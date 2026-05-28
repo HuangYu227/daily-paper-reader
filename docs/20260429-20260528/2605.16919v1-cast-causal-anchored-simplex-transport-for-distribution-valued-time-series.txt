@@ -1,0 +1,1233 @@
+Title: CAST: Causal Anchored Simplex Transport for Distribution-Valued Time Series
+
+URL Source: https://arxiv.org/pdf/2605.16919v1
+
+Published Time: Tue, 19 May 2026 00:43:47 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# CAST: Causal Anchored Simplex Transport for Distribution-Valued Time Series 
+
+Jiecheng Lu 
+
+Georgia Institute of Technology 
+
+jlu414@gatech.edu 
+
+Jieqi Di 
+
+Georgia Institute of Technology 
+
+jdi7@gatech.edu 
+
+Runhua Wu 
+
+Georgia Institute of Technology 
+
+rwu330@gatech.edu 
+
+Yuwei Zhou 
+
+Indiana University 
+
+yuwzhou@iu.edu 
+
+Abstract 
+
+Many decision-facing stochastic systems are observed through aggregate distribu-tions rather than scalar trajectories: queue occupancies, mobility shares, public-health mixtures, generation-source shares, ecological compositions, and air-quality severity profiles all live on the probability simplex and evolve over time. We study causal (time-respecting online) forecasting for these distribution-valued time series and argue that the transition operator itself should be structured around the simplex. We introduce CAST (Causal Anchored Simplex Transport), a successor-local oper-ator that (i) retrieves empirical successors from causal context, (ii) stabilizes them with a persistence anchor, and (iii) applies a bounded local stochastic transport on ordered supports; every stage preserves the simplex by construction. We identify a structural failure mode, latent transition-kernel aliasing, where similar observed dis-tributions evolve differently under different contextual regimes, and prove that any forecaster depending only on an aliased summary incurs an irreducible weighted Jensen–Shannon excess-risk lower bound, while the CAST hypothesis class con-tains the regime-aware Bayes successor; for ordered supports an additional Pinsker separation holds whenever the transported successor lies outside the no-transport anchor hull. On a suite of eleven public and simulated benchmarks spanning ecol-ogy, energy, diet, mortality, employment, air quality, severe weather, mobility, and 
+
+G/G/ 1, Gt/G/ 1 queue occupancy, CAST achieves the best average rank on both one-step KL (1.27) and autoregressive rollout JSD (1.91), winning 8/11 sections on each metric against a broad statistical, compositional, recurrent, convolutional, Transformer, and modern time-series baseline set, and top-2 on all 11 sections for offline KL. Component ablations and a controlled synthetic aliasing experiment corroborate the theory. The code release is available at this link. 
+
+1 Introduction 
+
+Modern stochastic systems are increasingly observed, controlled, and planned through aggregate distributions rather than isolated events or scalar trajectories. The rapid deployment of large language model services has in particular turned cloud inference into a high-throughput stochastic system with heterogeneous request sizes, variable service times, memory and cache constraints, and batching effects, placing queueing and scheduling at the center of high-performance inference [ 1 ]. For capacity planning, rebalancing, and risk-sensitive control, what matters is how the distribution of system states—queue length, workload, congestion regime—evolves over the next several intervals. The same pattern recurs across mobility platforms [ 2], public-health panels, power systems, ecological studies, and air-quality severity reports. 
+
+> Preprint.
+> arXiv:2605.16919v1 [stat.ML] 16 May 2026 stable one -step and rollout forecasts
+> preserves local mass motion
+> resolves regime aliasing
+> future time past
+> (ours)
+> CAST
+> future time past
+> Typical
+> baseline
+> future time past
+> (ground truth)
+> Target
+> high prob. low prob.
+> Especially strong on ordered supports
+> (e.g., queue occupancies over time)
+
+Why this leads to 
+
+better performance 
+
+> Simplex -valid
+> by construction
+
+ො𝑝 𝑡 +1 = 1 − 𝜌 𝑡 𝑎 𝑡 + 𝜌 𝑡 𝑇 𝑡 𝑎 𝑡              
+
+> predicted
+> next -step
+> distribution
+> Forecast
+> 𝑷 𝒕 +𝟏
+> 𝑇 𝑡 ,𝑎 𝑡
+> move mass
+> neighborhood
+> Bounded local
+> transport 𝑻 𝒕
+> 𝒂 𝒕 =𝝀 𝒕 𝒑 𝒕
+> +𝟏 −𝝀 𝒕 𝒓 𝒕
+> 𝑎 𝑡 (anchor)
+> 𝑟 𝑡 (retrieved)
+
++     
+
+> 𝑝 𝑡 (current)
+> Persistence
+> anchor 𝒂 𝒕
+> top -𝑘 similar
+> successors
+> memory
+> retrieval
+> Retrieve
+> Empirical
+> successors 𝒓 𝒕
+> history
+> window
+> (past
+> 𝑑 steps)
+> Causal
+> context
+> encoder
+> produce
+> forecast
+> moves mass locally on
+> ordered support
+> stabilizes with
+> persistence
+> selects the
+> right regime
+> Leverages context, similar histories, persistence,
+> and local transport.
+
+CAST: structured prediction pipeline      
+
+> It misses regime and produces
+> a blurred, unbiased guess.
+> Valid distribution,
+> wrong forecast.
+> ordered support
+> 0
+> 0.5
+> 1.0
+> probability
+> Averaged successor
+> (predicts the mean)
+> ordered support
+> 0
+> 0.5
+> 𝑃 𝑡 (only input)
+> 1.0
+> probability
+> Current -only or
+> fixed -summary model
+> Current -only or fixed -summary models
+> average incompatible successors.
+> Why standard forecasters fail
+> Latent transition -kernel aliasing:
+> same 𝒑 𝒕 , different true next distributions.
+> Same current state 𝑝 𝑡
+> (same distribution)
+> ordered support
+> 0
+> 0.5
+> probability  (true) 1.0
+> 𝑡 (current)
+> History B: draining after a burst
+> ordered support
+> 0
+> 0.5
+> (true) 1.0
+> probability
+> 𝑡 (current)
+> History A: entering congestion
+> The same current distribution can imply
+> different futures under different histories.
+
+The challenge: aliasing 
+
+> The target is an evolving probability distribution
+> on an ordered or categorical support.
+> time past
+> Air -quality category
+> profiles
+> time past
+> Ecological relative
+> abundances
+> time past
+> Public -health mixtures
+> time past
+> Energy mixes
+> time past
+> Mobility shares
+> time past
+> Queue occupancies
+> Many real -world systems evolve as
+> probability distributions on the simplex,
+> not single scalars.
+
+Why distribution -valued 
+
+time series matter               
+
+> Best average rank across 11 benchmark
+> sections; top -1 on 8/11 for offline KL
+> and 8/11 for rollout JSD.
+> 𝑡 −3𝑡 −2𝑡 −1
+> 𝑡 −3𝑡 −2𝑡 −1
+> 𝑝 𝑡
+> 𝑡 +1
+> 𝑝 𝑡
+> 𝑡 +1
+
++Figure 1: CAST overview. (1) Real-world systems evolve as distributions on a simplex rather than scalar trajectories; (2) the same pt can arise from histories with different successors, so (3) current-only forecasters collapse to a mixture average; (4) CAST encodes history, retrieves empirical successors rt, forms a persistence–retrieval anchor at = λtpt + (1 − λt)rt, and applies bounded local transport Tt on ordered supports, ˆpt+1 = (1 − ρt)at + ρtTtat, simplex-valid by construction; (5) this resolves regime aliasing and stabilizes rollout. 
+
+Distribution-valued forecasting. We formalize this by letting 
+
+pt ∈ ∆D−1 := 
+
+n
+
+p ∈ RD
+
+≥0 : PDj=1 p(j) = 1 
+
+o
+
+denote a probability vector observed at time t, and studying the causal one-step map ˆpt+1 = f (p1: t)
+
+that uses only present and past distributions. Here causal means time-respecting online prediction, not interventional causal inference. This is a compositional time series problem: observations are not arbitrary Euclidean vectors but proportions of a whole, and the simplex is the natural sample space [ 3, 4]. Classical compositional forecasters apply log-ratio transformations, state-space recursions, exponential smoothing, or VAR dynamics in unconstrained coordinates and then map back to the simplex [ 5– 7]; Wasserstein autoregressive and functional distributional models treat probability distributions as serially dependent objects [ 8, 9]. These provide important statistical baselines but leave a modeling question open: can the transition operator itself be structured as a causal map on the simplex? 
+
+Why the full distribution. Forecasting the whole distribution provides a signal that a single tra-jectory forecast cannot. A future window may place substantial mass on both a light-load and a severe-congestion regime, or split across compositions with very different operational consequences. Distribution-valued forecasts are therefore the natural primitive for early warning, resource allo-cation, risk-sensitive planning, and distributionally robust optimization [ 10 – 13 ]. Queueing makes this concrete: a discrete-time single-server queue obeys Lt+1 = max {0, L t + At − Ct} [ 14 – 16 ], and recent work casts next-step queue-length distribution prediction as its own forecasting target on simulated G/G/ 1 and Gt/G/ 1 systems [ 17 ]. Setting pt(k) ≈ P(Lt = k) turns the problem into one of forecasting how probability mass redistributes across an ordered support—directly exposing the probability of idleness, congestion, or overflow. 
+
+The structural challenge: latent-kernel aliasing. In distribution-valued dynamics the same ob-served composition can arise from different latent transition mechanisms: a queue occupancy histogram may look identical while the system is entering high load or draining after a burst; a similar air-quality histogram may appear under different seasonal or regional regimes; similar ecological compositions may have different successors because the sites have different histories. In such cases the current distribution alone does not determine the next distribution, and a forecaster depending only on a fixed visible summary must collapse multiple latent kernels into one averaged successor. Existing deep time-series architectures—recurrent, convolutional, attention-based, residual-MLP, patching, inverted, multiscale, frequency-decomposed, cross-dimension, channel-mixing, exogenous-aware, foundation-model [ 18 – 40 ]—can be cross-applied to probability vectors, but their output heads enforce validity through a final softmax and do not encode empirical successor locality, latent-regime disambiguation, or ordered mass motion. 
+
+CAST. We introduce CAST, a causal successor-local operator on the simplex (Figure 1). Given the causal history, CAST retrieves empirical successors from past context-successor pairs, forms a 2persistence-successor anchor, and, when the support is ordered, applies a bounded local stochastic transport operator: 
+
+ˆpt+1 = (1 − ρt) at + ρt Ttat, at = λtpt + (1 − λt) rt,
+
+where rt is a retrieved causal successor, at is a persistence–retrieval anchor, Tt is a radius-bounded row-stochastic transport, and ρt is a bounded transport strength. Every stage preserves the simplex by construction. This structure encodes a simple inductive bias: future distributions should be close to empirical successors observed in similar causal contexts, stabilized by persistence and corrected only by small local mass motion when the support has a natural order. Retrieval addresses aliasing (two visible distributions with different histories have different successors); transport addresses ordered mass motion (on queue occupancies, AQI levels, ages, severity bins, probability mass should move locally, not through an unconstrained global correction). 
+
+Contributions. (i) Model: we propose CAST, a causal successor-local transition model for distribution-valued time series, whose prediction is a convex combination of an empirical-successor anchor and a bounded local stochastic transport of that anchor on ordered supports. (ii) Theory: we prove a weighted Jensen–Shannon aliasing lower bound that any fixed-summary forecaster must pay when multiple latent regimes share the same observed summary, show that the CAST hypothesis class contains the regime-aware Bayes successor under mild memory assumptions, and give an ordered-support Pinsker separation for transports that leave the anchor hull; approximation bounds under imperfect retrieval/transport and simplex-closure/rollout-drift control complete the picture. (iii) Benchmarks: on an 11-section benchmark suite spanning ecology, energy, diet, mortality, employ-ment, air quality, severe weather, mobility, and queueing, CAST obtains average ranks of 1.27 (offline KL) and 1.91 (rollout JSD), winning 8/11 sections on each metric against statistical, compositional, recurrent, convolutional, Transformer, and modern time-series baselines, and is top-2 on all 11 sections for offline KL. A targeted five-seed robustness study, a component ablation, and a controlled synthetic aliasing experiment support the theory-driven reading of the results. 
+
+2 Related Work 
+
+Compositional and distributional time series. Aitchison’s log-ratio program [ 3 , 4 ] treats the simplex as the sample space for compositions; classical methods fit VAR, state-space, or exponential-smoothing recursions in ilr/alr coordinates and map back [ 5– 7 ]. Distribution time series have also been studied via Wasserstein autoregressive and functional-data models [ 8, 9 , 41 ], with optimal-transport tools for geometry on probability measures [ 42 , 43 ]. These approaches motivate the object of study but do not jointly implement causal successor retrieval, persistence anchoring, and ordered local transport. 
+
+Deep sequence forecasting. Modern time-series architectures span recurrent, attention-based multi-horizon, residual-MLP, hierarchical interpolation, Transformer, patching, periodic decomposition, inverted, multiscale mixing, frequency-decomposed, cross-dimension, channel-mixing, exogenous-aware, in-context, language-model-reprogramming, and foundation-model approaches [ 18 –37 , 39 ,44 – 48 ], with concurrent progress on efficient and linear-attention sequence backbones that scale subquadratically in context length [ 49 – 55 ]. With a simplex output head they are our neural baselines, but they learn arbitrary output logits rather than a transition operator structured around successor locality, regime disambiguation, or ordered mass motion. Neural temporal point processes [ 56 –58 ]instead predict future event times and marks. 
+
+Queueing and risk-sensitive decisions. Queueing theory supplies the motivating example of distribution-valued dynamics on an ordered support [ 1, 14 – 16 ]; our queue benchmark follows the simulation protocol of Di et al. [17] . Downstream, distributional RL models return distributions [ 10 ], quantile/CVaR MDPs optimize risk-sensitive summaries [ 11 , 12 ], and DRO works with ambiguity sets over distributions [ 13 ]. Nonlinear forecasting via nearest analogs [ 59 ] is a precedent for CAST’s retrieval; our heads are learned and causal within a sequence. 
+
+3 The CAST Model 
+
+Problem. We observe a distribution-valued time series p1, . . . , p T ∈ ∆D−1 and seek a causal one-step predictor ˆpt+1 = fθ (p1: t); coordinates may be unordered (compositions) or ordered (queue occupancy, AQI, age). CAST parameterizes fθ not as an unconstrained map to logits but as a 3structured simplex transition: history → empirical successor (retrieval) → persistence–successor anchor → bounded local transport. The complete ordered-support transition is 
+
+ˆpt+1 = (1 − ρt)λtpt + (1 − λt)rt
+
+ + ρt Tt
+
+λtpt + (1 − λt)rt
+
+, (1) with rt a retrieved empirical successor, λt ∈ [0 , 1] a persistence gate, Tt a radius-bounded row-stochastic transport, and ρt ∈ [0 , ρ max ] a bounded transport strength with ρmax ≤ 1 (so that each stage is a convex combination). For unordered supports the transport stage is disabled ( ρt ≡ 0), yielding the successor-anchor map ˆpt+1 = λtpt + (1 − λt)rt.
+
+Causal representation and retrieval. CAST computes causal hidden states h1: T = Enc θ (p1: T )—a decoder-only Transformer over simplex-aware embeddings—and retrieves from the strictly causal memory Mt = {(hs, p s+1 ) : s < t } (the strict inequality prevents leakage of pt+1 ). For each retrieval head m, queries q(m) 
+
+> t
+
+= W (m) 
+
+> q
+
+ht and keys k(m) 
+
+> s
+
+= W (m) 
+
+> k
+
+hs produce causal softmax weights 
+
+α(m) 
+
+> t,s
+
+∝ exp  (q(m) 
+
+> t
+
+)⊤k(m) 
+
+> s
+
+/√dr
+
+ over s < t , and each head outputs r(m) 
+
+> t
+
+= P 
+
+> s<t
+
+α(m) 
+
+> t,s
+
+ps+1 . The retrieved successor rt = P 
+
+> m
+
+ηt,m r(m) 
+
+> t
+
+with ηt = softmax( Wη ht) is a convex combination of past simplex observations, hence rt ∈ ∆D−1; if no valid past successor exists, CAST falls back to persistence rt = pt.
+
+Persistence–successor anchor. Pure retrieval is noisy, so CAST forms at = λtpt + (1 − λt)rt with gated persistence weight λt = λmin + ( λmax − λmin ) σ(gθ (ht)) . This interpolates between copying the present distribution ( λt → 1) and reusing the retrieved transition ( λt → 0); bounded gating keeps 
+
+at ∈ ∆D−1 strictly. 
+
+Bounded local transport. For ordered supports, CAST predicts a row-stochastic radius-1 kernel 
+
+Kt(j, o ) ≥ 0, P 
+
+> o∈{− 1,0,+1 }
+
+Kt(j, o ) = 1 , and applies (Ttat)( k) = P 
+
+> j
+
+at(j) P 
+
+> o
+
+Kt(j, o ) 1{k =clip( j + o, 1, D )}. The correction is mixed back into the anchor at strength ρt ∈ [0 , ρ max ]. To prevent runaway support drift during multi-step rollout, CAST enforces a realized-mean-shift budget: with μ(p) = P 
+
+> j
+
+j p (j) and ∆μt = μ(Ttat) − μ(at), the raw strength is scaled by 
+
+gt = min  1, B t/(|∆μt| + ϵ) where Bt = δμ + δσ σsupp (at). Transport is therefore local in both support radius and realized mean displacement. 
+
+Training. CAST is trained on teacher-forced adjacent pairs (p1: t, p t+1 ) with L = Lstep + λop Rop ,where Lstep = 1
+
+> |Ω|
+
+P 
+
+> (b,t )∈Ω
+
+KL( pb,t +1 ∥ˆpb,t +1 ) over unmasked positions Ω and Rop is a small target-free operator prior on the transport (penalizing strong transport, off-identity mass, rough kernels across neighboring bins, and realized mean shift). Rop depends only on Tt and at, never on future targets; no rollout loss, multi-horizon target loss, target-moment loss, oracle gate supervision, or validation/test retrieval memory is used. Rollout evaluation iterates the learned one-step map: each prediction is appended to the context and used as input for subsequent predictions. The decomposition of Rop is in Appendix D. 
+
+Properties. Four structural properties hold throughout: (i) Causality— ˆpt+1 never depends on 
+
+pt+1 ; (ii) Simplex closure— rt, a t, T tat, ˆpt+1 ∈ ∆D−1 by convexity of each stage; (iii) Identity containment— (λt, ρ t) = (1 , 0) recovers persistence, (0 , 0) recovers pure successor anchoring; (iv) Bounded drift— W1(at, ˆpt+1 ) ≤ ρtr and |μ(ˆ pt+1 ) − μ(at)| ≤ ρtBt, preventing accumulation of support displacement under multi-step rollout. Compactly, CAST = causal successor retrieval + persistence stabilization + bounded local transport: a structured alternative to a sequence-to-distribution Transformer that preserves empirical transition structure for rollout stability while retaining a small, interpretable correction mechanism for ordered distributional motion. 
+
+4 Theoretical Analysis 
+
+Our theory makes conditional, structural claims. It does not assert that CAST dominates every forecaster on every process; it identifies a data regime, latent transition-kernel aliasing, in which averaging incompatible successors is unavoidable for aliased summaries, while CAST’s retrieval– anchor–transport class contains the corresponding Bayes successor. Three pieces are stated below; full proofs and an approximation/retrieval/consistency supplement appear in Appendix A. 
+
+Setup. Let Ft = σ(p1: t) be the causal history and Gϕt = σ(ϕ(p1: t)) ⊆ F t the summary available to a baseline. The hard case is that two or more histories share the same observed summary φ but different conditional successors, indexed by a latent regime Zt ∈ { 1, . . . , K }. On {ϕ(p1: t) = φ},4let πz = P(Zt = z | φ) and uz = E[pt+1 | Zt = z, φ ]. All KL statements assume relative-interior successors or the same small-probability smoothing used in evaluation ( ∆D−1 
+
+> γ
+
+when needed). The no-transport anchor class is At = {λp t + (1 − λ)r : λ ∈ [0 , 1] , r ∈ R t}.
+
+Theorem 1 (Latent-kernel aliasing lower bound) . Fix φ and suppose πz > 0 for all z and the regime-specific Bayes successors u1, . . . , u K are not all identical. Then every fixed-summary forecaster 
+
+f (p1: t) = g(ϕ(p1: t)) has conditional KL excess risk (relative to the regime-aware Bayes predictor) at least 
+
+inf 
+
+> q∈∆D−1
+> K
+
+X
+
+> z=1
+
+πz KL( uz ∥ q) = JS π (u1, . . . , u K ) > 0,
+
+where JS π is the weighted Jensen–Shannon divergence. Proof sketch. Any fixed-summary forecaster must output a single q = g(φ) independent of Zt. The standard regime-conditional KL decomposition makes the regime-aware Bayes risk cancel, leaving excess risk P 
+
+> z
+
+πz KL( uz ∥q); its minimizer is the mixture ¯u = P 
+
+> z
+
+πz uz , and substitution gives 
+
+JS π (u1, . . . , u K ), which is zero iff all uz coincide. □
+
+Theorem 2 (CAST oracle representability) . Assume that, conditional on Zt = z, the Bayes successor has CAST form uz = (1 − ρz )az + ρz Tz az , az = λz pt + (1 − λz )sz , with sz ∈ ∆D−1, λz ∈ [0 , 1] ,
+
+ρz ∈ [0 , ρ max ] for some ρmax ≤ 1, and valid local stochastic Tz (for ordered supports). Assume further that (i) there exists a causal representation ht = E(p1: t) identifying Zt; (ii) for each z, the causal memory before time t contains an anchor sz , or anchors whose convex hull contains sz ; (iii) CAST gates and transport head can realize (λz , ρ z , T z ). Then there is a CAST parameterization (or a limit of finite-softmax parameterizations) such that ˆpt+1 = uZt ; the conditional KL excess risk of this oracle CAST predictor is zero, and vanishing in deterministic benchmarks. Proof sketch. Because ht identifies Zt, retrieval heads can concentrate their mass (exactly, or as a finite-softmax limit) on the memory anchor sZt ; the anchor and transport gates then realize 
+
+(λZt , ρ Zt , T Zt ); substitution into (1) recovers uZt . □
+
+Theorem 3 (Ordered-support transport separation) . Assume the support is ordered, Zt is identified, and the no-transport anchor class A0 
+
+> z
+
+= {λp t + (1 − λ)r : λ ∈ [0 , 1] , r ∈ R 0 
+
+> z
+
+} has L1 gap 
+
+δz = inf q∈A 0 
+
+> z
+
+∥uz − q∥1 > 0 for each z. Then even an oracle no-transport method that knows Zt
+
+incurs conditional KL excess risk 
+
+inf  
+
+> qz∈A 0
+> z
+
+X
+
+> z
+
+πz KL( uz ∥ qz ) ≥ 12
+
+X
+
+> z
+
+πz δ2 
+
+> z
+
+,
+
+while CAST attains zero oracle excess risk whenever uz lies in the CAST local-transport class (Theorem 2). Proof sketch. For each z, ∥uz − qz ∥1 ≥ δz by construction; Pinsker’s inequality gives KL( uz ∥qz ) ≥ 
+
+> 12
+
+δ2 
+
+> z
+
+; averaging over z yields the bound. The boundary case δz = 0 (successor already in the hull) is exactly when the theorem gives no separation, matching the intended reading that transport is only a formal advantage when local motion is not already representable as a no-transport mixture. □
+
+Supporting results and scope. Appendix A supplements these theorems with: an approximation bound ∥˜u − u∥1 ≤ ϵr + 2 ϵλ + ρmax ϵT + 2 ϵρ for imperfect CAST estimates (with a 1/γ -Lipschitz KL counterpart on ∆D−1 
+
+> γ
+
+); a retrieval-consistency statement that the nearest-memory retrieval error at distance dt is at most Ld t + ∥ξ∥1 under an L-Lipschitz successor map, so a dense causal memory makes the anchor converge to the Bayes successor; simplex-closure and W1 drift control used in Section 3; and a queueing corollary specializing to uup /down = (1 − ρ)p⋆ + ρT right /left p⋆, where a phase-blind baseline pays JS 1/2(uup , u down ) and no-transport anchor methods pay an additional  
+
+> 12
+
+δ2—tested below on a controlled synthetic. 
+
+5 Experimental Setup 
+
+Task and evaluation modes. Each method is trained to predict ˆpt+1 = f (p1: t) and evaluated under the same online information structure. We report two modes. Offline one-step: teacher-forced prediction on held-out chronological target positions; this isolates the quality of the learned one-step conditional map. Autoregressive rollout: from an observed context the model repeatedly feeds its own prediction back into its history, measuring long-horizon drift and stability of the learned transition operator. 5Table 1: Benchmark suite summary. Ordered = the support has a natural order relevant to local transport ( ρt̸ ≡ 0). Queue sections follow the G/G/ 1 and Gt/G/ 1 generation protocol of Di et al. [17].                                                                              
+
+> Section Type Sequence unit #Seq. DLength (min / med / max) Ordered BioTIME ecological composition study-site annual 646 128 15 / 25 / 57 no Ember Monthly energy generation share country monthly 87 940 / 109 / 327 no OWID Dietary diet composition country annual 135 25 63 / 63 / 63 no CDC Weekly Deaths mortality cause share state weekly 50 6190 / 190 / 190 no BLS QCEW industry employment share state annual 53 13 15 / 15 / 15 no EPA AirData AQI AQI category share county monthly 800 660 / 191 / 300 yes
+> NOAA Storm Events event-type share state monthly 49 32 61 / 244 / 300 no NYC TLC Trip pickup-zone share pickup-hour weekly 24 266 52 / 53 / 53 no Queue Homogeneous G/G/ 1occupancy queue trajectory 10,000 596 101 / 549 / 16621 yes
+> Queue Nonhomogeneous Gt/G/ 1occupancy queue trajectory 9,900 562 27 / 547 / 1758 yes
+> Queue Combined pooled G/G/ 1∪Gt/G/ 1queue trajectory 19,900 596 27 / 548 / 16621 yes
+
+Benchmark suite. The suite contains eleven distribution-valued sections: eight public composition panels—BioTIME (ecological composition) [ 60 ], Ember Monthly (electricity generation mix) [ 61 ], OWID Dietary (diet composition) [ 62 ], CDC Weekly Deaths (cause-of-death share) [ 63 ], BLS QCEW (industry employment share) [ 64 ], EPA AirData AQI (AQI category share) [ 65 ], NOAA Storm Events (event-type share) [ 66 ], NYC TLC Trip (pickup-zone share) [ 2 ]—and three queue-occupancy sections (Homogeneous, Nonhomogeneous, Combined) built from G/G/ 1 and Gt/G/ 1 simulations following the generation protocol of Di et al. [17] . The suite is intentionally heterogeneous: unordered composition panels test whether a method can exploit causal successor information without coordinate order, while ordered datasets (EPA AQI and all queue sections) additionally test whether local mass motion helps. Appendix C gives full data sources, licenses, preprocessing, and per-section split statistics; Table 1 summarizes the sections. 
+
+Baselines. We compare CAST with 15 baselines that all produce simplex-valued forecasts under the same loss masks. Statistical/compositional: persistence (ˆpt+1 = pt), analog_successor (train-split memory bank of context-successor windows with weighted nearest-neighbor retrieval), ilr_var 
+
+(VAR in isometric log-ratio coordinates), compositional_ets (ilr-space ETS/state-space). Neural: 
+
+transformer_naive (decoder-only Transformer with simplex head), gru , lstm , tcn , nhits [ 21 ], 
+
+dlinear [ 25 ], timemixer [35 ], itransformer [32 ], informer [22 ], autoformer [23 ], and tide 
+
+[ 29 ]. Each neural backbone is adapted to distribution-valued inputs and capped with a final simplex-valued head; all trainable baselines use one-step KL loss on the same masked adjacent pairs as CAST. 
+
+Splits and protocol. All splits are chronological. For the eight public panels, each split file stores the same probability-vector sequences with disjoint loss masks over scored one-step targets; because the models are causal, held-out target scoring is teacher-forced online forecasting, not a random shuffle. Per-dataset split policies and target counts are in Appendix D. The queue benchmark uses a file-level 70/10/20 split by whole queue system, stratified by support-width deciles, so queue evaluation measures generalization to unseen simulated systems rather than interpolation between overlapping windows from seen systems. Rollout contexts/horizons range from 8/2 (BLS QCEW) to 128/64 (queue sections); see Appendix D. 
+
+Training. All trainable models optimize one-step KL with AdamW, learning rate 3×10 −4, 200-step warmup, weight decay 0.1, gradient clipping 1.0, 10k iterations (12k for queues), hidden dimension 256, 6 layers, 4 heads, dropout 0.1, batch size 16 (4 for queues). Models are selected by the lowest validation one-step KL loss. No rollout loss, multi-horizon target loss, target-moment loss, oracle gate supervision, or validation/test retrieval memory is used for CAST. Fit-only baselines (persistence , analog_successor , ilr_var , compositional_ets ) are fitted on the training split without SGD. Full hyperparameters, dataset-specific block sizes, CAST configuration, and compute (A100/H200/L40S two-GPU nodes, 16 cores, ≥128 GB host memory) are in Appendix D. 
+
+Metrics and reporting. Lower is better for all metrics. We report one-step KL, JSD, L1, and ordered-support W1; the primary one-step metric is offline KL and the primary long-horizon metric is rollout JSD. The main aggregate comparison is average rank over the 11 sections; top-1 wins are reported as an auxiliary summary because ranks retain how close a method remains when it is not the winner. The main tables report seed 42 as a broad common-protocol comparison across 16 methods and 11 datasets; we additionally run a targeted five-seed CAST robustness study on the public non-queue sections (Appendix F). 6Table 2: Average ranks across the 11 benchmark sections (lower is better). All 16 methods are complete on all 11 sections; ranks are directly comparable. CAST is the only method with sub-2 average rank on either metric.                                                                                  
+
+> Method KL avg RO avg Mean Best Method KL avg RO avg Mean Best
+> CAST 1.27 1.91 1.59 1 / 1 iTransformer 8.73 9.73 9.23 5 / 7 Comp. ETS 5.27 3.91 4.59 2 / 1 TCN 8.64 11.27 9.95 3 / 7 Persistence 5.64 3.73 4.68 2 / 1 TimeMixer 9.00 11.36 10.18 3 / 5 N-HiTS 5.27 5.55 5.41 1 / 3 TiDE 10.82 10.18 10.50 8 / 7 Informer 6.45 7.18 6.82 4 / 3 LSTM 12.27 9.45 10.86 7 / 2 Transformer 9.00 6.64 7.82 3 / 2 Analog succ. 12.00 11.18 11.59 5 / 4 ilr-VAR 7.45 8.64 8.05 1 / 2 Autoformer 12.55 13.64 13.09 6 / 6 GRU 8.55 8.27 8.41 3 / 3 DLinear 13.09 13.36 13.23 6 / 11
+
+Table 3: Dataset-level comparison: CAST vs. strongest non-CAST baseline on each metric (lower is better; bold = winner). CAST is top-1 on 8/11 sections for both metrics and top-2 on all 11 sections for offline KL. 
+
+Offline KL ↓ Rollout JSD ↓
+
+Dataset CAST vs. strongest non-CAST Winner CAST vs. strongest non-CAST Winner BioTIME 0.1313 / 0.1844 N-HiTS CAST 0.03232 / 0.02206 Comp. ETS Comp. ETS Ember Monthly 0.04342 / 0.05583 Persist. CAST 0.007129 / 0.01146 ilr-VAR CAST 
+
+OWID Dietary 0.009096 / 0.009747 Comp. ETS CAST 0.005478 / 0.005441 Persist. Persist. CDC Weekly Deaths 0.01079 / 0.01423 N-HiTS CAST 0.01743 / 0.003676 Persist. Persist. BLS QCEW 0.0008773 / 0.001242 Persist. CAST 0.0002459 / 0.0002461 Persist. CAST 
+
+EPA AirData AQI 0.1184 / 0.09518 N-HiTS N-HiTS 0.03749 / 0.04465 Transf. CAST 
+
+NOAA Storm Events 1.004 / 0.805 N-HiTS N-HiTS 0.2042 / 0.2161 LSTM CAST 
+
+NYC TLC Trip 0.02168 / 0.02742 N-HiTS CAST 0.009625 / 0.01169 Comp. ETS CAST 
+
+Queue Homogeneous 0.01576 / 0.01466 ilr-VAR ilr-VAR 0.07323 / 0.0887 Persist. CAST 
+
+Queue Nonhomogeneous 0.07101 / 0.07959 Persist. CAST 0.03857 / 0.05524 Persist. CAST 
+
+Queue Combined 0.007519 / 0.0103 Persist. CAST 0.081 / 0.08827 Comp. ETS CAST CAST top-1 8/11 sections 8/11 sections 
+
+6 Results 
+
+Aggregate ranks. Table 2 reports average rank across 11 sections. CAST is first on both offline KL (1.27) and rollout JSD (1.91), with mean rank 1.59 vs. 4.59 for the closest non-CAST competitor (Comp. ETS) and 5.41 for the closest neural backbone (N-HiTS). CAST is top-1 on 8/11 sections for both metrics (Table 3) and top-2 on all 11 for offline KL. The three non-winning offline sections (EPA AirData AQI, NOAA Storm Events, Queue Homogeneous) are all sections where CAST wins rollout JSD, so one-step losses do not propagate to long-horizon stability. Strong classical baselines (persistence, Comp. ETS) are rollout-competitive on smooth panels but collapse on Queue Nonhomogeneous/Combined—the regime predicted by Theorems 1–3. The main sweep is single-seed by design; a five-seed CAST robustness study on the non-queue sections (Appendix F) keeps the CAST interval separated from the immediately worse baseline in almost all CAST-winning cases (the only unstable exception is OWID Dietary, where leading methods have very small absolute gaps). 
+
+6.1 Component ablation 
+
+Table 4 (visualized in Figure 2D) compares each variant against the strongest non-CAST baseline per section. Removing structural regularization keeps offline KL wins (8/11) but drops rollout wins from 8/11 to 6/11—the target-free operator prior is a rollout-stability mechanism. Removing the persistence mix ( λt ≡ 0) is the most damaging change: KL wins drop from 8/11 to 5/11 ( +14 .5% 
+
+median ∆), with Ember Monthly and Queue Combined rising by orders of magnitude. A fixed local kernel keeps offline KL wins but degrades rollout where ordered transport matters (Queue Nonhomogeneous rollout JSD +223% ). Single-head retrieval is occasionally stronger than CAST on individual sections but does not improve the 11-section summary. Full per-section numbers are in Appendix E. 72 4 6 8 10 12 14 
+
+> Average rank across sections
+> CAST
+> Comp. ETS
+> Persistence
+> N-HiTS
+> Informer
+> Transformer
+> ilr-VAR
+> GRU
+> iTransformer
+> TCN
+> TimeMixer
+> TiDE
+> LSTM
+> Analog succ.
+> Autoformer
+> DLinear
+
+(A) Average-rank summary                                                                                                                                                                                                                                                                                                                                                            
+
+> Offline KL
+> Rollout JSD
+> Bio
+> KL RO
+> Ember
+> KL RO
+> OWID
+> KL RO
+> CDC
+> KL RO
+> BLS
+> KL RO
+> EPA
+> KL RO
+> NOAA
+> KL RO
+> NYC
+> KL RO
+> Q-Hom
+> KL RO
+> Q-Non
+> KL RO
+> Q-Comb
+> KL RO
+> CAST
+> Comp. ETS
+> Persistence
+> N-HiTS
+> Informer
+> Transformer
+> ilr-VAR
+> GRU
+> iTransformer
+> TCN
+> TimeMixer
+> TiDE
+> LSTM
+> Analog succ.
+> Autoformer
+> DLinear
+> 1311121811212111211111
+> 413323523513 414 12 52363332
+> 522431712212 515 15 84422223
+> 24556525561614239511 11 14 7
+> 69810 811 4411 9634847686585
+> 11 10 97776716 11 32656611 412 10 12 4
+> 15 15 4244334314 11 13 616 16 110 49416
+> 10 13 11 812 810 15 88413 733812 37410 8
+> 7510 12 11 10 16 14 13 14 598911 95758510
+> 9816 13 10 13 910 912 9837910 712 816 615
+> 3612 15 9913 13 14 15 11 14 510 75814 10 15 79
+> 8713 14 14 12 14 912 10 810 10 11 12 11 10 997912
+> 13 16 14 915 14 812 7715 711 213 12 13 13 15 611 6
+> 16 12 765611 11 6416 16 16 16 15 15 14 11 13 12 13 14
+> 12 14 15 16 16 15 12 610 13 715 12 14 10 14 15 16 14 14 15 13
+> 14 11 611 13 16 15 16 15 16 10 12 913 14 13 16 15 16 13 16 11
+
+(B) Per-section rank heatmap        
+
+> 12345678
+> Rank position
+> Queue Combined
+> Queue Nonhomogeneous
+> Queue Homogeneous
+> NYC TLC Trip
+> NOAA Storm Events
+> EPA AirData AQI
+> BLS QCEW
+> CDC Weekly Deaths
+> OWID Dietary
+> Ember Monthly
+> BioTIME
+> Benchmark section
+> ilr-VAR
+> N-HiTS
+> N-HiTS
+> CAST top-1: 8/11; top-2: 11/11
+
+(C) Dataset-level CAST standing 
+
+Offline KL        
+
+> 1
+> 1
+> 1
+> 1
+> 1
+> 2
+> 1
+> 2
+> 2
+> 1
+> 1
+> 1
+> 1
+> 1
+> 12345678
+> Rank position
+> Persist.
+> Persist.
+> Comp. ETS
+> CAST top-1: 8/11; top-3: 10/11
+
+Rollout JSD        
+
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 1
+> 8
+> 2
+> 1
+> 3CAST rank
+> Non-CAST winner
+> 0246810 12
+> Top-1 wins
+> CAST
+> w/o struct. reg.
+> anchor only
+> fixed kernel
+> w/o persistence
+> single head
+> 8/11
+> 8/11
+> 8/11
+> 6/11
+> 7/11
+> 7/11
+> 8/11
+> 6/11
+> 5/11
+> 7/11
+> 7/11
+> 7/11
+
+(D) Ablation summary 
+
+Win counts      
+
+> Offline KL
+> Rollout JSD
+> 0246810
+> Lower than CAST plus ties
+> KL 0+11
+> JSD 0+11
+> KL 2+6
+> JSD 2+6
+> KL 2+6
+> JSD 1+6
+> KL 2+7
+> JSD 1+7
+> KL 2+0
+> JSD 4+0
+> KL 5+0
+> JSD 3+0
+
+Direct comparison with CAST 
+
+> Lower than CAST
+> Tie with CAST
+
+Figure 2: Main empirical results and component ablations. (A) Average offline KL and rollout JSD ranks across 11 sections for all 16 methods (lower is better). (B) Per-dataset rank heatmap for offline KL and rollout JSD; cooler = stronger rank. (C) Dataset-level standing vs. the best non-CAST baseline: red circles = CAST’s rank, gray squares = non-CAST winner when CAST is not top, horizontal segments = the rank gap. (D) CAST component study: top-1 wins against the best non-CAST baseline and direct section-level comparisons with CAST. Table 4: Component and capacity-control summary. Win counts are each CAST variant vs. the strongest non-CAST baseline per section (so 8/11 matches full CAST). Median ∆ is variant/CAST −1;positive means higher error. 
+
+Variant Study KL wins RO wins Med. KL ∆ Med. RO ∆ KL <CAST RO <CAST 
+
+CAST Full model 8/11 8/11 – – – –w/o structural reg. Strict ablation 8/11 6/11 +0.0% +0.0% 2/11 2/11 anchor only Strict ablation 7/11 7/11 +0.0% +0.0% 2/11 1/11 single-head retrieval Capacity control 7/11 7/11 +0.5% +2.4% 5/11 3/11 fixed local kernel Strict ablation 8/11 6/11 +0.0% +0.0% 2/11 1/11 w/o persistence mix Strict ablation 5/11 7/11 +14.5% +0.8% 2/11 4/11 
+
+6.2 Synthetic validation of the aliasing theory 
+
+We implement the exact setup of the queueing corollary (Section 4): two equal-probability latent phases, identical current simplex state p⋆, and opposite radius-1 local transports uup = (1 − ρ)p⋆ +
+
+ρT right p⋆, udown = (1 − ρ)p⋆ + ρT left p⋆. Table 5 shows the predicted gap cleanly: a fixed-summary forecaster and a trained current-only neural forecaster both sit almost exactly on the Bayes mixture average (KL ≈ 0.04489 ), the phase-aware anchor-only comparator is worse than the fixed-summary optimum because it cannot leave the no-transport hull (KL 0.04784 ), and both the CAST oracle and a trained CAST local-transport head close the gap to essentially zero (trained CAST KL ≈ 1.7×10 −8). This is not a parameter-tuning artefact: the fixed-summary optimum is provably JS 1/2(uup , u down ) by Theorem 1, the anchor-only gap is provably 12 δ2 by Theorem 3, and the CAST success is Theorem 2. 
+
+6.3 Qualitative visualization analysis 
+
+Figure 3 complements the aggregate numbers on held-out queues. In offline residuals (panel a) CAST’s error is visually structureless (small amplitude, no ridge alignment) while persistence/Comp. ETS show diagonal stripes (they lag moving mass) and N-HiTS/Transformer show patchy high-error regions (misplaced modes). Autoregressive rollouts (panel b) turn these one-step differences into qualitative divergence: persistence freezes into a static band, Comp. ETS and N-HiTS smear the mass into a plateau, Transformer develops off-support ghost modes, and CAST continues to advance the occupancy mode and track the narrowing of the distribution—consistent with a bounded-transport operator acting on a persistence–retrieval anchor. CAST’s advantage is thus not a small numerical 8Table 5: Synthetic aliasing experiment ( K = 2 equal-probability regimes, identical p⋆, opposite radius-1 local transports). Fixed-summary forecasters must collapse to the JS-average; phase-aware anchor-only cannot leave the no-transport hull; CAST closes the gap.                                  
+
+> Method KL ↓JSD ↓L1↓
+> Fixed-summary optimum (Bayes mixture average) 0.044893 0.011562 0.238730 Trained current-only neural forecaster 0.044899 ±3.3e −60.011564 ±3.2e −60.238774 ±2.9e −5
+> Phase-aware anchor only (no transport) 0.047840 0.011722 0.246619 CAST oracle local transport 000
+> Trained CAST local-transport head 1.7e−8±5.0e−80±6.1e−82.3e−4±1.7e−5
+
+Figure 3: Qualitative offline and rollout on held-out queueing systems. (a) Offline one-step residual heat maps (annotated by mean KL): CAST’s errors are diffuse and low-magnitude; baselines show structured errors aligned with target ridges. (b) Autoregressive rollout (annotated by mean JSD): CAST preserves the moving occupancy mass and changing support shape; persistence and Comp. ETS drift toward static bands, N-HiTS over-smooths, and Transformer produces off-support artefacts. CAST’s rollout advantage is driven by preserving ordered local mass motion under its own past predictions—the mechanism the bounded transport + shift-budget design enables. edge on one-step KL but a structural advantage in how predicted probability mass evolves under the model’s own past forecasts. 
+
+Where aliasing matters most. The nearest-neighbor diagnostic of Appendix G isolates strong aliasing in EPA AirData AQI, NOAA Storm Events, and Queue Nonhomogeneous/Combined— precisely where CAST’s rollout advantage is largest (rank 1 on all four, 16 –30% rollout-JSD gaps on the two queue sections). Queue Homogeneous is the opposite case: CAST’s advantage there reflects rollout stability and ordered local transport rather than aliasing disambiguation (loses offline KL to ilr-VAR but wins rollout JSD by 17% ). 
+
+7 Conclusion 
+
+CAST structures the transition operator for distribution-valued time series as a causal successor-retrieval + persistence-anchor + bounded-local-transport composition, keeping every stage inside 
+
+∆D−1. The theory gives a weighted Jensen–Shannon excess-risk lower bound for fixed-summary forecasters under latent-kernel aliasing and places the regime-aware Bayes successor inside CAST’s hypothesis class, with an added Pinsker separation for ordered supports. CAST attains the best average rank on both one-step KL and rollout JSD (8/11 wins each) across eleven benchmarks; ablations, seed robustness, a synthetic aliasing experiment, and queueing rollout visualizations show that its advantage comes from preserving ordered local mass motion under its own past predictions. 
+
+8 Limitations 
+
+CAST targets recurring transition regimes with optional ordered mass motion; fully unordered supports with purely smooth dynamics may favor a different model. The main sweep is single-seed 9(complemented by a five-seed CAST robustness check in Appendix F), and the aliasing theory is an existence argument, not a finite-sample training guarantee. Training uses a one-step KL objective with rollout as a pure evaluation protocol; long-horizon training, longer-range retrieval, multi-radius transport, and integration with risk-sensitive decision making are natural extensions. 
+
+References 
+
+[1] Michael Mitzenmacher and Rana Shahout. Queueing, predictions, and large language models: Challenges and open problems. Stochastic Systems , 15(3):195–219, 2025. doi: 10.1287/stsy.2025.0106. [2] New York City Taxi and Limousine Commission. TLC Trip Record Data. https://www.nyc.gov/ site/tlc/about/tlc-trip-record-data.page , 2025. Accessed 2026-05-05. [3] John Aitchison. The statistical analysis of compositional data. Journal of the Royal Statistical Society: Series B (Methodological) , 44(2):139–160, 1982. doi: 10.1111/j.2517-6161.1982.tb01195.x. [4] John Aitchison. The Statistical Analysis of Compositional Data . Chapman and Hall, London, 1986. [5] Ralph D. Snyder, J. Keith Ord, Anne B. Koehler, Keith R. McLaren, and Adrian Beaumont. Forecasting compositional time series: A state space approach. Working Paper 11/15, Department of Econometrics and Business Statistics, Monash University, 2015. [6] Ralph D. Snyder, J. Keith Ord, Anne B. Koehler, Keith R. McLaren, and Adrian Beaumont. Forecasting compositional time series: A state space approach. International Journal of Forecasting , 33(2):502–512, 2017. doi: 10.1016/j.ijforecast.2016.11.008. [7] Carles Barceló-Vidal, Lucía Aguilar, and Josep Antoni Martín-Fernández. Compositional VARIMA time series. In Compositional Data Analysis: Theory and Applications , pages 87–103. John Wiley & Sons, 2011. doi: 10.1002/9781119976462.ch7. [8] Chao Zhang, Piotr Kokoszka, and Alexander Petersen. Wasserstein autoregressive models for density time series. Journal of Time Series Analysis , 43(1):30–52, 2022. doi: 10.1111/jtsa.12590. [9] Yiye Jiang and Jérémie Bigot. Wasserstein multivariate auto-regressive models for modeling distributional time series, 2022. [10] Marc G. Bellemare, Will Dabney, and Rémi Munos. A distributional perspective on reinforcement learning. In Proceedings of the 34th International Conference on Machine Learning , volume 70 of Proceedings of Machine Learning Research , pages 449–458. PMLR, 2017. [11] Xiaocheng Li, Huaiyang Zhong, and Margaret L. Brandeau. Quantile markov decision processes. Opera-tions Research , 70(3):1428–1447, 2022. doi: 10.1287/opre.2021.2123. [12] Yinlam Chow, Aviv Tamar, Shie Mannor, and Marco Pavone. Risk-sensitive and robust decision-making: A CVaR optimization approach. In Advances in Neural Information Processing Systems , volume 28, pages 1522–1530, 2015. [13] Wolfram Wiesemann, Daniel Kuhn, and Melvyn Sim. Distributionally robust convex optimization. 
+
+Operations Research , 62(6):1358–1376, 2014. doi: 10.1287/opre.2014.1314. [14] D. V. Lindley. The theory of queues with a single server. Mathematical Proceedings of the Cambridge Philosophical Society , 48(2):277–289, 1952. doi: 10.1017/S0305004100027638. [15] Mor Harchol-Balter. Performance Modeling and Design of Computer Systems: Queueing Theory in Action .Cambridge University Press, 2013. [16] Sergio Palomo and Jamol Pender. Learning lindley’s recursion. In Proceedings of the 2020 Winter Simulation Conference , pages 644–655, 2020. doi: 10.1109/WSC48552.2020.9384121. [17] Jieqi Di, Jiecheng Lu, Runhua Wu, and Yuwei Zhou. Transformer-based next-step prediction for queue length distribution. In NeurIPS 2025 Workshop on Mathematical Foundations and Operational Integration of Machine Learning for Uncertainty-Aware Decision-Making , 2025. URL https://openreview.net/ forum?id=ErSFgi45jD . Published on OpenReview. [18] David Salinas, Valentin Flunkert, Jan Gasthaus, and Tim Januschowski. DeepAR: Probabilistic forecasting with autoregressive recurrent networks. International Journal of Forecasting , 36(3):1181–1191, 2020. doi: 10.1016/j.ijforecast.2019.07.001. 
+
+10 [19] Bryan Lim, Sercan O. Arik, Nicolas Loeff, and Tomas Pfister. Temporal fusion transformers for inter-pretable multi-horizon time series forecasting. International Journal of Forecasting , 37(4):1748–1764, 2021. doi: 10.1016/j.ijforecast.2021.03.012. [20] Boris N. Oreshkin, Dmitri Carpov, Nicolas Chapados, and Yoshua Bengio. N-BEATS: Neural basis expansion analysis for interpretable time series forecasting. In International Conference on Learning Representations , 2020. [21] Cristian Challu, Kin G. Olivares, Boris N. Oreshkin, Federico Garza Ramirez, Max Mergenthaler Canseco, and Artur Dubrawski. N-HiTS: Neural hierarchical interpolation for time series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pages 6989–6997, 2023. doi: 10.1609/aaai. v37i6.25854. [22] Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong, and Wancai Zhang. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 11106–11115, 2021. doi: 10.1609/aaai. v35i12.17325. [23] Haixu Wu, Jiehui Xu, Jianmin Wang, and Mingsheng Long. Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting. In Advances in Neural Information Processing Systems , volume 34, pages 22419–22430, 2021. [24] Tian Zhou, Ziqing Ma, Qingsong Wen, Xue Wang, Liang Sun, and Rong Jin. FEDformer: Frequency enhanced decomposed transformer for long-term series forecasting. In Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pages 27268–27286. PMLR, 2022. [25] Ailing Zeng, Muxi Chen, Lei Zhang, and Qiang Xu. Are transformers effective for time series forecasting? In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pages 11121–11128, 2023. doi: 10.1609/aaai.v37i9.26317. [26] Yuqi Nie, Nam H. Nguyen, Phanwadee Sinthong, and Jayant Kalagnanam. A time series is worth 64 words: Long-term forecasting with transformers. In International Conference on Learning Representations , 2023. [27] Haixu Wu, Tengge Hu, Yong Liu, Hang Zhou, Jianmin Wang, and Mingsheng Long. TimesNet: Tem-poral 2d-variation modeling for general time series analysis. In International Conference on Learning Representations , 2023. [28] Yunhao Zhang and Junchi Yan. Crossformer: Transformer utilizing cross-dimension dependency for multivariate time series forecasting. In International Conference on Learning Representations , 2023. URL 
+
+https://openreview.net/forum?id=vSVLM2j9eie .[29] Abhimanyu Das, Weihao Kong, Andrew Leach, Shaan Mathur, Rajat Sen, and Rose Yu. Long-term forecasting with TiDE: Time-series dense encoder. Transactions on Machine Learning Research , 2023. URL https://openreview.net/forum?id=pCbC3aQB5W .[30] Si-An Chen, Chun-Liang Li, Nathanael C. Yoder, Sercan O. Arik, and Tomas Pfister. TSMixer: An all-MLP architecture for time series forecasting. Transactions on Machine Learning Research , 2023. URL 
+
+https://openreview.net/forum?id=wbpxTuXgm0 .[31] Jiecheng Lu, Xu Han, and Shihao Yang. ARM: Refining multivariate forecasting with adaptive temporal-contextual learning. In International Conference on Learning Representations , 2024. URL https: //openreview.net/forum?id=JWpwDdVbaM .[32] Yong Liu, Tengge Hu, Haoran Zhang, Haixu Wu, Shiyu Wang, Lintao Ma, and Mingsheng Long. iTrans-former: Inverted transformers are effective for time series forecasting. In International Conference on Learning Representations , 2024. [33] Yuxuan Wang, Haixu Wu, Jiaxiang Dong, Guo Qin, Haoran Zhang, Yong Liu, Yunzhong Qiu, Jianmin Wang, and Mingsheng Long. TimeXer: Empowering transformers for time series forecasting with exogenous variables. In Advances in Neural Information Processing Systems , volume 37, 2024. URL 
+
+https://openreview.net/forum?id=l3MOy7AydX .[34] Jiecheng Lu, Xu Han, Yan Sun, and Shihao Yang. CATS: Enhancing multivariate time series forecasting by constructing auxiliary time series as exogenous variables. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research . PMLR, 2024. URL https://openreview.net/forum?id=1lDAGDe0UR .
+
+11 [35] Shiyu Wang, Haixu Wu, Xiaoming Shi, Tengge Hu, Huakun Luo, Lintao Ma, James Zhang, and Jun Zhou. TimeMixer: Decomposable multiscale mixing for time series forecasting. In International Conference on Learning Representations , 2024. [36] Jiecheng Lu, Xu Han, Yan Sun, and Shihao Yang. WAVE: Weighted autoregressive varying gate for time series forecasting. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research . PMLR, 2025. URL https://openreview.net/forum? id=Qqn5ktBUxH .[37] Abdul Fatir Ansari, Lorenzo Stella, Ali Caner Türkmen, Xiyuan Zhang, Pedro Mercado, Huibin Shen, Oleksandr Shchur, Syama Sundar Rangapuram, Sebastian Pineda Arango, Shubham Kapoor, Jasper Zschiegner, Danielle C. Maddix, Hao Wang, Michael W. Mahoney, Kari Torkkola, Andrew Gordon Wilson, Michael Bohlke-Schneider, and Yuyang Wang. Chronos: Learning the language of time series. Transactions on Machine Learning Research , 2024. URL https://openreview.net/forum?id=gerNCVqqtR .[38] Jiecheng Lu and Shihao Yang. HyperMLP: An integrated perspective for sequence modeling, 2026. [39] Abhimanyu Das, Weihao Kong, Rajat Sen, and Yichen Zhou. A decoder-only foundation model for time-series forecasting. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research . PMLR, 2024. [40] Yubin Kim, Viresh Pati, Jevon Twitty, Vinh Pham, Shihao Yang, and Jiecheng Lu. StretchTime: Adaptive time series forecasting via symplectic attention, 2026. [41] Ziyue Wang and Yuko Araki. Functional time series forecasting of distributions: A koopman-wasserstein approach. Behaviormetrika , 2025. doi: 10.1007/s41237-025-00278-1. [42] Marco Cuturi. Sinkhorn distances: Lightspeed computation of optimal transport. In Advances in Neural Information Processing Systems , volume 26, pages 2292–2300, 2013. [43] Gabriel Peyré and Marco Cuturi. Computational optimal transport: With applications to data science. 
+
+Foundations and Trends in Machine Learning , 11(5–6):355–607, 2019. doi: 10.1561/2200000073. [44] Jiecheng Lu, Yan Sun, and Shihao Yang. In-context time series predictor. In International Conference on Learning Representations , 2025. URL https://openreview.net/forum?id=dCcY2pyNIO .[45] Ming Jin, Shiyu Wang, Lintao Ma, Zhixuan Chu, James Y. Zhang, Xiaoming Shi, Pin-Yu Chen, Yuxuan Liang, Yuan-Fang Li, Shirui Pan, and Qingsong Wen. Time-LLM: Time series forecasting by reprogram-ming large language models. In International Conference on Learning Representations , 2024. URL 
+
+https://openreview.net/forum?id=Unb5CVPtae .[46] Jiecheng Lu and Shihao Yang. Free energy mixer. In International Conference on Learning Representations ,2026. URL https://openreview.net/forum?id=vjQnKToCnV .[47] Gerald Woo, Chenghao Liu, Akshat Kumar, Caiming Xiong, Silvio Savarese, and Doyen Sahoo. Unified training of universal time series forecasting transformers. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research . PMLR, 2024. [48] Viresh Pati, Yubin Kim, Vinh Pham, Jevon Twitty, Shihao Yang, and Jiecheng Lu. CAPS: Unifying attention, recurrence, and alignment in transformer-based time series forecasting, 2026. [49] Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and François Fleuret. Transformers are RNNs: Fast autoregressive transformers with linear attention. In Proceedings of the 37th International Conference on Machine Learning , volume 119 of Proceedings of Machine Learning Research , pages 5156–5165. PMLR, 2020. [50] Krzysztof Choromanski, Valerii Likhosherstov, David Dohan, Xingyou Song, Andreea Gane, Tamas Sarlos, Peter Hawkins, Jared Davis, Afroz Mohiuddin, Lukasz Kaiser, David Belanger, Lucy Colwell, and Adrian Weller. Rethinking attention with performers. In International Conference on Learning Representations ,2021. URL https://openreview.net/forum?id=Ua6zuk0WRH .[51] Albert Gu and Tri Dao. Mamba: Linear-time sequence modeling with selective state spaces. In First Conference on Language Modeling , 2024. URL https://openreview.net/forum?id=tEYskw1VY2 .[52] Songlin Yang, Bailin Wang, Yikang Shen, Rameswar Panda, and Yoon Kim. Gated linear attention transformers with hardware-efficient training. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research . PMLR, 2024. 
+
+12 [53] Jiecheng Lu and Shihao Yang. Linear transformers as VAR models: Aligning autoregressive attention mechanisms with autoregressive forecasting. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research . PMLR, 2025. URL 
+
+https://openreview.net/forum?id=SxJUV9mnyt .[54] Yutao Sun, Li Dong, Shaohan Huang, Shuming Ma, Yuqing Xia, Jilong Xue, Jianyong Wang, and Furu Wei. Retentive network: A successor to Transformer for large language models, 2023. [55] Jiecheng Lu, Xu Han, Yan Sun, Viresh Pati, Yubin Kim, Siddhartha Somani, and Shihao Yang. ZeroS: Zero-sum linear attention for efficient transformers. In Advances in Neural Information Processing Systems ,volume 38, 2025. URL https://openreview.net/forum?id=Ms6IXbfzzX . Spotlight. [56] Nan Du, Hanjun Dai, Rakshit Trivedi, Utkarsh Upadhyay, Manuel Gomez-Rodriguez, and Le Song. Recurrent marked temporal point processes: Embedding event history to vector. In Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pages 1555–1564, 2016. doi: 10.1145/2939672.2939875. [57] Hongyuan Mei and Jason M. Eisner. The neural hawkes process: A neurally self-modulating multivariate point process. In Advances in Neural Information Processing Systems , volume 30, pages 6754–6764, 2017. [58] Oleksandr Shchur, Ali Caner Türkmen, Tim Januschowski, and Stephan Günnemann. Neural temporal point processes: A review. In Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence , pages 4585–4593, 2021. doi: 10.24963/ijcai.2021/623. [59] George Sugihara and Robert M. May. Nonlinear forecasting as a way of distinguishing chaos from measurement error in time series. Nature , 344:734–741, 1990. doi: 10.1038/344734a0. [60] Maria Dornelas, Laura H. Antão, Amanda E. Bates, et al. BioTIME 2.0: Expanding and improving a database of biodiversity time series. Global Ecology and Biogeography , 34(5):e70003, 2025. doi: 10.1111/geb.70003. [61] Ember. Monthly Electricity Data. https://ember-energy.org/data/data-product/ monthly-electricity-data , 2026. Monthly full-release long-format CSV and Ember Electricity Data Methodology; accessed 2026-04-15. [62] Hannah Ritchie, Pablo Rosado, and Max Roser. Diet compositions. Our World in Data , 2023. https: //ourworldindata.org/diet-compositions .[63] National Center for Health Statistics. Weekly Provisional Counts of Deaths by State and Select Causes, 2020–2023. https://data.cdc.gov/d/muzy-jte6 , 2023. Centers for Disease Control and Prevention; accessed 2026-04-15. [64] U.S. Bureau of Labor Statistics. Quarterly Census of Employment and Wages. https://www.bls.gov/ cew/ , 2026. Annual singlefile CSV data files for 2010–2024; accessed 2026-04-15. [65] U.S. Environmental Protection Agency. AirData Daily AQI by County. https://aqs.epa.gov/aqsweb/ airdata/download_files.html , 2026. Daily AQI by county CSV ZIP files for 2000–2024; accessed 2026-04-15. [66] NOAA National Centers for Environmental Information. Storm Events Database. https://www.ncei. noaa.gov/stormevents/ , 2026. Storm Events details CSV files for 2000–2024; accessed 2026-04-15. 
+
+13 A Theory: Full Proofs and Supporting Results 
+
+We give the full proofs of the three main theorems stated in Section 4, together with approximation, retrieval-consistency, and simplex-closure supplements that are summarized in the main text. 
+
+A.1 Setup recap 
+
+Let pt ∈ ∆D−1 = {p ∈ RD 
+
+> ≥0
+
+: P 
+
+> j
+
+p(j) = 1 }; coordinates may be unordered categorical or ordered support states. Let Ft = σ(p1: t) be the observed causal history and Gϕt = σ(ϕ(p1: t)) ⊆ F t the summary available to a baseline. The central hard case is latent-kernel aliasing: two or more histories have the same observed summary but different conditional successors, indexed by Zt ∈ { 1, . . . , K }.For an aliasing event ϕ(p1: t) = φ, let πz = P(Zt = z | φ) and uz = E[pt+1 | Zt = z, φ ]. In stochastic settings the total expected KL risk has an irreducible within-regime term, so the aliasing lower bound is stated as an excess-risk term over the regime-aware Bayes predictor; in deterministic one-step benchmarks that term is zero. For clean KL statements we either assume interior-simplex successors or apply the same small-probability smoothing used in the empirical KL evaluation; when needed we write ∆D−1 
+
+> γ
+
+= {p : p(j) ≥ γ}.The CAST hypothesis class, for ordered supports with radius-r transport, is ˆp = (1 − ρ)a + ρT a 
+
+with a = λp + (1 − λ)r, r ∈ R retrieved from the causal memory, λ ∈ [0 , 1] , ρ ∈ [0 , ρ max ] for some ρmax ≤ 1, and row-stochastic local T (identity for unordered supports, where we set ρ = 0 ). The no-transport anchor class is At = {λp t + (1 − λ)r : λ ∈ [0 , 1] , r ∈ R t}; an ordered-transport separation is only meaningful when the no-transport hull does not already contain the transported successor. 
+
+A.2 Theorem 1 (aliasing lower bound): restatement and proof Restatement (Theorem 1: latent-kernel aliasing lower bound) . Fix an aliasing summary value 
+
+φ. Suppose P(Zt = z | ϕ(p1: t) = φ) = πz > 0 with P 
+
+> z
+
+πz = 1 and the regime-specific Bayes successors u1, . . . , u K are not all identical. Then every fixed-summary forecaster f (p1: t) = 
+
+g(ϕ(p1: t)) has conditional KL excess risk, relative to the regime-aware Bayes predictor, at least 
+
+inf 
+
+> q∈∆D−1
+> K
+
+X
+
+> z=1
+
+πz KL( uz ∥ q) = JS π (u1, . . . , u K ) > 0,
+
+where JS π is the weighted Jensen–Shannon divergence. Proof. On the event ϕ(p1: t) = φ, any fixed-summary forecaster f = g◦ϕ outputs a single distribution 
+
+q = g(φ) independent of Zt. For stochastic targets, the regime-conditional expected KL decomposes as 
+
+E[KL( pt+1 ∥q) | Zt = z, φ ] = E[KL( pt+1 ∥uz ) | Zt = z, φ ] + KL( uz ∥q),
+
+where the first term is the regime-aware Bayes risk and does not depend on q. The fixed-summary excess risk is therefore 
+
+R(q) = X
+
+> z
+
+πz KL( uz ∥q).
+
+The minimizer of R(q) over q ∈ ∆D−1 is the mixture ¯u = P 
+
+> z
+
+πz uz ; substituting ¯u into R gives 
+
+R(¯ u) = X
+
+> z
+
+πz KL( uz ∥ ¯u) = JS π (u1, . . . , u K ),
+
+the weighted Jensen–Shannon divergence. JS π is zero iff all uz are identical, so under the theorem’s assumption it is strictly positive. 
+
+A.3 Theorem 2 (oracle representability): restatement and proof Restatement (Theorem 2: CAST oracle representability) . Suppose that, conditional on Zt = z,the Bayes successor has CAST form uz = (1 − ρz )az + ρz Tz az , az = λz pt + (1 − λz )sz , with 
+
+sz ∈ ∆D−1, λz ∈ [0 , 1] , ρz ∈ [0 , ρ max ] for some ρmax ≤ 1, and valid local stochastic Tz (for ordered supports). Assume further that (i) there exists a causal representation ht = E(p1: t) identifying Zt;(ii) for each z, the causal memory before time t contains an anchor sz , or anchors whose convex hull contains sz ; (iii) CAST gates and transport head can realize (λz , ρ z , T z ). Then there exists 
+
+14 a CAST parameterization, or a limit of finite-softmax parameterizations, such that ˆpt+1 = uZt ;the conditional KL excess risk of this oracle CAST predictor is zero (vanishing in deterministic benchmarks). Proof. Because the causal representation ht = E(p1: t) identifies Zt, the retrieval heads can place all retrieval mass—or arbitrarily concentrated finite-softmax mass—on the memory anchor whose value equals sZt (by assumption (ii), such an anchor or convex hull of anchors exists in Mt). The anchor gate sets at = λZt pt + (1 − λZt )sZt , and the transport head and strength gate set Tt = TZt , ρt = ρZt .Substituting these choices into ˆpt+1 = (1 −ρt)at +ρtTtat gives ˆpt+1 = (1 −ρZt )aZt +ρZt TZt aZt =
+
+uZt , which is the regime-aware Bayes successor. On ∆D−1 
+
+> γ
+
+(or under the smoothing convention), the conditional KL excess risk of this oracle CAST predictor is zero; on deterministic benchmarks it is zero one-step KL to the target. 
+
+A.4 Theorem 3 (ordered-support transport separation): restatement and proof Restatement (Theorem 3: ordered-support transport separation) . Assume the support is ordered, Zt
+
+is identified, and the no-transport anchor class A0 
+
+> z
+
+= {λp t + (1 − λ)r : λ ∈ [0 , 1] , r ∈ R 0 
+
+> z
+
+} has L1
+
+gap δz = inf q∈A 0 
+
+> z
+
+∥uz − q∥1 > 0 for each z. Then even an oracle no-transport method that knows 
+
+Zt incurs conditional KL excess risk 
+
+inf  
+
+> qz∈A 0
+> z
+
+X
+
+> z
+
+πz KL( uz ∥ qz ) ≥ 12
+
+X
+
+> z
+
+πz δ2 
+
+> z
+
+,
+
+while CAST attains zero oracle excess risk whenever uz lies in the CAST local-transport class. Proof. By construction, for each z, every qz ∈ A 0 
+
+> z
+
+satisfies ∥uz − qz ∥1 ≥ δz . Pinsker’s inequality (with KL measured in natural logarithms, matching the experimental evaluation) gives 
+
+KL( uz ∥qz ) ≥ 12 ∥uz − qz ∥21 ≥ 12 δ2 
+
+> z
+
+.
+
+Averaging over z with weights πz yields inf qz ∈A 0
+
+> z
+
+P 
+
+> z
+
+πz KL( uz ∥qz ) ≥ 12
+
+P 
+
+> z
+
+πz δ2 
+
+> z
+
+. The boundary case δz = 0 (transported successor already in the no-transport hull) gives no separation and matches the intended reading: transport is a formal advantage only when ordered local motion is not already representable as a no-transport mixture. 
+
+A.5 Proposition on approximation under imperfect retrieval/transport Proposition 1 (Approximation under imperfect CAST estimates) . Let the oracle CAST successor be u = (1 − ρ)a + ρT a , a = λp + (1 − λ)r, and let an estimated CAST predictor use ˜r, ˜λ, ˜ρ, ˜T ,producing ˜u = (1 − ˜ρ)˜ a + ˜ ρ ˜T ˜a. Assume ρ, ˜ρ ∈ [0 , ρ max ] with ρmax ≤ 1, ∥˜r − r∥1 ≤ ϵr , |˜λ − λ| ≤ ϵλ,
+
+|˜ρ − ρ| ≤ ϵρ, and ∥ ˜T ˜a − T ˜a∥1 ≤ ϵT . Then 
+
+∥˜u − u∥1 ≤ ϵr + 2 ϵλ + ρmax ϵT + 2 ϵρ.
+
+If additionally u, ˜u ∈ ∆D−1 
+
+> γ
+
+, then KL( u ∥ ˜u) ≤ 1
+
+> γ
+
+ϵr + 2 ϵλ + ρmax ϵT + 2 ϵρ
+
+.Proof sketch. The anchor error obeys ∥˜a − a∥1 ≤ ∥ (1 − ˜λ)(˜ r − r) + ( ˜λ − λ)( p − r)∥1 ≤ ϵr + 2 ϵλ,using ∥p − r∥1 ≤ 2. Row-stochastic transports are L1-nonexpansive: ∥ ˜T ˜a − T a ∥1 ≤ ∥ ˜a − a∥1 + ϵT .Adding and subtracting (1 − ˜ρ)a + ˜ ρT a and applying ∥T a − a∥1 ≤ 2, ˜ρ ≤ ρmax yields the L1 bound. On ∆D−1 
+
+> γ
+
+the map q 7 → KL( u∥q) is 1/γ -Lipschitz in L1, giving the KL bound. □
+
+A.6 Proposition on retrieval consistency Proposition 2 (Retrieval consistency under Lipschitz successor map) . Let m(h) = E[pt+1 | ht =
+
+h] ∈ ∆D−1 and suppose ∥m(h) − m(h′)∥1 ≤ L∥h − h′∥. Write ps+1 = m(hs) + ξs where ξs is the centered residual (so that P 
+
+> j
+
+ξs(j) = 0 ). Let s⋆(t) = arg min s<t ∥ht − hs∥, dt = ∥ht − hs⋆(t)∥. If the 1-NN retrieved successor is rt = ps⋆(t)+1 , then 
+
+∥rt − m(ht)∥1 ≤ Ld t + ∥ξs⋆(t)∥1.
+
+The proposition weakens the exact matched-memory assumption in Theorem 2: as the causal memory becomes dense in the relevant representation space so that dt → 0, the 1-NN retrieval anchor converges to the Bayes successor map m(ht) up to the residual noise ξs⋆(t). CAST’s multi-head soft-attention retrieval (Section 3) is not directly characterized by this statement, but the proposition captures the regime where concentrated retrieval mass localizes around nearby causal contexts. 15 A.7 Proposition on simplex closure and rollout drift Proposition 3 (Simplex closure and rollout drift control) . At every CAST step: (a) if pt, r t ∈ ∆D−1,then at ∈ ∆D−1; (b) if Tt is row-stochastic per Section 3, then Ttat ∈ ∆D−1; (c) if 0 ≤ ρt ≤ 1,then ˆpt+1 = (1 − ρt)at + ρtTtat ∈ ∆D−1. For ordered supports with unit ground metric and radius 
+
+r, W1(at, T tat) ≤ r and W1(at, ˆpt+1 ) ≤ ρtr; with the mean-shift budget |μ(Ttat) − μ(at)| ≤ Bt,
+
+|μ(ˆ pt+1 ) − μ(at)| ≤ ρtBt.
+
+These are the simplex-closure and drift-control properties used in Section 3; both follow directly from convexity and row-stochasticity, and the mean bound is the same convex-mixture calculation applied to μ(·).
+
+A.8 Queueing corollary and unordered case Queue occupancy. For queue occupancy pt(k) = P(Nt = k), the current histogram can be identical while the load phase differs. In the notation of Section 3, set Zt ∈ { up , down } and suppose at an aliasing distribution p⋆: uup = (1 − ρ)p⋆ + ρT right p⋆, udown = (1 − ρ)p⋆ + ρT left p⋆, with 
+
+Tright , T left opposite radius-1 local transports. A baseline summary that cannot distinguish phases pays JS 1/2(uup , u down ) by Theorem 1; if the anchor-only hull excludes these transported successors by L1 margin δ, it additionally pays 12 δ2 by Theorem 3. CAST avoids both penalties when its causal representation identifies the phase and its transport head realizes Tright , T left .
+
+Unordered compositional data. For unordered supports, set ρz = 0 ; the transport separation does not apply and the relevant theory is Theorem 1 plus Theorem 2: if similar visible compositions have different contextual successors, a summary that aliases those contexts must average incompatible successors, while a history-conditioned successor retrieval operator can represent the regime-specific Bayes successor. 
+
+A.9 What the theorems do and do not imply 
+
+The three theorems describe a regime in which CAST’s hypothesis class is expressive enough to avoid unavoidable averaging penalties. They are not sample-complexity or optimization guarantees, and they do not imply that every observed CAST advantage in Section 6 stems from aliasing alone—rollout stability, for example, is also driven by persistence anchoring (Table 4) and by the realized-mean-shift budget in Proposition 3. The empirical-diagnostic check in Appendix G connects the theoretical regime to benchmark behavior dataset-by-dataset. 
+
+B Synthetic Latent-Kernel Aliasing Experiment 
+
+This appendix elaborates on the controlled experiment summarized in Section 6.2. The setup instantiates the theorem’s hard case directly: the current simplex state p⋆ is identical across two equiprobable regimes, while the causal history reveals whether the successor is a left or right radius-1 local transport of the anchor. A fixed-summary forecaster must average incompatible successors, a phase-aware anchor-only comparator cannot leave the no-transport hull, and CAST’s local transport class can realize the regime-specific successor. The numerical results were reported in Table 5. Figure 4 visualizes the construction and the resulting KL gap: the two successors are obvious under causal context, the fixed-summary optimum is exactly their mixture average, and CAST’s oracle and trained local-transport head are essentially exact. 
+
+C Benchmark Construction and Data Sources 
+
+Each benchmark is converted into regularly spaced probability-vector sequences. The raw observation at time t is first aggregated into nonnegative category mass xt ∈ RD 
+
+> +
+
+and then normalized to 
+
+pt = xt/ P 
+
+> j
+
+xt,j ; rows with no usable mass are excluded. Target positions are adjacent one-step pairs (p1: t, p t+1 ) scored through split-specific loss masks (tensor-based public panels) or held-out queue-system manifests (queue benchmark). 16 0 10 20 30 40    
+
+> ordered support
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> probability mass  history selects
+> left or right
+> current-only
+> must average
+> (a) Aliased current state
+> same pt
+> u
+> u
+> average
+> fixed
+> summary
+> anchor
+> only
+> CAST
+> oracle
+> trained
+> CAST
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.05
+> test KL
+> 0.045 0.048
+> 00
+> (b) KL gap
+
+Figure 4: Synthetic latent-kernel aliasing construction. Panel (a): the same current distribution with two history-dependent local-transport successors; a fixed-summary forecaster must collapse them to their average. Panel (b): the resulting KL gap (fixed-summary and anchor-only comparators retain positive error; CAST’s oracle and trained local-transport head are essentially exact). 
+
+C.1 Source, citation, and license map                         
+
+> Section Source License / reuse note BioTIME BioTIME 2.0 [60] Open access, per-study metadata licenses; cite database and studies. Ember Monthly Ember monthly electricity data [61] CC-BY-4.0. OWID Dietary OWID Diet Compositions [62] CC BY; third-party sources carry own terms. CDC Weekly Deaths CDC/NCHS weekly deaths [63] Public Domain U.S. Government; frozen 2023-09-27. BLS QCEW BLS Quarterly Census of Employment and Wages [64] Public domain; cite BLS. EPA AirData AQI EPA AirData daily AQI by county [65] Public EPA data product. NOAA Storm Events NOAA/NCEI Storm Events Database [66] U.S. public domain; NCEI toward CC0. NYC TLC Trip NYC TLC trip records [2] NYC Open Data; cite source/version. Queue Occupancy Synthetic G/G/ 1and Gt/G/ 1following Lindley [14] ,Harchol-Balter [15], Di et al. [17] Project-generated; cite protocol.
+
+Snapshot URLs and retrieval dates are recorded in the release manifest; they include BioTIME (biotime.st-andrews.ac.uk ), Ember (files.ember-energy.org/public-downloads/monthly_full_release_long_format.csv ), OWID (ourworldindata.org/grapher/dietary-composition-by-country.csv ), CDC (data.cdc.gov/d/muzy-jte6 ), BLS QCEW (data.bls.gov/cew/data/files/{year}/csv/ ), EPA AirData (aqs.epa.gov/aqsweb/airdata/daily_aqi_by_county_{year}.zip ), NOAA Storm Events (ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/ ), and NYC TLC (nyc.gov/site/tlc/about/tlc-trip-record-data.page ). 
+
+C.2 Dataset-by-dataset preprocessing BioTIME Birds. BioTIME 2.0 is filtered to Birds species-level rows; sequence unit is a site key (study id, latitude, longitude, depth); time is annual; the longest contiguous annual window is selected, requiring ≥ 15 observations. The vocabulary is the top-127 species by measure mass plus an OTHER 
+
+residual ( D = 128 , covering ≈ 96 .2% of retained mass before the residual). The processed track contains 646 sequences across 37 studies, 15,914 site-year observations; per-sequence chronological 70/15/15 gives 10,412 train / 2,039 val / 2,817 test one-step targets. 
+
+Ember Monthly. Monthly full-release long-format CSV normalized across nine detailed-fuel genera-tion categories ( Coal, Gas, Other Fossil, Nuclear, Hydro, Wind, Solar, Bioenergy, Other Renewables ); D = 9 . 87 country/economy sequences, global raw range 1999-01 to 2026-03, median length 109 monthly observations. Tail-12/12 split when sequence is long enough (84 sequences); 70/15/15 chronological otherwise (3 sequences). Targets: 8,272 / 1,027 / 1,031. 
+
+OWID Dietary. Balanced 1961–2023 annual panel across current ISO3 countries, 25 food-commodity groups; D = 25 , 135 sequences of length 63. Fixed chronological: train 1962–2004, val 2005–2013, test 2014–2023; 5,805 / 1,215 / 1,350 targets. 17 CDC Weekly Deaths. Six causes (diseases of heart, malignant neoplasms, cerebrovascular, chronic lower respiratory, COVID-19 underlying, OTHER_CAUSES ); 50 state sequences of length 190. Sup-pressed 1–9 counts imputed at 5.0; final 4 provisional weeks dropped before splitting; train 2020W02– 2021W33, val 2021W34–2022W33, test 2022W34–2023W33; 4,250 / 2,600 / 2,600 targets. 
+
+BLS QCEW. Annual singlefile data 2010–2024 aggregated to state × supersector (13 categories); 
+
+D = 13 . 33,301 retained rows from ∼53.9M raw; 53 state sequences of length 15; per-sequence 70/15/15; 477 / 106 / 159 targets. 
+
+EPA AirData AQI. Daily county AQI 2000–2024 aggregated to county-month distributions over six ordered categories ( Good, Moderate, USG, Unhealthy, Very Unhealthy, Hazardous ); 
+
+D = 6 . 7,818,930 rows retained; 800 sequences, median length 191. Tail-12/12 (796 sequences) or 70/15/15 (4); 136,728 / 9,584 / 9,592 targets. The ordering of categories makes W1 a meaningful diagnostic. 
+
+NOAA Storm Events. Corrected yearly details files 2000–2024 aggregated to state × month event-type shares over top 31 types plus OTHER (D = 32 ); 49 sequences, median length 244. Tail-12/12 split; 9,594 / 588 / 588 targets. 
+
+NYC TLC Trip. Yellow taxi trip-record Parquet files (2023) aggregated by pickup hour and calendar week over 265 taxi zones plus UNKNOWN (D = 266 ). 24 hour-of-day sequences of length 52–53; final-8-week tail split; 863 / 192 / 192 targets. 
+
+Queue Occupancy (Homogeneous, Nonhomogeneous, Combined). Synthetic single-server queues following Di et al. [17] . Each occupancy distribution is pt(k) = P(Nt = k) with ordered support, so local transport and W1 are meaningful. Homogeneous ( G/G/ 1): inter-arrival/service distributions sampled from seven parametric families (Gamma, Erlang, lognormal, two-normal mixture, hyper-exponential, uniform, Weibull) with configuration-specific random parameters, expected utilization restricted to ≈ 0.26 –0.6. Nonhomogeneous ( Gt/G/ 1): six candidate families (as above except Weibull), arrival-side parameters varying sinusoidally. Combined: pooled. Protocol uses N = 500 
+
+arrivals and R = 10 ,000 replications per configuration; ∆t = 1 . The CAST benchmark preserves full trajectories. File-level 70/10/20 split stratified by support-width deciles, seed 42: Homogeneous 7000/1000/2000 systems, Nonhomogeneous 6930/990/1980, Combined 13928/1989/3983. Models see only the num_in_sys_* columns; raw arrival/service moments are held out. For offline one-step queue metrics, a streamed fixed-window payload uses 24 test systems and a 128-step offline window; rollout uses 12 held-out systems, 128-step observed context, and a 64-step autoregressive horizon. 
+
+C.3 Benchmark design rationale 
+
+The suite is designed to support three claims simultaneously. First, distribution-valued forecasting is not a niche formatting issue: the suite spans ecology, energy, diet, mortality, labor, air quality, severe weather, mobility, and queueing—all settings where the forecast object is naturally a composition or probability law. Second, general sequence models can be cross-applied, but the task has structure that generic multivariate TSF models do not directly encode: simplex-valued states, time-respecting successor reuse, persistence as a meaningful anchor, and ordered local mass motion on supports with geometry. Third, the mix of smooth low-frequency panels, high-variance event mixtures, high-dimensional sparse mobility shares, and controlled ordered queue dynamics makes it possible to argue that CAST is not tuned to a single dataset family. 
+
+D Experimental and Implementation Details 
+
+D.1 Metrics 
+
+For target p and prediction q we report 
+
+KL( p∥q) = X
+
+> j
+
+pj log pj 
+
+> qj
+
+, JSD( p, q ) = 12 KL( p∥m) + 12 KL( q∥m), m = 12 (p + q),L1(p, q ) = P 
+
+> j
+
+|pj − qj |, Bray–Curtis distance, and (ordered supports) W1(p, q ) = P
+
+> j
+
+P 
+
+> k≤j
+
+(pk −
+
+qk) . Prediction and target are renormalized to the simplex before metrics, with ϵ = 10 −8 for numerical stability. Primary one-step ranking metric is offline KL; primary long-horizon metric is rollout JSD. 18 D.2 Splits and rollout horizons 
+
+Non-queue split policies are: BioTIME, BLS QCEW—per-sequence chronological 70/15/15; Em-ber, EPA AirData AQI, NOAA Storm Events—tail 12/12 if history allows, else 70/15/15; CDC Weekly Deaths—tail 52/52 after dropping the final 4 provisional weeks; OWID Dietary—fixed 1962–2004/2005–2013/2014–2023; NYC TLC Trip—tail 8/8 weeks. Queue split: file-level 70/10/20 by whole queue system, stratified by support-width deciles, split seed 42. Rollout (context / horizon / max examples): BioTIME 16/4/8, Ember 36/12/8, OWID 32/10/8, CDC 52/26/8, BLS 8/2/8, EPA 36/12/8, NOAA 36/12/8, NYC TLC 26/8/8, each queue section 128/64/12. Target counts after splitting (tensor-based): BioTIME 10,412 / 2,039 / 2,817; Ember 8,272 / 1,027 / 1,031; OWID 5,805 / 1,215 / 1,350; CDC 4,250 / 2,600 / 2,600; BLS 477 / 106 / 159; EPA 136,728 / 9,584 / 9,592; NOAA 9,594 / 588 / 588; NYC TLC 863 / 192 / 192. Queue split units are whole queue-system trajectories (see Appendix C). 
+
+D.3 Training protocol 
+
+All trainable models optimize the one-step KL loss on masked adjacent pairs with AdamW, learning rate 3×10 −4 (linear warmup to base, constant thereafter), weight decay 0.1, gradient clipping 1.0; 200-step warmup; 10,000 iterations for non-queue sections, 12,000 for queue sections; evaluation every 250 steps with 20 (non-queue) or 50 (queue) validation batches; batch size 16 (non-queue) or 4 (queue) with gradient accumulation 1 or 2; mixed precision enabled when CUDA bfloat16 is available; no torch.compile . Common architecture defaults: hidden dimension 256, 6 layers, 4 attention heads, dropout 0.1. Model selection uses lowest validation one-step KL. Fit-only baselines (persistence , analog_successor , ilr_var , compositional_ets ) are fitted on the training split without SGD. Dataset-specific block sizes (training block / model max sequence / offline batch / rollout batch): BioTIME 8/64/4/4; Ember 24/384/2/2; OWID 24/64/8/8; CDC 52/192/4/4; BLS 8/16/16/8; EPA 24/192/4/4; NOAA 24/192/4/4; NYC TLC 26/128/4/4; each queue section 128/128/4/4. 
+
+D.4 CAST configuration                         
+
+> Quantity Value Retrieval heads M2Retrieval head dimension dr64 Persistence gate initialization ( λt)≈0.55
+> Persistence gate bounds [λmin , λ max ][0 .05 ,0.95]
+> Transport radius 1Support basis dimension 2Initial transport strength 0.02 Maximum transport strength ρmax 0.20 Base mean-shift budget δμ0.25 Scale-dependent shift budget coefficient δσ0.10 Structural regularization weight λop 5×10 −4
+> Smoothness regularization weight 10 −4
+
+For unordered supports CAST disables local transport ( ρt ≡ 0) and uses only the persistence– successor anchor; for ordered supports the radius-1 stochastic kernel and bounded transport-strength gate are active. 
+
+D.5 Operator regularizer decomposition 
+
+Rop (Tt, a t) is a weighted sum of four target-free terms: (1) a strength penalty proportional to ρt; (2) an off-identity penalty P 
+
+> j,o ̸=0
+
+Kt(j, o )2 weighted by the kernel’s deviation from the identity; (3) a neighbor-smoothness penalty P 
+
+> j
+
+∥Kt(j, ·) − Kt(j + 1 , ·)∥2 across adjacent support bins; and (4) a mean-shift penalty (∆ μt/B t)2 that discourages the transport head from consuming the entire budget. All terms depend only on the learned transport Tt and the current anchor at, never on additional future targets. 19 Table 6: Appendix rank matrix for offline KL. Lower ranks are better; values are ranks within each benchmark section and Avg. is the 11-section mean rank.                                                                                                                                                                                                             
+
+> Method Bio. Ember OWID CDC BLS EPA NOAA NYC Q-Hom. Q-Non. Q-All Avg.
+> CAST 111112212111.27
+> Comp. ETS 4325313 14 53335.27 Persistence 5237212 15 84225.64 N-HiTS 25625112911 14 5.27 Informer 688411 6446686.45 Transformer 11 97616 36611 12 12 9.00 ilr-VAR 15 443414 13 16 1447.45 GRU 10 11 12 10 847312 710 8.55 iTransformer 710 11 16 13 5811 5558.73 TCN 916 10 999397868.64 TimeMixer 312 913 14 11 57810 79.00 TiDE 813 14 14 12 810 12 10 9910.82 LSTM 13 14 15 8715 11 13 13 15 11 12.27 Analog succ. 16 7511 616 16 15 14 13 13 12.00 Autoformer 12 15 16 12 10 712 10 15 14 15 12.55 DLinear 14 613 15 15 10 914 16 16 16 13.09
+
+D.6 Implementation and compute 
+
+Experiments are implemented in PyTorch. Neural models use distributed data parallel across two GPUs on nodes with A100/H200/L40S GPUs, 16 CPU cores, and ≥ 128 GB host memory per GPU; fit-only statistical baselines run on CPU. All methods use identical splits, loss masks, simplex normalization, and metric computation. The resource settings are sufficient for the reported suite; CAST itself has no architectural requirement for this particular compute. 
+
+D.7 Seeds and reporting 
+
+The main tables report seed 42 for model initialization and data shuffling; the queue file-level split also uses seed 42. Under distributed execution, each process uses a deterministic rank-offset seed. Tables in Section 6 are a broad single-seed benchmark comparison, supplemented by a targeted five-seed CAST robustness study in Appendix F. 
+
+D.8 Reporting caveats 
+
+(i) Offline one-step evaluation is teacher-forced online evaluation over held-out target positions. (ii) Rollout evaluation is autoregressive and does not feed future ground truth after the context. (iii) Queue offline metrics are computed from deterministic streamed evaluation windows; queue rollout is the primary long-horizon stability evidence. (iv) Main results are single-seed; a targeted CAST seed study is reported separately. (v) Incomplete baselines, if any, would be excluded from that model’s average rank on missing sections; in our sweep all 16 methods complete all 11 sections. 
+
+E Full Quantitative Results 
+
+This appendix reports the complete per-section tables backing the main paper summaries. Table 6 and Table 7 give the full rank matrix across the 11 sections and all 16 methods. Table 8 gives per-section absolute metric values (offline KL/JSD/ L1, rollout KL/JSD/ L1). Table 9 and Table 10 report the full component-study metrics underlying the ablation summary in Table 4.                                                                                                                   
+
+> Table 8: Full per-section benchmark results for all completed methods. Lower is better for all metric columns. Rows are ordered by offline KL rank within each benchmark section; RO rank is the rollout JSD rank. Dataset Method KL rank Offline KL Offline JSD Offline L1 RO rank Rollout KL Rollout JSD Rollout L1 BioTIME CAST 10.131296 0.0288672 0.296733 30.128925 0.0323185 0.34223 N-HiTS 20.184371 0.0441001 0.38581 40.278072 0.0652255 0.515977 TimeMixer 30.239845 0.0587172 0.459311 60.460469 0.119345 0.710424 Comp. ETS 40.257355 0.0269796 0.273036 10.113159 0.0220623 0.264881 Persistence 50.300852 0.0325042 0.307927 20.130495 0.0258193 0.279001 Informer 60.316669 0.073841 0.526572 91.03989 0.211057 0.959278 iTransformer 70.336148 0.0752553 0.54116 50.388964 0.0958021 0.644366 TiDE 80.391031 0.0918333 0.587084 70.633637 0.155722 0.843999 TCN 90.410141 0.0967683 0.602273 80.807651 0.172641 0.882695 GRU 10 0.419028 0.0935012 0.583072 13 1.4907 0.312032 1.22414 Transformer 11 0.494601 0.107203 0.651694 10 1.19113 0.253003 1.1219 Autoformer 12 0.983137 0.204876 0.952815 14 4.49785 0.470729 1.53171 LSTM 13 1.07034 0.235398 1.02791 16 3.82639 0.504036 1.63129
+
+20 Table 8: Full per-section benchmark results for all completed methods (continued). Dataset Method KL rank Offline KL Offline JSD Offline L1 RO rank Rollout KL Rollout JSD Rollout L1 DLinear 14 1.18268 0.267732 1.10605 11 2.09595 0.280232 1.18052 ilr-VAR 15 1.55203 0.140215 0.699709 15 9.9853 0.502051 1.66066 Analog succ. 16 3.07778 0.271958 0.98551 12 2.96658 0.290308 1.0624 Ember Monthly CAST 1 0.043419 0.0112432 0.163191 1 0.02491 0.00712896 0.118412 Persistence 2 0.0558339 0.00708276 0.125076 4 0.0680647 0.0190364 0.207939 Comp. ETS 3 0.0594081 0.00811643 0.133984 3 0.0592081 0.0165153 0.189015 ilr-VAR 4 0.0768509 0.0112401 0.163082 2 0.0422035 0.0114587 0.157029 N-HiTS 5 0.135026 0.0300888 0.297387 5 0.0749478 0.0200396 0.21404 DLinear 6 0.185841 0.0501369 0.353763 11 0.42838 0.0812699 0.510123 Analog succ. 7 0.196317 0.0171863 0.181592 6 0.124148 0.0322352 0.272416 Informer 8 0.243485 0.0562127 0.430766 10 0.20515 0.0548298 0.42204 Transformer 9 0.306071 0.0480868 0.389961 7 0.202451 0.0379548 0.343594 iTransformer 10 0.329173 0.08132 0.558565 12 0.365359 0.0994242 0.554701 GRU 11 0.331481 0.0739683 0.510132 8 0.146972 0.0419272 0.307166 TimeMixer 12 0.356405 0.0914943 0.621615 15 0.77084 0.198903 0.973175 TiDE 13 0.482048 0.107117 0.639066 14 0.859812 0.192836 0.86541 LSTM 14 0.573672 0.123553 0.693727 9 0.16772 0.0462562 0.325333 Autoformer 15 0.849209 0.219647 1.04387 16 1.05914 0.26427 1.18726 TCN 16 0.860306 0.149058 0.811679 13 0.688121 0.181629 0.918278 OWID Dietary CAST 1 0.00909632 0.00208483 0.0725963 2 0.0251553 0.00547772 0.132651 Comp. ETS 2 0.00974658 0.00197552 0.0686436 3 0.0261259 0.00548995 0.126743 Persistence 3 0.00977941 0.00199659 0.0687337 1 0.0258536 0.00544115 0.128837 ilr-VAR 4 0.0124073 0.00259699 0.0862119 4 0.0415185 0.00932013 0.194097 Analog succ. 5 0.0334084 0.00579772 0.118409 6 0.113759 0.0186083 0.234954 N-HiTS 6 0.0572862 0.0134366 0.224671 5 0.057456 0.0146851 0.238726 Transformer 7 0.149681 0.0354405 0.376776 7 0.111226 0.0271152 0.330619 Informer 8 0.162702 0.0363493 0.374594 11 0.217676 0.0520433 0.460199 TimeMixer 9 0.186185 0.04415 0.442642 9 0.184034 0.0432359 0.426927 TCN 10 0.221173 0.0496117 0.446061 13 0.331781 0.081625 0.603847 iTransformer 11 0.225536 0.0511349 0.459742 10 0.208341 0.0515749 0.482573 GRU 12 0.253017 0.0538751 0.466933 8 0.145166 0.0347956 0.382494 DLinear 13 0.292235 0.0791687 0.57811 16 0.663966 0.144923 0.822368 TiDE 14 0.327727 0.0725552 0.573166 12 0.331337 0.0767271 0.602625 LSTM 15 0.363798 0.0899221 0.648624 14 0.365886 0.0915409 0.65642 Autoformer 16 0.413582 0.0969842 0.662566 15 0.520798 0.122952 0.762143 CDC Weekly Deaths CAST 1 0.0107881 0.00296787 0.079106 8 0.0582988 0.0174321 0.185183 N-HiTS 2 0.0142264 0.00379054 0.108123 5 0.0400412 0.0117563 0.148261 ilr-VAR 3 0.0164484 0.00259223 0.0781426 3 0.0187595 0.00504297 0.116092 Informer 4 0.0167048 0.00462867 0.108243 4 0.0335239 0.00959844 0.149116 Comp. ETS 5 0.0186036 0.00265749 0.0807235 2 0.0140918 0.00371193 0.099118 Transformer 6 0.0195876 0.00538896 0.105769 7 0.0458788 0.0132165 0.167135 Persistence 7 0.0202088 0.00289444 0.0862581 1 0.0139517 0.00367584 0.0981381 LSTM 8 0.0244364 0.00692017 0.121431 12 0.0807208 0.0240117 0.228398 TCN 9 0.0287298 0.00822043 0.13316 10 0.0759255 0.022323 0.232646 GRU 10 0.0391405 0.011486 0.148457 15 0.11474 0.0343769 0.296633 Analog succ. 11 0.0453423 0.00556252 0.114225 11 0.0808203 0.0236295 0.226284 Autoformer 12 0.04876 0.0145005 0.169936 6 0.0443087 0.012723 0.174658 TimeMixer 13 0.053485 0.0158688 0.177856 13 0.103348 0.0307619 0.274461 TiDE 14 0.0539142 0.0135576 0.230729 9 0.0661668 0.0187953 0.22678 DLinear 15 0.0600882 0.01594 0.250935 16 0.887797 0.138453 0.850887 iTransformer 16 0.0685253 0.0202776 0.220506 14 0.110236 0.032842 0.288916 BLS QCEW CAST 1 0.000877299 0.000210913 0.0161524 1 0.00101067 0.000245855 0.0252409 Persistence 2 0.00124199 0.000217116 0.0148815 2 0.00101154 0.000246087 0.0252444 Comp. ETS 3 0.00153748 0.000287053 0.0170236 5 0.00766992 0.00126986 0.0322875 ilr-VAR 4 0.0017315 0.00036926 0.02112 3 0.00131132 0.000321105 0.0280655 N-HiTS 5 0.00223366 0.00055218 0.0310259 6 0.00705517 0.00146595 0.0393494 Analog succ. 6 0.00500186 0.00122302 0.0229677 4 0.00142995 0.000362673 0.0260285 LSTM 7 0.0184843 0.00476039 0.111191 7 0.016034 0.00400536 0.106318 GRU 8 0.0217669 0.00540283 0.113477 8 0.0221345 0.00559466 0.119954 TCN 9 0.0246176 0.00612776 0.130935 12 0.0485267 0.0107716 0.180417 Autoformer 10 0.0255385 0.00648846 0.126957 13 0.0435019 0.0110232 0.198157 Informer 11 0.0261033 0.00678146 0.121539 9 0.0279846 0.00702364 0.141428 TiDE 12 0.0279086 0.00702397 0.148591 10 0.0328629 0.00797709 0.158621 iTransformer 13 0.0428377 0.0110241 0.204422 14 0.0536858 0.0135799 0.202021 TimeMixer 14 0.0675995 0.0163482 0.212513 15 0.0652305 0.0167058 0.220618 DLinear 15 0.0889357 0.0241089 0.293117 16 0.0965313 0.0256036 0.315455 Transformer 16 0.197784 0.0512437 0.52214 11 0.0413023 0.0104851 0.184597 EPA AirData AQI N-HiTS 1 0.0951827 0.0254094 0.261104 6 0.21827 0.063517 0.439714 
+
+CAST 2 0.118364 0.0329105 0.303775 1 0.133078 0.0374855 0.333589 Transformer 3 0.118412 0.0283931 0.276533 2 0.181052 0.0446549 0.366627 GRU 4 0.139433 0.0323235 0.300142 13 0.400356 0.100397 0.646791 iTransformer 5 0.165264 0.0462373 0.384421 9 0.279152 0.0743963 0.543373 Informer 6 0.167172 0.0376505 0.328333 3 0.228875 0.0619752 0.493508 Autoformer 7 0.20381 0.0576035 0.443592 15 0.422042 0.108073 0.711935 
+
+21 Table 8: Full per-section benchmark results for all completed methods (continued). Dataset Method KL rank Offline KL Offline JSD Offline L1 RO rank Rollout KL Rollout JSD Rollout L1 TiDE 8 0.209028 0.0520525 0.407176 10 0.305901 0.0777592 0.54205 TCN 9 0.214709 0.0431351 0.352139 8 0.282052 0.0734942 0.529449 DLinear 10 0.254184 0.0621291 0.371073 12 0.477053 0.0931641 0.505303 TimeMixer 11 0.272136 0.0783938 0.537543 14 0.417715 0.10739 0.650099 Persistence 12 0.331506 0.0317229 0.290943 5 1.15134 0.0629187 0.416975 Comp. ETS 13 0.332621 0.0323935 0.2894 4 1.0303 0.0627821 0.409021 ilr-VAR 14 0.333877 0.0364723 0.303371 11 0.720614 0.0899845 0.538254 LSTM 15 0.337118 0.0652318 0.440824 7 0.294233 0.0726406 0.529403 Analog succ. 16 0.499962 0.0460878 0.354127 16 2.05277 0.143879 0.718139 NOAA Storm Events N-HiTS 1 0.804972 0.190844 0.884904 4 1.06746 0.250997 1.08331 
+
+CAST 2 1.0042 0.240966 1.03659 1 0.877943 0.204162 0.936352 TCN 3 1.17051 0.28466 1.17446 7 1.36934 0.27765 1.16312 Informer 4 1.18189 0.241927 1.0171 8 1.48019 0.281181 1.14625 TimeMixer 5 1.18788 0.284153 1.16783 10 1.3886 0.304777 1.22844 Transformer 6 1.25203 0.268041 1.09856 5 1.27068 0.274235 1.13487 GRU 7 1.2706 0.259499 1.07998 3 1.18076 0.239621 1.03937 iTransformer 8 1.27503 0.307094 1.23358 9 1.22876 0.296223 1.216 DLinear 9 1.33342 0.282046 1.11826 13 1.71357 0.344454 1.30853 TiDE 10 1.44887 0.297881 1.17492 11 1.62198 0.314353 1.23061 LSTM 11 1.4822 0.270865 1.10645 2 1.05991 0.2161 0.970997 Autoformer 12 1.92024 0.385258 1.41546 14 1.98512 0.374555 1.39473 ilr-VAR 13 2.73715 0.246669 1.02504 6 2.83251 0.276656 1.10898 Comp. ETS 14 3.30315 0.332319 1.23383 12 3.26815 0.341975 1.28594 Persistence 15 4.3975 0.247541 0.999917 15 8.12481 0.396987 1.39809 Analog succ. 16 7.93023 0.388703 1.35276 16 8.4979 0.413657 1.43581 NYC TLC Trip CAST 1 0.0216781 0.00533544 0.123575 1 0.0392898 0.00962498 0.171443 N-HiTS 2 0.027418 0.00685197 0.143953 3 0.0481726 0.0120206 0.193679 GRU 3 0.0374347 0.0093467 0.174971 8 0.0751246 0.0178017 0.250104 Informer 4 0.037457 0.00834764 0.158408 7 0.0754962 0.0158038 0.231958 Comp. ETS 5 0.0394307 0.00614814 0.126547 2 0.080051 0.0116937 0.182876 Transformer 6 0.0430201 0.0110779 0.205135 6 0.0624697 0.0151754 0.234303 TimeMixer 7 0.0453191 0.0111672 0.203309 5 0.0615421 0.0150163 0.222775 Persistence 8 0.0461533 0.00713079 0.138658 4 0.0968018 0.0140436 0.210845 TCN 9 0.0500653 0.012201 0.210939 10 0.171072 0.0382772 0.380874 Autoformer 10 0.132937 0.0321771 0.351482 14 5.29464 0.313007 1.15443 iTransformer 11 0.140185 0.0325128 0.362233 9 0.0808156 0.0208806 0.250952 TiDE 12 0.141825 0.0352235 0.424395 11 0.23163 0.0530208 0.480762 LSTM 13 0.149013 0.0376267 0.401264 12 0.263217 0.0647972 0.558567 DLinear 14 1.00539 0.247281 1.1709 13 1.4417 0.268382 1.21295 Analog succ. 15 4.02082 0.542739 1.77242 15 3.87917 0.566316 1.81045 ilr-VAR 16 13.6058 0.691612 1.99869 16 14.6028 0.692487 1.99953 Queue Homogeneous ilr-VAR 1 0.0146575 0.00257377 0.0700608 10 7.14156 0.325373 1.04609 
+
+CAST 2 0.0157613 0.00364617 0.0543488 1 1.32163 0.0732326 0.286115 Comp. ETS 3 0.0175075 0.00326471 0.0560934 6 1.93932 0.182566 0.673514 Persistence 4 0.0202404 0.00419852 0.0612677 2 1.5297 0.0887025 0.336183 iTransformer 5 0.0364966 0.00796403 0.155832 7 1.78061 0.216013 0.935441 Informer 6 0.0783006 0.018033 0.220333 8 1.61026 0.24709 1.04285 TCN 7 0.0815257 0.0185813 0.221934 12 3.57281 0.336199 1.19171 TimeMixer 8 0.119072 0.0208954 0.220727 14 2.43904 0.353977 1.30293 N-HiTS 9 0.15382 0.027131 0.195042 5 1.13843 0.173467 0.782484 TiDE 10 0.190298 0.0428669 0.312958 9 2.61056 0.317366 1.17196 Transformer 11 0.191079 0.0354214 0.272254 4 1.39686 0.16314 0.688111 GRU 12 0.199407 0.0390967 0.311613 3 1.06916 0.159669 0.74346 LSTM 13 0.3267 0.0494002 0.358521 13 3.40247 0.351077 1.19764 Analog succ. 14 0.481032 0.103656 0.400823 11 4.63087 0.330393 1.0851 Autoformer 15 0.609488 0.113984 0.664258 16 11.2235 0.483502 1.58416 DLinear 16 1.69633 0.329345 1.20749 15 2.31494 0.405561 1.39143 Queue Nonhomogeneous CAST 1 0.0710114 0.00666879 0.0851155 1 0.204651 0.0385748 0.318583 Persistence 2 0.0795933 0.00630115 0.0799253 2 0.349448 0.0552407 0.374623 Comp. ETS 3 0.0823439 0.00699556 0.0812887 3 0.405678 0.0692842 0.425503 ilr-VAR 4 0.112021 0.00908139 0.102818 9 5.18929 0.305106 1.02409 iTransformer 5 0.141987 0.0357759 0.309032 8 1.51932 0.298196 1.20873 Informer 6 0.14358 0.0315839 0.2856 5 1.5097 0.219169 0.972414 GRU 7 0.177276 0.0374576 0.289299 4 0.630546 0.134544 0.726834 TCN 8 0.211043 0.043954 0.332068 16 9.45437 0.508572 1.62843 TiDE 9 0.219794 0.0469991 0.356809 7 1.31548 0.228863 0.988286 TimeMixer 10 0.220335 0.0407757 0.332287 15 2.91359 0.424839 1.50168 N-HiTS 11 0.264766 0.0422817 0.302265 11 1.86893 0.354042 1.34894 Transformer 12 0.328068 0.0504815 0.370057 10 2.62586 0.322617 1.25643 Analog succ. 13 0.543859 0.114609 0.476953 12 5.31117 0.376462 1.27208 Autoformer 14 1.02563 0.177012 0.789748 14 6.00347 0.413609 1.40729 LSTM 15 1.36191 0.24386 1.00272 6 1.2865 0.221353 0.970517 DLinear 16 1.45636 0.311163 1.17229 13 3.16441 0.394726 1.39268 Queue Combined CAST 1 0.00751856 0.00183513 0.064725 1 1.12658 0.0810041 0.401138 
+
+22 Table 8: Full per-section benchmark results for all completed methods (continued). Dataset Method KL rank Offline KL Offline JSD Offline L1 RO rank Rollout KL Rollout JSD Rollout L1 Persistence 2 0.0102985 0.00209581 0.069828 3 1.3917 0.0952724 0.442644 Comp. ETS 3 0.0106556 0.00217919 0.0695206 2 1.33272 0.0882713 0.428818 ilr-VAR 4 0.0141545 0.00297808 0.0888672 16 11.4434 0.501139 1.50207 iTransformer 5 0.10614 0.0266371 0.285218 10 2.69081 0.347132 1.2959 TCN 6 0.139265 0.0323932 0.291559 15 5.21619 0.453163 1.53838 TimeMixer 7 0.153117 0.0307791 0.279044 9 1.9972 0.284695 1.14236 Informer 8 0.163512 0.0359912 0.324176 5 1.47397 0.179185 0.821501 TiDE 9 0.267956 0.054411 0.396357 12 2.37105 0.385379 1.35612 GRU 10 0.280635 0.0447805 0.326054 8 1.80887 0.238433 0.95875 LSTM 11 0.314297 0.0595657 0.370144 6 1.6557 0.220644 0.951859 Transformer 12 0.417396 0.0625187 0.411972 4 1.72367 0.155291 0.657375 Analog succ. 13 0.508904 0.116507 0.468033 14 5.39012 0.402995 1.31472 N-HiTS 14 0.535516 0.0386793 0.252346 7 1.53283 0.237438 1.02648 Autoformer 15 1.00371 0.149492 0.736358 13 6.58272 0.390247 1.35194 DLinear 16 1.62752 0.344405 1.26957 11 2.71501 0.364278 1.31315 Table 9: Full CAST component-study metrics by benchmark section. Deltas are variant/CAST −1 on the same section; negative values mean the variant has lower error than CAST. Dataset Variant Offline KL KL ∆ Rollout JSD Rollout ∆
+
+BioTIME CAST 0.131296 – 0.0323185 –w/o structural reg. 0.131296 +0.0% 0.0323185 +0.0% anchor only 0.131296 +0.0% 0.0323185 +0.0% single-head retrieval 0.140599 +7.1% 0.0309276 -4.3% fixed local kernel 0.131296 +0.0% 0.0323185 +0.0% w/o persistence mix 0.146632 +11.7% 0.0280559 -13.2% Ember Monthly CAST 0.043419 – 0.00712895 –w/o structural reg. 0.043419 +0.0% 0.00712895 +0.0% anchor only 0.043419 +0.0% 0.00712895 +0.0% single-head retrieval 0.0300788 -30.7% 0.00758012 +6.3% fixed local kernel 0.043419 +0.0% 0.00712895 +0.0% w/o persistence mix 0.133281 +207.0% 0.0138151 +93.8% OWID Dietary CAST 0.00909632 – 0.00547772 –w/o structural reg. 0.00909632 +0.0% 0.00547772 +0.0% anchor only 0.00909632 +0.0% 0.00547772 +0.0% single-head retrieval 0.0138495 +52.3% 0.00686305 +25.3% fixed local kernel 0.00909632 +0.0% 0.00547772 +0.0% w/o persistence mix 0.00868301 -4.5% 0.00524196 -4.3% CDC Weekly Deaths CAST 0.0107881 – 0.0174321 –w/o structural reg. 0.0107881 +0.0% 0.0174321 +0.0% anchor only 0.0107881 +0.0% 0.0174321 +0.0% single-head retrieval 0.00898956 -16.7% 0.0171674 -1.5% fixed local kernel 0.0107881 +0.0% 0.0174321 +0.0% w/o persistence mix 0.00968232 -10.2% 0.0181817 +4.3% BLS QCEW CAST 0.000877299 – 0.000245855 –w/o structural reg. 0.000877299 +0.0% 0.000245855 +0.0% anchor only 0.000877299 +0.0% 0.000245855 +0.0% single-head retrieval 0.000742832 -15.3% 0.00024583 +0.0% fixed local kernel 0.000877299 +0.0% 0.000245855 +0.0% w/o persistence mix 0.00100521 +14.6% 0.000243454 -1.0% EPA AirData AQI CAST 0.118364 – 0.0374855 –w/o structural reg. 0.114322 -3.4% 0.0370734 -1.1% anchor only 0.111513 -5.8% 0.0359284 -4.2% single-head retrieval 0.11995 +1.3% 0.0398978 +6.4% fixed local kernel 0.114509 -3.3% 0.0380775 +1.6% w/o persistence mix 0.152539 +28.9% 0.0377938 +0.8% NOAA Storm Events CAST 1.0042 – 0.204162 –w/o structural reg. 1.00412 +0.0% 0.204198 +0.0% anchor only 1.00412 +0.0% 0.204198 +0.0% single-head retrieval 1.00397 +0.0% 0.208365 +2.1% fixed local kernel 1.0042 +0.0% 0.204162 +0.0% w/o persistence mix 1.14998 +14.5% 0.209803 +2.8% NYC TLC Trip CAST 0.0216781 – 0.00962498 –w/o structural reg. 0.0216781 +0.0% 0.00962498 +0.0% anchor only 0.0216781 +0.0% 0.00962498 +0.0% single-head retrieval 0.0217785 +0.5% 0.00985627 +2.4% fixed local kernel 0.0216781 +0.0% 0.00962498 +0.0% w/o persistence mix 0.0239812 +10.6% 0.0096677 +0.4% Queue Homogeneous CAST 0.0157613 – 0.0732326 –
+
+23 3 2 1 0 1 2 3           
+
+> (metric - CAST seed median) / seed SD
+> BioTIME
+> Ember Monthly
+> OWID Dietary
+> CDC Weekly Deaths
+> BLS QCEW
+> EPA AirData AQI
+> NOAA Storm Events
+> NYC TLC Trip
+> Offline KL (5 seeds)
+> Comp. ETS
+> 3210123
+> (metric - CAST seed median) / seed SD
+> Rollout JSD (5 seeds)
+> Persist.
+> Persist.
+> Comp. ETS
+> TiDE
+> normalized median +/- SD seed run median fixed at 0 crosses better crosses worse not crossed
+
+Figure 5: CAST random-seed robustness over five seeds (benchmark seed plus robustness seeds 42–45). Each benchmark row is normalized by CAST seed variability: the horizontal axis is 
+
+(metric − CAST seed median )/CAST seed SD , so the CAST interval is fixed at [−1, 1] and the seed median is fixed at zero. Triangles mark the relative positions of the immediately better- or worse-ranked appendix-table neighbors (Table 8); green triangles indicate favorable crossings of better-ranked neighbors, orange triangles indicate crossings of worse-ranked neighbors. Baselines beyond the plotted range are clipped at the edge. In the CAST-winning cases the five-seed CAST interval almost always remains separated from the immediately worse baseline; the only unstable exception is OWID Dietary, where the leading methods have very small absolute gaps and the CAST seed spread overlaps its neighbor. 
+
+Table 9: Full CAST component-study metrics by benchmark section (continued). Dataset Variant Offline KL KL ∆ Rollout JSD Rollout ∆
+
+w/o structural reg. 0.0158458 +0.5% 0.0730351 -0.3% anchor only 0.0185469 +17.7% 0.0886507 +21.1% single-head retrieval 0.01584 +0.5% 0.0746717 +2.0% fixed local kernel 0.0160649 +1.9% 0.0712605 -2.7% w/o persistence mix 0.0157966 +0.2% 0.0703303 -4.0% Queue Nonhomogeneous CAST 0.0710114 – 0.0385748 –w/o structural reg. 0.0736161 +3.7% 0.0554675 +43.8% anchor only 0.0814837 +14.7% 0.0474633 +23.0% single-head retrieval 0.0694002 -2.3% 0.0548115 +42.1% fixed local kernel 0.0694392 -2.2% 0.124439 +222.6% w/o persistence mix 0.0865577 +21.9% 0.0511655 +32.6% Queue Combined CAST 0.00751856 – 0.0810041 –w/o structural reg. 0.00903069 +20.1% 0.109586 +35.3% anchor only 0.010207 +35.8% 0.0923865 +14.1% single-head retrieval 0.00826227 +9.9% 0.0899711 +11.1% fixed local kernel 0.00837703 +11.4% 0.109043 +34.6% w/o persistence mix 0.133507 +1675.7% 0.136629 +68.7% 
+
+F CAST Seed Robustness 
+
+The main benchmark table is a broad single-seed sweep. As a targeted sensitivity check, we rerun CAST over five seeds on the public non-queue sections and compare the CAST seed interval with the immediately adjacent baselines in Table 8. 
+
+G Empirical Diagnostics for the Aliasing Theory 
+
+Section 4 gives a structural lower bound for fixed-summary forecasters under latent-kernel aliasing. This appendix reports a per-benchmark diagnostic that checks whether the condition behind the theory—similar present distributions but different next-step distributions, under different causal histories—appears in the data. 
+
+G.1 Diagnostic protocol 
+
+We sample states from each benchmark section and, for each sampled state, find cross-sequence neighbors by current distribution; we then measure how close the matched current distributions are (current-neighbor JSD), how different their next-step successors are (successor JSD), and whether a 24 Table 7: Appendix rank matrix for rollout JSD. Lower ranks are better; values are ranks within each benchmark section and Avg. is the 11-section mean rank.                                                                                                                                                                                                             
+
+> Method Bio. Ember OWID CDC BLS EPA NOAA NYC Q-Hom. Q-Non. Q-All Avg.
+> CAST 312811111111.91
+> Comp. ETS 13325412 26323.91 Persistence 24112515 42233.73 N-HiTS 45556643511 75.55 Informer 910 11 493878557.18 Transformer 10 77711 256410 46.64 ilr-VAR 15 243311 616 10 916 8.64 GRU 13 8815 813 383488.27 iTransformer 512 10 14 14 9997810 9.73 TCN 813 13 10 12 8710 12 16 15 11.27 TimeMixer 615 913 15 14 10 514 15 911.36 TiDE 714 12 910 10 11 11 9712 10.18 LSTM 16 914 12 77212 13 669.45 Analog succ. 12 6611 416 16 15 11 12 14 11.18 Autoformer 14 16 15 613 15 14 14 16 14 13 13.64 DLinear 11 11 16 16 16 12 13 13 15 13 11 13.36
+
+Table 10: Dataset-level best component-control comparison against CAST. The selected component variant is the lowest-error non-CAST CAST control for that metric; negative deltas mean the component control is lower than CAST.                                                                                       
+
+> Dataset CAST KL Best variant KL KL ∆KL variant CAST RO Best variant RO RO ∆
+> BioTIME 0.131296 0.131296 +0.0% w/o structural reg. 0.0323185 0.0280559 -13.2% Ember Monthly 0.043419 0.0300788 -30.7% single-head retrieval 0.00712896 0.00712896 +0.0% OWID Dietary 0.00909632 0.00868301 -4.5% w/o persistence mix 0.00547772 0.00524196 -4.3% CDC Weekly Deaths 0.0107881 0.00898956 -16.7% single-head retrieval 0.0174321 0.0171674 -1.5% BLS QCEW 0.000877299 0.000742832 -15.3% single-head retrieval 0.000245855 0.000243454 -1.0% EPA AirData AQI 0.118364 0.111513 -5.8% anchor only 0.0374855 0.0359284 -4.2% NOAA Storm Events 1.0042 1.00397 +0.0% single-head retrieval 0.204162 0.204162 +0.0% NYC TLC Trip 0.0216781 0.0216781 +0.0% w/o structural reg. 0.00962498 0.00962498 +0.0% Queue Homogeneous 0.0157613 0.0157966 +0.2% w/o persistence mix 0.0732326 0.0703303 -4.0% Queue Nonhomogeneous 0.0710114 0.0694002 -2.3% single-head retrieval 0.0385748 0.0474633 +23.0% Queue Combined 0.00751856 0.00826227 +9.9% single-head retrieval 0.0810041 0.0899711 +11.1%
+
+short causal history descriptor gives a closer successor match than the current state alone (history-better rate). For queue variants, the neighbor search uses ordered-support moment and quantile descriptors to propose current-state matches, and we then report actual padded-distribution JSD for the selected pairs. This is a diagnostic proxy rather than proof of the theorem’s assumptions: cross-sequence nearest neighbors reveal ambiguity in the map from current distribution to successor, whereas CAST’s actual retrieval memory is causal within a sequence; the diagnostic supports the claim that the benchmark contains the same structural failure mode targeted by the theory, not that every ambiguous cross-sequence pair is literally retrieved at test time. 
+
+G.2 Dataset-level summary 
+
+Using a consistent threshold on the neighbor and successor JSD statistics, the benchmark sections partition as follows: • Strong evidence: EPA AirData AQI, NOAA Storm Events, Queue Nonhomogeneous, Queue Combined. • Moderate evidence: BioTIME, Ember Monthly, CDC Weekly Deaths. • Weak evidence: BLS QCEW, NYC TLC Trip, OWID Dietary, Queue Homogeneous. This pattern is consistent with the result pattern of Section 6: CAST’s rollout-JSD advantage is largest exactly on the strong-evidence sections (top-1 rollout JSD on all four, with 17 –30% rollout JSD gaps over the closest non-CAST baseline on the two queue sections), moderate on the moderate-evidence sections, and modest or absent on the weak-evidence sections where simple persistence or smooth classical dynamics remain competitive. 
+
+G.3 Queue-specific interpretation 
+
+Queue data make the aliasing picture concrete because the observed state is only the occupancy distribution P(Nt = k): arrival intensity, service configuration, utilization, and nonstationary phase are side information or latent context from the model’s perspective. The generation protocol of Di 25 Table 11: Five-seed CAST robustness on the non-queue datasets. Values are mean ± sample standard deviation over five CAST runs, combining the benchmark run together with robustness seeds 42–45. Lower is better for all metrics. EPA and NOAA offline values use the same rolling-window offline evaluation protocol as the benchmark tables.                                                                                                     
+
+> Dataset Offline KL Offline JSD Rollout KL Rollout JSD BioTIME 0.129846931 ±0.001307300 0.028489747 ±0.000339945 0.115820839 ±0.013476657 0.029042774 ±0.003360500
+> Ember Monthly 0.040094380 ±0.006953061 0.010433575 ±0.001772240 0.028612465 ±0.007330173 0.007923460 ±0.001567363
+> OWID Dietary 0.016360002 ±0.009978004 0.003982110 ±0.002597886 0.036616299 ±0.014838105 0.008544794 ±0.003986897
+> CDC Weekly Deaths 0.009233608 ±0.000985212 0.002518346 ±0.000282897 0.062832310 ±0.009995790 0.018819080 ±0.003049933
+> BLS QCEW 0.000838914 ±0.000029311 0.000204769 ±0.000003499 0.001010642 ±0.000000031 0.000245855 ±0.000000003
+> EPA AirData AQI 0.112830553 ±0.005006539 0.031074019 ±0.001461186 0.134789750 ±0.007979795 0.037963682 ±0.002572998
+> NOAA Storm Events 0.996603588 ±0.031013309 0.237163796 ±0.006285711 0.894662467 ±0.023715547 0.208050197 ±0.004317885
+> NYC TLC Trip 0.021926485 ±0.000213208 0.005383274 ±0.000042496 0.039566407 ±0.000288092 0.009684717 ±0.000076063
+
+et al. [17] uses stationary G/G/ 1 for the homogeneous slice and sinusoidal arrival-side variation for 
+
+Gt/G/ 1 nonhomogeneous systems; replication averages produce the observed empirical occupancy distributions. The diagnostic supports the following nuanced reading:                     
+
+> Queue slice Current-nbr JSD med. Successor JSD med. Successor JSD q90 History-better rate Interpretation Homogeneous 0.00075 0.00085 0.00414 30.7% mostly smooth, weak aliasing Nonhomogeneous 0.00130 0.00264 0.01061 46.1% clearest queue aliasing Combined 0.00111 0.00202 0.00851 40.6% mixed but meaningful ambiguity
+
+The nonhomogeneous and combined queue slices are the best empirical matches to the aliasing theory: they often contain very close current occupancy distributions whose successors differ more than the typical one-step drift—the setting where a fixed current-state baseline must average futures and a history-conditioned successor-local operator can do better. The homogeneous slice is different: nearest current matches usually have similar successors, so CAST’s queue-homogeneous advan-tage is better framed as rollout stability and ordered local transport rather than as strong aliasing disambiguation. 
+
+G.4 Summary 
+
+Distribution-valued time series often revisit similar simplex states under different causal contexts. In such cases fixed-summary classical forecasters must collapse distinct successors into a single prediction; CAST avoids this collapse by indexing empirical successors with a causal representation and by applying bounded local transport on ordered supports. The theorem suite identifies a recurring data regime: the same observed simplex state appears under different causal contexts, but the next distribution depends on the context. The diagnostic shows this structure especially clearly in EPA, NOAA, and the nonhomogeneous/combined queue slices, matching the main result pattern. 
+
+H Additional Qualitative Visualizations I Reproducibility and Code Availability 
+
+The code release is available at https://anonymous.4open.science/r/ Causal-Anchored-Simplex-Transport-8775 . The release contains the CAST imple-mentation, benchmark preprocessing entry points, training and evaluation commands, queue simulation configuration, and instructions for reproducing the reported tables and figures. All experiments use chronological or file-level splits described in Appendix D; public benchmark sources and snapshot notes are listed in Appendix C; queue occupancy data are project-generated from the cited simulation protocol, and the release provides either the simulator and configurations or the processed queue trajectories for reproduction. 
+
+J Broader Impacts 
+
+Because CAST targets decision-facing forecasting on aggregate distributions, it is worth discussing positive and negative societal impacts beyond the model-level limitations in Section 8. Our bench-marks are public aggregate statistical panels and project-generated queueing simulations, so the model itself does not ingest or produce personally identifying data; nevertheless, distribution-valued forecasts can be used as inputs to consequential decisions, which motivates a concrete discussion. 26 Figure 6: Additional offline one-step residual visualizations across homogeneous, nonhomogeneous, and combined queueing regimes. For each target sequence, CAST is compared with baselines spanning a range of sequence-level performance ranks, from numerically competitive methods to substantially weaker predictors. Residual panels show the absolute prediction error and are annotated by the corresponding JSD; lighter and less structured residuals indicate more accurate one-step distribution forecasts. CAST consistently yields diffuse, low-magnitude residuals, whereas many baselines exhibit structured errors aligned with the target ridges, revealing missed temporal shifts even when aggregate scores are close. 
+
+Positive impacts. CAST is designed for settings where the object of decision is how probability mass over system states evolves. Better distribution-valued forecasts on ordered supports can (i) improve capacity planning for AI and cloud inference infrastructure by anticipating idleness, congestion, and overflow distributions rather than mean load only [ 1 ]; (ii) support risk-sensitive and distributionally robust decision making by producing probability-law inputs that are directly consumable by CVaR, quantile, and ambiguity-set based planners [ 10 – 13 ]; (iii) strengthen early-warning pipelines in environmental monitoring (air-quality severity category profiles, storm-event type mixtures) by forecasting the full severity distribution rather than expected values that can hide tail risk; and (iv) aid transportation, energy, and public-health dashboards that already publish share-type indicators (mobility zones, generation-source shares, cause-of-death mixtures), where a distribution-valued forecaster is a more faithful summary than a scalar trend line. 
+
+Potential negative impacts and misuse pathways. CAST is a forecasting operator and does not itself classify individuals, generate content, or take automated actions. The negative-impact pathways are therefore downstream and governance-shaped: • Distributional forecasts used as automation signals. If a downstream system automatically allocates resources or triggers interventions from CAST’s predicted distributions (e.g., denying service in a region during a predicted congestion spike, triaging care based on predicted mortality-cause mixtures), forecast errors or distributional shift relative to the training snapshot can translate into unfair or unsafe decisions for specific subpopulations. Users should audit forecasts against realized outcomes in deployment and set decision policies that are robust to forecast uncertainty (for example, by coupling CAST with the risk-sensitive planners cited above rather than optimizing expected-value summaries of the forecast). • Benchmark provenance. Public panels such as CDC Weekly Deaths, BLS QCEW, EPA AirData, and NOAA Storm Events are publisher-curated aggregates. Their snapshots evolve: 27 Figure 7: Extended rollout visualization for the selected examples. Each row shows the ground-truth queue-state distribution followed by CAST and four representative baselines, annotated by mean rollout JSD. Examples A–D correspond to the main-paper cases, while Examples E–H provide additional held-out systems with different support sizes and temporal dynamics. CAST remains closest to the target evolution across these cases, preserving moving modes and broad distributional shape more reliably than baselines that produce static bands, distorted transitions, or unstable artefacts. update policies, category systems, and revision cycles change over time, so a model tuned on one snapshot may degrade when upstream definitions change. This is not a CAST-specific issue but it matters for any deployment that silently treats new upstream releases as drop-in replacements. • Latent-group aliasing. The paper’s main theoretical contribution is that fixed-summary fore-casters pay an unavoidable JS π penalty under latent-regime aliasing. The same phenomenon has a fairness angle: if the "latent regime" Zt correlates with a protected attribute that is not observed at deployment time, even a well-calibrated average forecaster may behave unfairly on the regime-conditional subpopulation. CAST’s retrieval mechanism helps only to the extent that the causal representation it learns actually separates those regimes; it is not a fairness guarantee in itself. • Queueing applications. Queue-distribution forecasts can inform admission control, pricing, or routing policies. Deployments that feed CAST’s outputs into such policies should treat the distribution as a planning input rather than a ground-truth, and should preserve human oversight for admission decisions that affect users directly. 
+
+Mitigations and scope. We recommend the standard distribution-level forecasting hygiene: (i) monitor realized residuals against forecasts in deployment and retrain or recalibrate when residuals structurally change; (ii) pair CAST with downstream planners that are risk-sensitive or robust to ambiguity, rather than planners that optimize forecast means only; (iii) keep human oversight in the loop whenever the forecast feeds admission, allocation, or triage decisions that affect specific individuals; and (iv) audit how the representation handles latent-group structure by running the diagnostic of Appendix G on deployment data. Because our benchmarks are public aggregate panels and simulated queues, we did not identify a direct high-risk generative or surveillance pathway that would warrant additional model-release safeguards beyond standard scientific documentation and the code release linked in Appendix I. 28

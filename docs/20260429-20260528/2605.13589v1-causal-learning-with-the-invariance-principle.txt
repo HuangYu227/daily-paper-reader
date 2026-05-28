@@ -1,0 +1,1135 @@
+Title: Causal Learning with the Invariance Principle
+
+URL Source: https://arxiv.org/pdf/2605.13589v1
+
+Published Time: Thu, 14 May 2026 01:22:39 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Causal learning with the invariance principle 
+
+Francesco Montagna 
+
+Institute of Science and Technology Austria 
+
+francesco.montagna@ist.ac.at 
+
+Francesco Locatello 
+
+Institute of Science and Technology Austria 
+
+# Abstract 
+
+Causal discovery, the problem of inferring the direction of causality, is generally ill-posed. We use the language of structural causal models (SCM) to show that assuming that the causal relations are acyclic and invariant across multiple envi-ronments (e.g., the way minimum wage affects employment rate is stable across different geographical regions), only two auxiliary environments are sufficient to in-fer the causal graph for arbitrary nonlinear mechanisms. Moreover, we demonstrate that this implies identifiability of the SCM functional mechanisms: as a corollary, we show that two auxiliary environments are sufficient to guarantee correct counter-factual inference. We empirically support our theoretical results on synthetic data. 
+
+# 1 Introduction 
+
+Causal discovery, the problem of estimating a causal graph from data, is a cornerstone of causal inference, necessary for inferring causal effects under interventions (Pearl, 2009). However, it is well known to be ill-posed: multiple causal models are generally compatible with the observed data distribution, and the causal graph is not observationally identifiable .The way out is to impose additional constraints on the causal structure by collecting more data while still avoiding explicit interventions. This idea underlies many identifiability results in causal discovery (Peters et al., 2015; Perry et al., 2022; Jalaldoust et al., 2025; Montagna, 2026), independent component analysis (Hyvärinen and Morioka, 2016; Hyvärinen et al., 2019; Gresele et al., 2019; Lachapelle et al., 2022), and related generalizations (e.g., causal representation learning, Schölkopf et al. (2021)). These constraints often come from auxiliary datasets, which we call environments .This idea is also known in the causal inference literature under the name of natural experiments 
+
+(Titiunik, 2021): to infer causality, we generally need a control group (a base environment, in our language) and a treatment group (an auxiliary environment). Unlike randomized controlled trials, where the researcher defines the experiment, in natural experiments one only collects observational data from different distributions: if the distribution shifts are subject to sufficient constraints, pairing observational data suffices for causal inference (e.g., Card and Krueger (1994) shows that minimum wage affects employment rate assuming that the causal relation is stable across geographical regions). This is the idea at the heart of multi-environment causal inference. Our work formalizes this idea and provides sufficient conditions for the identifiability of causal graphs for arbitrary nonlinear SCMs from only two auxiliary environments: the only requirements we impose on the data-generating process are that the causal graph is acyclic, and the function 
+
+f : S 7 → X mapping latent variables S to observed variables X is invertible (which is always assumed in any tractable causal discovery problem). The requirement of only two environments for such a general class of SCMs is remarkable in light of prior work, which either requires the number of auxiliary environments to scale with the number of nodes in the graph (Monti et al., 2020) or makes strong distributional assumptions such as Gaussianity of the noise terms (Montagna, 2026)). Moreover, we show that acyclicity and two auxiliary environments are sufficient for the identifiability of counterfactual outcomes, the highest rung of the causal hierarchy.        
+
+> Preprint.
+> arXiv:2605.13589v1 [stat.ML] 13 May 2026 e= 0 ,1, . . .
+> ?
+> ÿÕ
+> pe
+> Svaries
+> Causal direction identified
+> ÿ−→ Õ
+> institution prosperity
+> Theorem 1
+
+(a) Colonial institutions and long-run prosperity. 
+
+Different European colonies serve as environments modulating the background conditions pe
+
+> S
+
+, while f :
+
+institutions 7 → prosperity is invariant. Acemoglu et al. (2001) show that the inclusiveness of institutions to-wards indigenous people affects long-term prosperity.             
+
+> e= 0 ,1, . . .
+> Ll
+> pe
+> Svaries
+> Counterfactual identification
+> f:L7−→ l
+> wage 7−→ employment
+> Thm. 2 + Cor. 1
+
+(b) Minimum wage and empolyment rate. In Card and Krueger (1994), New Jersey and Pennsylvania act as two environments: given the causal graph, a minimum-wage increase in New Jersey, but not in Penn-sylvania, creates exogenous variation that identifies the invariant causal effect f .
+
+Figure 1: Natural experiments as instances of our multi-environment framework. 
+
+1.1 Summary of contributions 
+
+From a theoretical perspective, our paper consists of three main contributions. We (informally) summarize them below. 
+
+
+
+Theorem 1 (Informal version of causal graph identifiability) . Given a structural causal model X = f (S) with bijective function f , the causal graph is identifiable from only two sufficiently different auxiliary environments. 
+
+
+
+Theorem 2 (Informal version of ICA identifiability) . Given a structural causal model 
+
+X = f (S) with f bijective, and two sufficiently different auxiliary environments, the function f is identifiable up to trivial indeterminacies. 
+
+As a corollary of Theorem 2, we have the following result: 
+
+ Corollary 1 (Informal corollary of Theorem 2) . A structural causal model estimated from three sufficiently distinct environments is enough for counterfactual inference. 
+
+Empirically, based on our theory, we introduce MCD (Multienvironment Causal Discovery), the first algorithm that, in the population limit, provably returns the correct causal graph for arbitrary noise distribution and causal mechanisms, given only two auxiliary environments. 
+
+# 2 Preliminaries 
+
+Throughout this paper, we take the perspective that a structural causal model with independent latent variables is an independent component analysis (ICA) model of the form 
+
+X = f (S), X ∈ X ⊆ Rd
+
+pS(s) = 
+
+> d
+
+Y
+
+> i=1
+
+p(si), ∀s ∈ S ⊆ Rd,
+
+∃P ∈ Rd×d permutation s.t. P J f P T is lower triangular. (1) Assume pS strictly positive density. The permutation constraint distinguishes SCMs from standard ICA models: without it, Equation (1) reduces to a general ICA model; with it, the Jacobian Jf is triangularizable, which is equivalent to acyclicity of G. (Uppercase letters, e.g. S, are used for random variables, lowercase letters for their realization.) This perspective is quite established in the literature (Monti et al., 2020; Hyvärinen et al., 2023; Reizinger et al., 2023; Montagna, 2026). While inde-pendent component analysis aims to recover f and pS (assuming a density exists) from observations 2of X, causal discovery is a much simpler problem: the goal here is to infer the causal graph that is imposed on X variables by f . In particular, an SCM assumes a set of structural causal equations 
+
+Xi := Fi(XPA i , S i), ∀i = 1 , ..., d, (2) where XPA i are the causes of Xi, specified by a directed acyclic graph (DAG) G with nodes X;
+
+PA i ⊂ { 1, ..., d } are the parent indices of Xi. The Fi functions are the causal mechanisms . We further assume no latent common causes, no selection bias, and causal minimality. Recursively applying Equation (2) gives exactly Equation (1). 
+
+Causal order. Intuitively, the causal order is the direction of causality, and is the main object of interest in causal discovery. For example, in X1 → X2, the only valid causal order is {1, 2}; for a graph X2 ← X1 → X3, {1, 2, 3} or {1, 3, 2} are valid causal orders; {2, 3, 1} is not. The causal order of a graph is the fundamental object of inference in causal discovery. When the causal order can be recovered from observations of X, we say that the causal graph is identifiable . In general, this requires access to a control and a treatment group: in this work, multiple environments serve as naturally arising control and treatment groups in passively collected data. 
+
+2.1 Base and auxiliary environments as control and treatment groups in natural experiments 
+
+Consider the SCM of Equation (1). We call this the base environment. An auxiliary environment is the structural causal model: 
+
+Xe = f (Se), pe
+
+> S
+
+(s) = 
+
+> d
+
+Y
+
+> i=1
+
+pe(si) (3) The idea is that we have access to the distribution of X under several shifts corresponding to environments, and postulate that these shifts are not arbitrary and follow an invariance principle. 
+
+> 
+
+The invariance principle. An environment is characterized by 1. Invariant causal mechanisms f ;2. p0
+
+> S
+
+̸ = pe
+
+> S
+
+, with 0 denoting the base environment, and e = 1 , ..., |E| ,where E ⊂ N collects the indices of all auxiliary environments. 
+
+Definition 1 (Informal definition of identifiability for causal discovery) . The causal graph G is iden-tifiable if the collection of observed distributions (pe
+
+> X
+
+)|E|  
+
+> e=0
+
+uniquely determines the causal graph G.
+
+Stronger notions are possible: more importantly, we have identifiability in the ICA sense. 
+
+Definition 2 (Informal definition of identifiability for ICA) . An ICA model is identifiable if the col-lection of observed distributions (pe
+
+> X
+
+)|E|  
+
+> e=0
+
+uniquely determines f and pe 
+
+> S
+
+up to trivial indeterminacies. 
+
+We now state the main research problem. 
+
+Problem definition. We characterize when a causal graph G is identifiable from the fewest pos-sible environments. Moreover, we find the minimal set of assumptions under which the causal mechanisms and noise terms are also identifiable from a few environments in the ICA sense. 
+
+Environments as natural experiments. The notion of environment was popularized in causal discovery by Peters et al. (2015), but the underlying idea is older: the base environment is a control group and an auxiliary environment is a treatment group. When such groups arise naturally rather than being engineered, we speak of natural experiments (Titiunik, 2021): our framework is precisely a formalization of this concept with SCMs. Notable instances of causal inference with natural experiments are presented in Acemoglu et al. (2001) and Card and Krueger (1994), and illustrated in Figure 1a and Figure 1b, serving as real-world motivating examples for our theory. Next, we demonstrate our main theoretical claims, namely, that only two auxiliary environments are sufficient to identify the causal graph and the mixing function of any acyclic and bijective SCM. 33 Theory of identifiability of bijective causal models 
+
+This section is devoted to provide the intuition and formalize the theoretical results of Theorem 1, Theorem 2, and Corollary 1. In particular, we show that causal discovery for arbitrary invertible SCMs can be achieved with only two auxiliary environments; moreover, we find that this is equivalent to ICA identifiability when the structural causal model is assumed acyclic. 
+
+3.1 Causal structure learning from multiple environments 
+
+To develop our theory, we need to constrain the class of structural causal models we consider. Intuitively, the main restrictive assumption that we make is invertibility of the causal mechanism f .
+
+Assumption 1 (Invertibility) . f is a global diffeomorphism. 
+
+Assumption 2 (Faithfulness) . Consider Z ∈ Rm and V ∈ Rn random vectors, and the acyclic structural equation model Zi := gi(VPA i ), and a DAG G with nodes Z, V and edges from VPA i to 
+
+Zi. We assume faithfulness of pZ density to G, i.e.: 
+
+ZA
+
+> |=
+
+ZB |ZC =⇒ ZA
+
+> |= d
+
+ZB |ZC ,
+
+where  
+
+> |= d
+
+denotes classical d-separation on G, and 
+
+> |=
+
+denotes probabilistic conditional indepen-dence. A, B, C ⊆ { 1, ..., m } are non-overlapping sets of indices. 
+
+Assumption 3 (Sufficient variability) . We have access to at least two auxiliary environments e = 1 , 2.Let ∆(0 , e, x) := ∇  log p(x)0 − log p(x)e. Then: (i) ∆(0 , 2, x)i̸ = 0 a.s., i = 1 , ..., d .(ii) For every non-sink Xi, there exists j̸ = i such that the vectors  ∆(0 , 1, x)i, ∆(0 , 2, x)i
+
+ and  ∂sj ∆(0 , 1, x)i, ∂ sj ∆(0 , 2, x)i
+
+ are not collinear on a positive-measure set. 
+
+Comparison with assumptions in the literature. Assumption 1 is ubiquitous when studying identifiability of causal graphs and beyond (in ICA and causal representation learning): causal graph identifiability from pure observations requires additivity of the noise terms (Hoyer et al., 2008) or variations of it, as in the post-nonlinear and location scale noise models (Zhang and Hyvärinen, 2009; Immer et al., 2022). All these parametric assumptions directly imply diffeomorphism (Dominguez-Olmedo et al., 2023) (hence, our Assumption 1); instead, the viceversa is not true, making our hypothesis strictly less demanding (for example, the celebrated additive noise models of Hoyer et al. (2008) equivalently assume that all the eigenvalues of the Jacobian of the mixing function are equal to 1, a very strong requirement) . In the multienvironment setting, bijectivity is also a common requirement (Peters et al., 2015; Heinze-Deml et al., 2018; Ghassami et al., 2018; Jalaldoust et al., 2025; Montagna, 2026). Assumption 2 of faithfulness is a common requirement in causal discovery, and known to be generic (almost always satisfied) at the population level; hence, it is mild and non-restrictive. Our formulation for arbitrary structural equation models is just a variation of the usual faithfulness for standard causal models (including SCMs). Genericity of Assumption 2 is discussed in detail in Section D. Finally, Assumption 3 of sufficient variability comes in different forms but is standard in multienvironment identifiability arguments in causal discovery (Montagna, 2026; Chevalley et al., 2025), ICA (Hyvärinen and Morioka, 2016; Lachapelle et al., 2022), and causal representation learning (Ahuja et al., 2024; Varici et al., 2025; Ng et al., 2025), and just excludes pathological environment choices. Part (i) simply requires a treatment group that is sufficiently different in the entire domain. Part (ii) has a less immediate interpretation: it is a geometric requirement asking that the first-order differences of densities are not aligned with second-order differences of the densities. Intuitively, this should be true, as there is no geometric reason to believe that such alignment should occur. This can be proven more formally for quite a broad class of SCMs: in Section E, we show that for SCMs with a finite number of parameters in the Euclidean space, whose mixing function is analytic, the set of density parameters that lead to violations of the assumption lives in a Lebesgue-zero measure subset of the Euclidean space. Such geometric requirements on the class of allowed environments are present for any result under the umbrella of identifiability with multiple environments that we mentioned, suggesting that it is somehow unavoidable to discard pathological cases, as we find ourselves. Finally, we note that Assumption 3 requires two auxiliary environments. All the results that follow can be generalized to the case where we have access to an arbitrary number of environments: in which case, we partition the auxiliary environments in non-overlapping groups E1, E2, and define ∆(0 , e, x) := ∇  log p0(x) − P 
+
+> ϵ∈E e
+
+log pϵ(x).4Next, we show that given our modeling assumptions, we can demonstrate identifiability of the causal graph. We provide a step-by-step derivation of the results with two variables via an example. 
+
+Example 1. Consider a bivariate structural causal model x2 := f2(x1, s 2), such that f : s1, s 2 7 →
+
+s1, x 2. Let x = f (s), where by injectivity of f , s is uniquely determined. Given three environments 
+
+pe, e ∈ { 0, 1, 2}, we write the score function (gradient of the log-likelihood) of x:
+
+∇ log pe(x) = JT  
+
+> f−1
+
+(x)∇ log pe(s) + ∇ log |Jf −1 (x)|, (4) 
+
+where |Jf −1 (x)| denotes the determinant. The latter expression can be easily verified via the change of variable formula for densities. We note that the gradient of the log-det term (the volume arising from the change of variable formula) does not depend on the index of the environment. Then, if we take the difference of the score of the base and auxiliary environments, it cancels out as follows: 
+
+∆(0 , e, x) := ∇  log p0(x) − log pe(x) = JT  
+
+> f−1
+
+(x)∇  log p0(s) − log pe(s) , (5) 
+
+that is, the derivative of the log-odds ratio does not depend on the volume term. Let’s unpack the ∆
+
+term componentwise: 
+
+∆(0 , e, x)1 = ∂s1
+
+ log p0(s1) − log pe(s1) + ∂x1 s2∂s2
+
+ log p0(s2) − log pe(s2)
+
+∆(0 , e, x)2 = ∂x2 s2∂s2
+
+ log p0(s2) − log pe(s2) . (6) 
+
+We know, by assumption, that the correct causal model (hence, the SCM with correct causal direction) must have mutually independent sources. Previous literature exploited this hypothesis in the context of additive noise models. In particular, Montagna et al. (2025) shows that for observationally identifiable SCMs, the score of a sink node Xl is a only a function of the source node Sl, and uses this intuition to demonstrate identifiability of the causal order. However, this is not the case for the second equality in (6) , due to the multiplier ∂x2 s2 = ∂x2 f −12 (x1, x 2). To recover the desired situation of the score (a function of the score, in our case) of the sink node X2 depending only on S2, we note that the term ∂x2 s2 is uniquely determined by the form of f , the causal mechanisms, that is invariant with respect to the environment index. We exploit this fact by taking the ratio 
+
+R(s) := ∆(0 , 1, f (s)) ∆(0 , 2, f (s)) ,
+
+where 
+
+R1 := R1(s) = ∂s1
+
+ log p0(s1) − log p1(s1) + ∂x1 s2∂s2
+
+ log p0(s2) − log p1(s2)
+
+∂s1 (log p0(s1) − log p2(s1)) + ∂x1 s2∂s2 (log p0(s2) − log p2(s2)) 
+
+R2 := R2(s) = ∂s2
+
+ log p0(s2) − log p1(s2)
+
+∂s2 (log p0(s2) − log p2(s2)) .
+
+(7) 
+
+Inutively, the above relation defines a structural equation model g : S 7 → R where: 
+
+R1 := g1(S1, S 2)
+
+R2 := g2(S2).
+
+The above is true unless, due to pathological algebraic cancellations, we have ∂si R1(s) = 0 almost surely for i = 1 or 2. These are ruled out by Assumption 3 of sufficient variability. Hence, we obtain the ratio R2 depending only on S2, and R1 depending on the noise vector S1, S 2. Then, there is a structural equation model 
+
+X := f (S), R := g(S)
+
+specified by Equation (1) and Equation (7) , with the DAG of Figure 2. A straightforward application of the Assumption 2 of faithfulness over the structural equation models verifies that: 
+
+R2
+
+> |=
+
+X1, X1 ∼ peX1 (8) 
+
+R1̸|= X2 X2 ∼ peX2 , (9) 
+
+We conclude that for generic SCMs, simply testing the unconditional independence of R and X
+
+entries yields a criterion for identifying the causal order. 
+
+The above example provides the key technical steps to our main result. 
+
+Theorem (Formalization of Theorem 1) . Consider the SCM of Equation (1) . Let Assumption 1 and Assumption 2 be satisfied. Then, given at least two auxiliary environments satisfying Assumption 3 of sufficient variability for each node, the causal graph is identifiable. 
+
+The proof is given in Section C.1. 5S1 S2  
+
+> R1
+> X1X2R2
+
+Figure 2: Graph for the structural equation model of Example 1. X1, X 2, R 1, R 2 are observable mea-surements of the latent variables S1, S 2. The resulting graph is a DAG: each observed measurement is a function of its parent nodes in the structural equations defining the model. By d-separation, we have R1̸|= dX2 and R2
+
+> |= d
+
+X1, according to the analysis in the example, which distinguishes the causal order on the SCM over X1, X 2.
+
+> 
+
+Discussion. Under suitable assumptions, only two auxiliary environments are sufficient to identify the causal graph of an SCM with arbitrary bijective mechanisms. This is in stark contrast with multi-environment identifiability results in ICA, where the number of environments necessarily linearly scales with the number of nodes. Similar findings were recently presented in Montagna (2026), however, under the restrictive assumption of Gaussianity of the SCM noise terms and on the nature of the environments. The above theorem, while presenting (to the best of our knowledge) the most general identifiability result in the theory of causality with SCMs, is under the constraint that all noise terms are subject to shifts in at least two environments (Assumption 3). From a theoretical perspective, this is acceptable, as studying the conditions of full graph identifiability is a well-known problem of interest, and widely researched in the literature (Shimizu et al., 2006; Hoyer et al., 2008; Zhang and Hyvärinen, 2009; Immer et al., 2022; Montagna, 2026); however, practical causal discovery should consider what is identifiable of the graph given a set of datasets under the least possible assumptions about their generating process. In the appendix, we show that violations of Assumption 3 can be detected from the data—specifically, we can verify if some of the latent variables are not subject to interventions from statistics of the observed causal variables. Characterizing the nature of the equivalence class that is still identifiable when only a subset of latents are subject to variation in the auxiliary environments is an important research direction that we open to future work. 
+
+Out of distribution generalization. Given pX and the causal graph G, Pearl’s backdoor adjustment provides a recipe for provably correct inference at the interventional level of the causal ladder (Pearl, 2009). Hence, given the result in Theorem 1, two auxiliary environments allow for trustworthy OOD generalization over data generated under interventions on the SCM. Next, we show some consequences that are even more striking: the DAG assumption, a strong yet widely adopted restriction in causal discovery, is enough to elevate these conclusions to the counterfactual level and beyond. 
+
+3.2 ICA identifiability and counterfactual inference 
+
+Consider the SCM of Equation (1), that is, an ICA model with Jacobian that can be triangularized by a permutation matrix. Under the assumptions of diffeomorphism and faithfulness, we can show that f
+
+is identifiable in the ICA sense, i.e. up to elementwise reparametrization of the sources. This is a consequence of the fact that the DAG assumption implies strong constraints on the form of f , which is enough to elevate identifiability in the sense of causal discovery to identifiability in the ICA sense. 
+
+Theorem (Formalization of Theorem 2) . Consider the ICA model Equation (1) for X = f (S). Let Assumptions 1 and 2 to hold. Further, assume that the domain of f : S → X is connected. Then, given at least two auxiliary environments satisfying Assumption 3 f is identifiable in the ICA sense, i.e. up to an invertible and elementwise reparametrization of the sources. 
+
+A sketched and complete proofs are presented in Section C.2. An interesting consequence (independently found by Nasr-Esfahany et al. (2023), assuming the graph is given) is that identifiability in the sense of ICA implies generalization at the counterfactual level. 
+
+Corollary (Formalization of Corollary 1) . Consider the ICA model Equation (1) for X = f (S). Let Assumptions 1 and 2 to hold, and assume that the domain of f : S → X is connected. Then, the SCM 
+
+6is counterfactually identifiable from the observational distribution pX and two auxiliary environments satisfying Assumption 3. 
+
+Proof can be found in Section C.3. For details on counterfactual identifiability, we refer to Peters et al. (2017) (Section 3.3) and Pearl et al. (2019) (Section 4.2). 
+
+Discussion and summary of the theory. Our theory supports surprisingly strong conclusions. (i) 
+
+from a causality perspective, for acyclic and invertible SCMs two auxiliary environments are sufficient for out-of-distribution generalization to the counterfactual level of the ladder of causation. This is remarkable under the lenses of natural experiments : passively observing only two sufficiently different treatment groups is enough to correctly infer the effect of arbitrary treatment in the system of interest (note that we only require changes in the treated populations; the treatment type can be invariant between the auxiliary environments); moreover, it is sufficient to imagine the effect of counterfactual treatments. Clearly, given the strength of this conclusion, one should be careful in imposing the DAG-ness and causal sufficiency assumptions, which are responsible for the heavy-weight lifting in elevating observational information to the counterfactual level. (ii) from a representation learning perspective, ICA models with triangular monotonic maps are identifiable from only two environments. This is remarkable in the light of previous literature: without the triangularity constraint on the Jacobian Jf of Equation (1), it is known that identifiability can be achieved only with a number of environments that scales with the number of nodes. Also in this case, the strong assumption on the structure of the Jacobian is responsible for this result, which remains nevertheless impressive being ICA a notably hard unsupervised-learning task. 
+
+# 4 Multi-environment causal discovery from data: algorithm and experiments 
+
+In this section, we translate our theory on the identifiability of graphs from 3 or more environments into a practical algorithm for inference; the goal is to validate our theory on synthetically generated data. 
+
+4.1 The MCD algorithm 
+
+We propose a new method for causal discovery that can leverage multiple datasets from different environments, that we call MCD (Multienvironment Causal Discovery). Intuitively, our approach recursively finds sink nodes based on the logic illustrated in Example 1 and adopted in the proof of our main theorem (Theorem 1). A word of caution: our method mostly serves the purpose of empirically validating our theoretical claims, rather than being a serious proposal for causal discovery. In fact, as the logic of the algorithm follows that of the proof of Theorem 1, it is not optimized for empirical performance, and we leave the effort of developing new, accurate methods based on our theory for future work. However, our synthetic experiments show that MCD can achieve remarkable performance, inferring the causal order better than random and than performative baselines for observational causal discovery, both on linear Gaussian data and on SCMs with arbitrary nonlinear mechanisms and up to 20 nodes. 
+
+A recursive approach to causal order estimation. The focus of our method is finding the causal order. Once that is given, it is known how to recover the causal graph, without the need of special modelling assumptions. Given a sink-identification criterion, we can recursively find the causal order. For example, consider the graph X3 ← X1 → X2. With enough samples an a correct sink-identification criterion, we find that X2 is a sink (if we were to find X3 sink, the argument would be perfectly symmetric). Then, we know the position of X2 in the causal order, and we can safely remove it from the graph. Next, we run the sink-identification criterion on X1 → X3, and expect to find that X3 is a sink. So, we know that the causal order X1, X 3, X 2 is a valid one. This idea is central to our method. To identify sink nodes, we borrow from the logic of Example 1: given the vector of ratios R, we know that Ri
+
+> |=
+
+X−i ⇐⇒ node i is a sink (i.e., the ith component of the ratio vector is independent of all causal variables except for Xi). In practice, however, the ratio is numerically unstable, which is why we replace it with a theoretically equivalent but algorithmically friendlier alternative. This, and a sketch of the workflow of MCD are presented in Algorithm 1. The key statistical estimation steps (involving score estimation) and MCD’s algorithmic complexity are presented in Section F.1. Next, we discuss the empirical performance of our method on synthetic data. We compare to several algorithms from the observational causal discovery literature. 7Algorithm 1: MCD: recursive sink peeling from score ratios 
+
+Data: Datasets De = {xen}Ne
+
+> n=1
+
+, e = 0 , . . . , E ; auxiliary environments split {1, ..., E } = E1 ∪ E 2
+
+Result: Estimated causal order bπ
+
+A ← { 1, ..., d } // Active variables 
+
+bπ ← () 
+
+while |A| > 0 do 
+
+bge(xA) ≈ ∇ xA log pe(xA), e = 0 , . . . , E. // Estimate the scores 
+
+∆(ℓ)(xA) ← bg0(xA) − P 
+
+> e∈E ℓ
+
+bge(xA), ℓ = 1 , 2. // Compute score differences 
+
+U ←
+
+h
+
+(∆ (1)  
+
+> i
+
+, ∆(2)  
+
+> i
+
+) for i ∈ 1, ..., d 
+
+i
+
+// Statistics (stabler than ratio) 
+
+U ←
+
+h Ui 
+
+> || Ui||
+
+for i ∈ 1, ..., d 
+
+ibs = arg min i∈A HSIC( Ui, xA\{ i}) // HSIC returns p-value; argmin returns sink index 
+
+bπ ← (bs, bπ) // Prepend the newly found sink 
+
+A ← A \ { bs} // Remove sink from active nodes 
+
+end return bπ
+
+4.2 Experiments: validation of theoretical claims and benchmarking 
+
+In this section, we analyse the performance of MCD on synthetic data generated by SCMs notably non-identifiable from pure observations. 
+
+Synthetic data generation. Data are synthetically generated as follows: we consider Erdos-Renyi randomly generated graphs (Erdos and Renyi, 1960), a common choice for causal discovery bench-marking, with 3, 5, 10 , 20 nodes. For each pair of nodes in the graph, we have a probability of attachment (drawing an edge between the pair) of {0.8, 0.5, 0.25 , 0.25 } (different values for all the graphs’ dimensions). Noise terms follow a Gaussian distribution, with mean sampled in the interval 
+
+[−2, 2] and standard deviation in [0 .5, 4] , which we allow to shift between environments. For each structural equation Xi := Fi(XPA i,S i ), with uniform probability the function Fi is either a linear transformation (resulting in a linear Gaussian SCM, notoriously non-identifiable from observations), or, else, a random nonlinearity: we sample the weights of a 4-layers Residual Neural Network from a standard Gaussian N (1 , 1) , with tanh activations and normalization at the last layer, so that 
+
+Xi = ResNet i(XPA i , S i)—the source and parents are concatenated in a unique input vector. Figure 3 displays some of the random nonlinear mechanisms we sampled. Datasets consists of 3000 observa-tions per environment. In Section F.2.1 we empirically analyse the statistical efficiency of the method. 
+
+Metric. As the focus of MCD is finding the causal order of the graph, we adopt the well-established topological divergence Dtop (Rolland et al., 2022). It counts the number of edges a fully connected graph would miss due to a mistake in inferring the causal order. E.g., for a graph X1 → X2 → X3,an estimated causal order {1, 3, 2} would correspond to Dtop = 1 , because the edge X2 → X3 is forbidden by such ordering. In our plots, we normalize the divergence by the total number of edges in the graph, so that it ranges from 0 (best) to 1 (worst). 
+
+Discussion of the experimental results. In Figure 4, we consider the experimental performance of MCD on the synthetic data we described, given three environments. (Experiments with more environments are reported in Section F.2.2.) For the score estimation (which requires solving a kernel-ridge regression) we use 0.001 as weight of the ℓ2 regularization. We compare the performance of MCD with well-known and state of the art methods for causal discovery with additive noise models: CAM (Bühlmann et al., 2013), RESIT (Peters et al., 2014), LiNGAM (Shimizu et al., 2006), and NoGAM (Montagna et al., 2023b) 1. Our findings are remarkable. While all other methods are no better than a baseline which uniformly samples a causal order at random, MCD achieves normalized 
+
+> 1For CAM and NoGAM we use the dodiscover implementations (Li et al.) from Montagna et al. (2023a); RESIT and LiNGAM Python implementations are in the pip lingam package.
+
+82 1 0 1 2                 
+
+> parent 2
+> 1
+> 0
+> 1
+> 2
+> source
+> 2
+> 1
+> 0
+> 1
+> ResNet 1(xpa ,s)
+> 21012
+> parent 2
+> 1
+> 0
+> 1
+> 2
+> source
+> 0.8
+> 0.0
+> 0.8
+> ResNet 2(xpa ,s)
+> 21012
+> parent 2
+> 1
+> 0
+> 1
+> 2
+> source
+> 0.8
+> 0.0
+> 0.8
+> ResNet 3(xpa ,s)
+
+Figure 3: Samples of the random nonlinear mechanisms (one parent, one source) sampled from a residual neural network, adopted in our synthetic experiments. The function is nonlinear in the sources and sometimes even non-invertible (left figure), meaning we stress-test MCD beyond its assumptions. 3 5 10 20      
+
+> Number of nodes
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Dtop
+> mcd (ours) cam lingam nogam resit random
+
+Figure 4: Mean Dtop (20 seeds, the lower the better) performance on linear and nonlinear Gaussian data that are non-identifiable from pure observations. Error is 95% confidence interval. Given three environments, MCD can infer the causal direction where all other state-of-the-art methods for observational causal discovery are no better than a baseline randomly selecting the causal order. 
+
+Dtop values (the lower, the better) ranging between ∼ 0.1 for 3 nodes, meaning the method perfectly infers the order over almost all seeds, to ∼ 0.3 on 20 nodes, remaining far better than random with statistical significance. We conclude the following: 
+
+
+
+The empirical results supports the theoretical claim that the number of environments doesn’t need to scale with the number of nodes. Moreover, MCD’s accuracy on graphs with up to 20 nodes is a surprising achievement, given that scaling causal discovery with multiple environments beyond the bivariate setting is a well-known, unaddressed challenge, already found in Monti et al. (2020); Reizinger et al. (2023); Montagna (2026). 
+
+# 5 Conclusion 
+
+The theory of our work shows that for structural causal models that are notoriously non-identifiable from observational data, only three environments (with the lens of natural experiments, a control group and two treatment groups emerging in passively collected data) with invariant causal mechanisms are all it takes to uncover the direction of causal relations. Moreover, leveraging the acyclicity assumption, a common requirement in causality, we demonstrate that finding the causal graph is equivalent to solve a nonlinear ICA problem. This is an impressive finding, knowing that general nonlinear ICA is a notoriously hard unsupervised learning problem (thought to be unsolvable until Hyvärinen and Morioka (2016)): our result is the first showing sufficient conditions for its solution with a constant (and low, only 2) number of auxiliary environments. Finally, we demonstrate that, when the causal model is bijective, having access to only three environments (i.e., naturally performing only 2 inter-ventions on the latent sources) is sufficient to draw provably correct conclusions at the counterfactual level, the highest rung in the ladder of causality. Our MCD (Multienvironment Causal Discovery) method empirically validates the theoretical claims of graph identifiability on synthetic data. We leave for future work finding strong methodologies that leverage our theory for real-world causal discovery. 96 Acknowledgments 
+
+FM acknowledges the Chan Zuckerberg Initiative for financial support. 
+
+# References 
+
+Daron Acemoglu, Simon Johnson, and James A. Robinson. The colonial origins of comparative development: An empirical investigation. American Economic Review , 91(5):1369–1401, 2001. Kartik Ahuja, Amin Mansouri, and Yixin Wang. Multi-domain causal representation learning via weak distributional invariances. In Sanjoy Dasgupta, Stephan Mandt, and Yingzhen Li, editors, 
+
+Proceedings of The 27th International Conference on Artificial Intelligence and Statistics , volume 238 of Proceedings of Machine Learning Research , pages 865–873. PMLR, 02–04 May 2024. URL https://proceedings.mlr.press/v238/ahuja24a.html .Philip Boeken, Patrick Forré, and Joris M. Mooij. Are bayesian networks typically faithful?, 2026. URL https://arxiv.org/abs/2410.16004 .Philippe Brouillard, Sébastien Lachapelle, Alexandre Lacoste, Simon Lacoste-Julien, and Alexandre Drouin. Differentiable causal discovery from interventional data. In H. Larochelle, M. Ranzato, R. Hadsell, M.F. Balcan, and H. Lin, editors, Advances in Neural Information Processing Systems , volume 33, pages 21865–21877. Curran Associates, Inc., 2020. URL https://proceedings.neurips.cc/paper_files/paper/2020/file/ f8b7aa3a0d349d9562b424160ad18612-Paper.pdf .Simon Buchholz, Goutham Rajendran, Elan Rosenfeld, Bryon Aragam, Bernhard Schölkopf, and Pradeep Kumar Ravikumar. Learning linear causal representations from interventions under general nonlinear mixing. In Thirty-seventh Conference on Neural Information Processing Systems ,2023. URL https://openreview.net/forum?id=q131tA7HCT .Peter Bühlmann, Jonas Peters, and Jan Ernest. Cam: Causal additive models, high-dimensional order search and penalized regression. The Annals of Statistics , 42, 10 2013. doi: 10.1214/14-AOS1260. David Card and Alan B. Krueger. Minimum wages and employment: A case study of the fast-food industry in New Jersey and Pennsylvania. American Economic Review , 84(4):772–793, 1994. Mathieu Chevalley, Patrick Schwab, and Arash Mehrjou. Deriving causal order from single-variable interventions: Guarantees & algorithm. In The Thirteenth International Conference on Learning Representations , 2025. Pierre Comon. Independent component analysis, a new concept? Signal Processing , 36(3):287–314, 1994. ISSN 0165-1684. doi: https://doi.org/10.1016/0165-1684(94)90029-9. URL https://www. sciencedirect.com/science/article/pii/0165168494900299 . Higher Order Statistics. Ricardo Dominguez-Olmedo, Amir-Hossein Karimi, Georgios Arvanitidis, and Bernhard Schölkopf. On data manifolds entailed by structural causal models. In Andreas Krause, Emma Brunskill, Kyunghyun Cho, Barbara Engelhardt, Sivan Sabato, and Jonathan Scarlett, editors, Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research , pages 8188–8201. PMLR, 23–29 Jul 2023. URL https://proceedings. mlr.press/v202/dominguez-olmedo23a.html .Frederick Eberhardt, Clark Glymour, and Richard Scheines. On the number of experiments sufficient and in the worst case necessary to identify all causal relations among n variables. In Proceedings of the 21st Conference on Uncertainty in Artificial Intelligence (UAI-05) , pages 178–184. AUAI Press, 2005. Paul Erdos and Alfred Renyi. On the evolution of random graphs. Publ. Math. Inst. Hungary. Acad. Sci. , 5:17–61, 1960. AmirEmad Ghassami, Negar Kiyavash, Biwei Huang, and Kun Zhang. Multi-domain causal structure learning in linear systems. In S. Bengio, H. Wallach, H. Larochelle, K. Grauman, N. Cesa-Bianchi, and R. Garnett, editors, Advances in Neural Information Processing Systems , volume 31. Cur-ran Associates, Inc., 2018. URL https://proceedings.neurips.cc/paper_files/paper/ 2018/file/6ad4174eba19ecb5fed17411a34ff5e6-Paper.pdf .10 Luigi Gresele, Paul K. Rubenstein, Arash Mehrjou, Francesco Locatello, and Bernhard Schölkopf. The incomplete rosetta stone problem: Identifiability results for multi-view nonlinear ica. In 
+
+Proceedings of the 35th Conference on Uncertainty in Artificial Intelligence (UAI) , volume 115 of Proceedings of Machine Learning Research , pages 217–227. PMLR, 2019. URL https: //www.auai.org/uai2019/proceedings/papers/53.pdf .Arthur Gretton, Kenji Fukumizu, Choon Teo, Le Song, Bernhard Schölkopf, and Alex Smola. A kernel statistical test of independence. In J. Platt, D. Koller, Y. Singer, and S. Roweis, editors, Advances in Neural Information Processing Systems , volume 20. Curran Associates, Inc., 2007. URL https://proceedings.neurips.cc/paper_files/paper/2007/file/ d5cfead94f5350c12c322b5b664544c1-Paper.pdf .Hermanni Hälvä and Aapo Hyvärinen. Hidden markov nonlinear ica: Unsupervised learning from nonstationary time series. In Proceedings of the 36th Conference on Uncertainty in Artificial Intel-ligence (UAI) , volume 124 of Proceedings of Machine Learning Research , pages 939–948. PMLR, 2020. URL https://www.auai.org/uai2020/proceedings/379_main_paper.pdf .Hermanni Hälvä, Sylvain Le Corff, Luc Lehéricy, Jonathan So, Yongjie Zhu, Elisabeth Gassiat, and Aapo Hyvärinen. Disentangling identifiable features from noisy data with structured nonlinear ica. In Advances in Neural Information Processing Systems 34 (NeurIPS 2021) , 2021. URL https://proceedings.neurips.cc/paper/2021/file/ 0cdbb4e65815fbaf79689b15482e7575-Paper.pdf .Christina Heinze-Deml, Jonas Peters, and Nicolai Meinshausen. Invariant causal prediction for non-linear models. Journal of Causal Inference , 6(2):20170016, 2018. doi: doi:10.1515/jci-2017-0016. URL https://doi.org/10.1515/jci-2017-0016 .Ambroise Heurtebise, Omar Chehab, Pierre Ablin, Alexandre Gramfort, and Aapo Hyvärinen. Identifiable multi-view causal discovery without non-gaussianity, 2025. URL https://arxiv. org/abs/2502.20115 .Patrik Hoyer, Dominik Janzing, Joris M Mooij, Jonas Peters, and Bernhard Schölkopf. Nonlin-ear causal discovery with additive noise models. In D. Koller, D. Schuurmans, Y. Bengio, and L. Bottou, editors, Advances in Neural Information Processing Systems , volume 21. Curran As-sociates, Inc., 2008. URL https://proceedings.neurips.cc/paper_files/paper/2008/ file/f7664060cc52bc6f3d620bcedc94a4b6-Paper.pdf .Biwei Huang, Kun Zhang, Jiji Zhang, Joseph Ramsey, Ruben Sanchez-Romero, Clark Glymour, and Bernhard Schölkopf. Causal discovery from heterogeneous/nonstationary data. J. Mach. Learn. Res. , 21(1), January 2020. ISSN 1532-4435. Aapo Hyvärinen. Estimation of non-normalized statistical models by score matching. Journal of Machine Learning Research , 6(24):695–709, 2005. URL http://jmlr.org/papers/v6/ hyvarinen05a.html .Aapo Hyvärinen and Hiroshi Morioka. Unsupervised feature extraction by time-contrastive learning and nonlinear ica. In Proceedings of the 30th International Conference on Neural Information Processing Systems , NIPS’16, page 3772–3780, Red Hook, NY, USA, 2016. Curran Associates Inc. ISBN 9781510838819. Aapo Hyvärinen and Hiroshi Morioka. Nonlinear ica of temporally dependent stationary sources. In 
+
+Proceedings of the 20th International Conference on Artificial Intelligence and Statistics (AISTATS) ,volume 54 of Proceedings of Machine Learning Research , pages 460–469. PMLR, 2017. URL 
+
+https://proceedings.mlr.press/v54/hyvarinen17a.html .Aapo Hyvärinen, Hiroaki Sasaki, and Richard E. Turner. Nonlinear ica using auxiliary variables and generalized contrastive learning. In Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics (AISTATS) , volume 89 of Proceedings of Machine Learning Research ,pages 859–868. PMLR, 2019. URL https://proceedings.mlr.press/v89/hyvarinen19a. html .Aapo Hyvärinen, Ilyes Khemakhem, and Ricardo Monti. Identifiability of latent-variable and structural-equation models: from linear to nonlinear. Annals of the Institute of Statistical Mathe-matics , November 2023. ISSN 0020-3157. doi: 10.1007/s10463-023-00884-4. 11 Aapo Hyvärinen and Petteri Pajunen. Nonlinear independent component analysis: Existence and uniqueness results. Neural Networks , 12(3):429–439, 1999. ISSN 0893-6080. doi: https://doi. org/10.1016/S0893-6080(98)00140-3. URL https://www.sciencedirect.com/science/ article/pii/S0893608098001403 .Alexander Immer, Christoph Schultheiss, Julia E. Vogt, Bernhard Scholkopf, Peter Bühlmann, and Alexander Marx. On the identifiability and estimation of causal location-scale noise models. In 
+
+International Conference on Machine Learning , 2022. URL https://api.semanticscholar. org/CorpusID:252917975 .Amin Jaber, Murat Kocaoglu, Karthikeyan Shanmugam, and Elias Bareinboim. Causal dis-covery from soft interventions with unknown targets: Characterization and learning. In H. Larochelle, M. Ranzato, R. Hadsell, M.F. Balcan, and H. Lin, editors, Advances in Neural Information Processing Systems , volume 33, pages 9551–9561. Curran Associates, Inc., 2020. URL https://proceedings.neurips.cc/paper_files/paper/2020/file/ 6cd9313ed34ef58bad3fdd504355e72c-Paper.pdf .Kasra Jalaldoust, Saber Salehkaleybar, and Negar Kiyavash. Multi-domain causal discovery in bijective causal models. In Fourth Conference on Causal Learning and Reasoning , 2025. URL 
+
+https://openreview.net/forum?id=Li07fCvEhw .Nan Rosemary Ke, Silvia Chiappa, Jane X Wang, Jorg Bornschein, Anirudh Goyal, Melanie Rey, Theophane Weber, Matthew Botvinick, Michael Curtis Mozer, and Danilo Jimenez Rezende. Learning to induce causal structure. In International Conference on Learning Representations ,2023. URL https://openreview.net/forum?id=hp_RwhKDJ5 .Ilyes Khemakhem, Diederik P. Kingma, Ricardo Pio Monti, and Aapo Hyvärinen. Variational autoencoders and nonlinear ica: A unifying framework. In Proceedings of the 23rd International Conference on Artificial Intelligence and Statistics (AISTATS) , volume 108 of Proceedings of Machine Learning Research , pages 2207–2216. PMLR, 2020a. URL https://proceedings. mlr.press/v108/khemakhem20a/khemakhem20a.pdf .Ilyes Khemakhem, Ricardo Pio Monti, Diederik P. Kingma, and Aapo Hyvärinen. Ice-beem: Identifi-able conditional energy-based deep models based on nonlinear ica. In Advances in Neural Infor-mation Processing Systems 33 (NeurIPS 2020) , 2020b. URL https://proceedings.neurips. cc/paper/2020/file/962e56a8a0b0420d87272a682bfd1e53-Paper.pdf .Sebastien Lachapelle, Pau Rodriguez, Yash Sharma, Katie E Everett, Rémi LE PRIOL, Alexandre Lacoste, and Simon Lacoste-Julien. Disentanglement via mechanism sparsity regularization: A new principle for nonlinear ICA. In Bernhard Schölkopf, Caroline Uhler, and Kun Zhang, editors, Proceedings of the First Conference on Causal Learning and Reasoning , volume 177 of Proceedings of Machine Learning Research , pages 428–484. PMLR, 11–13 Apr 2022. URL 
+
+https://proceedings.mlr.press/v177/lachapelle22a.html .Adam Li, Jaron Lee, Francesco Montagna, Chris Trevino, and Robert Ness. Dodiscover: Causal discovery algorithms in Python. URL https://github.com/py-why/dodiscover .Yingzhen Li and Richard E. Turner. Gradient estimators for implicit models. In International Conference on Learning Representations , 2018. URL https://openreview.net/forum?id= SJi9WOeRb .Francesco Montagna. On the identifiability of causal graphs with multiple environments. In 
+
+The Fourteenth International Conference on Learning Representations , 2026. URL https: //openreview.net/forum?id=ta8BKRa1bl .Francesco Montagna, Atalanti Mastakouri, Elias Eulig, Nicoletta Noceti, Lorenzo Rosasco, Dominik Janzing, Bryon Aragam, and Francesco Locatello. Assumption violations in causal discovery and the robustness of score matching. In A. Oh, T. Nau-mann, A. Globerson, K. Saenko, M. Hardt, and S. Levine, editors, Advances in Neu-ral Information Processing Systems , volume 36, pages 47339–47378. Curran Associates, Inc., 2023a. URL https://proceedings.neurips.cc/paper_files/paper/2023/file/ 93ed74938a54a73b5e4c52bbaf42ca8e-Paper-Conference.pdf .12 Francesco Montagna, Nicoletta Noceti, Lorenzo Rosasco, Kun Zhang, and Francesco Locatello. Causal discovery with score matching on additive models with arbitrary noise. In Mihaela van der Schaar, Cheng Zhang, and Dominik Janzing, editors, Proceedings of the Second Conference on Causal Learning and Reasoning , volume 213 of Proceedings of Machine Learning Research ,pages 726–751. PMLR, 11–14 Apr 2023b. URL https://proceedings.mlr.press/v213/ montagna23a.html .Francesco Montagna, Philipp Michael Faller, Patrick Blöbaum, Elke Kirschbaum, and Francesco Locatello. Score matching through the roof: linear, nonlinear, and latent variables causal discovery. In Fourth Conference on Causal Learning and Reasoning , 2025. URL https://openreview. net/forum?id=HNMuBz1JXO .Ricardo Pio Monti, Kun Zhang, and Aapo Hyvärinen. Causal discovery with general non-linear relationships using non-linear ica. In Ryan P. Adams and Vibhav Gogate, editors, Proceedings of The 35th Uncertainty in Artificial Intelligence Conference , volume 115 of Proceedings of Machine Learning Research , pages 186–195. PMLR, 22–25 Jul 2020. URL https://proceedings.mlr. press/v115/monti20a.html .Joris M Mooij, Dominik Janzing, Tom Heskes, and Bernhard Schölkopf. On causal discovery with cyclic additive noise models. In J. Shawe-Taylor, R. Zemel, P. Bartlett, F. Pereira, and K.Q. Weinberger, editors, Advances in Neural Information Processing Systems , volume 24. Curran As-sociates, Inc., 2011. URL https://proceedings.neurips.cc/paper_files/paper/2011/ file/d61e4bbd6393c9111e6526ea173a7c8b-Paper.pdf .Arash Nasr-Esfahany, Mohammad Alizadeh, and Devavrat Shah. Counterfactual identifiability of bijective causal models. In Andreas Krause, Emma Brunskill, Kyunghyun Cho, Barbara Engelhardt, Sivan Sabato, and Jonathan Scarlett, editors, Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research ,pages 25733–25754. PMLR, 23–29 Jul 2023. URL https://proceedings.mlr.press/v202/ nasr-esfahany23a.html .Ignavier Ng, Shaoan Xie, Xinshuai Dong, Peter Spirtes, and Kun Zhang. Causal representation learning from general environments under nonparametric mixing. In Yingzhen Li, Stephan Mandt, Shipra Agrawal, and Emtiyaz Khan, editors, Proceedings of The 28th International Conference on Artificial Intelligence and Statistics , volume 258 of Proceedings of Machine Learning Research ,pages 3700–3708. PMLR, 03–05 May 2025. URL https://proceedings.mlr.press/v258/ ng25a.html .Judea Pearl. Causality . Cambridge University Press, Cambridge, UK, 2 edition, 2009. ISBN 978-0-521-89560-6. doi: 10.1017/CBO9780511803161. Judea Pearl, Maria Glymour, and Nicholas Jewell. Causal inference in statistics: A primer. Biometrics ,75(2):708–709, 2019. doi: https://doi.org/10.1111/biom.13079. URL https://onlinelibrary. wiley.com/doi/abs/10.1111/biom.13079 .Ronan Perry, Julius Von Kügelgen, and Bernhard Schölkopf. Causal discovery in heterogeneous environments under the sparse mechanism shift hypothesis. In Alice H. Oh, Alekh Agarwal, Danielle Belgrave, and Kyunghyun Cho, editors, Advances in Neural Information Processing Systems , 2022. URL https://openreview.net/forum?id=kFRCvpubDJo .J. Peters, Peter Buhlmann, and Nicolai Meinshausen. Causal inference by using invariant prediction: identification and confidence intervals. Journal of the Royal Statistical Society: Series B (Statistical Methodology) , 78, 2015. URL https://api.semanticscholar.org/CorpusID:36882285 .Jonas Peters, Joris M. Mooij, Dominik Janzing, and Bernhard Schölkopf. Causal discovery with continuous additive noise models. Journal of Machine Learning Research , 15(58):2009–2053, 2014. URL http://jmlr.org/papers/v15/peters14a.html .Jonas Peters, Dominik Janzing, and Bernhard Schlkopf. Elements of Causal Inference: Foundations and Learning Algorithms . The MIT Press, 2017. ISBN 0262037319. Patrik Reizinger, Yash Sharma, Matthias Bethge, Bernhard Schölkopf, Ferenc Huszár, and Wieland Brendel. Jacobian-based causal discovery with nonlinear ICA. Transactions on Machine Learning Research , 2023. ISSN 2835-8856. URL https://openreview.net/forum?id=2Yo9xqR6Ab .13 Paul Rolland, Volkan Cevher, Matthäus Kleindessner, Chris Russell, Dominik Janzing, Bernhard Schölkopf, and Francesco Locatello. Score matching enables causal discovery of nonlinear additive noise models. In Kamalika Chaudhuri, Stefanie Jegelka, Le Song, Csaba Szepesvari, Gang Niu, and Sivan Sabato, editors, Proceedings of the 39th International Conference on Machine Learning ,volume 162 of Proceedings of Machine Learning Research , pages 18741–18753. PMLR, 17–23 Jul 2022. URL https://proceedings.mlr.press/v162/rolland22a.html .Dominik Rothenhäusler, Christina Heinze, Jonas Peters, and Nicolai Meinshausen. Backshift: Learning causal cyclic graphs from unknown shift interventions. In C. Cortes, N. Lawrence, D. Lee, M. Sugiyama, and R. Garnett, editors, Advances in Neural Information Processing Systems ,volume 28. Curran Associates, Inc., 2015. URL https://proceedings.neurips.cc/paper_ files/paper/2015/file/92262bf907af914b95a0fc33c3f33bf6-Paper.pdf .Bernhard Schölkopf, Francesco Locatello, S. Bauer, N. R. Ke, N. Kalchbrenner, A. Goyal, and Y. Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5):612–634, 2021. doi: 10.1109/JPROC.2021.3058954. URL https://ieeexplore.ieee.org/stamp/ stamp.jsp?arnumber=9363924 .Shohei Shimizu, Patrik O. Hoyer, Aapo Hyvärinen, and Antti Kerminen. A linear non-gaussian acyclic model for causal discovery. J. Mach. Learn. Res. , 7:2003–2030, December 2006. ISSN 1532-4435. P. Spirtes, C. Glymour, and R. Scheines. Causation, Prediction, and Search . MIT press, 2nd edition, 2000. Chandler Squires, Sara Magliacane, Kristjan Greenewald, Daniel Katz, Murat Kocaoglu, and Karthikeyan Shanmugam. Active structure learning of causal DAGs via directed clique trees. In 
+
+Advances in Neural Information Processing Systems 33 (NeurIPS 2020) , 2020. Rocío Titiunik. Natural Experiments , pages 103–129. 03 2021. ISBN 9781108478502. doi: 10.1017/9781108777919.008. Caroline Uhler, G. Raskutti, Peter Bühlmann, and B. Yu. Geometry of the faithfulness assumption in causal inference. The Annals of Statistics , 41, 07 2012. doi: 10.1214/12-AOS1080. Burak Varici, Emre Acartürk, Karthikeyan Shanmugam, Abhishek Kumar, and Ali Tajer. Score-based causal representation learning: Linear and general transformations. Journal of Machine Learning Research , 26(112):1–90, 2025. URL http://jmlr.org/papers/v26/24-0194.html .Karren D. Yang, Abigail Katcoff, and Caroline Uhler. Characterizing and learning equivalence classes of causal DAGs under interventions. In Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 5541–5550, 2018. Dingling Yao, Dario Rancati, Riccardo Cadei, Marco Fumero, and Francesco Locatello. Unifying causal representation learning with the invariance principle. In The Thirteenth International Conference on Learning Representations , 2025. URL https://openreview.net/forum?id= lk2Qk5xjeu .Kun Zhang and Aapo Hyvärinen. On the identifiability of the post-nonlinear causal model. In 
+
+Proceedings of the Twenty-Fifth Conference on Uncertainty in Artificial Intelligence , UAI ’09, page 647–655, Arlington, Virginia, USA, 2009. AUAI Press. ISBN 9780974903958. Kun Zhang, Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Kernel-based conditional independence test and application in causal discovery. Proceedings of the 27th Conference on Uncertainty in Artificial Intelligence, UAI 2011 , 02 2012. 14 A Limitations 
+
+The main limitation that we find in our work are of practical nature. As discussed in the main paper, the assumption that all latent variables are subject to distribution shift can be strong for large graphs. Similarly, the assumption of causal sufficiency (no latent confounders) is a significant restriction, despite common in theoretical studies. Moreover, our MCD method is tested limited to synthetic data. Despite the promising performance, it would be interesting to have access to multi-environment real world data to evaluate its performance. 
+
+# B Related works 
+
+Several works have tackled the problem of identifiability from multiple environments under the invariance principle, both in the causal discovery and in representation learning (ICA and causal representation learning). Below, we summarize the literature and how it relates to our works. 
+
+Observational causal discovery with SCMs. Several works investigated the identifiability of causal graphs from pure observations: Shimizu et al. (2006); Hoyer et al. (2008) focused on linear and nonlinear additive noise models; Zhang and Hyvärinen (2009); Immer et al. (2022) on more or less slight generalizations. The burden of all these methodologies is that they require very strong restrictions on the class of structure causal models that must have generated the data. 
+
+Causal discovery with multiple environments. Causal inference with the invariance principle was popularized by Peters et al. (2015) first (on linear models) and Heinze-Deml et al. (2018) later (on nonlinear additive noise models). Both methods address the problem of (i) locally identifying the causal direction and (ii) learn a regression model in the causal direction that is robust to distribution shifts due to interventions. The idea of their work is quite aligned to ours, despite being significantly more limited in terms of the class of SCMs they consider (additive noise models), while more expanded on the statistical analysis. In the context of causal discovery with structural causal models, Rothenhäusler et al. (2015); Ghassami et al. (2018); Heurtebise et al. (2025) study identifiability of causal graphs with multiple environments, under the assumption of linear models. Montagna (2026) extends these ideas to arbitrary nonlinear models, with the requirements of Gaussian sources: for the causal discovery theory part, this is probably the work closest to ours. The papers of Huang et al. (2020) and Perry et al. (2022) are also concerned with causal discovery and multiple environments under some invariant principle: the main difference is that they do not assume a functional models of causality; as a result, they can only guarantee identifiability as the number of auxiliary datasets go to infinity. All these results can be viewed in the light of classic literature as causal discovery and inference under with natural experiments (Titiunik, 2021). An interesting approach to causal discovery with some overlap to ours is Mooij et al. (2011): they show how to integrate interventional and observational information for causal discovery. 
+
+Causal discovery from interventions. Several empirical and theoretical works investigates causal discovery with hard interventions. Eberhardt et al. (2005) seminal paper upper bounds the number of experiments (in terms of hard assignments) needed to recover the causal graph, in terms of the number of nodes. Yang et al. (2018); Brouillard et al. (2020); Jaber et al. (2020) characterize equivalence classes of causal graphs one can learn from interventional data. From a practical perspective, Brouillard et al. (2020); Ke et al. (2023) introduce neural architectures for causal discovery with interventions. 
+
+Independent component analysis. The ICA problem was introduce by Comon (1994) in their seminal paper. Beyond linearity, ICA was generally thought to be non-solvable; some narrow identifiability results have been presented in Hyvärinen and Pajunen (1999)—specifically, they showed that if the mixing function is conformal it can be recovered up to a rotation indeterminacy. But general nonlinear ICA identifiability has not been shown until Hyvärinen and Morioka (2016) with a multi-environment-based approach (in their work, time intervals serve as the environment label). These results sparked an entire lien of research at the intersection between ICA identifiability and the invariance principle (Hyvärinen and Morioka, 2017; Hyvärinen et al., 2019; Gresele et al., 2019; Khemakhem et al., 2020b,a; Hälvä and Hyvärinen, 2020; Hälvä et al., 2021; Lachapelle et al., 2022). Moreover, given that causal discovery with structural causal model is a simplified version of 15 the ICA problem (Montagna, 2026), Monti et al. (2020); Reizinger et al. (2023) directly translated these findings showing that causal discovery can be solved with multiple environments: however, their results require a number of auxiliary datasets that scale at least linearly with the number of nodes in the graphs, making their guarantees not appealing, in practice. Moreover, their proposed methodologies fail to perform well on graphs with more than two nodes, even on synthetically generated data. 
+
+Causal representation learning. The field of causal representation learning (Schölkopf et al., 2021) strongly focused on analyzing the assumptions under which theoretical guarantees of identifiability can be provided. Most of these results rely on variations of our multi environment setting (e.g., see Squires et al. (2020); Buchholz et al. (2023); Varici et al. (2025)). Yao et al. (2025) nicely presents these works in a unified framework. 
+
+# C Proof of theoretical results 
+
+C.1 Proof of Theorem 1 
+
+We first formalize the sink-identification argument of Example 1. 
+
+Proposition 1 (Sink identification from score ratios) . Let x = f (s) for s ∼ p0 
+
+> S
+
+. For e ∈ { 1, 2},define 
+
+∆(0 , e, x) := ∇  log p0(x) − log pe(x) , Ri(x) := ∆(0 , 1, x)i
+
+∆(0 , 2, x)i
+
+.
+
+Under Assumptions 1, 2, and 3, for every i ∈ { 1, ..., d },
+
+Xi is a sink ⇐⇒ Ri
+
+> |=
+
+X−i.
+
+Proof. Without loss of generality, let the variables be ordered according to a valid causal order, so that Jf −1 is lower triangular. By the change-of-variable formula, 
+
+∆(0 , e, f (s)) = JT  
+
+> f−1
+
+(f (s)) ∇  log p0(s) − log pe(s) ,
+
+hence 
+
+∆(0 , e, f (s)) i =
+
+> d
+
+X
+
+> j=i
+
+∂xi sj ∂sj
+
+ log p0(sj ) − log pe(sj ) .
+
+Assume first that Xi is a sink. Then no node Xj , j > i , is a descendant of Xi. Equivalently, the i-th column of Jf −1 has only the diagonal nonzero entry, and therefore 
+
+∆(0 , e, f (s)) i = ∂xi si ∂si
+
+ log p0(si) − log pe(si) .
+
+Taking the ratio cancels the Jacobian term; defining g : S 7 → R, we get: 
+
+Ri = gi(s) = ∂si
+
+ log p0(si) − log p1(si)
+
+∂si (log p0(si) − log p2(si)) .
+
+Thus Ri is a function of Si only. Since Xi is a sink, X−i is a function of S−i only, and by independence of the sources we obtain 
+
+Ri
+
+> |=
+
+X−i,
+
+where we consider under S ∼ p0
+
+> S
+
+.Conversely, suppose that Xi is not a sink. By Assumption 3, there exists Xj ∈ X−i such that the vectors  ∆(0 , 1, f (s)) i, ∆(0 , 2, f (s)) i
+
+ and  ∂sj ∆(0 , 1, f (s)) i, ∂ sj ∆(0 , 2, f (s)) i
+
+
+
+are not collinear on a positive-measure set. By Assumption 3(i), ∆(0 , 2, f (s)) i̸ = 0 a.s. Hence 
+
+∂sj Ri(f (s)) = ∂sj ∆(0 , 1, f (s)) i ∆(0 , 2, f (s)) i − ∆(0 , 1, f (s)) i ∂sj ∆(0 , 2, f (s)) i
+
+∆(0 , 2, f (s)) 2
+
+> i
+
+.
+
+The numerator is nonzero on a positive-measure set exactly because the above two vectors are not collinear. Therefore ∂sj Ri(f (s)) ̸ = 0 on a positive-measure set, so the structural equation defining 
+
+Ri depends on Sj .16 Consider the structural equation models given by X := f (S) and R := g(S). Given that 
+
+∂sj Ri(f (s)) ̸ = 0 on a positive-measure subset of S domain, in the corresponding DAG we have 
+
+Sj → Ri; also, we have Sj → Xj , so 
+
+Ri̸|= dXj .
+
+By Assumption 2, this implies 
+
+Ri̸|= Xj .
+
+Since Xj is a component of X−i, it follows that 
+
+Ri̸|= X−i.
+
+This proves the claim. Next, we restate the theorem and present its demonstration. 
+
+Theorem (Formalization of Theorem 1) . Consider the SCM of Equation (1) . Let Assumption 1 and Assumption 2 be satisfied. Then, given at least two auxiliary environments satisfying Assumption 3 of sufficient variability for each node, the causal graph is identifiable. Proof of Theorem 1. By Proposition 1, the observed distributions (pe
+
+> X
+
+)2 
+
+> e=0
+
+determine exactly which nodes are sinks: the quantity Ri is observable from the score differences, and 
+
+Ri
+
+> |=
+
+X−i ⇐⇒ Xi is a sink. Now remove one sink. Since a sink has no children, the remaining variables again form an acyclic structural causal model with independent sources, obtained by deleting that node and its noise term. The restricted model still satisfies Assumptions 1, 3, and 2. Applying Proposition 1 recursively identifies the sinks of the reduced graph at each step. Therefore the data determine a set of valid causal orders of the SCM. Under Assumption 2 of faithfulness, given the causal order, we can uniquely and correctly identify the causal graph. This proves the claim. 
+
+C.2 Proof of Theorem 2 
+
+For convenience, we begin restating the theorem. 
+
+Theorem (Formalization of Theorem 2) . Consider the ICA model Equation (1) for X = f (S). Let Assumptions 1 and 2 to hold. Further, assume that the domain of f : S → X is connected. Then, given at least two auxiliary environments satisfying Assumption 3 f is identifiable in the ICA sense, i.e. up to an invertible and elementwise reparametrization of the sources. 
+
+C.2.1 Sketch of the proof 
+
+Given that the proof is technical, first, we provide a sketch to present the intuition without mathemati-cal complications. 
+
+Proof sketch. By Theorem 1, the causal order is identifiable. Hence, WLOG, we assume Jf is lower triangular. The proof proceeds by induction. 
+
+Base case. For the source node X1, the only nonzero entry in the row Jf ,1 is the diagonal element 
+
+Jf ,11 . Consider an alternative ICA solution bf : this must satisfy the same causal order imposed by 
+
+f : hence, we have Jbf ,11 ̸ = 0 and all remaining entries in the row Jbf ,1 equal zero. Being both f , bf
+
+diffeomorphisms, there is a diffeomorphic function h : bf −1 ◦ f : S 7 → bS: then, the structure of the Jacobians of f and bf imposes that ˆS1 = h1(S1), i.e., the noise of a source node X1 is identified up to an element wise invertible transformation. 17 Inductive step. Let, for each j < i , ˆSj = hj (Sj ). Given that h is lower triangular, we have 
+
+ˆSi = hi(S1, ..., S i). Now, by the inductive assumption, Sj = h−1 
+
+> j
+
+( ˆSj ) for j < i . Being ˆSi by construction independent of ˆS1, ..., ˆSi−1, equally 
+
+ˆSi
+
+> |=
+
+S1: i−1.
+
+We then show that this forces hi(S1, . . . , S i) to reduce to a function of Si alone, namely ˆSi = hi(Si).This is the main technical step of the proof and requires care. Once established, the claim follows. Before presenting the complete proof of the main theorem, we introduce a useful lemma. 
+
+Lemma 1 (Uniqueness of a monotone scalar transport) . Let S be a scalar random variable with strictly positive density on I ⊆ R. Let h, ˜h : I → R be two diffeomorphisms onto their images with the same orientation, i.e. either both strictly increasing or both strictly decreasing. If h(S) and ˜h(S)
+
+have the same distribution, then 
+
+h(s) = ˜h(s), ∀s ∈ I .
+
+Proof. Let F be the cdf of S, and let G be the common cdf of h(S) and ˜h(S). Since S has strictly positive density on I, F is strictly increasing on I. Moreover, by the change of variable formula, the common law of h(S) and ˜h(S) has strictly positive density on its support, so G is strictly increasing there. Assume first that h and ˜h are strictly increasing. Then, for every s ∈ I ,
+
+G(h(s)) = P(h(S) ≤ h(s)) = P(S ≤ s) = F (s),
+
+and similarly 
+
+G(˜h(s)) = P(˜h(S) ≤ ˜h(s)) = P(S ≤ s) = F (s).
+
+Hence G(h(s)) = G(˜h(s)) , and strict monotonicity of G gives h(s) = ˜h(s).If instead h and ˜h are strictly decreasing, then for every s ∈ I ,
+
+G(h(s)) = P(h(S) ≤ h(s)) = P(S ≥ s) = 1 − F (s),
+
+where the last equality uses that S has a density. The same identity holds with ˜h in place of h, so again G(h(s)) = G(˜h(s)) , and strict monotonicity of G gives h(s) = ˜h(s).This proves the claim. Next, we demonstrate Theorem 2. 
+
+Proof. Let (bf , ˆpe
+
+> S
+
+)e be an alternative ICA model generating the same observed distributions (pe
+
+> X
+
+)e.By Theorem 1, the causal order is identifiable. Hence, after a common permutation of the coordinates, we may assume without loss of generality that both Jf and Jbf are lower triangular. Define 
+
+h := bf −1 ◦ f , bS = h(S).
+
+Since f and bf are lower triangular diffeomorphisms, so is h. Therefore, for each i = 1 , . . . , d ,
+
+ˆSi = hi(S1, . . . , S i).
+
+We now show by induction that each hi depends only on Si. For i = 1 , this is immediate. Assume that for some i > 1, we already proved 
+
+ˆSj = hj (Sj ), j = 1 , . . . , i − 1.
+
+Then bS1: i−1 is an invertible componentwise transformation of S1: i−1. Since the coordinates of bS are independent, ˆSi
+
+> |=
+
+bS1: i−1, and therefore also 
+
+ˆSi
+
+> |=
+
+S1: i−1.
+
+18 On the other hand, ˆSi = hi(S1, . . . , S i). Fix any value of S1: i−1. Because h is a diffeomorphism, the map 
+
+si 7 → hi(S1, . . . , S i−1, s i)
+
+is a one-dimensional diffeomorphism, hence strictly monotone. Moreover, the domain of h is connected, because it coincides with the domain of f , which is connected by assumption. Since ∂si hi
+
+is continuous and never vanishes, it must have constant sign on the connected domain of h. Therefore the above one-dimensional map has the same orientation for every value of S1: i−1.Since ˆSi
+
+> |=
+
+S1: i−1, the conditional law of ˆSi given S1: i−1 coincides almost surely with the marginal law of ˆSi. Since ˆSi = hi(S1, . . . , S i), there exists a set E ⊆ Ri−1 of full measure under the law of 
+
+S1: i−1 such that, for every c ∈ E, the random variable hi(c, S i) has the same distribution as ˆSi.On the other hand, for fixed c ∈ E, the map 
+
+si 7 → hi(c, s i)
+
+is strictly monotone, and by connectedness its orientation does not depend on c. Hence, for any 
+
+c, c ′ ∈ E, Lemma 1 applies to the two maps si 7 → hi(c, s i) and si 7 → hi(c′, s i), yielding 
+
+hi(c, s i) = hi(c′, s i), ∀si.
+
+Therefore there exists a function, still denoted by hi, such that 
+
+hi(S1, . . . , S i−1, s i) = hi(si)
+
+for every si and every (S1, . . . , S i−1) ∈ E.Finally, since E has full measure under the law of S1: i−1, it is dense in supp( S1: i−1). Since the original map hi(S1, . . . , S i−1, s i) is continuous, the above identity extends to all values of S1: i−1 in 
+
+supp( S1: i−1). Thus 
+
+ˆSi = hi(Si).
+
+Repeating the argument for all i = 1 , . . . , d , we obtain 
+
+ˆSi = hi(Si), i = 1 , . . . , d. 
+
+Since h is a diffeomorphism, each hi is invertible. Therefore, 
+
+bf −1 ◦ f (S) = ( h1(S1), . . . , h d(Sd)) ,
+
+so f is identifiable up to elementwise reparametrization of the sources. 
+
+C.3 Proof of Corollary 1 
+
+In this section, we present teh corollary statement and its proof. 
+
+Corollary (Formalization of Corollary 1) . Consider the ICA model Equation (1) for X = f (S). Let Assumptions 1 and 2 to hold, and assume that the domain of f : S → X is connected. Then, the SCM is counterfactually identifiable from the observational distribution pX and two auxiliary environments satisfying Assumption 3. Proof. Let (bf , ˆpe
+
+> S
+
+)e be an alternative SCM compatible with the same observational distribution and the same two auxiliary environments. By Theorem 2, the two models can differ only by an elementwise reparametrization of the sources. That is, there exists an invertible componentwise map 
+
+h such that bS = h(S), bf = f ◦ h−1.
+
+Thus, the two SCMs differ only by a relabeling of the exogenous variables. Fix now any factual observation x. In the original model, abduction gives s = f −1(x). In the alternative model, abduction gives 
+
+ˆs = bf −1(x) = h(s).
+
+Hence the inferred exogenous variables in the two models correspond exactly under the same componentwise transformation. 19 Now write the original SCM as 
+
+Xi := Fi(XPA i , S i), i = 1 , . . . , d. 
+
+Since bf = f ◦ h−1 and h acts componentwise, the alternative SCM admits the representation 
+
+Xi := Fi(XPA i , h−1 
+
+> i
+
+( bSi)) , i = 1 , . . . , d. 
+
+Therefore, after abduction at the factual observation x, the two models satisfy 
+
+h−1 
+
+> i
+
+(ˆ si) = si, i = 1 , . . . , d. 
+
+Consider now any intervention on the endogenous variables. This replaces the same structural equa-tions in both SCMs by the same intervened assignments. We claim that the resulting counterfactual values of X coincide in the two models. Since the SCM is acyclic, there exists a causal order. Without loss of generality, assume that this order is 1, . . . , d . We now argue by induction on i.For the base case i = 1 , if X1 is directly intervened on, then its counterfactual value is the same in both models by definition of the intervention. Otherwise, if intervention occurs on Xj for j̸ = i,since X1 has no parents, its counterfactual value in the original model is given by 
+
+X1 := F1(S1),
+
+while in the alternative model it is given by 
+
+X1 := F1(h−11 ( bS1)) .
+
+After abduction, h−11 (ˆ s1) = s1, so the two right-hand sides are equal. Hence the counterfactual value of X1 is the same in both models. For the inductive step, let i > 1 and assume that the counterfactual values of X1, . . . , X i−1 coincide in the two models. If Xi is directly intervened on, then again its counterfactual value is the same in both models by definition of the intervention. Otherwise, in the original model its counterfactual value is obtained from 
+
+Xi := Fi(XPA i , S i),
+
+while in the alternative model it is obtained from 
+
+Xi := Fi(XPA i , h−1 
+
+> i
+
+( bSi)) .
+
+By the inductive hypothesis, the counterfactual values of all variables in XPA i coincide in the two models, since PA i ⊆ { 1, . . . , i − 1}. Moreover, after abduction, h−1 
+
+> i
+
+(ˆ si) = si. Therefore the right-hand sides of the two structural equations are equal, and so the counterfactual value of Xi is the same in both models. By induction, the counterfactual values of all coordinates of X coincide in the two models. Hence, the two SCMs produce the same counterfactual value of X for the given factual observation x and the given intervention. Since x and the intervention were arbitrary, every SCM compatible with the observational distribution and the two auxiliary environments gives the same counterfactual answers. This proves counterfactual identifiability. 
+
+# D On the genericity of the faithfulness assumption 
+
+Faithfulness assumption is well known to be generic in precise terms both in parametric (Spirtes et al., 2000; Uhler et al., 2012) and non-parametric Bayesian networks (Boeken et al., 2026). Below, we provide an example of genericity for the structural equation model (SEM) of Example 1. Note that such an SEM defines a Bayesian network, so all genericity results in the literature apply to our problem. Computations below only serve for illustrative purposes. 20 D.1 Faithfulness in Linear Gaussian Structural Equation Models 
+
+We now formally state that the statistical dependence R1̸|= X2, motivated by the d-connection in Figure 2, holds generically. In linear Gaussian settings, violations of this faithfulness assumption correspond to a set of environment parameters with Lebesgue measure zero, which is well known for faithfulness on Linear Gaussian SCMs. 
+
+Theorem 3 (Generic Faithfulness of the Score Ratio) . Assume a bivariate linear Gaussian structural causal model X1 = S1 and X2 = aS 1 + bS 2 with b̸ = 0 . Let the sources Si across environments 
+
+e ∈ { 0, 1, 2} be distributed as N (μei , (σei )2). Let R1 be the score ratio defined in Equation (7) . The set of environment parameters θ = {μei , σ ei }i,e for which R1 and X2 are statistically independent has Lebesgue measure zero. Proof. Because the sources are Gaussian, their log-densities are quadratic. The score difference for source i between the base environment 0 and auxiliary environment e is therefore a strictly linear function of si:
+
+∆ie (si) = ∂si
+
+ log p0(si) − log pe(si) = αie si + βie 
+
+where αie = 1(σei )2 − 1(σ0  
+
+> i)2
+
+and βie = μ0  
+
+> i
+> (σ0
+> i)2
+
+− μei  
+
+> (σei)2
+
+.From the causal mechanism x2 = as 1 + bs 2, we have s2 = x2−ax 1 
+
+> b
+
+. The Jacobian term is thus the constant ∂x1 s2 = −a/b . Let us denote this constant as γ.Substituting these linear forms into the definition of R1, we obtain a rational function of S1 and S2:
+
+R1(S1, S 2) = α11 S1 + β11 + γ(α21 S2 + β21 )
+
+α12 S1 + β12 + γ(α22 S2 + β22 )
+
+We wish to find the conditions under which R1(S1, S 2) ⊥ X2, where X2 = aS 1 + bS 2. For a non-constant rational function of joint Gaussians to be perfectly independent of a non-trivial linear combination of those same Gaussians, the parameter gradients must align such that R1 depends on 
+
+S1 and S2 strictly through vectors orthogonal to X2.This requirement imposes strict algebraic constraints on the parameter space θ. Specifically, the coefficients of the numerator and denominator of R1 must satisfy a non-trivial polynomial equality involving αie , β ie , a, and b.Let Θ ⊂ Rk be the parameter space of all valid environment means and variances. The subset of parameters that satisfy this polynomial constraint defines a proper algebraic variety. By well-known results in algebraic geometry (Spirtes et al., 2000), the roots of a non-trivial multivariate polynomial evaluated over Rk have a Lebesgue measure of zero. Consequently, exact cancellations leading to R1 ⊥ X2 occur only on a set of measure zero, concluding the proof. 
+
+# E On the genericity of sufficient variability 
+
+E.1 Finite-dimensional analytic families Proposition 2 (Genericity of Assumption 3) . Let Θ ⊆ Rm be open, and a parametrized SCM 
+
+(fθ , p e 
+
+> S,θ
+
+)2
+
+> e=0
+
+, θ ∈ Θ.
+
+Assume that S = supp( S) is connected and open, and that for every i ∈ { 1, ..., d } and e ∈ { 0, 1, 2}
+
+the density peSi,θ is strictly positive on its domain. Further, assume that the maps 
+
+(si, θ ) 7 → peSi,θ (si), (s, θ ) 7 → fθ (s)
+
+are real analytic. If there exists θ⋆ ∈ Θ such that Assumption 3 holds, then the set of θ ∈ Θ for which Assumption 3 fails has Lebesgue measure zero. Proof. For i ∈ { 1, ..., d }, define 
+
+Gi(s, θ ) := ∆(0 , 2, fθ (s)) i
+
+21 where 
+
+∆(0 , e, fθ (s)) := ∇  log pX,θ (fθ (s)) 0 − log pX,θ (fθ (s)) e .
+
+For i, j ∈ { 1, ..., d }, j̸ = i, define 
+
+Hij (s, θ ) := ∆(0 , 1, fθ (s)) i ∂sj ∆(0 , 2, fθ (s)) i − ∆(0 , 2, fθ (s)) i ∂sj ∆(0 , 1, fθ (s)) i.
+
+Since positive real analytic functions have real analytic logarithm, the maps 
+
+(si, θ ) 7 → ∂si
+
+ log p0 
+
+> Si,θ
+
+(si) − log peSi,θ (si)
+
+are real analytic. Therefore Gi and Hij are real analytic in (s, θ ).Since p0 
+
+> S,θ
+
+is strictly positive on S, Assumption 3(i) fails for node i if and only if Gi(·, θ ) vanishes on a positive-measure subset of S. By analyticity on the connected open set S, this is equivalent to 
+
+Gi(·, θ ) ≡ 0.
+
+Likewise, for fixed i and j̸ = i, the two vectors in Assumption 3(ii) are collinear if and only if 
+
+Hij (s, θ ) = 0 . Hence Assumption 3(ii) fails for a non-sink Xi if and only if 
+
+Hij (·, θ ) ≡ 0, ∀j̸ = i. 
+
+Fix θ⋆ as in the statement. Then Gi(·, θ ⋆)̸ ≡ 0 for every i. Moreover, for every non-sink Xi, there exists ji̸ = i such that Hij i (·, θ ⋆)̸ ≡ 0. Fix s0 ∈ S . Expanding around s0,
+
+Gi(s, θ ) = X
+
+> α
+
+ci,α (θ)( s − s0)α, Hij i (s, θ ) = X
+
+> α
+
+di,α (θ)( s − s0)α,
+
+where each coefficient is real analytic in θ. Since Gi(·, θ ⋆) and Hij i (·, θ ⋆) are not identically zero, there exist multi-indices αi, β i such that ci,α i and di,β i are non-trivial real analytic functions on Θ.Therefore their zero sets have Lebesgue measure zero. If Assumption 3 fails at θ, then either Gi(·, θ ) ≡ 0 for some i, or Hij i (·, θ ) ≡ 0 for some non-sink 
+
+Xi. Hence the exceptional set is contained in the finite union 
+
+> d
+
+[
+
+> i=1
+
+{θ ∈ Θ : ci,α i (θ) = 0 } ∪ [   
+
+> i:Xinon-sink
+
+{θ ∈ Θ : di,β i (θ) = 0 },
+
+which has Lebesgue measure zero. 
+
+E.2 Linear Gaussian illustration Proposition 3 (Linear Gaussian illustration) . Consider the bivariate setting of Example 1, and assume 
+
+X1 := S1, X2 := aX 1 + S2,
+
+with a ∈ R, and 
+
+Sei ∼ N (0 , (σei )2), i = 1 , 2, e = 0 , 1, 2.
+
+Define 
+
+αei := 1(σei )2 − 1(σ0 
+
+> i
+
+)2 .
+
+If 
+
+α21̸ = 0 , α22̸ = 0 , α12α21 − α22α11̸ = 0 ,
+
+then the set of coefficients a for which Assumption 3 fails is {0}.Proof. For e ∈ { 1, 2},
+
+∂si
+
+ log p0(si) − log pe(si) = αei si,
+
+hence 
+
+∆(0 , e, x)2 = αe
+
+> 2
+
+s2, ∆(0 , e, x)1 = αe
+
+> 1
+
+s1 − aα e
+
+> 2
+
+s2.
+
+Therefore Assumption 3(i) holds for both i = 1 , 2.The only non-sink is X1, and in Assumption 3(ii) we can take j = 2 . Since 
+
+∂s2 ∆(0 , e, x)1 = −aα e
+
+> 2
+
+,
+
+the determinant testing collinearity is 
+
+∆(0 , 1, x)1 ∂s2 ∆(0 , 2, x)1 − ∆(0 , 2, x)1 ∂s2 ∆(0 , 1, x)1 = a  α12α21 − α22α11
+
+ s1.
+
+By assumption, this vanishes on a positive-measure set if and only if a = 0 . Hence Assumption 3(ii) holds for every a̸ = 0 , and fails for a = 0 .22 3 5 10 20 
+
+> Number of nodes
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> 120
+> 140
+> 160
+> Running time (s)
+> Compute time of MCD (3 environments)
+> n = 1,000
+> n = 2,000
+> n = 3,000
+
+Figure 5: Average ( 20 seeds) execution time of the MCD algorithm, per number of samples and number of nodes. Experiments are run on a laptop Lenovo ThinkPad T14 Gen 5 on CPU. 
+
+# F Algorithm and additional experimental results 
+
+In this section we present further details on the MCD algorithm, details on the compute resources, and additional experimental results. 
+
+F.1 The MCD algorithm 
+
+The MCD algorithm is introduced in Section 4, Algorithm 1. Here we provide further details on statistical estimation procedures and computational complexity. 
+
+Statistical inference steps: the score matching approach. The key object to infer from the data is the difference of the score between different environments, i.e., the quantity ∆(0 , e, x) of Equation (6). Then, the main statistical inference task is estimating partial derivatives of joint log-densities. This is a well-studied problem, and can be addressed with an umbrella of techniques that go under the name of score matching (Hyvärinen, 2005) ( ∇ log p is known as the score function). In this work, we adopt the Stein estimator introduced by Li and Turner (2018) (to which we point the interested reader for a thorough treatment of Stein estimation techniques). For the independence testing required to identify a sink node at each iteration of the algorithm, we use the HSIC test (Gretton et al., 2007), also a standard choice in causality (Zhang et al., 2012). Both the score estimator and the independence testing are correct in the population limit. The same property is hence inherited by MCD. 
+
+Algorithmic complexity. The method recursively iterates on all nodes to allocate them a position in the estimated causal order. Each iteration involves running the gradient ∇ log pX estimator for each input environment; this which requires solving a kernel ridge regression problem with cubic complexity in the number of nodes. Overall, for E environments, d nodes in the graph, and n number of samples, the score estimation requires O(Edn 3) operations. The HSIC independence testing requires O(n2d) operations, and is run for each node, contributing O(d2n2). Overall, MCD has 
+
+O(Edn 3 + d2n2).
+
+F.2 Additional experimental results 
+
+In this section, we present additional experimental results on the MCD method, in support of our theory. 
+
+F.2.1 Statistical efficiency of MCD 
+
+We empirically evaluate the statistical efficiency of the MCD algorithm. In Figure 6 we show the average topological order divergence on 3 to 20 nodes of our method, achieved when each base or auxiliary environment is assigned 1000 , 2000 or 3000 samples. We observe meaningful improvements 23 3 5 10 20 
+
+> Number of nodes
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Dtop
+> Statistical efficiency of MCD
+> n = 1,000
+> n = 2,000
+> n = 3,000
+
+Figure 6: Average normalized Dtop (the lower, the better) and 95% confidence interval ( 20 seeds) of MCD at varying datasets size. n refers to the number of samples observed in each environment. We see that for n = 1000 MCD already infers causality better than random (expected accuracy at 
+
+0.5); for 2000 samples MCD significantly increases the accuracy, which remains almost stable for 
+
+n = 3000 .3 5 10 20 
+
+> Number of nodes
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Dtop
+> Effect of number of environments on MCD
+> 3 environments
+> 5 environments
+> 7 environments
+
+Figure 7: We compare MCD average normalized Dtop (the lower, the better) when inference occurs on 3, 5, 7 environments; in line with the findings of Theorem 1, 3 datasets are sufficient for causal discovery. In fact, up to finite samples effects, adding environments does not clearly improves inference accuracy. Error bars denote 95% confidence intervals over 20 seeds. when increasing datasets size from 1000 to 2000 ; interestingly, after 2000 samples the quality of inference is substantially stable. 
+
+F.2.2 3 environments is all it takes 
+
+In Figure 7 we evaluate MCD accuracy when we add auxiliary information from more environments. We consider settings where inference occurs on 3, 5, 7 datasets: we observe that adding environments beyond 3 does not affect the accuracy with statistical significance (sometimes leading to marginal improvements, sometimes to marginal degradation of the mean normalized Dtop ). This is in line with our main claim in Theorem 1, stating that only two auxiliary environments are sufficient for causal graph discovery. 
+
+F.2.3 Ablation study on the mechanism type 
+
+We analyse the impact of the mechanism choice on the results of Figure 4 in Section 4.2. In particular, we run inference with 3 environments, each with 3000 samples, and repeat each experimental run on 
+
+20 seeds. The red curve denotes MCD accuracy achieved on data generated by SCMs with linear mechanisms only. The green curve, similarly, is the accuracy when mechanisms are only nonlinear, 24 3 5 10 20 
+
+> Number of nodes
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Dtop
+> Ablation: MCD by mechanism type
+> Linear
+> ResNet nonlinear
+
+Figure 8: We study MCD average Dtop (the lower, the better) separately, on synthetic datasets whose causal mechanisms are only linear or only nonlinear (parametrized with a ResNet, as described in Section 4.2). We find that MCD accuracy is substantially unaffected by the nonlinearity, as predicted by the theory. Error bars denote 95% confidence intervals over 20 seeds. randomly sampled from a neural network (as described in Section 4.2). Remarkably, adding (severe) nonlinearity in the data generating process does not affect MCD ability to infer causality. 25

@@ -1,0 +1,724 @@
+Title: Temporal Causal Models as a Model of Computation
+
+URL Source: https://arxiv.org/pdf/2605.06292v1
+
+Published Time: Fri, 08 May 2026 01:39:46 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Temporal Causal Models as a Model of Computation 
+
+# Maksim Gladyshev 1 , Natasha Alechina 2,1 , Brian Logan 3,11Utrecht University, The Netherlands 
+
+> 2
+
+# Open Universiteit, The Netherlands 
+
+> 3
+
+# University of Aberdeen, UK 
+
+# {m.gladyshev, n.a.alechina, b.s.logan }@uu.nl 
+
+# Abstract 
+
+Causal models, also known as Structural Equation Models (SEM), are a well-known formalism for representing and reasoning about causal dependen-cies between events. In this paper, we show that Temporal SEMs (TSEMs), which extend SEMs to support causal reasoning in temporal settings, can be interpreted as a model of computation. We prove that TSEMs can encode Linear Bounded Au-tomata, and thus causal settings representable in context sensitive languages. We also prove that TSEMs with countably many variables are Turing complete. These results establish a formal connec-tion between causal reasoning and classical models of computation, enabling the integration of counter-factual reasoning techniques from causal inference into the theory of computation. 
+
+# 1 Introduction 
+
+Causal models in the form of Structural Equation Models (SEM) [Pearl, 2000; Spirtes et al. , 2001; Halpern, 2016] have become the dominant AI framework for representing and analysing causal relations between events of interest. These models represent events as the assignment of values to vari-ables, and encode causal dependencies between variables us-ing structural equations which define how the value of each variable depends on the values of other variables. Being a rel-atively simple yet powerful formalism, they have found multi-ple applications in different disciplines, including Economics [Heckman and Pinto, 2022], Medicine [Gunzler et al. , 2021] and Machine Learning [Albahri et al. , 2022]. Causal frameworks can also be used to causally model and understand the temporally extended behaviour of natural sys-tems or temporally extended processes. In many applications we are interested in reasoning about not only whether “event A causes event B” but also whether “event A happening at time t1 causes event B at time t2”, and a range of approaches to integrating temporal and causal reasoning have been pro-posed, based both on SEMs e.g., [Bongers et al. , 2022; Assaad et al. , 2022; Boeken and Mooij, 2024; Gladyshev 
+
+et al. , 2025a; Cinquini et al. , 2025], and on alternative frameworks, e.g., [Console and Torasso, 1993; Lorini, 2013; Batusov and Soutchanski, 2018; Ciuni and Lorini, 2018; Finkbeiner et al. , 2024]. In this paper we argue that temporal causal models are not only an effective tool for reasoning about causal structures underlying physical, biological or social processes, but can also be viewed as a useful formalism for representing com-puting devices. Although other temporal formalisms, for ex-ample extensions of the logic LTL [Mukherjee et al. , 2012], can be used to reason about computations, temporal causal models allow us to use techniques specifically developed for causal inference, e.g., counterfactual reasoning, to model and understand the dynamics of program behaviour. We show that Temporal Structural Equation Models (TSEM) [Glady-shev et al. , 2025a] can encode Linear Bounded Automata and thus causal settings representable in context sensitive lan-guages. We also prove that TSEMS with countably many variables are Turing complete, and sufficiently expressive for reasoning about computations in both deterministic and non-deterministic settings. Understanding the causal evolution of computational pro-cesses over time is important for computability theory, and we argue that TSEMs provide a useful framework to represent not only the sequence of computational states, but also the causal dependencies between state transitions. This allows us to analyse how specific inputs or intermediate steps causally affect computational outcomes. For example, TSEMs may be used to augment formal verification techniques to determine why certain errors occurred in a system, and what could pre-vent them. The contributions of this paper are as follows: 1. We introduce a non-deterministic extension of TSEMs and define interventions on TSEMs in Section 2. 2. We prove that TSEMs are as expressive as Linear Bounded Automata in Section 3. 3. We prove that TSEMs with countably many variables are as expressive as Turing machines in Section 4. 4. We discuss how interventions on TSEMs can be used to answer computational questions in Section 5. 
+
+# 2 Temporal Causal Models 
+
+In this section, we introduce the main components of Tem-poral Structural Equation Models (TSEM). As we aim to en-
+
+> arXiv:2605.06292v1 [cs.FL] 7 May 2026
+
+code nondeterministic Linear Bounded Automata and nonde-terministic Turing Machines, we focus on nondeterministic 
+
+causal models in which a set of events may result in more than one outcome. Let V = {X1, X 2, . . . } be a finite set of variables. A
+
+range function R associates with every variable Xi ∈ V anon-empty finite set R(Xi) = {x1, . . . , x k} of possible val-ues. The values of variables may change over time, and these changes are governed by temporal structural equations which describe how the current value of each Xi ∈ V depends on the previous values of variables in V. A domain function 
+
+D : V −→ 2V maps each variable Y ∈ V to a finite subset of variables, intuitively those variables whose values determine the possible next values of Y .A causal model M over a signature S = ( V, R, D) con-sists of a set of structural equations F = {F Y | Y ∈ V} 
+
+specifying how the next values of Y depends on the previous values of the variables in its domain D(Y ). Formally: 
+
+Definition 1 (Temporal Structural Equation Model) . A (non-deterministic) Temporal Structural Equation Model (TSEM), over a signature S is a tuple M = ( S, F), where F asso-ciates with every variable Y ∈ V a function 
+
+FY : Y 
+
+> X∈D (Y)
+
+R(X) −→ 2R(Y )
+
+which defines the structural equation describing how the (next) value of Y depends on the (previous) values of the variables in its domain D(Y ).1 A TSEM is deterministic if all structural equations always return a single value. 
+
+The changes in the values of variables induced by a set of structural equations are described by a computation. A
+
+computation C is a tree of configurations of M, i.e., complete assignments of values to variables V. We denote a complete assignment to V by ⃗v, and use ⃗v |X to denote ⃗v restricted to 
+
+X ∈ V ; we also denote ⃗v restricted to the variables in the domain of Y as ⃗v |D (Y ). Let Conf CM (M) be the set of all possible configurations of a causal model M.
+
+Definition 2 (Computation) . A computation C for a TSEM 
+
+M with initial assignment ⃗v 0 is a tree T C , whose nodes are elements of Conf CM (M) with root node ⃗v 0, and ⃗v 1 ↠M⃗v 2
+
+iff ∀X ∈ V ,⃗ v 2|X ∈ F X (⃗v 1|D (X)).
+
+As a simple illustration, consider a model M with a sin-gle variable X: V = {X}, such that R(X) = {0, . . . , 9},
+
+D(X) = {X}, and a single structural equation defined as follows: 
+
+FX (X = x) = 
+
+9, if x = 9 
+
+{0, x + 1 }, if x̸ = 9 
+
+If the value of X on the previous step of the computation is equal to 9, it remains so on the current step. However, if the previous value x of X is less than 9, FX makes a non-deterministic choice: either to continue counting and increase the value of X to x + 1 or to reset X to 0.                     
+
+> 1We abuse notation and interpret elements of Q
+> X∈{ X1,...,X k}
+> R(X)both as vectors of values (x1, . . . , x k)
+> and as vectors of assignments (X1=x1, . . . , X k=xk).
+
+One of the key features of causal models is that they al-low counterfactual reasoning , that is, they allow us to reason not only about the actual sequence of events, but also about hypothetical counterfactual sequences of events by means of so-called interventions . An intervention is an operation on causal model. An atomic intervention is denoted by do (Y n ← y), where 
+
+Y ∈ V , n ∈ N, y ∈ R (Y ), says that the value of the variable 
+
+Y must be fixed to y at the nth step of the computation. An intervention do (⃗Y⃗n ←⃗y) = do (Y n1 
+
+> 1
+
+← y1, . . . , Y nj 
+
+> i
+
+← yi)
+
+is a vector of atomic interventions. Here we assume that if Y nk ← yk and Y nl ← yl occur in ⃗ Y⃗n ←⃗ y, then 
+
+Yk̸ = Yl. This intervention results in an updated computa-tion tree C⃗ Y⃗n ←⃗y , defined for each computation branch as fol-lows. Given a default assignment ⃗v 0, let ⃗v I 
+
+> 0
+
+under intervention 
+
+I = do (⃗ Y⃗n ←⃗y) be an assignment of V, which agrees with ⃗v 0 everywhere, except the variables Yi, such that Y 0 
+
+> i
+
+← y
+
+occurs in ⃗ Y⃗n ←⃗y. The values of those variables in ⃗v I 
+
+> 0
+
+are set according to ⃗ Y⃗n ←⃗y. We write C(i)| X to refer to X’s value at the i’th step of C. This means that we set a value of X on all branches of C.
+
+Definition 3 (Intervention) . Given an intervention I =
+
+do (⃗ Y⃗n ←⃗y) and (M,⃗ v 0), an updated computation tree CI
+
+is defined as, for every branch Cb in the tree, CIb (0) = ⃗v 0I ,and ∀i > 0, ∀X ∈ V :
+
+CIb (i)|X =
+
+(
+
+x′, if Xi ← x′ ∈⃗ Y⃗n ←⃗y
+
+FX (CIb (i − 1)) |D (X), otherwise 
+
+Interventions can be used to define a cause of a particular state of affairs. Since we consider a temporal setting, as in [Gladyshev et al. , 2025a], we focus on the notion of a cause at step n rather than cause in general. Since we are in non-deterministic setting, we follow [Beckers, 2025b] to define a cause in the strong sense that the outcome could have been prevented on all branches of the computation tree. 
+
+Definition 4. Given a TSEM M, its initial configuration ⃗v 0 and two assignments of variables ⃗ X⃗ t =⃗ x = ( X t1 
+
+> 1
+
+=
+
+x1, . . . , X tn 
+
+> n
+
+= xn) and ⃗ Y⃗ t′
+
+=⃗y = ( Y t′ 
+
+> 1
+> 1
+
+= y1, . . . , Y t′ 
+
+> k
+> k
+
+=
+
+y′
+
+> k
+
+) at the corresponding time steps t1, . . . , t n and t′
+
+> 1
+
+, . . . , t ′
+
+> k
+
+.We say that ⃗ X⃗ t =⃗x is the cause of ⃗ Y⃗ t′
+
+=⃗y in (M,⃗ v 0) iff (1) both ⃗ X⃗ t =⃗x and ⃗ Y⃗ t′
+
+=⃗y hold in C for (M,⃗ v 0);(2) there exists an intervention I = do (⃗ X⃗ t ←⃗ x ′) with ⃗x̸ =⃗ x′, such that ⃗ Y⃗ t′
+
+=⃗ y does not hold on any branch in CI ;(3) no proper subset of ⃗ X⃗ t =⃗x satisfies condition (2). 
+
+The definition of causal models we present here differs from the standard definition of static SEM, e.g., [Halpern, 2016], where a signature usually contains two types of vari-ables: exogenous variables (whose values are determined out-side of the model) and endogenous variables (whose values depend on the values of other variables). However, this dis-tinction is not required in our setting, and we treat all the variables as endogenous. Following [Gladyshev et al. , 2025a], we also interpret structural equations as temporal (or time-lagged), and call these models temporal SEMs. While in general TSEMs al-low equations with arbitrary long delays (time lags) [Glady-shev et al. , 2025b], to simplify notation we restrict consider-ation to TSEMs with 1-step delays as these are sufficient for the proofs presented below. Lastly, while non-deterministic extensions of static SEMs have been considered in [Beck-ers, 2025b; Beckers, 2025a] and [Barbero, 2024], to the best of our knowledge, temporal extensions of non-deterministic SEMs have not been studied before. 
+
+# 3 Encoding Linear Bounded Automata 
+
+In this section, we show how TSEMs can be used to encode Linear Bounded Automata. A linear bounded automaton (LBA) is a restricted form of a Turing Machine in which the tape is finite and bounded by left and right endmarkers, and where transitions may not overwrite the endmarkers or to move to the left of the left endmarker or to the right of the right endmarker. Non-deterministic LBAs accept the class of context-sensitive lan-guages, that is, problems which can be expressed in a context sensitive grammar [Hopcroft and Ullman, 1979]. An LBA ac-cepts a grammar if for each string in the language it accepts with a tape that is bounded by a linear function of the length of the input string. There are several definitions of LBAs in the literature. The definition below is based on that in [Simovici and Tenney, 1999] as it allows a simpler encoding as a causal model. 
+
+Definition 5 (LBA) . A (nondeterministic) LBA is a tuple A =(Q, q 0, F, Σ, Γ, δ ), where 
+
+• Q is a finite set of states with q0 ∈ Q the initial state; 
+
+• F ⊂ Q is the set of final (or accepting) states; 
+
+• Σ is a finite set of input symbols; 
+
+• Γ = Σ ∪{ #, ▷, ◁ } is the finite set of tape symbols, where 
+
+# is the blank symbol, ▷ and ◁ the left and right end-markers, and {#, ▷, ◁ } ∩ Σ = ∅;
+
+• δ : ( Q \ F ) × Γ × Q × Γ × {− 1, 0, 1} is a transition relation mapping a state q ∈ (Q \ F ) and a symbol 
+
+γ ∈ Γ to a set of tuples (q′, γ ′, d ), where q′ is the next state, γ′ ∈ Γ is the symbol written in the current cell and 
+
+d ∈ {− 1, 0, 1} is the direction in which the head moves (−1 indicates the head moves to the left etc.). 
+
+The transition relation δ is constrained such that, if γ is ▷ then 
+
+γ′ = ▷ and d̸ = −1 and if γ is ◁ then γ′ = ◁ and d̸ = 1 , i.e., the endmarkers cannot be overwritten and transitions cannot move to the left of the left endmarker or to the right of the right endmarker. Note also that δ is defined only for states in 
+
+Q \ F , i.e., computation stops when a final state is reached. We say that an LBA has tape of length n if the number of cells between ▷ and ◁, not including the cells with the end-markers, is n. We represent a configuration of an LBA with a tape of length n as a string 
+
+λ = C0C1 . . . qC i . . . C nCn+1 
+
+where q is the state of the LBA, the tape head is above cell 
+
+Ci, C0 = ▷, Cn+1 = ◁, and each Ck, 1 ≤ k ≤ n represents a symbol written in the k-th cell of the tape. Without loss of generality, we assume that, in the initial configuration, the head is above cell C0, and the string of input symbols s =
+
+σ1, . . . , σ k are in the cells C1, . . . C k.
+
+Definition 6. Let Conf LBA (A) be the set of all possible con-figurations of an LBA A. Then, a run of A on input s is a tree 
+
+T . The nodes of T are elements of Conf LBA (A) with a root node λs representing the initial configuration of A for input 
+
+s, and λ ↠A λ′ ∈ T iff λ′ is a possible result of transition from λ according to δ.
+
+An LBA accepts a string s iff the computation tree T for the input s contains a sequence of valid transitions λs ↠A
+
+· · · ↠A λ′ from the root node λs to some accepting config-uration λ′ = C0 . . . q F . . . C n+1 where the LBA is in a final state (i.e., qF ∈ F ). We now show how to construct a TSEM which we call a 
+
+Causal Calculator that simulates an LBA. For a given LBA 
+
+A with a tape of length n we are going to build an LBA causal calculator MA parameterised by n such that A ac-cepts a string iff MA has an accepting computation on the corresponding input. To simplify the construction, we intro-duce a transition relation δF which is deterministic for final states of the LBA: 
+
+δF (q, γ ) = 
+
+{⟨ q′, γ ′, d ⟩ | ⟨ q, γ, q ′, γ ′, d ⟩ ∈ δ(q, γ )} if q̸ ∈ F
+
+{⟨ q, γ, 0⟩} if q ∈ F
+
+where d ∈ {− 1, 0, 1}.We first explain the intuition and then give the formal defi-nition. As the LBA transition relation δ is non-deterministic, we cannot update the state, symbol and the direction in which the head moves separately in the configuration of MA. We therefore use a special variable X0 whose value is a 3-tuple where the first element is the current state of the LBA, the second is the symbol written at the last LBA transition, and the third is the direction the head moved to arrive at the cur-rent LBA configuration. In addition, to allow interventions on LBA transitions, instead of an encoding where a variable 
+
+Xi holds the symbol in the ith cell of the LBA, the index of the variable holding the symbol in Ci is relative to the last position of the head. In effect, we shift the representation of the LBA tape in the causal model left or right depending on the movement of the head. This requires twice the number of variables in the causal model as there are cells in the tape of the LBA, from X−(n+1) to Xn+1 . At any given time, a contiguous set of these variables correspond to C0, . . . , C n+1 
+
+but shifted by at most n + 1 compared to the LBA cells, de-pending on the past movements of the head. For example, if at time t − 1 the head was over Cn+1 , at time t the second element of X0 is ◁ and C0 in the LBA corresponds to the variable X−(n+1) .
+
+Definition 7. Given an LBA A = ( Q, q 0, F, Σ, Γ, δ ) with tape of length n, an LBA Causal Calculator is a tuple MA =(SA, FA), with signature SA = ( V, R, D), where 
+
+• V = {Xi | − (n + 1) ≤ i ≤ (n + 1) };
+
+• R(X0) = Q × Γ × {− 1, 0, 1},
+
+R(Xi∈[−(n+1) ,n +1] \{ 0}) = Γ ;• D(Xi∈[−n,n ]) = {X0, X i−1, X i, X i+1 },
+
+D(X−(n+1) ) = {X0, X −(n+1) , X −n},
+
+D(Xn+1 ) = {X0, X nXn+1 };and equations FA:
+
+FX0 (X0 = ⟨q, γ, d ⟩, X d = γ′) = 
+
+{⟨ q′, γ ′′ , d ′⟩ | ⟨ q′, γ ′′ , d ′⟩ ∈ δF (q, γ ′)}FXi∈[−(n+1) ,n ]\{ 0} (X0 = ⟨q, γ, d ⟩, X i+d = γ′) = γ′
+
+In the initial configuration ⃗v 0, X0 = ⟨q0, ▷, 0⟩, Xn+1 = ◁,
+
+Xi∈[1 ,k ] = σi, where σ1, . . . , σ k is the input, and Xi = # for 
+
+−n ≤ i < 0 and k + 1 ≤ i ≤ n.Informally, the first equation updates the value of X0 and the second equation updates the value of all other variables 
+
+Xi∈[−n,n +1] \{ 0}.For X0, if the head did not move at t − 1 (this includes the initial configuration), the value of X0 is updated with the LBA transition (q′, γ ′′ , d ′) = δF (q, γ ′) at t, where γ′ = γ.If the head moved left at the last transition, then X0 is up-dated with (q′, γ ′′ , d ′) = δF (q, γ ′), where γ′ is the symbol in 
+
+X−1 (i.e., the symbol currently under the head). If the head moved right at the last transition, then X0 is updated with 
+
+(q′, γ ′′ , d ′) = δF (q, γ ′), where γ′ is the symbol in X1.For Xi∈[−n,n +1] \{ 0}, if the head did not move the value of 
+
+Xi is updated with γ′ = γ, i.e., remains the same. If the head moved left, the value of Xi is updated to be the value in Xi−1,i.e., it shifts the representation of the LBA tape in the causal model to the right. (To simplify the presentation, we abuse notation and assume that in the case where Xi−1 = X0, γ′
+
+is the second element of the tuple in X0.) If the head moved right, the value of Xi is updated to be the value in Xi+1 .We say that an LBA causal calculator accepts a string s iff the computation tree CMA
+
+for the input s contains a sequence of valid transitions ⃗v 0 ↠MA · · · ↠MA⃗ v m from the root node ⃗v 0 to some accepting configuration ⃗v m such that ⃗v i ∈
+
+Conf CM , 0 ≤ i ≤ m. A configuration ⃗v m = X−(n+1) . . . X0 . . . X n+1 is accepting iff X0 = ⟨qF ∈ F, γ, 0⟩, i.e., the state is final. 
+
+Theorem 1. An LBA A accepts a string if, and only if, it is accepted by the corresponding causal calculator MA.Proof. In order to prove this we show that there is a bisimu-lation relation between the nodes of the computation tree of 
+
+A, T , and of computation tree of MA, C, where bisimilar nodes have the same states and tape contents. If λ and ⃗v are bisimilar, and λ ↠A λ′, then there is a transition ⃗v ↠ MA⃗ v′
+
+such that λ′ and ⃗ v′ are bisimilar, and vice versa. This will im-ply that a configuration with an accepting state is reachable in one tree if and only if it is reachable in another. Since the variables of MA correspond to different tape cells at different steps, the notion of bisimulation is non-trivial and depends on the history of the computation so far. We will say that a transition λ ↠A λ′ is by (q, γ, q ′, γ ′, d )
+
+if this was the element of δF used for this transition, and la-bel this edge in T by d. Similarly, we say that a transition ⃗v ↠ MA⃗ v′ is by (q, γ, q ′, γ ′, d ) if the value of X0 in ⃗v is 
+
+(q, γ, −) and the value of X0 in ⃗ v′ is (q′, γ ′, d ), and we label this edge in C by d.Finally, we say that two nodes λ and ⃗ v at step t are 
+
+d1, . . . , d t bisimilar if (i) the path from the root node to each of them is labelled d1, . . . , d t, (ii) the state in λ is the same as the state component in the value of X0 in ⃗v, (iii) the symbol in Ck in λ is the same as the symbol in Xk−ot (the symbol in 
+
+X0 = ( −, γ, −) is γ), where ot = Σ i=ti=0 di − dt. Observe that 
+
+j = Σ i=ti=0 di is the position of the head in λ. (Note that the offset ot can also be calculated using the index of the variable containing ▷, but this more general approach also works for non-deterministic TMs.) Clearly, λ0 and ⃗v 0 are ϵ-bisimilar, where ϵ is an empty path. For the inductive step, assume that λ and ⃗v at step t − 1 are 
+
+d1, . . . , d t−1 bisimilar. We need to show that 
+
+(T → C) if there is a transition from λ to λ′ by 
+
+(q, γ, q ′, γ ′, d ), then there is a transition from ⃗v to ⃗ v′ by 
+
+(q, γ, q ′, γ ′, d ), and λ′ and ⃗ v′ are d1, . . . , d t−1, d bisimilar; 
+
+(C → T ) if there is a transition from ⃗v to ⃗ v′ by (q, γ, q ′, γ ′, d ),then there is a transition from λ to λ′ by (q, γ, q ′, γ ′, d ), and 
+
+λ′ and ⃗ v′ are d1, . . . , d t−1, d bisimilar. We prove those conditions for d = 1. The proofs for 
+
+d = −1 and d = 0 are similar. 
+
+(T → C ) Let λ = C0 . . . qC j . . . C n+1 , that is, the head is over Cj and the state is q. By the inductive hypoth-esis, X0 = (q, C j−dt−1 , d t−1), and the symbol that the head is reading is in Xj−ot−1 . Let the transition from λ
+
+be by some (q, γ, q ′, γ ′, 1) where γ is in Cj . The resulting 
+
+λ′ = C0 . . . C j = γ′q′Cj+1 . . . C n+1 . The successor of ⃗v
+
+by (q, γ, q ′, γ ′, 1) is (i) reachable from the root by the same sequence d1, . . . , d t−1, 1 as λ′, (ii) has the same state q′ due to the equation for X0, (iii) the symbol that was held in Xi
+
+is now held in Xi−1 because of the equation for Xi, which maintains the correspondence with LBA cells since the offset has increased by d = 1 .
+
+(C → T ) Let X0 in ⃗v have value (q, χ, d t−1). Assume that transition in MA is to ⃗ v′ by (q, γ, q ′, γ ′, 1) where γ is the symbol in Xdt−1 (which by the inductive hypothesis is the symbol the head is reading in λ). Since ⃗v and λ have the same state q and the head position in λ is over γ, A can make a transition to λ′ = C0 . . . C j = γ′q′Cj+1 . . . C n+1 . The ar-gument that ⃗ v′ is d1, . . . , d t−1, 1 bisimilar to λ′ is the same as above. 
+
+# 4 Encoding Turing Machines 
+
+In this section we show that TSEMs with a countable set of variables V are Turing complete. For a simpler construction, we consider the case of deterministic Turing Machines, since they are known to be as powerful as non-deterministic ones. We begin by recalling the definition of a Turing Machine [Hopcroft and Ullman, 1979]. 
+
+Definition 8 (Turing machine) . A Turing Machine (TM) is a tuple T = ( Q, q 0, F, Σ, Γ, δ ), where 
+
+• Q is a finite set of states with q0 ∈ Q the initial state; 
+
+• F ⊂ Q is the set of final (or accepting) states; 
+
+• Σ is a finite set of input symbols; • Γ = Σ ∪ { #} is the finite set of tape symbols, where 
+
+#̸ ∈ Σ is the blank symbol; 
+
+• δ : Q \ F × Γ −→ Q × Γ × {− 1, 1} is a function mapping a state q ∈ (Q \ F ) and a symbol γ ∈ Γ to a tuple δ(q, γ ) = ( q′, α, d ), where q′ is the next state, 
+
+α ∈ Γ is a symbol that must be written in the cell and 
+
+d ∈ {− 1, 1} is the direction in which the head moves (−1 indicates the head moves to the left). 
+
+To simplify notation we will write d = Dir (q, γ ) (for direc-tion), σ = Sym (q, γ ) (for symbol) and q′ = Out (q, γ ) (for outcome). We assume that all cells on the tape are indexed with inte-gers relative to the head. So, the current cell always has index 
+
+0, its right-side cells have positive indexes, and left-side cells have negative ones. We represent a configuration of a TM as 
+
+λ = C−i . . . C −2C−1qC 0C1C2 . . . C j
+
+where q is the state of the TM, the head is (always) scanning a cell indexed 0, and each Ck represents a symbol written in the k-th cell of the tape. Note that only blank symbol # may occur on the tape on left of −i’s and on the right of j’s cells. 
+
+Definition 9. Let Conf T M (T ) be the set of all possible con-figurations of a TM T . Then, a run of T on input I is a se-quence λ0 ↠T λ1 ↠T . . . of elements of Conf T M (T ),where λ0 is the initial configuration of T for input I, and each λi yields λi+1 in one step. 
+
+A TM T accepts a string s iff the run λs ↠T
+
+λ1 ↠T · · · ↠T λ′ of T starting in the initial config-uration λs terminates in an accepting configuration λ′ =
+
+C−i . . . C −2C−1qF C0C1C2 . . . C j where the TM is in a fi-nal state (i.e., qF ∈ F ). Now we will construct a causal calculator MT simulating a TM T . Since a TM has an infinite tape, a causal calculator has to work with an input of arbitrary length. So, in contrast to Definition 1, we assume that V contains countably many vari-ables, however ranges and domains of all variables remain finite. The extension to infinitely many variables does not create any technical difficulties and the definitions of a com-putation C (Definition 2) remains unchanged. Causal models with infinitely many variables have previously been studied in [Halpern and Peters, 2022]. 
+
+Definition 10. Given a TM T = ( Q, q 0, F, Σ, Γ, δ ), a TM causal calculator is a tuple MT = ( ST , FT ), with a signa-ture ST = ( V, R, D), where 
+
+• V = {S} ∪ { Xi | i ∈ Z};
+
+• R(Xi) = Γ and R(S) = Q;
+
+• D(S) = {S, X 0}D(Xi) = {X0, S, X i−1, X i, X i+1 } for i ∈ Z;Structural equations F are defined as follows. 
+
+FS (S = q, X 0 = γ) = 
+
+q′, if q′ ∈ Out (q, γ )
+
+q, if q ∈ F
+
+For ⃗v |D (Xi) = ( X0 = α, X i−1 = β, X i = γ, X i+1 = δ, S =
+
+q):
+
+FXi /∈{− 1,1}(⃗v |D (Xi)) = 
+
+
+
+β, if − 1 = Dir (q, α )
+
+δ, if 1 = Dir (q, α )
+
+γ, if q ∈ F
+
+For ⃗v |D (X−1 ) = ( X0 = α, X −1 = β, X −2 = γ, S = q):
+
+FX−1 (⃗v |D (X−1)) = 
+
+
+
+γ, if − 1 = Dir (q, α )
+
+Sym (q, α ), if 1 = Dir (q, α )
+
+β, if q ∈ F
+
+For ⃗v |D (X1) = ( X0 = α, X 1 = β, X 2 = γ, S = q):
+
+FX1 (⃗v |D (X1)) = 
+
+
+
+Sym (q, α ), if − 1 = Dir (q, α )
+
+γ, if 1 = Dir (q, α )
+
+β, if q ∈ F
+
+Variable S represents the state of the TM, and Xi’s repre-sent corresponding cells on the tape. So, the range of S is the set of states Q of the TM, and the range of each Xi is the tape alphabet Γ. Finally, domains D demonstrate which vari-ables are causally related. Thus, the value of the current state 
+
+S depends on the previous value of itself and a current sym-bol X0. And the value of any variable Xi depends on itself, 
+
+X0, S , and its left- and right-most cells Xi−1 and Xi+1 .The structural equations are defined as follows. For S, if the previous value q1 of S is a final state of the TM ( q1 ∈ F ), then the current value of S remains q1. Otherwise, S gets value q2, which is the result of the transition δ(q1, α ) in the TM. Next, for any cell variable Xi, except X1 and X−1, and any possible input ⃗v |D (Xi) = ( X0 = α, X i−1 = β, X i =
+
+γ, X i+1 = δ, S = q) of FXi , it is defined as follows. In case the TM’s head moves to the left ( −1 = Dir (q, α )), FXi gets the value of Xi−1; if it moves to the right ( 1 = Dir (q, α ))then FXi gets the value of Xi+1 ; and if the state q is final, 
+
+FXi inherits its own value from the previous step. This al-lows us to simulate the movements of the head in TM tak-ing into account that the numeration of the tape cells is at-tached to the head. Thus, at any step of the computation C,the value of Xi corresponds to the current symbol written in 
+
+i’s cell on the tape of the TM. Finally, X−1 and X1 are two special cases, because TM rewrites the symbol in the cur-rent cell (indexed 0) with a new symbol Sym (q, α ) on each step, which propagates to either X−1 or X1 depending on the direction of the next movement. Thus, for X−1 and input ⃗v |D (X−1) = ( X0 = α, X −1 = β, X −2 = γ, S = q), if the head moves left in δ(q, α ), then FX−1 gets the value of X−2;if the head moves right in δ(q, α ), then FX−1 gets a symbol 
+
+Sym (q, α ) that has been written on the tape before the move-ment; and if q is the final state, the value of X−1 remains the same. The case for X1 is symmetric. Now it is straightforward to define a translation between the configurations of T and MT . Given a configuration 
+
+λ = C−i . . . C −2C−1qC 0C1C2 . . . C j of T , the correspond-ing configuration of M is ⃗v λ = ( S = q) ∪ { (Xk = Ck) |−i ≤ k ≤ j} ∪ { (Xn = #) | n ∈ Z \ [−i, j ]}.We say that a TM causal calculator accepts a string s iff the computation CMT
+
+for the input s contains a sequence of valid transitions ⃗v 0 ↠MT · · · ↠MT⃗v m from the initial con-figuration ⃗v 0 to some accepting configuration ⃗v m such that ⃗v i ∈ Conf CM , 0 ≤ i ≤ m. A configuration ⃗v m is accepting iff (S = qF ) ∈⃗v m, i.e., it contains the final state. We want to show that for any initial configuration λ of T
+
+we can take a corresponding initial configuration ⃗v = τ (λ)
+
+of MT and generate a computation C which will simulate a computation of T in a step-wise manner. Lemma 1. For any λ1, λ 2 ∈ Conf T M , it holds that 
+
+λ1 ↠T λ2, iff ⃗v λ1 ↠MT⃗v λ2
+
+Proof. Given a configuration 
+
+λ1 = C−i . . . C −2C−1qC 0C1C2 . . . C j
+
+of the TM, there are three possible cases for the 
+
+λ2 = C′−i . . . C ′−2C′−1q′C′
+
+> 0
+
+C′
+
+> 1
+
+C′ 
+
+> 2
+
+. . . C ′
+
+> j
+
+Case q ∈ F 2. If the current state in λ1 is final, then λ2 =
+
+λ1. The construction of MT also guarantees that for any Y ∈V and any ⃗v, s.t. (S = q F ) ∈⃗v it holds that F Y (⃗v |D (Y )) = ⃗v |Y . So, ⃗v λ1 ↠MT⃗v λ1 , and thus ⃗v λ1 ↠MT⃗v λ2 .
+
+Case −1 = Dir (q, C 0). In this case the head moves to the left after writing symbol ζ: δ(q, C 0) = ( q′, ζ, −1) . The construction of MT guarantees that (a) FS (⃗v |D (S) 
+
+> λ1
+
+) = q′ iff 
+
+q′ = Out (q, C 0), (b) FX1 (⃗v |D (X1) 
+
+> λ1
+
+) = ζ iff ζ = Sym (q, C 0)
+
+(i.e. iff C′ 
+
+> 1
+
+= ζ), and (c) for i̸ = 1 , FXi (⃗v |D (Xi) 
+
+> λ1
+
+) = β
+
+iff ⃗v |Xi−1 
+
+> λ1
+
+= β (i.e. iff Ci−1 = β). Thus, λ1 ↠T λ2 iff ⃗v λ1 ↠MT⃗v λ2 .
+
+Case 1 = Dir (q, X 0). The argument is symmetric to the previous case. The next result follows immediately. 
+
+Theorem 2. A TM accepts a string if, and only if, it is ac-cepted by the corresponding causal calculator. 
+
+As we mentioned before, it is a well-known fact that any non-deterministic TM T ∗ can be simulated by a deterministic TM T 3. So, Theorem 2 implies that TSEMs can also simu-late T ∗ by simulating the corresponding T . However, such a procedure exponentially increases the computation time of T
+
+(and thus of MT ) with respect to T ∗. But since in general case TSEMs admit non-deterministic structural equations, they are capable of simulating an NTM in a stepwise manner, with no additional computing time. This can be demonstrated using a slightly modified construction of the LBA causal cal-culator from Definition 7 that does not contain tape bounds. 
+
+Theorem 3. An NTM accepts a string if, and only if, it is accepted by the corresponding causal calculator. Proof. The detailed proof is presented in Technical Ap-pendix. 
+
+# 5 Potential Applications 
+
+The key feature of causal models is that they are specifically designed for counterfactual reasoning. Causal models contain enough information to represent not only the actual sequence of events that occurred, but also hypothetical counterfactual alternatives. This capability aligns closely with theoretical concerns in computability theory, when we are interested in                    
+
+> 2Here for simplicity of the proof we assume that for any final configuration λ,λ↠Tλ.
+> 3Recall that in a non-deterministic TM T∗the transition function
+> δis replaced with a relation δ∗⊆ Q\F×Γ× Q×Γ×{− 1,1}
+
+reasoning not only about what happened in the actual com-putation, but also what would have happened if a different computational path had been taken. TSEMs provide suffi-cient expressive power to analyse both the actual computa-tion and its counterfactual variations enabling new forms of reasoning about temporally extended processes by means of the interventions introduced in Section 2. Interventions allow us to alter value of some variable(s) at a given time step and observe how this might change the overall outcome of a computation. For example, interventions allow us to ask questions such as “Which part of the input had causal influence on the output?” or “Had the random bit at step t been flipped, would the output remain unchanged?” to analyse the internal causal structure that governs a computing device to arrive at a given result. One possible application is the analysis of the causal influ-ence of alternating bits of input, because interventions pro-vide a straightforward way to explore how local changes in the input propagate through the computation. As a sim-ple example, consider a Turing machine that accepts binary strings if the input contains an alternating pattern of 0s and 1s, e.g.“ 0101 . . . ” or “ 1010 . . . ”. A causal analysis of such a computation may reveal not only when the machine accepts or rejects the input, but also how individual bits contribute to the machine’s decision. Suppose the machine halts and accepts the input “0101”, which may be represented as the initial assignment of a canonical causal calculator (Definition 10) ⃗v 0 = ( X0 = 0 , X 1 = 1 , X 3 = 0 , X 5 = 1 ). Then, by sys-tematically intervening on each bit, changing 0 to 1 or vice versa (in our notation do (X0 
+
+> i
+
+← 1) ), we can identify which bits are causally necessary for acceptance. For example, the intervention do (X01 ← 0) disrupts the alternation pattern and causes the machine to reject, indicating that this bit X1 has a critical causal link to the outcome of the computation. Con-versely, if altering a bit leaves the outcome unchanged, we can classify it as causally inert or redundant. At the same time, we may be interested in intervening not only on the input bits (intervening at time step t = 0 ), but also in analysing the role of some random bit alternation at an arbitrary step t′. This allows reasoning about computations with corrupted or faulty memory, for example. One potential application of such counterfactual reasoning is the analysis of so-called soft errors [Mukherjee et al. , 2005]. A soft er-ror is a type of a computer system fault that alters data or logic states without causing permanent damage to the hard-ware. It is typically caused by external factors like cosmic rays or radioactive decay, which can flip a bit in memory or logic circuits, leading to incorrect computational behaviour. A recent example of this kind of error is the Airbus incident, where intense solar radiation was claimed to corrupt data crit-ical to the functioning of flight controls, which resulted in a recall of 6000 aircraft [Hepher et al. , 2025]. By systemati-cally intervening on different values in arbitrary steps of the computation and exploring the causal consequences of these changes, we can study the fault tolerance of a system and de-velop methods to mitigate the effects of soft errors in critical computational applications. We conclude this section by commenting on the decision problems involved, namely establishing causality. In Defi-nition 3, as time indexes are fixed for all variables, the deci-sion problem of whether some variable values are the cause of other variable values at a fixed step is decidable for both LBA and TM causal calculators. However, if we would like to rep-resent the outcome in a richer language, for example using an LTL temporal operator eventually F, e.g. F(⃗Y =⃗y) instead of ⃗Y⃗ t =⃗y, then the problem becomes undecidable for the case of TM causal calculator, because the formula F(S = qF ) ba-sically encodes the halting problem for Definition 10. 
+
+# 6 Discussion and Future Work 
+
+In reasoning about computation, we are usually interested in answering questions like whether a given function is com-putable, how long it takes to compute, or how much resources it requires. However, we typically lack a formal framework for asking why a computation led to a specific outcome, or what would have happened if a particular input or step had been different. In this paper, we used temporal causal models to address this gap and to analyse the internal dynamics of computa-tions in a causally meaningful way. We introduced a temporal causal framework with non-deterministic structural equations and defined interventions for this setting. We then proved that TSEMs can simulate Linear Bounded Automata and TSEMs with countably many variables are Turing complete. Finally, we discussed potential applications of interventions for coun-terfactual reasoning about computations. We believe our re-sults can enrich the field of formal verification with TSEM-based techniques for reasoning about safety, fault tolerance and explainability of computational systems. In future work we would like to explore other notions of interventions that make sense for computations. For ex-ample, we could consider atomic structure interventions, 
+
+do (Y n(⃗X =⃗ x) ← y), where ⃗ X = D(Y ),⃗ x ∈ R (⃗ X),says that at time n the structural equation FY for Y must be rewritten so that FX (⃗X =⃗x) = y. As before, a struc-ture intervention do (⃗Y⃗n (⃗X =⃗x) ←⃗y) is a vector of atomic interventions. 
+
+Definition 11 (Structure Intervention) . Given a TSEM M
+
+and a structure intervention I = do (⃗ Y⃗n (⃗X =⃗x) ←⃗y), let dynamic structural equations Fi be defined as follows. For any Y ∈ V ,⃗ X = D(Y ) and ⃗x = R(⃗ X), F0 
+
+> Y
+
+(⃗X =⃗x) = y ′
+
+if Y 0(⃗ X =⃗x) ← y ′ ∈ I and F0 
+
+> Y
+
+(⃗ X =⃗x) = F(⃗ X =⃗x)
+
+otherwise. For any i > 0,
+
+FiY (⃗X =⃗x) = 
+
+(
+
+y′, if Y i(⃗X =⃗x) ← y ′ ∈ I
+
+Fi−1 
+
+> Y
+
+(⃗X =⃗x), otherwise Finally, the computation is defined as 
+
+CI (i) = Y
+
+> X∈V
+
+Fi−1
+
+> X
+
+ CI (i − 1) |D (X) for i > 0
+
+Note that structure interventions are not expressible in terms of standard interventions. Consider the model V =
+
+{X}, R(X) = {0, 1} and FX (X = x) = 1 for any x. So, whatever the initial assignment of X is, starting from step 
+
+i > 0, (X = 1) ∈ C(i). With a structure intervention, we can turn the equation into a constant function returning 0 in-stead of 1: FX (X = x) = 0 for any x. So, we can enforce that for i > 0, (X = 0) ∈ C(i). Standard interventions allow changing the value of X only on the steps specified in the in-tervention. So, we can enforce X = 0 on an arbitrary long but 
+
+finite interval of the computation. Thus, an infinite sequence of X = 0 cannot be achieved by changing the value of X at a finite sequence of steps. Structure interventions would enable us to talk about changing transition rules in a computing de-vice rather than a particular value, enabling us to model e.g. software patches. Formal reasoning about structure interventions will require a richer syntax (being able to say that a particular equation is the cause of a state of affairs). We can also enrich the syntax with temporal operators, to express that some value is reach-able in principle. Further variations of causality problems for TSEMs may also be developed besides the extension with a richer syntax. Firstly, for non-deterministic computations it may be impor-tant to check if some C is the cause of some outcome O on all or only some branches of the computation tree. Secondly, we presented the simplest form of the definition of a cause, called but-for cause, however several alternative approaches to actual causality have been developed, e.g., [Halpern, 2016; Beckers, 2021a; Beckers, 2025a]. The adaptation of these approaches to temporal settings and validating whether argu-ments against but-for definition hold for TSEM framework as well as extending existing formal verification techniques, e.g., [de Lima and Lorini, 2024; ¨ Ozcan et al. , 2025] to tem-poral setting are important directions for future research. Finally, the canonical causal calculators constructed in Sections 3–4 have a specific structure since they are specif-ically designed to simulate LBA and TMs. However, other architectures of causal models (e.g. a more distributed struc-tures with multiple ‘inner’ variables) may be more suitable in some applications. In this context, an important question to ask is whether two structurally different causal models ex-ecute the same computational behaviour under various inter-ventions. We believe that recent work on the notions of causal model equivalence [Beckers, 2021b; Gladyshev et al. , 2025a] as well as on the notions of an abstraction or a transformation 
+
+of one causal model into another [Rubenstein et al. , 2017; Beckers and Halpern, 2019; Willig et al. , 2023] can bring new formal techniques initially developed for causal reasoning to analysis of computation and enrich the field. 
+
+# References 
+
+[Albahri et al. , 2022] A. S. Albahri, Alhamzah Alnoor, A. A. Zaidan, O. S. Albahri, Hamsa Hameed, B. B. Zaidan, S. S. Peh, A. B. Zain, S. B. Siraj, A. H. B. Masnan, and A. A. Yass. Hybrid artificial neural network and structural equa-tion modelling techniques: a survey. Complex & Intelli-gent Systems , 8(2):1781–1801, 2022. [Assaad et al. , 2022] Charles K. Assaad, Emilie Devijver, and Eric Gaussier. Survey and evaluation of causal dis-covery methods for time series. J. Artif. Int. Res. , 73, May 2022. [Barbero, 2024] Fausto Barbero. On the logic of interven-tionist counterfactuals under indeterministic causal laws. In Arne Meier and Magdalena Ortiz, editors, Foundations of Information and Knowledge Systems , pages 203–221, Cham, 2024. Springer Nature Switzerland. [Batusov and Soutchanski, 2018] Vitaliy Batusov and Mikhail Soutchanski. Situation calculus semantics for actual causality. Proceedings of the AAAI Conference on Artificial Intelligence , 32(1), 2018. [Beckers and Halpern, 2019] Sander Beckers and Joseph Y. Halpern. Abstracting causal models. In Proceedings of the Thirty-Third AAAI Conference on Artificial Intel-ligence and Thirty-First Innovative Applications of Ar-tificial Intelligence Conference and Ninth AAAI Sympo-sium on Educational Advances in Artificial Intelligence ,AAAI’19/IAAI’19/EAAI’19. AAAI Press, 2019. [Beckers, 2021a] Sander Beckers. The counterfactual NESS definition of causation. Proceedings of the AAAI Confer-ence on Artificial Intelligence , 35:6210–6217, 5 2021. [Beckers, 2021b] Sander Beckers. Equivalent causal models. 
+
+Proceedings of the AAAI Conference on Artificial Intelli-gence , 35:6202–6209, 5 2021. [Beckers, 2025a] Sander Beckers. Actual causation and non-deterministic causal models. In Causal Learning and Rea-soning , pages 514–532. PMLR, 2025. [Beckers, 2025b] Sander Beckers. Nondeterministic causal models. In Causal Learning and Reasoning , pages 1532– 1554. PMLR, 2025. [Boeken and Mooij, 2024] Philip Boeken and Joris M. Mooij. Dynamic structural causal models. arXiv preprint arXiv:2406.01161 , 2024. [Bongers et al. , 2022] Stephan Bongers, Tineke Blom, and Joris M. Mooij. Causal modeling of dynamical systems. 
+
+arXiv preprint arXiv:1803.08784 , 2022. [Cinquini et al. , 2025] Martina Cinquini, Isacco Beretta, Salvatore Ruggieri, and Isabel Valera. A practical ap-proach to causal inference over time. Proceedings of the AAAI Conference on Artificial Intelligence , 39(14):14832– 14839, Apr. 2025. [Ciuni and Lorini, 2018] Roberto Ciuni and Emiliano Lorini. Comparing semantics for temporal stit logic. 
+
+Logique et Analyse , (243):pp. 299–339, 2018. [Console and Torasso, 1993] Luca Console and Pietro Torasso. Temporal constraint satisfaction on causal models. Information Sciences , 68(1):1–32, 1993. [de Lima and Lorini, 2024] Tiago de Lima and Emiliano Lorini. Model checking causality. In Thirty-Third Interna-tional Joint Conference on Artificial Intelligence (IJCAI-24) , pages 3324–3332, 2024. [Finkbeiner et al. , 2024] Bernd Finkbeiner, Hadar Frenkel, Niklas Metzger, and Julian Siber. Synthesis of temporal causality. In Computer Aided Verification: 36th Interna-tional Conference, CAV 2024, Montreal, QC, Canada, July 24–27, 2024, Proceedings, Part III , page 87–111, Berlin, Heidelberg, 2024. Springer-Verlag. [Gladyshev et al. , 2025a] Maksim Gladyshev, Natasha Alechina, Mehdi Dastani, Dragan Doder, and Brian Logan. Temporal causal reasoning with (non-recursive) structural equation models. Proceedings of the AAAI Con-ference on Artificial Intelligence , 39(14):14949–14957, Apr. 2025. [Gladyshev et al. , 2025b] Maksim Gladyshev, Natasha Alechina, Mehdi Dastani, Dragan Doder, and Brian Logan. Temporal causal reasoning with (non-recursive) structural equation models. arXiv preprint arXiv:2501.10190 , 2025. [Gunzler et al. , 2021] Douglas Gunzler, Adam Perzynski, and Adam Carle. Structural Equation Modeling for Health and Medicine . CRC Press, 02 2021. [Halpern and Peters, 2022] Joseph Y. Halpern and Spencer Peters. Reasoning about causal models with infinitely many variables. Proceedings of the AAAI Conference on Artificial Intelligence , 36(5):5668–5675, Jun. 2022. [Halpern, 2016] Joseph Y. Halpern. Actual Causality . The MIT Press, 2016. [Heckman and Pinto, 2022] James J Heckman and Rodrigo Pinto. Causality and econometrics. Working Paper 29787, National Bureau of Economic Research, February 2022. [Hepher et al. , 2025] Tim Hepher, Allison Lampert, and David Shepardson. Airbus says most of its recalled 6,000 a320 jets now modified. Reuters , 1 Dec 2025. Available at: https://www.reuters.com/business/aerospace-defense/ airbus-narrows-software-crisis-airlines-ride-out-a320 -recall-2025-12-01/. [Hopcroft and Ullman, 1979] John E. Hopcroft and Jef-frey D. Ullman. Introduction to Automata Theory, Lan-guages, and Computation (1st ed.) . Addison-Wesley, 1979. [Lorini, 2013] Emiliano Lorini. Temporal logic and its ap-plication to normative reasoning. Journal of Applied Non-Classical Logics , 23(4):372–399, 2013. [Mukherjee et al. , 2005] S.S. Mukherjee, J. Emer, and S.K. Reinhardt. The soft error problem: an architectural per-spective. In 11th International Symposium on High-Performance Computer Architecture , pages 243–247, 2005. [Mukherjee et al. , 2012] Subhankar Mukherjee, Pallab Das-gupta, Siddhartha Mukhopadhyay, Scott Little, John Havlicek, and Srikanth Chandrasekaran. Synchronizing ams assertions with ams simulation: From theory to prac-tice. ACM Transactions on Design Automation of Elec-tronic Systems (TODAES) , 17(4):1–25, 2012. [Pearl, 2000] Judea Pearl. Causality: Models, Reasoning, and Inference. Cambridge University Press, New York, 2000. [Rubenstein et al. , 2017] Paul K Rubenstein, Sebastian We-ichwald, Stephan Bongers, Joris M Mooij, Dominik Janz-ing, Moritz Grosse-Wentrup, and Bernhard Sch¨ olkopf. Causal consistency of structural equation models. arXiv preprint arXiv:1707.00819 , 2017. [Simovici and Tenney, 1999] Dan Simovici and Richard L Tenney. Theory of Formal Languages with Applications .WORLD SCIENTIFIC, 1999. [Spirtes et al. , 2001] Peter Spirtes, Clark Glymour, and Richard Scheines. Causation, Prediction, and Search . The MIT Press, 2001. [Willig et al. , 2023] Moritz Willig, Matej Zeˇ cevi´ c, Deven-dra Singh Dhami, and Kristian Kersting. Do not marginal-ize mechanisms, rather consolidate! In Thirty-seventh Conference on Neural Information Processing Systems ,2023. [ ¨ Ozcan et al. , 2025] Daniel ¨Ozcan, Dalal Alrajeh, and Robert Craven. Reasoning About Actual Causality in An-swer Set Programming. In Proceedings of the 22nd In-ternational Conference on Principles of Knowledge Rep-resentation and Reasoning , pages 610–620, 10 2025. Technical Appendix 
+
+Stepwise simulation of an NTM Here we demonstrate how to extend the construction of the LBA causal calculator from Section 3 to simulate a non-deterministic TM (NTM) is stepwise manner and prove Theorem 3 . The overall argu-ment is very similar to Section 3, except the numeration of the tape cells. We start with a definition of NTM [Hopcroft and Ullman, 1979]. 
+
+Definition 12. A non-deterministic Turing Machine (NTM) is a tuple T ∗ = ( Q, q 0, F, Σ, Γ, δ ∗), in which all elements except δ∗ are identical to TM (Definition 8), and the transition function is replaced with a relation 
+
+δ∗ ⊆  Q \ F × Γ ×  Q × Γ × {− 1, 0, 1}4
+
+Following Section 4, we represent a configuration of an NTM as a string 
+
+λ = C−i . . . C −2C−1qC 0C1C2 . . . C j
+
+where q is the state of the TM, the tape head is scanning a symbol indexed i, and each Cl, −i ≤ l ≤ j represents a symbol written in the l-th cell of the tape. Note that only the blank symbol # may occur in cells to the left of −i and to the right of j. We use Conf T M (T ∗) to denote the set of all configurations of T ∗.
+
+Definition 13. A run of an NTM T ∗ on input I is a tree T .The nodes of T are elements of Conf T M (T ∗) with a root node λ0 representing the initial configuration of T ∗ for input 
+
+I, and λ ↠T ∗ λ′ ∈ T iff λ′ is a possible result of transition from λ according to δ∗.
+
+Similarly to Section 3, to simplify the construction, we in-troduce a transition relation δF which is deterministic for fi-nal states of the NTM: 
+
+δF (q, γ ) = 
+
+{⟨ q′, γ ′, d ⟩ | ⟨ q, γ, q ′, γ ′, d ⟩ ∈ δ∗(q, γ )} if q̸ ∈ F
+
+{⟨ q, γ, 0⟩} if q ∈ F
+
+where d ∈ {− 1, 0, 1}.An NTM accepts a string s iff the computation tree T for the input s contains a sequence of valid transitions λs ↠T ∗
+
+· · · ↠T ∗ λ′ from the root node λs to some accepting config-uration λ′, such that qF ∈ λ′.
+
+Definition 14. Given a non-deterministic TM T ∗ =(Q, q 0, F, Σ, Γ, δ ∗), a non-deterministic canonical causal calculator is a tuple MT ∗
+
+= (ST ∗
+
+, FT ∗
+
+) with signature 
+
+ST ∗
+
+= ( V, R, D) where 
+
+• V = {Xi | i ∈ Z};
+
+• R(X0) = Q × Γ × {− 1, 0, 1},
+
+R(Xi̸=0 ) = Γ ;
+
+• D(Xi) = {X0, X i−1, X i+1 };and equations FT ∗
+
+:
+
+FX0 (X0 = ⟨q, γ, d ⟩, X d = γ′) = 
+
+{⟨ q′, γ ′′ , d ′⟩ | ⟨ q′, γ ′′ , d ′⟩ ∈ δF (q, γ ′)}FXi̸=0 (X0 = ⟨q, γ, d ⟩, X i+d = γ′) = γ′       
+
+> 4Here for technical reasons we assume that d={− 1,0,1}
+> rather than {− 1,1}.
+
+This construction is similar to Definition 7, except the nu-meration on the tape and the absence of end-marker sym-bols since the NTM’s tape is unbounded. So, in the ini-tial configuration ⃗v 0, X0 = ⟨q0, α, 0⟩, where C0 = α,
+
+Xk∈[−i,j ]\{ 0} = Ck, and Xl = # for l < −i and l > j .For X0, if the head did not move at t − 1 (this includes the initial configuration), the value of X0 is updated with the NTM transition (q′, γ ′′ , d ′) = δF (q, γ ′) at t, where γ′ = γ.If the head moved left at the last transition, then X0 is up-dated with (q′, γ ′′ , d ′) = δF (q, γ ′), where γ′ is the symbol in 
+
+X−1 (i.e., the symbol currently under the head). If the head moved right at the last transition, then X0 is updated with 
+
+(q′, γ ′′ , d ′) = δF (q, γ ′), where γ′ is the symbol in X1.For Xi̸=0 , if the head did not move the value of Xi is up-dated with γ′ = γ, i.e., remains the same. If the head moved left, the value of Xi is updated to be the value in Xi−1 (To simplify the presentation, we abuse notation and assume that in the case where Xi−1 = X0, γ′ is the second element of the tuple in X0.) If the head moved right, the value of Xi is updated to be the value in Xi+1 .We say that an NTM causal calculator accepts a string s
+
+iff its computation tree C for the input s contains a sequence of valid transitions ⃗v 0 ↠MT ∗ · · · ↠MT ∗⃗ v m from the root node ⃗v 0 to some accepting configuration ⃗v m such that ⃗v i ∈
+
+Conf CM , 0 ≤ i ≤ m. A configuration ⃗v is accepting iff 
+
+(X0 = ⟨qF ∈ F, γ, 0⟩) ∈⃗v, i.e., if it contains the final state. 
+
+Theorem 3. An NTM accepts a string if, and only if, it is accepted by the corresponding causal calculator. Proof. Following the proof of Theorem 1, we will show that there is a bisimulation relation between the nodes of the com-putation tree of T ∗, T , and of computation tree of MT ∗
+
+, C. If 
+
+λ and ⃗v are bisimilar, and λ ↠ A λ′, then there is a transition ⃗v ↠ MT ∗⃗ v′ such that λ′ and ⃗ v′ are bisimilar, and vice versa. This will imply that a configuration with an accepting state is reachable in one tree if and only if it is reachable in another. We say that a transition λ ↠T ∗ λ′ is by (q, γ, q ′, γ ′, d ) if this was the element of δ used for this transition, and label this edge in the tree by d. Similarly, we say that a transition ⃗v ↠ MT ∗⃗ v′ is by (q, γ, q ′, γ ′, d ) if the value of X0 in ⃗v is 
+
+(q, γ, −) and the value of X0 in ⃗ v′ is (q′, γ ′, d ), and we label this edge in the tree by d.Finally, we say that two nodes λ and ⃗ v at step t are 
+
+d1, . . . , d t bisimilar if (i) the path from the root node to each of them is labelled d1, . . . , d t, (ii) the state in λ is the same as the state component in the value of X0 in ⃗v, (iii) the symbol in Ck in λ is the same as the symbol in Xk+dt (the symbol in 
+
+X0 = ( −, γ, −) is γ). Clearly, λ0 and ⃗v 0 are ϵ-bisimilar. For the inductive step, assume that λ and ⃗v at step t − 1 are 
+
+d1, . . . , d t−1 bisimilar. We need to show that 
+
+(T → C) if there is a transition from λ to λ′ by 
+
+(q, γ, q ′, γ ′, d ), then there is a transition from ⃗v to ⃗ v′ by 
+
+(q, γ, q ′, γ ′, d ), and λ′ and ⃗ v′ are d1, . . . , d t−1, d bisimilar; 
+
+(C → T ) if there is a transition from ⃗v to ⃗ v′ by (q, γ, q ′, γ ′, d ),then there is a transition from λ to λ′ by (q, γ, q ′, γ ′, d ), and 
+
+λ′ and ⃗ v′ are d1, . . . , d t−1, d bisimilar. We prove the back and forth conditions for d = 1 . The proofs for d = −1 and d = 0 are similar. 
+
+(T → C ) Let λ = C−i . . . C −1qC 0C1 . . . C j . By the in-ductive hypothesis, X0 = ( q, C −dt−1 , d t−1), and the symbol that the head is reading is in Xdt−1 . Let the transition from 
+
+λ be by some (q, γ, q ′, γ ′, 1) where γ is in C0. The resulting 
+
+λ′ = C−i−1 . . . C −1qC 0 = γ′C1 . . . C j−1. The successor of ⃗v by (q, γ, q ′, γ ′, 1) is (i) reachable from the root by the same sequence d1, . . . , d t−1, 1 as λ′, (ii) has the same state q′ due to the equation for X0, (iii) the symbol that was held in Xi
+
+is now held in Xi−1 because of the equation for Xi, which maintains the correspondence with LBA cells since the offset has changed by d = 1 .
+
+(C → T ) Let X0 in ⃗v have value (q, χ, d t−1). Assume that transition in MT ∗
+
+is to ⃗ v′ by (q, γ, q ′, γ ′, 1) where γ is the symbol in Xdt−1 (which by the inductive hypothesis is the symbol the head is reading in λ). Since ⃗v and λ have the same state q and the head position in λ is over γ, T ∗ can make a transition to λ′ = C−i . . . C −1q′C0 = γ′C1 . . . C j , where 
+
+Ck from λ′ is equal to Xk+1 from ⃗ v′. The argument that ⃗ v′ is 
+
+d1, . . . , d t−1, 1 bisimilar to λ′ is the same as above. 
+
+Single variable encoding of an LBA Recall that the con-struction of the LBA causal calculator in Section 3 uses twice as many variables as the number of LBA cells. However, one can use even simpler construction with a single vari-able, whose values represent all possible configurations of the LBA. 
+
+Definition 15 (LBA Causal Calculator) . Given an LBA A =(Q, q 0, F, Σ, Γ, δ ) with tape of length n, an LBA causal cal-culator is a tuple MA = ( SA, FA), with a signature SA =(V, R, D), where 
+
+• V = {V } where V represents a configuration 
+
+SHX 0X1X2 . . . X nXn+1 
+
+• R(V ) = Q × { 0, . . . , n + 1 } × { ▷} × Γ × . . . Γ × { ◁}
+
+• D(V ) = {V }
+
+The structural equations F are defined as follows: 
+
+FV (q, j, ▷, γ 1, . . . , γ j , . . . , γ n, ◁ ) = 
+
+{(q′, j ′, ▷, γ 1, . . . , γ ′ 
+
+> j
+
+, . . . , γ n, ◁ ) | j′ = j +
+
+d, (q, γ j , q ′, γ ′ 
+
+> j
+
+, d ) ∈ δ}
+
+Given a configuration λ of the LBA A, we denote a cor-responding configuration of MA as (V = λ). For any ini-tial configuration λ0, let TA and CMA be computation trees for the LBA A and the causal calculator MA on inputs λ0
+
+and ⃗v 0 = (V = λ0) respectively. It is now straightfor-ward to prove that the construction of MA guarantees that 
+
+(V = λ) ↠MA (V = λ′) ∈ C MA iff λ ↠A λ′ ∈ T A. Thus, 
+
+TA is isomorphic to CMA .However, this construction does not allow us to intervene on e.g. the symbol read by the head or on the next transition of the LBA.

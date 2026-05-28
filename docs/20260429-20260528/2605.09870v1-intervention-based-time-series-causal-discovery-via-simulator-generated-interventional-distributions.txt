@@ -1,0 +1,1645 @@
+Title: Intervention-Based Time Series Causal Discovery via Simulator-Generated Interventional Distributions
+
+URL Source: https://arxiv.org/pdf/2605.09870v1
+
+Published Time: Tue, 12 May 2026 01:58:14 GMT
+
+Number of Pages: 54
+
+Markdown Content:
+# Intervention-Based Time Series Causal Discovery via Simulator-Generated Interventional Distributions 
+
+Tsuyoshi Okita 
+
+Kyushu Institute of Technology 
+
+# Abstract 
+
+In many scientific domains, physics-based simulators—programs that compute system be-haviour from governing equations, such as density functional theory for materials or fluid dynamics solvers—encode causal mechanisms and can predict system behaviour under hy-pothetical interventions. Machine learning extracts patterns from observational time series at scale, but those patterns reflect statistical associations ( P (Y | X)), not causal effects (P (Y | do( X)) ): in the presence of latent confounders, the structural VAR is provably non-identifiable from observational data alone (Fact 3.2), and no amount of statistical so-phistication can substitute for genuine interventional data. Bridging these two traditions has so far been limited to using simulators for prediction; no existing framework uses them for causal structure discovery in time series. We propose SVAR-FM (Structural VAR with Flow Matching), a framework that treats a physical simulator as a mechanical realization of Pearl’s do( ·) operator. Clamping a vari-able in the simulator physically severs confounding paths, producing interventional data by construction rather than by statistical argument. Conditional Flow Matching then param-eterizes the interventional conditionals, enabling nonlinear mechanism learning. This yields four results. (1) The full structural VAR—contemporaneous and lagged edges jointly—becomes identifiable under a coverage condition on the simulator-clampable vari-ables, verifiable a priori from domain knowledge alone (Theorem 4.7). The argument is in-trinsic to the time series setting and has no i.i.d. counterpart. (2) An end-to-end error bound 
+
+|ˆei→j − e∗ 
+
+> i→j
+
+| ≤ O(M −1/2) + O(δS ) + O(εFM ) (Theorem 5.13) cleanly separates Monte Carlo sampling, simulator fidelity δS , and Flow Matching approximation. A sharp consequence is a sign-flip regime (Corollary 5.11): when δS exceeds a threshold set by the signal magnitude, the estimated causal effect reverses sign—a prediction that the prevailing forward-prediction view of simulators cannot produce. (3) The CausalSim benchmark confirms that SVAR-FM recovers the correct causal sign across four scientific domains (macroeconomics, diabetes, cosmic ray physics, and battery degradation) where observational methods produce sign-reversed estimates due to confounding. (4) A case study in ultrafast laser physics tests the sign-flip prediction by physically varying δS through the accuracy level of a first-principles quantum solver: the low-accuracy setting produces a sign-reversed estimate, while the high-accuracy setting recovers the correct positive slope ( R2 = 0 .983 , zero bias relative to ground truth), providing the first experimental demonstration of a simulator-fidelity-dominated fail-ure mode in causal discovery. 
+
+# 1 Introduction 
+
+Two powerful but historically separate traditions exist for understanding complex dynamical systems. On the one hand, mechanistic simulators encode causal mechanisms at the microscopic level and can predict system behaviour under hypothetical interventions. These range from first-principles solvers —programs that compute material properties directly from quantum mechanics, a cornerstone of recent AI-for-Science efforts in new materials discovery (Merchant et al., 2023; Zhang et al., 2024) and drug design (Jumper et al., 2021)—to Navier–Stokes solvers for fluid dynamics, kinetic models for chemical reactions, and agent-based 1
+
+> arXiv:2605.09870v1 [cs.LG] 11 May 2026
+
+models for financial markets. On the other hand, machine learning methods extract statistical patterns from observational time series at scale, but the patterns they find are associational: they reflect correlations shaped by confounding, feedback, and latent common causes, not the underlying causal structure. Bridging these two traditions has long been recognised as a key challenge. Physics-informed machine learn-ing (Raissi et al., 2019; Karniadakis et al., 2021) incorporates physical laws as regularization of predictive models, and AI-for-Science surrogate models (Jumper et al., 2021; Lam et al., 2023; Bodnar et al., 2024) learn to replace simulators for faster forward prediction. In both cases, however, the simulator’s role is to improve prediction , not to identify causal structure . The causal graph—which variable drives which, and through what mechanism—remains inaccessible from observational data alone whenever latent confounders are present. Causal inference (Pearl, 2009) provides the missing language: the do( ·) operator formally distinguishes inter-vention from observation, and under appropriate conditions makes causal structure identifiable. Yet existing causal discovery methods for time series either assume causal sufficiency (no latent confounders) (Granger, 1969; Runge et al., 2019; Hyvärinen et al., 2010) or operate on i.i.d. data (Wang et al., 2017; Mooij et al., 2020; Brouillard et al., 2020). In the presence of latent confounders, the structural VAR is provably non-identifiable from observational data alone (Fact 3.2). The fundamental difficulty is that no amount of statistical sophistication—non-Gaussianity, heteroscedasticity, score regularity—can substitute for the inter-ventional data that the do( ·) operator requires. The key observation of this paper is that the simulators already in routine use in the physical sciences can mechanically realize Pearl’s do( ·) operator . When a simulator is run with a variable clamped to a fixed value (e.g., fixing temperature in an Arrhenius kinetics model, or fixing laser intensity in a quantum dynamics solver), confounding paths through that variable are physically severed; the resulting output is interventional by construction, not by statistical argument. This is categorically different from physics-informed ML (which uses physical laws for prediction, not causal identification) and from i.i.d. interventional methods (whose interventions are experimental labels, not simulator-realized manipulations of a time-varying process). Incorporating simulators as causal operators into machine learning therefore requires a framework that integrates causal inference with time series analysis and explicitly accounts for the simulator’s imperfection— the gap between the simulator’s physics and reality. The framework we develop, SVAR-FM (Structural VAR with Flow Matching), uses a structural VAR (Sims, 1980) as the causal language for time series and conditional Flow Matching (Lipman et al., 2023; Tong et al., 2024) as the distributional learner. The central move is that the simulator is not one more ingredient of the learning objective but the operator that defines what is being identified in the first place. Once the simulator is taken seriously in this role, a new object enters the analysis—its fidelity δS , which classical causal theory does not track, and which we will show controls both the sample complexity and the sign of the recovered effects. We evaluate SVAR-FM on a case study in ultrafast laser physics (Corkum, 1993) where a single first-principles quantum-mechanical solver generates both observational and interventional data, and the solver’s physical accuracy can be tuned continuously—providing a direct test of the sign-flip prediction. We also evaluate on the CausalSim benchmark spanning four scientific domains (macroeconomics, diabetes, cosmic ray physics, and battery degradation). Against this background, the paper addresses four interrelated problems. 
+
+1. How should a simulator enter causal inference? Existing uses of simulators in ML—as prediction tar-gets (Jumper et al., 2021; Lam et al., 2023), as supervised data sources (Cranmer et al., 2020), or as tools inside autonomous agents (Boiko et al., 2023)—treat the simulator’s forward output as the quantity of interest. None uses the simulator as a causal operator . We formalise the simulator-as-do -operator view: when the simulator clamps a variable, confounding paths are physically severed, and the resulting output is interventional by construction. 
+
+2. Under what conditions is the causal graph identifiable? In the i.i.d. setting, Eberhardt’s theory (Eberhardt et al., 2005; 2007) shows that O(log d) interventional experiments suffice; practical algorithms (IGSP (Wang et al., 2017), JCI (Mooij et al., 2020)) implement this for i.i.d. data. For time series, however, contem-2poraneous and lagged edges must be handled jointly, and spurious high-frequency effects from unobserved lagged confounders have no i.i.d. counterpart. We prove that the full SVAR is identifiable under a coverage condition on the simulator-clampable variables (Theorem 4.7), verifiable a priori from domain knowledge alone. 
+
+3. What happens when the simulator is imperfect? Every real simulator has finite fidelity δS . Classical causal theory does not track this quantity; the AI-for-Science literature treats it as a prediction loss to minimise. We derive an end-to-end error bound (Theorem 5.13) that decomposes the estimation error into Monte Carlo, simulator fidelity, and Flow Matching terms. A sharp consequence is a sign-flip regime (Corollary 5.11): when 
+
+δS exceeds a threshold set by the signal magnitude, the estimated causal effect reverses sign—a prediction that the forward-prediction view of simulators cannot produce. 
+
+4. Can the sign-flip prediction be tested? A case study in ultrafast laser physics (§8) provides a setting where δS is physically controllable: switching between two levels of physical accuracy in the same first-principles solver changes δS from large (sign-reversed estimate) to small (correct sign recovered, R2 =0.983 ). The CausalSim benchmark confirms the same sign-reversal pattern across four additional domains (macroeconomics, diabetes, cosmic ray physics, battery degradation). In summary, the main contributions of this paper are: 
+
+• A framework (SVAR-FM) that treats physics-based simulators as mechanical realizations of Pearl’s 
+
+do( ·) operator for time series causal discovery, bridging mechanistic simulation and causal inference. 
+
+• An identifiability theorem (Theorem 4.7) showing that the full structural VAR is recoverable under a coverage condition verifiable a priori from domain knowledge, with an argument intrinsic to the time series setting. 
+
+• An end-to-end error bound (Theorem 5.13) that decomposes estimation error into Monte Carlo, simulator fidelity δS , and Flow Matching terms, and predicts a sign-flip regime (Corollary 5.11). 
+
+• The CausalSim benchmark: four cross-domain experiments (macroeconomics, diabetes, cosmic ray physics, battery degradation) demonstrating that SVAR-FM recovers correct causal signs where observational methods fail. 
+
+• A case study in ultrafast laser physics providing the first experimental test of the sign-flip prediction by physically varying the simulator’s accuracy level. Sections 2–3 review related work and formalise the non-identifiability of SVARs from observational data. Section 4 introduces the simulator-as-do -operator framework and states the identifiability theorem; Section 5 derives the end-to-end error bound (Theorem 5.13) and the sign-flip corollary, connecting simulator fidelity 
+
+δS to the sign of the recovered effects. Section 6 describes the algorithm. Section 7 reports the CausalSim benchmark across four domains, and Section 8 presents the ultrafast laser physics case study. Section 9 discusses positioning and limitations, and concludes. 
+
+# 2 Related Works 
+
+SVAR-FM proposes a use of physical simulators that has no direct counterpart in the existing causal-discovery or AI-for-Science literature—the simulator as a mechanical realization of Pearl’s do( ·) operator, with its fidelity δS treated as a first-class object of the error analysis. To make this positioning precise, we contrast the proposal against four research streams whose concerns it touches: (i) time series causal discovery, (ii) intervention-based causal discovery, (iii) causal discovery under latent confounders, and (iv) simulation-based and mechanistic approaches to causal inference. For each stream we identify, in turn, what is and is not shared with SVAR-FM in the choice of data source, the role assigned to the simulator, the form of the identifiability argument, and the object that controls the error. Table 1 summarises the positioning at a glance. Table 11 (Appendix B) gives the full time-series listing; Table 12 (Appendix B) gives the i.i.d. listing; the rest of this section develops the argument in prose. 3Table 1: Overview: positioning of representative methods across the assumption space. “Setting” is i.i.d. or time series (TS); “Conf.” denotes latent confounders; “Int.” denotes use of interventional data; “NL” denotes support for nonlinear mechanisms; “Graph” indicates whether the causal graph is an input ( known )or an output ( discovered ). Full listings of i.i.d. and TS methods appear in Appendix B (Tables 12 and 11).                                                        
+
+> Method Setting Conf. Int. NL Graph
+> i.i.d. observational
+> ANM (Hoyer et al., 2009) i.i.d. ××⃝discovered Nonlinear CD w/ latent (Kaltenpoth & Vreeken, 2023) i.i.d. ⃝×⃝discovered
+> i.i.d. interventional
+> DCDI (Brouillard et al., 2020) i.i.d. ×⃝⃝discovered JCI (Mooij et al., 2020) i.i.d. ⃝⃝⃝discovered DeCaFlow (Almodóvar et al., 2025) i.i.d. ⃝⃝⃝known
+> Time series observational
+> PCMCI (Runge et al., 2019) TS ××⃝discovered LPCMCI (Gerhardus & Runge, 2020) TS ⃝×⃝discovered (PAG) Rahmani–Frossard (Rahmani & Frossard, 2025b) TS ××⃝discovered
+> Time series flow-based, graph known
+> DoFlow (Wu et al., 2025b) TS ×⃝⃝known
+> Time series, graph discovered, latent confounders, interventional (ours)
+> SVAR-FM (ours) TS ⃝⃝⃝discovered
+
+2.1 Time series causal discovery 
+
+Granger causality (Granger, 1969) and its measure-theoretic extensions (Dahlhaus & Eichler, 2003; Eich-ler, 2012) recover directed relationships from predictive improvement under causal sufficiency and linear-ity. Constraint-based methods—PCMCI (Runge et al., 2019), PCMCI + (Runge, 2020), and the decadal synthesis of Runge et al. (2023)—lift linearity via nonparametric tests but retain causal sufficiency. VAR-LiNGAM (Hyvärinen et al., 2010) and SpinSVAR (Misiakos & Püschel, 2025) exploit non-Gaussianity for linear-SVAR identification. Score-based and deep-learning approaches—DYNOTEARS (Pamfil et al., 2020), Neural Granger (Tank et al., 2022), Rhino (Gong et al., 2023), CUTS/CUTS + (Cheng et al., 2023), Amortized CD (Löwe et al., 2022), TS-CausalNN (Assaad et al., 2022), Sun et al. (2023), temporal score matching (Chen et al., 2024), and score-informed neural operators (Kang et al., 2025)—broaden the mechanism class but still operate on observational data under causal sufficiency. Information-theoretic sample-complexity bounds (Yin et al., 2023; Veedu et al., 2023; Zhu et al., 2024) place the observational baseline. A parallel flow-based line—CAREFL (Khemakhem et al., 2021), Causal NF (Javaloy et al., 2023), OCDaf (Kamkari et al., 2023), Hoang et al. (2024), CASTOR (Rahmani & Frossard, 2025a), and Rah-mani & Frossard (2025b;c)—parameterizes causal generative processes with flows and extracts identifiability from statistical noise properties (non-Gaussianity, heteroscedasticity), requiring causal sufficiency. Every method above recovers causal structure by adding an assumption to observational data (sparsity, acyclicity, non-Gaussianity, regime structure). SVAR-FM takes a different route: it drops these assumptions and takes as input a different kind of data—simulator-generated do( ·) realizations. Identification is han-dled by the simulator’s do -operator (Theorem 4.7); Flow Matching then parameterizes the interventional conditionals, enabling nonlinear mechanism learning while preserving tolerance to latent confounders. 
+
+2.2 Intervention-based causal discovery 
+
+The closest methodological relatives of SVAR-FM are methods that discover causal structure from interven-tional data. In the i.i.d. setting, Eberhardt’s theory (Eberhardt et al., 2005; 2007; Eberhardt, 2012) shows that O(log d) experiments suffice for complete identification; practical algorithms include GIES (Hauser & 4Bühlmann, 2012), IGSP (Wang et al., 2017), UT-IGSP (Squires et al., 2020), JCI (Mooij et al., 2020), DCDI (Brouillard et al., 2020), ENCO (Lippe et al., 2022), and Bicycle (Rohbeck et al., 2024). All of these assume i.i.d. data; none addresses structural VARs with contemporaneous and lagged edges. SVAR-FM shares the general principle (use interventions for identifiability) but differs in three respects: (i) it operates on time series and handles the VAR structure natively; (ii) it admits latent confounders (Theorem 4.7 imposes no causal sufficiency); (iii) its interventions come from a physical simulator whose fidelity δS enters the error bound as a first-class term. 
+
+2.3 Causal discovery under latent confounders 
+
+Latent confounders require moving beyond Markov equivalence classes. The FCI family (Spirtes et al., 2000) identifies partial ancestral graphs (PAGs); tsFCI (Entner & Hoyer, 2010), LPCMCI (Gerhardus & Runge, 2020), and SVAR-GFCI (Malinsky & Spirtes, 2018) extend this to time series. In the i.i.d. setting, JCI (Mooij et al., 2020) and DeCaFlow (Almodóvar et al., 2025) handle latent confounders with interventional data. SVAR-FM also admits latent confounders, but its identification route is fundamentally different: the FCI methods use conditional-independence constraints to output a PAG (an equivalence class), while SVAR-FM uses physically realized interventions to identify the full SVAR (a single graph, not an equivalence class). In terms of Pearl’s do-calculus (Pearl, 2009), the identification strategy of SVAR-FM relies primarily on Rule 2 (the action/observation exchange): under an intervention that severs all backdoor paths, P (Y |
+
+do( X=x), Z ) = P (Y | X=x, Z ), which justifies using the simulator output as if it were experimental data. Settings requiring Rule 1 (insertion/deletion of observations) or Rule 3 (insertion/deletion of actions)—such as front-door identification when no variable can be directly intervened upon—fall outside the current scope of SVAR-FM. Extending the framework to exploit such indirect identification strategies via the simulator is a direction for future work. 
+
+2.4 Simulation-based and mechanistic approaches 
+
+Several lines of work bring simulators and mechanistic models into contact with causal inference, but with different goals. Simulation-based inference (SBI) (Cranmer et al., 2020; Brehmer et al., 2020; Lueckmann et al., 2021; Radev et al., 2023) estimates posterior distributions over the parameters of a mechanistic model whose causal structure is fixed ; SVAR-FM discovers the structure. Park et al. (Park et al., 2023) (GOBI) use ODE data-reproducibility for causal inference; the causal criterion is the ability to reproduce an observed time series, not a do-operator intervention. Deep SCMs (Pawlowski et al., 2020; Sanchez & Tsaftaris, 2022; Chao et al., 2024) and DoFlow (Wu et al., 2025b) learn causal mechanisms under a known graph; SVAR-FM discovers the graph. DeCaFlow (Almodóvar et al., 2025) and PO-Flow (Wu et al., 2025a) extend this to confounders and potential outcomes, respectively, but still require the graph as input. CaTSG (Xia et al., 2025) generates causal time series under a known graph. Identifiable flow models (Le et al. (Le et al., 2025)) learn mechanisms from a known ordering using conditional Flow Matching—the same technical primitive as SVAR-FM’s Phase 4, but solving a different problem (mechanism learning vs. structure discovery). 
+
+2.5 AI for Science and the role of simulators 
+
+The past five years have seen the emergence of AI for Science (AI4S) as a recognised research agenda at major ML venues (Wang et al., 2023; Karniadakis et al., 2021). The broader ecosystem now includes dedicated workshops at NeurIPS, ICML and ICLR (AI4Science, AI4Mat, ML4Science), a growing set of scientific foundation models, and a parallel push towards autonomous research agents. Much of this work can be organised around three recurring uses of simulators. 
+
+(a) Simulators as prediction targets. A first line trains ML models to replace a first-principles simulator whose output is itself the quantity of scientific interest. Representative examples include AlphaFold and its successors for protein structure (Jumper et al., 2021; Abramson et al., 2024), GraphCast (Lam et al., 2023) and GenCast (Price et al., 2025) for global weather, the Aurora atmospheric foundation model (Bodnar et al., 2024), GNoME (Merchant et al., 2023) and MatterSim (Zhang et al., 2024) for materials discovery, and MACE for interatomic potentials (Batatia et al., 2022). In these works the simulator (or the experimental 5ground truth it approximates) is the target, and the ML model’s job is to reproduce it faster or more accurately. 
+
+(b) Simulators as training-data generators. A second line uses simulators to supply supervised data for tasks where real observations are scarce or expensive: PDE surrogates (Brunton & Kutz, 2024; Li et al., 2021a), physics-informed learning (Karniadakis et al., 2021; Raissi et al., 2019), and simulation-based inference with neural density estimators (Cranmer et al., 2020; Brehmer et al., 2020; Lueckmann et al., 2021; Radev et al., 2023). Here the simulator is a teacher; the learned model inherits its inductive biases and is evaluated on held-out simulator states or on downstream tasks. 
+
+(c) Simulators inside autonomous research pipelines. A third, newer line treats the simulator as one tool among many inside an LLM-driven research agent: Coscientist (Boiko et al., 2023), the AI Scientist line (Lu et al., 2025), and proposals for AI co-scientists (Gottweis et al., 2025) all chain simulator calls with literature search, code execution, and (optionally) robotic experimentation. The simulator there is one substitutable component of an open-ended search procedure. SVAR-FM proposes a use of simulators that is not captured by (a)–(c) above. It is not a fourth item in the same list: the simulator here is neither a prediction target, nor a supervised-data source, nor a swappable tool inside an agent. It is an operator—an executable realization of Pearl’s do( ·) on the real-world data generating process—and the thing being learned is not the simulator’s forward map but the causal structure whose effects the operator makes identifiable. This shift in role changes what the analysis must say about the simulator. Its imperfections cannot be rolled into a prediction loss, because the quantity of interest is the causal effect e∗ 
+
+> i→j
+
+, which depends nonlinearly on the interventional distribution and can be sign-flipped by a bounded simulator bias δS (Theorem 5.13, Corollary 5.11). The bias becomes a first-class object of the analysis, with its own error term and its own threshold for sign reversal—features that none of the three uses (a)–(c) need to produce, because in none of them is the object of interest a causal structure. We therefore regard SVAR-FM not as an application of AI-for-Science methodology to causal discovery, but as a proposal that simulators in AI for Science have a second, distinct role beyond forward prediction. 
+
+# 3 Problem Setting 
+
+3.1 Notation 
+
+Consider d observed time series variables Xt = ( X1,t , . . . , X d,t )⊤ ∈ Rd (t = 1 , . . . , T ). The true causal structure is represented by a contemporaneous causal matrix B0 ∈ Rd×d and lagged causal matrices {Bl}pl=1 .
+
+3.2 Structural VAR Model 
+
+The structural VAR (SVAR) was introduced by Sims (Sims, 1980) and has become a standard tool in macroeconomics (Kilian & Lütkepohl, 2017). 
+
+Definition 3.1 (Structural VAR (SVAR) (Sims, 1980)) . The structural VAR model is defined as: 
+
+B0Xt =
+
+> p
+
+∑
+
+> l=1
+
+BlXt−l + ϵt (1) where B0 is the contemporaneous causal structure (with unit diagonal entries), Bl represents the causal effects at lag l, and ϵt denotes the structural shocks (mutually independent, E[ϵt] = 0 , Cov( ϵt) = Σ ϵ is diagonal). Rearranging Eq. (1) yields the reduced-form VAR: 
+
+Xt =
+
+> p
+
+∑
+
+> l=1
+
+ΦlXt−l + ut (2) where Φl = B−10 Bl and ut = B−10 ϵt.63.3 The Identification Problem 
+
+The identification problem of structural VARs has been extensively studied in econometrics (Sims, 1980; Kilian & Lütkepohl, 2017). 
+
+Fact 3.2 (Non-identifiability of Structural VAR (Kilian & Lütkepohl, 2017)) . For the error covariance matrix 
+
+Σu = Cov( ut), there exist infinitely many pairs (B0, Σϵ) satisfying 
+
+Σu = B−10 Σϵ(B−10 )⊤ (3) For any orthogonal matrix Q, the pair (B0Q, Q ⊤ΣϵQ) also satisfies Eq. (3). 
+
+(Proof: see Appendix A.) Remark 3.3 (Conventional identification strategies) . Kilian and Lütkepohl (Kilian & Lütkepohl, 2017) sys-tematize the following identification strategies: (1) Short-run restrictions: imposing zeros in B0 (Sims, 1980); (2) Long-run restrictions: constraining cumulative effects (Blanchard & Quah, 1989); (3) Sign restrictions: imposing sign constraints on effects (Uhlig, 2005); (4) Non-Gaussianity: SVAR-LiNGAM (Hyvärinen et al., 2010). All four strategies recover identifiability by imposing additional statistical or sign restrictions on the SVAR; none of them admit latent confounders. The framework developed in the remainder of this paper takes a different route, using physically realized interventions rather than additional statistical restrictions, and consequently is not a fifth item in the above list. 
+
+3.4 Latent Confounders 
+
+In Pearl’s (Pearl, 2009) framework, the limitations of causal discovery under the presence of latent con-founders are clearly established. 
+
+Definition 3.4 (Confounder (Pearl, 2009)) . A variable Z is a confounder of X and Y if it has the structure 
+
+X ← Z → Y .
+
+Proposition 3.5 (Non-identifiability under confounding (Pearl, 2009)) . When a latent confounder Z com-mon to X and Y exists, observational data P (X, Y ) cannot distinguish between X → Y (direct causation) and X ← Z → Y (confounding). 
+
+3.5 Summary of Identifiability Conditions 
+
+Table 2 summarizes the identifiability conditions according to model class, noise assumptions, and the presence of confounding. Table 2: Identifiability conditions for causal discovery methods Model Noise Confounding Identifiability Linear Gaussian × Not identifiable Linear Non-Gaussian × Identifiable (VARLiNGAM) Linear Non-Gaussian ⃝ Not identifiable (fails under conf.) Linear Any ⃝ Identifiable (SVAR-FM †)Nonlinear Any × Conditionally identifiable (ANM (Hoyer et al., 2009), etc.) Nonlinear Any ⃝ Identifiable (SVAR-FM †)   
+
+> †Requires a simulator satisfying Assumption 4.2 ( δS≈0) and the structural conditions of Remark 4.3.
+
+In the presence of confounding (marked with ⃝), identification is impossible from observational data alone, and intervention-based methods such as SVAR-FM are essential. 74 Proposed Method: SVAR-FM 
+
+4.1 Nonlinear Structural VAR 
+
+We work with a nonlinear generalization of the SVAR in Def. 3.1. This is not the main novel ingredient of the paper: the causal mechanism is nonlinear in virtually all scientific applications of interest (HHG 1, kinetics, physiology, etc.), so the linear SVAR of Def. 3.1 would not be applicable in the settings we care about. The essential new ingredient—the use of a physical simulator as a realization of Pearl’s do( ·) operator—is introduced in §4.3. 
+
+Definition 4.1 (Nonlinear Structural VAR) . The nonlinear structural VAR is defined as: 
+
+Xj,t = fj
+
+(
+
+Pa (0)  
+
+> j
+
+(t), Pa (1: p) 
+
+> j
+
+(t)
+
+)
+
++ ϵj,t (4) where Pa (0)  
+
+> j
+
+(t) denotes the contemporaneous parent variables, Pa (1: p) 
+
+> j
+
+(t) denotes the lagged parent variables, and fj is a nonlinear causal mechanism. 
+
+4.2 Flow Matching as the Distributional Learner 
+
+Conditional Flow Matching (Lipman et al., 2023; Albergo & Vanden-Eijnden, 2023; Chen et al., 2018; Tong et al., 2024) parameterizes the interventional conditionals P (· | do( Xi = x)) produced by the simulator. It has two roles in SVAR-FM: (1) modeling nonlinear causal mechanisms fj in Eq. (4), and (2) incorporating physical constraints from the simulator into the conditioning vector, enabling sensitivity analysis of causal effects with respect to simulator assumptions. The technical details (optimal-transport conditional flow matching (OT-CFM) loss, conditioning design, universal approximation) are given in Appendix E. 
+
+4.3 The simulator as a realization of Pearl’s do -operator 
+
+We now introduce the central object of the paper. Let S be a physical simulator (e.g., TDDFT 2, Arrhenius kinetics 3, an agent-based model). The simulator is not used as a surrogate of the forward dynamics and not 
+
+used as a source of supervised training data. Instead, we use it as an operator that, on demand, produces samples from the interventional distribution P (· | do( Xi = x)) of the nonlinear SVAR of Def. 4.1. That is, S is a mechanical realization of Pearl’s do( ·) operator: querying S(do( Xi = x)) returns a sample of the downstream variables that corresponds, by construction, to having physically severed all incoming causal arrows into Xi and fixed Xi at the value x. Three consequences follow immediately. First, the observa-tional and interventional distributions are distinguished by construction , not by a statistical proxy. Second, the identifiability argument does not need to assume non-Gaussianity, sparsity, or any other distributional restriction on the noise; it rests instead on which variables the simulator can clamp. Third, the fidelity of S enters the error analysis as an explicit, quantified object δS (Assumption 4.2 below), rather than as unmodelled noise. 
+
+Assumption 4.2 (Simulator validity) . The physical simulator S approximates the true interventional dis-tribution: ∥PS (·| do( Xi = x)) − P (·| do( Xi = x)) ∥T V 4 ≤ δS
+
+Remark 4.3 (Structural conditions for the simulator-as-do equivalence) . Assumption 4.2 is a distributional condition (TV distance). For the simulator to faithfully realize Pearl’s do( ·) operator, three structural conditions must also hold, which we state explicitly: (a) Structural fidelity : the internal causal structure of 
+
+S is consistent with the causal DAG of the target system, in the sense that the parent–child relationships encoded in the simulator’s equations correspond to those of the true SCM; (b) Modularity (the independent                
+
+> 1High harmonic generation: a nonlinear optical process in which molecules irradiated by intense femtosecond laser pulses emit photons at integer multiples of the laser frequency; see §8 for details.
+> 2Time-dependent density functional theory: a quantum-mechanical method that computes the time evolution of the electron density under external fields (e.g., laser pulses), used here via the Octopus code (Tancogne-Dejean et al., 2020).
+> 3A rate-equation framework in which the rate constant of a chemical or degradation process depends exponentially on temperature: k=Aexp( −Ea/k BT). Widely used in battery degradation modelling and chemical engineering.
+> 4∥ · ∥ T V denotes the total variation distance between two probability distributions: ∥P−Q∥T V = sup A|P(A)−Q(A)|. It ranges from 0 (identical distributions) to 1 (distributions with disjoint support).
+
+8causal mechanism principle (Peters et al., 2017; Schölkopf et al., 2012)): the operation do( Xi = x) within 
+
+S replaces exactly the structural equation for Xi while leaving all other equations invariant; (c) Variable correspondence : the simulator and the target system are defined over the same set of endogenous variables (or a known superset thereof). In the applications of this paper, conditions (a)–(c) are satisfied by construction: each simulator implements a well-validated physical model whose causal structure is known from domain science (e.g., the Navier–Stokes equations, Arrhenius kinetics, the UVA/Padova ODE system). When these structural conditions hold, Assumption 4.2 reduces the gap between S and the true system to a purely quantitative discrepancy δS (numerical accuracy, parameter uncertainty), which is the object analysed in Theorem 5.13. When condition (a) is violated—e.g., the simulator omits a relevant variable—the TV bound may still hold but the causal interpretation breaks down; in such cases, δS absorbs structural model error and may be large. 
+
+Lemma 4.4 (Identification of contemporaneous causation via intervention (Pearl, 2009; Eberhardt et al., 2007)) . Under Assumption 4.2, the interventional effect ei→j = E[Xj |do( Xi = x′)] − E[Xj |do( Xi = x)] 
+
+identifies the contemporaneous causal direction. (Proof: see Appendix A.) 
+
+Definition 4.5 (Intervention target set and coverage) . Let I ⊆ { 1, . . . , d } denote the set of variables for which simulator-generated interventional distributions PS (· | do( Xi,t = x)) are available for a sufficiently rich set of intervention values x ∈ X i with |X i| ≥ 2, for all t in the estimation window. We say that I covers 
+
+the graph G if every contemporaneous edge (i, j ) with i̸ = j in G has i ∈ I or j ∈ I ; equivalently, no two endogenous variables are simultaneously un-intervened. 
+
+Assumption 4.6 (Regularity of the SVAR process) . The SVAR in Def. 4.1 is (a) stable , in the sense that the companion matrix of the lagged coefficients has spectral radius strictly less than one; (b) acyclic in contemporaneous time , i.e., the contemporaneous edge set {(i, j ) : Bij 
+
+> 0
+
+̸ = 0 , i ̸ = j} forms a DAG; (c) the structural shocks ϵj,t are mutually independent across j and independent across t with finite second moments. 
+
+Theorem 4.7 (Interventional identifiability of SVAR-FM) . Let Assumptions 4.2 (with δS = 0 ) and 4.6 hold, and let I be an intervention target set that covers the contemporaneous graph of G. Then both the contemporaneous causal structure B0 and all lagged causal structures {Bl}pl=1 of the SVAR in Def. 4.1 are uniquely identifiable from the joint of the observational distribution P (X1: T ) and the family of interventional distributions {PS (X1: T | do( Xi,t = x)) : i ∈ I , x ∈ X i, t }. Moreover, I = {1, . . . , d } is sufficient but not necessary; for chain graphs, |I| = d − 1 suffices. (Proof: see Appendix A.) Remark 4.8 (From exact to approximate identifiability) . Theorem 4.7 establishes identifiability under the idealisation δS = 0 . When δS > 0 (as in every real simulator), the causal structure is no longer exactly identifiable, but the end-to-end error bound of Theorem 5.13 (§5) quantifies the resulting estimation error and shows that it decomposes cleanly into Monte Carlo, simulator fidelity, and Flow Matching components. In particular, Corollary 5.11 gives a threshold on δS below which the estimated sign of each causal effect is preserved—the practical condition under which the identifiability of Theorem 4.7 degrades gracefully rather than catastrophically. For instance, in CausalSim-Macro the true effect is |e∗| = 0 .006 ; the sign is preserved whenever δS < |e∗|/2 = 0 .003 , and the observed bias of 0.001 (Table 5) confirms that this condition holds. 
+
+Remark 4.9 (Operational meaning of the coverage condition) . Def. 4.5 is what we verify in each application. For instance, in the laser physics case study (§8), there are two correlated variables ( R and E0) and a single confounding edge R ↔ E0; fixing R at a single value places R in I, which covers this edge by Def. 4.5. More generally, the coverage condition can be verified a priori from domain knowledge of which variable pairs the simulator is capable of holding independently fixed. 
+
+Fact 4.10 (Separation of confounding via intervention (Pearl, 2009)) . When Z is a confounder of Xi and 
+
+Xj , do( Z = z) distinguishes confounding from direct causation. This is a standard result from Chapter 3 of Pearl (Pearl, 2009). 
+
+(Proof: see Appendix A.) Remark 4.11 (Addressing unobserved confounding via the simulator) . Theorem 4.7 and the known result (Fact 4.10) primarily address contemporaneous causation among observed variables (X ↔ Y ). How-ever, SVAR-FM can also address unobserved confounders (U → X, U → Y where U is unobservable). 9In the unobserved confounding case, the causal effect X → Y cannot be identified from observational data alone: 
+
+P (Y |X = x)̸ = P (Y |do( X = x)) (5) This arises because the backdoor path X ← U → Y remains open. The discrepancy between P (Y | X)
+
+and P (Y | do( X)) is the mechanism behind Simpson’s paradox (Simpson, 1951; Pearl, 2009): a statistical association can reverse sign when a confounding variable is conditioned on. In SVAR-FM, we exploit the fact that the simulator S can specify and control the values of the unobserved variable U :
+
+PS (Y |do( X = x), U = u) = P (Y |X = x, U = u) (6) Since the simulator can fix U and generate intervention data, the backdoor path through U can be blocked. This property enables SVAR-FM to address the following two types of confounding in a unified manner: 
+
+• Simultaneous causation (e.g., in macroeconomics, a central bank adjusts interest rates i in re-sponse to inflation π, creating a feedback loop i ↔ π that masks the true causal effect of i on π; see §7.1.1): intervention severs the reverse causal direction 
+
+• Unobserved confounding (e.g., in the laser physics case study of §8, a molecular parameter affects both the laser field and the spectral output, but cannot be independently measured in a real experiment): the simulator fixes the confounding variable Although the mechanisms differ, both are resolved within the unified framework of “intervention via a simulator.” 
+
+# 5 Theoretical Analysis 
+
+The theory of this section is organized around the object that the simulator-as-do -operator viewpoint intro-duces, namely the simulator fidelity δS , and its consequences for the recovery of causal effects. Two results are where the new content is concentrated: (i) interventional identifiability of the time series causal structure under an explicit coverage condition on the intervention target set (Theorem 4.7), which is not an instance of a previously available theorem—it has to handle the simultaneous presence of contemporaneous and lagged edges and to distinguish genuine contemporaneous causation from spurious high-frequency effects due to unobserved lagged confounders, neither of which arises in i.i.d. formulations; (ii) an end-to-end decompo-sition of the total estimation error into Monte Carlo, simulator fidelity, and Flow Matching approximation components (Theorem 5.13 and Corollary 5.15), together with its sign-flip consequence (Corollary 5.11): whenever δS exceeds a threshold determined by the signal magnitude, the estimated causal effect is reversed in sign relative to the ground truth—a prediction we verify in the ultrafast laser physics case study (§8.1) by switching between a low-accuracy and a high-accuracy first-principles solver. The remaining results in the section—the convergence rate of the interventional expectation estimator (Proposition 5.1), the sample complexity for joint identification of all pairwise effects (Proposition 5.3), the lower and upper bounds on the number of interventions (Corollaries 5.5–5.7), and consistency under vanishing estimation error (Proposition 5.9)—are obtained by specializing classical statistical and PAC-learning tools (van der Vaart, 2000; Wasserman, 2006; Valiant, 1984; Hoeffding, 1963) and the interventional combinatorics of Eberhardt et al. (2005; 2007) to the SVAR-FM setting, so that the paper is self-contained and the role of each component of the error bound is visible. 
+
+5.1 Convergence Rate of Intervention Effect Estimation 
+
+The following result records the convergence rate of the Monte Carlo estimator of the interventional expec-tation, for use later in Theorem 5.13. 
+
+Proposition 5.1 (Convergence rate (van der Vaart, 2000; Hoeffding, 1963)) . For the estimation error between the intervention effect ˆei→j estimated from M intervention samples and the true value e∗ 
+
+> i→j
+
+, when 
+
+10 the variance of Xj |do( Xi = x) is bounded by σ2:
+
+|ˆei→j − e∗ 
+
+> i→j
+
+| = Op(M −1/2) (7) 
+
+More precisely, by Hoeffding’s inequality (Hoeffding, 1963): 
+
+P (|ˆei→j − e∗ 
+
+> i→j
+
+| > ϵ ) ≤ 2 exp 
+
+(
+
+− M ϵ 2
+
+2σ2
+
+)
+
+(8) 
+
+(Proof: see Appendix A.) 
+
+Corollary 5.2 (Confidence interval (Wasserman, 2006)) . The confidence interval for the intervention effect at confidence level 1 − α is given by ˆei→j ± zα/ 2 · ˆσ/ √M .
+
+5.2 Sample Complexity 
+
+We record the sample complexity for recovering all pairwise causal effects from simulator-generated interven-tions, specializing the PAC learning framework (Valiant, 1984; Kearns & Vazirani, 1994) to the SVAR-FM setting. 
+
+Proposition 5.3 (Sample complexity (Valiant, 1984; Wasserman, 2006)) . The total number of intervention samples required to identify the causal structure of d variables with error probability at most δ and estimation accuracy ϵ is: 
+
+Mtotal = O
+
+( d2σ2 log( d2/δ )
+
+ϵ2
+
+)
+
+(9) 
+
+(Proof: see Appendix A.) Remark 5.4 (Comparison with existing methods) . The sample complexity O(d2) is of the same order as the number of conditional independence tests O(d2p) in PCMCI (Runge et al., 2019). However, SVAR-FM enjoys the advantage of being robust to confounding. 
+
+5.3 Lower and Upper Bounds on the Required Number of Interventions 
+
+The interventional combinatorics of Eberhardt et al. (2005; 2007), originally formulated for i.i.d. DAGs, continues to govern the SVAR-FM setting once the coverage condition of Def. 4.5 is in force; we record the resulting bounds for use in the error analysis. 
+
+Corollary 5.5 (Lower bound on the number of interventions) . To identify the causal structure of d variables, at least d − 1 single-variable interventions are required in the worst case. (Proof: see Appendix A.) 
+
+Corollary 5.6 (Upper bound on the number of interventions) . With d single-variable interventions (one per variable), any causal structure over d variables can be identified. (Proof: see Appendix A.) 
+
+Corollary 5.7 (Exact number of interventions (Eberhardt et al., 2005; 2007)) . The required number of interventions I∗ satisfies d − 1 ≤ I∗ ≤ d. The lower bound I∗ = d − 1 is attained for chain structures 
+
+X1 → X2 → · · · → Xd.(Proof: see Appendix A.) 
+
+5.4 Computational Complexity 
+
+Proposition 5.8 (Computational complexity) . The computational complexity of SVAR-FM is O(d2pT + d ·
+
+M · CS + d · T · CFM ), where CS is the simulator cost and CFM is the Flow Matching training cost. 
+
+11 5.5 Consistency 
+
+Proposition 5.9 (Consistency) . Under Assumption 4.2, inclusion of the true causal mechanism in the model class, and T, M → ∞ , the estimated causal structure ˆG of SVAR-FM converges in probability to the true structure G∗.(Proof: see Appendix A.) 
+
+5.6 Impact of Simulator Error and Evaluation of Physical Constraints 
+
+The following theorem quantifies the degree to which physical constraints inherent in the simulator (approx-imation accuracy of governing equations, numerical solver errors, etc.) affect causal estimation. Combined with the conditional generative model of Flow Matching (Remark E.2), the sensitivity of estimates to changes in physical constraints (e.g., changes in physical parameters or approximation levels of the simulator) can be theoretically assessed. 
+
+Theorem 5.10 (Propagation of simulator error and impact assessment of physical constraints) . When the simulator error is bounded by δS (Assumption 4.2), the estimation error of the intervention effect satisfies: 
+
+|ˆei→j − e∗ 
+
+> i→j
+
+| ≤ O(M −1/2) + O(δS ) (10) 
+
+The first term is the statistical estimation error (dependent on the sample size M ), and the second term is the systematic bias arising from the physical assumptions of the simulator. Through Flow Matching, the variation of δS (c) under different physical parameters c can be continuously modeled, enabling quantitative assessment of the impact of physical constraints on causal estimation. (Proof: see Appendix A.) 
+
+Corollary 5.11 (Robustness condition) . For the identification of the causal effect e∗ to be robust, it is necessary that |e∗| > 2δS + O(M −1/2).
+
+5.7 End-to-end error propagation through Flow Matching 
+
+Theorem 5.10 bounds the error of a direct Monte Carlo estimator of the interventional expectation. In SVAR-FM, however, the interventional distribution is not used directly: it is first approximated by a conditional Flow Matching model, and the causal effect is then read off from this model. The final estimation error therefore combines three sources: the Monte Carlo error, the simulator fidelity bias, and the Flow Matching approximation error. We now quantify this composition. Let v∗ denote the true (simulator-induced) conditional vector field that generates PS (· | do( Xi = x)) , and let 
+
+ˆvθ denote the estimate returned by minimizing the empirical conditional Flow Matching loss ̂ LCFM (θ) over the simulator-generated intervention dataset of size M . Denote the Flow Matching approximation error by 
+
+εFM := (LCFM (ˆ vθ ) − L CFM (v∗))1/2.
+
+This is the excess risk of the learned vector field with respect to the population CFM objective, and is upper-bounded by standard statistical-learning bounds in the form εFM ≤ O (Rad M (Vθ )) whenever Vθ has bounded Rademacher complexity (van der Vaart, 2000). 
+
+Assumption 5.12 (Lipschitz flow and bounded response) . (a) The target vector field v∗(·, t | c) is L-Lipschitz in x uniformly in (t, c); (b) the response functional gj (P ) := EXj ∼P [Xj ] is 1-Lipschitz with respect to the Wasserstein-1 distance on the marginal of Xj , which holds whenever Xj has bounded conditional variance under the interventional distribution. Assumption 5.12(a) is standard for flow-matching-based density estimation and implies, via a Gronwall-type argument (Albergo & Vanden-Eijnden, 2023; Tong et al., 2024), that the Wasserstein-1 distance between the distributions generated by ˆvθ and v∗ is controlled by their L2 difference: W1
+
+( ˆPˆθ , P S
+
+) ≤ eL · εFM .
+
+12 Theorem 5.13 (End-to-end error bound) . Under Assumptions 4.2, 4.6, and 5.12, the Flow-Matching-based estimator ˆeFM  
+
+> i→j
+
+:= gj ( ˆPˆθ (· | do( Xi = x′))) − gj ( ˆPˆθ (· | do( Xi = x))) satisfies 
+
+|ˆeFM  
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+| ≤ C1σ/ √M
+
+︸ ︷︷ ︸
+
+> Monte Carlo
+
++ C2 · δS
+
+︸ ︷︷ ︸ 
+
+> simulator fidelity
+
++ C3 · eL · εFM 
+
+︸ ︷︷ ︸
+
+> FM approximation
+
+, (11) 
+
+with probability at least 1 − η, where C1 = √2 log(2 /η ) and C2, C 3 ≤ 2 · sup x |xj | are constants that depend only on the conditional range of Xj .(Proof: see Appendix A.) Remark 5.14 (Which term dominates?) . Which term of Eq. equation 11 dominates is a diagnostic quantity that SVAR-FM can estimate empirically. (i) When the simulator is a first-principles solver with well-controlled discretization error, δS is small and the error is limited by M or εFM . (ii) When the simulator’s physical model omits an important effect, δS becomes O(1) relative to the signal, and Corollary 5.11 predicts a sign reversal rather than a smooth degradation. This is exactly what we observe in the laser physics case study (§8.1), where switching from a low-accuracy to a high-accuracy solver collapses the dominant term from δS to εFM and restores the correct causal sign. 
+
+Corollary 5.15 (Sample complexity revisited under FM approximation) . To achieve an overall estima-tion accuracy ϵ on d(d − 1) causal effects simultaneously with probability at least 1 − δ, it suffices to have intervention sample size M ≥ Cσ 2 log( d2/δ )/(ϵ/ 3) 2, simulator fidelity δS ≤ ϵ/ (3 C2), and Flow Matching approximation error εFM ≤ ϵ/ (3 C3eL).
+
+# 6 Algorithm and Methodology 
+
+This section describes the SVAR-FM algorithm (Section 6.1), the architectural design principles (Section 6.2), and methodological guidance for practical application (Section 6.3). 
+
+6.1 Algorithm 
+
+SVAR-FM consists of five phases (Algorithm 1). Phases 1–3 are responsible for causal structure identification, while Phases 4–5 handle the learning of causal mechanisms via Flow Matching and the evaluation of physical constraints. Phase 1 is standard reduced-form VAR estimation, with the lag order p∗ selected by BIC (Hamilton, 1994); this is the same initial step used by VARLiNGAM (Hyvärinen et al., 2010) and other VAR-based causal discovery methods. Default hyperparameters: pmax = 10 , bootstrap replicates B = 1000 , significance level 
+
+α = 0 .05 with Bonferroni correction α′ = α/d (d−1) . Phase 2 generates intervention data using the simulator 
+
+S. The design of intervention values is discussed in Section 6.3.2. Phase 3 identifies causal edges through bootstrap tests of the intervention effects ˆei→j . By employing statistical significance testing rather than threshold-based effect size judgments alone, consistency with the theoretical guarantees of Proposition 5.1 is maintained. The identification formula implemented by Phase 3 can be stated explicitly: for each variable pair (i, j ) with 
+
+i ∈ I , the causal effect is identified as 
+
+ˆei→j = 1
+
+M
+
+> M
+
+∑
+
+> m=1
+
+X(m)
+
+> j
+
+∣∣do( Xi=x′) − ¯Xobs  
+
+> j
+
+(12) where {X(m) 
+
+> j
+
+}Mm=1 are simulator-generated samples and ¯Xobs  
+
+> j
+
+is the observational mean. The edge i → j is included in ˆG if and only if the bootstrap z-statistic |ˆei→j |/ˆσij exceeds zα′/2 under the Bonferroni-corrected threshold α′ = α/d (d−1) . This formula makes the identification constructive: it specifies an explicit estimand expressed in terms of observable (observational mean) and experimentally accessible (simulator samples) quantities. Phases 4–5 are optional; the causal graph ˆG is obtained from Phases 1–3 alone. The necessity of Phases 4–5 is discussed in Section 6.3.4. 13 Algorithm 1 SVAR-FM 
+
+Require: Observed time series Dobs = {yt}Tt=1 , simulator S, maximum lag pmax , significance level α
+
+Ensure: Causal graph ˆG, causal mechanisms {vθj }, sensitivities {sij } 
+
+> 1:
+
+// Phase 1: Reduced-form VAR estimation (Hamilton, 1994)  
+
+> 2:
+
+p∗ ← arg min p≤pmax BIC( p) 
+
+> 3:
+
+{ ˆΦl}p∗ 
+
+> l=1
+
+← OLS estimation  
+
+> 4:
+
+ˆut ← yt − ∑p∗ 
+
+> l=1
+
+ˆΦlyt−l 
+
+> 5:
+
+// Phase 2: Intervention data generation via simulator  
+
+> 6:
+
+for i = 1 , . . . , d do  
+
+> 7:
+
+Design intervention values {x(m) 
+
+> i
+
+}Mm=1 within the physically valid range [xi, x i] 
+
+> 8:
+
+for m = 1 , . . . , M do  
+
+> 9:
+
+y(m) ← S .do( Xi = x(m) 
+
+> i
+
+) 
+
+> 10:
+
+end for  
+
+> 11:
+
+end for  
+
+> 12:
+
+// Phase 3: Causal structure identification (Lemma 4.4)  
+
+> 13:
+
+ˆG ← ∅  
+
+> 14:
+
+for (i, j ), i̸ = j do  
+
+> 15:
+
+ˆei→j ← 1
+
+> M
+
+∑Mm=1 y(m) 
+
+> j
+
+− ¯yobs j 
+
+> 16:
+
+ˆσij ← bootstrap standard error ( B = 1000 replicates)  
+
+> 17:
+
+if |ˆei→j |/ˆσij > z α/ 2 then  
+
+> 18:
+
+ˆG ← ˆG ∪ { Xi → Xj } (significant causal edge)  
+
+> 19:
+
+end if  
+
+> 20:
+
+end for  
+
+> 21:
+
+// Phase 4: Causal mechanism learning via Flow Matching (Remark E.2)  
+
+> 22:
+
+for j = 1 , . . . , d do  
+
+> 23:
+
+Construct conditioning vector cj ← [xPa( j), ϕ] 
+
+> 24:
+
+(xPa( j): parent variables of j in ˆG, ϕ: physical parameters)  
+
+> 25:
+
+θj ← arg min θ LCFM (θ; cj ) (Eq. 20)  
+
+> 26:
+
+end for  
+
+> 27:
+
+// Phase 5: Impact assessment of physical constraints  
+
+> 28:
+
+for (i, j ) ∈ ˆG do  
+
+> 29:
+
+for k = 1 , . . . , |ϕ| do  
+
+> 30:
+
+ϕ′ 
+
+> k
+
+← perturb the k-th component of ϕ by ±δ 
+
+> 31:
+
+sij,k ← | ˆei→j (ϕ′
+
+> k
+
+) − ˆei→j (ϕ)|/δ  
+
+> 32:
+
+end for  
+
+> 33:
+
+end for  
+
+> 34:
+
+return ˆG, {vθj }, {sij,k }
+
+14 Figure 1: Architecture of SVAR-FM. The inputs are the observed time series Dobs and the physical simulator 
+
+S. Phases 1–3 are responsible for identifying the causal structure ˆG, and for linear causal mechanisms, the procedure is complete at this stage. Phases 4–5 learn nonlinear causal mechanisms via conditional Flow Matching and assess the impact of physical constraints. 
+
+6.2 Architecture 
+
+Figure 1 illustrates the SVAR-FM pipeline. Phases 1–3 (causal structure identification) and Phases 4–5 (physical constraint modeling) are clearly separated, each serving distinct purposes. Phases 1–3 are composed of the following data flow. First, a reduced-form VAR is estimated from the observed time series Dobs (Phase 1), and intervention data Dint are simultaneously generated using the simulator S (Phase 2). These two outputs are integrated to construct the causal graph ˆG via estimation and statistical testing of intervention effects (Phase 3). Phases 4–5 provide additional value. In Phase 4, the causal mechanisms of each variable are learned via con-ditional Flow Matching based on the structure of ˆG. By including physical parameters ϕ in the conditioning vector cj , a generative model consistent with physical laws is obtained. In Phase 5, sensitivities sij,k of the causal effects to perturbations in ϕ are computed, quantifying the impact of physical constraints on the esti-mates. Phase 5 is analogous in purpose to the sensitivity analysis frameworks of VanderWeele & Ding (2017) (E-value) and Robins et al. (2000) (bounding factor), which assess how strong an unmeasured confounder would need to be to explain away an observed effect. In SVAR-FM, the “unmeasured confounder” is the simulator’s physical approximation: Phase 5 asks how large a change in ϕ is needed to reverse the sign of the estimated causal effect. Table 3 lists the simulators used in this paper; the bottom rows show further applications in preparation (cf. §9.3). 15 Table 3: Simulators used in this paper. CausalSim instances (§7.1 and Appendix D) are listed in the middle block; the HHG case study (top) and further applications in preparation (bottom) complete the picture. “Type” reflects simulator fidelity: ab initio > numerical > analytical > MC > statistical > agent-based. Application Simulator Intervention variable M Type HHG (§8) Octopus (TDDFT, SIC-ADSIC) Laser amplitude E0 10 Ab initio CausalSim benchmark (§7.1): 
+
+Macroeconomics DSGE (Taylor Rule) Policy rate i 100 Analytical Diabetes UVA/Padova T1DMS Insulin dose 200 Numerical Cosmic rays Heitler–Matthews σinel (E, A fixed) 500 MC Battery (App. D) Quantum ESPRESSO (DFT) + Arrhenius Temperature T 50 Ab initio Further applications (in preparation, cf. §9.3): 
+
+ECG PhysioNet synthetic Disease severity 100 Statistical Finance BS + VIX-linked Sentiment 100 Analytical Finance (rates) Mesa ABM 3.0 Interest rate ∆r 371 Agent-based 
+
+6.2.1 SVAR-FM-DAG: NOTEARS Post-Processing Variant 
+
+SVAR-FM-DAG is the variant of SVAR-FM used when the data are expected to obey a strict DAG constraint (e.g., Tigramite synthetic data). It differs from the base algorithm in two components. 
+
+Phase 0: PINN ensemble prior knowledge Prior to Phase 1, a directional score is computed as prior knowledge using a linear two-stage ensemble (VAR coefficients + Ridge Granger). When T ≥ 100 and 
+
+N ≤ 20 , a flow-matching-based nonlinear two-stage ensemble is also executed (when PyTorch is available) and integrated with the Phase 1 scores using weight w = 0 .2.
+
+NOTEARS post-processing The score matrix obtained in Phase 1 is subjected to the acyclicity con-straint 
+
+h(W ) = tr (eW ◦W ) − d = 0 (13) enforced via the augmented Lagrangian method (Zheng et al., 2018). This substantially reduces false dis-covery rate (FDR) for data where a DAG structure is expected (e.g., Tigramite synthetic data). 
+
+6.2.2 SVAR-dyn1/SVAR-dyn2: Variants for ODE-Based Dynamical Systems 
+
+For dynamical systems with bidirectional edges (cycles), the NOTEARS DAG constraint is inappropriate. SVAR-dyn1 and SVAR-dyn2 disable NOTEARS and Phase 0, and add a differential Granger score based on 
+
+dXj /dt ≈ f (X). SVAR-dyn2 further integrates Phases 3–5 with adaptive weighting and an eps-guard for deterministic chaotic systems. Full details are given in Appendix F. 
+
+6.3 Methodological Guidance 
+
+Applying SVAR-FM requires several methodological decisions. Below, we describe the conditions for applica-bility, the principles of intervention design, and the criteria for selecting among the framework components. 
+
+Variant selection. The choice among SVAR-FM, SVAR-FM-DAG, and SVAR-dyn1/dyn2 is guided by domain knowledge of the system under study, not by post-hoc performance comparison: 
+
+• If the causal graph is known to be acyclic (e.g., regulatory cascades, economic policy transmission), use SVAR-FM-DAG (Phase 0 + NOTEARS). 
+
+• If the system contains feedback loops or cycles (e.g., coupled oscillators, predator-prey dynamics), use SVAR-dyn1/dyn2 (NOTEARS disabled, differential Granger enabled). 16 • When the structure is unknown , the base SVAR-FM (Phases 1–3, without NOTEARS or differ-ential Granger) provides a conservative default that does not impose structural assumptions. The adaptive routing strategy described in Appendix C.5 automates this selection using the BDS nonlinearity test (Brock et al., 1996) and system dimension as input features, removing the need for manual variant selection. 
+
+6.3.1 Applicability: When Can a Simulator Be Treated as an Intervention? 
+
+SVAR-FM treats the output of a simulator as “intervention data” in causal inference (Assumption 4.2). For this treatment to be justified, the simulator must satisfy the following conditions. 1. Variable controllability : The intervention target variable Xi can be fixed at a desired value, while other variables respond according to their causal mechanisms. For example, the Arrhenius simulator fixes the temperature T and computes the reaction rate k as k = A exp( −Ea/RT ).2. Mechanism independence : do( Xi = x) does not alter the causal mechanisms of variables other than Xi (corresponding to Pearl’s (Pearl, 2009) modularity assumption). 3. Assessable approximation accuracy : The δS in Assumption 4.2 is estimable. By Theorem 5.10, smaller δS yields more robust causal estimation. The “Type” column in Table 3 reflects the hierarchy of simulator fidelity. First-principles calculations (TDDFT, hydrodynamics) are derived directly from physical laws, resulting in small δS but high computa-tional cost. Analytical models (Arrhenius kinetics, Taylor Rule) have low computational cost but depend on model assumptions. This accuracy–cost trade-off is reflected in the differences in sample size M in Table 3. 
+
+6.3.2 Intervention Design 
+
+The design of intervention values {x(m) 
+
+> i
+
+}Mm=1 in Phase 2 directly affects estimation accuracy. The following principles guide the design. 
+
+(1) Physical range : Intervention values should be set within the validity domain of the simulator. For example, in the HHG application of §8, the laser field amplitude E0 is restricted to values below the over-the-barrier ionization threshold, beyond which the TDDFT treatment ceases to be physically meaningful. More generally, Arrhenius-type kinetic simulators are restricted to temperature ranges that exclude phase transitions, since the underlying rate law assumes a single reaction mechanism. Values outside such domains inflate δS in Assumption 4.2. 
+
+(2) Sample size M : By Proposition 5.1, the estimation error of the intervention effect scales as O(M −1/2).For a desired accuracy ϵ and confidence level 1 − α, M ≥ 2σ2 log(2 /α )/ϵ 2 is required (Eq. 8). In practice, 
+
+M = 50 –200 suffices for many applications, but when the simulator variance is large (e.g., Monte Carlo simulators), M = 500 –1000 may be needed (see Table 3). 
+
+(3) Placement of intervention values : When nonlinearity of the causal effect is expected, intervention values should be placed using Latin hypercube sampling or importance sampling rather than uniform spacing. 
+
+6.3.3 Statistical Testing and Multiple Comparison Correction 
+
+In Phase 3, the presence or absence of causal edges is simultaneously tested for d(d − 1) variable pairs, giving rise to a multiple comparison problem. Although Algorithm 1 uses individual bootstrap-based tests, we recommend either a Bonferroni correction α′ = α/d (d − 1) or false discovery rate (FDR) control via the Benjamini–Hochberg procedure (Benjamini & Hochberg, 1995). The sample complexity O(d2 log( d2/δ )/ϵ 2)
+
+from Proposition 5.3 already accounts for multiple comparison correction via the union bound. 17 6.3.4 Determining the Necessity of Phases 4–5 
+
+Phases 4–5 (Flow Matching) are optional. The following criteria guide the decision on their necessity. 
+
+Cases where Phases 1–3 alone suffice : (a) when causal mechanisms can be assumed linear and the primary quantity of interest is the (signed) causal effect rather than the response distribution, (b) when the sole objective is identification of the causal graph ˆG, (c) when the simulator cost is high, making the generation of Phase 4 training data infeasible. 
+
+Cases where Phases 4–5 are beneficial : (a) when causal mechanisms are inherently nonlinear, so that a single-number effect size is insufficient and the full response distribution is needed (HHG; cf. §8), (b) when one wishes to compare predictions across multiple simulator variants—e.g., different exchange–correlation functionals in HHG (LDA vs. SIC-ADSIC), or different physical model families in other applications, (c) when one wishes to quantify the sensitivity of the estimates to the simulator’s physical assumptions via the Phase 5 sensitivities sij,k .
+
+6.3.5 Practical Assessment of Simulator Fidelity δS
+
+Assumption 4.2 bounds the simulator error by δS in total variation distance, and Corollary 5.11 requires |e∗| >
+
+2δS +O(M −1/2) for sign preservation. Since the true interventional distribution is unknown (otherwise causal discovery would be unnecessary), δS cannot be measured directly. We recommend three complementary strategies for a priori assessment. 
+
+(1) Cross-simulator consistency. When multiple simulators of different fidelity are available for the same system, agreement among their interventional estimates provides an upper bound on δS . In CausalSim-Cosmic (§7.1.3), the SVAR-FM estimate ( −0.086 g/cm 2/mb) agrees with three independent QCD Monte Carlo generators (QGSJet-II-04: −0.103 , EPOS-LHC: −0.096 , SIBYLL-2.3c: −0.110 ) to within 10–22%, bounding δS relative to the signal magnitude. In HHG, the transition from LDA (sign-reversed) to SIC-ADSIC (correct sign, R2 = 0 .983 ) provides a binary diagnostic: when δS crosses the sign-flip threshold, the qualitative change is immediately visible. 
+
+(2) Simulator validation against known experimental data. Most physical simulators are accom-panied by validation studies comparing their predictions to experimental measurements on quantities other 
+
+than the causal effect of interest. The discrepancy on these auxiliary quantities provides an independent estimate of δS . For example, the UVA/Padova simulator (CausalSim-Diabetes) has been validated against clinical glucose profiles from 300 patients (Man et al., 2014); the Octopus TDDFT code reproduces experi-mental ionization potentials of small molecules to within 0.1–0.3 eV (Tancogne-Dejean et al., 2020). These known accuracies constrain δS without requiring knowledge of the causal effect. 
+
+(3) Internal consistency: sensitivity of the causal estimate to simulator parameters. Phase 5 of SVAR-FM computes the sensitivities sij,k = |ˆei→j (ϕ′
+
+> k
+
+) − ˆei→j (ϕ)|/δ with respect to physical parameters 
+
+ϕ. When sij,k is large relative to |ˆei→j |, the estimate is dominated by the O(δS ) term and the sign may be unreliable. This provides a self-diagnostic : even without external validation data, a practitioner can flag causal estimates whose sign depends sensitively on simulator parameters. None of these strategies provides a certified bound on δS ; that would require access to the true interventional distribution. Together, however, they constitute a practical due-diligence protocol analogous to the model-checking practices standard in Bayesian inference and simulation-based inference (Cranmer et al., 2020). It is important to note that all three strategies are falsification criteria: they can detect when the simulator is inadequate (e.g., cross-simulator disagreement, discrepancy with experimental data, high sensitivity to parameters) but cannot certify that the simulator is sufficient. This asymmetry is inherent to causal inference: one can refute a causal model but never conclusively verify it from finite data. The strategies above are therefore best understood as a refutation protocol that increases confidence in proportion to the number of checks passed, rather than as a validation guarantee. 18 7 Evaluation 
+
+The experiments in this paper are organised in three tiers. 1. CausalSim benchmark (this section): three scientific domains in the main text (macroeconomics, diabetes, cosmic ray physics) plus a fourth (battery degradation) in Appendix D, in which a first-principles simulator realizes Pearl’s do( ·) operator and generates interventional data. Observational baselines cannot consume these data and therefore cannot remove the confounding that the simulator intervention severs. This tier directly tests the property that distinguishes SVAR-FM from every other method. 2. HHG case study (§8): the load-bearing experiment of the paper, in which the sign-flip prediction of Theorem 5.13 is verified by varying δS physically (LDA vs. SIC-ADSIC (Tancogne-Dejean et al., 2020) exchange–correlation functional). 3. Standard benchmarks (Appendix C): CausalTime (Cheng et al., 2024), Tigramite (Runge et al., 2019), and CausalDynamics (Herdeanu et al., 2025), on which SVAR-FM is compared against observational baselines and, in an extended setting, against i.i.d. intervention-based methods (IGSP (Wang et al., 2017), UT-IGSP (Squires et al., 2020)). These benchmarks were not designed with simulator-based intervention in mind; they confirm that SVAR-FM performs competitively even outside its intended setting. 
+
+Baseline methods. The following observational baselines are used throughout all three tiers. 
+
+• OLS : Ordinary least squares regression (used in CausalSim and HHG). 
+
+• Granger (Granger, 1969): Pairwise linear Granger causality test. 
+
+• VARLiNGAM (Hyvärinen et al., 2010): ICA-LiNGAM applied to VAR residuals; directional estimation via non-Gaussianity. 
+
+• PCMCI (Runge et al., 2019): PC-stable skeleton estimation + MCI test (partial correlation; Par-Corr). 
+
+• PCMCI+ (Runge, 2020): Extension of PCMCI with support for contemporaneous causation. Additional methods specific to individual tiers (IGSP (Wang et al., 2017), UT-IGSP (Squires et al., 2020), SVAR-FM-DAG, SVAR-FM-CF, SVAR-dyn1, SVAR-dyn2) are described where they are first used (Ap-pendix C for the standard benchmarks). 
+
+Proposed method variants. 
+
+• SVAR-FM : Proposed method (Phases 1–5, without Phase 0 spatial scoring). 
+
+• SVAR-FM-DAG : SVAR-FM with Phase 0 (PINN spatial scoring) + NOTEARS post-processing (§6.2.1). 
+
+Evaluation metrics. F1 score (harmonic mean of precision and recall), TPR (True Positive Rate), FDR (False Discovery Rate), SHD (Structural Hamming Distance), AUROC, and AUPRC. For CausalSim, we additionally report the estimated causal effect, its sign correctness, and bias reduction relative to OLS. 
+
+7.1 CausalSim: Simulator-Driven Benchmark 
+
+We introduce CausalSim , a benchmark suite designed specifically to evaluate causal discovery methods that consume simulator-generated interventional data. Each CausalSim instance consists of (i) a real or realistic observational time series with known confounding, (ii) a first-principles simulator whose do( ·) operation 19 Table 4: CausalSim benchmark: summary across four domains. “Sign correct” reports the percentage of seeds recovering the correct sign (Macro: 50 seeds; Diabetes: 20 seeds) or a qualitative indicator for single-run experiments (Cosmic, Battery). “Bias reduction” is relative to OLS. Battery (Appendix D) uses a DFT first-principles simulator.                                                          
+
+> Domain Method Estimate True value Sign correct Bias reduction Macroeconomics OLS (obs.) +0 .076 −0.006 88% —VARLiNGAM (obs.) +0 .229 −0.006 44% −187%
+> SVAR-FM (ours) −0.007 −0.006 100% 99%
+> Diabetes OLS (obs.) +5525 −3000 0% —PCMCI (obs.) +182 −3000 0% —
+> SVAR-FM (ours) −1922 −3000 100% 87%
+> Cosmic ray Obs. ( σ→Nμ)+0 .013 0.000 ——
+> SVAR-FM (ours) (σ→Nμ)0.000 0.000 —100% SVAR-FM (ours) (σ→Xmax )−0.086 −0.078 correct —Battery (App. D) OLS (obs.) −0.10 +0 .03 wrong —
+> SVAR-FM (ours) +0.03 +0 .03 correct 100%
+
+physically severs the confounding path, and (iii) a ground-truth causal effect against which estimates are evaluated. The suite currently comprises four instances spanning four scientific domains and four simulator types: 
+
+• CausalSim-Macro : macroeconomic monetary policy (Taylor Rule confounding; analytical DSGE simulator) 
+
+• CausalSim-Diabetes : glucose–insulin dynamics (feedback-control confounding; numerical UVA/Padova ODE simulator) 
+
+• CausalSim-Cosmic : cosmic ray air showers (energy confounding; Monte Carlo Heitler–Matthews simulator) 
+
+• CausalSim-Battery (Appendix D): lithium-ion battery degradation (latent temperature confound-ing; ab initio Quantum ESPRESSO DFT + Arrhenius simulator) Observational methods (OLS, Granger, VARLiNGAM, PCMCI) are run on the same observational data for comparison; they cannot consume the interventional data and therefore cannot, in principle, remove the confounding that the simulator intervention severs. Table 4 previews the results: in all four instances the observational methods produce sign-reversed or near-zero estimates, whereas SVAR-FM recovers the correct sign with the lowest bias. 
+
+7.1.1 CausalSim-Macro: Taylor Rule Confounding 
+
+Problem setting. In monetary policy analysis, the following causal structure operates: interest rate i
+
+affects the output gap y through the IS curve, and y in turn affects inflation π through the Phillips curve, so that the true causal effect i → π is negative ( −σκ ). In observational data the Taylor Rule ( π → i:the central bank raises i in response to rising π) creates reverse causation, producing a spurious positive 
+
+correlation between i and π.
+
+Data. Three quarterly macroeconomic time series from Federal Reserve Economic Data (FRED) 5: Federal Funds Rate (FEDFUNDS), CPI-based annualized inflation (CPIAUCSL), and HP-filtered Real GDP output gap (GDPC1, λ = 1600 ). Analysis period: 1960Q1–2007Q3 ( T = 192 quarters; post-2008 data are excluded due to the zero lower bound). This is a standard dataset in macroeconomic SVAR analysis (Kilian & Lütkepohl, 2017). 
+
+> 5https://fred.stlouisfed.org/ , publicly available
+
+20 Simulator and intervention. The simulator is a Dynamic Stochastic General Equilibrium (DSGE) model consisting of three coupled difference equations: an IS curve (output depends on interest rate), a Phillips curve (inflation depends on output gap), and a Taylor Rule (interest rate responds to inflation and output gap). DSGE models are the standard workhorse of central bank forecasting and are available in multiple open-source implementations 6. The model is calibrated to the FRED data. The intervention do( i = exogenous )
+
+disables the Taylor Rule and sets the interest rate exogenously, severing the π → i feedback. Structural parameters estimated from the real data: interest-rate smoothing ρi = 0 .882 , inflation response ϕπ = 0 .357 ,output-gap response ϕy = 0 .229 , Phillips slope κ = 0 .114 , IS elasticity σ = 0 .038 . From these, the true causal effect is i → π = −σκ = −0.006 .
+
+Results. Table 5 compares five methods on the i → π causal effect (50 seeds). SVAR-FM estimates 
+
+−0.007 , matching the true value −0.006 with 99% bias reduction over OLS. It is the only method to recover the correct negative sign across all 50 seeds (100% sign accuracy). OLS, VARLiNGAM, and SVAR-Cholesky all produce the wrong (positive) sign on the real data due to Taylor Rule confounding. Table 5: Method comparison for i → π causal effect (macroeconomics) Method Estimate |Bias | RMSE Sign correct OLS +0 .076 0.082 0.046 88% Granger −0.009 0.003 0.095 60% VARLiNGAM +0 .229 0.235 0.313 44% SVAR-Cholesky +0 .074 0.080 0.042 88% 
+
+SVAR-FM (ours) −0.007 0.001 0.008 100 %
+
+Simulator fidelity. The DSGE simulator is an analytical model whose structural parameters (ρi, ϕ π , ϕ y , κ, σ ) are estimated from the FRED data by ordinary least squares. The simulator error δS
+
+therefore reflects the misspecification of the New Keynesian three-equation model relative to the true mone-tary transmission mechanism. The 99% bias reduction (Table 5) indicates that δS is small enough to preserve the sign of the causal effect, consistent with the threshold condition of Corollary 5.11. 
+
+7.1.2 CausalSim-Diabetes: Glucose–Insulin Feedback Control 
+
+Problem setting. In glucose management for Type 1 diabetes, the true causal effect of insulin on blood glucose is negative (insulin lowers glucose). In observational data, however, an automated insulin pump delivers insulin in response to rising glucose, creating reverse causation: hyperglycemia → insulin increase →
+
+glucose reduction. This bidirectional feedback makes the true effect unidentifiable from observational data. 
+
+Data. To demonstrate the limitations of real clinical data, we first examined the ShanghaiT1DM/T2DM CGM dataset (Zhao et al., 2023) 7 (12 T1DM patients, 100 T2DM patients, 15-minute CGM intervals). Insulin delivery amounts are not recorded in this dataset, making estimation of the insulin →CGM effect impossible in principle. 
+
+Simulator and intervention. We used the UVA/Padova Type 1 Diabetes Simulator (Man et al., 2014; Kovatchev et al., 2009; Cobelli & Kovatchev, 2023), an FDA-accepted physiological model that describes glucose–insulin dynamics as a system of ∼30 coupled ODEs (glucose absorption, insulin kinetics, hepatic glucose production, peripheral uptake). It is the standard in silico platform for testing artificial pancreas control algorithms before human trials and includes 300 virtual patients with realistic inter-patient variability. The open-source Python implementation simglucose 8 (Xie, 2018) was used.          
+
+> 6E.g., Dynare ( https://www.dynare.org/ ), a widely-used DSGE toolbox. Our implementation follows the same three-equation structure. SVAR-FM integration scripts will be released upon publication.
+> 7Shanghai CGM dataset: https://doi.org/10.1038/s41597-023-02041-1
+> 8simglucose: https://github.com/jxx123/simglucose .Alternative implementations exist in MATLAB (original UVA/Padova distribution) and Julia.
+
+21 Figure 2: CausalSim-Macro: method comparison (50 seeds). SVAR-FM (orange) achieves the smallest bias and RMSE across all seeds. The true causal effect −σκ = −0.006 is shown as a green dashed line. Observational methods (OLS, VARLiNGAM, SVAR-Cholesky) cluster around positive values due to Taylor Rule confounding. 
+
+Observational data (within the simulator): a reactive Basal-Bolus controller adjusts insulin according to blood glucose (glucose > 180 mg/dL ⇒ insulin increase; glucose < 80 mg/dL ⇒ insulin decrease). This feedback loop is the source of reverse causation. 
+
+Intervention data : do( insulin = c) for c ∈ { 0.01 , 0.015 , . . . , 0.04 } U/min (7 levels). The feedback loop is severed by construction: the simulator delivers insulin at a fixed rate regardless of blood glucose. Three virtual patients (adult#001–003), 3-day simulation, 5-minute intervals (864 samples/patient, 2592 total). Meal schedule: breakfast 50 g (7:00), lunch 80 g (12:00), dinner 60 g (19:00). 
+
+Results. The true causal effect (ATE of insulin on blood glucose, −3000 mg/dL per U/min) is computed from the simulator’s interventional data across 20 independent Monte Carlo seeds with different sensor noise realizations. Table 6 compares five methods (20 seeds). SVAR-FM achieves the lowest bias and RMSE (87% improvement over OLS) and is one of only two methods to recover the correct negative sign with 100% accuracy. OLS and PCMCI produce positive estimates due to reverse causation. 
+
+Simulator fidelity. The UVA/Padova simulator is an FDA-accepted numerical ODE model of glucose– insulin dynamics, validated against clinical trial data from 300 virtual patients (Man et al., 2014). The simulator error δS reflects the discrepancy between the ODE model and real human physiology. The 87% bias reduction (Table 6) is lower than in CausalSim-Macro (99%), which is expected: the nonlinear glucose– 22 Table 6: Method comparison for Insulin → CGM causal effect (diabetes) Method Estimate |Bias | RMSE Sign correct OLS +5525 8525 8527 0% Granger −635 2365 2367 100% VARLiNGAM −259 2741 2744 100% PCMCI +182 3182 3182 0% 
+
+SVAR-FM (ours) −1922 1078 1104 100 %
+
+Figure 3: CausalSim-Diabetes: method comparison (20 seeds). SVAR-FM (orange) achieves the smallest bias and RMSE with 100% sign accuracy. OLS and PCMCI produce sign-reversed (positive) estimates due to the insulin-pump feedback loop. insulin dynamics introduce higher δS than the linear DSGE model. Nevertheless, the sign is correctly recovered across all 20 seeds. 
+
+7.1.3 CausalSim-Cosmic: Unobserved Confounding at Ultra-High Energies 
+
+Problem setting. When ultra-high-energy cosmic rays ( E > 10 15 eV) enter the atmosphere, they produce extensive air showers. The primary energy E and mass number A are directly unobservable; only shower observables are measured: the inelastic cross section σinel , shower maximum depth Xmax , and muon number 
+
+Nμ. Energy E confounds the relationship between σinel and Nμ: both depend on E, creating a spurious positive correlation in observational data. The true direct effect σinel → Nμ is zero , while σinel → Xmax is non-zero (an increase in σinel decreases the interaction length, causing earlier shower development). 23 Observational data. The COMBINED dataset from the KASCADE-Grande experiment (Antoni et al., 2003; Haungs et al., 2018): 3,343,981 cosmic ray events at 10 15 .5 < E < 10 17 .5 eV, publicly available from the KCDC portal 9. This is the largest publicly released cosmic ray dataset and has been used in over 100 publications in astroparticle physics. 
+
+Simulator and intervention. The Heitler–Matthews model (Matthews, 2005) is an analytical approxi-mation to hadronic cascade development that predicts shower observables ( Xmax , Nμ) from primary particle properties ( E, A, σinel ) via closed-form equations. It is a standard textbook model in cosmic ray physics 10 .The intervention do( σinel = σ0, E = 10 PeV , A = 1) fixes the confounders E and A and varies σinel over 450–550 mb, with 500 events at each value. 
+
+Results. Table 7 shows two key findings. 
+
+(i) Identification of a zero effect. In observational data, σinel and log Nμ show a spurious positive correlation (+0 .013 /mb) driven by the extremely high correlation r(σinel , E ) = 0 .9997 . By fixing E and A in the simulator, SVAR-FM correctly identifies σinel → log Nμ as zero (100% RMSE improvement). 
+
+(ii) Identification of a non-zero effect. The causal effect σinel → Xmax is estimated at −0.086 g/cm 2/mb, agreeing with the analytical true value ( −0.078 ) to within 10% and consistent across three independent QCD models (QGSJet-II-04: −0.103 , EPOS-LHC: −0.096 , SIBYLL-2.3c: −0.110 g/cm 2/mb). Table 7: Causal effect estimation in cosmic ray showers (KASCADE real data, 3.34M events) Causal effect Method Estimate True value Bias 
+
+σinel → log Nμ
+
+Observational +0 .013 /mb 0.000 +0 .013 
+
+SVAR-FM (ours) 0.000 /mb 0.000 0.000 
+
+σinel → Xmax 
+
+SVAR-FM (ours) −0.086 −0.078 −0.008 
+
+QCD models ∼ − 0.10 — —
+
+Simulator fidelity. The Heitler–Matthews shower model (Matthews, 2005) is a simplified analytical model of hadronic cascades. By fixing E and A in the simulator, δS arises from the model’s simplifying assumptions (e.g., superposition approximation, neglect of electromagnetic subshowers). The agreement of the SVAR-FM estimate ( −0.086 ) with three independent full Monte Carlo QCD generators (QGSJet-II-04: −0.103 ,EPOS-LHC: −0.096 , SIBYLL-2.3c: −0.110 ) to within 10–22% provides an independent upper bound on δS ,since these generators model the physics at a higher fidelity than the Heitler–Matthews approximation. 
+
+Cross-domain pattern. Across all four CausalSim instances (including CausalSim-Battery in Ap-pendix D), the same pattern holds: observational methods produce sign-reversed or near-zero estimates due to confounding (Taylor Rule feedback, insulin-pump feedback, energy confounding), while SVAR-FM recovers the correct sign by physically severing the confounding path through the simulator’s do( ·) opera-tor. This consistency across four unrelated scientific domains—economics, medicine, particle astrophysics, and electrochemistry—with four different simulator types (analytical DSGE, numerical ODE, Monte Carlo shower model, and ab initio DFT) provides evidence that the framework is not domain-specific. Moreover, by design, observational methods cannot participate in CausalSim at all: the benchmark evaluates a capability (consuming simulator-generated interventional data) that these methods do not possess. A further regularity in the CausalSim results is the asymmetry of Phase 3 ATE magnitudes between causal and anticausal directions: in every domain, the ATE in the true causal direction is substantially larger than in the reverse direction (e.g., CausalSim-Macro: X0 → X1 ATE ≈ 1.0 vs. X1 → X0 ATE ≈ 0.02 ; CausalSim-Diabetes: insulin → CGM ATE = −5396 vs. CGM → insulin ATE ≈ 0). This asymmetry is a direct     
+
+> 9https://kcdc.iap.kit.edu/
+> 10 Based on the analytical Heitler–Matthews cascade equations. Full Monte Carlo alternatives (CORSIKA, https://www. iap.kit.edu/corsika/ ) exist and use QCD event generators (QGSJet, EPOS, SIBYLL) for higher fidelity at ∼10 4×higher computational cost. The SVAR-FM integration scripts will be released upon publication.
+
+24 Figure 4: CausalSim-Cosmic: results from the cosmic ray shower experiment (KASCADE real data, 3.34 million events). Upper left: strong positive correlation between log 10 (E) and log 10 Nμ reveals the energy confounding. Upper right: interventional slope σinel → Xmax = −0.086 g/cm 2/mb. Lower left: comparison of causal effects; the spurious σ → Nμ correlation ( +0 .013 ) vanishes under intervention. Lower right: consistency with QCD models. consequence of the independent causal mechanism (ICM) principle (Schölkopf et al., 2012): intervening on a cause produces a large effect on its descendants, while intervening on an effect leaves its causes unchanged. CausalSim-Battery is reported in Appendix D; it applies SVAR-FM to lithium-ion battery degradation using an ab initio density functional theory (DFT) simulator (Giannozzi et al., 2009). First-principles quantum-mechanical calculations are among the most rigorous simulators available in the physical sciences: they derive material properties from the Schrödinger equation without empirical fitting parameters, making the do( ·)
+
+operation maximally credible (minimal δS ). The DFT-based analysis discovers a dual causal pathway (LUMO energy and fluorine substitution) governing SEI formation and capacity retention, demonstrating that the CausalSim framework extends to quantum-mechanical simulators with real scientific discovery potential. 
+
+7.2 Ablation: Added Value of Flow Matching (Phases 4–5) 
+
+To evaluate the contribution of Phases 4–5 (Flow Matching), we compare three configurations across repre-sentative domains (Table 8). Two distinct causal quantities appear in the comparison. Phase 3 estimates a linear average treatment effect (ATE): the mean difference in Xj between interventional and observational conditions (Eq. 12). Phase 4 estimates a nonlinear average causal effect (Flow ACE): the expected difference under the conditional dis-tribution learned by Flow Matching, which captures the full nonlinear dose–response relationship. In linear 25 systems the two coincide; in nonlinear systems the Flow ACE can substantially exceed the linear ATE (e.g., Battery Cap → SEI: 4.8×). The ground-truth causal effect used for computing relative error differs by domain: an analytical solution for Macro (DSGE impulse response), a first-principles TDDFT calcula-tion for HHG (SIC-ADSIC regression slope), a literature reference value for ECG (Rasmussen et al. 1993, 
+
+β = 12 .9 ms/(ng/mL)), and the Phase 4 Flow ACE itself for Battery (where no external ground truth exists and the comparison is between Phase 3 and Phase 4 magnitudes). Table 8: Ablation analysis: contribution of Phase 4 Flow Matching across four domains. Relative error (%) is with respect to the ground-truth causal effect. “—” = cannot be estimated; “ ×” = no method recovers the correct sign. 
+
+Causal effect estimation Outputs Configuration Macro. HHG ECG Battery ∥ Finance Graph Sensitivity Phases 1–3 only 2.1% 35.2% † ×‡ sign ⃝ (4.8 × underest.) ∥ —† ⃝ ×
+
+Phases 1–4 (+ FM) 2.3% 1.2% 72.6% § sign ⃝ (correct magnitude) — ⃝ ×
+
+Phases 1–5 (+ FM + sens.) 2.3% 1.2% 72.6% § sign ⃝ (correct magnitude) — ⃝ ⃝                   
+
+> †Phases 1–3 employ linear estimation only; accuracy for nonlinear causal mechanisms is inherently limited.
+> ‡All Phase 1–3 methods fail: OLS and Granger underestimate with unstable sign; VARLiNGAM returns ≈0; PCMCI reverses sign. Phase 4 FM is required to recover the correct positive direction.
+> §SVAR-FM estimates ˆβ= 22 .27 ms/(ng/mL) vs. reference β= 12 .9; the 72.6% relative error reflects inter-individual variability in the real clinical data rather than method error.
+> ∥Battery (Cap →SEI pathway): Phase 3 linear ATE =−0.276 ; Phase 4 Flow ACE =−1.330 (4.8 ×larger). Sign is correct in both phases, but Phase 3 underestimates the nonlinear acceleration of SEI growth by a factor of 4.8.
+
+For macroeconomics (linear causal mechanism), the three configurations yield nearly identical results (relative error ∼2%), confirming that Phases 4–5 are unnecessary when the causal mechanism is linear. For HHG (nonlinear causal mechanism), Phases 1–3 alone incur a relative error of 35.2%, because the linear estimator cannot capture the nonlinear relationship between the laser field and the spectral cutoff. Adding Phase 4 (Flow Matching) reduces the error to 1.2%—a 34-point improvement —by modeling the nonlinear interventional conditional P (Ecut | do( E0 = e)) directly. For ECG (drug-induced QTcF 11 prolongation), Phase 4 FM is not merely beneficial but essential : all Phase 1–3 methods fail to recover even the correct sign of the causal effect (OLS and Granger underestimate with unstable sign; VARLiNGAM returns ≈ 0; PCMCI reverses the sign). Only with Phase 4 does SVAR-FM recover the correct positive direction ( ˆβ = 22 .27 ms/(ng/mL), 95% CI: [20 .08 , 24 .44] ), because the full PK/PD 12 dose–response distribution must be learned from the simulator’s interventional data—a task that linear estimation cannot perform. For battery degradation (Appendix D), Phase 3 linear ATE correctly identifies the sign of the Cap → SEI reverse causation pathway, but underestimates the magnitude by a factor of 4.8 (linear ATE = −0.276 ; Flow ACE = −1.330 ). The nonlinear acceleration of SEI growth under capacity fade—driven by Arrhenius-type temperature dependence—is invisible to linear estimation and is only captured by Phase 4 Flow Matching. Phase 5 does not improve estimation accuracy beyond Phase 4 but provides sensitivity information: for battery degradation, perturbing the activation energy Ea by ±10 % yielded a causal effect change of ∆e =
+
+±0.008 , confirming robustness to the Arrhenius assumption. This diagnostic is unobtainable without Phase 5. In summary, the necessity of Phases 4–5 depends on the nonlinearity of the causal mechanism: for linear domains, Phases 1–3 suffice; for nonlinear domains, Phase 4 Flow Matching substantially improves estimation accuracy (HHG: 35.2% → 1.2%), captures nonlinear amplification invisible to linear methods (Battery: 4.8 ×
+
+underestimation), or is outright essential for sign recovery (ECG: Phase 1–3 fails entirely); and Phase 5 provides sensitivity diagnostics for physical assumptions.   
+
+> 11 QTcF (corrected QT interval, Fridericia formula): a measure of cardiac repolarisation time corrected for heart rate (QTcF =
+> QT /RR 1/3). Prolonged QTcF indicates increased risk of fatal arrhythmias and is a primary safety endpoint in drug development.
+> 12 PK/PD (pharmacokinetics/pharmacodynamics): PK describes how the body absorbs, distributes, metabolises, and ex-cretes a drug (concentration vs. time); PD describes how the drug concentration produces a physiological effect (effect vs. concentration). The combined PK/PD model maps dosing to clinical response.
+
+26 8 Application: High Harmonic Generation 
+
+We now present a detailed application case study that illustrates a capability of SVAR-FM that is unavailable to observational causal discovery methods: the recovery of a causal effect whose sign is inverted by latent confounding, using interventional data generated by a first-principles physical simulator. We focus on a single domain—high harmonic generation (HHG) from molecules in strong laser fields—because it provides the cleanest experimental instantiation of Theorem 5.13. The application is chosen for three reasons. First, HHG exhibits a strong R–E0 confounding ( r = −0.999 )that causes observational OLS to produce a severely biased estimate of the causal effect of electron cor-relation on the spectral cutoff energy (288% overestimation relative to the ground truth). Second, both the observational data (seven configurations with correlated R and E0) and the interventional data (three configurations with R fixed at a single value) are generated by the same first-principles solver (Octopus TDDFT (Tancogne-Dejean et al., 2020)), so all sources of variability other than the intervention itself are controlled. Third, HHG offers a rare opportunity to vary the simulator fidelity δS in a physically inter-pretable way: switching the exchange–correlation (XC) functional 13 from LDA 14 to SIC-ADSIC 15 changes 
+
+δS from being of order the signal itself (due to the self-interaction error, SIE) to being negligibly small. This allows us to observe directly how the O(δS ) term in Theorem 5.13 drives the estimate across the sign-reversal threshold of Corollary 5.11. HHG is an ultrafast phenomenon on the 10 −15 second (femtosecond) timescale and is a foundational technol-ogy for attosecond pulse generation and molecular imaging (Krausz & Ivanov, 2009). The R–E0 confounding that arises in HHG experiments is the canonical setting in which simulator-based intervention is the only available tool for resolving the causal structure: the bond length R cannot be held fixed in a real laboratory without also altering the effective laser field E0, but it can be held fixed inside a TDDFT simulation. 
+
+8.1 Problem Setting 
+
+HHG is described by the three-step model (Corkum, 1993; Lewenstein et al., 1994): 1. Tunnel ionization: The electron is tunnel-emitted from the atom/molecule by a strong electric field 2. Acceleration in the field: The electron is accelerated by the laser electric field 3. Recollision and photon emission: The electron returns to the parent ion and emits a high-energy photon The HHG cutoff energy is given by the semiclassical 3.17 Up cutoff law (Krause et al., 1992; Corkum, 1993), 
+
+Ecut = Ip + 3 .17 Up, where Ip (ionization potential 16 ) depends on the molecular structure and Up = E20 /(4 ω2)
+
+(ponderomotive energy 17 ) depends on the laser field amplitude E0.The causal question is: “to what extent does electron correlation Vee affect the HHG spectral centroid energy 
+
+Ecut ?” The true causal structure is: 
+
+Vee  
+
+> +1 .25 eV
+
+−−−−−−→ Ip → Ecut = Ip + 3 .17 Up (14)       
+
+> 13 Exchange–correlation (XC) functional: in density functional theory (DFT), the XC functional approximates the many-body electron–electron interaction energy. Different approximations—LDA (local density approximation), GGA, hybrid functionals— trade accuracy for computational cost. The choice of XC functional is the dominant source of systematic error in TDDFT calculations.
+> 14 LDA (local density approximation): the simplest XC functional, which approximates the exchange–correlation energy using the uniform electron gas model. LDA is computationally inexpensive but suffers from self-interaction error (SIE), where each electron spuriously interacts with its own charge density, leading to systematic underestimation of ionization potentials.
+> 15 SIC-ADSIC (self-interaction correction, averaged density): a correction scheme that removes the spurious self-interaction error from LDA by subtracting the one-electron self-interaction energy. This restores the correct asymptotic behaviour of the potential and yields more accurate ionization potentials.
+> 16 Ionization potential ( Ip): the minimum energy required to remove an electron from a molecule. It depends on the electronic structure and is computed here via Koopmans’ theorem from the TDDFT orbital energies.
+> 17 Ponderomotive energy ( Up): the cycle-averaged kinetic energy of an electron oscillating in a laser field. It scales as the square of the field amplitude E0and inversely as the square of the frequency ω.
+
+27 That is, stronger electron correlation increases Ip, raising the cutoff (positive effect). However, confounding exists in the observational data. In H 2, larger bond length R lowers Ip, making ionization easier, so experimentalists tend to reduce E0 to avoid over-ionization. As a result, observational data exhibit a strong negative correlation between R and E0 (r ≈ − 0.999 ). When the causal quantity is defined as E0 → Ecut,centroid,after (pulse-latter-half spectral centroid), both the direct effect of E0 (through 
+
+Up) and the confounding effect of R (through Ip) push the centroid in the same positive direction, causing OLS to severely overestimate the true slope ( +22 .973 vs. +5 .921 eV/a.u. 18 , bias 288%). 
+
+8.2 Observational and Interventional Data: Both from Octopus TDDFT 
+
+A key feature of this application is that both observational and interventional data are generated by first-principles Octopus TDDFT calculations (Tancogne-Dejean et al., 2020). Seven TDDFT calculations were performed under confounded conditions, varying bond length R and laser amplitude E0 in a naturally correlated manner ( R = 0 .60 , 0.65 , 0.70 , 0.74 , 0.80 , 0.85 , 0.90 Å, each with a corresponding E0). These represent the HHG spectra that an experimentalist would actually observe (a natural experimental setting in which R and E0 are negatively correlated). Three TDDFT calculations were performed with bond length fixed at R = 0 .74 Å while varying only E0
+
+(E0 = 0 .055 , 0.070 , 0.075 a.u.), implementing Pearl’s do( E0 = e) operation. This severs the backdoor path through R, leaving only the direct causal effect E0 → Ecut observable. Initial analyses using the LDA functional ( lda_x ) showed sign-reversed estimates for all metrics of the inter-ventional data. LDA suffers from self-interaction error (SIE) (Perdew & Zunger, 1981), causing systematic underestimation of Ip. Switching to the SIC-ADSIC functional ( lda_x + lda_c_pw , with self-interaction correction) (Tancogne-Dejean et al., 2020) restored a positive slope ( R2 = 0 .983 ) for the pulse-latter-half spectral centroid metric—the mean photon energy of the HHG spectrum computed over the latter half of the pulse, when the laser is sufficiently intense. This finding demonstrates that the physical accuracy of the simulator (XC functional choice) directly de-termines the sign of the causal effect estimate, providing an experimental verification of the O(δS ) bias term in Theorem 5.13. All calculations use H 2 with a cosine-squared laser pulse ( λ = 800 nm, ≈10 fs); full computational parameters are listed in Appendix H. The SIC-ADSIC functional ( Vee = 1 , Ip = 10 .25 eV) and exchange-only functional ( Vee = 0 , Ip = 9 .00 eV) differ only in the treatment of electron correlation; changing Vee with identical laser parameters constitutes a do( Vee = v) operation. 
+
+8.3 Results 
+
+Table 9 compares the ground states and HHG spectra. Table 9: Comparison of H 2 molecule via Octopus TDDFT (SIC-ADSIC vs. exchange-only) Physical quantity lda_x + lda_c_pw (SIC-ADSIC) lda_x (exchange only) Total energy −1.1360 H19 −1.0424 H
+
+Ip (Koopmans) 10.25 eV 9.00 eV Dipole amplitude ±1.43 bohr 20 ±1.74 bohr Plateau yield ratio 1.00 (baseline) 1.12 Spectral centroid H5.01 H4.72 The true causal effect is ∆Ip = 10 .25 − 9.00 = +1 .25 eV, with the RMS difference in dipole moment at 32.1% and a 10.4% change in spectral intensity in the plateau region. At high harmonics (H21–H25), the intensity ratio reaches 1.6–2.4 ×, and the effect of Vee is pronounced near the cutoff.       
+
+> 18 eV/a.u. (electron volts per atomic unit of electric field): the unit of the causal effect slope. 1a.u. = 5 .142 ×10 11 V/m; the slope measures how much the spectral centroid energy (in eV) changes per unit increase in laser field amplitude.
+
+28 Figure 5: Method comparison for HHG causal effect estimation (real Octopus SIC-ADSIC data). (a) :Observational data— R–E0 confounding ( r = −0.999 ) causes OLS to overestimate the slope of E0 vs. pulse-latter-half spectral centroid (slope = +23 .0, bias 288%). (b) : SIC-ADSIC interventional data ( R = 0 .74 
+
+Å fixed, E0 varied)—the pulse-latter-half spectral centroid increases monotonically with E0 (slope = +5 .921 
+
+eV/a.u., R2 = 0 .983 ), recovering the true positive causal effect. (c) : ATE comparison—OLS produces an inflated estimate ( +22 .973 eV/a.u., bias 288%) due to confounding, while SVAR-FM correctly recovers the ground-truth estimate ( +5 .921 eV/a.u., zero bias). Figure 5 and Table 10 present the results. Both observational data (7 conditions, R–E0 confounded) and interventional data (3 conditions, R = 0 .74 Å fixed) were generated by Octopus SIC-ADSIC calculations. The pulse-latter-half spectral centroid metric was adopted for all estimates. Table 10: Method comparison for HHG causal effect estimation (real Octopus SIC-ADSIC data, E0 →
+
+Ecut,centroid,after , pulse-latter-half spectral centroid, R = 0 .74 Å fixed for intervention, 3 points). All methods use E0 as cause and Ecut,centroid,after as effect. Bias is relative to the ground-truth ATE ( +5 .921 eV/a.u.). Method Estimate (eV/a.u.) Sign correct Bias (%) Notes OLS (observational) +22 .973 ⃝ 288 Confounding inflates estimate Granger (observational) +22 .973 ⃝ 288 Same as OLS VARLiNGAM (observational) 0.000 — — No edge detected PCMCI (observational) +0 .921 ⃝ −84 Partial correlation 
+
+SVAR-FM (ours) +5.921 ⃝ 0 R2 = 0 .983 
+
+Intervention (ground truth) +5 .921 ⃝ — First-principles SIC-ADSIC calculation When all methods are unified to estimate the same causal quantity E0 → Ecut,centroid,after , the confounding manifests not as sign reversal but as severe estimation bias. OLS and Granger overestimate the true ATE by 288% (+22 .973 vs. +5 .921 eV/a.u.) because the strong R–E0 correlation ( r = −0.999 ) inflates the re-gression coefficient. VARLiNGAM fails to detect any edge, while PCMCI underestimates the effect ( +0 .921 ,underestimation by 84%). SVAR-FM is the only method to recover the ground-truth ATE with zero bias 
+
+(+5 .921 eV/a.u., R2 = 0 .983 ). The primary output of SVAR-FM is the causal graph ˆG. The ATE values in Table 10 quantitatively validate the identified graph. In HHG, the true causal structure is R → E0 → Up → Ecut and Vee → Ip → Ecut , with R acting as a confounder. Observational methods (OLS, Granger, VARLiNGAM, PCMCI) operate on observational data 29 − #"#'""                             
+
+> 
+> 
+> 
+>  $''% %&$'&'$
+> 
+> E
+> 0E
+> cut
+> V
+> ee
+> I
+> p
+> −
+> −
+> Sign %)%& %  #"#(" " )
+>  $"$ #%$(&#" #" *
+> 
+> E
+> 0E
+> cut
+> V
+> ee
+> I
+> p
+> confused
+> −
+> Non-Gaussianity cannot resolve confounding
+>   #%$(&#" #" *
+> 
+> E
+> 0E
+> cut
+> V
+> ee
+> I
+> p
+> severed by do (E 0)
+> ✗
+> 
+> 
+> Correct sign recovered (+5.921 eV/a.u., R2=0.983)
+>  ✓ )&%!' &#$"&$("&#"
+> 
+> E
+> 0E
+> cut
+> V
+> ee
+> I
+> p
+
+Figure 6: Causal graphs identified by each method in HHG. (a) True structure: R confounds E0 and 
+
+Ecut ; the true effect E0 → Ecut is positive ( +5 .921 eV/a.u.). (b) OLS/Granger produce a heavily biased positive edge ( +22 .973 eV/a.u., bias 288%) because r(R, E 0) = −0.999 . PCMCI underestimates ( +0 .921 ). 
+
+(c) VARLiNGAM fails to detect any edge; non-Gaussianity cannot resolve the confounding. (d) SVAR-FM uses do( E0) via the Octopus simulator to sever the confounding path and recovers the correct edge ( +5 .921 
+
+eV/a.u., R2 = 0 .983 , zero bias). where R and E0 are confounded ( r = −0.999 ). They cannot disentangle the confounding path R → E0
+
+from the causal path E0 → Ecut , and consequently produce severely biased estimates—OLS and Granger overestimate the ATE by 288%, VARLiNGAM detects no edge, and PCMCI underestimates by 84%. SVAR-FM identifies the confounding structure from the observational data (Phase 1: VAR estimation reveals the strong R–E0 coupling) and uses the simulator to generate interventional data with R fixed (Phase 2: 
+
+do( E0 = e) via Octopus with R = 0 .74 Å). The resulting interventional regression (Phase 3) recovers the correct edge E0+
+
+→ Ecut with slope +5 .921 eV/a.u. Figure 6 visualises this comparison. The SVAR-FM estimate coincides with the interventional regression slope because the simulator has phys-ically severed the confounding path, making the interventional regression the causal effect. SVAR-FM’s contribution is the complete framework: (i) identifying confounding from observational data, (ii) using the simulator to sever it, and (iii) providing the error bound (Theorem 5.13) predicting when the estimate will be sign-reversed. With the LDA functional (SIE present), all metrics of the interventional data point in the wrong direction. With SIC-ADSIC (SIE corrected), the pulse-latter-half spectral centroid becomes positive ( R2 = 0 .983 ). This demonstrates that the physical accuracy of the XC functional determines the sign of the causal effect estimate, providing an experimental verification of the O(δS ) bias term in Theorem 5.13. The intervention do( E0 = e) (fixing R = 0 .74 Å in the Octopus calculation) severs the backdoor path through R. With SIC-ADSIC accurately computing Ip, the causal chain E0 → Up → Ecut dominates, and the positive causal connection Vee → Ip → Ecut is correctly identified. 
+
+8.4 How SVAR-FM Resolves the HHG Confounding 
+
+The causal structure in HHG is: 
+
+R → E0, E0 → Up → Ecut , Vee → Ip → Ecut (15) In the observational data, R acts as a confounder affecting both E0 and Ecut , inducing severe estimation bias (288% overestimation). SVAR-FM uses the do( E0 = e) operation (Octopus calculation with R = 0 .74 
+
+Å fixed) as the intervention, severing the confounding path and correctly identifying the true causal effect of electron correlation. This experiment demonstrates that SVAR-FM is applicable to ultrafast phenomena on the femtosecond timescale, achieving 100% bias reduction over OLS using an ab initio simulator as an intervention. Moreover, it confirms experimentally that simulator fidelity (the choice of XC functional, i.e., δS in Assumption 4.2) is critical for correct causal sign recovery. 30 9 Discussion and Conclusion 
+
+9.1 Discussion 
+
+We highlight three aspects of the HHG application in light of the theoretical framework of §5. A distinctive feature of HHG is that the simulator fidelity δS of Assumption 4.2 is itself physically inter-pretable: the leading source of error in TDDFT is the choice of exchange–correlation functional. The LDA functional incurs a well-known self-interaction error (SIE) (Tancogne-Dejean et al., 2020), which inflates δS
+
+to the point where Corollary 5.11’s robustness condition |e∗| > 2δS + O(M −1/2) is violated—the symptom being a sign-reversed causal estimate. Replacing LDA with SIC-ADSIC reduces δS to the level where the signal dominates, and the correct positive sign is recovered ( +5 .921 eV/a.u., R2 = 0 .983 ). This is, to our knowledge, the first experimental demonstration that XC functional choice directly determines the sign of a causal estimate in a simulator-based causal discovery pipeline, and it provides physical grounding for the 
+
+O(δS ) bias term in Theorem 5.13. The R–E0 confounding ( r = −0.999 ) saturates any observational identification criterion. The TDDFT simulator circumvents this by running the solver with R fixed, producing interventional data on demand. Remark 5.14 predicts that the dominant error term is O(δS ) when the XC functional is underpowered, and shifts to O(M −1/2) once fidelity is adequate. The empirical results confirm this: under LDA, increasing M
+
+does not correct the sign; under SIC-ADSIC, three runs suffice ( R2 = 0 .983 ). The framework is not limited to HHG; the CausalSim benchmark (§7.1, Appendix D) confirms the same sign-reversal pattern across four additional domains. 
+
+Role of prior domain knowledge. A natural concern is that all applications in this paper involve causal graphs that are at least qualitatively known a priori from domain science—the Taylor Rule in macroeco-nomics, the three-step model in HHG, the Heitler–Matthews cascade in cosmic ray physics. The coverage condition (Def. 4.5) requires knowing which variables to clamp, and this knowledge comes from the do-main, not from the data. We regard this as a feature rather than a limitation: the simulator-as-do -operator framework is designed for settings where a mechanistic model exists but its quantitative causal effects are confounded in observational data. In such settings, qualitative domain knowledge (“ R and E0 are corre-lated”) is abundant while quantitative effect estimation (“ E0 → Ecut is +5 .921 eV/a.u.”) requires interven-tion. When the causal graph is entirely unknown and no simulator exists, observational methods (PCMCI, VARLiNGAM) remain the appropriate first step; SVAR-FM complements rather than replaces them. 
+
+Relationship to transportability. Using simulator-generated data for real-world causal inference is, at its core, a transportability problem (Bareinboim & Pearl, 2016): the simulator defines a source domain Π∗
+
+and the real system defines a target domain Π, and the question is which causal quantities estimated in 
+
+Π∗ remain valid in Π. In the SVAR-FM framework, the transportability gap is absorbed by δS in As-sumption 4.2, and the structural conditions of Remark 4.3 ensure that the causal mechanisms that are intervened upon are shared across domains (the modularity condition corresponds to the assumption that 
+
+S-nodes—variables whose mechanisms differ across domains—do not include the intervention targets). Ex-plicitly identifying which mechanisms are domain-invariant and which are domain-specific is a promising direction for decomposing δS into reducible (parameter calibration) and irreducible (structural mismatch) components. In the diabetes application, for instance, the pharmacokinetic equations are transportable across patient populations, while patient-specific parameters (clearance, volume of distribution) contribute to a reducible component of δS that fine-tuning can address. 
+
+Connection to invariance-based causal inference. SVAR-FM’s identification strategy is structurally related to the invariance principle that underlies Invariant Causal Prediction (ICP) (Peters et al., 2016) and Invariant Risk Minimization (IRM) (Arjovsky et al., 2019). In ICP, a causal parent set S∗ is identified by the property that the conditional distribution P (Y | XS∗ ) is invariant across environments ; variables outside S∗
+
+produce environment-dependent conditionals. In SVAR-FM, each simulator setting do( Xi = x) defines an environment, and Phase 3 tests whether the distribution of Xj changes across these environments—which is 31 precisely an invariance test applied to the pair (Xi, X j ). The key advantage of the simulator-based approach is that environments can be generated in arbitrary number and with controlled intervention magnitude, whereas ICP requires that multiple environments be observed naturally. This connection also clarifies the role of Phase 5 sensitivity analysis: it quantifies how much the causal effect estimate changes when the simulator’s physical parameters ϕ are perturbed, which is equivalent to asking whether the learned causal mechanism is invariant across nearby simulator configurations—a direct operationalization of the independent causal mechanism (ICM) principle (Schölkopf et al., 2012; Peters et al., 2017). 
+
+9.2 Positioning Relative to Related Work 
+
+The positioning relative to causal-inference and generative-model literature is developed in §2; here we summarise the key distinctions with the HHG results in hand. Full comparisons with simulation-based inference (SBI), mechanistic model-based causal inference (GOBI), deep generative causal models (DoFlow, DeCaFlow, PO-Flow), the econometric SVAR literature, and causal digital twins are given in Appendix G. 
+
+SBI (Cranmer et al., 2020) estimates parameters of a mechanistic model whose causal structure is fixed ;SVAR-FM discovers the structure. Deep generative causal models (Pawlowski et al., 2020; Wu et al., 2025b; Le et al., 2025) assume the graph as input and learn mechanisms; SVAR-FM discovers the graph through simulator intervention. Econometric SVARs (Kilian & Lütkepohl, 2017; Misiakos & Püschel, 2025) achieve identification through statistical assumptions; SVAR-FM achieves it through physically realized interventions. In all three cases, the distinctive content of SVAR-FM is the simulator-as-do -operator stance and the δS -aware error analysis. 
+
+9.3 Conclusion 
+
+This paper proposed SVAR-FM, a framework that treats physics-based simulators as mechanical realizations of Pearl’s do( ·) operator for time series causal discovery. The theoretical results—an identifiability theorem under a coverage condition (Theorem 4.7) and an error bound with a sign-flip regime (Theorem 5.13, Corol-lary 5.11)—are complemented by experiments across four CausalSim domains, three standard benchmarks, and an HHG case study. The HHG experiment provided, to our knowledge, the first experimental demon-stration of a simulator-fidelity-dominated failure mode in causal discovery: varying the exchange–correlation functional from LDA to SIC-ADSIC reversed the sign of the causal estimate, as predicted by the O(δS )
+
+term. Beyond confirming the theory, the experiments revealed that the cross-domain consistency of sign re-versal under confounding is robust across analytical (DSGE), numerical (UVA/Padova ODE), Monte Carlo (Heitler–Matthews), and ab initio (DFT) simulators—a finding that the theory alone does not guarantee, since it depends on each simulator’s δS being below the sign-flip threshold. 21 
+
+SVAR-FM proposes a new role for simulators in AI for Science: not as prediction targets, data sources, or agent tools, but as causal operators whose imperfection δS is a first-class object of the error analysis. Several directions remain open: (i) extension to soft interventions, where the simulator perturbs rather than fixes the target variable (Eberhardt et al., 2007); (ii) active intervention selection (Hauser & Bühlmann, 2012; Toth et al., 2022) driven by δS (c) to minimise simulator calls; (iii) time-varying causal structures via state-space integration—a particularly important direction because many real applications (battery degra-dation, disease progression) involve causal mechanisms that change over time (e.g., the Arrhenius activation energy Ea may drift as SEI composition evolves), and the current stationarity assumption (Assumption 4.6) would need to be relaxed to a piecewise-stationary or smooth-variation model; (iv) high-dimensional scaling (d > 50 ) with sparsity constraints; (v) broader evaluation of the Flow Matching component on nonlinear benchmarks ; (vi) causal representation learning from simulator interventions (Schölkopf et al., 2021): the current framework requires causal variables (e.g., Ecut , Cap, IR) to be pre-specified from domain knowledge, but physical simulators typically produce high-dimensional outputs (full HHG spectra, complete voltage profiles). Using the distributional changes induced by do( ·) operations to automatically identify causally relevant latent dimensions from raw simulator output is a natural extension that connects SVAR-FM to the causal representation learning programme; (vii) experimental verification of mechanism invariance across 
+
+> 21 Code will be released upon publication.
+
+32 intervention targets : running the simulator under multiple distinct do( ·) configurations (e.g., fixing R at several different values in HHG, or varying the insulin dose across a wider range in diabetes) and confirming that the learned causal mechanism P (Xj | do( Xi = x)) is invariant would provide direct experimental vali-dation of the ICM principle (Schölkopf et al., 2012). Such a multi-configuration analysis is straightforward for low-cost simulators (DSGE, Arrhenius) but computationally expensive for ab initio methods (TDDFT). The ablation in §7.2 confirms that Phase 4 substantially improves estimation in the nonlinear HHG domain (relative error 35.2% → 1.2%), while adding no value for linear domains. Extending this analysis to addi-tional nonlinear systems (e.g., nonlinear dose-response in UVA/Padova diabetes, strongly coupled chaotic systems) would further characterise the regime in which Flow Matching is essential. The framework has the following limitations. (i) SVAR-FM requires a simulator (§6.3.1); (ii) estimation bias scales as O(δS ) (Theorem 5.13), and the TV-distance bound of Assumption 4.2 is not directly mea-surable; §6.3.5 provides practical assessment strategies; (iii) the current framework assumes a DAG on contemporaneous edges; (iv) the CausalSim comparisons with observational methods are asymmetric by de-sign: observational methods cannot consume interventional data, so the comparison primarily demonstrates the value of the data source rather than algorithmic superiority. Appendix C reports comparisons with IGSP/UT-IGSP on standard benchmarks to partially address this limitation; (v) sample complexity scales as O(d2) (Proposition 5.3), with current applications at d ≤ 5; (vi) the HHG case study uses N = 7 + 3 
+
+runs, limited by TDDFT computational cost ( ∼hours per run). The interventional regression ( p = 0 .0825 
+
+on 3 points, 1 degree of freedom) does not reach conventional significance; the HHG experiment is therefore best understood as an illustration of the sign-flip prediction, while the CausalSim benchmark (50 and 20 seeds in Macro and Diabetes, respectively) provides the statistical validation. Regarding reproducibility: CausalSim-Macro, CausalSim-Diabetes, and the standard benchmarks require only a standard CPU and run in minutes; CausalSim-Cosmic requires a Monte Carlo generator but completes in under an hour. The HHG case study, by contrast, requires the Octopus TDDFT code on a multi-core workstation ( ∼hours per run). Code for all experiments will be released upon publication; pre-computed HHG data will be included to enable reproduction without access to a TDDFT installation. 
+
+# References 
+
+Josh Abramson, Jonas Adler, Jack Dunger, Richard Evans, Tim Green, Alexander Pritzel, Olaf Ronneberger, Lindsay Willmore, Andrew J Ballard, Joshua Bambrick, et al. Accurate structure prediction of biomolec-ular interactions with AlphaFold 3. Nature , 630:493–500, 2024. Michael S. Albergo and Eric Vanden-Eijnden. Building normalizing flows with stochastic interpolants. In The Eleventh International Conference on Learning Representations (ICLR 2023) , 2023. arXiv:2209.15571. Adrián Almodóvar, Adrián Javaloy, Juan Parras, Santiago Zazo, and Isabel Valera. DeCaFlow: A decon-founding causal generative model. In Advances in Neural Information Processing Systems 38 (NeurIPS 2025) , 2025. T. Antoni et al. The cosmic-ray experiment KASCADE. Nuclear Instruments and Methods in Physics Research A , 513(3):490–510, 2003. doi: 10.1016/S0168-9002(03)02076-X. Martin Arjovsky, Léon Bottou, Ishaan Gulcevich, and David Lopez-Paz. Invariant risk minimization. 
+
+arXiv:1907.02893 , 2019. Charles K. Assaad, Emilie Devijver, and Eric Gaussier. Survey and evaluation of causal discovery methods for time series. Journal of Artificial Intelligence Research , 73:767–819, 2022. doi: 10.1613/jair.1.13428. Elias Bareinboim and Judea Pearl. Causal inference and the data-fusion problem. Proceedings of the National Academy of Sciences , 113(27):7345–7352, 2016. Ilyes Batatia, David P Kovacs, Gregor Simm, Christoph Ortner, and Gábor Csányi. MACE: Higher order equivariant message passing neural networks for fast and accurate force fields. In Advances in Neural Information Processing Systems , volume 35, pp. 11423–11436, 2022. 33 Yoav Benjamini and Yosef Hochberg. Controlling the false discovery rate: A practical and powerful approach to multiple testing. Journal of the Royal Statistical Society: Series B , 57(1):289–300, 1995. doi: 10.1111/ j.2517-6161.1995.tb02031.x. Olivier J. Blanchard and Danny Quah. The dynamic effects of aggregate demand and supply disturbances. 
+
+American Economic Review , 79(4):655–673, 1989. Ira Bloom, Brian W. Cole, Jerry J. Sohn, Steven A. Jones, Edward G. Polzin, Vincent S. Battaglia, Gary L. Henriksen, Chester Motloch, Roberta Richardson, Tony Unkelhaeuser, David Ingersoll, and Howard L. Case. An accelerated calendar and cycle life study of Li-ion cells. Journal of Power Sources , 101(2): 238–247, 2001. doi: 10.1016/S0378-7753(01)00783-2. Cristian Bodnar, Wessel P Bruinsma, Ana Lucic, Megan Stanley, Johannes Brandstetter, Patrick Garvan, Maik Riechert, Jonathan A Weyn, Haiyu Dong, Anna Vaughan, et al. Aurora: A foundation model of the atmosphere. arXiv preprint arXiv:2405.13063 , 2024. Daniil A Boiko, Robert MacKnight, Ben Kline, and Gabe Gomes. Autonomous chemical research with large language models. Nature , 624(7992):570–578, 2023. Johann Brehmer, Gilles Louppe, Juan Pavez, and Kyle Cranmer. Mining gold from implicit models to improve likelihood-free inference. Proceedings of the National Academy of Sciences , 117(10):5242–5249, 2020. doi: 10.1073/pnas.1915980117. Dario Brignone and Michele Piffer. A structural VAR model for the UK economy. Macro Technical Paper 3, Bank of England, 2025. William A Brock, José Alexandre Scheinkman, W Davis Dechert, and Blake LeBaron. A test for independence based on the correlation dimension. Econometric Reviews , 15(3):197–235, 1996. Philippe Brouillard, Sébastien Lachapelle, Alexandre Lacoste, Simon Lacoste-Julien, and Alexandre Drouin. Differentiable causal discovery from interventional data. In Advances in Neural Information Processing Systems 33 (NeurIPS 2020) , pp. 21865–21877, 2020. Steven L Brunton and J Nathan Kutz. Promising directions of machine learning for partial differential equations. Nature Computational Science , 4(7):483–494, 2024. Peter Bühlmann, Jonas Peters, and Jan Ernest. CAM: Causal additive models, high-dimensional order search and penalized regression. Annals of Statistics , 42(6):2526–2556, 2014. Patrick Chao, Patrick Blöbaum, Saurabh Patel, and Shiva Prasad Kasiviswanathan. Modeling causal mech-anisms with diffusion models for interventional and counterfactual queries. Transactions on Machine Learning Research , 2024. Hao Chen, Kai Yi, Lin Liu, and Yan Guang Wang. Score-matching-based structure learning for temporal data on networks. arXiv preprint arXiv:2412.07469 , 2024. Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt, and David Duvenaud. Neural ordinary differential equations. In Advances in Neural Information Processing Systems 31 (NeurIPS 2018) , pp. 6572–6583, 2018. Hao Cheng et al. CausalTime: Realistically generated time-series for benchmarking of causal discovery. In 
+
+The Twelfth International Conference on Learning Representations (ICLR 2024) , 2024. Yuxiao Cheng, Runzhao Yang, Tingxiong Xiao, Zongren Li, Jinli Suo, Kunlun He, and Qionghai Dai. CUTS: Neural causal discovery from irregular time-series data. In The Eleventh International Conference on Learning Representations (ICLR 2023) , 2023. Claudio Cobelli and Boris Kovatchev. Developing the UVA/Padova type 1 diabetes simulator: Modeling, validation, refinements, and utility. Journal of Diabetes Science and Technology , 17(6):1493–1505, 2023. doi: 10.1177/19322968221082513. 34 Paul B. Corkum. Plasma perspective on strong field multiphoton ionization. Physical Review Letters , 71 (13):1994–1997, 1993. doi: 10.1103/PhysRevLett.71.1994. Kyle Cranmer, Johann Brehmer, and Gilles Louppe. The frontier of simulation-based inference. Proceedings of the National Academy of Sciences , 117(48):30055–30062, 2020. doi: 10.1073/pnas.1912789117. Rainer Dahlhaus and Michael Eichler. Causality and graphical models in time series analysis. Oxford Statistical Science Series , pp. 115–137, 2003. In: Green, Hjort, Richardson (Eds.) Highly Structured Stochastic Systems. Frederick Eberhardt. Almost optimal intervention sets for causal discovery. Proceedings of the 28th Confer-ence on Uncertainty in Artificial Intelligence (UAI) , pp. 161–170, 2012. Frederick Eberhardt, Clark Glymour, and Richard Scheines. On the number of experiments sufficient and in the worst case necessary to identify all causal relations among N variables. In Proceedings of the 21st Conference on Uncertainty in Artificial Intelligence (UAI 2005) , pp. 178–184, 2005. Frederick Eberhardt, Clark Glymour, and Richard Scheines. Interventions and causal inference. Philosophy of Science , 74(5):981–995, 2007. doi: 10.1086/525638. Michael Eichler. Graphical modelling of multivariate time series. Probability Theory and Related Fields , 153 (1–2):233–268, 2012. doi: 10.1007/s00440-011-0345-8. Doris Entner and Patrik O. Hoyer. On causal discovery from time series data using FCI. In Proceedings of the 5th European Workshop on Probabilistic Graphical Models (PGM 2010) , pp. 121–128, 2010. Andreas Gerhardus and Jakob Runge. High-recall causal discovery for autocorrelated time series with latent confounders. In Advances in Neural Information Processing Systems 33 (NeurIPS 2020) , pp. 12615–12625, 2020. Paolo Giannozzi, Stefano Baroni, Nicola Bonini, Matteo Calandra, Roberto Car, Carlo Cavazzoni, Davide Ceresoli, Gian Luca Chiarotti, Matteo Cococcioni, Ismaila Dabo, et al. QUANTUM ESPRESSO: a modular and open-source software project for quantum simulations of materials. Journal of Physics: Condensed Matter , 21(39):395502, 2009. Paolo Giannozzi, Oliviero Andreussi, Thomas Brumme, Oana Bunau, Marco Buongiorno Nardelli, Matteo Calandra, Roberto Car, Carlo Cavazzoni, Davide Ceresoli, Matteo Cococcioni, et al. Advanced capabilities for materials modelling with Quantum ESPRESSO. Journal of Physics: Condensed Matter , 29(46):465901, 2017. Wenbo Gong, Joel Jennings, Cheng Zhang, and Nick Pawlowski. Rhino: Deep causal temporal relationship learning with history-dependent noise. In The Eleventh International Conference on Learning Represen-tations (ICLR 2023) , 2023. Juraj Gottweis, Wei-Hung Weng, Alexander Daryin, Tao Tu, Anil Palepu, Petar Sirkovic, Artiom Myaskovsky, Felix Weissenberger, Keran Rong, Ryutaro Tanno, et al. Towards an AI co-scientist. arXiv preprint arXiv:2502.18864 , 2025. C. W. J. Granger. Investigating causal relations by econometric models and cross-spectral methods. Econo-metrica , 37(3):424–438, 1969. doi: 10.2307/1912791. James D. Hamilton. Time Series Analysis . Princeton University Press, Princeton, NJ, 1994. Andreas Haungs et al. The KASCADE cosmic-ray data centre KCDC: Granting open access to astroparticle physics research data. European Physical Journal C , 78:741, 2018. doi: 10.1140/epjc/s10052-018-6221-2. Alain Hauser and Peter Bühlmann. Characterization and greedy learning of interventional Markov equiva-lence classes of directed acyclic graphs. Journal of Machine Learning Research , 13:2409–2464, 2012. 35 Bohdan Herdeanu et al. CausalDynamics: A large-scale benchmark for structural discovery of dynamical causal models. In Advances in Neural Information Processing Systems 38 (NeurIPS 2025) , 2025. Nu Hoang, Bao Duong, and Thin Nguyen. Enabling causal discovery in post-nonlinear models with normal-izing flows. In European Conference on Artificial Intelligence (ECAI) , 2024. Wassily Hoeffding. Probability inequalities for sums of bounded random variables. Journal of the American Statistical Association , 58(301):13–30, 1963. doi: 10.1080/01621459.1963.10500830. Mohammad Hadi Homaei, Mohammed Tarif, Pedro Garcia Rodríguez, Alejandro Caro, and Marc Ávila. Causal digital twins for cyber-physical security in water systems: A framework for robust anomaly detec-tion. Machine Learning with Applications , 23:100824, 2025. doi: 10.1016/j.mlwa.2025.100824. Patrik O. Hoyer, Dominik Janzing, Joris M. Mooij, Jonas Peters, and Bernhard Schölkopf. Nonlinear causal discovery with additive noise models. In Advances in Neural Information Processing Systems 21 (NeurIPS 2008) , pp. 689–696, 2009. Aapo Hyvärinen, Kun Zhang, Shohei Shimizu, and Patrik O. Hoyer. Estimation of a structural vector autoregression model using non-Gaussianity. Journal of Machine Learning Research , 11:1709–1731, 2010. Adrián Javaloy, Pablo Sánchez Martín, and Isabel Valera. Causal normalizing flows: From theory to practice. In Advances in Neural Information Processing Systems 36 (NeurIPS 2023) , 2023. John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov, Olaf Ronneberger, Kathryn Tunyasuvunakool, Russ Bates, Augustin Žídek, Anna Potapenko, et al. Highly accurate protein structure prediction with AlphaFold. Nature , 596(7873):583–589, 2021. David Kaltenpoth and Jilles Vreeken. Nonlinear causal discovery with latent confounders. In Proceedings of the 40th International Conference on Machine Learning (ICML) , volume 202, pp. 15639–15654. PMLR, 2023. Hamidreza Kamkari, Vahid Zehtab, Vahid Balazadeh, and Rahul G Krishnan. OCDaf: Ordered causal discovery with autoregressive flows. arXiv preprint arXiv:2308.07480 , 2023. Jiyeon Kang, Songseong Kim, Chanhui Lee, Doyeong Hwang, Joanie Hayoun Chung, Yunkyung Ko, Sumin Lee, Sungwoong Kim, and Sungbin Lim. Score-informed neural operator for enhancing ordering-based causal discovery. In Advances in Neural Information Processing Systems (NeurIPS) , 2025. George Em Karniadakis, Ioannis G Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, and Liu Yang. Physics-informed machine learning. Nature Reviews Physics , 3(6):422–440, 2021. Michael J. Kearns and Umesh V. Vazirani. An Introduction to Computational Learning Theory . MIT Press, Cambridge, MA, 1994. Ilyes Khemakhem, Ricardo Pio Monti, Robert Leech, and Aapo Hyvärinen. Causal autoregressive flows. In Proceedings of The 24th International Conference on Artificial Intelligence and Statistics (AISTATS 2021) , volume 130 of Proceedings of Machine Learning Research , pp. 3520–3528, 2021. Lutz Kilian and Helmut Lütkepohl. Structural Vector Autoregressive Analysis . Cambridge University Press, Cambridge, 2017. doi: 10.1017/9781108164818. Aneesh Komanduri, Xintao Wu, Yongkai Wu, and Feng Chen. From identifiable causal representations to controllable counterfactual generation: A survey on causal generative modeling. Transactions on Machine Learning Research , 2024. Boris P. Kovatchev, Marc Breton, Chiara Dalla Man, and Claudio Cobelli. In silico preclinical trials: Aproof of concept in closed-loop control of type 1 diabetes. Journal of Diabetes Science and Technology , 3 (1):44–55, 2009. doi: 10.1177/193229680900300106. 36 Jeffrey L Krause, Kenneth J Schafer, and Kenneth C Kulander. High-order harmonic generation from atoms and ions in the high intensity regime. Physical Review Letters , 68(24):3535–3538, 1992. Ferenc Krausz and Misha Ivanov. Attosecond physics. Reviews of Modern Physics , 81(1):163–234, 2009. Remi Lam, Alvaro Sanchez-Gonzalez, Matthew Willson, Peter Wirnsberger, Meire Fortunato, Ferran Alet, Suman Ravuri, Timo Ewalds, Zach Eaton-Rosen, Weihua Hu, et al. Learning skillful medium-range global weather forecasting. Science , 382(6677):1416–1421, 2023. Minh Khoa Le, Kien Do, and Truyen Tran. Learning structural causal models from ordering: Identifiable flow models. Proceedings of the AAAI Conference on Artificial Intelligence , 39(17):17831–17839, 2025. doi: 10.1609/aaai.v39i17.34946. Maciej Lewenstein, Philippe Balcou, Misha Yu. Ivanov, Anne L’Huillier, and Paul B. Corkum. Theory of high-harmonic generation by low-frequency laser fields. Physical Review A , 49(3):2117–2132, 1994. doi: 10.1103/PhysRevA.49.2117. Chunlin Li, Xiaotong Shen, and Wei Pan. Nonlinear causal discovery with confounders. Journal of the American Statistical Association , 2023. Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. In The Ninth International Conference on Learning Representations (ICLR 2021) , 2021a. arXiv:2010.08895. Zongyi Li, Nikolas Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhatt, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. In International Conference on Learning Representations (ICLR) , 2021b. Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. Flow matching for generative modeling. In The Eleventh International Conference on Learning Representations (ICLR 2023) ,2023. arXiv:2210.02747. Phillip Lippe, Taco Cohen, and Efstratios Gavves. Efficient neural causal discovery without acyclicity constraints. In The Tenth International Conference on Learning Representations (ICLR 2022) , 2022. Sindy Löwe, David Madras, Richard Zemel, and Max Welling. Amortized causal discovery: Learning to infer causal graphs from time-series data. In Proceedings of the First Conference on Causal Learning and Reasoning (CLeaR 2022) , volume 177 of PMLR , pp. 509–525, 2022. Chris Lu, Shengran Hu, and Jeff Clune. The AI scientist-v2: Workshop-level automated scientific discovery via agentic tree search. arXiv preprint arXiv:2504.08066 , 2025. Jan-Matthis Lueckmann, Jan Boelts, David S. Greenberg, Pedro J. Gonçalves, and Jakob H. Macke. Bench-marking simulation-based inference. In Proceedings of the 24th International Conference on Artificial Intelligence and Statistics (AISTATS 2021) , volume 130 of PMLR , pp. 343–351, 2021. Daniel Malinsky and Peter Spirtes. Causal structure learning from multivariate time series in settings with unmeasured confounding. In Proceedings of 2018 ACM SIGKDD Workshop on Causal Discovery ,volume 92 of PMLR , pp. 23–47, 2018. Chiara Dalla Man, Francesco Micheletto, Dayu Lv, Marc Breton, Boris Kovatchev, and Claudio Cobelli. The UVA/PADOVA type 1 diabetes simulator: New features. Journal of Diabetes Science and Technology , 8 (1):26–34, 2014. doi: 10.1177/1932296813514502. J. Matthews. A Heitler model of extensive air showers. Astroparticle Physics , 22(5–6):387–397, 2005. doi: 10.1016/j.astropartphys.2004.09.003. Dominik Meier, Sujai Hiremath, Promit Ghosal, and Kyra Gan. When additive noise meets unobserved mediators: Bivariate denoising diffusion for causal discovery. In Advances in Neural Information Processing Systems (NeurIPS) , 2025. 37 Amil Merchant, Simon Batzner, Samuel S Schoenholz, Muratahan Aykol, Gowoon Cheon, and Ekin Dogus Cubuk. Scaling deep learning for materials discovery. Nature , 624(7990):80–85, 2023. Panagiotis Misiakos and Markus Püschel. SpinSVAR: Estimating structural vector autoregression assuming sparse input. In Proceedings of the 41st Conference on Uncertainty in Artificial Intelligence (UAI 2025) ,volume 286 of Proceedings of Machine Learning Research , pp. 3048–3092, 2025. Francesco Montagna, Nicoletta Noceti, Lorenzo Rosasco, Kun Zhang, and Francesco Locatello. Scalable causal discovery with score matching. In Proceedings of the Second Conference on Causal Learning and Reasoning (CLeaR 2023) , volume 213 of PMLR , pp. 752–771, 2023. Francesco Montagna, Philipp M Faller, Patrick Bloebaum, Elke Kirschbaum, and Francesco Locatello. Score matching through the roof: linear, nonlinear, and latent variables causal discovery. In Proceedings of the Fourth Conference on Causal Learning and Reasoning (CLeaR) , volume 275 of Proceedings of Machine Learning Research , pp. 552–605, 2025. Joris M Mooij, Dominik Janzing, and Bernhard Schölkopf. From ordinary differential equations to structural causal models: the deterministic case. In Proceedings of the 29th Conference on Uncertainty in Artificial Intelligence (UAI) , pp. 440–448, 2013. Joris M. Mooij, Sara Magliacane, and Tom Claassen. Joint causal inference from multiple contexts. Journal of Machine Learning Research , 21(99):1–108, 2020. Roxana Pamfil, Nisara Sriwattanaworachai, Shaan Desai, Philip Pilgerstorfer, Konstantinos Georgatzis, Paul Beaumont, and Bryon Aragam. DYNOTEARS: Structure learning from time-series data. In Proceedings of the 23rd International Conference on Artificial Intelligence and Statistics (AISTATS 2020) , volume 108 of PMLR , pp. 1595–1605, 2020. Sung Hoon Park, Seokmin Ha, and Jae Kyoung Kim. A general model-based causal inference method overcomes the curse of synchrony and indirect effect. Nature Communications , 14:4287, 2023. doi: 10. 1038/s41467-023-40056-9. Nick Pawlowski, Daniel Coelho Castro, and Ben Glocker. Deep structural causal models for tractable counterfactual inference. In Advances in Neural Information Processing Systems 33 (NeurIPS 2020) , pp. 12151–12164, 2020. Judea Pearl. Causality: Models, Reasoning, and Inference . Cambridge University Press, Cambridge, 2nd edition, 2009. John P Perdew and Alex Zunger. Self-interaction correction to density-functional approximations for many-electron systems. Physical Review B , 23(10):5048–5079, 1981. Jonas Peters, Peter Bühlmann, and Nicolai Meinshausen. Causal inference by using invariant prediction: identification and confidence intervals. Journal of the Royal Statistical Society: Series B , 78(5):947–1012, 2016. Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Elements of Causal Inference: Foundations and Learning Algorithms . MIT Press, 2017. Ilan Price, Alvaro Sanchez-Gonzalez, Ferran Alet, Tom R Andersson, Andrew El-Kadi, Dominic Masters, Timo Ewalds, Jacklynn Stott, Shakir Mohamed, Peter Battaglia, et al. Probabilistic weather forecasting with machine learning. Nature , 637:84–90, 2025. Stefan T. Radev, Marvin Schmitt, Valentin Pratz, Umberto Picchini, Ullrich Köthe, and Paul-Christian Bürkner. JANA: Jointly amortized neural approximation of complex bayesian models. Proceedings of the 39th Conference on Uncertainty in Artificial Intelligence (UAI 2023) , 216:1695–1706, 2023. Abdellah Rahmani and Pascal Frossard. CASTOR: Causal temporal regime structure learning. In Proceedings of The 28th International Conference on Artificial Intelligence and Statistics (AISTATS) , volume 258 of 
+
+Proceedings of Machine Learning Research , pp. 4546–4554, 2025a. 38 Abdellah Rahmani and Pascal Frossard. Flow based approach for dynamic temporal causal models with non-Gaussian or heteroscedastic noises. In Advances in Neural Information Processing Systems (NeurIPS) ,2025b. Abdellah Rahmani and Pascal Frossard. Flow-based non-stationary temporal regime causal structure learn-ing. arXiv preprint arXiv:2506.17065 , 2025c. Maziar Raissi, Paris Perdikaris, and George E. Karniadakis. Physics-informed neural networks: A deep learn-ing framework for solving forward and inverse problems involving nonlinear partial differential equations. 
+
+Journal of Computational Physics , 378:686–707, 2019. doi: 10.1016/j.jcp.2018.10.045. James M Robins, Andrea Rotnitzky, and Daniel O Scharfstein. Sensitivity analysis for selection bias and unmeasured confounding in missing data and causal inference models. IMA Volumes in Mathematics and its Applications , 116:1–94, 2000. Martin Rohbeck, Brendan Clarke, Kris Mikulik, Andrew Pettet, Oliver Stegle, and Kai Ueltzhoeffer. Bicycle: Intervention-based causal discovery with cycles. In Proceedings of the Third Conference on Causal Learning and Reasoning (CLEaR) , volume 236 of Proceedings of Machine Learning Research , pp. 209–242, 2024. Paul Rolland, Volkan Cevher, Matthäus Kleindessner, Chris Russell, Bernhard Schölkopf, Dominik Janzing, and Francesco Locatello. Score matching enables causal discovery of nonlinear additive noise models. In Proceedings of the 39th International Conference on Machine Learning (ICML 2022) , volume 162 of 
+
+PMLR , pp. 18741–18753, 2022. Jakob Runge. Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. In Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence (UAI 2020) ,pp. 1388–1397, 2020. Jakob Runge, Peer Nowack, Marlene Kretschmer, Seth Flaxman, and Dino Sejdinovic. Detecting and quan-tifying causal associations in large nonlinear time series datasets. Science Advances , 5(11):eaau4996, 2019. doi: 10.1126/sciadv.aau4996. Jakob Runge, Andreas Gerhardus, Gherardo Varando, Veronika Eyring, and Gustau Camps-Valls. Causal inference for time series. Nature Reviews Earth & Environment , 4:487–505, 2023. doi: 10.1038/ s43017-023-00431-y. Bhaskar Saha and Kai Goebel. Battery data set. NASA Ames Prognostics Data Repository, 2007. Pedro Sanchez and Sotirios A. Tsaftaris. Diffusion causal models for counterfactual estimation. In Proceedings of the First Conference on Causal Learning and Reasoning (CLEaR) , volume 177 of Proceedings of Machine Learning Research , pp. 647–668, 2022. Bernhard Schölkopf, Dominik Janzing, Jonas Peters, Eleni Sgouritsa, Kun Zhang, and Joris Mooij. On causal and anticausal learning. In Proceedings of the 29th International Conference on Machine Learning (ICML) , pp. 459–466, 2012. Bernhard Schölkopf, Francesco Locatello, Stefan Bauer, Nan Rosemary Ke, Nal Kalchbrenner, Anirudh Goyal, and Yoshua Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5): 612–634, 2021. Kristen A. Severson, Peter M. Attia, Norman Jin, Nicholas Perkins, Benben Jiang, Zi Yang, Michael H. Chen, Muratahan Aykol, Patrick K. Herring, Dimitrios Fraggedakis, Martin Z. Bazant, Stephen J. Harris, William C. Chueh, and Richard D. Braatz. Data-driven prediction of battery cycle life before capacity degradation. Nature Energy , 4:383–391, 2019. doi: 10.1038/s41560-019-0356-8. Edward H. Simpson. The interpretation of interaction in contingency tables. Journal of the Royal Statistical Society: Series B (Methodological) , 13(2):238–241, 1951. Christopher A. Sims. Macroeconomics and reality. Econometrica , 48(1):1–48, 1980. doi: 10.2307/1912017. 39 Peter Spirtes, Clark Glymour, and Richard Scheines. Causation, Prediction, and Search . MIT Press, 2nd edition, 2000. Chandler Squires, Yuhao Wang, and Caroline Uhler. Permutation-based causal structure learning with un-known intervention targets. In Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence (UAI 2020) , volume 124 of PMLR , pp. 1039–1048, 2020. Xiangyu Sun, Oliver Schulte, Guiliang Liu, and Pascal Poupart. NTS-NOTEARS: Learning nonparametric dbns with prior knowledge. Proceedings of Machine Learning Research (AISTATS 2023) , 206:1942–1964, 2023. Nicolas Tancogne-Dejean, Micael J. T. Oliveira, Xavier Andrade, Heiko Appel, Carlos H. Borca, Guillaume Le Breton, Florian Buchholz, Alberto Castro, Stefano Corni, Alfredo A. Correa, Umberto De Giovannini, Alain Delgado, F. G. Eich, Johannes Flick, Gabriel Gil, Alejandro Gomez, Nicole Helbig, Hannes Hübener, René Jézéquel, Markus Kettner, Sebastian Kretz, Igor V. Lebedeva, Yair Levi, Florian Lieber, José I. N. Oliveira, Esa Rasanen, Daniel Rui, Angel Rubio, Robin Santra, Sangeeta Sharma, Shunsuke A. Sato, David A. Strubbe, Nicolas Sueur, Jan Michael Witzorky, Zhechao Xu, Kazuhiro Yabana, David Zeitler, Xochitl López-Lozano, A. H. Castro Neto, and Angel Rubio. Octopus, a computational framework for exploring light-driven phenomena and quantum dynamics in extended and finite systems. Journal of Chemical Physics , 152(12):124119, 2020. doi: 10.1063/1.5142502. Alex Tank, Ian Covert, Nicholas Foti, Ali Shojaie, and Emily B. Fox. Neural Granger causality. IEEE Transactions on Pattern Analysis and Machine Intelligence , 44(8):4267–4279, 2022. doi: 10.1109/TPAMI. 2021.3065601. Alexander Tong, Nikolay Malkin, Guillaume Huguet, Yanlei Zhang, Jarrid Rector-Brooks, Kilian Fatras, Guy Wolf, and Yoshua Bengio. Conditional flow matching: Simulation-free dynamic optimal transport. 
+
+Transactions on Machine Learning Research , 2024. arXiv:2302.00482. Christian Toth, Lars Lorch, Christian Knoll, Andreas Krause, Franz Pernkopf, Robert Peharz, and Julius von Kügelgen. Active bayesian causal inference. In Advances in Neural Information Processing Systems 35 (NeurIPS 2022) , pp. 16261–16275, 2022. Harald Uhlig. What are the effects of monetary policy on output? Results from an agnostic identification procedure. Journal of Monetary Economics , 52(2):381–419, 2005. doi: 10.1016/j.jmoneco.2004.05.007. Leslie G. Valiant. A theory of the learnable. Communications of the ACM , 27(11):1134–1142, 1984. doi: 10.1145/1968.1972. A. W. van der Vaart. Asymptotic Statistics . Cambridge University Press, Cambridge, 2000. Tyler J VanderWeele and Peng Ding. Sensitivity analysis in observational research: introducing the e-value. 
+
+Annals of Internal Medicine , 167(4):268–274, 2017. Mishfad Shaikh Veedu, Deepjyoti Deka, and Murti V Salapaka. Information theoretically optimal sample complexity of learning dynamical directed acyclic graphs. arXiv preprint arXiv:2308.16859 , 2023. Hanchen Wang, Tianfan Fu, Yuanqi Du, Wenhao Gao, Kexin Huang, Ziming Liu, Payal Chandak, Shengchao Liu, Peter Van Katwyk, Andreea Deac, et al. Scientific discovery in the age of artificial intelligence. Nature ,620(7972):47–60, 2023. Yuhao Wang, Liam Solus, Karren D. Yang, and Caroline Uhler. Permutation-based causal inference algo-rithms with interventions. In Advances in Neural Information Processing Systems 30 (NeurIPS 2017) , pp. 5822–5831, 2017. Larry Wasserman. All of Nonparametric Statistics . Springer, New York, 2006. Dongrui Wu, David I. Inouye, and Yao Xie. Flow-based generative modeling of potential outcomes and counterfactuals. arXiv preprint arXiv:2505.16051 , 2025a. 40 Dongrui Wu et al. DoFlow: Causal generative flows for interventional and counterfactual time-series predic-tion. arXiv preprint arXiv:2511.02137 , 2025b. Yue Xia et al. Causal time series generation via diffusion models. arXiv preprint arXiv:2509.20846 , 2025. Jinyu Xie. Simglucose v0.2.1. https://github.com/jxx123/simglucose , 2018. Karren Yang, Abigail Katcoff, and Caroline Uhler. Characterizing and learning equivalence classes of causal DAGs under interventions. In Proceedings of the 35th International Conference on Machine Learning (ICML) , pp. 5537–5546. PMLR, 2018. Ning Yin, Tian Gao, Yue Yu, and Qiang Ji. Information theoretically optimal sample complexity of learning dynamical directed acyclic graphs. arXiv preprint arXiv:2312.12844 , 2023. Han Zhang, Xixian Wang, Jinbo Zhang, Yuyan Bi, Fu-Zhi Chen, Haifeng Dong, Mingyu Guo, Shenyu Huang, Wei Huang, Chi Jin, et al. MatterSim: A deep learning atomistic model across elements, temperatures and pressures. arXiv preprint arXiv:2405.04967 , 2024. Kun Zhang and Aapo Hyvärinen. On the identifiability of the post-nonlinear causal model. Proceedings of the 25th Conference on Uncertainty in Artificial Intelligence (UAI 2009) , pp. 647–655, 2009. Qiuling Zhao, Jingyi Zhu, Qingqing Fang, Yufan Pan, Yanling Wang, Jing Shao, and Wenhui Xie. Chi-nese diabetes datasets for data-driven machine learning. Scientific Data , 10:35, 2023. doi: 10.1038/ s41597-023-01940-7. Xun Zheng, Bryon Aragam, Pradeep Ravikumar, and Eric P. Xing. DAGs with NO TEARS: Continuous optimization for structure learning. In Advances in Neural Information Processing Systems 31 (NeurIPS 2018) , pp. 9472–9483, 2018. Zhenyu Zhu, Francesco Locatello, and Volkan Cevher. Sample complexity bounds for score-matching: Causal discovery and generative modeling. arXiv preprint arXiv:2310.18123 , 2024. 
+
+# A Proofs 
+
+This appendix collects the proofs of all results stated in the main text. 
+
+A.1 Proof of Fact 3.2 
+
+Proof. The standard proof can be found in Chapter 8 of Kilian and Lütkepohl (Kilian & Lütkepohl, 2017). For the transformation ˜B0 = B0Q via an orthogonal matrix Q, (B0Q)−1(Q⊤ΣϵQ)(( B0Q)−1)⊤ =
+
+Q⊤B−10 Σϵ(B−10 )⊤Q. When Σϵ is diagonal and Q is chosen appropriately, the same Σu is generated. 
+
+A.2 Proof of Lemma 4.4 
+
+Proof. By Rule 2 of Pearl’s (Pearl, 2009) do-calculus, if Xi̸ → Xj , then P (Xj |do( Xi = x)) = P (Xj ).Therefore, ei→j̸ = 0 establishes the existence of Xi → Xj .
+
+A.3 Proof of Theorem 4.7 
+
+Proof. We prove that the contemporaneous matrix B0 and lagged matrices {Bl}pl=1 are uniquely identifiable from the joint of the observational distribution and the family of interventional distributions generated by interventions on I. Three features of the time-series setting drive the argument and have no counterpart in the i.i.d. intervention literature (Eberhardt et al., 2007; Hauser & Bühlmann, 2012; Mooij et al., 2020): (i) the simultaneous presence of contemporaneous and lagged edges and the need to disentangle them; (ii) the propagation of interventions through the autoregressive recursion; and (iii) the identifiability of Bl for l ≥ 1
+
+in the presence of stationarity. We handle each in a separate step, invoking existing tools where applicable and introducing new argument where the time-series structure forces it. 41 Step 1 (Contemporaneous edges). Fix any i ∈ I and consider the interventional distribution PS (Xt |
+
+do( Xi,t = x)) for x ∈ X i with |X i| ≥ 2. Under δS = 0 (Assumption 4.2) this equals the true interventional distribution. By Rule 2 of Pearl’s do-calculus (Pearl, 2009), P (Xj,t | do( Xi,t = x)) = P (Xj,t ) if and only if there is no directed contemporaneous path from Xi,t to Xj,t in G, given that lagged parents are fixed. Taking expectations and varying x ∈ X i yields the contemporaneous interventional effect ei→j (Lemma 4.4), which is zero if and only if (i, j ) is not a contemporaneous edge. Iterating over i ∈ I recovers every contemporaneous edge incident to I.For contemporaneous edges (i, j ) with i, j / ∈ I , coverage (Def. 4.5) excludes this case: by hypothesis every contemporaneous edge has at least one endpoint in I, so no such edge can exist. Combined with the contemporaneous acyclicity of G (Assumption 4.6(b)), the full contemporaneous DAG is identified. 
+
+Step 2 (Lagged edges). The lagged structure {Bl}pl=1 governs how an intervention at time t propagates to times t + l for l ≥ 1. Under Assumption 4.6(a), the reduced-form VAR is stable, so the cumulative response ∂E[Xj,t +l | do( Xi,t = x)] /∂x is well-defined and finite for every l ≥ 0.In the linear SVAR, Kilian & Lütkepohl (2017) (Proposition 4.2) show that the impulse response sequence 
+
+Θl := ∂E[Xt+l | do( Xi,t = x)] /∂x uniquely determines all lagged matrices once B0 is known, because 
+
+Θl = ( B−10
+
+∑lk=1 BkΘl−k) is a recursion whose coefficients are the {Bl}.For the nonlinear SVAR of Def. 4.1, the argument requires modification because the mechanisms fj are no longer linear. We proceed as follows. Fix i ∈ I and consider the family of interventional distributions 
+
+{P (Xt+1: t+p | do( Xi,t = x)) : x ∈ X i}. Under Assumption 4.6(a) (stability) and the contemporaneous acyclicity established in Step 1, the joint distribution of Xt+1 given do( Xi,t = x) and Xt−1: t−p+1 is deter-mined by the structural equations Xj,t +1 = fj (Pa (0)  
+
+> j
+
+(t+1) , Pa (1: p) 
+
+> j
+
+(t+1)) + ϵj,t +1 . Since B0 (and hence the contemporaneous DAG ordering) is identified from Step 1, the lagged parent sets Pa (1: p) 
+
+> j
+
+are the only remain-ing unknowns. Varying x over Xi and observing the change in P (Xj,t +1 | do( Xi,t = x), Xt−1: t−p+1 ) tests whether Xi,t is a lagged parent of Xj,t +1 : by the exclusion restriction (Assumption 4.6(c), independence of structural shocks), a non-trivial change identifies a lagged edge i → j at lag 1. Iterating over lags l = 1 , . . . , p 
+
+and over all i ∈ I recovers the full lagged structure. The key difference from the linear case is that we identify lagged edges (presence or absence) rather than lagged coefficients (numerical values); for nonlinear mechanisms, the “coefficient” is replaced by the functional dependence fj , whose estimation is delegated to Phase 4 (Flow Matching). This is why Phase 4 is essential for nonlinear domains (Table 8) but unnecessary for linear ones. Since Step 1 identifies B0, Step 2 identifies {Bl}pl=1 (in the linear case) or the lagged edge set (in the nonlinear case). 
+
+Step 3 (Disambiguating lagged from contemporaneous). A subtlety specific to SVARs is that a spurious high-frequency contemporaneous edge can be generated by an unobserved lagged confounder at a shorter sampling interval than the data. Interventions resolve this: do( Xi,t = x) sets the value of Xi,t after 
+
+all lagged influences have been realized, so any residual change in Xj,t must be attributable to a genuine contemporaneous edge i → j, not to a shared lagged cause. Formally, P (Xj,t | do( Xi,t = x), Xt−1: t−p)
+
+under the true graph equals P (Xj,t | Xt−1: t−p) if and only if there is no contemporaneous edge i → j.This is the time-series analogue of the “severed back-door” argument and is what distinguishes SVAR-FM’s contemporaneous identification from standard Granger causality testing. 
+
+Step 4 (Coverage tightness). The sufficiency of |I| = d is immediate from Steps 1–3. For tightness, consider a chain graph X1 → X2 → · · · → Xd at contemporaneous time. Intervening on {X1, . . . , X d−1}
+
+identifies every edge (i, i +1) ; the remaining node Xd is a sink and carries no outgoing contemporaneous edge, so no intervention on Xd is required. Therefore |I| = d − 1 is sufficient for chains. Eberhardt et al. (2005) showed, in the i.i.d. setting, that the worst-case lower bound is ⌈log 2 d⌉ interventions when interventions on arbitrary subsets are allowed; the single-variable counterparts that our setting actually needs are those stated as Corollaries 5.5–5.7, whose proofs (Sections A.7 and A.9) run on the time-series identifiability argument of Steps 1–3 above. 42 A.4 Proof of Fact 4.10 
+
+Proof. do( Z = z) severs the paths Z → Xi and Z → Xj , so that any remaining dependence is attributable solely to direct causation. For details, see Chapter 3 of Pearl (Pearl, 2009). 
+
+A.5 Proof of Proposition 5.1 
+
+Proof. Consider the estimator ˆei→j = 1
+
+> M
+
+∑Mm=1 y(m) 
+
+> j
+
+−μj . Each y(m) 
+
+> j
+
+is independent with E[y(m) 
+
+> j
+
+] = e∗ 
+
+> i→j
+
++μj .By the central limit theorem (van der Vaart, 2000), √M (ˆ ei→j − e∗ 
+
+> i→j
+
+) d
+
+−→ N (0 , σ 2). The finite-sample concentration inequality follows from Hoeffding (Hoeffding, 1963). 
+
+A.6 Proof of Proposition 5.3 
+
+Proof. Intervention effects are estimated for d(d − 1) variable pairs. Requiring accuracy ϵ with failure probability δ/d 2 for each pair, Proposition 5.1 yields that M = O(σ2 log( d2/δ )/ϵ 2) samples are needed per pair. By the union bound (Wasserman, 2006), the probability of simultaneous success across all pairs is at least 1 − δ. With interventions on d variables, the total sample count is d · M .
+
+A.7 Proof of Corollary 5.5 
+
+Proof. Suppose only d − 2 or fewer single-variable interventions are performed. Then at least two variables 
+
+Xa, X b remain unintervened. By Fact 3.2, the contemporaneous causation between Xa and Xb is non-identifiable from observational data alone, so no collection of d − 2 or fewer single-variable interventions can resolve it. Therefore, at least d − 1 interventions are necessary. The combinatorial core of this argument is the counting lemma of Eberhardt et al. (2005); what our proof supplies is the link from the i.i.d. counting argument to the non-identifiability result for SVARs in Fact 3.2, which is specific to the time-series setting. 
+
+A.8 Proof of Corollary 5.6 
+
+Proof. An intervention on variable Xi enables estimation of the causal effects from Xi to all other variables (Lemma 4.4). With d interventions, all causal effects are obtained, and the causal structure is identified by Theorem 4.7. 
+
+A.9 Proof of Corollary 5.7 
+
+Proof. Corollaries 5.5 and 5.6 together give d − 1 ≤ I∗ ≤ d. For chain structures X1 → X2 → · · · → Xd,interventions on all variables except X1 (d − 1 interventions) determine the direction of each edge, as in the chain construction of Theorem 5 of Eberhardt et al. (2007); the step that carries that construction over to the SVAR setting is Theorem 4.7, which handles the contemporaneous-plus-lagged structure. 
+
+A.10 Proof of Proposition 5.9 
+
+Proof sketch. (1) Consistency of VAR coefficients follows from standard OLS theory (Hamilton, 1994). (2) Consistency of intervention effects follows from Proposition 5.1. (3) Consistency of Flow Matching follows from universal approximation (Fact E.3). 
+
+A.11 Proof of Theorem 5.10 
+
+Proof. Let eS 
+
+> i→j
+
+:= EPS (·| do( Xi=x′)) [Xj ] − EPS (·| do( Xi=x)) [Xj ] denote the interventional effect under the simulator-induced distribution , and let e∗ 
+
+> i→j
+
+denote the same quantity under the true interventional dis-tribution. Decompose the estimation error by triangle inequality: 
+
+|ˆei→j − e∗ 
+
+> i→j
+
+| ≤ | ˆei→j − eS 
+
+> i→j
+
+|
+
+︸ ︷︷ ︸
+
+> (A) statistical
+
++ |eS 
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+|
+
+︸ ︷︷ ︸
+
+> (B) simulator bias
+
+.
+
+43 Term (A) is bounded by Proposition 5.1: with M samples, |ˆei→j − eS 
+
+> i→j
+
+| = Op(M −1/2).For term (B), write eS 
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+= ∫ xj
+
+(dP S (x | do( Xi = x′)) − dP (x | do( Xi = x′)) ) − ∫ xj
+
+(dP S (x | do( Xi =
+
+x)) − dP (x | do( Xi = x)) ). Each of the two integrals is a signed integral against a measure whose total variation is bounded by 2δS (Assumption 4.2). Letting Bj := sup x |xj | denote the essential sup of Xj under both the simulator and the true interventional distributions, the absolute value of each integral is bounded by 2Bj δS (Wasserman, 2006). Hence |eS 
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+| ≤ 4Bj δS , which is the O(δS ) term in the theorem. 
+
+A.12 Proof of Theorem 5.13 
+
+Proof. Decompose the total error via two intermediate quantities: the simulator-distribution effect eS
+
+> i→j
+
+(as in the proof of Theorem 5.10) and the Flow-Matching-distribution effect ˜ei→j := gj ( ˆPˆθ (· | do( Xi =
+
+x′))) − gj ( ˆPˆθ (· | do( Xi = x))) . Then, by two applications of the triangle inequality, 
+
+|ˆeFM  
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+| ≤ |ˆeFM  
+
+> i→j
+
+− ˜ei→j |
+
+︸ ︷︷ ︸
+
+> (I) Monte Carlo at FM
+
++ |˜ei→j − eS 
+
+> i→j
+
+|
+
+︸ ︷︷ ︸
+
+> (II) FM approximation
+
++ |eS 
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+|
+
+︸ ︷︷ ︸
+
+> (III) simulator bias
+
+.
+
+Term (I). ˆeFM  
+
+> i→j
+
+is a Monte Carlo estimate of ˜ei→j based on M forward samples of the trained flow. By Hoeffding’s inequality (Hoeffding, 1963), for any η ∈ (0 , 1) ,
+
+|ˆeFM  
+
+> i→j
+
+− ˜ei→j | ≤ σ
+
+√ 2 log(2 /η )
+
+M
+
+with probability at least 1 − η, yielding the C1σ/ √M term with C1 = √2 log(2 /η ).
+
+Term (II). By Assumption 5.12(b), the response functional gj is 1-Lipschitz with respect to W1, so 
+
+|˜ei→j −eS 
+
+> i→j
+
+| ≤ W1
+
+( ˆPˆθ (· | do( Xi = x′)) , P S (· | do( Xi = x′)) ) + W1
+
+( ˆPˆθ (· | do( Xi = x)) , P S (· | do( Xi = x)) ).
+
+By Assumption 5.12(a) and a Gronwall-type argument for flow matching (Albergo & Vanden-Eijnden, 2023; Tong et al., 2024), each W1 term is bounded by eL·εFM . Summing gives the C3·eL·εFM term of Eq. equation 11 with C3 = 2 .
+
+Term (III). Exactly the simulator-bias term from the proof of Theorem 5.10: |eS 
+
+> i→j
+
+− e∗ 
+
+> i→j
+
+| ≤ 4Bj δS ,yielding the C2δS term with C2 = 4 Bj .Combining the three bounds and noting that the failure event has probability at most η completes the proof. 
+
+# B Detailed listing of causal-discovery methods 
+
+Table 12 complements the overview in Table 1 and the time-series listing in Table 11 by providing a detailed view of i.i.d. causal discovery methods. The purpose is twofold. First, it makes visible which classes of methods operate under causal sufficiency, which admit latent confounders, which rely on interventional data, and which require the causal graph to be known. Second, for readers whose primary background is in i.i.d. causal discovery, it clarifies why directly applying any of these methods to time series with contemporaneous and lagged edges is not straightforward: the column “Source” marks every entry as “i.i.d.”, and the sole time-series entry in the comparison—SVAR-FM itself—appears separately in Table 11. Methods are grouped by their identifiability mechanism. Entries that already appear in Table 1 are included here for completeness. 44 Table 11: Time-series methods in detail. Full listing of time-series causal-discovery methods. Columns match Table 1; “Source” indicates whether the method relies on observational data (“obs.”), interventional data (“int.”), or is an i.i.d. method included as a reference point (“i.i.d.”). The final row highlights the unique position occupied by SVAR-FM. 
+
+Method Source Conf. Int. NL Graph 
+
+Classical and constraint-based 
+
+Granger (Granger, 1969) obs. × × × discovered PCMCI (Runge et al., 2019) obs. × × ⃝ discovered PCMCI + (Runge, 2020) obs. × × ⃝ discovered tsFCI (Entner & Hoyer, 2010) obs. ⃝ × × discovered (PAG) LPCMCI (Gerhardus & Runge, 2020) obs. ⃝ × ⃝ discovered (PAG) SVAR-GFCI (Malinsky & Spirtes, 2018) obs. ⃝ × × discovered (PAG) 
+
+SVAR / LiNGAM-based 
+
+VARLiNGAM (Hyvärinen et al., 2010) obs. × × × discovered SpinSVAR (Misiakos & Püschel, 2025) obs. × × × discovered 
+
+Score-based / differentiable / deep learning 
+
+Neural Granger (Tank et al., 2022) obs. × × ⃝ discovered DYNOTEARS (Pamfil et al., 2020) obs. × × ⃝ discovered Rhino (Gong et al., 2023) obs. × × ⃝ discovered CUTS / CUTS + (Cheng et al., 2023) obs. × × ⃝ discovered Amortized CD (Löwe et al., 2022) obs. × × ⃝ discovered TS-CausalNN (Assaad et al., 2022) obs. × × ⃝ discovered CausalDynamics (Herdeanu et al., 2025) obs. × × ⃝ discovered Temporal score matching (Chen et al., 2024) obs. × × ⃝ discovered 
+
+Flow-based, graph discovered 
+
+CASTOR (Rahmani & Frossard, 2025a) obs. × × ⃝ discovered Rahmani–Frossard (Rahmani & Frossard, 2025b) obs. × × ⃝ discovered Non-stationary flow (Rahmani & Frossard, 2025c) obs. × × ⃝ discovered 
+
+Flow/diffusion-based, graph known 
+
+DoFlow (Wu et al., 2025b) int. × ⃝ ⃝ known CaTSG (Xia et al., 2025) int. × ⃝ ⃝ known PO-Flow (Wu et al., 2025a) int. × ⃝ ⃝ known (PO) 
+
+Intervention-based (i.i.d., listed as reference) 
+
+DCDI (Brouillard et al., 2020) i.i.d. × ⃝ ⃝ discovered IGSP / UT-IGSP (Wang et al., 2017; Squires et al., 2020) i.i.d. ⃝ ⃝ × discovered JCI (Mooij et al., 2020) i.i.d. ⃝ ⃝ ⃝ discovered ENCO (Lippe et al., 2022) i.i.d. × ⃝ ⃝ discovered Bicycle (Rohbeck et al., 2024) i.i.d. × ⃝ ⃝ discovered (cyclic) 
+
+SVAR-FM (ours) int. ⃝ ⃝ ⃝ discovered 
+
+# C Standard Benchmark Experiments with Intervention Extensions 
+
+C.1 Overview and positioning 
+
+The CausalSim benchmark (§7.1) and the HHG case study (§8) evaluate SVAR-FM in the setting for which it is designed: a physical simulator realizes Pearl’s do( ·) operator, and the question is whether causal structure can be recovered from the resulting interventional distributions. This appendix reports a complementary set of experiments on three standard time-series causal-discovery benchmarks—CausalTime (Cheng et al., 2024), Tigramite (Runge et al., 2019), and CausalDynamics (Herdeanu et al., 2025)—that were not designed with simulator-based intervention in mind . We include them for two reasons: (i) to confirm that SVAR-FM performs competitively against observational baselines (Granger, VARLiNGAM, PCMCI, PCMCI+) even when no physical simulator is available, and 45 Table 12: i.i.d. methods in detail. Full listing of i.i.d. causal-discovery methods grouped by their identi-fiability mechanism. Columns match Table 1. All methods in this table operate in the i.i.d. setting and do not directly address time-series data with contemporaneous and lagged edges.                                                                                                               
+
+> Method Source Conf. Int. NL Graph
+> ANM / PNL / CAM-style identifiability via noise asymmetry
+> ANM (Hoyer et al., 2009) obs. ××⃝discovered PNL (Zhang & Hyvärinen, 2009) obs. ××⃝discovered CAM (Bühlmann et al., 2014) obs. ××⃝discovered
+> Score-matching / score-based
+> SCORE (Rolland et al., 2022) obs. ××⃝discovered DiffAN (Montagna et al., 2023) obs. ××⃝discovered Score-through-the-roof (Montagna et al., 2025) obs. ⃝×⃝discovered
+> Flow-based causal discovery (graph discovered)
+> CARE-FL (Khemakhem et al., 2021) obs. ××⃝discovered CNF (Javaloy et al., 2023) obs. ××⃝discovered OCDaf (Kamkari et al., 2023) obs. ××⃝discovered PNL with normalizing flows (Hoang et al., 2024) obs. ××⃝discovered
+> Nonlinear with latent confounders
+> NL latent CD (Kaltenpoth & Vreeken, 2023) obs. ⃝×⃝discovered NL CD w/ confounders (Li et al., 2023) obs. ⃝×⃝discovered Bivariate denoising diffusion (Meier et al., 2025) obs. ⃝×⃝discovered
+> Intervention-based (graph discovered)
+> GIES (Hauser & Bühlmann, 2012) int. ×⃝×discovered IGSP / UT-IGSP (Wang et al., 2017; Squires et al., 2020) int. ⃝⃝×discovered JCI (Mooij et al., 2020) int. ⃝⃝⃝discovered DCDI (Brouillard et al., 2020) int. ×⃝⃝discovered ENCO (Lippe et al., 2022) int. ×⃝⃝discovered Bicycle (Rohbeck et al., 2024) int. ×⃝⃝discovered (cyclic)
+> Flow/diffusion-based (graph known)
+> DeCaFlow (Almodóvar et al., 2025) int. ⃝⃝⃝known Identifiable Flow (Le et al., 2025) int. ×⃝⃝known (ordering)
+
+(ii) to compare against i.i.d. intervention-based methods (IGSP (Wang et al., 2017), UT-IGSP (Squires et al., 2020)) by generating surrogate intervention data through VAR forward simulation or direct DGP/ODE manipulation. The latter comparison is informative but not strictly fair : the intervention data given to SVAR-FM and to IGSP/UT-IGSP differ in design (see §C.2 for details). 
+
+Method capability summary. Table 13 summarises which capabilities each method brings to the com-parison. SVAR-FM is the only method that operates natively on time series, handles nonlinearity via Flow Matching, and can consume simulator-generated interventional data. IGSP and UT-IGSP consume interven-tional data but assume i.i.d. observations and use Gaussian conditional-independence tests, which degrade under nonlinearity. 
+
+C.2 Intervention data generation methods 
+
+None of the three standard benchmarks provides a physical simulator in the sense of §4.3. To include intervention-based methods in the comparison, we generate surrogate intervention data through three meth-ods, each matched to the benchmark’s data-generating process (DGP). To our knowledge, the systematic comparison of these surrogate-intervention strategies for time-series causal discovery has not been reported in the existing literature; the closest precedent is the use of soft interventions in Tigramite’s own DGP (Runge et al., 2019), but that work does not compare across intervention types or combine them with Flow Matching–based discovery. 46 Table 13: Method capabilities in the standard benchmark setting. “TS” = native time-series support; “NL” = nonlinear mechanism support; “Int.” = can consume interventional data; “Latent” = admits latent confounders.                             
+
+> Method TS NL Int. Latent Granger ⃝×××
+> VARLiNGAM ⃝××⃝
+> PCMCI / PCMCI+ ⃝⃝××
+> IGSP ××⃝×
+> UT-IGSP ××⃝×
+> SVAR-FM (ours) ⃝⃝⃝⃝
+
+Method I: VAR forward simulation (all benchmarks). A VAR model is fitted to the observational data. For each target variable Xi, the intervention do( Xi = μi + 5 σi) is applied by clamping Xi at the specified value and propagating the effect through the estimated VAR coefficients for Tsim steps. This method requires no access to the DGP and is therefore applicable to real data (CausalTime). Its quality depends on the accuracy of the VAR approximation; in nonlinear or short-sample regimes ( T < N ), the VAR coefficients may be poorly estimated. 
+
+Method II: DGP direct hard intervention (Tigramite only). Tigramite’s synthetic-data generator (toys.structural_causal_process ) accepts an intervention argument that applies a hard do operation at each time step: Xi(t) := μi + 2 σi for all t. The causal mechanisms of all other variables are re-executed under this clamping, producing a counterfactual time series. This method has access to the true DGP and therefore produces the highest-fidelity intervention data in linear systems. In nonlinear systems, however, clamping Xi at a constant value for all t destroys the temporal autocorrelation structure, which can degrade the quality of intervention-effect estimates for methods that rely on temporal smoothness. 
+
+Method III: ODE direct soft intervention (CausalDynamics only). For ODE-based dynamical systems (Lorenz, Rössler, etc.), we add a restoring-force term to the ODE right-hand side: 
+
+dx dt = foriginal (x) + λ · (x∗ 
+
+> i
+
+− xi) · ei, (16) where x∗ 
+
+> i
+
+= μi + 2 σi is the intervention target, λ = 10 is the restoring strength, and ei is the i-th unit vector. This “soft” intervention pulls Xi toward x∗ 
+
+> i
+
+without instantaneously destroying the dynamics, preserving the temporal structure of the ODE trajectory. This approach has, to our knowledge, not been used previously for causal discovery in dynamical systems; the standard practice is either hard clamping (which destroys the attractor) or do-calculus reasoning on the ODE Jacobian (Mooij et al., 2013). 
+
+Novelty and limitations. The VAR forward simulation (Method I) and the ODE soft intervention (Method III) are, to our knowledge, new in the context of time-series causal discovery benchmarks. Method I provides a simulator-free surrogate that makes IGSP/UT-IGSP applicable to time-series data they were not designed for. Method III provides a dynamics-preserving alternative to hard clamping in chaotic ODE sys-tems. Neither method is a substitute for a true physical simulator (as used in CausalSim and HHG), but they allow a meaningful—if not strictly fair—comparison between SVAR-FM and i.i.d. intervention-based methods on standard benchmarks. The asymmetry in the comparison should be noted: SVAR-FM uses PINN-guided variable selection, Flow Matching extrapolation ( T = 40 → 200 ), and confounding-score-based intervention prioritisation when appli-cable, whereas IGSP/UT-IGSP receive uniform interventions on all variables without these enhancements. This asymmetry is unavoidable because the enhancements are integral to the SVAR-FM framework and cannot be transferred to IGSP/UT-IGSP without leaking SVAR-FM-specific information. 47 C.3 Benchmark C.1: CausalTime 
+
+CausalTime (Cheng et al., 2024) is a benchmark based on real-world time series: medical ( N =20 , T =40 ,40.3% density), pm25 ( N =36 , T =40 , 28.1%), and traffic ( N =20 , T =40 , 21.6%). No DGP simulator is available; intervention data are generated via Method I (VAR forward simulation). In all datasets, T = 40 < N , which causes the VAR residual covariance matrix to be non-positive definite; consequently, VARLiNGAM is inapplicable across all datasets (F1 = 0 .000 ). SVAR-FM operates stably under the T < N condition through automatic Ridge switching. Table 14 reports AUROC and F1 (mean ± std, 5 samples). Table 14: CausalTime extended results. “Obs.” = observational data only; “+Int.” = with VAR-simulated intervention data. SVAR-FM-DAG uses PINN spatial scoring (Phase 0) which accounts for its advantage on pm25. Bold : best per dataset and metric.                                                     
+
+> medical ( N= 20 )pm25 ( N= 36 )traffic ( N= 20 )Method AUROC F1 AUROC F1 AUROC F1 Obs.  Granger .503 ±.032 .264 ±.030 .486 ±.065 .232 ±.074 .492 ±.033 .200 ±.037 VARLiNGAM .500 ±.000 .000 ±.000 .500 ±.000 .000 ±.000 .500 ±.000 .000 ±.000 PCMCI .469 ±.059 .224 ±.132 .704 ±.145 .496 ±.191 .510 ±.027 .210 ±.041
+> SVAR-FM-DAG (ours) .575 ±.057 .374 ±.071 .758 ±.086 .490 ±.090 .508 ±.029 .210 ±.041 +Int.  IGSP+VAR .494 ±.029 .236 ±.046 .494 ±.011 .213 ±.015 .524 ±.019 .214 ±.032 UT-IGSP+VAR .491 ±.016 .227 ±.027 .492 ±.007 .206 ±.019 .515 ±.010 .199 ±.011
+> SVAR-FM-DAG+FM+CA (ours)
+> .561 ±.038 .349 ±.056 .746 ±.078 .472 ±.068 .534 ±.049 .236 ±.062
+
+Observations. (i) SVAR-FM-DAG (observational only) is the top method on medical and pm25, driven by Phase 0 PINN spatial scoring rather than by intervention data. (ii) IGSP and UT-IGSP produce AUROC 
+
+≈ 0.49 –0.52 across all datasets, barely above chance; their Gaussian CI tests are ineffective on the nonlinear, short ( T = 40 ) CausalTime data. (iii) On traffic, where PINN spatial structure is absent, SVAR-FM-DAG+FM+CA (with FM extrapolation T = 40 → 200 ) achieves the best AUROC (0.534), marginally above IGSP+VAR (0.524). 
+
+C.4 Benchmark C.2: Tigramite 
+
+Tigramite (Runge et al., 2019) provides 8 synthetic scenarios (S1–S8) spanning linear/nonlinear, Gaussian/non-Gaussian, contemporaneous, latent confounding, high-dimensional, and feedback settings: S1 (linear Gaussian, N =3 ), S2 (nonlinear Gaussian, N =3 ), S3 (linear non-Gaussian, N =3 ), S4 (nonlinear non-Gaussian, N =3 ), S5 (contemporaneous, N =4 ), S6 (latent confounding, N =4 ), S7 (high-dimensional sparse, 
+
+N =8 ), S8 (feedback, N =3 ); all with T = 1000 –2000 and τmax = 3 .Intervention data are generated via Method II (DGP direct hard intervention) for IGSP/UT-IGSP and SVAR-FM-CF/SVAR-FM-DAG. Table 15 reports F1 scores (mean ± std, 5 seeds). 
+
+Observations. (i) SVAR-FM achieves the best F1 on S2 and S4 (nonlinear scenarios) where IGSP/UT-IGSP’s Gaussian CI tests fail, and ties with VARLiNGAM on S1 and S3 (linear scenarios with F1 = 1.000). (ii) SVAR-FM-CF achieves perfect F1 = 1.000 on S6 (latent confounding) , the only method to do so, by using residual-correlation thresholding to detect and exclude confounded variable pairs. (iii) IGSP and UT-IGSP are competitive only on linear scenarios (S1, S3) where their Gaussian assumption holds; on nonlinear scenarios (S2, S4, S7, S8) their performance degrades to near-random. (iv) VARLiNGAM achieves the best F1 on S5 (contemporaneous), S7 (high-dimensional), and S8 (feedback), all of which have linear, independent-noise structure matching its assumptions exactly. 48 Table 15: Tigramite extended F1 results. Observational baselines (Granger, VARLiNGAM, PCMCI, PCMCI+) from the original experiment; intervention-based methods (IGSP, UT-IGSP, SVAR-FM-CF) added with DGP-direct hard intervention (Method II). SVAR-FM-CF uses residual correlation > 0.5 to detect and exclude confounded pairs. Bold : best per scenario.                                                                      
+
+> Scenario Granger VARLiNGAM PCMCI PCMCI+ IGSP UT-IGSP SVAR-FM (ours)
+> SVAR-FM-CF (ours)
+> S1 Lin-G .697 ±.077 1.00 ±.000 .550 ±.034 .571 ±.000 .640 ±.207 .460 ±.227 1.00 ±.000 .748 ±.130 S2 NL-G .667 ±.236 .567 ±.316 .381 ±.143 .310 ±.138 .613 ±.292 .557 ±.374 .840 ±.084 .740 ±.126 S3 Lin-NG .711 ±.082 1.00 ±.000 .513 ±.059 .571 ±.000 .570 ±.200 .540 ±.263 1.00 ±.000 .721 ±.130 S4 NL-NG .633 ±.188 .683 ±.183 .431 ±.126 .371 ±.107 .483 ±.372 .447 ±.348 .920 ±.103 .670 ±.170 S5 Contemp .534 ±.067 .938 ±.113 .462 ±.036 .600 ±.000 .359 ±.230 .327 ±.109 .793 ±.055 .742 ±.026 S6 Latent .515 ±.030 .724 ±.068 .439 ±.022 .496 ±.015 .440 ±.295 .720 ±.169 .657 ±.030 1.00 ±.000
+> S7 HighDim .502 ±.079 .861 ±.102 .348 ±.044 .396 ±.056 .274 ±.119 .203 ±.065 .508 ±.041 .372 ±.038 S8 Feedback .667 ±.000 1.00 ±.000 .667 ±.000 .667 ±.000 .473 ±.135 .453 ±.112 .986 ±.045 .826 ±.119
+
+C.5 Benchmark C.3: CausalDynamics 
+
+CausalDynamics (Herdeanu et al., 2025) evaluates causal discovery on time series generated from nonlinear dynamical systems (ODEs) with known causal structures: Lorenz ( N =3 , 5 edges), Rössler ( N =3 , 4), Cou-pledLorenz ( N =6 , 11), LotkaVolterra ( N =2 , 2), and CoupledRösslerLorenz ( N =6 , 10), each with T = 2000 –
+
+3000 . A distinctive feature is that the true graphs contain bidirectional edges (cycles). Accordingly, we use the SVAR-FM dynamics variants (§6.2.2) for the observational comparison, and SVAR-FM-routed (with adaptive routing) for the intervention-extended comparison. Five dynamical systems were used, with 5 configurations per system varying noise intensity and coupling strength (25 experiments total, τmax = 5 ). Intervention data are generated via Method III (ODE direct soft intervention) for SVAR-FM variants and via both Methods I and III for IGSP/UT-IGSP. Table 16 reports AUROC (mean ± std, 5 configurations). SVAR-FM-routed uses an adaptive routing strategy (BDS nonlinearity test + system dimension) to select the best intervention method and scoring mode per configuration: 
+
+• Route A (deterministic chaos, N ≤ 3): Convergent Cross Mapping (CCM) scores; 
+
+• Route B (deterministic chaos, N ≥ 4): SVAR-FM original rank ensemble; 
+
+• Route C (BDS nonlinear): ODE soft intervention + Phase 3-NL; 
+
+• Route D (BDS linear): VAR intervention + Phase 3-L. 
+
+Observations. (i) SVAR-FM-routed achieves the highest mean AUROC (0.770) across the four systems, a 
+
++15 .1% improvement over SVAR-FM without intervention (0.669). (ii) IGSP/UT-IGSP with either VAR or ODE intervention data produce AUROC 0.45 –0.66 , substantially below SVAR-FM-routed; their Gaussian CI assumption is violated by the chaotic, nonlinear dynamics. (iii) ODE soft intervention (Method III) consis-tently outperforms VAR intervention (Method I) for both SVAR-FM and IGSP, confirming that intervention-data quality directly affects causal-discovery accuracy—an empirical analogue of the theoretical O(δS ) term in Theorem 5.13. (iv) CoupledRösslerLorenz (N=6, heterogeneous coupling) remains difficult for all methods; SVAR-FM (0.679, observational) slightly outperforms SVAR-FM-routed (0.657) here, suggesting that the routing heuristic can be improved for heterogeneous multi-system coupling. (v) PCMCI results are unavail-able (“—”) for the coupled systems ( N ≥ 6) because its computational cost scales steeply with dimension and the required τmax = 5 makes the conditioning sets too large for stable partial-correlation estimation at the available sample sizes. (vi) LotkaVolterra ( N = 2 ) is omitted from the intervention-extended tables because all methods (including SVAR-FM) achieve F1 = 1.000 on this simple bidirectional system, making intervention unnecessary and uninformative for the comparison. 49 Table 16: CausalDynamics extended AUROC results. “Obs.” = observational data only; “+Int.” = with intervention data (VAR or ODE). SVAR-FM-routed uses adaptive routing (see text). Bold : best per system.                                                   
+
+> Method Lorenz Rössler CoupledLorenz CoupledRösslerL. Mean Obs.  Granger .660 ±.241 .637 ±.143 .634 ±.070 .698 ±.062 .657 VARLiNGAM .560 ±.351 .775 ±.114 .656 ±.044 .609 ±.098 .650 PCMCI .640 ±.167 .400 ±.271 ———SVAR-FM (ours) .780 ±.335 .625 ±.159 .590 ±.060 .679 ±.141 .669 +Int.  IGSP+VAR .660 ±.152 .475 ±.056 .461 ±.030 .515 ±.034 .528 UT-IGSP+VAR .540 ±.230 .450 ±.068 .481 ±.027 .515 ±.022 .497 IGSP+ODE .540 ±.313 .450 ±.068 .490 ±.034 .575 ±.050 .514 UT-IGSP+ODE .540 ±.313 .450 ±.068 .497 ±.029 .580 ±.041 .517
+> SVAR-FM-routed (ours) .860 ±.167 .800 ±.259 .764 ±.063 .657 ±.169 .770
+
+C.6 Cross-benchmark summary 
+
+Table 17 summarises the three benchmarks. Table 17: Cross-benchmark summary: best AUROC of IGSP/UT-IGSP vs. best AUROC of SVAR-FM variants.             
+
+> Benchmark IGSP best SVAR-FM (ours) best ∆
+> CausalTime (3 datasets) 0.524 0.758 +0.234 Tigramite S6 (latent, F1) 0.720 1.000 +0.280 CausalDynamics (4 systems) 0.660 0.860 +0.200
+
+Two patterns emerge consistently across all three benchmarks. First, IGSP and UT-IGSP degrade sharply under nonlinearity : their Gaussian conditional-independence tests are the bottleneck, not the availability of intervention data. This is visible in every nonlinear scenario (CausalTime real data, Tigramite S2/S4/S7/S8, CausalDynamics Lorenz/Rössler/CoupledLorenz). Second, intervention-data quality matters : ODE soft intervention consistently outperforms VAR forward simulation (CausalDynam-ics, +0 .059 AUROC on average), and DGP direct intervention outperforms bootstrap shifting (Tigramite). This pattern is the empirical counterpart of the O(δS ) term in the end-to-end error bound of Theorem 5.13: higher simulator fidelity produces more accurate causal-effect estimates. These results are consistent with, but do not replace, the CausalSim and HHG experiments in the main text, which evaluate SVAR-FM in its intended setting—physical simulators as do -operators. 
+
+C.7 Controlled comparison: identical intervention data, varying autocorrelation 
+
+The cross-benchmark comparisons above are informative but not strictly controlled: SVAR-FM and IGSP/UT-IGSP receive different intervention data, and the benchmarks were not designed to isolate the effect of temporal structure. To address this, we conducted a controlled experiment using the Tigramite S1 DGP (linear, Gaussian, 3 variables, T = 1000 ) with the autoregressive coefficient ρ varied over 
+
+{0.0, 0.3, 0.5, 0.7, 0.9}. Crucially, all three methods receive identical DGP-generated intervention data at each ρ and seed. Each condition was replicated over 5 seeds, and all methods are evaluated on the same criterion: recovery of the true causal directions {0 → 1, 1 → 2} (Table 18). The most striking result is that SVAR-FM achieves perfect recall (TPR = 1 .000 ) at every value of ρ. Phase 1 VAR estimation correctly identifies the lagged structure X0 → X1 (lag 1) and X1 → X2 (lag 2) regardless of autocorrelation strength, and Phase 3 intervention tests confirm both edges with high significance ( z > 20 ,
+
+p < 10 −6). The cost of this high recall is elevated FDR (0.37–0.62), primarily from detecting the indirect effect X0 → X2 as a direct edge. 50 Table 18: Controlled comparison: identical intervention data, varying autocorrelation ρ. F1 and TPR for causal direction recovery (mean ± std, 5 seeds).                                      
+
+> F1 TPR
+> ρIGSP UT-IGSP SVAR-FM (ours) IGSP UT-IGSP SVAR-FM (ours) 0.0 0.000 0.000 0.773 0.000 0.000 1.000
+> 0.3 0.833 0.533 0.773 0.800 0.500 1.000
+> 0.5 0.700 0.700 0.773 0.700 0.700 1.000
+> 0.7 0.400 0.500 0.610 0.500 0.600 1.000
+> 0.9 0.560 0.400 0.548 0.700 0.500 1.000
+
+By contrast, IGSP and UT-IGSP return empty graphs at ρ = 0 .0 (F1 = 0 .000 )—precisely the i.i.d. setting for which they were designed. Inspection of the output shows dag.arcs = ∅: no edges are detected in any direction. This occurs because the DGP intervention (fixing Xi at +2 σ) produces a large distributional shift that causes the Gaussian invariance test to reject invariance for all variable pairs, leaving the algorithm unable to orient any edge (Yang et al., 2018). The behaviour of IGSP is also non-monotonic in ρ: it achieves its best F1 at ρ = 0 .3 (0.833), where moderate autocorrelation smooths the intervention signal enough for the invariance test to function. At higher ρ (0.7– 0.9), IGSP degrades (F1 = 0 .400 –0.560 ) as the i.i.d. assumption of its conditional-independence tests is increasingly violated, producing spurious edges and direction reversals. Taken together, these results show that SVAR-FM’s advantage over i.i.d. intervention-based methods has two sources: Phase 1 VAR estimation natively handles temporal dependence, maintaining TPR = 1 .000 
+
+across all ρ; and the intervention-effect test in Phase 3 is robust to intervention magnitude, whereas IGSP’s invariance test is sensitive to distributional shift. The trade-off is that SVAR-FM’s ATE-based test is more liberal, producing higher FDR than IGSP at moderate ρ (e.g., ρ = 0 .3: SVAR-FM FDR = 0 .37 vs. IGSP FDR = 0 .10 ). Combining Phase 1 VAR structure with a more conservative edge-selection criterion is a promising direction for reducing SVAR-FM’s FDR. 
+
+# D CausalSim-Battery: First-Principles DFT Simulator 
+
+This appendix reports the fourth CausalSim instance, which uses ab initio density functional theory (DFT) calculations as the simulator. Among all CausalSim instances, this is the most rigorous: DFT derives material properties from the Schrödinger equation without empirical fitting parameters, making the do( ·)
+
+operation maximally credible ( δS ≈ 0 up to the exchange–correlation approximation). This instance is reported separately because the domain-specific background (electrochemistry, SEI formation) exceeds what is needed for the main-text evaluation, but the scientific implications—discovery of a previously unknown dual causal pathway—are substantial. 
+
+D.1 Problem setting: latent confounding in battery degradation 
+
+Understanding the degradation mechanisms of lithium-ion batteries is critical for electric vehicles and re-newable energy storage (Severson et al., 2019). The key variables are capacity (Cap) and internal resistance (IR). Temperature T acts as an unobserved common cause (latent confounder) : high temperature accelerates both SEI growth (increasing IR) and side reactions (decreasing Cap), producing a spurious neg-ative correlation between IR and Cap. The true causal effect IR → Cap is positive (increased IR impedes ion transport). Methods based solely on observational data cannot distinguish the spurious correlation from the true causal effect. 51 D.2 Simulator and intervention 
+
+The Arrhenius law (Bloom et al., 2001) serves as the simulator: 
+
+k(T ) = A exp 
+
+(
+
+− Ea
+
+RT 
+
+)
+
+, (17) where Ea = 50 kJ/mol. The intervention do( T = 25 °C) fixes temperature and severs the confounding path, allowing estimation of the direct effect IR → Cap. Observational data are from the NASA Battery Dataset 22 (Saha & Goebel, 2007) (18650 cells, 5,592 cycles, 5 variables). 
+
+D.3 Results: sign reversal confirms confounding 
+
+• Temperature uncontrolled (observational): ATE(IR → Cap) = −0.10 (wrong sign )
+
+• Temperature fixed at 25 °C (intervention via Arrhenius simulator 23 ): ATE(IR → Cap) = +0 .03 
+
+(correct sign )This sign reversal satisfies the confounding detection criterion of Fact 4.10. 
+
+D.4 Discovery of dual causal pathways via DFT 
+
+DFT calculations using Quantum ESPRESSO (Giannozzi et al., 2009; 2017) of electrolyte additive LUMO 24 
+
+(Lowest Unoccupied Molecular Orbital) energies reveal the causal mechanism of SEI 25 formation. Four additives were analysed (Table 19). Table 19: DFT-computed LUMO energies and SVAR-FM causal effects for SEI additives Additive LUMO (eV) Cap. ret. (%) Improvement Reducibility EC (baseline) −0.78 53 — Low FEC −0.76 80 +27% Low VC −1.14 74 +21% Medium 
+
+LiBOB −1.75 87 +34% High The fluorine anomaly. FEC has nearly the same LUMO as EC ( −0.76 vs. −0.78 eV), yet its capacity retention is 27% higher. This anomaly cannot be explained by a LUMO-only model and reveals a second causal pathway : fluorine atoms form LiF within the SEI, providing ionic conductivity, mechanical stability, and chemical stability independently of the LUMO mechanism. 
+
+Dual pathway model. Incorporating fluorine as a binary variable yields: Cap = α + β1 · LUMO + β2 · F + ϵ. (18) The model fit improves from R2 = 0 .42 (LUMO only) to R2 = 0 .93 (LUMO + F), with β1 = −33 .6 %/eV and β2 = +24 .2 %. The LUMO effect had been underestimated by 64% in the single-pathway model because fluorine acted as a confounder.                
+
+> 22 NASA Battery Dataset: https://www.nasa.gov/content/prognostics-center-of-excellence-data-set-repository
+> 23 DFT calculations were performed using Quantum ESPRESSO (Giannozzi et al., 2009; 2017) (https://www. quantum-espresso.org/ ). The Arrhenius simulator and SVAR-FM integration code will be released upon publication.
+> 24 LUMO (Lowest Unoccupied Molecular Orbital): the lowest-energy empty electron orbital of a molecule. Molecules with lower (more negative) LUMO energy are more easily reduced, meaning they accept electrons more readily and decompose earlier during battery charging to form the SEI film.
+> 25 SEI (Solid Electrolyte Interphase): a thin passivation film ( ∼10–50 nm) that forms on the anode surface during the first charge cycles of a lithium-ion battery. The SEI is ionically conductive but electronically insulating; its quality determines long-term battery capacity retention.
+
+52 AI for Science significance. This result demonstrates that SVAR-FM, combined with a first-principles DFT simulator, can discover previously unknown causal pathways in materials science. The dual-pathway model provides actionable design guidelines: optimal SEI additives should combine low LUMO (for prefer-ential reduction) with fluorine substitution (for LiF formation). The predicted improvement for fluorinated LiBOB (F-LiBOB) is 56.8%, substantially exceeding any single additive. 
+
+# E Flow Matching Technical Details 
+
+Definition E.1 (Conditional Flow Matching (Tong et al., 2024)) . Conditional Flow Matching learns a vector field vθ (x, t |c):
+
+dxt
+
+dt = vθ (xt, t |c), t ∈ [0 , 1] (19) where c is a conditioning vector that includes the physical parameters (intervention conditions) of the simulator. The CFM loss is given by (Lipman et al., 2023): 
+
+LCFM (θ) = Et, x0,x1,c
+
+[
+
+∥vθ (xt, t |c) − (x1 − x0)∥2]
+
+(20) 
+
+Remark E.2 (Flow Matching and physical constraints) . By including the simulator’s physical parameters in 
+
+c: (a) Flow Matching learns PS (·| do( Xi = x)) and estimates counterfactual distributions consistent with physical laws; (b) it enables sensitivity analysis of causal effects with respect to physical parameters ( δS in Assumption 4.2); (c) it provides a unified framework for comparing different simulator variants (e.g., TDDFT exchange-correlation functionals in HHG). 
+
+Fact E.3 (Universal approximation (Chen et al., 2018)) . A CNF 26 parameterized by a neural network of sufficient capacity can approximate any continuous conditional distribution to arbitrary precision. 
+
+# F SVAR-dyn1/SVAR-dyn2: Full Details 
+
+For ODE-based dynamical systems (CausalDynamics), the true graph contains bidirectional edges (cycles). The following modifications are applied: (1) NOTEARS is disabled; (2) Phase 0 directional bias is disabled; (3) a differential Granger score is added. The differential Granger score is defined as 
+
+sdG  
+
+> ij
+
+= max 
+
+(
+
+0, E(j)base − E (j,i )full 
+
+E(j)base 
+
+)
+
+(21) where E(j)base is the squared prediction error from X(j) 
+
+> t
+
+alone, and E(j,i )full adds X(i) 
+
+> t
+
+(Ridge regression, λ = 0 .1). Table 20: Architectural variants of SVAR-FM-dynamics Variant Configuration SVAR-dyn1 Rank ensemble of Phase 1 (VAR coefficients + Diff-Granger) only. Phases 3– 5 are not used. Stable for small systems ( N ≤ 3). SVAR-dyn2 z-score weighted ensemble of Phases 1–5. Adds Phase 3 (ATE), Phase 4 (FM-ATE), Phase 5 (FNO-Granger 27 ), with adaptive Spearman-ρ weighting (w = 0 when ρ ≤ 0). Eps-guard zeroes Phase 5 when ϵmax < 10 −3. Improves for large coupled systems ( N ≥ 6). 
+
+Eps-guard. The threshold θ = 10 −3 corresponds to typical floating-point residuals in noise-free ODE integrations (double precision); it is not tuned to benchmark data.       
+
+> 26 CNF (Continuous Normalizing Flow): a generative model that transforms a simple base distribution (e.g., standard Gaus-sian) into a complex target distribution via a continuous-time ordinary differential equation dx/dt =vθ(x, t ), where the velocity field vθis parameterised by a neural network.
+
+53 G Detailed Positioning Relative to Related Work 
+
+G.1 Simulation-Based Inference (SBI) 
+
+SBI (Cranmer et al., 2020) takes a mechanistic model whose causal structure is fixed and estimates a posterior over its parameters. SVAR-FM recovers the causal graph itself. Brehmer et al. (Brehmer et al., 2020) exploit latent structural information within simulators for likelihood-free inference; both that work and SVAR-FM look inside the simulator, but for different objects (parameter posteriors vs. do -operator realizations). The two frameworks can be chained—SBI for parameters, SVAR-FM for the graph—but neither replaces the other. 
+
+G.2 Mechanistic Model-Based Causal Inference 
+
+GOBI (Park et al., 2023) uses data-reproducibility of monotonic ODE models as a causal criterion, without requiring intervention data. SVAR-FM actively generates intervention data via the simulator and provides theoretically guaranteed identification (Theorem 4.7). 
+
+G.3 Causal Inference with Deep Generative Models 
+
+Deep generative causal models (Pawlowski et al., 2020; Khemakhem et al., 2021; Javaloy et al., 2023; Le et al., 2025; Sanchez & Tsaftaris, 2022; Chao et al., 2024) assume the graph and learn mechanisms. DoFlow (Wu et al., 2025b) is the closest time-series extension; it predicts under a known graph, while SVAR-FM discovers the graph. Further 2025 developments—CaTSG (Xia et al., 2025), DeCaFlow (Almodóvar et al., 2025), PO-Flow (Wu et al., 2025a)—all assume a known graph. See Komanduri et al. (Komanduri et al., 2024) for a survey. The key contrast with DoFlow (Wu et al., 2025b): SVAR-FM discovers the graph (unknown) from simulator-generated interventions; DoFlow predicts under a known graph from observational data. They use Flow Matching in structurally different roles (causal mechanism approximation vs. node-conditional generation) and are composable. 
+
+G.4 SVAR Literature in Econometrics 
+
+Econometric SVARs (Kilian & Lütkepohl, 2017; Blanchard & Quah, 1989; Uhlig, 2005) achieve identification through statistical assumptions. SpinSVAR (Misiakos & Püschel, 2025) scales to thousands of nodes via sparse Laplacian assumptions; the Bank of England (Brignone & Piffer, 2025) uses SVARs for monetary policy. SVAR-FM achieves identification through simulator intervention instead. 
+
+G.5 Causal Digital Twins 
+
+CDT (Homaei et al., 2025) discovers the graph from observational data then reasons with the SCM; Bicy-cle (Rohbeck et al., 2024) discovers cyclic graphs from CRISPR perturbations; Le et al. (Le et al., 2025) learn mechanisms under a known graph. SVAR-FM uses the simulator as Pearl’s do -operator to discover 
+
+the graph, with δS in the error analysis. 
+
+# H HHG Computational Parameters 
+
+All Octopus TDDFT calculations in §8 use the following settings. The system is an H 2 molecule on a spherical grid (radius 15 Å, spacing 0.3 Å). The laser wavelength is λ = 800 nm ( ω0 = 0 .057 H) with a cosine-squared envelope of width 400 a.u. ( ≈10 fs). The propagation runs for 500 a.u. ( ≈12 fs) over 250,000 time steps. Both observational and interventional data use the SIC-ADSIC exchange–correlation functional (lda_x + lda_c_pw ). 54

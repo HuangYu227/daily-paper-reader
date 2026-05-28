@@ -1,0 +1,616 @@
+Title: A Generative Adversarial Graph Neural Network for Synthetic Time Series Data
+
+URL Source: https://arxiv.org/pdf/2605.22215v1
+
+Published Time: Fri, 22 May 2026 00:52:42 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# A Generative Adversarial Graph Neural Network for Synthetic Time Series Data 
+
+## Marco Gregnanin a, b, *,1 , Johannes De Smedt b,1 , Giorgio Gnecco a,1 and Maurizio Parton c,1 aIMT School for Advanced Studies Lucca 
+
+bKU Leuven 
+
+cUniversity of Chieti-Pescara 
+
+Abstract. Generating synthetic data for financial time series poses challenges, especially considering their non-stationary nature. Tra-ditional statistical time series models normally assume weak sta-tionarity. However, this assumption can constrain their effectiveness. Deep learning models, particularly Generative Adversarial Networks (GANs), have exhibited considerable potential in emulating complex probability distributions. GANs employ a generator-discriminator framework, where the generator creates data samples, while the dis-criminator distinguishes real from generated data. In this research, we introduce the Sig-Graph GAN model, which inte-grates the time-series signature, offering a structured summary of its temporal evolution; the Long Short-Term Memory network, captur-ing its inherent autoregressive structure; and Graph Neural Networks (GNNs), leveraging geometric patterns within the time-series data. To employ GNNs optimally, we use the visibility graph algorithm to derive a graph-based representation of the underlying time series. Numerical evaluations demonstrate that the Sig-Graph GAN model outperforms baseline methods in replicating the distribution of log-arithmic returns across different stock exchanges. The integration of the graph structure with the autoregressive component effectively captures both geometric and temporal patterns embedded in time-series data. This research advances the field of GAN models for time series by introducing a model capable of leveraging both autoregressive prop-erties and geometric structures for synthetic data generation. 
+
+## 1 Introduction 
+
+Across various domains including, among others, healthcare, image and signal processing, economics and finance, environmental sci-ence, and energy consumption, the necessity arises for the generation of synthetic data. This need is driven by several factors, such as the scarcity of original data due to privacy concerns, and the requirement for data diversity to enhance model generalization. However, the gen-eration of synthetic time series data poses a considerable challenge due to their stochastic nature. This holds especially true for the finan-cial case. Two distinct approaches for generating synthetic data are commonly considered: model-based and data-driven. The former in-volves developing statistical or mathematical models to describe the underlying data-generating process. Classical statistical and financial  
+
+> ∗
+
+Corresponding Author. Email: marco.gregnanin@imtlucca.it  
+
+> 1
+
+Equal contribution. Working Paper 
+
+mathematics models have achieved favorable outcomes in generating synthetic data. Both approaches rely on certain assumptions. Classi-cal statistical models, such as Autoregressive Integrated Moving Av-erage (ARIMA) [6], assume that stock prices exhibit stationarity or at the very least, weakly stationary, implying that both the mean and the auto-covariance of a time series are time-invariant [52]. Simi-larly, financial mathematics models, like the Black-Scholes [4], and Merton [41] models, rely on stationarity and homoskedasticity as-sumptions while also assuming that stock prices reflect all available information [17] and follow a random walk [32]. In contrast, the data-driven approach seeks to uncover and leverage latent patterns within the data. Machine learning and deep learning models, partic-ularly Generative Adversarial Networks (GANs) [20], have exhib-ited promising results in generating synthetic data. However, exist-ing GAN models in the literature primarily focus on capturing and exploiting the autoregressive component inherent in time series data. For financial time series, this may prove inadequate for capturing non-stationarity and particularly evolving volatility, which exerts a substantial influence on trading strategies owing to its capacity to al-ter risk assessments associated with stocks [8]. Notably, volatility stands as a pivotal indicator widely employed in the domain of risk management [42]. In this paper, we show that geometric patterns play an important role in addressing the generation of synthetic data for a time se-ries. Specifically, transforming time series from a Euclidean to a non-Euclidean space using a graph-based approach can significantly enhance our understanding and analysis of complex financial time series behavior as the examination of the graph’s node degree dis-tribution can provide insights into whether the series showcases pe-riodic, random, or fractal characteristics [31], which is particularly relevant in financial time series given the presence of fractal behav-ior in stock prices [40]. Introducing fractal concepts into financial modeling can lead to a more accurate depiction of market dynam-ics. Fractals possess the capacity to encapsulate the inherent self-similarity and scaling properties that are intrinsic to financial markets [45, 16]. Furthermore, the adoption of a graph-based representation for the data liberates us from the constraint of assuming stationarity within the time series. The graph representation facilitates the explo-ration of structural dynamics intrinsic to the time series, providing a means to apprehend relationships and dependencies among the data points. Graph Neural Networks (GNNs) [49] possess the capability to capture and model the geometric patterns intrinsic to graph data. Analogous to fractals, GNNs can capture local structural informa-
+
+> arXiv:2605.22215v1 [cs.CE] 21 May 2026
+
+tion within a graph by iteratively aggregating data from neighboring nodes. This iterative process empowers GNNs to acquire and gen-eralize patterns at varying scales, thereby effectively capturing the intrinsic geometric attributes of the graph akin to fractals embodying self-similarity. Furthermore, we explore the application of the time series signature [39, 38], a concept derived from path theory, which provides a universal description of time series. In essence, the signa-ture can be viewed as analogous to the Moment Generating Function (MGF), which is significant for comparing random variable distribu-tions as it encodes all distribution moments into a single function, uniquely characterizing the distribution itself [46]. To address the challenge of generating synthetic financial time series data, we propose an innovative GAN model that adeptly harnesses both the autoregressive nature of time series and the underlying geo-metric properties. This is achieved by integrating two techniques, the visibility graph and the time series signature that are traditionally ap-plied in the domains of Complex Network Analysis, and Stochastic Analysis, respectively, into the framework of a generative adversarial model. Our contributions encompass: 1) Introducing a novel GAN model that integrates dynamic GNNs with the Long Short-Term Memory (LSTM) network [25]; 2) Proposing two custom loss functions based on the signature, de-rived specifically for the Sig-Graph GAN model, and based on the Mean Square Error (MSE) and Kullback-Leibler Divergence (KLD) metrics. These functions are proposed in order to capture both pointwise discrepancies and probability distribution function (PDF) disparities between real and generated data; 3) Conducting a comprehensive evaluation of our approach across diverse stock exchanges, showcasing performance enhancements compared to benchmark models. The subsequent sections of this paper are organized as follows: Sec-tion 2 reviews relevant statistical and GAN models used for generat-ing time series data; Section 3 defines the time series signature, the visibility graph, and the GNN model; Section 4 precisely defines the problem under consideration; Section 5 elucidates the architecture of our proposed model; Section 6 provides a comparative analysis of our model against benchmark models; and finally, Section 7 con-cludes the paper. 
+
+## 2 Related Works 
+
+The generation of financial time series data is a crucial task due to their limited availability. While daily data is openly accessible, high-frequency data are typically proprietary. However, relying solely on accessible daily data might be insufficient, leading to potential biases and overfitting in models [2]. Generating financial time series data can be accomplished through ei-ther model-based or data-driven methodologies. The former involves the utilization of statistical and mathematical models. Prominent sta-tistical techniques encompass the Autoregressive Integrated Mov-ing Average (ARIMA), Autoregressive Conditional Heteroskedas-ticity (ARCH), and Generalized AutoRegressive Conditional Het-eroskedasticity (GARCH) models [7]. These models vary in their treatment of volatility; ARIMA assumes constant volatility, while others permit varying variances. Notably, ARCH and GARCH have been employed to model and forecast the volatility of stock ex-changes such as Nasdaq and Dow Jones [15]. Mathematical mod-els predominantly rely on geometric Brownian motion. The Black-Scholes-Merton model [4] utilizes geometric Brownian motion for studying asset price paths and pricing European options. [41] and [29] introduced discontinuity to capture fat-tailed distributions, and [22] modeled stochastic volatility. Conversely, data-driven approaches leverage observed data for pat-tern extraction. Monte Carlo simulations [54] and Bootstrapping [48] are common for generating stock prices and return distributions. Nonetheless, these methods inherit assumptions from the model-driven approaches, potentially affecting their results. Machine and deep learning models are also employed, with GANs [20] achieving success in various domains. SeqGAN [33] was introduced for the generation of sequential discrete time series, exemplified in domains like music and Speech-language. C-RNN-GAN [43] employed Re-current Neural Networks (RNNs) and bidirectional RNNs to generate music. TimeGAN [58] was developed to maintain temporal dynam-ics within time series data, as observed in domains like energy and stock prices. Concentrating exclusively on the generation of finan-cial time series, we have Quant GANs [56] that utilize Temporal Convolutional Networks (TCNs) for capturing long-term dependen-cies in the financial time series. The Restricted Boltzmann Machine (RBM) generates synthetic market data by utilizing stochastic binary activation units for the visible and hidden layers [28]. To enhance GAN performance, Wasserstein loss was introduced [13] in order to measure the distance between two probability distributions. The integration of GANs with the time series signature was proposed by [44], who introduced the Signature Wasserstein-1 metric (Sig-W1)as loss function. [14] extended Sig-W1 for multi-stock price gen-eration. DAT-CGAN [51] was proposed into the multi-period asset allocation problem. However, all these methods focus solely on the autoregressive nature of time series data when generating synthetic sequences, neglecting the geometric patterns. 
+
+## 3 Preliminaries 
+
+This section offers the mathematical underpinnings of the methodol-ogy. We begin by defining the path signature, followed by the visibil-ity graph algorithm used for the graphical representation of univari-ate time series. Lastly, we briefly outline the generic mathematical foundations of GNN, and GAN models. 
+
+## 3.1 Signature 
+
+The signature is a mathematical concept derived from the field of path theory, which provides a comprehensive and structured repre-sentation of the temporal evolution of a time series. In accordance with the notation presented in [44], for the sake of convenience, our discourse shall be limited to the space of continuous functions mapping from a compact time interval J := [ a, b ] to Rd with finite 
+
+p-variation and starting from the origin, denoted by Cp 
+
+> 0
+
+(J, Rd).Let T(( Rd)) := ⊕∞
+
+> k=0
+
+(Rd)⊗k be a tensor algebra space. This space encapsulates the signatures of Rd-valued paths, allowing for their comprehensive representation. Moreover, let S = {s1, s 2, . . . , s T }
+
+denote a discrete time series. Subsequently, it becomes necessary to convert the time series into a continuous path using either the lead-lag transformation or the time-join transformation method [35]. Let 
+
+L denote the continuous path derived through the lead-lag transfor-mation, which is employed within our model. Within this context, the signature S and the truncated signature at level M , denoted as SM ,can be defined as follows: 
+
+Definition 1 (Signature and Truncated Signature) . Let L ∈
+
+Cp 
+
+> 0
+
+(J, Rd) be a path. The signature S of the path L is defined as: 
+
+S = (1 , L 1 
+
+> J
+
+, . . . , L kJ , . . . ) ∈ T( Rd) , (1) where LkJ = R    
+
+> t1<t 2<...t k,t 1,...t k∈J
+
+dL t1 ⊗ · · · ⊗ dL tk are called iterated integrals. The truncated signature of degree M is defined as: 
+
+SM = (1 , L 1 
+
+> J
+
+, . . . , L MJ ) . (2) The signature of a path offers a hierarchical interpretation: lower-order components capture the general path attributes, while higher-order terms unravel intricate local characteristics. Notably, the signa-ture is invariant to reparameterization, preserving the integral values despite transformations at different time instances. It is also transla-tion invariant and adheres to concatenation properties [9]. The trun-cated signature retains the first dM +1 −1 
+
+> d−1
+
+iterated integrals, with M
+
+representing the truncation degree, and d the dimension of the path. The factorial decay of the neglected iterated integrals ensures that minimal information loss occurs in truncating the signature S [34]. Given two stochastic processes, denoted as A and B, defined on a probability space (Ω , P, F), suppose that equation (1) is satisfied al-most surely for both A and B. Additionally, assume that the expected values of S(A) and S(B) are finite. We have the following theorem [37]: 
+
+Theorem 1 (Expected Signature) . Let A and B be two C10 (J, Rd)-valued random variables. If E[S(A)] = E[S(B)] , and E[S(A)] has infinite radius of convergence, then A d
+
+= B, i.e., A and B are equal in distribution. 
+
+While a path’s signature uniquely defines its trajectory [39], the expected signatures uniquely ascertain the paths’ distributions, akin to the role of the moment generating function [11]. For further comprehensive definitions and rigorous formulations, we refer to [36, 10, 35]. 
+
+## 3.2 Network Theory and Visibility Graph 
+
+Let G = ( V, E ) be a graph, where V = {v1, . . . , v n} represents the set of nodes, and E ⊆ V × V constitutes the set of edges. The associated graph G’s adjacency matrix A is an n × n matrix whose entries are 1 or 0, indicating whether nodes u and v are connected by an edge, i.e., A(u, v ) = 1 if and only if (u, v ) ∈ E.In this study, we establish a dynamic graph through a snapshot-based representation [55]. A dynamic graph constitutes a sequence of static graph snapshots in discrete time, incorporating a set T =
+
+{t1, t 2, . . . , t T } encompassing T = |T | time steps, i.e., G =
+
+{Gti }Ti=1 , where Gti = ( Vti , E ti ) is the snapshot taken at time 
+
+ti.We use the visibility graph algorithm [31] to generate a graph from a univariate time series, which establishes connections be-tween data points if there exists a clear line of sight between them. This approach involves depicting time series values as vertical bins, with edges formed between each bar and the visible bars from the top, devoid of obstructions. Each data point becomes a node, while edges represent visibility connections. Given a univariate time se-ries S = {s1, s 2, . . . , s T } and associated discrete time stamps T =
+
+{t1, t 2, . . . , t T }, the visibility criterion is defined as follows: any two data points (si, t i) and (sj , t j ) link in the graph if every other data point (sk , t k ) in a suitable set satisfies: sk < s j + ( sj − si) tj −tk  
+
+> tj−ti
+
+.In time series data, the visibility graph approach captures non-linear dependencies and patterns [31]. Furthermore, despite affine trans-formations, the resulting time series-based graph stays connected and invariant [50]. This approach allows one to create either undi-rected or directed graphs starting from a time series. For the former,  
+
+> Figure 1. Visibility graph algorithm applied to the Standard and Poor’s 500 closing price from 2017/12/12 to 2018/05/07.
+
+the visibility condition considers all potential (si, t i), i = 1 , . . . , T 
+
+value combinations. In contrast, for directed graphs, the visibility condition is applied under the “from left to right” principle, where 
+
+(si, t i) is compared to values with time stamps greater than ti, i.e., 
+
+∀(sj , t j ), j = i + 1 , . . . , T .Figure 1 demonstrates the application of the visibility graph algo-rithm to a univariate time series, computed using the “Time series to visibility graphs” (ts2vg) Python package [3]. The first plot il-lustrates closing price trajectories, the middle plot depicts the vis-ibility condition and link formation, and the final plot presents the corresponding undirected graph. The visibility graph transformation preserves structural properties of the time series: periodic time series are transformed into regular graphs, random time series correspond to random graphs, and fractal time series are represented as small-world graphs [31]. Hence, the visibility graph serves as an effective means for representing non-stationary time series, ensuring that no information pertaining to temporal aspects is lost in the process, and capturing the inherent patterns and trends present in a time series, such as peaks, valleys, and overall trends. 
+
+## 3.3 Graph Neural Networks 
+
+Graph Neural Networks (GNNs) are sophisticated deep learning models engineered to derive node embeddings for graphs. Built upon a message-passing paradigm, GNNs facilitate the dissemination of information among graph nodes [18, 57]. Following the formalism presented in [59], we establish the l-th layer within a GNN as fol-lows: 
+
+m(l) 
+
+> u→v
+
+= MSG (l)(h(l−1)  
+
+> u
+
+, h (l−1)  
+
+> v
+
+) ,h(l) 
+
+> v
+
+= AGG (l)(m(l) 
+
+> u→v
+
+|u ∈ N (v), h v (l−1) ) . (3) Here, h(l) 
+
+> v
+
+denotes the embedding of node v, initialized with the fea-ture value of node v as h(0)  
+
+> v
+
+= xv . The function MSG (·) represents the message function, yielding the message embedding m(l) at the 
+
+l-th layer. N (v) signifies the set of neighboring nodes for node v,and AGG (·) symbolizes the aggregation function, elaborated later. The role of the message function is to facilitate a seamless exchange of information among nodes and their neighbors. A prevalent prac-tice involves employing a linear function to compute the message content. Conversely, the aggregation function amalgamates received messages from neighboring nodes, fashioning a coherent representa-tion for the recipient node. The aggregation function needs to remain permutation invariant and generate consistent node representations. Common aggregation functions encompass mean, sum, and maxi-mum functions. The label “ l-th layer” encapsulates information orig-inating from nodes situated at a distance of l hops away, providing information diffusion across successive GNN layers. 3.4 Generative Adversarial Networks 
+
+Generative Adversarial Networks (GANs) [20] represent a class of machine learning models structured around a strategic game between two agents, the generator and the discriminator. The fundamental ob-jective of a GAN is to achieve a probability distribution for the gen-erative model that closely approximates the distribution of the actual data x, i.e., Pmodel (˜x) ∼ Pdata (x) [20]. In this study, the generator, denoted as Gen , takes random noise 
+
+z, and an adjacency matrix A as input and leverages a vector of learnable parameters θ to generate ˜x, yielding ˜x = Gen (z, θ, A ).Here, Gen (·) is the generator function, while A is the adjacency ma-trix associated to the graph representation of the true data, and z
+
+originates from a probability distribution denoted as Pz(z) — typ-ically assumed to be a normal or uniform distribution. Conversely, the discriminator, labeled as Dis , seeks to distinguish between gen-uine data and synthetic data. Specifically, the discriminator takes real data and the adjacency matrix A as input, and produces the proba-bility of it being authentic with a vector of learnable parameters η,i.e., Preal (x) = Dis (x, η, A ), where Dis (·) represents the discrimi-nator function. Both networks endeavor to minimize their respective costs, participating in a zero-sum game. Consequently, the training of the GAN model follows a minimizing-maximizing approach for the value function V (Gen , Dis ):
+
+min  
+
+> Gen
+
+max  
+
+> Dis
+
+V (Gen , Dis ) = Ex∼Pdata (x)[log Dis (x, A )] + Ez∼Pz(z)[log(1 − Dis (Gen (z, A ), A ))] .
+
+This game between the generator and the discriminator leads to the iterative improvement of the generator’s capability to produce real-istic data and the discriminator’s ability to distinguish between real and synthetic data. It is noteworthy that the training of the discrimi-nator’s and generator’s parameters, denoted as η and θ respectively, is accomplished by alternating the computation of their gradients and updating their corresponding parameters. 
+
+## 4 Problem Formulation 
+
+Consider a univariate time series S = {s1, s 2, . . . , s T } extending up to time T . The objective of this research is to determine a function 
+
+f (·), given a random variable Z and an adjacency matrix A associ-ated to the graph-based representation G of the original time series S,that is able to generate synthetic data S′. The synthetic data should closely resemble the statistical characteristics, temporal dependen-cies, and geometric patterns observed in the original time series S.Therefore, we want to find that {s1, . . . , s T } d
+
+≃ { s′
+
+> 1
+
+, . . . s ′ 
+
+> T
+
+}, where 
+
+S′ = f (Z, A ).Hence, in this study, our objective is to train a GAN model to enable the generator component, represented by Gen (·), to generate syn-thetic time series data that exhibits as much as possible the statistical properties of the target time series S at time t. This generation is ac-complished using: a noise random variable z sampled from the prob-ability distribution Pz , the vector of parameters θ subject to training, and the adjacency matrix At associated to the graph Gt correspond-ing to the temporal series S evaluated at time t, with t ≤ T . The model is formulated as follows: 
+
+S′ 
+
+> t
+
+= Gen (Zt, θ, A t) d
+
+≃ St .
+
+Here, At signifies the graphical representation of the time series S,incorporating the most recent observation and past m observations until time t. Consequently, the set of observations can be expressed as St = {st−m, . . . , s t}, comprising m + 1 elements. The random noise Zt is constructed by sampling m+1 observations from a Gaus-sian distribution with mean and variance of 0 and 1, respectively. This procedure is repeated F times, and yields a matrix of noise ran-dom vectors, denoted as Zt ∈ R ˜T ×F ∼ N (0 , 1) , where ˜T conve-niently represents m + 1 .
+
+## 5 Proposed Sig-Graph GAN Framework 
+
+Figure 2 illustrates the architecture of the proposed model. In align-ment with the principles of the Quant GAN model [56], we adopt an identical network configuration for both the generator and the discriminator, denoted as Dis (·). The initialization involves the con-struction of the time series St = {st−m, . . . , s t} and the random noise matrix Zt ∈ R ˜T ×F . Subsequently, the corresponding graph 
+
+Gt associated with the time series is formed utilizing the visibil-ity graph algorithm. The choice between an undirected or directed graph is considered a hyperparameter to optimize. Regardless, the adjacency matrix At associated to the graph Gt maintains dimen-sions of ˜T × ˜T , with each node corresponding to a specific time observation. The generator/discriminator functions are structured as follows: 
+
+Dis (St, η, A t) , Gen (Zt, θ, A t) .
+
+Here, η represents the vector of learnable parameters for the discrimi-nator, and St ∈ R ˜T ×1. The network structure, visualized in Figure 3, combines a Geometric Block, a Recurrent Block, and a Feedforward Block, for fortifying the discriminator and generator components. For simplicity, we denote the input for the generator and discrimi-nator agents as Zt and St, respectively, which can be represented as 
+
+Xt ∈ R ˜T ×F , where F is set to 1 for the discriminator. 
+
+## 5.1 Recurrent Block 
+
+The Recurrent Block takes the feature matrix Xt ∈ R ˜T ×F as input and produces the output ˜XT IM E t ∈ R ˜T ×F . Its objective is to analyze and leverage temporal patterns within the data. Algorithm 1 outlines the operations of this component. 
+
+Algorithm 1 Recurrent Block 
+
+Input: feature matrix Xt
+
+Output: temporal pattern ˜XT IM E t
+
+R(0)  
+
+> t
+
+= Xt
+
+for l = 1 to L do 
+
+R(l) 
+
+> t
+
+= LSTM (l)(R(l−1)  
+
+> t
+
+)
+
+end for 
+
+˜XT IM E t = FC (R(L) 
+
+> t
+
+)
+
+The process involves initializing a hidden layer, denoted as R(0)  
+
+> t
+
+,with the feature matrix. Subsequently, based on the number of layers 
+
+L, the l-th hidden layer of a LSTM neural networks model - R(l) 
+
+> t
+
+=
+
+LSTM (l)(R(l−1)  
+
+> t
+
+) - is applied. The LSTM model is consider in this research for its ability to capture temporal and long-term patterns. Finally, to obtain the output of the Recurrent Block, a fully connected layer denoted as FC (·), is applied, defined by: 
+
+˜XT IM E t = WtR(L) 
+
+> t
+
++ bt , (4) where Wt is the weight matrix, b is a bias vector, and ˜XT IM E t ∈
+
+R ˜T ×F as output, where F equates to 1 for the discriminator. Figure 2. Proposed Generative Adversarial Networks Architecture. 
+
+Figure 3. Network structure for the Discriminator and Generator Agents. 
+
+## 5.2 Geometric Block 
+
+The Geometric Block takes as input the adjacency matrix At ∈
+
+R ˜T × ˜T , derived using the visibility graph on the set St of the last 
+
+m observations of the original time series S, and the feature matrix 
+
+Xt ∈ R ˜T ×F . The output of this block represents the geometric pat-terns and is denoted as ˜XGRAP H t ∈ R ˜T ×F . Algorithm 2 outlines the operations of this component. 
+
+Algorithm 2 Geometric Block 
+
+Input: adjacency matrix At, feature matrix Xt
+
+Output: geometric pattern ˜XGRAP H t
+
+H(0)  
+
+> t
+
+= Xt
+
+for l = 1 to L′
+
+do 
+
+H(l) 
+
+> t
+
+= GNN (l)(H(l−1)  
+
+> t
+
+)
+
+end for 
+
+˜X = LSTM (H(L′ ) 
+
+> t
+
+)˜XGRAP H t = FC ( ˜X)
+
+The process begins by initializing the hidden layer, denoted as 
+
+H(0)  
+
+> t
+
+, with the feature matrix. Depending on the number of lay-ers L′
+
+, the l-th layer of a GNN is applied, denoted as H(l) 
+
+> t
+
+=
+
+GNN (l)(H(l−1)  
+
+> t
+
+). This can be defined using the message-passing paradigm defined in Equation (3). Note that changing the definition of the message and aggregation function leads to different types of GNN models. In this research, we decide to consider only the Graph Convolutional Networks (GCNs) [27], and the l-th layer can be de-fined as: 
+
+H(l) 
+
+> t
+
+= ρ
+
+ ˜D−1/2 
+
+> t
+
+˜At ˜D−1/2 
+
+> t
+
+H(l−1)  
+
+> t
+
+Θ
+
+
+
+,
+
+where ρ(·) is the hyperbolic tangent activation function, Θ is the weight matrix, ˜At = At + I, I is the identity matrix, ˜Dt is the degree matrix computed on ˜At. Before obtaining the output of the Geometric Block, we pass H(L′ ) 
+
+> t
+
+through an LSTM layer to process the spatial patterns uncovered by the GNN layers, and through a FC layer as defined in Equation (4). 
+
+## 5.3 Feedforward Block 
+
+The inputs of the Feedforward Block are the temporal patterns 
+
+˜XT IM E t ∈ R ˜T ×F , obtained from the Recurrent Block, the geomet-ric patterns ˜XGRAP H t ∈ R ˜T ×F , computed by the Geometric Block, and the feature matrix Xt ∈ R ˜T ×F . Algorithm 3 outlines the opera-tions of this component. 
+
+Algorithm 3 Feedforward Block 
+
+Input: temporal pattern ˜XT IM E t , geometric pattern ˜XGRAP H t ,feature matrix Xt
+
+Output: prediction ˆS∗
+
+> t
+
+˜XT OT t = ˜XT IM E t + ˜XGRAP H t
+
+if Skip Layer True then 
+
+˜XT OT t = CONCAT ( ˜XT OT t , X t)
+
+end if 
+
+Y (0)  
+
+> t
+
+= ˜XT OT t
+
+for l = 1 to L′′ 
+
+do 
+
+Y (l) 
+
+> t
+
+= ϕ(FC (l)(Y (l−1)  
+
+> t
+
+)) 
+
+end for 
+
+ˆS∗ 
+
+> t
+
+= Y (L′′ )
+
+> t
+
+The process begins by summing up the two patterns, and the result is denoted as ˜XT OT t . Then, if a skip layer is considered, ˜XT OT t is concatenated with the feature matrix Xt. Finally, the hidden layer, denoted as Y (0)  
+
+> t
+
+is initialized with ˜XT OT t . Before obtaining the pre-diction vector, denoted as ˆS∗ 
+
+> t
+
+∈ R ˜T ×1, the l-th layer of a fully con-nected model is applied, with the number of layers denoted as L′′ 
+
+. In this research, we decided to consider three, i.e. L′′ 
+
+= 3 , fully con-nected layers, as defined in Equation (4), with 128 , 64 , and 1 units. Intermediate to these layers lies the Parametric Rectified Linear Unit (PReLU) [21] activation function, corresponding to ϕ(·) in the algo-rithm 3, defined as f (x) = max(0 , x )+ α min(0 , x ) with α = 0 .25 ,serving to capture final non-linear patterns. 
+
+## 5.4 Loss Functions 
+
+Prior to computing the loss function, we subject the output of the discriminator and generator agent ˆS∗ 
+
+> t
+
+, - wherein ∗ is replaced with “real ” for the discriminator and “ fake ” for the generator - , to the lead-lag transformation, denoted with L(·). To this end, we apply the truncated signature, as defined in Equation (2), with a truncation level degree set at 5. In further pursuit of comprehensive insight, we also perform a cumulative summation on ˆS∗ 
+
+> t
+
+, subsequently leading to the computation of a cumulative truncated signature [10], which retains path dependencies, and mirroring the temporal progression of information accumulation. We compute the signature using the “iisignature” Python packages [26]. The two custom loss functions adopted are Mean Square Error (MSE) and Kullback-Leibler Divergence (KLD). Denoting the trun-cated signature as SM (·) and the cumulative truncated signature as 
+
+SCM (·), the two loss functions are defined as follows: MSE ( ˆSfake  
+
+> t
+
+, ˆSreal  
+
+> t
+
+) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+
+
+SM (L( ˆSfake  
+
+> t
+
+)) i − S M (L( ˆSreal  
+
+> t
+
+)) i
+
+2
+
++ 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+
+
+SCM (L( ˆSfake  
+
+> t
+
+)) i − S CM (L( ˆSreal  
+
+> t
+
+)) i
+
+2
+
+KLD ( ˆSfake  
+
+> t
+
+, ˆSreal  
+
+> t
+
+) = DKL 
+
+
+
+SM (L( ˆSfake  
+
+> t
+
+)) ∥S M (L( ˆSreal  
+
+> t
+
+))) 
+
+
+
++ DKL 
+
+
+
+SCM (L( ˆSfake  
+
+> t
+
+)) ∥S CM (L( ˆSreal  
+
+> t
+
+))) 
+
+
+
+, (5) where N is the number of elements inside the SM (·) and SCM (·),
+
+DKL (·∥· ) is the Kullback–Leibler divergence [30], and we apply the softmax function to derive probabilities from SM (·) and SCM (·). We opt for conducting two distinct simulations for the model contingent on the chosen loss function. Finally, the choice of LSTM as the Recurrent Block is driven by our intention to emphasize the importance of geometric patterns in time series analysis. We believe that a convincing approach to illustrate this significance is to integrate LSTM, one of the simplest recurrent neural network models in terms of complexity and architecture, with the GNN. Our goal is to show that this combination can outperform baseline models in generating synthetic time series data, even when the baseline models use more sophisticated time series models, such as the TCN used in the QuantGAN model [56]. 
+
+## 6 Experimental Evaluation 
+
+In this section, we outline the approach used to compare the Sig-Graph GAN model with the baseline models. Our evaluation com-mences by providing a comprehensive overview of the dataset used, delineating the steps encompassing data pre-processing. Sub-sequently, we introduce the array of evaluation metrics adopted to facilitate rigorous comparisons. Following this, we proceed to de-fine the hyperparameters intrinsic to both the primary model and the baseline models. In the course of our analysis, the computations were executed uti-lizing the Nvidia GPU A100-SXM4-40GB. The optimization of hy-perparameters was undertaken through the utilization of the Optuna Python package [1]. Lastly, we establish the baseline models, which encompass the Quant GAN model 2, the GARCH (1 , 1) model [5], as well as the Monte-Carlo simulation for the Black and Scholes model. 
+
+## 6.1 Dataset and Pre-processing 
+
+For the scope of our analysis, we have selected three stock exchanges of considerable importance: the Standard & Poor’s 500 (S&P 500),                                  
+
+> 2Python implementation available at https://github.com/ICascha/ QuantGANs-replication.
+> Table 1. Definition of the hyperparameters. Loss BS LR # Neurons # Layers Dropout Seq. Len. Dir MSE 30 0.000797 [190 ,120 ,190] [3 ,7] 0.31 100 None KLD 30 0.000221 [110 ,70 ,190] [2 ,4] 0.35 100 None
+
+the Nasdaq Composite Index (IXIC), and the Nikkei 225 (N225). We have collected the closing prices of these stock exchanges span-ning the interval from January 4, 2010, to December 30, 2019. Each dataset consists of approximately 2515 observations. Before subjecting the dataset to normalization processes to achieve a mean of zero and a variance of one, a preliminary step involves computing logarithmic returns denoted as rt = log( st) − log( st−1).The choice of logarithm returns derives from their log-normal distri-bution characteristics. Subsequently, to induce a distribution with fat tails, we adopt the inverse Lambert-W probability transform [19] as outlined in [56]. 
+
+## 6.2 Evaluation Metrics 
+
+Empirical observations in stock returns, known as stylized facts [12], demonstrated certain characteristic properties. These include fat-tailed distributions, deviating from normal distributions, as well as volatility clustering, indicating alternating periods of high and low price-change activity in historical asset returns. The presence of a leverage effect suggests a negative correlation between volatility and returns. To facilitate meaningful comparisons among different models, we employ different evaluation metrics. Notably, we utilize the lever-age effect score as defined in [56], and a distribution-based metric. In particular, we consider the Earth Mover’s Distance (EMD), also known as the Wasserstein 1-distance, as elaborated in [53, 47]. This metric quantifies the minimal cost required to transform the distribu-tion of real data into that of generated data. Furthermore, we calculate the Root Mean Square Error (RMSE) between the signatures of the real and generated data. 
+
+## 6.3 Configurations of the Models 
+
+To train our model effectively, we must define hyperparameters. These include the batch size (BS), learning rate (LR) for optimiza-tion, number of neurons (# Neurons) for the recurrent and geomet-ric blocks - outlined in Section 4 -, number of layers (# Layers) in GNN and LSTM, dropout rate, direction (Dir) for applying the vis-ibility graph algorithm, and sequence length (Seq. Len.) for graph derivation. We utilize RMSProp [24] as our optimization algorithm. Depending on the loss function - defined in Equation (5) -, we con-duct two hyperparameter optimizations. We set the number of train-ing epochs to a fixed value of 100. Detailed results regarding the outcomes of the hyperparameter optimization process are shown in Table 1. The numbers of neurons respectively correspond to the GNN and LSTM within the geometric block, and the LSTM within the re-current block, while the numbers of layers respectively correspond to the GNN and LSTM layers within the recurrent block. Finally, we consider undirected graphs. For the baseline model, we adopt the parameters outlined in [56] for Quant GAN. For the Monte-Carlo simulation of the geometric Brow-nian motion, which plays a significant role in financial mathematics for option pricing and stock price simulation. The mean and variance were determined by maximizing the log-likelihood function [23]. Table 2. Results for the real and the generated data for the Nasdaq (IXIC), Nikkei 225 (N 225 ), and Standard & Poor’s 500 (S&P 500 ) datasets. To facilitate results comparison, the values are multiplied by a factor of 100 . In brackets, in the Sig-Graph GAN model is reported the type of loss function used. Evaluation metric QuantGAN Sig-Graph GAN(MSE) Sig-Graph GAN(KLD) MC GARCH(1,1) IXIC S&P 500 N225 IXIC S&P 500 N225 IXIC S& P500 N225 IXIC S&P 500 N225 IXIC S& P500 N225 EMD(1) 0.1323 0.1483 0.1759 0.1649 0.1274 0.1809 0.1618 0.1472 0.1611 64 .1325 50 .3969 40 .1514 79 .6734 68 .8657 101 .6870                                                                                                                         
+
+> EMD(5) 0.4051 0.3681 0.4341 0.4949 0.3144 0.4232 0.3931 0.2816 0.2066 321 .0774 252 .3970 203 .1317 175 .3732 151 .0271 223 .6870
+> EMD(20) 1.4059 1.0954 1.0522 1.3431 0.8679 1.4692 1.3247 0.9438 0.6767 1284 .3564 1009 .8142 815 .9213 354 .0737 305 .4143 450 .6941
+> EMD(100) 5.8784 4.2506 4.8196 5.4952 4.0865 4.1957 5.6074 4.3141 3.3477 6400 .7781 5034 .7390 4077 .6804 799 .9104 695 .6773 1016 .9772
+> Sig-RMSE(1) 5.4381 4.1200 8.1107 5.4062 4.0911 8.0068 5.3985 4.0782 8.0583 5.3843 4.0809 8.0334 10490 .6999 5618 .0861 23154 .0991
+> Sig-RMSE(5) 5.6048 4.2529 7.7411 5.5681 4.2228 7.6333 5.5703 4.2117 7.6854 5.5528 4.2123 7.6637 12185 .4361 5087 .6136 25530 .0890
+> Sig-RMSE(20) 5.4281 3.9921 7.7616 5.3587 3.9763 7.6707 5.3450 3.9288 7.7020 5.4102 3.9120 7.6722 15932 .3498 6263 .2784 24719 .1718
+> Sig-RMSE(100) 5.5419 4.6748 8.4680 5.4419 4.6810 8.4262 5.4224 4.6422 8.4639 5.3526 4.5633 8.3349 22124 .6168 6461 .6048 54772 .4263
+> Leverage Effect 3.8110 3.8231 3.5620 4.8641 3.9510 4.7748 3.9694 3.6354 3.0600 4.1356 4.125 3.5627 3.8905 3.9218 3.4887
+
+## 6.4 Numerical Results 
+
+Data generation is conducted at different temporal intervals: daily, weekly, monthly, and long-term, corresponding to 1, 5, 20 , and 100 
+
+days, respectively. Results for both real and generated data for the various datasets are presented in Table 2. Optimal results are high-lighted in bold. Our proposed model consistently outperforms the baseline models in terms of the EMD and leverage effect metric. The choice between KLD and MSE loss depends on the dataset, favoring KLD for N225 and IXIC datasets, while MSE loss for S&P 500 . However, the Quant GAN model excels for the IXIC dataset in both one-day EMD and the leverage effect metric. The Sig-MSE metric outcomes show a balance between our model and the Monte Carlo simulation for ge-ometric Brownian motion. This balance is due to the Monte Carlo approach solely relying on the mean and standard deviation for stock price trajectory simulation. Figure 4 shows the cumulative log-returns distributions from the 
+
+Figure 4. Sig-Graph GAN (KLD) Cumulative Returns Distribution of the N225 for the historical returns (blue) and for the synthetic returns (orange). 
+
+Sig-Graph GAN model using the KLD loss on the N 225 dataset. The model effectively replicates the distributions for 5 and 10 days, showing similar results. For the 1-day scenario, it captures the tail characteristics but not the high portion of the curve. 
+
+## 6.5 Ablation Study 
+
+To evaluate the importance of the different components in the Sig-Graph GAN model, we train the model by removing one compo-nent at a time while keeping all others fixed. The main components considered in the proposed model are the Geometric Block, Recur-rent Block, Feedforward Block, skip layer, and dropout rate. Figure 5 presents the results of this ablation study, for the proposed model trained with the two custom loss functions on the N 225 and S&P 500 
+
+datasets, depicted in the first and second figures, respectively. Due to space limitations, we evaluated the performance using only the (widely adopted) EMD evaluation metric, denoting models obtained by removing specific components, for exanple, as “w/o Geometric Block”. Lower values and smaller box sizes indicate better results. 
+
+Figure 5. An ablation study was conducted for the Sig-Graph GAN trained using the two custom loss functions. The first plot refers to the Sig-Graph GAN (KLD) trained on the Nikkei 225 data, while the second plot refers to the Sig-Graph GAN (MSE) trained on the S&P 500 .
+
+We observe that the importance of the components varies depend-ing on the type of loss function used to train the model. Specifically, we find that without the Geometric Block, the model performs worse with both loss functions, with the impact of the Geometric Block more evident with the KLD loss. It is interesting to note that the contribution of the dropout rate, skip layer, and Feedforward Block remain consistent across both loss functions, with the impact and im-portance of this component more evident when the MSE loss is used. 
+
+## 7 Conclusion 
+
+In this study, we introduce a novel approach that combines GNN, LSTM networks, and Signature transformation to construct a GAN model for the generation of synthetic stock log-returns. Our method-ology leverages the inherent geometric patterns present within the time series data, leading to enhanced capabilities in the synthesis of artificial data. Through comprehensive evaluations conducted on multiple datasets: IXIC, N 225 , and S&P 500 . We demonstrate that our proposed model consistently surpasses baseline models, as indi-cated by improved performance in metrics such as EMD and lever-age effect. While the Sig-MSE metric does not always yield the best results, our model showcases competitive outcomes. Future works could involve extending Sig-Graph GAN model to tackle other time series generation challenges, as well as assessing its potential in enhancing the performance of trading strategies based on synthetic data. Furthermore, future research endeavors will also explore the possibility of replacing the LSTM within the Recurrent Block with more sophisticated time series models, such as Transformers. 
+
+## References 
+
+[1] T. Akiba, S. Sano, T. Yanase, T. Ohta, and M. Koyama. Optuna: A next-generation hyperparameter optimization framework. In Proceed-ings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining , pages 2623–2631, 2019. [2] S. A. Assefa, D. Dervovic, M. Mahfouz, R. E. Tillman, P. Reddy, and M. Veloso. Generating synthetic data in finance: opportunities, chal-lenges and pitfalls. In Proceedings of the First ACM International Con-ference on AI in Finance , pages 1–8, 2020. [3] C. Bergillos. Ts2vg: Time series to visibility graphs. https://pypi.org/ project/ts2vg/, 2020. Accessed: 2028-08-09. [4] F. Black and M. Scholes. The pricing of options and corporate liabili-ties. Journal of Political Economy , 81(3):637–654, 1973. [5] T. Bollerslev. Generalized autoregressive conditional heteroskedastic-ity. Journal of Econometrics , 31(3):307–327, 1986. [6] G. E. Box, G. M. Jenkins, G. C. Reinsel, and G. M. Ljung. Time Series Analysis: Forecasting and Control . John Wiley & Sons, 5 edition, 2015. [7] P. J. Brockwell and R. A. Davis. Introduction to Time Series and Fore-casting . Springer, 2002. [8] R. Buff. Uncertain Volatility Models: Theory and Application . Springer Science & Business Media, 2002. [9] K.-T. Chen. Integration of paths – a faithful representation of paths by noncommutative formal power series. Transactions of the American Mathematical Society , 89(2):395–407, 1958. [10] I. Chevyrev and A. Kormilitzin. A primer on the signature method in machine learning, 2016. [11] I. Chevyrev and T. Lyons. Characteristic functions of measures on geo-metric rough paths. The Annals of Probability , 44(6):4049–4082, 2016. [12] R. Cont. Empirical properties of asset returns: Stylized facts and statis-tical issues. Quantitative Finance , 1(2):223, 2001. [13] F. De Meer Pardo. Enriching financial datasets with generative adver-sarial networks. MS thesis, Delft University of Technology, The Nether-lands , 2019. [14] F. De Meer Pardo, P. Schwendner, and M. Wunsch. Tackling the expo-nential scaling of signature-based generative adversarial networks for high-dimensional financial time-series generation. The Journal of Fi-nancial Data Science , 4(4):110–132, 2022. [15] R. F. Engle, S. M. Focardi, and F. J. Fabozzi. ARCH/GARCH models in applied financial econometrics. Encyclopedia of Financial Models ,2012. [16] C. J. Evertsz. Fractal geometry of financial time series. Fractals , 3(03): 609–616, 1995. [17] E. F. Fama. Efficient capital markets: A review of theory and empirical work. The Journal of Finance , 25(2):383–417, 1970. [18] J. Gilmer, S. S. Schoenholz, P. F. Riley, O. Vinyals, and G. E. Dahl. Neural message passing for quantum chemistry. In International Con-ference on Machine Learning , pages 1263–1272. PMLR, 2017. [19] G. M. Goerg. The Lambert way to Gaussianize heavy-tailed data with the inverse of Tukey’s h transformation as a special case. The Scientific World Journal , 2015, 2015. [20] I. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley, S. Ozair, A. Courville, and Y. Bengio. Generative adversarial networks. 
+
+Communications of the ACM , 63(11):139–144, 2020. [21] K. He, X. Zhang, S. Ren, and J. Sun. Delving deep into rectifiers: Surpassing human-level performance on imagenet classification. In 
+
+Proceedings of the IEEE international conference on computer vision ,pages 1026–1034, 2015. [22] S. L. Heston. A closed-form solution for options with stochastic volatil-ity with applications to bond and currency options. The Review of Fi-nancial Studies , 6(2):327–343, 1993. [23] Y. Hilpisch. Derivatives Analytics with Python: Data Analysis, Models, Simulation, Calibration and Hedging . John Wiley & Sons, 2015. [24] G. Hinton, N. Srivastava, and K. Swersky. Neural networks for machine learning: Lecture 6a – overview of mini-batch gradient descent. Tech-nical report, Dept. of Computer Science, University of Toronto, 2012. [25] S. Hochreiter and J. Schmidhuber. Long short-term memory. Neural Computation , 9(8):1735–1780, 1997. [26] P. Kidger and T. Lyons. Signatory: Differentiable computations of the signature and logsignature transforms, on both CPU and GPU, 2020. [27] T. N. Kipf and M. Welling. Semi-supervised classification with graph convolutional networks, 2016. [28] A. Kondratyev and C. Schwarz. The market generator. Available at SSRN 3384948 , 2019. [29] S. G. Kou. A jump-diffusion model for option pricing. Management Science , 48(8):1086–1101, 2002. [30] S. Kullback and R. A. Leibler. On information and sufficiency. The Annals of Mathematical Statistics , 22(1):79–86, 1951. [31] L. Lacasa, B. Luque, F. Ballesteros, J. Luque, and J. C. Nuno. From time series to complex networks: The visibility graph. Proceedings of the National Academy of Sciences , 105(13):4972–4975, 2008. [32] D. Lamberton and B. Lapeyre. Introduction to Stochastic Calculus Ap-plied to Finance . CRC press, 2011. [33] Y. Lantao, Z. Weinan, W. Jun, and Y. Yong. SeqGAN: Sequence gen-erative adversarial nets with policy gradient. In Proceedings of the 31st AAAI Conference on Artificial Intelligence (AAAI’17) , pages 2852– –2858, 2017. [34] M. Lemercier, C. Salvi, T. Damoulas, E. Bonilla, and T. Lyons. Dis-tribution regression for sequential data. In International Conference on Artificial Intelligence and Statistics , pages 3754–3762. PMLR, 2021. [35] D. Levin, T. Lyons, and H. Ni. Learning from the past, predicting the statistics for the future, learning an evolving system, 2013. [36] T. Lyons. Rough paths, signatures and the modelling of functions on streams, 2014. [37] T. Lyons and H. Ni. Expected signature of Brownian motion up to the first exit time from a bounded domain. The Annals of Probability , 43 (5):2729–2762, 2015. [38] T. Lyons, H. Ni, and H. Oberhauser. A feature set for streams and an application to high-frequency financial tick data. In Proceedings of the 2014 International Conference on Big Data Science and Computing ,pages 1–8, 2014. [39] T. J. Lyons. Differential equations driven by rough signals. Revista Matemática Iberoamericana , 14(2):215–310, 1998. [40] B. B. Mandelbrot. Fractals and Scaling in Finance: Discontinuity, Con-centration, Risk. Selecta volume E . Springer Science & Business Media, 2013. [41] R. C. Merton. Option pricing when underlying stock returns are discon-tinuous. Journal of Financial Economics , 3(1-2):125–144, 1976. [42] A. Meucci. Risk and Asset Allocation , volume 1. Springer, 2005. [43] O. Mogren. C-RNN-GAN: A continuous recurrent neural network with adversarial training. In Constructive Machine Learning Workshop (CML) at NIPS 2016 , page 1, 2016. [44] H. Ni, L. Szpruch, M. Wiese, S. Liao, and B. Xiao. Conditional sig-Wasserstein GANs for time series generation, 2020. [45] E. E. Peters. Fractal Market Analysis: Applying Chaos Theory to In-vestment and Economics , volume 24. John Wiley & Sons, 1994. [46] S. Resnick. A Probability Path . Springer, 2019. [47] Y. Rubner, C. Tomasi, and L. J. Guibas. The earth mover’s distance as a metric for image retrieval. International Journal of Computer Vision ,40:99–121, 2000. [48] E. Ruiz and L. Pascual. Bootstrapping financial time series. Journal of Economic Surveys , 16(3):271–300, 2002. [49] F. Scarselli, M. Gori, A. C. Tsoi, M. Hagenbuchner, and G. Monfar-dini. The graph neural network model. IEEE Transactions on Neural Networks , 20(1):61–80, 2008. [50] M. Stephen, C. Gu, and H. Yang. Visibility graph based time series analysis. PloS One , 10(11):e0143015, 2015. [51] H. Sun, Z. Deng, H. Chen, and D. C. Parkes. Decision-aware condi-tional GANs for time series data, 2023. [52] R. S. Tsay. Analysis of Financial Time Series . John Wiley & Sons, 2005. [53] C. Villani et al. Optimal Transport: Old and New , volume 338. Springer, 2009. [54] H. Wang. Monte Carlo Simulation with Applications to Finance . CRC Press, 2012. [55] Y. Wang, Y. Yuan, Y. Ma, and G. Wang. Time-dependent graphs: Defi-nitions, applications, and algorithms. Data Science and Engineering , 4: 352–366, 2019. [56] M. Wiese, R. Knobloch, R. Korn, and P. Kretschmer. Quant GANs: Deep generation of financial time series. Quantitative Finance , 20(9): 1419–1440, 2020. [57] K. Xu, C. Li, Y. Tian, T. Sonobe, K.-i. Kawarabayashi, and S. Jegelka. Representation learning on graphs with jumping knowledge networks. In International Conference on Machine Learning , pages 5453–5462. PMLR, 2018. [58] J. Yoon, D. Jarrett, and M. van der Schaar. Time-series generative adversarial networks. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, editors, Advances in Neural Information Processing Systems , volume 32. Curran Associates, Inc., 2019. [59] J. You, T. Du, and J. Leskovec. ROLAND: Graph learning framework for dynamic graphs. In Proceedings of the 28th ACM SIGKDD Con-ference on Knowledge Discovery and Data Mining , pages 2358–2366, 2022.

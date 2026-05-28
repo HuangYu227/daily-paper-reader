@@ -1,0 +1,2091 @@
+Title: SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets
+
+URL Source: https://arxiv.org/pdf/2605.16620v1
+
+Published Time: Tue, 19 May 2026 00:18:16 GMT
+
+Number of Pages: 34
+
+Markdown Content:
+# SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Alpar Turkoglu 1 Muralikrishnna G. Sethuraman 1 Faramarz Fekri 1
+
+## Abstract 
+
+Learning causal relationships between variables from data is a fundamental research area with many applications across disciplines. Most of the existing causal discovery algorithms rely on the assumptions that (i) the underlying system is acyclic, (ii) the exogenous noise variables are Gaussian, and (iii) that the intervention targets for the data generating experiments are known. While these assumptions simplify the analysis, they are violated in real-life systems. Most ex-isting methods that address these issues either assume the underlying model is linear or are constrained to operate in limited interventional settings. To that end, we propose SCOUT, a novel causal discovery framework to learn non-linear causal cyclic relationships from soft inter-ventional data with unknown targets. Our main approach maximizes the data log-likelihood to re-cover the graph structure, using two normalizing-flow architectures—contractive residual flows and neural spline flows. By conducting experiments on synthetic and real-world data, we show that SCOUT outperforms state-of-the-art methods in both causal graph and unknown target recovery across various interventional and noise settings. 
+
+## 1. Introduction 
+
+Identifying cause-effect relations among variables is a fun-damental challenge across many scientific fields. Causal models provide a mechanistic understanding of underlying systems, enabling us to predict how they behave under pre-viously unseen perturbations. Typically, causal interactions are encoded as a directed graph (DG), reducing the problem 
+
+> 1
+
+School of Electrical and Computer Engineering, Georgia Institute of Technology. Correspondence to: Alpar Turkoglu 
+
+<aturkoglu3@gatech.edu >, Muralikrishnna G. Sethuraman <mu-ralikgs@gatech.edu >.
+
+Proceedings of the 43 rd International Conference on Machine Learning , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s). 
+
+of recovering causal effects to identifying the structure of this graph. Causal discovery methods can be broadly categorized into three classes: (i) constraint-based, (ii) score-based, and (iii) hybrid methods. Constraint-based methods, such as the PC algorithm (Spirtes et al., 2001; Triantafillou & Tsamardinos, 2015; Heinze-Deml et al., 2018), exploit the conditional independence relations implied by the underlying causal graph and aim to recover a graph that is consistent with the observed independencies. These methods typically suf-fer from scalability issues, as they require testing a large number of conditional independence relations, which grows exponentially with the number of variables in the graph. 
+
+Score-based methods, such as GES (Meek, 1997; Hauser & B ¨uhlmann, 2012), instead formulate causal discovery as an optimization problem, seeking to maximize a penalized score function—such as the Bayesian Information Crite-rion (BIC)—over the space of candidate graphs. Since the number of possible graphs grows super-exponentially with the number of nodes, these methods generally rely on greedy or heuristic search strategies to remain computation-ally tractable. A major recent breakthrough was introduced by Zheng et al. (2018), who proposed a smooth character-ization of the acyclicity constraint, enabling optimization over continuous adjacency matrices while restricting the solution to directed acyclic graphs (DAGs). This idea has inspired numerous extensions (Yu et al., 2019; Ng et al., 2020; Ng et al.; Zheng et al., 2020; Lee et al., 2019; Brouil-lard et al., 2020) that cast causal discovery as a continuous optimization problem under various modeling assumptions and constraints. Finally, hybrid methods (Tsamardinos et al., 2006; Solus et al., 2017; Wang et al., 2017) combine ele-ments of both constraint-based and score-based approaches, typically by incorporating conditional independence infor-mation into a scoring framework or by using independence tests to guide and prune the search over graph structures. With a few notable exceptions (Hyttinen et al., 2012; Richardson, 1996; Mooij & Heskes, 2013; Bongers et al., 2021), most existing causal discovery methods assume that the underlying causal graph is acyclic and operate purely in the observational regime. While these assumptions sub-stantially simplify the search space and facilitate theoret-1
+
+> arXiv:2605.16620v1 [cs.LG] 15 May 2026 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets
+
+ical analysis, they are often unrealistic in real-world sys-tems, where feedback mechanisms are common (Sachs et al., 2005; Freimer et al., 2022). Moreover, enforcing acyclicity typically increases the computational complexity of both optimization- and search-based procedures. Recent advances in experimental sciences, particularly in biology, have enabled the collection of large-scale inter-ventional datasets. For instance, technological develop-ments in biological assays building upon CRISPR/Cas9 and single-cell RNA sequencing (Dixit et al., 2016) now make it possible to probe a large number of interventions in gene regulatory networks. This, in turn, creates a growing need for causal discovery algorithms that can effectively leverage multiple and heterogeneous interventional contexts. How-ever, even recent works on cyclic causal discovery fall short of full generality, as they typically rely on restrictive assump-tions such as linearity (Hyttinen et al., 2012; Rothenh ¨ausler et al., 2015) or specific noise models (e.g., Gaussianity), and often consider only surgical (hard) interventions (Sethura-man et al., 2023; Sethuraman & Fekri, 2025). These limi-tations substantially restrict their applicability to complex real-world systems. To address these challenges, we propose a novel causal dis-covery framework, SCOUT, that simultaneously accommo-dates nonlinear mechanisms, directed cycles, non-Gaussian additive noise, and soft interventional experiments with un-known targets , thereby substantially broadening the scope of causal discovery in realistic experimental settings. 
+
+1.1. Related Works Cyclic Graphs. A range of methods have been proposed to address feedback loops in causal graphs. Early work by Richardson (1996) extended constraint-based approaches from DAGs to graphs with directed cycles, while Lacerda et al. (2008) generalized ICA-based causal discovery to lin-ear cyclic models under non-Gaussian noise. More recent efforts have focused on score-based formulations for learn-ing cyclic structures (Huetter & Rigollet, 2020; Amendola et al., 2020; Mooij & Heskes, 2013; Drton et al., 2019), with some methods further leveraging interventional data to improve identifiability (Hyttinen et al., 2012; Huetter & Rigollet, 2020). Building on these ideas, Sethuraman et al. (2023) proposed a differentiable, likelihood-based frame-work for learning nonlinear cyclic graphs that avoids explicit acyclicity constraints by directly optimizing the data like-lihood. Subsequent extensions broaden this framework to account for unmeasured (latent) variables (Sethuraman & Fekri, 2025). 
+
+Soft interventions. There are various approaches for causal discovery under soft interventions. Greedy Inter-ventional Equivalence Search (GIES) (Hauser & B ¨uhlmann, 2012) extends greedy equivalence search for DAGs to inter-ventional data. It is a score-based algorithm that operates un-der known multiple intervention targets for each experiment. IGSP (Wang et al., 2017) instead uses permutation-based causal inference, which is non-parametric, so it doesn’t rely on the Gaussian assumption. The Joint causal infer-ence framework (JCI) (Mooij et al., 2016) extends the ideas of classical constraint-based algorithms for interventions by adding context variables to the graph. Differentiable Causal Discovery from Interventions (DCDI) (Brouillard et al., 2020) uses a continuous-optimization approach in the interventional setting to learn the ground-truth DAG by maximizing the likelihood across all datasets. Backshift (Rothenh ¨ausler et al., 2015) is an algorithm for linear causal cyclic models that uses different shift interventions for struc-ture learning. Kocaoglu et al. (2019) characterize causal graph equivalence under soft interventions in the presence of latent variables. 
+
+Unknown targets. Several methods have been proposed in the literature to estimate the graph structure of a causal system when the intervention targets are unknown. UT-IGSP (Squires et al., 2020) is a version of IGSP that has been extended to work with unknown targets. More recent methods developed by Varici et al. (2022) and Yang et al. (2024), detect unknown targets by exploiting sparse changes in the precision matrices or in the noise distributions, re-spectively. Bayesian Causal Discovery with Unknown Inter-ventions (BaCaDI) (H ¨agele et al., 2022) uses a variational inference approach to learn the DAG structure and the inter-vention targets. JCI (Mooij et al., 2016), DCDI (Brouillard et al., 2020), and BackShift (Rothenh ¨ausler et al., 2015) also estimate the unknown intervention targets while recovering the causal graph structure. Finally, Jaber et al. (2020) study causal discovery under soft interventions with unknown targets while allowing for latent confounding. 
+
+1.2. Contribution 
+
+In this work, we address four major challenges in causal discovery: directed cycles , nonlinearity , non-Gaussian ex-ogenous noise , and soft interventions with unknown targets .Our main contributions can be summarized as follows: • We propose SCOUT, a novel framework for causal dis-covery that utilizes the normalizing flows architectures of contractive residual flow and neural spline flows to learn nonlinear cyclic causal relationships under non-Gaussian noise from soft interventional data with unknown targets, while simultaneously inferring the intervention targets. • We prove that exact maximization of the proposed score function identifies the interventional equivalence class of the ground-truth graph. 2SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+• We perform extensive experiments, benchmarking SCOUT against state-of-the-art causal discovery meth-ods on both synthetic and real-world datasets. 
+
+1.3. Organization 
+
+The remainder of the paper is organized as follows: Sec-tion 2 describes the problem setup. Section 3 introduces SCOUT, our framework for nonlinear cyclic causal discov-ery under soft interventions with unknown targets. Section 4 presents experimental results on synthetic and real-world datasets. Finally, we conclude the paper with Section 5. 
+
+## 2. Problem Setup 
+
+2.1. Structural Equations for Cyclic Causal Graphs 
+
+Let G = ( V, E ) be a cyclic causal graph, where V denotes the vertex set {1, . . . , d } and E denotes the directed edges of the form i → j. Each node i ∈ V is associated with a random variable Xi, and each edge i → j ∈ E represents a direct causal relation from random variable Xi to Xj .Following the framework proposed by Bollen (1989) and Pearl (2009), we use the structural equation model (SEM) to represent our system, that is: 
+
+Xi = fi(Xpa G (i)) + ϵi, i = 1 , . . . , d, (1) where pa G (i) := {j ∈ V : j → i ∈ E and j̸ = i} denotes the parent set of Xi in G. Xpa G (i) is the random vector consisting of the collection of these parents. The function 
+
+fi represents the causal mechanism encoding the functional relationships between the random variable Xi and its par-ents. ϵi is the exogenous noise variable accounting for the stochastic nature of our system and can be non-Gaussian in our model. Note that we exclude self-loops in this model to avoid dealing with extra identifiability issues (Bongers et al., 2021; Hyttinen et al., 2012). For convenience, (1) can be combined over all nodes i ∈{1, . . . , d } into a vectorized form by collecting the causal mechanism into a joint function f = ( f1, . . . , f d) in the following way: 
+
+X = f (X) + ϵ. (2) Note that the SEM in (2) induces a probability distribution over the exogenous noise variables pE (ϵ). We assume the system is free of confounders (causal sufficiency), as a result the exogenous noise variables are independent of each other. Due to the (potential) presence of cycles in the SEM, the ob-servations X can be thought of as a snapshot of a dynamical process under equilibrium conditions. For a random draw of ϵ, X is the solution to (2) . We also assume that there is a fixed, unique solution for each draw of ϵ, which allows us to define an invertible forward map X 7 → ϵ = ( id − f )( X),where id represents the identity transformation. A more detailed discussion of solvability for cyclic systems under equilibrium can be found in Appendix A. Under these assumptions, the probability density function for X is well-defined and can be written as: 
+
+pG (X) = pE (( id − f )( X)) det( J(id −f )(X)) , (3) where J(id −f )(X) denotes the Jacobian matrix of the func-tion (id − f ) evaluated at X.
+
+2.2. Modeling Interventions 
+
+One important feature of causal graphs is that they can be used to infer the model’s behavior under interventions. In this work, we focus on imperfect interventions, also known as soft interventions. In contrast to surgical (hard) inter-ventions, the connectivity of the intervened node with its parents is preserved under these types of interventions. Still, the causal mechanism or noise characteristics may be altered depending on the type of soft intervention. Given a set of of intervened nodes I ⊆ V the SEM in (1) takes the following form: 
+
+Xi =
+
+
+
+˜f (k) 
+
+> i
+
+(Xpa G (i)) + ˜ ϵ(k) 
+
+> i
+
+, if i ∈ Ik,fi(Xpa G (i)) + ϵi, if i / ∈ Ik,
+
+(4) where ˜f (k) 
+
+> i
+
+, ˜ϵ(k) 
+
+> i
+
+denote the intervened causal mechanism and intervened noise variable for the k-th experiment respec-tively. We consider K interventional experiments where Ik ∈ I 
+
+represent the interventional targets for the k-th experiment. Similar to the observational setting, we can combine (4) over all the nodes i ∈ V to obtain the following vectorized form: 
+
+X = Uk(f (X) + ϵ) + ( Id − Uk)( ˜f (X) + ˜ϵ), (5) where Uk ∈ { 0, 1}d×d is a diagonal matrix indicating which variables are observed in the k-th experiment, in other words,  Uk
+
+ 
+
+> ii
+
+= 1 if i / ∈ Ik and  Uk
+
+ 
+
+> ii
+
+= 0 if i ∈ Ik. Id
+
+is the d × d identity matrix. In this work, we treat Uk as an unknown parameter to be learned during training, given the distinct experiment indices k.For each interventional experiment, the forward map X 7 →
+
+Ukϵ + ( Id − Uk)˜ϵ is given by 
+
+
+
+id − Ukf − (Id − Uk) ˜f
+
+
+
+(X). (6) We now make the following assumption regarding the sta-bility of the interventional experiments. 
+
+Assumption 2.1 (Interventional solvability) . For each inter-vention Ik considered in this work, the forward map given by (6) is invertible. 3SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Let p eE denote the probability density of ˜ϵ. The probability distribution of X under the k-th experiment can be written as: 
+
+pIk ,G (X) = pE
+
+(id − Ukf )( X)
+
+> Uk
+
+
+
+× p eE
+
+(id − ˜Uk ˜f )( X)
+
+> Ik
+
+
+
+× det( J(id −f (Ik ))(X)) , (7) where f (Ik ) ≜ (Ukf + ( Id − Uk) ˜f ), Uk ≜ V \ Ik, is the combined intervened causal mechanism and ˜Uk = I − Uk.We deal with three different types of soft interventions: • Shift Interventions : The intervened noise variable is obtained by shifting the mean of the observed noise variable by a finite number, i.e., ˜ϵi = ˜ μi + ϵi.• Scale Interventions : The intervened noise variable is obtained by scaling the variance of the observed noise variable by a finite number, i.e., ˜ϵi = ˜ σ2 
+
+> i
+
+ϵi.• Noisy Function Interventions : The intervened causal mechanism is obtained by changing the structural pa-rameters of the observed causal mechanism, provided that Assumption 2.1 is satisfied. . Given data obtained from K interventional experiments, our goal in this work is to learn the structure of the cyclic causal graph as well as the interventional targets by maximizing the log-likelihood of the data. 
+
+## 3. SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+3.1. Using Normalizing Flows for Causal Learning under Non-Gaussian Noise 
+
+Normalizing flows are a class of generative models that are capable of transforming a simple distribution (standard Gaussian) to something more complex through a series of bi-jective transformations (Papamakarios et al., 2021). Within our framework, normalizing flows are employed twice: first we use contractive residual flows (Behrmann et al., 2019) to obtain the noise component ϵ in the SEM of (2) , then we use piecewise rational quadratic CDF transformation (Durkan et al., 2019) to transform this noise component ϵ
+
+into a standard normal gaussian random vector z (allow-ing us to model more complex families of exogenous noise distributions). 3.1.1. M ODELING THE CAUSAL FUNCTION 
+
+As mentioned in the Section 2, we assume that the forward mapping X 7 → ϵ = ( id − f )( X) is invertible. According to Banach’s fixed point, we can satisfy this condition by restricting the function f to be contractive (see Appendix A for details).. A function g : Rd → Rd is said to be contractive if there exists a constant L < 1 such that: 
+
+∥g(x) − g(y)∥ ≤ L ∥x − y∥ for all x, y ∈ Rd.
+
+We use neural networks to parametrize the function f , and the contractivity assumption can be conserved with spectral normalization of the network weights during each iteration. The adjancencies of the causal graph G can be introduced explicitly as a binary matrix M G ∈ { 0, 1}d×d, with 1 rep-resenting the presence an edge. As a result, the causal mechanism can be shown as: 
+
+[fθ (x)] i = NN θ
+
+ M G∗,i ⊙ x 
+
+> i
+
+, (8) where NN θ denotes a fully connected neural network pa-rameterized by θ, ⊙ denotes the Hadamard product, and 
+
+M G∗,i is the i-th column of M G . The entries of M G
+
+are sampled from the Gumbel-softmax distribution M ϕ
+
+(Jang et al., 2017) and the parameters ϕ are updated dur-ing training using straight-through gradient estimation. 
+
+λG EM G ∼M ϕ [ ∥M ∥1 ] will be used as the regularizer in the loss function to favor a sparse adjacency matrix. In the case of soft interventions, we model ˜f similar to 
+
+f with another set of neural network parameters ˜θ while preserving the same adjacency matrix M G that is: 
+
+[ ˜f ˜θ (x)] i = NN ˜θ
+
+ M G∗,i ⊙ x 
+
+> i
+
+. (9) While training the model, we rescale the weights of neural network layers of f and ˜f to ensure they remain contractive. 3.1.2. T RANSFORMING THE NON -G AUSSIAN NOISE 
+
+Under the assumption that the noise vector ϵ may be non-Gaussian, we require a tractable and efficient way to com-pute the noise distribution pE from (3) . This can again be achieved using normalizing flows and assuming an invert-ible forward map ϵ 7 → z = g(ϵ). Under this assumption, the probability density function for ϵ is well-defined and can be written as: 
+
+pE (ϵ) = pZ (g(ϵ)) det( Jg (ϵ)) , (10) where pZ (z) = N (z | 0, I) denotes the probability density function of standard normal distribution and Jg (ϵ) denotes the Jacobian matrix of the function g evaluated at ϵ.Since, in Section 2, we assumed our causal system is free of confounders, the noise samples will be independent. To preserve the independence assumption, we pick zi = gi(ϵi).This also simplifies the Jacobian Jg (ϵ) to a simple diagonal matrix. We restrict g to be a piecewise rational quadratic CDF because of its expressivity in a wide family of distribu-tions while being invertible and yielding a tractable Jacobian 4SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+determinant (Durkan et al., 2019). The map g : ϵ 7 → z is modeled using neural networks. For the noise vector under interventions, ˜ϵ, we define an-other forward function ˜g mapping it to standard Gaussian random variable. The overall transformation under interven-tion Ik is given by: z(Ik) = Ukg(ϵ) + ( I − Uk)˜g(˜ϵ).
+
+3.2. Finding Unknown Intervention Targets 
+
+In order to identify the unknown interventional targets for each setting Ik ∈ I , we define an interventional target ma-trix T I ∈ { 0, 1}K×d where each row denotes the specific experiment and each column depicts the nodes in the graph. 
+
+(T )I 
+
+> kj
+
+= 0 indicates that Xj is intervened on in the k-th interventional experiment. The entries of T I are sampled using Gumbel-softmax distribution T ψ . Similar to graph adjacency learning, the parameters ψ are updated during training using straight-through gradient estimation. We also introduce another regularizer favoring sparse intervention targets calculated as λI ET I ∼T ψ
+
+ ∥T I ∥1
+
+.
+
+3.3. Computing the log-determinant of the Jacobian 
+
+The computation of the log-determinant of the Jacobian term log det( J(id −f (Ik ))(X)) is a significant challenge. To address this issue, we use the unbiased estimator intro-duced by Behrmann et al. (2019), which is based on the following power series expansion: 
+
+log det J(id −f (Ik ))(X) = log det  I − J(f (Ik ))(X)
+
+= −
+
+> ∞
+
+X
+
+> m=1
+
+1
+
+m Tr 
+
+n
+
+J m  
+
+> (f(Ik))
+
+(X)
+
+o
+
+,
+
+(11) where I ∈ Rd×d denotes the identity matrix. The con-tractivity of f (Ik ) guarantees the convergence of the above series. The trace term can be further simplified using the Hutchinson trace estimator: 
+
+Tr 
+
+n
+
+J m  
+
+> (f(Ik))
+
+(X)
+
+o
+
+= Ew
+
+h
+
+w⊤J m  
+
+> (f(Ik))
+
+(X) w
+
+i
+
+, (12) where w ∼ N (0, I). In practice, the above power series can be evaluated by truncating it to a finite number of terms. However, this truncation causes the estimator to be biased; to make it unbiased, we follow the method proposed by Chen et al. (2019). We truncate the series to a random cut-off n ∼ p(N ), where p is a probability distribution over natural numbers N. In this work, we pick p to be the Poisson distribution n ∼ Poi (N ), where we treat N
+
+as a hyperparameter. Finally, each term in the series is reweighted to obtain the following estimator for the log-determinant of the Jacobian: 
+
+log det J(id −f (Ik ))(X) = − En, w
+
+" nX
+
+> m=1
+
+w⊤J m   
+
+> (f(Ik))
+
+w
+
+m · P(N ≥ k)
+
+#
+
+.
+
+(13) 
+
+3.4. The Score Function 
+
+Our primary objective in this work is to determine the pa-rameters of the SEM, specifically the causal graph structure, causal mechanism, and intervention targets for each exper-iment. To that end, as in previous works, we use regular-ized log-likelihoods as the score function to be maximized. Given a candidate graph G and a set of interventional targets 
+
+I, the score function can be written as: 
+
+S(G, I) = sup 
+
+> θ
+> K
+
+X
+
+> k=1
+
+EX∼p(k)
+
+ log pIk ,G (X)
+
+− λG |G| − λI |I| ,
+
+(14) where p(k) is the data generating distribution for the k-th experiment, log pIk ,G (X) is given by (7) , λG and λI terms are the regularizers discussed in sections 3.1.1 and 3.2 re-spectively, and θ is the causal system parameters. We will now present the main theoretical result of this paper. This theorem will establish that under certain assumptions, exact maximizing the score function given in (14) with respect to G and I will recover the I∗-Markov equivalence class of G∗ and the ground truth interventional family I∗.Due to space constraints, a detailed proof of this theorem will be provided in the Appendix B. 
+
+Theorem 3.1. Let G∗ be the ground truth graph and let 
+
+I∗ be the ground truth intervention family. ( ˆG, ˆI) ∈
+
+arg max G,I S(G, I). Under the Assumptions 2.1, B.8, B.9, B.10 and B.11, and for suitable λG , λ I > 0, ˆG is I∗-Markov equivalent to G∗ and ˆI = I∗.Proof (Sketch). Using the characterization of general di-rected Markov equivalence class from Bongers et al. (2021), augmenting it to include interventions, we show that any graph G outside of this equivalence class or any intervention family I̸ = I∗ will yield a strictly lower score than the 
+
+S(G∗, I∗). This can be demonstrated by showing that the augmented graph built from a graph outside this equivalence class and an incorrect intervention family either misses cer-tain existing independencies or imposes extra independen-cies that do not exist in the data. Furthermore, coefficients 
+
+λG , λ I should be chosen small enough to avoid too much sparse solutions. The score function in (14) is defined under the infinite data limit. To make it computable under finite data samples, we 5SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+redefine it in the following way: 
+
+ˆS(M ϕ, T ψ ) = sup 
+
+> θ
+
+EMG ∼M ϕ  
+
+> TI∼Tψ
+
+" KX
+
+> k=1
+> Nk
+
+X
+
+> i=1
+
+log pIk ,G (x(i,k ))
+
+−λG ∥M ∥1 − λI ∥T ∥1
+
+#
+
+.
+
+(15) where we take a summation over finite samples x(i,k ) of each experiment instead of taking the expectation over the data distribution. We optimize the score function (15) with respect to the neural network parameters θ, the graph struc-ture parameters M ϕ and intervention target parameters T ψ .
+
+## 4. Experiments 
+
+The code for SCOUT is available at the repository: https://github.com/alparturkoglu/scout-master We evaluated SCOUT on both synthetic and real-world datasets. We also compared its performance against exist-ing state-of-the-art causal discovery algorithms, NODAGS-Flow (Sethuraman et al., 2023), LLC (Hyttinen et al., 2012), and BACKSHIFT (Rothenh ¨ausler et al., 2015). NODAGS-Flow can learn nonlinear cyclic causal graphs with interven-tions; however, it assumes that the interventions are surgical with the interventional targets being known. Additionally, NODAGS-Flow assumes the exogenous noise to be Gaus-sian. LLC does not assume a normal noise distribution; how-ever, it is limited to Linear SEM and requires interventional targets to operate. BACKSHIFT operates under unknown targets and deals with shift interventions; however, it cannot handle other types of soft interventions. Furthermore, it is also designed to work with Linear SEM. We also provide a comparison between SCOUT and other baselines which can handle nonlinearity, soft-interventions, and unknown targets, but specifically for DAGs in Appendix C.1, 
+
+4.1. Synthetic data 
+
+We generated cyclic graphs using the Erd ˝os-R ´enyi (ER) ran-dom graph model with d = 10 nodes and outgoing edge density of 2. Our training data consists of 10 experiments, one for each single-node intervention, and each experiment contains 1, 000 samples. For all the experimental results presented here, we used non-linear SEMs constrained to be contractive. We used nine different settings in our ex-periments, varying the exogenous noise variable between Gaussian, Exponential, and Gumbel distributions, and vary-ing the soft intervention type between shift, scale, and noisy function. When a node is not intervened, the corresponding exogenous noise distribution parameters are set as follows: for the Gaussian noise setting, the noise mean is set to 0,and variance is set to 0.25 . For the exponential noise setting the rate is set to 2. Finally, for the Gumbel noise setting the location and scale of the distribution is set to 0 and 0.5 respectively. We set the shift and scale parameters to 2
+
+for the respective interventions, and for the noisy-function interventions, we negate the causal mechanism. The performance on synthetic data is evaluated with respect to both graph structure recovery and unknown intervention target recovery. We compare the learned adjacency matrix with the binary ground truth adjacency matrix to evaluate the graph recovery, and we compare the learned interven-tion targets to the binary ground truth interventional target matrix. We use the Area Under Precision-Recall Curve (AUPRC) as the error metric. AUPRC computes the area under the precision-recall curve evaluated at various thresh-old values (the higher the better). The results of the synthetic experiments are presented in Figure 1 and Table 1. The box plot in Figure 1 shows the median and interquartile range of the AUPRC metric for all the models over ten inde-pendent trials. Each plot in Figure 1 shows the performance of our framework compared to baselines with respect to the interventional setting given at the left of the row, i.e., the ver-tical labels, and the exogenous noise presented at the top of the column. As seen from Figure 1, SCOUT acheives near perfect graph recovery in all settings except Noisy Function + Gaussian noise (where it attains comparable performance to that of the baseline methods). Table 1 presents the intervention target recovery perfor-mance of SCOUT compared to BACKSHIFT, providing mean AUPRC values along with standard deviations in the same settings as Figure 1. The other baselines do not iden-tify unknown targets; therefore, they are not included in this table. For scale interventions, both models can iden-tify targets perfectly, matching the results in the Figure 1. For shift interventions, SCOUT can recover the targets per-fectly, whereas BACKSHIFT achieves comparable perfor-mance; however, it is insufficient to recover the ground truth graph, as shown again in Figure 1. While both SCOUT and BACKSHIFT fail to fully recover the interventional targets for noisy function interventions, SCOUT still outperforms BACKSHIFT in this setting. This is expected since the noisy function interventions can not induce a significant dis-tribution change compared to shift/scale interventions (see the Appendix C.6 for numerical results), and in practice, identifying intervention targets typically requires interven-tions that induce sufficiently strong distributional changes for finite data (Gamella & Heinze-Deml, 2020). 4.1.1. S CALING WITH NODES 
+
+We compare the performance of SCOUT to the baselines as the number of nodes varies from 10 to 70. We look at non-linear SEM under unknown shift and scale interventions with Gaussian and Gumbel noise. As shown in Figure 2 and 6SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 1. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and various interventional and exogenous noise settings, evaluated using AUPRC (higher is better). Results are reported as mean ± standard deviation over 10 independent trials. In all cases, the number of nodes is fixed at d = 10 .Gaussian Exponential Gumbel Intervention Type SCOUT BACKSHIFT SCOUT BACKSHIFT SCOUT BACKSHIFT Shift 1.000 ± 0.000 0.962 ± 0.038 1.000 ± 0.000 0.868 ± 0.116 1.000 ± 0.000 0.859 ± 0.144 
+
+Scale 1.000 ± 0.000 1.000 ± 0.000 0.975 ± 0.079 1.000 ± 0.000 1.000 ± 0.000 1.000 ± 0.000 
+
+Noisy Function 0.264 ± 0.133 0.259 ± 0.107 0.590 ± 0.123 0.313 ± 0.214 0.607 ± 0.152 0.423 ± 0.269 0.2   
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+
+Figure 1. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and various interven-tional and exogenous noise settings, evaluated using AUPRC (the higher the better). The box plots show the median and interquartile ranges across ten independent trials. In all cases, the number of nodes is fixed at d = 10 .
+
+3, SCOUT’s structure recovery performance remains rela-tively high, whereas other baselines yield lower AUPRCs as the graph size increases. Table 2 suggests that while BACK-SHIFT begins not to detect intervention targets correctly, SCOUT still achieves a perfect performance in terms of in-terventional target recovery for large-scale graphs. Overall, these results show that SCOUT is highly scalable as graph sizes increase. 4.1.2. E FFECT OF NEURAL SPLINE FLOWS 
+
+To assess the contribution of each component in our model, we perform an ablation study comparing SCOUT, SCOUT-noNSF, and NODAGS (Sethuraman et al., 2023). In SCOUT-noNSF, the Neural Spline Flow (NSF) layer is re-placed with a simple Gaussian likelihood. NODAGS is designed for Gaussian noise and hard interventions with known targets. 10 30 50 70       
+
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 10 30 50 70
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 2. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interven-tions. The number of nodes is varied from d = 10 to 70 
+
+Table 2. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 5 independent trials. The number of nodes is varied from d = 10 to 70. Gaussian Gumbel 
+
+d SCOUT BACKSHIFT SCOUT BACKSHIFT 10 1.00 ±0.00 0.90 ±0.14 1.00 ±0.00 0.87 ±0.13 
+
+30 1.00 ±0.00 0.51 ±0.15 1.00 ±0.00 0.51 ±0.14 
+
+50 1.00 ±0.00 0.08 ±0.02 1.00 ±0.00 0.05 ±0.01 
+
+70 1.00 ±0.00 0.03 ±0.00 1.00 ±0.00 0.02 ±0.00 10 30 50 70       
+
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 10 30 50 70
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 3. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and scale interven-tions. The number of nodes is varied from d = 10 to 70 
+
+While SCOUT-noNSF retains the ability to model soft in-terventions and includes an interventional target matrix for handling unknown targets, it lacks the flexibility to trans-form non-Gaussian noise distributions. In contrast, SCOUT incorporates the NSF layer, enabling it to map arbitrary 7SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+noise distributions to a standard Gaussian space, thereby improving identifiability and learning. We conduct this experiment under the same setting as Fig-ure 1. As shown in Figure 4 and Table 3, removing the NSF layer leads to a significant degradation in performance: in-tervention targets become unidentifiable, and graph recovery fails in the unknown-target setting. However, as shown in Figure 5, when the intervention tar-gets are known and the noise is Gaussian, the contractive residual structure alone is sufficient for accurate graph re-covery. 0.2   
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+
+Figure 4. Graph recovery performance comparison between SCOUT, SCOUT-noNSF, and NODAGS under nonlinear SEM and various interventional and exogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+Additional experiments, including performance evaluations on non-contractive SEMs (DAGs) in Appendix C.1, linear SEMs in Appendix C.2, hard interventions in Appendix C.4, and known intervention targets in Appendix C.3, are pro-vided in Appendix C. Further ablation studies assessing the robustness of the model are presented in Appendix C.5. 
+
+4.2. Real World Data 
+
+4.2.1. G ENE REGULATORY NETWORKS 
+
+(P ERTURB -CITE-SEQ )We evaluate SCOUT’s performance on learning the causal graph structure of gene regulatory networks from real-world gene expression data with genetic interventions. We focus on the PerturbCITE-seq dataset (Frangieh et al., 2021) that 0.2   
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+> SCOUT
+> SCOUT-noNSF
+> NODAGS
+
+Figure 5. Graph recovery performance comparison between SCOUT, SCOUT-noNSF, and NODAGS for known intervention targets under nonlinear SEM and various interventional and ex-ogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+contains gene expressions taken from 218,331 melanoma cells split over three different cell conditions: (i) control, (ii) co-culture, and (iii) IFN-γ.Due to computational limitations, we limit our analysis to 61 genes out of approximately 20,000 in the genome, and we treat each cell condition as a separate dataset, following the setup of (Sethuraman et al., 2023). We train SCOUT, along with the baselines, on these three datasets by supply-ing single-gene interventions for the 61 genes as unknown targets. The adjacency matrix recovered by SCOUT for the cell condition co-culture is given in Figure 23. Since the dataset does not include a ground-truth causal graph, we evaluate the performance of SCOUT and base-lines based on predictive performance under unseen inter-ventions. We perform a 90-10 split of the dataset, taking 90% of the data as training set and the remaining 10% as the testing set. As a performance metric, we use negative log-likelihood (NLL) on the test portion of the data after training the model (lower the better). Since BACKSHIFT does not have a method to compute this metric, it is not included in the results. The results can be seen in Figure 6. SCOUT outperforms all baselines across all cell conditions, demonstrating that accounting for non-Gaussian exogenous noise enables the model to learn the target distribution better and improve its predictive power. Additionally, we present a performance comparison of SCOUT with other baselines 8SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 3. Interventional target recovery performance comparison between SCOUT and SCOUT without NSF under non-linear SEM and various interventional and exogenous noise settings, evaluated using AUPRC. Results are reported as mean ± standard deviation over 10 independent trials. In all cases, the number of nodes is fixed at d = 10 .
+
+Gaussian Exponential Gumbel Intervention Type SCOUT SCOUT-noNSF SCOUT SCOUT-noNSF SCOUT SCOUT-noNSF Shift 1.000 ± 0.000 0.144 ± 0.049 1.000 ± 0.000 0.471 ± 0.145 1.000 ± 0.000 0.237 ± 0.078 
+
+Scale 1.000 ± 0.000 0.227 ± 0.077 0.975 ± 0.079 0.232 ± 0.128 1.000 ± 0.000 0.171 ± 0.070 
+
+Noise 0.264 ± 0.133 0.393 ± 0.183 0.590 ± 0.123 0.443 ± 0.211 0.607 ± 0.152 0.463 ± 0.244 
+
+under known targets, as well as another comparison with respect to the mean absolute error (MAE) metric (including BACKSHIFT) in the Appendix C.7. SCOUT NODAGS LLC     
+
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> I-NLL
+> 0.525
+> ±0.085
+> 1.347
+> ±0.018
+> 1.868
+> ±0.066
+> Co-Culture
+> SCOUT NODAGS LLC
+> 0.616
+> ±0.147
+> 1.395
+> ±0.008
+> 2.193
+> ±0.102
+> Control
+> SCOUT NODAGS LLC
+> 0.583
+> ±0.105
+> 1.463
+> ±0.008
+> 2.092
+> ±0.118
+> IFN-
+
+Figure 6. The performance comparison results on the Perturb-CITE-seq (Frangieh et al., 2021) gene perturbation dataset. The bar graph shows interventional negative log-likelihood (I-NLL) and its standard deviation across 5 trials. 
+
+4.2.2. C LOSE -TO -R EAL -W ORLD DATA (SERGIO) Although experiments on the real-world Perturb-CITE-seq dataset show that SCOUT outperforms the baselines in terms of NLL, this dataset does not provide a ground-truth causal graph. To evaluate the graph recovery and unknown intervention target recovery performance of SCOUT in a close-to-real-world setting, we use SERGIO (Dibaeinia & Sinha, 2020), a simulator for single-cell gene expression data generated from a gene regulatory network (GRN). SER-GIO produces realistic stochastic expression data using non-linear regulatory dynamics, including Hill-type effects, and can simulate perturbations such as gene knockouts across different environments and cell types. We set the number of genes (nodes) to d = 10 . The under-lying random cyclic graph is sampled with edge probabil-ity p = 0 .25 and contains 2 master regulators, i.e., nodes with no incoming edges. The SERGIO simulation hyper-parameters are set to noise params =1.0, decay =0.8, 
+
+hill =2, and sampling state =4. For each environ-ment, we simulate 1000 cells, with Ntypes = 5 cell types and Ncells/type = 200 cells per type. We again use a single-node intervention design, namely one single-gene knockout environment per node, resulting in K = 10 intervention environments. The results in Figure 7 show that SCOUT outperforms the existing baselines in graph identification, although it does not achieve perfect recovery because the overall causal mechanism generated by SERGIO need not be contractive. In addition, SCOUT achieves near-perfect intervention tar-get recovery, with an AUPRC of 0.978 ± 0.025 , compared to 0.432 ± 0.032 for BACKSHIFT. SCOUT 
+
+> NODAGS
+> LLC
+> BACKSHIFT
+> 0.30
+> 0.45
+> 0.60
+> 0.75
+> AUPRC
+> SERGIO
+
+Figure 7. The performance comparison results on SERGIO evalu-ated using AUPRC. 
+
+## 5. Discussion and Conclusion 
+
+We proposed SCOUT, a novel framework for causal dis-covery that simultaneously infers directed cyclic causal structure and unknown intervention targets from soft inter-ventional data under non-Gaussian noise. It models causal relationships as neural networks and recovers the ground-truth graph along with intervention targets via likelihood score maximization. We provided consistency proof for the recovery of the Markov equivalence class of the ground truth graph under unknown intervention targets. We con-ducted experiments on both synthetic and real-world data to demonstrate that SCOUT outperforms state-of-the-art meth-ods in causal graph recovery and identification of target nodes that are intervened on, across various interventional and noise settings. We showed that our model is highly scal-able with increasing graph size and maintains its robustness with increasing number of intervention targets. Evaluations on the Perturb-CITE-seq dataset show that our model also achieves superior predictive accuracy in real-world scenar-ios. Possible research directions to extend this work include incorporating more realistic measurement noise models, al-lowing the system to handle confounders, or scaling up to handle larger graph models. 9SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+## Acknowledgments 
+
+This material is based on work supported National Science Foundation (NSF) under grant number 2502298. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Amendola, C., Dettling, P., Drton, M., Onori, F., and Wu, J. Structure learning for cyclic linear causal mod-els. In Peters, J. and Sontag, D. (eds.), Proceedings of the 36th Conference on Uncertainty in Artificial Intel-ligence (UAI) , volume 124 of Proceedings of Machine Learning Research , pp. 999–1008. PMLR, 03–06 Aug 2020. URL https://proceedings.mlr.press/ v124/amendola20a.html .Behrmann, J., Grathwohl, W., Chen, R. T. Q., Duvenaud, D., and Jacobsen, J.-H. Invertible residual networks. In Chaudhuri, K. and Salakhutdinov, R. (eds.), Proceed-ings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learn-ing Research , pp. 573–582. PMLR, 09–15 Jun 2019. URL https://proceedings.mlr.press/v97/ behrmann19a.html .Bollen, K. A. Structural Equations with Latent Variables .John Wiley & Sons, Ltd, 1989. ISBN 9781118619179. doi: 10.1002/9781118619179. Bongers, S., Forr ´e, P., Peters, J., and Mooij, J. M. Foun-dations of structural causal models with cycles and la-tent variables. The Annals of Statistics , 49(5):2885 – 2915, 2021. doi: 10.1214/21-AOS2064. URL https: //doi.org/10.1214/21-AOS2064 .Brouillard, P., Lachapelle, S., Lacoste, A., Lacoste-Julien, S., and Drouin, A. Differentiable causal discovery from interventional data. In Proceedings of the 34th Inter-national Conference on Neural Information Processing Systems , NIPS ’20, Red Hook, NY, USA, 2020. Curran Associates Inc. ISBN 9781713829546. Chen, R. T. Q., Behrmann, J., Duvenaud, D. K., and Jacobsen, J.-H. Residual flows for invertible gen-erative modeling. In Wallach, H., Larochelle, H., Beygelzimer, A., d'Alch ´e-Buc, F., Fox, E., and Garnett, R. (eds.), Advances in Neural Information Process-ing Systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips. cc/paper_files/paper/2019/file/ 5d0d5594d24f0f955548f0fc0ff83d10-Paper. pdf .Dibaeinia, P. and Sinha, S. Sergio: A single-cell expres-sion simulator guided by gene regulatory networks. Cell Systems , 11, 08 2020. doi: 10.1016/j.cels.2020.08.003. Dixit, A., Parnas, O., Li, B., Chen, J., Fulco, C. P., Jerby-Arnon, L., Marjanovic, N. D., Dionne, D., Burks, T., Raychowdhury, R., Adamson, B., Norman, T. M., Lander, E. S., Weissman, J. S., Friedman, N., and Regev, A. Perturb-seq: Dissecting molecular circuits with scalable single-cell rna profiling of pooled genetic screens. Cell , 167(7):1853–1866.e17, 2016. ISSN 0092-8674. doi: https://doi.org/10.1016/j.cell.2016.11. 038. URL https://www.sciencedirect.com/ science/article/pii/S0092867416316105 .Drton, M., Fox, C., and Wang, Y. S. Computation of maximum likelihood estimates in cyclic structural equa-tion models. The Annals of Statistics , 47(2):663 – 690, 2019. doi: 10.1214/17-AOS1602. URL https://doi. org/10.1214/17-AOS1602 .Durkan, C., Bekasov, A., Murray, I., and Papamakarios, G. Neural spline flows. In Wallach, H., Larochelle, H., Beygelzimer, A., d'Alch ´e-Buc, F., Fox, E., and Garnett, R. (eds.), Advances in Neural Information Processing Systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips. cc/paper_files/paper/2019/file/ 7ac71d433f282034e088473244df8c02-Paper. pdf .Forr ´e, P. and Mooij, J. M. Markov properties for graphical models with cycles and latent variables, 2017. URL 
+
+https://arxiv.org/abs/1710.08775 .Frangieh, C., Melms, J., Thakore, P., Geiger-Schuller, K., Ho, P., Luoma, A., Cleary, B., Jerby-Arnon, L., Malu, S., Cuoco, M., Zhao, M., Ager, C., Rogava, M., Hovey, L., Rotem, A., Bernatchez, C., Wucherpfennig, K., Johnson, B., Rozenblatt-Rosen, O., Schadendorf, D., Regev, A., and Izar, B. Multimodal pooled perturb-cite-seq screens in patient models define mechanisms of cancer immune evasion. Nature Genetics , 53(3):332–341, March 2021. ISSN 1061-4036. doi: 10.1038/s41588-021-00779-1. Publisher Copyright: © 2021, The Author(s), under ex-clusive licence to Springer Nature America, Inc. Freimer, J., Shaked, O., Naqvi, S., Sinnott-Armstrong, N., Kathiria, A., Garrido, C., Chen, A., Cortez, J., Greenleaf, W., Pritchard, J., and Marson, A. Systematic discovery and perturbation of regulatory genes in human t cells reveals the architecture of immune networks. Nature 
+
+10 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+genetics , 54(8):1133–1144, August 2022. ISSN 1061-4036. doi: 10.1038/s41588-022-01106-y. Publisher Copyright: © 2022, The Author(s), under exclusive li-cence to Springer Nature America, Inc. Gamella, J. L. and Heinze-Deml, C. Active invariant causal prediction: Experiment selection through stability. arXiv: Methodology , 2020. URL https: //api.semanticscholar.org/CorpusID: 219558684 .H ¨agele, A., Rothfuss, J., Lorch, L., Somnath, V. R., Sch ¨olkopf, B., and Krause, A. BacaDI: Bayesian causal discovery with unknown interventions. In UAI 2022 Workshop on Causal Representation Learning ,2022. URL https://openreview.net/forum? id=gbgPtVkztWn .Hauser, A. and B ¨uhlmann, P. Characterization and greedy learning of interventional markov equivalence classes of directed acyclic graphs. J. Mach. Learn. Res. , 13(1): 2409–2464, August 2012. ISSN 1532-4435. Heinze-Deml, C., Peters, J., and Meinshausen, N. Invari-ant causal prediction for nonlinear models. Journal of Causal Inference , 6(2):20170016, 2018. doi: doi: 10.1515/jci-2017-0016. URL https://doi.org/ 10.1515/jci-2017-0016 .Huetter, J.-C. and Rigollet, P. Estimation rates for sparse linear cyclic causal models. In Peters, J. and Sontag, D. (eds.), Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence (UAI) , volume 124 of Proceedings of Machine Learn-ing Research , pp. 1169–1178. PMLR, 03–06 Aug 2020. URL https://proceedings.mlr.press/ v124/huetter20a.html .Hyttinen, A., Eberhardt, F., and Hoyer, P. O. Learn-ing linear cyclic causal models with latent variables. 
+
+Journal of Machine Learning Research , 13(109):3387– 3439, 2012. URL http://jmlr.org/papers/ v13/hyttinen12a.html .Jaber, A., Kocaoglu, M., Shanmugam, K., and Barein-boim, E. Causal discovery from soft interven-tions with unknown targets: Characterization and learning. In Larochelle, H., Ranzato, M., Had-sell, R., Balcan, M., and Lin, H. (eds.), Advances in Neural Information Processing Systems , vol-ume 33, pp. 9551–9561. Curran Associates, Inc., 2020. URL https://proceedings.neurips. cc/paper_files/paper/2020/file/ 6cd9313ed34ef58bad3fdd504355e72c-Paper. pdf .Jang, E., Gu, S., and Poole, B. Categorical reparameter-ization with gumbel-softmax. In International Confer-ence on Learning Representations , 2017. URL https: //openreview.net/forum?id=rkE3y85ee .Kingma, D. P. and Ba, J. Adam: A method for stochastic op-timization, 2017. URL https://arxiv.org/abs/ 1412.6980 .Kocaoglu, M., Jaber, A., Shanmugam, K., and Bareinboim, E. Characterization and learning of causal graphs with latent variables from soft interventions. In Wallach, H., Larochelle, H., Beygelzimer, A., d'Alch ´e-Buc, F., Fox, E., and Garnett, R. (eds.), Advances in Neural Information Processing Systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips. cc/paper_files/paper/2019/file/ c3d96fbd5b1b45096ff04c04038fff5d-Paper. pdf .Lacerda, G., Spirtes, P., Ramsey, J., and Hoyer, P. O. Discovering cyclic causal models by inde-pendent components analysis. ArXiv , abs/1206.3273, 2008. URL https://api.semanticscholar. org/CorpusID:84256 .Lee, H.-C., Danieletto, M., Miotto, R., Cherng, S., and Dudley, J. T. Scaling structural learn-ing with no-bears to infer causal transcriptome networks. Pacific Symposium on Biocomputing. Pacific Symposium on Biocomputing , 25:391–402, 2019. URL https://api.semanticscholar. org/CorpusID:207773853 .M. Mooij, J. and Claassen, T. Constraint-based causal dis-covery using partial ancestral graphs in the presence of cycles. In Peters, J. and Sontag, D. (eds.), Proceedings of the 36th Conference on Uncertainty in Artificial Intel-ligence (UAI) , volume 124 of Proceedings of Machine Learning Research , pp. 1159–1168. PMLR, 03–06 Aug 2020. URL https://proceedings.mlr.press/ v124/m-mooij20a.html .Meek, C. Graphical Models: Selecting causal and statistical models. 1 1997. doi: 10.1184/R1/22696393.v1. URL https://kilthub.cmu.edu/articles/ thesis/Graphical_Models_Selecting_ causal_and_statistical_models/ 22696393 .Mokhtarian, E., Salehkaleybar, S., Ghassami, A., and Kiyavash, N. A unified experiment design approach for cyclic and acyclic causal models. Journal of Machine Learning Research , 24(354):1–31, 2023. URL http: //jmlr.org/papers/v24/22-1425.html .11 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Mooij, J. M. and Heskes, T. Cyclic causal discovery from continuous equilibrium data. In Proceedings of the Twenty-Ninth Conference on Uncertainty in Artificial Intelligence , UAI’13, pp. 431–439, Arlington, Virginia, USA, 2013. AUAI Press. Mooij, J. M., Magliacane, S., and Claassen, T. Joint causal inference from multiple contexts. J. Mach. Learn. Res. , 21:99:1–99:108, 2016. URL https: //api.semanticscholar.org/CorpusID: 126017772 .Ng, I., Zhu, S., Fang, Z., Li, H., Chen, Z., and Wang, J. Masked Gradient-Based Causal Structure Learn-ing , pp. 424–432. doi: 10.1137/1.9781611977172.48. URL https://epubs.siam.org/doi/abs/10. 1137/1.9781611977172.48 .Ng, I., Ghassami, A., and Zhang, K. On the role of spar-sity and dag constraints for learning linear dags. In 
+
+Proceedings of the 34th International Conference on Neural Information Processing Systems , NIPS ’20, Red Hook, NY, USA, 2020. Curran Associates Inc. ISBN 9781713829546. Papamakarios, G., Nalisnick, E., Rezende, D. J., Mohamed, S., and Lakshminarayanan, B. Normalizing flows for probabilistic modeling and inference. Journal of Machine Learning Research , 22(57):1–64, 2021. Pearl, J. Causality . Cambridge University Press, 2 edition, 2009. Richardson, T. A discovery algorithm for directed cyclic graphs. In Proceedings of the Twelfth International Con-ference on Uncertainty in Artificial Intelligence , UAI’96, pp. 454–461, San Francisco, CA, USA, 1996. Morgan Kaufmann Publishers Inc. ISBN 155860412X. Rothenh ¨ausler, D., Heinze, C., Peters, J., and Mein-shausen, N. Backshift: Learning causal cyclic graphs from unknown shift interventions. In Neural Informa-tion Processing Systems , 2015. URL https://api. semanticscholar.org/CorpusID:18370444 .Sachs, K., Perez, O., Pe’er, D., Lauffenburger, D. A., and Nolan, G. P. Causal protein-signaling networks derived from multiparameter single-cell data. Sci-ence , 308(5721):523–529, 2005. doi: 10.1126/science. 1105809. URL https://www.science.org/ doi/abs/10.1126/science.1105809 .Sethuraman, M. G. and Fekri, F. Differentiable cyclic causal discovery under unmeasured confounders. In The Thirty-ninth Annual Conference on Neural Information Pro-cessing Systems , 2025. URL https://openreview. net/forum?id=95z3psF9zJ .Sethuraman, M. G., Lopez, R., Mohan, R., Fekri, F., Bian-calani, T., and Huetter, J.-C. Nodags-flow: Nonlin-ear cyclic causal structure learning. In Ruiz, F., Dy, J., and van de Meent, J.-W. (eds.), Proceedings of The 26th International Conference on Artificial Intelligence and Statistics , volume 206 of Proceedings of Machine Learning Research , pp. 6371–6387. PMLR, 25–27 Apr 2023. URL https://proceedings.mlr.press/ v206/sethuraman23a.html .Solus, L., Wang, Y., and Uhler, C. Consistency guarantees for greedy permutation-based causal infer-ence algorithms. Biometrika , 2017. URL https: //api.semanticscholar.org/CorpusID: 234167535 .Spirtes, P., Glymour, C., and Scheines, R. Causation, Pre-diction, and Search . 01 2001. ISBN 9780262284158. doi: 10.7551/mitpress/1754.001.0001. Spirtes, P. L. Directed cyclic graphical representations of feedback models, 2013. URL https://arxiv.org/ abs/1302.4982 .Squires, C., Wang, Y., and Uhler, C. Permutation-based causal structure learning with unknown intervention tar-gets. In Conference on Uncertainty in Artificial Intelli-gence , pp. 1039–1048. PMLR, 2020. Triantafillou, S. and Tsamardinos, I. Constraint-based causal discovery from multiple interventions over over-lapping variable sets. Journal of Machine Learning Re-search , 16(66):2147–2205, 2015. URL http://jmlr. org/papers/v16/triantafillou15a.html .Tsamardinos, I., Brown, L. E., and Aliferis, C. F. The max-min hill-climbing bayesian network structure learning al-gorithm. Machine Learning , 65(1):31–78, October 2006. ISSN 0885-6125. doi: 10.1007/s10994-006-6889-7. Varici, B., Shanmugam, K., Sattigeri, P., and Tajer, A. In-tervention target estimation in the presence of latent vari-ables. In Cussens, J. and Zhang, K. (eds.), Proceedings of the Thirty-Eighth Conference on Uncertainty in Artifi-cial Intelligence , volume 180 of Proceedings of Machine Learning Research , pp. 2013–2023. PMLR, 01–05 Aug 2022. URL https://proceedings.mlr.press/ v180/varici22a.html .Wang, Y., Solus, L., Yang, K., and Uhler, C. Permutation-based causal inference algorithms with interventions. In Guyon, I., Luxburg, U. V., Bengio, S., Wallach, H., Fergus, R., Vishwanathan, S., and Garnett, R. (eds.), Advances in Neural Information Process-ing Systems , volume 30. Curran Associates, Inc., 2017. URL https://proceedings.neurips. cc/paper_files/paper/2017/file/ 
+
+12 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+275d7fb2fd45098ad5c3ece2ed4a2824-Paper. pdf .Yang, Y., Salehkaleybar, S., and Kiyavash, N. Learning unknown intervention targets in structural causal models from heterogeneous data. In International Conference on Artificial Intelligence and Statistics , pp. 3187–3195. PMLR, 2024. Yao, B. and Mooij, J. M. σ-maximal ancestral graphs, 2025. URL https://arxiv.org/abs/2507.00093 .Yu, Y., Chen, J., Gao, T., and Yu, M. DAG-GNN: DAG structure learning with graph neural networks. In Chaudhuri, K. and Salakhutdinov, R. (eds.), Proceed-ings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learn-ing Research , pp. 7154–7163. PMLR, 09–15 Jun 2019. URL https://proceedings.mlr.press/v97/ yu19a.html .Zheng, X., Aragam, B., Ravikumar, P., and Xing, E. P. Dags with no tears: Continuous optimization for struc-ture learning. In Neural Information Processing Systems ,2018. URL https://api.semanticscholar. org/CorpusID:53217974 .Zheng, X., Dan, C., Aragam, B., Ravikumar, P., and Xing, E. Learning sparse nonparametric dags. In Chiappa, S. and Calandra, R. (eds.), Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics , volume 108 of Proceedings of Machine Learning Research , pp. 3414–3425. PMLR, 26–28 Aug 2020. URL https://proceedings.mlr.press/ v108/zheng20a.html .13 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+The appendix is organized as follows: Appendix A discusses the solvability of cyclic systems under equilibrium and justifies the contractiviy assumption on observed and intervened causal mechanisms. Appendix B develops the theoretical basis for the cyclic causal discovery under soft interventions with unknown targets, including the proof of Theorem 3.1 and a characterization of the score-maximizing equivalence class of directed graphs. Appendix C reports additional experimental results comparing SCOUT against these baselines. Appendix D details the experimental setup and implementation of SCOUT and the baseline methods. 
+
+## A. Solvability of Cyclic Systems Under Equilibrium 
+
+Our causal discovery framework relies on the existence of unique observational and interventional distributions, as well as Markov properties with respect to σ-/ d-separation. These requirements are automatically satisfied for acyclic SCMs. However, when cycles are allowed, stronger conditions are needed to guarantee unique solvability. In particular, (Bongers et al., 2021) showed that unique solvability with respect to each strongly connected component is necessary for an SCM to satisfy the Markov property with respect to σ-separation. The same work also characterizes a class of SCMs, called simple SCMs , that satisfy these unique solvability requirements. This assumption is also standard in several constraint-based causal discovery methods (M. Mooij & Claassen, 2020; Mokhtarian et al., 2023). This motivates our restriction to contractive causal mechanisms. Contractivity guarantees unique solvability and the Markov property with respect to σ-separation. Therefore, the SCMs considered in our work form a subset of simple SCMs. Under soft interventions, however, an SCM need not remain simple. In other words, the intervened system may fail to admit a unique interventional distribution. In that case, the Markov property is no longer guaranteed, and causal discovery from static equilibrium data is no longer a well-posed problem. We assume that, in the observational regime, the dynamical system evolves according to 
+
+x(t) := f
+
+
+
+x(t−1) 
+
++ ε.
+
+If f is contractive, then by the Banach fixed-point theorem, for every initial value x(0) and every ε, the sequence {x(t)}t≥0
+
+converges to a unique fixed point x⋆ satisfying 
+
+x⋆ = f (x⋆) + ε.
+
+Hence, the observed equilibrium X satisfies 
+
+ε = (id − f )( X).
+
+Similarly, under an intervention that changes either the mechanism or the noise characteristics, the dynamical system can be written as 
+
+x(t) = Uk
+
+ f (x(t−1) ) + ε + ( I − Uk)  ˜f (x(t−1) ) + ˜ ε,
+
+where Uk is a diagonal matrix with ones corresponding to non-intervened variables and zeros corresponding to intervened variables, and I denotes the identity matrix. Equivalently, defining the intervened mechanism and effective noise as 
+
+f (Ik )(x(t−1) ) := Ukf (x(t−1) ) + ( I − Uk) ˜f (x(t−1) ), η := Ukε + ( I − Uk)˜ ε,
+
+we can write 
+
+x(t) := f (Ik )
+
+x(t−1) 
+
++ η.
+
+If f (Ik ) is contractive, then again by the Banach fixed-point theorem, for every initialization, the iterates converge to a unique fixed point x⋆k satisfying 
+
+x⋆k = f (Ik )(x⋆k) + η.
+
+Therefore, the observed interventional equilibrium X satisfies 
+
+η =  id − f (Ik )(X).
+
+Thus, if the intervened mechanism f (Ik ) remains contractive, the Banach fixed-point theorem guarantees that the intervention admits a unique equilibrium. 14 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+## B. Theory 
+
+In this section, we lay out the theory behind cyclic causal discovery under soft interventions with unknown targets. We start by summarizing the definitions and establish results required for the proof of Theorem 3.1, beginning with standard graph-theoretic notation. 
+
+B.1. Preliminaries 
+
+Consider a directed graph G = ( V, E). A path π between nodes i and j is a sequence (i0, ε 1, i 1, . . . , ε n, i n), where 
+
+{i0, . . . , i n} ⊆ V and {ε1, . . . , ε n} ⊆ E , with i0 = i and in = j. A path is directed if each edge εk follows the form 
+
+ik−1 → ik for all k ∈ [n]. A cycle through node i consists of a directed path from i to some node j and an additional edge j → i. For any node i ∈ V , the ancestor set is defined as an G (i) := {j ∈ V | a directed path from j to i exists in G} ,while the descendant set is given by de G (i) := {j ∈ V | a directed path from i to j exists in G} . The strongly connected component of i, denoted sc G (i), is the intersection of its ancestors and descendants: sc G (i) = an G (i) ∩ de G (i).
+
+Definition B.1 (Collider) . For a directed graph G = ( V, E), a node ik ∈ V in a path π = ( i0, ε 1, i 1, ε 2, . . . , i n−1, ε n, i n)
+
+is called a collider if k̸ = 0 , n (non-endpoint) and the two edges εk, ε k+1 have their heads pointed at i, i.e., the subpath 
+
+(ik−1, ε k, i k, ε k+1 , i k+1 ) is of the form ik−1 → ik ← ik+1 . The node ik is called a non-collider if ik is not a collider. 
+
+Definition B.2 (d-separation) . Let G = ( V, E) be a directed graph and let C ⊆ V be a subset of nodes. A path π =(i0, ε 1, i 1, ε 2, . . . , i n−1, ε n, i n) is said to be d-blocked given C if 1. π contains a collider ik /∈ an G (C)
+
+2. π contains a non-collider ik ∈ C.The path π is said to be d-open given C if it is not d-blocked. Two subsets of nodes A, B ⊆ V is said to be d-separated given C if all paths between a and b, where a ∈ A and b ∈ B, is d-blocked given C, and is denoted by 
+
+A d
+
+⊥ 
+
+> G
+
+B | C. 
+
+If the underlying graph is acyclic, d-separation implies conditional independence. That is, for subsets of nodes A, B, C ⊆ V ,
+
+A d
+
+⊥ 
+
+> G
+
+B | C =⇒ XA ⊥
+
+> pG
+
+XB | XC ,
+
+where ⊥pG denotes conditional independence, and pG denotes the observational distribution. This is known as the directed global Markov property of G (Forr ´e & Mooij, 2017). However, in general, cyclic graphs do not obey the directed global Markov property as shown by (Bongers et al., 2021; Spirtes, 2013). (Forr ´e & Mooij, 2017) proposed σ-separation, a generalization of d-separation that extends the directed global Markov property to graphs with cycles. 
+
+Definition B.3 (σ-separation) . Let G = ( V, E) be a directed graph and let C ⊆ V be a subset of nodes. A path 
+
+π = ( i0, ε 1, i 1, ε 2, . . . , i n−1, ε n, i n) is said to be σ-blocked given C if 1. the first node of π, i0 ∈ C or its last node in ∈ C, or 2. π contains a collider ik /∈ an G (C)
+
+3. π contains a non-collider ik ∈ C that points towards a neighbor that is not in the same strongly connected component as ik in G, i.e, such that ik−1 ← ik in π and ik−1 /∈ sc G (ik), or ik → ik+1 in π and ik+1 /∈ sc G (ik).The path π is said to be σ-open given C if it is not σ-blocked. Two subsets of nodes A, B ⊆ V is said to be σ-separated given C if all paths between a and b, where a ∈ A and b ∈ B, is σ-blocked given C, and is denoted by 
+
+A σ
+
+⊥ 
+
+> G
+
+B | C. 
+
+15 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Note that σ-separation reduces to d-separation for acyclic graphs, that is, when sc G (i) = {i} for all i ∈ V .With σ-separation in place, we can now state the generalized directed global Markov property. 
+
+Definition B.4 (General directed global Markov property (Forr ´e & Mooij, 2017)) . Let G = ( V, E) be a directed graph and 
+
+pG denote the probability density of the observations X. The probability density pG satisfies the general directed global Markov property if for A, B, C ⊆ V 
+
+A σ
+
+⊥ 
+
+> G
+
+B | C =⇒ XA ⊥
+
+> pG
+
+XB | XC ,
+
+that is, XA and XB are conditionally independent given XC .
+
+B.2. Joint Causal Modelling and Markov properties      
+
+> X1X2
+> X3X4
+> G
+> X1X2
+> X3X4
+> C1C2
+> GI
+
+Figure 8. Illustration of the augmented graph GI corresponding to the set of interventional targets I = {∅ , {X3}, {X4}} .
+
+To integrate multiple interventional settings in a single causal graph, we adopt the idea of joint causal model proposed by (Mooij et al., 2016) by introducing a new set of context variables CI = ( C1, . . . , CK ) each representing another interventional setting. (The scenario where Ck = ∅ for all k = 1 , . . . , K corresponds to the observational setting.) Given a family of interventional targets I = {Ik}Kk=1 , we built an augmented graph GI from the parentless context variables 
+
+CI along with the existing system variables X by making sure ch G (Ck) = Ik. An example augmented graph with the intervention sets I = {∅ , {X3}, {X4}} can be found in Figure 8. The new system represented by the augmented graph is called meta system , and the structural equations governing the meta system can be written in the following way: 
+
+f ′ 
+
+> i
+
+(Xpa G (i), CI 
+
+> pa IG(i)
+
+, ϵ i, ˜ϵi) = 
+
+
+
+˜f (k) 
+
+> i
+
+(Xpa G (i)) + ˜ ϵ(k) 
+
+> i
+
+, if ∃ k ∈ [K] s.t. CK̸ = ∅ and Xi ∈ Ik,fi(Xpa G (i)) + ϵi, otherwise .
+
+(16) Recall from (7) that the probability distribution for the interventional setting Ik can be written as: 
+
+pIk ,G (X) = pE
+
+(id − Ukf )( X)
+
+> Uk
+
+
+
+× p eE
+
+(id − ˜Uk ˜f )( X)
+
+> Ik
+
+
+
+× det( J(id −f (Ik ))(X)) .
+
+This can also be written in terms of the context variables in the following way: 
+
+pGI (X | Ck = ξIk , C−k = ∅) = pIk ,G (X),
+
+where ξIk is an indicator function. Moreover, the joint distribution can be expressed as: 
+
+pGI (CI , X) = pGI (CI )pGI (X | CI ). (17) 
+
+Definition B.5. Let G = ( V, E) be a directed graph, and I = {Ik}Kk=0 with I0 = ∅ be a family of interventional targets. Let MI (G) denote the set of positive densities pGI : Rd → R such that pGI is given by (17) for all f (Ik ) : Rd → Rd, with 
+
+f (Ik ) 
+
+> i
+
+(X) = f (Ik ) 
+
+> i
+
+(Xpa G (i)) , such that f (Ik ) is unique and invertible. 
+
+Proposition B.6. For a directed graph G = ( V, E) and a family of interventional targets I = {Ik}Kk=0 such that I0 = ∅, let 
+
+p ∈ M I (G), then p satisfies the general directed global Markov property relative to GI .Proof. For a directed graph G, suppose the intervened mechanisms f (Ik ) are uniquely specified and invertible. Then the corresponding structural equations admit a unique solution on each strongly connected component of G. Moreover, introducing context variables in the augmented graph does not create additional cycles, so the resulting meta-system constitutes a simple SCM. Consequently, by Theorem A.21 in (Bongers et al., 2021), the induced distribution pGI is well-defined (unique) and satisfies the general directed global Markov property. 16 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+We now introduce the interventional Markov equivalence class for directed graphs, defined in terms of the set of distributions they induce. 
+
+Definition B.7 (I-Markov Equivalence Class) . Two directed graphs G1 and G2 are I-Markov equivalent if and only if 
+
+MI (G1) = MI (G2), denoted as G1 ≡I G2. The set of all directed graphs that are I-Markov equivalent to G1 is the 
+
+I-Markov equivalence class of G1, denoted as I-MEC (G1).
+
+B.3. Proof of Theorem 3.1 
+
+In this section, we prove the main theorem of this paper. We recall the score function introduced in Section 3.4: 
+
+S(G, I) = sup 
+
+> θ
+> K
+
+X
+
+> k=1
+
+EX∼p(k)
+
+ log pIk ,G (X) − λG |G| − λI |I| ,
+
+where p(k) is the ground truth distribution for the k-th experiment, and θ is the parameters of the causal system. We can rewrite the score function for the metasystem introduced above as: 
+
+S(GI ) = sup 
+
+> θ
+
+E
+
+> (X,C)∼p∗I
+
+log pGI (X, C | θ) − λ′|G I |,
+
+where p∗I is the joint ground truth distribution for all of the variables in the augmented graph and the pGI (X, C | θ) is given by (17) for a specific choice of θ. We define PI (G) as the collection of all distributions pGI (X, C | θ) that can be represented by the model specified in (5), (8), and (9). That is, 
+
+PI (G) := {p | ∃ θ s.t p = pGI (· | θ)}. (18) Theorem 3.1 relies on four assumptions. First of which is to ensure that the model is able to express the ground truth distribution. 
+
+Assumption B.8 (Sufficient Capacity) . The joint ground truth distribution p∗I is such that p∗I ∈ P ∗I (G∗), where G∗ is the ground truth graph and I∗ is the ground truth intervention family. The second assumption is the generalization of the faithfulness to the interventional setting. 
+
+Assumption B.9 (I-σ-faithfulness) . Let V = ( X, CI ), for any subset of nodes A, B, C ⊆ V ∪ CI , and Ik ∈ I 
+
+A σ̸⊥
+
+> GI
+
+B | C =⇒ VA̸ ⊥
+
+> pGI
+
+VB | VC .
+
+The above assumption entails that any conditional independence observed in the data must correspond to a σ-separation in the associated interventional ground-truth graph. Third assumption is to ensure the model distribution is strictly positive. 
+
+Assumption B.10 (Strict positivity) . The joint model distribution pGI (· | θ) is strictly positive for all parameters θ, directed graph G and interventional family I.From Assumption B.10 and (18) we can see that PI (G) ⊆ M I (G).
+
+Assumption B.11 (Finite differential entropy) . For I = {Ik}Kk=0 ,
+
+|Ep∗I log p∗I (X, C)| < ∞.
+
+The final assumption is to ensure that both S(GI ) and S(G∗I ∗
+
+) don’t go to infinity, as illustrated by the following lemma from (Brouillard et al., 2020). 
+
+Lemma B.12 (Finiteness of the score function (Brouillard et al., 2020)) . Under assumptions B.8 and B.11, S(GI ) < ∞.
+
+Using the results of (Brouillard et al., 2020), we can write the score difference between G∗I ∗
+
+and GI as a KL-divergence minimization term plus the difference between their regularization penalties. 17 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Lemma B.13 (Rewritting the score function (Brouillard et al., 2020)) . Under assumptions B.8 and B.11, we have 
+
+S(G∗I ∗
+
+) − S (GI ) = inf  
+
+> θ
+
+DKL (p∗I ∥pGI (· | θ)) + λ′(|G I | − |G ∗I ∗
+
+|).
+
+In order to prove Theorem 3.1 we will take the following technical lemma from (Sethuraman & Fekri, 2025). 
+
+Lemma B.14. Let G = ( V, E) be a directed graph, for a set of interventional targets I = {Ik}Kk=0 , and p∗ /∈ M I (G)) ,then 
+
+inf   
+
+> p∈M I(G))
+
+D(p∗∥p) > 0.
+
+The proof of this lemma can be found in (Sethuraman & Fekri, 2025). We recall Theorem 3.1 and present its proof. 
+
+Theorem B.15. 3.1 Let G∗ be the ground truth graph and let I∗ be the ground truth intervention family. ( ˆG, ˆI) ∈
+
+arg max G,I S(G, I). Under the Assumptions 2.1, B.8, B.9, B.10 and B.11, and for suitable λG , λ I > 0, ˆG is I∗-Markov equivalent to G∗ and ˆI = I∗.Proof. We should show that if G /∈ I -MEC (G∗) or I̸ = I∗ , the score function for the augmented graph GI will be strictly lower than the score function of G∗I ∗
+
+, i.e S(GI ) < S(G∗I ∗
+
+). To show that, first, we define 
+
+η(GI ) := inf  
+
+> θ
+
+DKL (p∗I ∥pGI (· | θ)) .
+
+Then, from Lemma B.13, the difference between these two score functions can be written as 
+
+S(G∗I ∗
+
+) − S (GI ) = η(GI ) + λ′(|G I | − |G ∗I ∗
+
+|) (19) Since G /∈ I -MEC (G∗) or I̸ = I∗, G∗I ∗
+
+and GI do not impose the same σ-separation constraints; that means there must exist subsets of nodes A, B, C ⊆ V ∪ CI such that either: 
+
+A σ
+
+⊥
+
+> GI
+
+B | C and A σ̸⊥
+
+> G∗I ∗
+
+B | C, 
+
+or 
+
+A σ̸⊥
+
+> GI
+
+B | C and A σ
+
+⊥ 
+
+> G∗I ∗
+
+B | C, 
+
+From Assumption B.8 we know p∗I ∈ M I (G∗), then for the first case it must be true that VA̸ ⊥p(k) VB | VC (Assump-tion B.9). Therefore, p∗I doesn’t satisfy the general directed Markov property with respect to GI and hence p∗I /∈ M I (G).For the second case if we take p∗I ∈ M I (G) then from Assumption B.9 we can say VA̸ ⊥p(k) VB | VC , however since 
+
+p∗I ∈ M I (G∗) and Proposition B.6 implies that VA ⊥p(k) VB | VC , this is a contradiction. Therefore, p∗I /∈ M I (G). Thus, by applying Lemma B.14, we can show η(GI ) would be strictly positive. This would imply the score difference in (19) would be always positive for the scenarios where |G I | ≥ |G ∗I ∗
+
+|. By picking λ′ such that 0 < λ ′ < min GI ∈G+ η(GI )   
+
+> |G ∗I ∗|−|G I|
+
+,we can make sure (19) would remain positive for GI ∈ G+ := {G I | |G I | < |G ∗I ∗
+
+|} . We can see this from 
+
+λ′ < min  
+
+> GI∈G+
+
+η(GI )
+
+|G ∗I ∗ | − |G I | (20) 
+
+⇐⇒ λ < η(GI )
+
+|G ∗I ∗ | − |G I | ∀G I ∈ G+ (21) 
+
+⇐⇒ λ(|G ∗I ∗
+
+| − |G I |) < η (GI ) ∀G I ∈ G+ (22) 
+
+⇐⇒ 0 < η (GI ) + λ(|G I | − |G ∗I ∗
+
+|) = S(G∗I ∗
+
+) − S (GI ) ∀G I ∈ G+. (23) Therefore, we have shown that for every graph that is outside of the general directed Markov equivalence class of the ground truth graph, and every interventional family different from the ground truth interventional family, would yield a strictly lower score. 18 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+B.4. Characterization of Equivalence Class 
+
+A graphical notion of the I-Markov equivalence class of a direct graph G can be given using σ-Maximal Ancestral Graphs (σ-MAGs) (Yao & Mooij, 2025). A graph G is said to be maximal if there exists no inducing path (relative to the empty set) between any two non-adjacent nodes. An inducing path relative to a subset L is a path on which every non-endpoint node 
+
+i / ∈ L is a collider on the path, and every collider is an ancestor of an endpoint of the path. A Maximal Ancestral Graph 
+
+(MAG) is one that is both ancestral and maximal. A σ-MAG for a directed graph G is a MAG on the same node set that represents the σ-separation model of G in the sense that σ-separation in G coincides with m-separation (defined as in (Yao & Mooij, 2025)) in the σ-MAG. Given the augmented graph GI , it is possible to construct a σ-MAG over V = ( X, CI ) that preserves both the independence structure and ancestral relationships encoded in GI ; see (Yao & Mooij, 2025) for details. We denote σ-MAG (GI ) to mean a σ-MAG constructed from GI . Therefore, all independencies encoded by σ-separation in GI are also present in σ-MAG (GI ) via m-separation. A path π = ( i0, ε 1, . . . , i n−1, ε n, i n) in σ-MAG (GI ) is called a 
+
+discriminating path for in−1 if (1) π includes at least three edges; (2) in−1 is a non-endpoint node on π, and is adjacent to 
+
+in on π; and (3) i0 and in are not adjacent, and every node in between i0 and in−1 is a collider on π and is a parent of in.The following theorem characterizes the equivalence of σ-MAGs. 
+
+Theorem B.16 ((Yao & Mooij, 2025)) . Two σ-MAGs G1 and G2 are Markov equivalent if and only if: 1. G1 and G2 have the same adjacencies; 2. G1 and G2 have the same unshielded colliders; and 3. Let π be a discriminating path for a node v in G1, and let π′ be the corresponding path to π in G2 If π′ is also a discriminating path for v, then v is a collider on π in G1 if and only if it is a collider on π′ in G2.
+
+Hence, by Theorem B.16, two directed graphs G1 and G2 are I-Markov equivalent if and only if their corresponding 
+
+σ-MAGs, σ-MAG (GI 
+
+> 1
+
+) and σ-MAG (GI 
+
+> 2
+
+), satisfy the conditions of Theorem B.16; that is, (i) have the same skeleton, (ii) have the same unshielded colliders, and (iii) have the same discriminating paths with consistent collider status. 19 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+## C. Additional Experiments 
+
+C.1. Experiments on Non-contractive DAGs 
+
+We conduct tests on non-contractive causal mechanisms where the ground truth graph is acyclic. We modify our methodology to work under non-contractive SEM’s following the preconditioning approach proposed by (Sethuraman et al., 2023). According to this method we introduce a learnable diagonal preconditioning matrix Λ to transform the causal mechanism in the following way: ˆf = Λ−1 ◦ f ◦ Λ, (24) where f remains contractive. For this comparison, we additionally include DCDI (Brouillard et al., 2020), UT-IGSP (Squires et al., 2020), and BACADI (H ¨agele et al., 2022) as baseline methods. These approaches are designed for learning DAGs under unknown interventions. A direct comparison with UT-IGSP is infeasible, since, as a constraint-based approach, it does not return a candidate graph but instead a candidate I-Markov Equivalence class. To evaluate the AUPRC, we picked the maximum among the graphs in this equivalence class. Figure 9 shows that SCOUT can recover the causal structure of the graph with a near-perfect performance in every setting except the Noisy Function + Gaussian noise scenario, where it obtains comparable results with baselines. As for the target recovery, Table 4 suggests SCOUT successfully identifies the intervened nodes for shift and scale interventions. 0.0   
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> NODAGS
+> LLC
+> BACKSHIFT
+> DCDI
+> UT-IGSP
+> BACADI
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> NODAGS
+> LLC
+> BACKSHIFT
+> DCDI
+> UT-IGSP
+> BACADI
+> SCOUT
+> NODAGS
+> LLC
+> BACKSHIFT
+> DCDI
+> UT-IGSP
+> BACADI
+
+Figure 9. Graph recovery performance comparison between SCOUT and baselines under non-contractive DAG’s and various interventional and exogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+20 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 4. Graph recovery performance comparison between SCOUT and baselines under different intervention types and exogenous noise distributions, evaluated using AUPRC (higher is better). Results are reported as mean ± standard deviation. 
+
+Noise Type Intervention Type SCOUT BACKSHIFT DCDI UT-IGSP BACADI Gaussian Shift 1.000 ± 0.000 0.954 ± 0.054 0.157 ± 0.215 0.991 ± 0.019 0.887 ± 0.032 
+
+Scale 1.000 ± 0.000 1.000 ± 0.000 0.104 ± 0.140 1.000 ± 0.000 0.766 ± 0.019 
+
+Noisy Function 0.137 ± 0.063 0.166 ± 0.127 0.204 ± 0.239 0.212 ± 0.108 0.550 ± 0.000 
+
+Exponential Shift 1.000 ± 0.000 0.979 ± 0.030 0.158 ± 0.193 0.924 ± 0.041 1.000 ± 0.000 
+
+Scale 1.000 ± 0.000 1.000 ± 0.000 0.056 ± 0.000 0.909 ± 0.064 1.000 ± 0.000 
+
+Noisy Function 0.322 ± 0.171 0.145 ± 0.102 0.098 ± 0.047 0.366 ± 0.152 0.550 ± 0.000 
+
+Gumbel Shift 1.000 ± 0.000 0.825 ± 0.183 0.055 ± 0.000 0.983 ± 0.030 0.825 ± 0.033 
+
+Scale 1.000 ± 0.000 1.000 ± 0.000 0.057 ± 0.001 0.995 ± 0.014 0.870 ± 0.033 
+
+Noisy Function 0.158 ± 0.062 0.131 ± 0.073 0.109 ± 0.157 0.292 ± 0.105 0.550 ± 0.000 
+
+C.2. Experiments for Linear SEM 
+
+We evaluate SCOUT’s performance alongside baselines for linear SEM, using the same intervention and noise settings as in the nonlinear case. We use AUPRC as our evaluation metric (higher is better) again. The box plot results of Figure 10 show that SCOUT can again achieve near-perfect graph recovery in all settings except Noisy Function + Gaussian noise (where it outperforms all of the baselines). From Table 5, it can be seen that SCOUT can also achieve near-perfect intervention target recovery, except for noisy function interventions, where it still outperforms BACKSHIFT. 0.2   
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+
+Figure 10. Graph recovery performance comparison between SCOUT and baselines under linear SEM and various interventional and exogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+21 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 5. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under linear SEM across different intervention modes and exogenous noise types. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. 
+
+Gaussian Exponential Gumbel Intervention Type SCOUT BACKSHIFT SCOUT BACKSHIFT SCOUT BACKSHIFT Shift 1.000 ± 0.000 0.812 ± 0.173 1.000 ± 0.000 0.816 ± 0.182 1.000 ± 0.000 0.707 ± 0.186 
+
+Scale 1.000 ± 0.000 1.000 ± 0.000 0.956 ± 0.138 1.000 ± 0.000 1.000 ± 0.000 1.000 ± 0.000 
+
+Noisy Function 0.591 ± 0.169 0.404 ± 0.304 0.842 ± 0.189 0.533 ± 0.170 0.792 ± 0.080 0.445 ± 0.251 
+
+C.3. Experiments Under Known Intervention Targets 
+
+We conduct a performance benchmark of graph recovery for SCOUT and baselines under known interventions for nonlinear SEM (The BACKSHIFT model does not accept known targets, so we use the unknown setting for this baseline). Figure 11 shows that SCOUT can recover the graph with near-perfect performance across all settings, including Noisy Function + Gaussian noise, indicating that the distributional shift in this setting allows our model to learn the graph structure when the targets are known. 0.2   
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Shift
+> Gaussian Exponential Gumbel
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Scale
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Noisy Function
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+> SCOUT
+> NODAGS
+> BACKSHIFT
+> LLC
+
+Figure 11. Graph recovery performance comparison between SCOUT and baselines for known intervention targets under nonlinear SEM and various interventional and exogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+C.4. Experiments for Hard (Perfect) Interventions 
+
+We run experiments on SCOUT and the baselines to evaluate their structures and target recovery performance under hard (perfect) interventions, in which the incoming edges of the intervened nodes are removed. Figure 12 shows that SCOUT can learn causal relationships under hard interventions. Both SCOUT and BACKSHIFT can identify intervention targets in this setting with perfect accuracy. 22 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets SCOUT 
+
+> NODAGS
+> LLC
+> BACKSHIFT
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Hard
+> Gaussian
+> SCOUT
+> NODAGS
+> LLC
+> BACKSHIFT
+> Exponential
+> SCOUT
+> NODAGS
+> LLC
+> BACKSHIFT
+> Gumbel
+
+Figure 12. Graph recovery performance comparison between SCOUT and baselines under nonlinear SEM and hard interventions with various exogenous noise settings, evaluated using AUPRC. In all cases, the number of nodes is fixed at d = 10 .
+
+C.5. Ablation Studies 
+
+C.5.1. I MPACT OF NUMBER OF MAXIMUM INTERVENTIONAL TARGETS 
+
+In this section, we evaluated SCOUT’s performance alongside baselines while varying the maximum number of interventions per experiment from 1 to 5. We examine non-linear SEM under unknown-scale interventions with Gaussian and Gumbel noise. From Figure 13 and Table 6, we observe that as the maximum number of intervention targets per experiment increases, SCOUT shows some performance degradation. Nevertheless, it consistently remains superior to the baseline methods. In contrast, BACKSHIFT deteriorates much more substantially in both graph structure recovery and intervention target recovery compared to the single-node intervention setting. 1 2 3 4 5       
+
+> Max Intervened Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 12345
+> Max Intervened Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 13. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The number of maximum intervention targets per experiment is varied from 1 to 5. 
+
+23 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 6. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. The number of nodes is varied from 1 to 5. Gaussian Gumbel Max Intervened Nodes SCOUT BACKSHIFT SCOUT BACKSHIFT 1 1.000 ± 0.000 0.641 ± 0.158 1.000 ± 0.000 0.451 ± 0.155 
+
+2 1.000 ± 0.000 0.372 ± 0.165 0.990 ± 0.023 0.435 ± 0.188 
+
+3 0.986 ± 0.031 0.401 ± 0.128 0.999 ± 0.001 0.471 ± 0.048 
+
+4 0.940 ± 0.053 0.298 ± 0.077 0.912 ± 0.066 0.300 ± 0.077 
+
+5 0.849 ± 0.104 0.356 ± 0.080 0.919 ± 0.087 0.321 ± 0.124 
+
+C.5.2. S CALING WITH TRAINING SAMPLES 
+
+In this experiment, we evaluate the sample size requirements of SCOUT. Figure 14 and Table 7 indicate that even 250 samples per experiment allows SCOUT to learn the causal graph along with unknown targets under shift interventions. 250 500 1000 1500       
+
+> Number of Samples
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 250 500 1000 1500
+> Number of Samples
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 14. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The number of samples per experiment is varied from 250 to 1500. 
+
+Table 7. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. The number of samples per experiment is varied from n = 250 to n = 1500 .
+
+Gaussian Gumbel Number of Samples SCOUT BACKSHIFT SCOUT BACKSHIFT 250 1.00 ± 0.00 0.82 ± 0.18 1.00 ± 0.00 0.70 ± 0.20 
+
+500 1.00 ± 0.00 0.87 ± 0.17 1.00 ± 0.00 0.79 ± 0.16 
+
+1000 1.00 ± 0.00 0.93 ± 0.08 1.00 ± 0.00 0.87 ± 0.16 
+
+1500 1.00 ± 0.00 0.92 ± 0.18 1.00 ± 0.00 0.88 ± 0.13 
+
+C.5.3. S CALING WITH OUTGOING EDGE DENSITY 
+
+We evaluate the effect of the graph sparsity on the structure and target recovery of SCOUT by varying the expected outgoing edge density from 1 to 4. The results are summarized in Figure 15 and Table 8. The SCOUT learns the underlying graph structure and unknown interventional targets independently of graph sparsity. 24 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 1 2 3 4      
+
+> Edge Density
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 1234
+> Edge Density
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 15. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The number of expected outgoing edge density is varied from 1 to 4. 
+
+Table 8. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. Edge density is varied from 1 to 4. 
+
+Gaussian Gumbel Edge Density SCOUT BACKSHIFT SCOUT BACKSHIFT 1 1.00 ± 0.00 0.98 ± 0.04 1.00 ± 0.00 0.80 ± 0.20 
+
+2 1.00 ± 0.00 0.89 ± 0.15 1.00 ± 0.00 0.82 ± 0.13 
+
+3 1.00 ± 0.00 0.94 ± 0.10 1.00 ± 0.00 0.89 ± 0.12 
+
+4 1.00 ± 0.00 0.88 ± 0.15 1.00 ± 0.00 0.82 ± 0.17 
+
+C.5.4. I MPACT OF SHIFT PARAMETER 
+
+We evaluate the effect of the shift parameter on the graph and target recovery in this study. We vary the shift amount from 0 (observational case) to 2. From Figure 16, it can be understood that for the Gaussian noise, with the increasing shift amount, SCOUT’s performance on discovering the causal relationships increases, whereas for the Gumbel noise model, it works with near-perfect performance for all shift parameters. In terms of intervention target recovery, Table 9 indicates that for Gaussian noise, SCOUT can learn targets even for low amounts of shift, and for Gumbel noise, its performance gets better as the shift parameter increases. 
+
+Table 9. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. The shift parameter is varied from 0.5 to 2.0. 
+
+Gaussian Gumbel Shift SCOUT BACKSHIFT SCOUT BACKSHIFT 0.5 0.99 ± 0.02 0.24 ± 0.11 0.18 ± 0.05 0.13 ± 0.08 
+
+1.0 1.00 ± 0.00 0.63 ± 0.21 1.00 ± 0.00 0.40 ± 0.17 
+
+2.0 1.00 ± 0.00 0.95 ± 0.05 1.00 ± 0.00 0.93 ± 0.10 
+
+25 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 0.0 0.5 1.0 2.0       
+
+> Shift
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 0.0 0.5 1.0 2.0
+> Shift
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 16. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The shift parameter is varied from 0 (observational case) to 2. 
+
+C.5.5. I MPACT OF SCALE PARAMETER 
+
+In this section, we vary the scale parameter to see its effect on the performance of SCOUT and baselines. We change it from 0.25 to 2 (0.5 is the observational case). The results are given in Figure 17 and Table 10. For Gaussian noise, the overall performance of SCOUT again increases, and for Gumbel noise, it achieves near-perfect performance regardless of the scale parameter. 0.25 0.50 1.00 2.00       
+
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 0.25 0.50 1.00 2.00
+> Number of Nodes
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 17. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The scale parameter is varied from 0.25 to 2. 
+
+26 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+Table 10. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and scale interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. The scale factor is varied from 0.25 to 2.0. 
+
+Gaussian Gumbel Scale SCOUT BACKSHIFT SCOUT BACKSHIFT 0.25 0.05 ± 0.00 0.00 ± 0.00 0.05 ± 0.00 0.00 ± 0.00 
+
+1.00 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+2.00 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+C.5.6. I MPACT OF CYCLES 
+
+In this section, we change the number of cycles in ground truth graph to see its effect on the performance of SCOUT and baselines. The number of nodes in the graph are fixed to d = 10 , and the number of cycles are varied from 0 to 8. The results are given in Figure 18 and Table 11. The number of cycles do no effect the performance of SCOUT. 0 2 4 6 8       
+
+> Number of Cycles
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> AUPRC
+> Gaussian
+> 02468
+> Number of Cycles
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gumbel
+> SCOUT NODAGS BACKSHIFT LLC
+
+Figure 18. Graph recovery performance comparison between SCOUT and baselines under non-linear SEM and shift interventions. The number of cycles are varied from 0 to 8 
+
+Table 11. Interventional target recovery performance comparison between SCOUT and BACKSHIFT under non-linear SEM and shift interventions. The table presents the average AUPRC value along with its standard deviation evaluated using 10 independent trials. The number of cycles is varied from 0 to 8.                                                                  
+
+> Gaussian Gumbel Number of Cycles SCOUT BACKSHIFT SCOUT BACKSHIFT 01.00 ±0.00 0.91 ±0.12 1.00 ±0.00 0.86 ±0.12
+> 21.00 ±0.00 0.88 ±0.19 1.00 ±0.00 0.88 ±0.15
+> 41.00 ±0.00 0.95 ±0.05 1.00 ±0.00 0.92 ±0.10
+> 61.00 ±0.00 0.93 ±0.11 1.00 ±0.00 0.90 ±0.11
+> 81.00 ±0.00 0.95 ±0.10 1.00 ±0.00 0.94 ±0.08
+
+27 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+C.6. Induced Distribution Change Comparison of Soft Interventions 
+
+The results presented in Section 4 show that neither SCOUT nor the baselines can perfectly recover the graph structure and the intervention targets for noisy function interventions, as opposed to shift and scale interventions. However, for the known interventions, we see in Figure 11 that SCOUT can identify the causal structure with near-perfect performance. The reason is that, to recover the unknown intervention targets under the finite-data limit, we need a significant distributional change induced by that intervention (Gamella & Heinze-Deml, 2020). To experimentally verify this, we compare the KL-divergence between the single-node interventional and observational distributions under these three types of soft interventions for a graph with d = 10 nodes. For every node i and experiment k, we estimate the marginal distributions of Xi under intervention (pk,i ) and observational ( qi) using a shared histogram binning, and compute the divergence. 
+
+Di,j = KL( pi,j ∥ qj ) .
+
+We then summarize the overall intervention impact by averaging across interventions and nodes: 
+
+¯D = 1
+
+d
+
+> d
+
+X
+
+> i=1
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+Dk,i 
+
+!
+
+,
+
+and report the mean and standard deviation of ¯D across the 10 runs. We can see from Figure 19 that noisy function interventions yield a significantly low KL-divergence, thus inducing a limited distribution change compared to shift/scale interventions. Noisy Function 
+
+> Shift
+> Scale
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> KL Divergence
+> 0.140 ± 0.007
+> 2.099 ± 0.057
+> 1.035 ± 0.022
+
+Figure 19. KL-divergence comparison between noisy function, shift, and scale interventions under all the single node interventions for a graph with d = 10 nodes. 
+
+C.7. Additional Experiments on Perturb-CITE-seq Dataset 
+
+We test how well SCOUT performs compared to other baselines when the intervention targets are known on the Perturb-CITE-seq dataset (Frangieh et al., 2021). Additionally, we compared the baselines’ performances (this time including BACKSHIFT) using Mean Absolute Error (MAE) as the evaluation metric. We can compute MAE by taking the mean of 
+
+|| f (Ik )(x) − x|| 1/d over all observations x in the held-out test set. The results for both known and unknown settings are given in Figures 21 and 22, respectively. The results indicate that SCOUT remains competitive with state-of-the-art methods under the MAE metric. 28 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets SCOUT NODAGS LLC 
+
+0.0 
+
+0.5 
+
+1.0 
+
+1.5 
+
+2.0 
+
+2.5 
+
+> I-NLL
+> 0.489
+> ±0.088
+> 1.349
+> ±0.020
+> 1.868
+> ±0.066
+
+Co-Culture 
+
+SCOUT NODAGS LLC 
+
+> 0.593
+> ±0.143
+> 1.396
+> ±0.008
+> 2.193
+> ±0.102
+
+Control 
+
+SCOUT NODAGS LLC 
+
+> 0.551
+> ±0.086
+> 1.463
+> ±0.008
+> 2.092
+> ±0.118
+
+IFN-
+
+Figure 20. The performance comparison results on the Perturb-CITE-seq (Frangieh et al., 2021) gene perturbation dataset with known interventional targets. The bar graph shows mean absolute error (MAE) and its standard deviation across 5 trials. SCOUT   
+
+> NODAGS
+> LLC
+> BackShift
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> MAE
+> 0.775
+> ±0.011
+> 0.773
+> ±0.011
+> 1.264
+> ±0.075
+> 0.971
+> ±0.047
+> Co-Culture
+> SCOUT
+> NODAGS
+> LLC
+> BackShift
+> 0.835
+> ±0.008 0.828
+> ±0.008
+> 1.581
+> ±0.087
+> 1.089
+> ±0.116
+> Control
+> SCOUT
+> NODAGS
+> LLC
+> BackShift
+> 0.909
+> ±0.008 0.903
+> ±0.007
+> 1.575
+> ±0.114
+> 1.086
+> ±0.056
+> IFN-
+
+Figure 21. The performance comparison results on the Perturb-CITE-seq (Frangieh et al., 2021) gene perturbation dataset with unknown interventional targets. The bar graph shows mean absolute error (MAE) and its standard deviation across 5 trials. SCOUT   
+
+> NODAGS
+> LLC
+> BackShift
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> MAE
+> 0.775
+> ±0.011
+> 0.773
+> ±0.011
+> 1.264
+> ±0.075
+> 0.971
+> ±0.047
+> Co-Culture
+> SCOUT
+> NODAGS
+> LLC
+> BackShift
+> 0.835
+> ±0.008 0.828
+> ±0.008
+> 1.581
+> ±0.087
+> 1.089
+> ±0.116
+> Control
+> SCOUT
+> NODAGS
+> LLC
+> BackShift
+> 0.908
+> ±0.009 0.903
+> ±0.007
+> 1.575
+> ±0.114
+> 1.086
+> ±0.056
+> IFN-
+
+Figure 22. The performance comparison results on the Perturb-CITE-seq (Frangieh et al., 2021) gene perturbation dataset with unknown interventional targets. The bar graph shows interventional negative log-likelihood (I-NLL) and its standard deviation across 5 trials. 
+
+## D. Experimental Setup 
+
+In this section, we explain how we generate our synthetic data and how we preprocess the gene perturbation dataset. We provide the implementation details for SCOUT, along with the baselines, and discuss our evaluation metrics. The code for SCOUT is available at the repository: https://github.com/alparturkoglu/scout-master 
+
+D.1. Data Generation for Synthetic Experiments 
+
+For all types of SEM, we first sample a directed graph with edge density of 2 using the Erd ˝os-R ´enyi (ER) random graph model. For the linear SEM, we sample the edge weights from the uniform distribution Unif (( −0.9, 0.2) ∪ (0 .2, 0.9)) for contractive SEMs used in cyclic graphs, and we rescale the edge weight matrix to ensure its Lipschitz constant is less than 1. For the nonlinear SEM, we use a single-layer MLP with tanh (rectified linear unit) activation, f = tanh (W T x), where W
+
+is the weighted adjacency matrix. We ensure the contractivity by rescaling with the operator norm. For the noisy function interventions, we generate the intervened causal mechanism ˜f by negating the signs of the weights of the last layer for f .We can see from Proposition D.1 that this approach preserves the contractivity of the combined intervened causal mechanism 
+
+f (Ik ), thus satisfying Assumption 2.1. 
+
+Proposition D.1. For an interventional experiments Ik ∈ I and a contractive causal mechanism f , Let ˜f = αf , for 
+
+29 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets ACSL3 
+
+> ACTA2
+> B2M
+> CCND1
+> CD274
+> CD58
+> CD59
+> CDK4
+> CDK6
+> CDKN1A
+> CKS1B
+> CST3
+> CTPS1
+> DNMT1
+> EIF3K
+> EVA1A
+> FKBP4
+> FOS
+> GSEC
+> GSN
+> HASPIN
+> HLA-A
+> HLA-B
+> HLA-C
+> HLA-E
+> IFNGR1
+> IFNGR2
+> ILF2
+> IRF3
+> JAK1
+> JAK2
+> LAMP2
+> LGALS3
+> MRPL47
+> MYC
+> P2RX4
+> PABPC1
+> PAICS
+> PET100
+> PTMA
+> PUF60
+> RNASEH2A
+> RRS1
+> SAT1
+> SEC11C
+> SINHCAF
+> SMAD4
+> SOX4
+> SP100
+> SSR2
+> STAT1
+> STOM
+> TGFB1
+> TIMP2
+> TM4SF1
+> TMED10
+> TMEM173
+> TOP1MT
+> TPRKB
+> TXNDC17
+> VDAC2
+> ACSL3
+> ACTA2
+> B2M
+> CCND1
+> CD274
+> CD58
+> CD59
+> CDK4
+> CDK6
+> CDKN1A
+> CKS1B
+> CST3
+> CTPS1
+> DNMT1
+> EIF3K
+> EVA1A
+> FKBP4
+> FOS
+> GSEC
+> GSN
+> HASPIN
+> HLA-A
+> HLA-B
+> HLA-C
+> HLA-E
+> IFNGR1
+> IFNGR2
+> ILF2
+> IRF3
+> JAK1
+> JAK2
+> LAMP2
+> LGALS3
+> MRPL47
+> MYC
+> P2RX4
+> PABPC1
+> PAICS
+> PET100
+> PTMA
+> PUF60
+> RNASEH2A
+> RRS1
+> SAT1
+> SEC11C
+> SINHCAF
+> SMAD4
+> SOX4
+> SP100
+> SSR2
+> STAT1
+> STOM
+> TGFB1
+> TIMP2
+> TM4SF1
+> TMED10
+> TMEM173
+> TOP1MT
+> TPRKB
+> TXNDC17
+> VDAC2
+
+Figure 23. The adjacency matrix learnt by SCOUT for co-culture cell condition of Perturb-CITE-seq dataset (Frangieh et al., 2021). 
+
+|α| ≤ 1. Then, the combined interventional causal mechanism f (Ik ) ≜ (Ukf + ( 1d − Uk) ˜f ) remains contractive. Proof. We should show that f (Ik ) ≜ (Ukf + ( 1d − Uk) ˜f ) will still be contractive if f is contractive and ˜f = αf where 
+
+|α| ≤ 1.
+
+f (Ik )(x) =  Uk + α(I − Uk) f (x) = A f (x),
+
+where A := Uk + α(I − Uk) is diagonal with entries ai ∈ { 1, α }. For any x, y ∈ Rd,
+
+∥f (Ik )(x) − f (Ik )(y)∥ = ∥A f (x) − f (y)∥≤ ∥ A∥∥ f (x) − f (y)∥,
+
+where ∥A∥ denotes the induced operator norm. Since A is diagonal, 
+
+∥A∥ = max 
+
+i |ai| = max {1, |α|} = 1 (because |α| ≤ 1).
+
+Thus, 
+
+∥f (Ik )(x) − f (Ik )(y)∥ ≤ ∥ f (x) − f (y)∥ ≤ L ∥x − y∥,
+
+which shows that f (Ik ) is contractive with Lipschitz constant at most L < 1.Therefore, f (Ik ) is contractive. 
+
+D.2. Gene Perturbation Dataset 
+
+The data were downloaded from the Broad Institute Single Cell Portal (accession SCP1064). Following the preprocessing protocol of (Sethuraman et al., 2023), we removed cells with fewer than 500 detected genes and discarded genes expressed in fewer than 500 cells. To keep the analysis computationally tractable, we restricted attention to 61 perturbed genes (Table 12) selected from the full set of measured genes. We then split the data by experimental condition (co-culture, IFN-γ, and control), training and evaluating models separately within each condition. . 30 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets  
+
+> Table 12. The selected gene set from the Perturb-CITE-seq dataset (Frangieh et al., 2021).
+
+ACSL3 ACTA2 B2M CCND1 CD274 CD58 CD59 CDK4 CDK6 CDKN1A CKS1B CST3 CTPS1 DNMT1 EIF3K EVA1A FKBP4 FOS GSEC GSN HASPIN HLA-A HLA-B HLA-C HLA-E IFNGR1 IFNGR2 ILF2 IRF3 JAK1 JAK2 LAMP2 LGALS3 MRPL47 MYC P2RX4 PABPC1 PAICS PET100 PTMA PUF60 RNASEH2A RRS1 SAT1 SEC11C SINHCAF SMAD4 SOX4 SP100 SSR2 STAT1 STOM TGFB1 TIMP2 TM4SF1 TMED10 TMEM173 TOP1MT TPRKB TXNDC17 VDAC2 
+
+D.3. Implementation Details 
+
+D.3.1. A RCHITECTURAL DETAILS 
+
+The main algorithm of SCOUT is implemented in Python using the PyTorch library. The model takes as input an interventional dataset, where each sample is associated with its corresponding experiment index, along with a set of hyperparameters. To model the causal mechanisms f and ˜f , we use a gumbelSoftMLP architecture without hidden layers, followed by a 
+
+tanh activation. A learned Gumbel-sigmoid adjacency mask is used to select the parent set of each node, while intervention targets are inferred using a separate Gumbel-sigmoid intervention mask. We do not employ temperature annealing; instead, the temperatures are fixed at 1.0 for graph structure learning and 0.5 for intervention-target learning. The algorithm is initialized with parameters θ(0) , M (0)  
+
+> ϕ
+
+, T (0)  
+
+> ψ
+
+, and proceeds according to the methodology described in Section 3 to maximize the proposed score function. The objective is optimized using the ADAM optimizer (Kingma & Ba, 2017). The hyperparameters used during training are reported in Table 13, and the overall training procedure is summarized in Algorithm 1. All experiments were conducted on NVIDIA RTX6000 GPUs. 
+
+Algorithm 1 SCOUT Training 
+
+Require: Interventional dataset {x(i)}Ni=1 , experiment index {k(i)}Ni=1 , regularization coefficients λG and λI , batch size 
+
+B, learning rate α.
+
+Ensure: Learned neural network parameters ˆθ, graph structure parameters ˆM ϕ, interventional target parameters ˆT ψ . 
+
+> 1:
+
+Initialize the parameters: θ(0) ∼ pθ (θ), M (0)  
+
+> ϕ
+
+∼ pM ϕ (M ϕ), and T (0)  
+
+> ψ
+
+∼ pT ψ (T ψ ) 
+
+> 2:
+
+while NOT CONVERGED do  
+
+> 3:
+
+Shuffle {x(i), k (i)}i 
+
+> 4:
+
+for t = 1 to N/B do  
+
+> 5:
+
+M (t) ∼ M ϕ 
+
+> 6:
+
+T (t) ∼ T ψ 
+
+> 7:
+
+Compute LOSS = − 1
+
+> B
+
+PBi=1 ˆS
+
+
+
+θ, {x(j)}Bt j=B(t−1) , {k(j)}Bt j=B(t−1) , M (t), T (t)) + λG ∥M ϕ∥1 + λI ∥T ψ ∥1 
+
+> 8:
+
+Backpropagate using ADAM(LOSS , M ϕ, T ϕ, θ, α ) 
+
+> 9:
+
+Perform RESCALE( f θ , ˜f θ ) to ensure f θ and ˜f θ are 0.9-Lipschitz  
+
+> 10:
+
+end for  
+
+> 11:
+
+end while  
+
+> 12:
+
+return ˆθ, ˆM ϕ, ˆT ψ
+
+31 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets  
+
+> Table 13. Hyperparameters used in our experiments.
+
+Hyperparameter Meaning Value 
+
+λG Graph sparsity regularizer 0.001 
+
+λI Intervention family sparsity regularizer 0.01 
+
+α Learning rate 0.01 
+
+B Batch size 512 D.3.2. S ENSITIVITY ANALYSIS 
+
+To assess SCOUT’s sensitivity to random seeds and initialization, we conducted the following experiment. Using a fixed ground-truth graph and intervention targets with shift interventions under Gaussian noise and a non-linear mechanism, we trained the model five times with different random initializations. The graph recovery AUPRC achieves a mean of 0.9854 with a standard deviation of 0.00439, while the intervention recovery AUPRC is 1.0 in all trials. These results indicate that SCOUT is robust to initialization and random seed variability. To evaluate sensitivity to hyperparameters, we trained SCOUT using a range of hyperparameter settings on the same graph and intervention targets. As shown in Table 14, SCOUT achieves near-perfect performance across a wide range of configurations, demonstrating robustness to hyperparameter choices. To analyze the variance of the log-determinant estimator, we considered a linear SEM setting where the true determinant can be computed analytically. The estimator achieves a variance of 3.297 × 10 −3 and a mean squared error (MSE) of 
+
+2.905 × 10 −1.    
+
+> Table 14. SCOUT performance for various choices of hyperparameters α,λc,λr
+
+Learning rate (α) λc λr AUPRC Int. AUPRC 
+
+10 −2 10 −3 10 −2 1.00 1.00 
+
+10 −1 10 −3 10 −2 0.95 1.00 
+
+10 −3 10 −3 10 −2 1.00 1.00 
+
+10 −2 10 −3 10 −3 1.00 0.92 
+
+10 −2 10 −3 10 −1 1.00 1.00 
+
+10 −2 10 −2 10 −2 0.90 1.00 
+
+10 −2 10 −4 10 −2 1.00 1.00 32 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets 
+
+D.3.3. C OMPUTATIONAL COST ANALYSIS 
+
+Figure 24 reports the training times of SCOUT and the baseline methods. In contrast to the gradient-based approaches, LLC and BACKSHIFT require no stochastic optimization; as a result, they are substantially faster. NODAGS-Flow has lower runtime than SCOUT, but its formulation does not support unknown-target estimation or neural spline flows for exogenous noise transformation. All runtimes are measured on graphs with d = 10 nodes, using training data with all single-node interventional datasets; SCOUT and NODAGS are trained for 200 epochs. SCOUT NODAGS BACKSHIFT LLC  
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> 120
+> Seconds
+> 118s
+> 29s
+> 0.18s 0.01s
+
+Figure 24. Training time comparison between SCOUT and the baselines. 
+
+Let N be the number of nodes, B the minibatch size, M the number of samples scored at likelihood time, and K the number of power-series terms in the residual log-det estimator. In the current setup, E[K] = 4 .For one training step, the cost can be written explicitly as 
+
+Ttrain = O(BN 2)
+
+| {z }
+
+> sample Gumbel adjacency mask
+
++ O(BN 3)
+
+| {z }  
+
+> compute f(x)
+
++ O(BN 3)
+
+| {z } 
+
+> compute fi(x)
+
++ O(( K + 1) BN 3)
+
+| {z }
+
+> Neumann-series residual log-det
+
++ O(BN )
+
+| {z }
+
+> 1D spline-flow log-det
+
++ O(( K + 1) BN 3)
+
+| {z }
+
+> backpropagation
+
++ O(N 2)
+
+| {z } 
+
+> optimizer & Lipschitz projection
+
+.
+
+For one likelihood evaluation on M samples, the cost is 
+
+Tlik = O(M N 2)
+
+| {z }
+
+> sample Gumbel adjacency mask
+
++ O(M N 3)
+
+| {z }  
+
+> compute f(x)
+
++ O(M N 3)
+
+| {z } 
+
+> compute fi(x)
+
++ O(KM N 3)
+
+| {z }
+
+> power-series residual log-det
+
++ O(M N )
+
+| {z }
+
+> 1D spline-flow log-det
+
+.
+
+Hence, both training and likelihood evaluation are dominated by cubic scaling in the number of nodes, with overall leading-order costs O(( K + 1) BN 3) and O(KM N 3), respectively. We have measured the per-epoch computation time as well as training memory footprint for SCOUT as a function of nodes and experiments. Tables 15 and 16 indicate that the model scales linearly with the number of experiments where as the main computational bottleneck is the scaling with the number of nodes which is expected because of the Jacobian calculation. 33 SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets  
+
+> Table 15. Per-epoch computation time and training memory as a function of the number of nodes.
+
+Nodes Experiments Time / epoch (s) Train-State Mem Est. (KiB) 10 10 0.59 21.7656 30 30 8.30 102.7031 50 50 75.00 233.6406 70 70 197.0 414.5781  
+
+> Table 16. Per-epoch computation time and training memory as a function of the number of experiments.
+
+Nodes Experiments Time / epoch (s) Train-State Mem Est. (KiB) 10 10 0.59 21.7656 10 20 1.20 23.3281 10 30 1.80 24.8906 D.3.4. B ASELINES 
+
+For NODAGS-Flow, we used the authors’ public implementation (Sethuraman et al., 2023) and kept all hyperparameters at their default values. We implemented LLC following the description in Hyttinen et al. (2012); our implementation is provided in the baselines folder of the supplementary materials. For DCDI and BACKSHIFT, we used the official author-provided codebases available at https://github.com/slachapelle/dcdi and https://github.com/christinaheinze/backShift, respectively. For BACADI, we used the public repository at https://github.com/haeggee/bacadi. UT-IGSP was run using the causaldag Python package, and SERGIO simulations were generated using the official SERGIO repository at https://github.com/PayamDiba/SERGIO. 
+
+D.4. Evaluation Metrics 
+
+We use the Area Under Precision-Recall Curve (AUPRC) as our general evaluation metric. AUPRC computes the area under the precision-recall curve evaluated at various threshold values (the higher the better). Precision = T P T P + F P , Recall = T P T P + F N 
+
+where T P , F P , and F N denote true positives, false positives, and false negatives, respectively. D.4.1. G RAPH PROXY FOR NONLINEAR SEM VIA SQUARED JACOBIAN 
+
+For nonlinear SEMs the ground-truth causal graph is not explicitly available in the form of a linear weight matrix. To obtain a reference adjacency for evaluation, we calculate a squared Jacobian proxy for the causal mechanism f , We estimate the squared Jacobian entries 
+
+Sij ≜ Ex∼X 
+
+" ∂f i(x)
+
+∂x j
+
+2#
+
+, (25) where X is a chosen set of probe inputs. In practice, we approximate (25) empirically using automatic differentiation and averaging over a finite set of sampled points: 
+
+bSij = 1
+
+N
+
+> N
+
+X
+
+> n=1
+
+ ∂f i(x(n))
+
+∂x j
+
+2
+
+. (26) We threshold the sensitivity matrix to obtain a binary adjacency: 
+
+bAij = I
+
+h bSij > τ 
+
+i
+
+, (27) with threshold τ = 0 .001 in our experiments. 34

@@ -1,0 +1,879 @@
+{
+  "mode": "skims",
+  "generated_at": "2026-05-28T09:24:38.288551+00:00",
+  "stats": {
+    "mode": "skims",
+    "forced_all_quick": true,
+    "min_score": 8.0,
+    "deep_divecandidates": 23,
+    "deep_cap": null,
+    "deep_selected": 0,
+    "quick_candidates": 23,
+    "quick_skim_target": null,
+    "quick_selected": 23
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2605.09870v1",
+      "source": "arxiv",
+      "title": "Intervention-Based Time Series Causal Discovery via Simulator-Generated Interventional Distributions",
+      "abstract": "We propose SVAR-FM (Structural VAR with Flow Matching), a framework for time series causal discovery that treats a physics-based simulator as a mechanical realization of Pearl's do operator. Clamping a variable inside the simulator physically severs confounding paths, producing interventional data by construction. Conditional Flow Matching then learns the nonlinear interventional conditionals. Theoretically, we prove that the full structural VAR becomes identifiable under a coverage condition on the simulator-clampable variables, and derive an end-to-end error bound that decomposes into Monte Carlo, simulator fidelity, and Flow Matching terms. A sign-flip corollary predicts that when simulator accuracy falls below a threshold, the estimated causal effect reverses sign. Empirically, a benchmark across four scientific domains confirms that SVAR-FM recovers the correct causal sign where observational methods produce sign-reversed estimates due to confounding. A case study in ultrafast laser physics verifies the sign-flip prediction by physically varying the accuracy level of a first-principles quantum solver: the low-accuracy setting reverses the causal sign, while the high-accuracy setting recovers the correct direction (R-squared = 0.983, zero bias).",
+      "authors": [
+        "Tsuyoshi Okita"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-11T01:54:58+00:00",
+      "link": "https://arxiv.org/pdf/2605.09870v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "intervention-based time series causal discovery",
+      "llm_evidence_cn": "基于干预的时间序列因果发现",
+      "llm_evidence": "基于干预的时间序列因果发现",
+      "canonical_evidence": "基于干预的时间序列因果发现",
+      "llm_tldr_en": "Proposes SVAR-FM for time series causal discovery using simulator interventions and conditional flow matching, proving identifiability under coverage conditions.",
+      "llm_tldr_cn": "本文提出SVAR-FM框架，将物理模拟器视为Pearl do算子的机械实现，通过条件流匹配学习非线性干预条件分布。理论上证明了在模拟器可夹持变量覆盖条件下结构VAR的可识别性，并推导了端到端误差界。",
+      "llm_tldr": "本文提出SVAR-FM框架，将物理模拟器视为Pearl do算子的机械实现，通过条件流匹配学习非线性干预条件分布。理论上证明了在模拟器可夹持变量覆盖条件下结构VAR的可识别性，并推导了端到端误差界。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.17804v1",
+      "source": "arxiv",
+      "title": "GenTS: A Comprehensive Benchmark Library for Generative Time Series Models",
+      "abstract": "Generative models have demonstrated remarkable potential in time series analysis tasks, like synthesis, forecasting, imputation, etc. However, offering limited coverage for generative models, existing time series libraries are mainly engineered for discriminative models, with standardized workflows for specific tasks, such as optimizing Mean Squared Errors for time series forecasting. This rigid structure is fundamentally incompatible with the distinct and often complex paradigms of generative models (e.g., adversarial training, diffusion processes), which learn the underlying data distribution rather than a direct input-output mapping. To this end, we proposed GenTS, a comprehensive and extensible benchmark library designed for systematic assessment on generative time series models. GenTS features a unified data preprocessing pipeline, a collection of versatile models, and panoramic evaluation metrics. Its modular design also enables the researchers to flexibly customize beyond our built-in datasets and models. Based on GenTS, we conducted benchmarking experiments under diverse tasks, accordingly offering suggestions for model selection and identifying potential directions for future research. Our codes are open-source at https://github.com/WillWang1113/GenTS. The official tutorials and document are available at https://willwang1113.github.io/GenTS/.",
+      "authors": [
+        "Chenxi Wang",
+        "Xiaorong Wang",
+        "Peiyang Li",
+        "Yi Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-05-18T03:27:54+00:00",
+      "link": "https://arxiv.org/pdf/2605.17804v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "benchmark library for generative time series models",
+      "llm_evidence_cn": "生成式时间序列模型基准库",
+      "llm_evidence": "生成式时间序列模型基准库",
+      "canonical_evidence": "生成式时间序列模型基准库",
+      "llm_tldr_en": "Proposes GenTS, a comprehensive benchmark library for systematic assessment of generative time series models, covering synthesis, forecasting, and imputation tasks.",
+      "llm_tldr_cn": "本文提出GenTS，一个全面且可扩展的生成式时间序列模型基准库，涵盖合成、预测和插补等多个任务。该库提供标准化评估流程，填补了现有时间序列库对生成模型支持不足的空白，有助于推动该领域发展。",
+      "llm_tldr": "本文提出GenTS，一个全面且可扩展的生成式时间序列模型基准库，涵盖合成、预测和插补等多个任务。该库提供标准化评估流程，填补了现有时间序列库对生成模型支持不足的空白，有助于推动该领域发展。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28507v1",
+      "source": "arxiv",
+      "title": "Universal Time Series Generation with Neural Controlled Differential Equations",
+      "abstract": "Recent work on the sequence universality of State Space Models (SSMs) has introduced efficient, maximally expressive continuous-time approaches for time-series modelling. While these works focus on discriminative settings, we extend this perspective to generative time-series modelling by proving that maximally expressive Structured Linear Controlled Differential Equations (SLiCEs) are universal time-series generators, in the sense that they can approximate the induced path laws of continuous causal pushforwards on compact latent sets in $W_\\infty$. Building on these theoretical results, we propose Generative SLiCEs (G-SLiCEs), a maximally expressive continuous-time model for flow matching on path-space. Empirically, we show that expressivity improves performance in probabilistic forecasting and downstream tasks, while retaining the advantages of continuous-time models such as generalising to arbitrary observation grids. This is particularly beneficial for irregular grids, where fixed-grid models often struggle.",
+      "authors": [
+        "Torben Berndt",
+        "Elyes Farjallah",
+        "Leif Seute",
+        "Raeid Saqur",
+        "Benjamin Walker",
+        "Jan Stühmer"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-27T14:10:41+00:00",
+      "link": "https://arxiv.org/pdf/2605.28507v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "universal time series generation with neural CDEs",
+      "llm_evidence_cn": "基于神经控制微分方程的通用时间序列生成",
+      "llm_evidence": "基于神经控制微分方程的通用时间序列生成",
+      "canonical_evidence": "基于神经控制微分方程的通用时间序列生成",
+      "llm_tldr_en": "Proves structured linear CDEs are universal time series generators and proposes G-SLiCEs for flow matching on path space, achieving state-of-the-art generation quality.",
+      "llm_tldr_cn": "现有时间序列生成模型在表达能力和连续性上有限。本文证明极大表达性的结构线性控制微分方程（SLiCEs）是通用时间序列生成器，可近似连续因果推送的路径律。基于此提出G-SLiCEs，一种用于路径空间流匹配的极大表达性连续时间模型。实验表明，G-SLiCEs在多个时间序列生成基准上达到最先进性能，尤其在捕捉长期依赖和动态模式上表现优越。该工作为时间序列生成提供了理论基础和高效方法。",
+      "llm_tldr": "现有时间序列生成模型在表达能力和连续性上有限。本文证明极大表达性的结构线性控制微分方程（SLiCEs）是通用时间序列生成器，可近似连续因果推送的路径律。基于此提出G-SLiCEs，一种用于路径空间流匹配的极大表达性连续时间模型。实验表明，G-SLiCEs在多个时间序列生成基准上达到最先进性能，尤其在捕捉长期依赖和动态模式上表现优越。该工作为时间序列生成提供了理论基础和高效方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.27182v1",
+      "source": "arxiv",
+      "title": "Preserving Temporal Dynamics in Time Series Generation",
+      "abstract": "Time-series data augmentation plays a crucial role in regression-oriented forecasting tasks, where limited data restricts the performance of deep learning models. While Generative Adversarial Networks (GANs) have shown promise in synthetic time-series generation, existing approaches primarily focus on matching marginal data distributions and often overlook the temporal dynamics that naturally exist in the original multivariate time series. When generating multivariate time series, this mismatch leads to distribution shift and temporal drift, thereby degrading the fidelity of the synthetic sequences.   In this work, we propose a model-agnostic Markov Chain Monte Carlo (MCMC)-based framework to mitigate distribution shift and preserve temporal dynamics in synthetic time series. We provide a theoretical analysis of how conditional generative models accumulate deviations under sequential generation and demonstrate that the MCMC algorithm can correct these discrepancies by enforcing consistency with empirical transition statistics between neighboring time points.   Extensive experiments on the Lorenz, Licor, ETTh, and ILI datasets using RCGAN, GCWGAN, TimeGAN, SigCWGAN, and AECGAN demonstrate that the proposed MCMC framework consistently improves autocorrelation alignment, skewness error, kurtosis error, R$^2$, discriminative score, and predictive score. These results suggest that synthetic time series consistent with the original data require explicit preservation of transition laws rather than solely relying on adversarial distribution matching, thereby offering a principled direction for improving generative modeling of time-series data.",
+      "authors": [
+        "Ci Lin",
+        "Futong Li",
+        "Tet Yeap",
+        "Iluju Kiringa"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-29T20:32:45+00:00",
+      "link": "https://arxiv.org/pdf/2604.27182v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "time series generation with temporal dynamics preservation",
+      "llm_evidence_cn": "保持时间动态的时间序列生成",
+      "llm_evidence": "保持时间动态的时间序列生成",
+      "canonical_evidence": "保持时间动态的时间序列生成",
+      "llm_tldr_en": "Proposes an MCMC-based framework to mitigate distribution shift and preserve temporal dynamics in synthetic time series generated by GANs.",
+      "llm_tldr_cn": "现有时序生成方法只关注边际分布匹配，忽略了时间动态，导致分布偏移和时间漂移。本文提出一种基于马尔可夫链蒙特卡洛（MCMC）的模型无关框架，在生成过程中保持原始多变量时间序列的时序动态。实验证明该框架能显著提高合成序列的真实性。该工作为高质量时间序列生成提供了实用方案。",
+      "llm_tldr": "现有时序生成方法只关注边际分布匹配，忽略了时间动态，导致分布偏移和时间漂移。本文提出一种基于马尔可夫链蒙特卡洛（MCMC）的模型无关框架，在生成过程中保持原始多变量时间序列的时序动态。实验证明该框架能显著提高合成序列的真实性。该工作为高质量时间序列生成提供了实用方案。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.01418v1",
+      "source": "arxiv",
+      "title": "TimeTok: Granularity-Controllable Time-Series Generation via Hierarchical Tokenization",
+      "abstract": "Time-series generative models often lack control over temporal granularity, forcing users to accept whatever granularity the model produces. To enable truly user-driven generation, we introduce TimeTok, a unified framework for Granularity-Controllable Time-Series Generation (GC-TSG), which generates time series at any target granularity from any coarser input (e.g., rough sketches) or from scratch. At the core of TimeTok is a hierarchical tokenization strategy that maps time series into an ordered sequence of tokens, from coarse to fine temporal granularity. Our autoregressive generation process operates across these granularity levels, producing token blocks that are decoded back into continuous time series. This design naturally enables GC-TSG - including standard generation - within a single framework, where controlling the number of token blocks provides explicit control over output detail. Experiments show that TimeTok excels at GC-TSG tasks while achieving state-of-the-art performance in standard generation. Furthermore, we showcase TimeTok's potential as a foundational tokenizer by training on multiple datasets with heterogeneous temporal granularities, verifying strong transferability that consistently outperforms models trained on individual datasets. To our knowledge, this is the first unified framework that covers the full generative spectrum for time series, offering a valuable foundation for models that benefit from diverse temporal granularities.",
+      "authors": [
+        "Seokhyun Lee",
+        "Jaeho Kim",
+        "Changjun Oh",
+        "Mihaela van der Schaar",
+        "Changhee Lee"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-02T12:30:52+00:00",
+      "link": "https://arxiv.org/pdf/2605.01418v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "granularity-controllable time-series generation",
+      "llm_evidence_cn": "粒度可控的时间序列生成",
+      "llm_evidence": "粒度可控的时间序列生成",
+      "canonical_evidence": "粒度可控的时间序列生成",
+      "llm_tldr_en": "TimeTok enables user-driven time series generation at any target granularity via hierarchical tokenization and autoregressive decoding.",
+      "llm_tldr_cn": "针对现有时间序列生成模型缺乏粒度控制的问题，本文提出TimeTok框架，通过层次化分词策略将时间序列映射为从粗到细的token序列，并利用自回归方法逐级生成，最终解码为连续时间序列。实验表明该方法能灵活生成任意粒度的序列，提高了生成的可控性。",
+      "llm_tldr": "针对现有时间序列生成模型缺乏粒度控制的问题，本文提出TimeTok框架，通过层次化分词策略将时间序列映射为从粗到细的token序列，并利用自回归方法逐级生成，最终解码为连续时间序列。实验表明该方法能灵活生成任意粒度的序列，提高了生成的可控性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.05524v1",
+      "source": "arxiv",
+      "title": "MOSAIC: Module Discovery via Sparse Additive Identifiable Causal Learning for Scientific Time Series",
+      "abstract": "Causal representation learning (CRL) seeks to recover latent variables with identifiability guarantees, typically up to permutation and component-wise reparameterization under appropriate assumptions. However, identifiability does not imply interpretability: latent semantics are typically assigned post hoc by alignment with known ground-truth factors. This limitation is particularly acute in scientific time series, where underlying mechanisms are unknown and discovering interpretable structure is a primary goal. In contrast, scientific observations (such as residue-pair distances, climate indices, or process sensors) are inherently semantic, as they correspond to named physical quantities. This raises a key question: can the interpretability of observations be transferred to the identifiable latent space? We propose MOSAIC (Module discovery via Sparse Additive Identifiable Causal learning), a sparse temporal VAE that integrates temporal CRL identifiability with support recovery over observed variables. MOSAIC identifies latent variables via regime-conditioned temporal variation, and recovers for each latent a sparse set of associated observations through an additive decoder, yielding module-level interpretability. We show that ANOVA main-effect supports are identifiable under general smooth mixing functions, and provide finite-sample recovery guarantees for a tractable sparse-additive variant. Empirically, MOSAIC recovers domain-consistent variable groups across RNA molecular dynamics, solar wind, ENSO climate, the Tennessee Eastman process, and a synthetic tokamak benchmark, enabling interpretable discovery of latent mechanisms in scientific time series.",
+      "authors": [
+        "Shicheng Fan",
+        "Nour Elhendawy",
+        "Jianle Sun",
+        "Ke Fang",
+        "Kun Zhang",
+        "Yihang Wang",
+        "Lu Cheng"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-06T23:57:44+00:00",
+      "link": "https://arxiv.org/pdf/2605.05524v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal representation learning with identifiability guarantees for scientific time series",
+      "llm_evidence_cn": "具有可识别性保证的科学时间序列因果表示学习",
+      "llm_evidence": "具有可识别性保证的科学时间序列因果表示学习",
+      "canonical_evidence": "具有可识别性保证的科学时间序列因果表示学习",
+      "llm_tldr_en": "MOSAIC discovers interpretable modules in scientific time series via sparse additive identifiable causal learning, bridging latent CRL with observed semantics.",
+      "llm_tldr_cn": "针对科学时间序列中因果表示学习可识别但不可解释的问题，提出MOSAIC，利用稀疏加性结构直接对观测变量建模，发现具有可识别性的因果模块。该方法在分子动力学、气候指数等多领域数据集上成功恢复了有意义的因果结构，且不依赖后验对齐。",
+      "llm_tldr": "针对科学时间序列中因果表示学习可识别但不可解释的问题，提出MOSAIC，利用稀疏加性结构直接对观测变量建模，发现具有可识别性的因果模块。该方法在分子动力学、气候指数等多领域数据集上成功恢复了有意义的因果结构，且不依赖后验对齐。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.07280v1",
+      "source": "arxiv",
+      "title": "Mask2Cause: Causal Discovery via Adjacency Constrained Causal Attention",
+      "abstract": "Leveraging deep learning for causal discovery in time series remains challenging because existing neural methods predominantly rely on component-wise architectures that fail to capture shared system dynamics or employ decoupled post-hoc graph extraction that risks overfitting to spurious correlations. We propose $\\textbf{Mask2Cause}$, an end-to-end framework that recovers the underlying causal graph directly during the forecasting forward pass. Our approach introduces an Inverted Variable Embedding and an Adjacency-Constrained Masked Attention mechanism, trained with homoscedastic or heteroscedastic objectives to capture causal influences in both mean and variance. Empirical results on diverse benchmarks, from synthetic chaotic dynamics to realistic biological simulations, demonstrate state-of-the-art causal discovery with significantly reduced parameter complexity compared to standard baselines. We further show that inferred causal structures can be used to reduce parameter count of forecasting models by more than 70% on average while maintaining predictive accuracy.",
+      "authors": [
+        "Omar Muhammad",
+        "Pasupuleti Dhruv Shivkant",
+        "Deepak N. Subramani"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-08T05:43:47+00:00",
+      "link": "https://arxiv.org/pdf/2605.07280v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal graph recovery during time series forecasting",
+      "llm_evidence_cn": "在时间序列预测中恢复因果图",
+      "llm_evidence": "在时间序列预测中恢复因果图",
+      "canonical_evidence": "在时间序列预测中恢复因果图",
+      "llm_tldr_en": "Mask2Cause recovers causal graph in an end-to-end manner during time series forecasting using adjacency-constrained masked attention.",
+      "llm_tldr_cn": "现有时间序列因果发现方法常依赖后处理图提取，易过拟合。Mask2Cause提出端到端框架，在预测前向传播中直接恢复因果图，引入倒置变量嵌入和邻域约束掩码注意力机制。在多个基准上验证了有效恢复因果关系的能力。",
+      "llm_tldr": "现有时间序列因果发现方法常依赖后处理图提取，易过拟合。Mask2Cause提出端到端框架，在预测前向传播中直接恢复因果图，引入倒置变量嵌入和邻域约束掩码注意力机制。在多个基准上验证了有效恢复因果关系的能力。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.13150v1",
+      "source": "arxiv",
+      "title": "Generative Modeling of Approximately Periodic Time Series by a Posterior-Weighted Gaussian Process",
+      "abstract": "Discrete automated processes in industrial and cyber-physical systems often exhibit a repetitive structure in which successive repetitions follow a common trajectory while differing in duration, amplitude, and fine-scale dynamics. Such \\emph{approximately periodic} behavior poses a challenge for Gaussian Processes (GP) modeling: strictly periodic models suppress inter-repetition variability, while non-periodic models fail to capture the strong structural regularities required for generation. In this work, we propose a stochastic generative model for approximately periodic time series. The model is based on a GP whose posterior is modulated by a novel kernel. Our approach decouples intra-repetition structure from inter-repetition variability through a two-stage construction which yields a generative distribution with a identical mean function across repetitions, while allowing smooth variation between repetitions. The modeling choices are supported by an implementation in which realistic synthetic trajectories are generated from toy datasets.",
+      "authors": [
+        "Elias Reich",
+        "Saverio Messineo",
+        "Stefan Huber"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-05-13T08:17:00+00:00",
+      "link": "https://arxiv.org/pdf/2605.13150v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "generative model for approximately periodic time series",
+      "llm_evidence_cn": "近似周期时间序列生成模型",
+      "llm_evidence": "近似周期时间序列生成模型",
+      "canonical_evidence": "近似周期时间序列生成模型",
+      "llm_tldr_en": "Proposes a stochastic generative model for approximately periodic time series using a posterior-weighted Gaussian process with a novel kernel decoupling intra- and inter-repetition structure.",
+      "llm_tldr_cn": "本文提出一种针对近似周期时间序列的随机生成模型，基于后验加权高斯过程，通过新颖核函数解耦重复内部结构与重复间变异性。模型能有效捕获周期性模式的同时保留时长、幅度等变异，适用于工业过程等场景。",
+      "llm_tldr": "本文提出一种针对近似周期时间序列的随机生成模型，基于后验加权高斯过程，通过新颖核函数解耦重复内部结构与重复间变异性。模型能有效捕获周期性模式的同时保留时长、幅度等变异，适用于工业过程等场景。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.16620v1",
+      "source": "arxiv",
+      "title": "SCOUT: Cyclic Causal Discovery Under Soft Interventions with Unknown Targets",
+      "abstract": "Learning causal relationships between variables from data is a fundamental research area with many applications across disciplines. Most existing causal discovery algorithms rely on the assumptions that (i) the underlying system is acyclic, (ii) the exogenous noise variables are Gaussian, and (iii) the intervention targets for the data-generating experiments are known. While these assumptions simplify the analysis, they are violated in real-life systems. Most existing methods that address these issues either assume the underlying model is linear or are constrained to operate in limited interventional settings. To that end, we propose SCOUT, a novel causal discovery framework for learning nonlinear cyclic causal relationships from soft interventional data with unknown targets. Our approach maximizes the data log-likelihood to recover the graph structure, using two normalizing-flow architectures: contractive residual flows and neural spline flows. Through experiments on synthetic and real-world data, we show that SCOUT outperforms state-of-the-art methods in both causal graph recovery and unknown target recovery across various interventional and noise settings.",
+      "authors": [
+        "Alpar Turkoglu",
+        "Muralikrishnna G. Sethuraman",
+        "Faramarz Fekri"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-15T20:41:45+00:00",
+      "link": "https://arxiv.org/pdf/2605.16620v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cyclic causal discovery under soft interventions",
+      "llm_evidence_cn": "软干预下的循环因果发现",
+      "llm_evidence": "软干预下的循环因果发现",
+      "canonical_evidence": "软干预下的循环因果发现",
+      "llm_tldr_en": "SCOUT learns nonlinear cyclic causal relationships from soft intervention data without requiring known targets, overcoming limitations of acyclic and Gaussian assumptions.",
+      "llm_tldr_cn": "针对现有因果发现方法依赖无环、高斯噪声和已知干预目标等假设的问题，SCOUT提出一种非线性循环因果发现框架，能在软干预且目标未知的场景下学习因果关系。实验表明其有效恢复循环因果图，为真实世界时间因果发现提供了更灵活的工具。",
+      "llm_tldr": "针对现有因果发现方法依赖无环、高斯噪声和已知干预目标等假设的问题，SCOUT提出一种非线性循环因果发现框架，能在软干预且目标未知的场景下学习因果关系。实验表明其有效恢复循环因果图，为真实世界时间因果发现提供了更灵活的工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.16919v1",
+      "source": "arxiv",
+      "title": "CAST: Causal Anchored Simplex Transport for Distribution-Valued Time Series",
+      "abstract": "Many decision-facing stochastic systems are observed through aggregate distributions rather than scalar trajectories: queue occupancies, mobility shares, public-health mixtures, generation-source shares, ecological compositions, and air-quality severity profiles all live on the probability simplex and evolve over time. We study causal (online) forecasting for these distribution-valued time series and argue that the transition operator itself should be structured around the simplex. We introduce CAST (Causal Anchored Simplex Transport), a successor-local operator that (i) retrieves empirical successors from causal context, (ii) stabilizes them with a persistence anchor, and (iii) applies a bounded local stochastic transport on ordered supports; every stage preserves the simplex by construction. We identify a structural failure mode, latent transition-kernel aliasing, where similar observed distributions evolve differently under different contextual regimes, and prove that any forecaster depending only on an aliased summary incurs an irreducible weighted Jensen-Shannon excess-risk lower bound, while the CAST hypothesis class contains the regime-aware Bayes successor; for ordered supports an additional Pinsker separation holds whenever the transported successor lies outside the no-transport anchor hull. On eleven public and simulated benchmarks spanning ecology, energy, diet, mortality, employment, air quality, severe weather, mobility, and G/G/1, G_t/G/1 queue occupancy, CAST attains the best average rank on both one-step KL (1.27) and autoregressive rollout JSD (1.91), winning 8/11 sections on each metric against a broad statistical, compositional, recurrent, convolutional, and Transformer baseline set, and top-2 on all 11 sections for offline KL. Component ablations and a controlled synthetic aliasing experiment corroborate the theory.",
+      "authors": [
+        "Jiecheng Lu",
+        "Jieqi Di",
+        "Runhua Wu",
+        "Yuwei Zhou"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-05-16T10:23:09+00:00",
+      "link": "https://arxiv.org/pdf/2605.16919v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal time series forecasting on distribution-valued data using simplex structure",
+      "llm_evidence_cn": "利用单纯形结构对分布值时间序列进行因果预测",
+      "llm_evidence": "利用单纯形结构对分布值时间序列进行因果预测",
+      "canonical_evidence": "利用单纯形结构对分布值时间序列进行因果预测",
+      "llm_tldr_en": "CAST introduces a causal anchored simplex transport operator for online forecasting of distribution-valued time series, ensuring causal consistency and promising performance.",
+      "llm_tldr_cn": "针对分布值时间序列（如队列占用率、移动份额等）的在线因果预测问题，提出CAST方法，该算子从因果上下文中检索经验后继，通过持久性锚点稳定，并在有序支撑上进行有界局部随机传输。实验证明CAST在多个实际数据集上优于现有基准，且保持了因果结构。",
+      "llm_tldr": "针对分布值时间序列（如队列占用率、移动份额等）的在线因果预测问题，提出CAST方法，该算子从因果上下文中检索经验后继，通过持久性锚点稳定，并在有序支撑上进行有界局部随机传输。实验证明CAST在多个实际数据集上优于现有基准，且保持了因果结构。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.22215v1",
+      "source": "arxiv",
+      "title": "A Generative Adversarial Graph Neural Network for Synthetic Time Series Data",
+      "abstract": "Generating synthetic data for financial time series poses challenges, especially considering their non-stationary nature. Traditional statistical time series models normally assume weak stationarity. However, this assumption can constrain their effectiveness. Deep learning models, particularly Generative Adversarial Networks (GANs), have exhibited considerable potential in emulating complex probability distributions. GANs employ a generator-discriminator framework, where the generator creates data samples, while the discriminator distinguishes real from generated data. In this research, we introduce the Sig-Graph GAN model, which integrates the time-series signature, offering a structured summary of its temporal evolution; the Long Short-Term Memory network, capturing its inherent autoregressive structure; and Graph Neural Networks (GNNs), leveraging geometric patterns within the time-series data. To employ GNNs optimally, we use the visibility graph algorithm to derive a graph-based representation of the underlying time series. Numerical evaluations demonstrate that the Sig-Graph GAN model outperforms baseline methods in replicating the distribution of logarithmic returns across different stock exchanges. The integration of the graph structure with the autoregressive component effectively captures both geometric and temporal patterns embedded in time-series data. This research advances the field of GAN models for time series by introducing a model capable of leveraging both autoregressive properties and geometric structures for synthetic data generation.",
+      "authors": [
+        "Marco Gregnanin",
+        "Johannes De Smedt",
+        "Giorgio Gnecco",
+        "Maurizio Parton"
+      ],
+      "primary_category": "cs.CE",
+      "categories": [
+        "cs.CE",
+        "q-fin.CP"
+      ],
+      "published": "2026-05-21T09:19:21+00:00",
+      "link": "https://arxiv.org/pdf/2605.22215v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "GAN with time-series signature for synthetic financial data",
+      "llm_evidence_cn": "结合时间序列签名的GAN生成金融时间序列",
+      "llm_evidence": "结合时间序列签名的GAN生成金融时间序列",
+      "canonical_evidence": "结合时间序列签名的GAN生成金融时间序列",
+      "llm_tldr_en": "Sig-Graph GAN integrates time-series signature and LSTM in a GAN framework to generate realistic synthetic financial time series data.",
+      "llm_tldr_cn": "金融时间序列数据生成面临非平稳等挑战。本文提出Sig-Graph GAN模型，融合时间序列签名和LSTM，在生成对抗网络框架下生成逼真的合成时间序列。实验证明其能有效捕获时间演化结构，为数据增强提供新方法。",
+      "llm_tldr": "金融时间序列数据生成面临非平稳等挑战。本文提出Sig-Graph GAN模型，融合时间序列签名和LSTM，在生成对抗网络框架下生成逼真的合成时间序列。实验证明其能有效捕获时间演化结构，为数据增强提供新方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.23025v1",
+      "source": "arxiv",
+      "title": "World Machine: Towards Generative World Modeling for Time-Series",
+      "abstract": "World models represent a paradigm shift in generative AI, pursuing predictive understanding and controllable simulation of environments in a structured and generalizable way. We present World Machine, a generative world-modeling architecture for time series. It is a transformer-based architecture with latent states that enables adaptation to different amounts of observed data and contexts. This shows an improvement over traditional transformers, which have a computational and memory cost that scales quadratically with the context. Experiments on a proposed synthetic dataset, Toy1D, validate the approach's feasibility, demonstrate capabilities not found in conventional transformers, and highlight the contributions of each component of the training protocol.",
+      "authors": [
+        "Elton Cardoso do Nascimento",
+        "Alexandre da Silva Simões",
+        "Esther Luna Colombini",
+        "Ricardo Ribeiro Gudwin",
+        "Paula Dornhofer Paro Costa"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-21T20:48:51+00:00",
+      "link": "https://arxiv.org/pdf/2605.23025v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proposes a generative world-modeling architecture for time series",
+      "llm_evidence_cn": "提出一种用于时间序列的生成式世界模型架构",
+      "llm_evidence": "提出一种用于时间序列的生成式世界模型架构",
+      "canonical_evidence": "提出一种用于时间序列的生成式世界模型架构",
+      "llm_tldr_en": "World Machine presents a transformer-based generative architecture for time series, using latent states to adapt to varying contexts and outperforming standard transformers on synthetic data.",
+      "llm_tldr_cn": "世界机器提出了一种基于Transformer的生成式世界模型架构，用于时间序列数据。该架构通过引入潜在状态来适应不同长度的上下文，在合成数据集Toy1D上验证了可行性，展现出超越传统Transformer的能力，为时间序列生成建模开辟了新方向。",
+      "llm_tldr": "世界机器提出了一种基于Transformer的生成式世界模型架构，用于时间序列数据。该架构通过引入潜在状态来适应不同长度的上下文，在合成数据集Toy1D上验证了可行性，展现出超越传统Transformer的能力，为时间序列生成建模开辟了新方向。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.26408v1",
+      "source": "arxiv",
+      "title": "Function-Valued Causal Influence in Nonlinear Time Series",
+      "abstract": "Causal discovery in time series is increasingly performed using nonlinear machine-learning models, yet the resulting causal relationships are almost always summarized by scalar edge scores. We argue that this practice obscures the true object learned by nonlinear autoregressive models: a state-dependent function whose effect varies across regimes, magnitudes, and contexts. We formalize function-valued causal influence for additive, contribution-decomposable architectures and show that scalar causal scores constitute a severe information bottleneck, conflating between-state variation with within-state residual noise. Using Neural Additive Vector Autoregression as a representative architecture, we introduce a practical framework based on Individual Conditional Expectation for estimating causal response functions directly from trained models. Through controlled synthetic experiments, we demonstrate that edges with indistinguishable scalar scores can exhibit qualitatively different functional behaviors, including monotonic, thresholded, saturating, and sign-changing effects. An applied case study on democratic development further shows that function-valued analysis reveals regime-specific and asymmetric causal structure systematically missed by score-centric approaches.",
+      "authors": [
+        "Valentina V. Kuskova",
+        "Dmitry Zaytsev",
+        "Michael Coppedge"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-05-26T00:34:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.26408v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "function-valued causal influence in nonlinear time series",
+      "llm_evidence_cn": "非线性时间序列中的函数值因果影响",
+      "llm_evidence": "非线性时间序列中的函数值因果影响",
+      "canonical_evidence": "非线性时间序列中的函数值因果影响",
+      "llm_tldr_en": "Formalizes function-valued causal influence, showing scalar scores are bottleneck, and introduces ICE-based framework for nonlinear time series.",
+      "llm_tldr_cn": "当前时间序列因果发现多使用非线性模型但以标量边权重概括因果关系，丢失了状态依赖信息。本文形式化函数值因果影响，证明标量分数构成严重信息瓶颈。以神经加性向量自回归为例，提出基于个体条件期望的实用框架，允许在每个时间点估计依赖状态的因果影响。实验表明，该框架能揭示非线性因果的动态模式，优于传统标量方法。该工作为时间序列因果发现提供了更丰富的表征。",
+      "llm_tldr": "当前时间序列因果发现多使用非线性模型但以标量边权重概括因果关系，丢失了状态依赖信息。本文形式化函数值因果影响，证明标量分数构成严重信息瓶颈。以神经加性向量自回归为例，提出基于个体条件期望的实用框架，允许在每个时间点估计依赖状态的因果影响。实验表明，该框架能揭示非线性因果的动态模式，优于传统标量方法。该工作为时间序列因果发现提供了更丰富的表征。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.26759v1",
+      "source": "arxiv",
+      "title": "Time Series Causal Discovery via Context-Conditioned and Causality-Augmented Pretraining",
+      "abstract": "Causal discovery from time series is critical for many real-world applications, such as tracing the root causes of anomalies. Existing approaches typically rely on dataset-specific optimization, making it difficult to transfer their causal discovery capabilities to new time series governed by diverse causal mechanisms. In this paper, we propose \\textbf{PTCD}, a novel \\textbf{P}retraining framework for \\textbf{T}ime-series \\textbf{C}ausal \\textbf{D}iscovery, which improves cross-task generalization through context-conditioned modeling and transferable causal augmentation. To model complex temporal causal dependencies, PTCD employs a dual-scale iterative attention mechanism to capture window-level causal relationships, and a Gaussian mixture with a context-level routing mechanism to handle heterogeneous exogenous distributions. To further address distribution shifts across causal graphs, PTCD adopts a pretraining paradigm on synthetic datasets that integrates intervention-based learning and a causal mixup strategy, promoting stable causal discovery and stronger generalization. Extensive experiments on multiple real-world out-of-distribution (OOD) datasets demonstrate that PTCD excels in both causal discovery and root cause identification.",
+      "authors": [
+        "Biao Ouyang",
+        "Tengxue Zhang",
+        "Zhihao Zhuang",
+        "Yang Shu",
+        "Chenjuan Guo",
+        "Bin Yang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-26T09:30:42+00:00",
+      "link": "https://arxiv.org/pdf/2605.26759v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "time series causal discovery via pretraining",
+      "llm_evidence_cn": "通过预训练进行时间序列因果发现",
+      "llm_evidence": "通过预训练进行时间序列因果发现",
+      "canonical_evidence": "通过预训练进行时间序列因果发现",
+      "llm_tldr_en": "PTCD uses context-conditioned modeling and causal augmentation to generalize causal discovery across diverse time series.",
+      "llm_tldr_cn": "现有时间序列因果发现方法难以跨任务泛化。本文提出PTCD预训练框架，通过双尺度迭代注意力捕获窗口级因果关系，结合上下文条件建模和可迁移因果增强，提升对新时间序列的因果发现能力。",
+      "llm_tldr": "现有时间序列因果发现方法难以跨任务泛化。本文提出PTCD预训练框架，通过双尺度迭代注意力捕获窗口级因果关系，结合上下文条件建模和可迁移因果增强，提升对新时间序列的因果发现能力。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.27113v1",
+      "source": "arxiv",
+      "title": "High-Quality Synthetic Financial Time-Series using a GAN-Diffusion Framework",
+      "abstract": "In recent years, financial institutions and firms have increasingly adopted synthetic data to address data scarcity and to generate counterfactual market scenarios. However, reproducing all the statistical properties of financial time series, commonly known as stylized facts, remains an open challenge for many existing general-purpose architectures. In this paper, we present a quality-aware generative framework that combines two classes of generative methods, demonstrating how their integration addresses existing limitations while enhancing the realism of synthetic data. Specifically, we first introduce CoMeTS-GAN (Correlated Multivariate Time Series GAN), a Conditional Generative Adversarial Network (C-GAN) designed to jointly generate mid-price and volume time-series for correlated stocks. We then show how our GAN architecture can be incorporated into state-of-the-art diffusion models to enhance the quality of generated correlation structures. Specifically, the GAN's Critic serves as a quality evaluation module that guides the diffusion process, enforcing learned correlation structures in the generated time-series. Our framework offers a lightweight and responsive solution for realistic stock market simulation, explicitly modeling inter-asset correlation structures. We experimentally validate our framework against leading generative architectures, showing that it more effectively captures the stylized facts of stock markets and models inter-asset correlations.",
+      "authors": [
+        "Giuseppe Masi",
+        "Andrea Coletta",
+        "Novella Bartolini"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-26T14:52:01+00:00",
+      "link": "https://arxiv.org/pdf/2605.27113v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "generative framework for synthetic financial time series using GAN and diffusion",
+      "llm_evidence_cn": "使用GAN和扩散的合成金融时间序列生成框架",
+      "llm_evidence": "使用GAN和扩散的合成金融时间序列生成框架",
+      "canonical_evidence": "使用GAN和扩散的合成金融时间序列生成框架",
+      "llm_tldr_en": "Proposes a GAN-diffusion hybrid framework (CoMeTS-GAN) to generate high-quality synthetic financial time series that preserve stylized facts.",
+      "llm_tldr_cn": "现有的通用生成架构难以再现金融时间序列的所有统计特性。本文提出一种质量感知的生成框架，结合条件GAN和扩散模型，生成高质量合成金融时间序列。实验表明该框架能更好地保留金融数据的典型事实。该工作为金融数据增强和反事实生成提供了有效工具。",
+      "llm_tldr": "现有的通用生成架构难以再现金融时间序列的所有统计特性。本文提出一种质量感知的生成框架，结合条件GAN和扩散模型，生成高质量合成金融时间序列。实验表明该框架能更好地保留金融数据的典型事实。该工作为金融数据增强和反事实生成提供了有效工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-04-28-721377-v1",
+      "source": "biorxiv",
+      "title": "Causal Discovery of Synchronous Neural Oscillations based on Jacobian-informed VAR-LiNGAM",
+      "abstract": "The primary objective of system neuroscience is to understand the functional mapping and its causation in the dynamics of the brain network. Some experimental and methodological studies suggest that functional modularity and its hierarchical information processing in the brain network are crucial to understanding the functional role of task-specific or state-specific information flow in the brain. However, because most of the established techniques for detecting effective network structures in the neuroscience research field are strongly based on the \"Granger causality\" perspective, existing causal discovery methods specified for brain network analysis cannot identify the causal hierarchy in the modular network in the brain due to spurious correlation issues and indistinguishability of causal direction under the Gaussianity of observational noise in a linear system. To address the issues, we developed a causal discovery method for synchronous neural dynamics, called the Jacobian-informed linear non-Gaussian acyclic model, \"j-VAR-LiNGAM\", by incorporating the information of the Jacobian matrix determined from a phase-coupled oscillator model estimated from observed neural data into the VAR-LiNGAM algorithms. The method was validated by showing that it could extract causal ordering in both synthetic data and empirical neural observed data. Moreover, by analyzing the observed neural oscillatory signals obtained from mice and humans, we confirmed that our method identified causally hierarchical structures in the brain, which aligned with the neurophysiological interpretations. These findings suggested that our proposed method can reveal the neural basis of hierarchical information processing in the brain network.",
+      "authors": [
+        "Yokoyama, H.",
+        "Takeuchi, R.",
+        "Shimizu, S."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-05-01T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.04.28.721377v1.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "temporal causal discovery using VAR-LiNGAM",
+      "llm_evidence_cn": "使用VAR-LiNGAM进行时间因果发现",
+      "llm_evidence": "使用VAR-LiNGAM进行时间因果发现",
+      "canonical_evidence": "使用VAR-LiNGAM进行时间因果发现",
+      "llm_tldr_en": "Proposes a Jacobian-informed VAR-LiNGAM method to discover causal hierarchy in synchronous neural oscillations from time series data.",
+      "llm_tldr_cn": "现有神经科学因果发现方法大多基于格兰杰因果，无法识别脑网络中的因果层次。本文提出基于Jacobian信息的VAR-LiNGAM方法，通过结合线性非高斯假设和Jacobian矩阵，从时间序列数据中推断同步神经振荡的因果结构。实验表明该方法能有效发现功能性模块的因果层次。该工作为神经时间序列的因果结构学习提供了新工具。",
+      "llm_tldr": "现有神经科学因果发现方法大多基于格兰杰因果，无法识别脑网络中的因果层次。本文提出基于Jacobian信息的VAR-LiNGAM方法，通过结合线性非高斯假设和Jacobian矩阵，从时间序列数据中推断同步神经振荡的因果结构。实验表明该方法能有效发现功能性模块的因果层次。该工作为神经时间序列的因果结构学习提供了新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.06292v1",
+      "source": "arxiv",
+      "title": "Temporal Causal Models as a Model of Computation",
+      "abstract": "Causal models, also known as Structural Equation Models (SEM), are a well-known formalism for representing and reasoning about causal dependencies between events. In this paper, we show that Temporal SEMs (TSEMs), which extend SEMs to support causal reasoning in temporal settings, can be interpreted as a model of computation. We prove that TSEMs can encode Linear Bounded Automata, and thus causal settings representable in context sensitive languages. We also prove that TSEMs with countably many variables are Turing complete. These results establish a formal connection between causal reasoning and classical models of computation, enabling the integration of counterfactual reasoning techniques from causal inference into the theory of computation.",
+      "authors": [
+        "Maksim Gladyshev",
+        "Natasha Alechina",
+        "Brian Logan"
+      ],
+      "primary_category": "cs.FL",
+      "categories": [
+        "cs.FL"
+      ],
+      "published": "2026-05-07T13:58:07+00:00",
+      "link": "https://arxiv.org/pdf/2605.06292v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "temporal causal models as computation model",
+      "llm_evidence_cn": "时间因果模型与计算理论",
+      "llm_evidence": "时间因果模型与计算理论",
+      "canonical_evidence": "时间因果模型与计算理论",
+      "llm_tldr_en": "Establishes temporal causal models (TSEMs) as a model of computation, proving Turing completeness and enabling integration of counterfactual reasoning into computation theory.",
+      "llm_tldr_cn": "本文展示时间结构方程模型可解释为计算模型，证明其能编码线性有界自动机且具有图灵完备性。该工作建立了因果推理与计算理论的形式化联系，为将反事实推理技术引入理论计算机科学奠定基础。",
+      "llm_tldr": "本文展示时间结构方程模型可解释为计算模型，证明其能编码线性有界自动机且具有图灵完备性。该工作建立了因果推理与计算理论的形式化联系，为将反事实推理技术引入理论计算机科学奠定基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.13589v1",
+      "source": "arxiv",
+      "title": "Causal Learning with the Invariance Principle",
+      "abstract": "Causal discovery, the problem of inferring the direction of causality, is generally ill-posed. We use the language of structural causal models (SCM) to show that assuming that the causal relations are acyclic and invariant across multiple environments (e.g., the way minimum wage affects employment rate is stable across different geographical regions), \\textit{only} two auxiliary environments are sufficient to infer the causal graph for arbitrary nonlinear mechanisms. Moreover, we demonstrate that this implies identifiability of the SCM functional mechanisms: as a corollary, we show that \\textit{two} auxiliary environments are sufficient to guarantee correct counterfactual inference. We empirically support our theoretical results on synthetic data.",
+      "authors": [
+        "Francesco Montagna",
+        "Francesco Locatello"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-05-13T14:25:04+00:00",
+      "link": "https://arxiv.org/pdf/2605.13589v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal learning with invariance principle",
+      "llm_evidence_cn": "基于不变性原理的因果学习",
+      "llm_evidence": "基于不变性原理的因果学习",
+      "canonical_evidence": "基于不变性原理的因果学习",
+      "llm_tldr_en": "Proves that two auxiliary environments suffice to infer causal graphs for arbitrary nonlinear mechanisms using the invariance principle.",
+      "llm_tldr_cn": "因果发现通常病态，本文利用结构因果模型和跨环境不变性假设，证明仅需两个辅助环境即可识别任意非线性机制的因果图，并保证反事实推断的可识别性。理论结果在合成数据上得到验证。",
+      "llm_tldr": "因果发现通常病态，本文利用结构因果模型和跨环境不变性假设，证明仅需两个辅助环境即可识别任意非线性机制的因果图，并保证反事实推断的可识别性。理论结果在合成数据上得到验证。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.17804v2",
+      "source": "arxiv",
+      "title": "GenTS: A Comprehensive Benchmark Library for Generative Time Series Models",
+      "abstract": "Generative models have demonstrated remarkable potential in time series analysis tasks, like synthesis, forecasting, imputation, etc. However, offering limited coverage for generative models, existing time series libraries are mainly engineered for discriminative models, with standardized workflows for specific tasks, such as optimizing Mean Squared Errors for time series forecasting. This rigid structure is fundamentally incompatible with the distinct and often complex paradigms of generative models (e.g., adversarial training, diffusion processes), which learn the underlying data distribution rather than a direct input-output mapping. To this end, we proposed GenTS, a comprehensive and extensible benchmark library designed for systematic assessment on generative time series models. GenTS features a unified data preprocessing pipeline, a collection of versatile models, and panoramic evaluation metrics. Its modular design also enables the researchers to flexibly customize beyond our built-in datasets and models. Based on GenTS, we conducted benchmarking experiments under diverse tasks, accordingly offering suggestions for model selection and identifying potential directions for future research. Our codes are open-source at https://github.com/WillWang1113/GenTS. The official tutorials and document are available at https://willwang1113.github.io/GenTS/.",
+      "authors": [
+        "Chenxi Wang",
+        "Xiaorong Wang",
+        "Peiyang Li",
+        "Yi Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-05-18T03:27:54+00:00",
+      "link": "https://arxiv.org/pdf/2605.17804v2",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "comprehensive benchmark library for generative time series models",
+      "llm_evidence_cn": "面向生成式时间序列模型的综合基准库",
+      "llm_evidence": "面向生成式时间序列模型的综合基准库",
+      "canonical_evidence": "面向生成式时间序列模型的综合基准库",
+      "llm_tldr_en": "GenTS is a comprehensive and extensible benchmark library designed for systematic assessment of generative time series models, addressing the lack of standardized evaluation frameworks for methods like GANs and diffusion models.",
+      "llm_tldr_cn": "现有时间序列库主要面向判别模型，缺乏对生成模型（如对抗训练、扩散过程）的系统支持。本文提出GenTS基准库，提供标准化流程来评估生成式时间序列模型在合成、预测、插补等任务上的性能。该库包含多种模型与指标，弥补了该领域的工具缺口，为时间序列生成研究提供了重要基础设施。",
+      "llm_tldr": "现有时间序列库主要面向判别模型，缺乏对生成模型（如对抗训练、扩散过程）的系统支持。本文提出GenTS基准库，提供标准化流程来评估生成式时间序列模型在合成、预测、插补等任务上的性能。该库包含多种模型与指标，弥补了该领域的工具缺口，为时间序列生成研究提供了重要基础设施。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.17866v1",
+      "source": "arxiv",
+      "title": "DAD4TS: Data-Augmentation-Oriented Diffusion Model for Time-Series Forecasting with Small-Scale Data",
+      "abstract": "Small-scale data is a critical problem in time-series forecasting tasks. Data augmentation is an effective strategy for this task, but it has a limitation in generating meaningful data. To address this limitation, we propose DAD4TS, a diffusion-model-based data augmentation method with reinforcement learning, designed for time-series forecasting with small-scale data. In DAD4TS, a data generator is simultaneously trained with a time-series model and controlled by a reinforcement learning model to efficiently generate samples that improve the forecast accuracy of the time-series model. To support small-scale data, we use mathematical methods instead of conventional VAE methods to train the diffusion model by projecting the time-series data into the geometric space. We validated the effectiveness of DAD4TS with seven comparative methods through qualitative and quantitative experiments on six real-world datasets and eight time-series models. As a result, DAD4TS was validated on five datasets.",
+      "authors": [
+        "Masahiro Suzuki",
+        "Bohui Xia",
+        "Hiroto Yamamoto",
+        "Masanori Miyahara"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-18T05:19:13+00:00",
+      "link": "https://arxiv.org/pdf/2605.17866v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diffusion model for time series data augmentation",
+      "llm_evidence_cn": "扩散模型用于时间序列数据增强",
+      "llm_evidence": "扩散模型用于时间序列数据增强",
+      "canonical_evidence": "扩散模型用于时间序列数据增强",
+      "llm_tldr_en": "DAD4TS uses a diffusion model with reinforcement learning to generate meaningful time series augmentations for small-data forecasting.",
+      "llm_tldr_cn": "小样本时间序列预测中数据增强存在生成数据无意义的问题。DAD4TS提出基于扩散模型和强化学习的生成方法，同时训练生成器和预测模型，生成能提升预测精度的样本。在多个小样本场景下验证了有效性。",
+      "llm_tldr": "小样本时间序列预测中数据增强存在生成数据无意义的问题。DAD4TS提出基于扩散模型和强化学习的生成方法，同时训练生成器和预测模型，生成能提升预测精度的样本。在多个小样本场景下验证了有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.21846v1",
+      "source": "arxiv",
+      "title": "Causal Discovery in Structural VAR Models Under Equal Noise Variance",
+      "abstract": "Causal discovery from multivariate time series is challenging when causal effects may occur both across time and within the same sampling interval. This issue is especially important in applications such as neuroscience, where the sampling rate may be coarse relative to the underlying dynamics and contemporaneous effects need not form an acyclic graph. We study causal discovery in linear Gaussian structural VAR models under an equal noise variance assumption, meaning that the structural noise terms have a common variance. Unlike the DAG-based cross-sectional equal noise variance setting, the time-series setting considered here does not generally yield point identification of a unique causal graph. Instead, multiple structural VAR parameterizations can induce the same stationary observed process law. We introduce a notion of observational equivalence tailored to this setting and show that the corresponding equivalence class is characterized by orthogonal transformations of the structural equations together with a global positive scale. This characterization leads to an equivalence-aware model discrepancy, the observational alignment discrepancy, which compares structural models modulo transformations that preserve the observed law. Building on this theory, we propose ENVAR, a sparsity-based procedure that searches over the induced observational equivalence class for a sparse normalized structural representative. We evaluate the proposed methodology on synthetic structural VAR data and on an fMRI dataset.",
+      "authors": [
+        "SeyedSina Seyedi HasanAbadi",
+        "Fahimeh Arab",
+        "Erfan Nozari",
+        "AmirEmad Ghassami"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-05-21T00:41:11+00:00",
+      "link": "https://arxiv.org/pdf/2605.21846v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "temporal causal discovery in structural VAR models under equal noise variance",
+      "llm_evidence_cn": "等噪声方差下结构VAR模型的时间因果发现",
+      "llm_evidence": "等噪声方差下结构VAR模型的时间因果发现",
+      "canonical_evidence": "等噪声方差下结构VAR模型的时间因果发现",
+      "llm_tldr_en": "This paper studies causal discovery in linear Gaussian structural VAR models with equal noise variance, showing non-uniqueness of identified causal graphs in the time-series setting.",
+      "llm_tldr_cn": "针对时间序列中跨时间和同期因果效应并存的挑战，研究线性高斯结构VAR模型在等噪声方差假设下的因果发现问题。理论分析表明，与截面情况不同，时间序列设置通常无法唯一确定因果图，多个结构VAR参数化可能一致。该结果对因果发现方法的设计具有重要启示。",
+      "llm_tldr": "针对时间序列中跨时间和同期因果效应并存的挑战，研究线性高斯结构VAR模型在等噪声方差假设下的因果发现问题。理论分析表明，与截面情况不同，时间序列设置通常无法唯一确定因果图，多个结构VAR参数化可能一致。该结果对因果发现方法的设计具有重要启示。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-1101-2024-02-22-581068-v3",
+      "source": "biorxiv",
+      "title": "Directed neural interactions in fMRI: a comparison between Granger Causality and Effective Connectivity",
+      "abstract": "A key challenge for network neuroscience is to understand the role of interactions between brain regions and how they contribute to the encoding and broadcasting of information within cognitive processes. This requires computational tools to infer directional relations between brain regions from neural time series. For fMRI, the most common approaches are based on Granger causality (GC) analysis and effective connectivity (EC) models. Despite their different conceptual framing, GC and EC models for fMRI are based on similar mathematical assumptions, grounded on continuous- and discrete-time linear stochastic models. Based on a mapping between multivariate Ornstein-Uhlenbeck (MOU) and multivariate autoregressive (MVAR) processes, we analytically obtain an approximately quadratic relation between EC and GC, after rescaling the GC to compensate for unequal noise variances of the source and target. Simulations show that these relations can be observed in finite time series only if a large amount of data is available, implying that they may emerge only at a group level in real fMRI experiments. We verified this prediction by systematically comparing EC and GC in a large-scale fMRI data set from the Human Connectome Project. Overall, our findings can provide methodological and interpretational guidance in the usage of GC and EC for brain network reconstruction by clearly elucidating what is common between the two methods, but also their respective specificities and biases.",
+      "authors": [
+        "Allegra, M.",
+        "Gilson, M.",
+        "Brovelli, A."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-04-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2024.02.22.581068v3.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Compares Granger causality and effective connectivity for temporal causal discovery from neural time series",
+      "llm_evidence_cn": "比较Granger因果和有效连接，用于神经时间序列的时序因果发现",
+      "llm_evidence": "比较Granger因果和有效连接，用于神经时间序列的时序因果发现",
+      "canonical_evidence": "比较Granger因果和有效连接，用于神经时间序列的时序因果发现",
+      "llm_tldr_en": "This paper compares Granger causality and effective connectivity models for inferring directed interactions from fMRI time series, highlighting their shared mathematical foundations.",
+      "llm_tldr_cn": "该论文比较了Granger因果分析和有效连接模型在fMRI时间序列中推断定向交互的方法，揭示了它们在连续与离散时间线性随机模型下的共同数学基础，为神经科学中的因果发现提供了理论指导。",
+      "llm_tldr": "该论文比较了Granger因果分析和有效连接模型在fMRI时间序列中推断定向交互的方法，揭示了它们在连续与离散时间线性随机模型下的共同数学基础，为神经科学中的因果发现提供了理论指导。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-02-722054-v1",
+      "source": "biorxiv",
+      "title": "DoFormer: Causal Transformer for Gene Perturbation",
+      "abstract": "Learning causal gene regulatory mechanisms from single-cell data, and thereby predicting the effects of unseen perturbations, remains challenging. Observational RNA-seq data alone is insufficient for causal modeling, whereas perturbational data is essential. Classical causal inference methods often rely on unrealistic directed acyclic graph (DAG) assumptions and are not well suited to integrating multimodal data. Current transcriptomic foundation models also typically treat observational and perturbational data identically, limiting their ability to model perturbations. We present DoFormer, a causal multimodal Transformer that makes no DAG assumptions and leverages rich perturbational data to accurately predict previously unseen perturbations. DoFormer enables principled in silico perturbations by adapting the causal do-operator within the attention mechanism: the perturbed gene is set to the intervention value and prevented from attending to other genes, allowing the model to fully distinguish observational from interventional regimes. We train DoFormer using biologically informed loss functions and evaluate it with comprehensive perturbation prediction metrics. DoFormer substantially improves perturbation prediction relative to baseline and prior foundation models, underscoring the importance of intervention-aware architectures and biologically grounded objectives for causal modeling in single-cell genomics.",
+      "authors": [
+        "Karbalayghareh, A.",
+        "Paull, E.",
+        "Califano, A."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-05-04T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.02.722054v1.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal learning for gene perturbation without DAG assumption",
+      "llm_evidence_cn": "无需DAG假设的基因扰动因果学习",
+      "llm_evidence": "无需DAG假设的基因扰动因果学习",
+      "canonical_evidence": "无需DAG假设的基因扰动因果学习",
+      "llm_tldr_en": "DoFormer is a causal Transformer that predicts unseen gene perturbations without DAG assumptions by leveraging perturbational data.",
+      "llm_tldr_cn": "经典因果推断依赖DAG假设，且难以整合多模态数据。本文提出DoFormer，一种无需DAG假设的因果Transformer，利用丰富的扰动数据预测未见过的基因扰动效应。实验证明其在多个单细胞数据集上准确预测扰动效果。该工作为因果学习在基因扰动中的应用开辟了新途径。",
+      "llm_tldr": "经典因果推断依赖DAG假设，且难以整合多模态数据。本文提出DoFormer，一种无需DAG假设的因果Transformer，利用丰富的扰动数据预测未见过的基因扰动效应。实验证明其在多个单细胞数据集上准确预测扰动效果。该工作为因果学习在基因扰动中的应用开辟了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ]
+}

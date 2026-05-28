@@ -1,0 +1,925 @@
+Title: GenTS: A Comprehensive Benchmark Library for Generative Time Series Models
+
+URL Source: https://arxiv.org/pdf/2605.17804v1
+
+Published Time: Tue, 19 May 2026 01:50:35 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# GenTS: A Comprehensive Benchmark Library for Generative Time Series Models 
+
+# Chenxi Wang 
+
+The University of Hong Kong Hong Kong SAR, China cxwang@eee.hku.hk 
+
+# Xiaorong Wang 
+
+The University of Hong Kong Hong Kong SAR, China xrwong@connect.hku.hk 
+
+# Peiyang Li 
+
+Fudan University Shanghai, China pyli22@m.fudan.edu.cn 
+
+# Yi Wang 
+
+The University of Hong Kong Hong Kong SAR, China yiwang@eee.hku.hk 
+
+## Abstract 
+
+Generative models have demonstrated remarkable potential in time series analysis tasks, like synthesis, forecasting, imputation, etc. However, offering limited coverage for generative models, ex-isting time series libraries are mainly engineered for discriminative models, with standardized workflows for specific tasks, such as optimizing Mean Squared Errors for time series forecasting. This rigid structure is fundamentally incompatible with the distinct and often complex paradigms of generative models (e.g., adversarial training, diffusion processes), which learn the underlying data dis-tribution rather than a direct input-output mapping. To this end, we proposed GenTS , a comprehensive and extensible benchmark library designed for systematic assessment on generative time se-ries models. GenTS features a unified data preprocessing pipeline, a collection of versatile models, and panoramic evaluation metrics. Its modular design also enables the researchers to flexibly customize beyond our built-in datasets and models. Based on GenTS , we con-ducted benchmarking experiments under diverse tasks, accordingly offering suggestions for model selection and identifying poten-tial directions for future research. Our codes are open-source at https://github.com/WillWang1113/GenTS. The official tutorials and document are available at https://willwang1113.github.io/GenTS/. 
+
+## CCS Concepts 
+
+• Software and its engineering → Software libraries and repos-itories ; • Computing methodologies → Artificial intelligence .
+
+## Keywords 
+
+Time Series Analysis, Generative Models, Benchmark Library 
+
+ACM Reference Format: 
+
+Chenxi Wang, Xiaorong Wang, Peiyang Li, and Yi Wang. 2026. GenTS: A Comprehensive Benchmark Library for Generative Time Series Models. In Proceedings of 32nd ACM SIGKDD Conference on Knowledge Discovery  
+
+> Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> KDD ’26, Jeju, Korea
+> ©2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-1-4503-XXXX-X/2018/06 https://doi.org/XXXXXXX.XXXXXXX
+
+and Data Mining (KDD ’26). ACM, New York, NY, USA, 15 pages. https: //doi.org/XXXXXXX.XXXXXXX 
+
+## 1 Introduction 
+
+Time series, defined as a sequence of data points collected tempo-rally, are ubiquitous across multiple domains, for example, financial markets, energy systems, traffic systems, and so on. Over the past decade, the success of neural networks, coupled with the increasing availability of real-world time series data, have advanced time se-ries analysis from traditional models towards deep learning-based models [45]. In recent years, deep generative models have once again revolu-tionized time series analysis. Their excellence in learning complex data distributions, such as images [ 7, 18 , 38 ], audios [ 43 ], and texts [ 1, 17 , 42 ], motivates the community to further investigate gen-erative time series models for time series analysis, where both unconditional and conditional tasks are of interest. Unconditional models learn the data distribution from which novel but realistic time series can be sampled, primarily for tasks such as data augmen-tation. Meanwhile, conditional models generate time series based on given auxiliary inputs, empowering classical time series analysis, such as probabilistic forecasting, which produces future scenarios from past observations. So far, pioneering generative time series models have been developed for synthesis [ 10 , 31 , 46 ], imputation [41, 47], forecasting [29, 37], super-resolution [44], etc. Despite the growing research trend, there is a lack of a compre-hensive benchmarking library for generative time series models. As we will introduce in Section 3, predominantly engineered for dis-criminative models, the existing time series libraries either hardly integrate the generative models or focus on a single generation task, ignoring the versatility. Besides, generative models often employ diverse training methods, such as adversarial training, diffusion, and denoising, that are distinct from those of discriminative models. This makes it more difficult to integrate them into existing time-series libraries. Thus, there is still a lack of a comprehensive library for generative time series models, hindering systematic assessments of new advancements and innovations. To this end, we are motivated to propose GenTS , a comprehen-sive benchmark library for time series generation. In GenTS , we unified the preprocessing pipeline of time series data with built-in multi-domain datasets, collected the versatile generative time series models, and constructed the panoramic performance evaluation  
+
+> arXiv:2605.17804v1 [cs.LG] 18 May 2026 KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al.
+
+Table 1: Comparison of Time Series Generation Libraries. Syn.: Synthesis (either unconditional or class label-guided), Fcst: Fore-casting, Impt.: Imputation, Diff.: Diffusion, D.E.: Differential Equation, M-F: Model-Free, M-B: Model-Based, Vis: Visualization Datasets Models Tasks Evaluation Diversity GAN VAE Flow Diff. D. E. Syn. Fcst. Imp. M-F M-B Vis. 
+
+Synthcity [36] ✗ ✓ ✓ ✓ ✓ ✗ ✓ ✗ ✗ ✓ ✓ ✗
+
+TSGM [33] ✓ ✓ ✓ ✗ ✓ ✗ ✓ ✗ ✗ ✓ ✓ ✓
+
+TSLib [45] ✓ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✓ ✓ ✗ ✗
+
+GluonTS [3] ✓ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✗ ✓ ✗ ✗
+
+ProbTS [48] ✓ ✗ ✗ ✓ ✓ ✗ ✗ ✓ ✗ ✓ ✗ ✗
+
+TSGBench [4] ✓ ▲ ▲ ▲ ▲ ▲ ✓ ✗ ✗ ✓ ✓ ✓
+
+CTBench [5] ✗ ▲ ▲ ▲ ▲ ▲ ✓ ✗ ✗ ✓ ✓ ✓
+
+GenTS (Ours) ✓ ✓ ✓ ✓ ✓ ✓ ✓ ✓ ✓ ✓ ✓ ✓      
+
+> In this table, ✓indicates inclusion while ✗denotes exclusion. Primarily focusing on systematic evaluation metrics of generated time series data, TSGBench and CTBench are labeled with ▲in terms of Models, since their official code repositories only provide a template base model class, without implementation on SOTA models.
+
+for generated time series under different contexts. Modularly de-signed, GenTS also enables users to customize their own models and datasets, thereby further contributing to the broader scientific com-munity. We also launched large-scale benchmarking experiments under different time series generation tasks to disclose the strengths and weaknesses of different types of generative time series models. 
+
+Contributions: 1) We proposed a comprehensive benchmark li-brary, GenTS , designed for generative time series models. It provides standardized but also customizable workflow of data preparation, model training and performance evaluation for unconditional and conditional time series generation tasks. 2) Based on GenTS , we launched benchmark experiments over three common and major time series generation tasks, i.e., synthesis, forecasting and imputa-tion, which can be referred to for other related research works. 3) Accordingly, we formed suggestions on model selections in cross-task and task-specific contexts, and provided some potential future directions for the community. 
+
+## 2 Preliminaries 
+
+In this section, we will introduce the definition of time series generation and our focused time series generation tasks in this study. 
+
+## 2.1 Definition of Time Series Generation 
+
+Let us denote a multivariate time series as 𝑿 = (𝒙 1, 𝒙 2, · · · , 𝒙 𝑇 )⊤ ∈
+
+R𝑇 ×𝐷 , where 𝑇 is the length of time series, 𝐷 is the number of variables, and for 𝑡 ∈ { 1, · · · ,𝑇 }, 𝒙 𝑡 ∈ R𝐷 is the vector of obser-vations at time step 𝑡 . We are interested in the data distribution 
+
+𝑝 (𝑿 ) and in practice, we have access to the time series dataset 
+
+D = {𝑿 (1) , · · · , 𝑿 (𝑛 ) }, where each sample is drawn from 𝑝 (𝑿 ).
+
+Unconditional Generation : Since the ground truth of 𝑝 (𝑿 ) is inaccessible, we aim to approximate it with a proxy 𝑞 𝜃 (𝑿 ) parame-terized by trainable parameters 𝜃 . This allows us to generate new time series samples by drawing from the learned distribution, i.e., 
+
+𝑿 (new ) ∼ 𝑞 𝜃 (𝑿 ) ≈ 𝑝 (𝑿 ).
+
+Conditional Generation : In some cases, we expect that the generated time series are guided by some given condition 𝒚 ∈ R𝐶 
+
+(e.g., class labels, observed values). Mathematically, we are now interested in a conditional data distribution 𝑝 (𝑿 | 𝒚 ). If we can model this conditional distribution with a proxy conditional one 
+
+𝑞 𝜃 (𝑿 | 𝒚 ), then we can generate a conditional time series from it as well. 
+
+## 2.2 Our Scope 
+
+In this work, we focus on three major and common time series generation tasks. To make it clear, we use the word generation to refer to general time series generation, which encompass synthesis, forecasting, and imputation. 
+
+Time Series Synthesis : Time series synthesis aims to simulate an entirely new but realistic time series that closely resembles the original data, through learning the underlying real data distribution. It can be subdivided into to 1) unconditional synthesis and 2) class label-guided synthesis. The former one is the same as unconditional generation as previously mentioned, while the latter goals at syn-thesizing time series that are consistent with the characteristics of a given category, based on the provided class label. Typically, it is implemented via conditional generative models. Given the class label 𝒚 ∈ R𝐶 , usually represented by categorical encoding methods, e.g., one-hot encoding, our aim is to learn a conditional distribution 
+
+𝑞 𝜃 (𝑿 | 𝒚 ) ≈ 𝑝 (𝑿 | 𝒚 ). This enables controlled synthesis of time series samples belonging to specific categories. 
+
+Time Series Forecasting : Time series forecasting targets the prediction of future sequences based on historical observation. Given the observed time series 𝑿 obs = (𝒙 1, · · · , 𝒙 𝐿 obs )⊤ ∈ R𝐿 obs ×𝐷 ,we are interested in the conditional distribution 𝑝 (𝑿 pred | 𝑿 obs ),where 𝑿 pred = (𝒙 𝐿 obs +1, · · · , 𝒙 𝐿 obs +𝐿 pred )⊤ ∈ R𝐿 pred ×𝐷 . After learn-ing the proxy 𝑞 𝜃 (𝑿 pred | 𝑿 obs ), we can predict numerous future scenarios by sampling multiple times, ˆ𝑿 pred ∼ 𝑞 𝜃 (𝑿 pred | 𝑿 obs ).
+
+Time Series Imputation : The objective of the imputation task is to reconstruct missing data values within a time series based on GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea 
+
+its known observations. We assume that only a partially masked version of the time series ˜𝑿 = 𝑿 ⊙ m is observed, where m ∈{0, 1}𝑇 ×𝐷 is a binary mask matrix indicating missingness. In this context, we are interested in the conditional distribution 𝑝 (𝑿 |
+
+˜𝑿 , m), so that we can reconstruct the time series by sampling from the fitted proxy 𝑿 ′ ∼ 𝑞 𝜃 (𝑿 | ˜𝑿 , m), and assemble through ˆ𝑿 =
+
+𝑿 ⊙ m + 𝑿 ′ ⊙ ( 1 − m).In this paper, we focus on these three widely researched tasks, though there are other generative time series tasks like refine-ment (super-resolution) [ 25 , 44 ], which currently account for a tiny proportion. We will also keep on developing GenTS if there are emerging related research topics. 
+
+## 3 Overview of Generative Time Series Models and Libraries 3.1 Taxonomy of Models 
+
+Time series generative models can be mainly categorized into GANs, VAEs, Diffusions, Flows, and Differential Equations. The former four are typical generative models in general, while the last one is investigated in the time series community and the dynamic system community. 
+
+GAN-based Models : Generative Adversarial Networks (GANs) are one of the earliest generative deep learning models [ 16 ]. It consists of a generator and a discriminator to learn the data distri-bution directly through adversarial training. To consider the tem-poral characteristics of time series, some GAN-based variants are implemented through Recurrent Neural Networks (RNN) [ 12 ] and Attention modules [ 19 ]. To further enhance its expressive power, researchers customized adversarial training for time series by in-troducing additional loss functions [ 46 ] and integrating continuous time-flow processes [20]. 
+
+VAE-based Models : Compared to GANs, Variational Auto En-coder (VAE) has the privilege of stable training and a solid theoreti-cal base [ 24 ], aiming to optimize the Evidence Lower Bound (ELBO). To reconstruct high-quality time series, some VAE-based variants ac-commodate signal processing and time-frequency modules [ 10 , 26 ]. Besides, to consider time series driven by latent dynamics, some variants such as KoVAE [ 32 ] combine dynamics theories to reform more informative priors in VAEs. 
+
+Diffusion-based Models : As the extension of VAEs [ 30 ], dif-fusion models for generation tasks have become a major focus of current research. Trained by denoising the corrupted data, diffu-sion models generate high-quality data samples from pure random noise by means of a gradual denoising process [ 18 ]. Similar to VAEs, seasonal decompositions and time-frequency modules are often in-corporated to synthesize high-fidelity time series [ 9 , 31 , 44 , 47 ]. For time series forecasting and imputation, diffusion models have been further improved by modifying the conditional training process [28, 41]. 
+
+Flow-based Models : Flow-based models [ 11 , 23 , 34 ] map an easily-sampled distribution, such as a standard Gaussian, to a more complex data distribution through a series of invertible transforma-tions. Compared to GANs and VAEs, flow-based models explicitly learn data distributions. In time series generation tasks, they are adapted via modified coupling layers [ 2 ] that can satisfy the re-versibility and computability of Jacobian determinants. 
+
+Differential Equation-based Models : The core concept of differential equation-based time series generative models lies in utilizing ordinary or stochastic differential equations to charac-terize the intrinsic dynamics of data in continuous time [ 8, 21 ]. These models formalize the evolution of latent states through dif-ferential equations parameterized by neural networks, and usually coupled with VAEs and GANs, thereby generating regular or irreg-ular sampled time series data with realistic temporal dependencies and explicit models of temporal dynamics [22, 27, 39, 49]. 
+
+## 3.2 Related Benchmark Libraries 
+
+Despite the prosperity of the development of generative time series models, the related benchmark libraries are scarce compared to other fields of generative AI. In the time series community, the existing benchmark libraries rarely provide comprehensive inclu-sion of multi-domain datasets, various SOTA generative models, different generation tasks, and panoramic evaluation metrics at the same time, as shown in Table. 1. 
+
+Coverage of Generative Time Series Models and Tasks : As we investigated, most of the pioneering time series libraries either oriented towards discriminative models, or ignored the versatility of generative time series models. For example, TSLib and GluonTS provides a collection of discriminative models on classical time series analysis tasks, but lacks any implementations of generative models. Meanwhile, including typical generative time series models, TSGM [ 33 ] and Synthcity [ 36 ] only support unconditional synthesis while ProbTS merely focuses on time series forecasting. It should be also mentioned that two libraries, TSGBench [ 33 ] and CTBench [ 36 ], merely address the evaluation of generated time series, respectively from domain-agnostic and domain-specific perspectives, neglecting the data processing and model training. Therefore, the existing related libraries fail to cover the broader spectrum of time series generation that are critical for real-world applications. 
+
+Extensibility of the Existing Libraries for Generative Mod-els : In addition, it is objectively difficult to incorporate generative time series models into the existing libraries in terms of imple-mentation. On the one hand, since traditional time series libraries, like TSLib and GluonTS, focus on discriminative models instead of generative ones, their training objectives could be straightforward, e.g., MSE/quantile loss for regression and cross entropy for classifi-cation. The accessible application programming interfaces (APIs) for user customization are thus also designed for discriminative models. However, generative time series models could have com-plex and various training paradigms as we introduced above, such as adversarial training, diffusion-denoising, making it difficult to fit generative models in those libraries with APIs for discriminative models. On the other hand, existing generative time series libraries, as mentioned previously, primarily stick to either unconditional synthesis or time series forecasting. They also lack standardized data processing pipelines for various tasks, as well as the APIs to incorporate different types of exogenous conditions, e.g. categorical class labels or temporal observation masks. Therefore, we are motivated to proposed a comprehensive and customizable benchmark library for the community of generative time series models, which has unified data preparation, flexible model training, and thorough performance evaluation. KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al. lightning.Trainer 
+
+Data Preprocessing 
+
+Built-in Datasets 
+
+W 
+
+> Energy
+
+J
+
+> Financial
+
+Ì 
+
+> Weather
+
+O
+
+> Medical
+> Traffic
+
+-  
+
+> Physics
+> minute hour day
+
+Data resolutions 
+
+BaseDataModule   
+
+> lightning.LightningDataModule
+> Split Train/Val/Test Sets
+> · · ·
+> Build torch Dataloaders
+> · · ·
+> Simulate Missing Values
+
+Model Training 
+
+SOTA Models           
+
+> GAN TimeGAN, PSAGAN, · · ·
+> VAE TimeVAE, KoVAE, · · ·
+> Diffuion Diffuion-TS, TMDM, · · ·
+> Flow MAF, FourierFlow, · · ·
+> Diff. Eq. Latent SDE/ODE, · · ·
+> condition= {none,class,predict,impute }
+
+BaseModel 
+
+> lightning.LightningModule
+> Flexible Callbacks
+> Comprehensive Logging
+> Scalable Training
+> Reproducible Results
+
+Performance Evaluation 
+
+model_free  
+
+> CRPS
+> Wasserstein Distance MSE
+
+model_based  
+
+> Context FID
+> Discriminative Score Predictive Score
+
+visualization                                                                           
+
+> 2D TSNE Scatters
+> Prediction Curves Imputation Points
+> 1import torch
+> 2from gents . model import VanillaDDPM
+> 3from gents . dataset import SineND
+> 4from gents . evaluation import tsne_visual , predictive_score
+> 5from lightning import Trainer
+> 67#setup dataset and model
+> 8dm =SineND ( seq_len =64 , seq_dim =2)
+> 9model =VanillaDDPM ( seq_len = dm . seq_len ,
+> 10 seq_dim = dm . seq_dim ,
+> 11 condition = None , ...)
+> 12 #training
+> 13 trainer =Trainer ( max_epochs =10 , ...)
+> 14 trainer . fit ( model , dm )
+> 15 16 #testing ( one test batch for example )
+> 17 dm . setup ( " test ")
+> 18 test_batch =next ( iter ( dm . test_dataloader () ) )
+> 19 real_data =test_batch [ " seq " ]
+> 20 N=len ( real_data )
+> 21 gen_data =model . sample ( n_sample )
+> 22 #data shape : [N , seq_len , seq_dim ]
+> 23 24 #visualization with tsne
+> 25 tsne_visual ( real_data , gen_data )
+
+Figure 1: Left : The overview of GenTS framework. Right : A code snippet showing the neat usage of GenTS in less than 30 lines. 
+
+## 4 GenTS 
+
+Our proposed comprehensive library, GenTS , will be introduced in this section, with a modular design covering the full benchmark-ing pipeline, i.e., data preprocessing, model training, and perfor-mance evaluation. Built on torch and lightning 1, GenTS is highly user-friendly for researchers to benchmark the existing models and datasets, and facilitate the realization of new ideas. Figure 1 illustrates the structure of GenTS alongside a corresponding code snippet for a quick start. Our document and tutorials can be found at https://willwang1113.github.io/GenTS/. The official codes are available at https://github.com/WillWang1113/GenTS. 
+
+## 4.1 Data Preprocessing 
+
+Multi-domain Datasets Our GenTS library features a collec-tion of over fifteen time series datasets from six different domains, including traffic, energy, financial, and others. Most of them can be publicly accessed by web downloading and recorded in .csv 
+
+/ .txt / .tsf file formats. Our BaseDataModule parses all these files into tensors of time series windows and builds corresponding dataloaders for training, validation, and testing. In addition to the widely used real-world data, we simulated two simple physical trajectory data ( Spiral2D and SineND , see details in A.1) for users to quickly test their ideas of new models. As shown in Table. 2, these time series datasets range from less than 1 minute to 1 day, presenting distinct temporal patterns. Therefore, the multi-domain datasets in our library exhibit strong diversity that enables researchers to benchmark and develop generative time series models for various applications. 
+
+Customizable Base Data Module To realize data preparation for different time series generation tasks, we designed a base class named BaseDataModule . Inherited from LightningDataModule , it not only performs fundamental functions like dataset splitting and dataloader instantiation, but also completes task-related jobs, for 
+
+> 1
+
+Also known as pytorch-lightning 
+
+Table 2: Built-in Time Series Datasets in GenTS Name Resolution No. of Variables Domain 
+
+SineND continuous 𝑁 (user-configurable) Physics Spiral2D continuous 2 Physics Stocks 1 day 6 Financial Energy 10 min 28 Energy ETT 1 hour/15 min 7 Energy Electricity 1 hour 321 Energy Traffic 1 hour 862 Traffic Exchange 1 day 8 Financial MoJoCo continuous 14 Physics Physionet 1 min - 1 hour 35 Medical ECG ∼700 Hz 1 Medical Air quality 1 hour 6 Weather Weather 10 min 6 Weather example, simulating missing values for time series imputation, or assigning look-back windows for time series forecasting. Besides, for some models dealing with irregular time series, e.g., neural differential equations, we can optionally simulate irregular drop-ping of partial time steps. More importantly, users can effortlessly construct their own time series datamodule beyond our built-in datasets. By following the structure of BaseDataModule , users can implement their own specialized data preprocessing pipelines. The detailed introduction on how to customize BaseDataModule can be found in the tutorial on our document website. 
+
+## 4.2 Model Training 
+
+Built-in Models As mentioned in the previous overview in Section 3, we covered five main generative model types in GenTS ,currently including more than 25 SOTA models (and their vari-ants) from top conferences. Our implementation of these models mostly sticks to their respective official codes, except for some GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea 
+
+Table 3: GenTS Models. Syn.: Synthesis ("+" indicates support-ing class labels), Fcst: Forecasting, Impt.: Imputation Model Type Syn. Fcst. Impt. 
+
+VanillaVAE ∗
+
+VAE 
+
+✓+ ✓ ✓
+
+TimeVAE [10] ✓ — —TimeVQVAE [26] ✓+ — —KoVAE [32] ✓ — —VanillaGAN ∗
+
+GAN 
+
+✓+ ✓ ✓
+
+COSCIGAN [40] ✓ — —TimeGAN [46] ✓ — —GTGAN [20] ✓ — —PSAGAN [19] ✓ — —RCGAN [12] ✓+ — —VanillaMAF ∗
+
+Flow ✓+ ✓ ✓
+
+FourierFlow # [2] ✓ — —VanillaDDPM ∗
+
+Diffusion 
+
+✓+ ✓ ✓
+
+CSDI [41] — ✓ ✓
+
+DiffusionTS [47] ✓ ✓ ✓
+
+TMDM [28] — ✓ —FourierDiffusion [9] ✓ — —ImagenTime [31] ✓ ✓ ✓
+
+FIDE # [14] ✓ — —LatentODE [39] Diff. Eq. 
+
+✓ ✓ ✓
+
+LatentSDE [27] ✓ — —SDEGAN [22] ✓ — —LS4 [49] ✓ ✓ ✓   
+
+> ∗denotes simple baselines implemented by the authors; #denotes models that are only applicable to univariate time series.
+
+equivalent adaptations, e.g., from tensorflow to torch . In addition to these SOTA models, we implemented four naive baselines, i.e., 
+
+VanillaVAE , VanillaGAN , VanillaDDPM , and VanillaMAF , which are based on either simple MLP backbones or the 1-D version of computer vision backbones. They are the direct usage of genera-tive models without any adaptation to time series data, offering a reasonable starting point for developing new ideas. All of our existing models and their respective capabilities are listed in Ta-ble. 3, and the more details of our Vanilla models can be found in the Appendix. A.2. 
+
+Customizable Base Model Module Similar to BaseDataModule ,a base model class BaseModel is designed as a template for all mod-els. In this framework, we inherit LightningModule and then re-spectively implement training_step and validation_step for each model. Since some GAN-based models, like TimeGAN, lack validation during model training in their official codes, we supple-ment the Wasserstein distance as the validation metric for them as well. Utilizing lightning.Trainer , users can effortlessly fulfill the training loop and efficiently realize flexible callbacks, compre-hensive logging, gradient accumulation, and other useful functions during the model training process. Meanwhile, we design a sample 
+
+method in BaseModel to generate time series after fitting. Given the number of sampling times and the optional conditions, the sample 
+
+method returns the batched generated time series. Most importantly, owing to the modular model design, researchers can also customize their own generative time series model based on the BaseModel , as long as they implement the necessary training/validation/sampling process as well. We detailed how to customize generative time series models on our document website. 
+
+## 4.3 Performance Evaluation 
+
+Unlike classical time series analysis tasks, which usually have clear evaluation metrics, e.g., forecasting accuracy, the evaluation of time series generation can be multi-dimensional, depending on the specific contexts. In GenTS , we provide both model-free and model-based metrics to comprehensively evaluate generated time series data for different goals. 
+
+Model-free Metrics Without training additional neural net-works, model-free metrics evaluate the quality of generated time series from a statistical perspective. For example, we include the Wasserstein distance (and its variants) [ 6 ], the Continuous Ranked Probability Score (CRPS), Mean Squared Error (MSE), and others. These metrics comprehensively measure the distributional close-ness between the generated time series and the real ones. 
+
+Model-based Metrics Leveraging auxiliary neural networks, model-based metrics evaluate the fidelity and usefulness of gen-erated time series through the lens of neural network perception, usually in the context of time series synthesis task. Specifically, we include Predictive Score (PS), Discriminative Score (DS) [ 46 ], and Context-FID (C-FID) [ 19 ] as metrics. The former one evaluates the usefulness of generated time series as a training dataset for the time series forecasting task, while the latter two focus on the fidelity based on how indistinguishable or latently close the generated data are to the real one. In this way, the quality of the synthetic time se-ries is evaluated based on how neural networks learn and represent temporal dynamics. More details can be found in Appendix. A.3. 
+
+Visualization Beyond quantitative evaluation, we provide qual-itative visualization in GenTS to compare the generated time series with the real ones. Specifically, t-SNE is included for visualizing time series in a 2D space, commonly used to identify whether the learned data distribution is close to the real one. For time series forecasting and imputation, we provide useful functions to plot fore-casting and imputation results in one call, where both the averaged predictions and the prediction intervals will be demonstrated. 
+
+## 5 Experiments 
+
+In this section, we benchmarked the generative time series mod-els (Table. 3) on multi-domain datasets (Table. 2) via our GenTS 
+
+over three time series generation tasks, i.e., synthesis (with/without class label guidance), forecasting, and imputation. 
+
+## 5.1 Time series synthesis 
+
+Setting In this task, we aim to test the benchmarks’ capability of fitting the complex data distributions. Specifically, for each dataset, we fixed the length of the time series as 𝑇 = 24 , in the multivariate setting 𝐷 = min (16 , 𝐷 𝑁 ), where 𝐷 𝑁 denotes the total number of channels in the dataset. Since some models are designed for univari-ate time series, we also launched univariate synthesis experiments (attached in the appendix B). For class label-guided generation, we selected the datasets and models that are compatible with class KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al. Context                          
+
+> FID
+> Wasserstein
+> Distance
+> Predictive
+> Score
+> Discriminative
+> Score
+> Diff. Eq. Diffusion Flow GAN VAE 0246810
+> Number of datasets
+> VanillaVAE
+> FourierDiffusion
+> VanillaMAF
+> VanillaDDPM
+> TimeVAE
+> ImagenTime
+> COSCIGAN
+> SineND
+> Context FID
+> Rank=1
+> Rank=2
+> Rank=3
+> 0246810
+> Number of datasets
+> TimeGAN
+> DiffusionTS
+> VanillaDDPM
+> FourierDiffusion
+> VanillaMAF
+> ImagenTime
+> TimeVAE
+> COSCIGAN
+> SineND
+> Wasserstein Distance
+> Rank=1
+> Rank=2
+> Rank=3
+> 0246810 12
+> Number of datasets
+> VanillaVAE
+> VanillaMAF
+> VanillaDDPM
+> FourierDiffusion
+> DiffusionTS
+> TimeVAE
+> COSCIGAN
+> ImagenTime
+> SineND
+> Predictive Score
+> Rank=1
+> Rank=2
+> Rank=3
+> 0246810
+> Number of datasets
+> TimeVQVAE
+> VanillaVAE
+> VanillaDDPM
+> TimeVAE
+> FourierDiffusion
+> VanillaMAF
+> DiffusionTS
+> COSCIGAN
+> ImagenTime
+> Stocks
+> SineND
+> Discriminative Score
+> Rank=1
+> Rank=2
+> Rank=3
+
+Figure 2: Main Results of Time Series Synthesis Benchmarking. Left : Averaged normalized performance of each type of model over four metrics. The greater, the better. Right : Top-3 counts of each model over all datasets. 
+
+labels. All the models are evaluated by Wasserstein Distance, C-FID, PS, and DS. Please see our appendix B for more experiment details. 
+
+Results of Unconditional Synthesis As Figure 2 depicts (with full results in appendix B.1), different types of models generally exhibited varying performances on the evaluation metrics. Diffu-sion models showed overall superiority, especially on the model-based metrics, i.e., PS and DS. VAEs also demonstrated competitive performances on Wasserstein Distance and C-FID, implying their capability of modeling realistic high-dimensional distributions. In terms of individual model performance, ImagenTime, COSCI-GAN, and TimeVAE showed advantages. Specifically, ImagenTime aligned with the overall performance of diffusion-based models, excelling at PS and DS. Despite the general inferior performance of GAN-based models, COSCIGAN stood out and showed superiority on C-FID and Wasserstein Distance. TimeVAE achieved balanced but moderate performances in general. The univariate results can be found in the appendix B.1. 
+
+Results of Class Label-Guided Synthesis . Table. 4 and Fig-ure 3 respectively demonstrate the quantitative and qualitative benchmarking results. TimeVQVAE’s superior performance was highlighted in terms of statistical and representative closeness to the labeled time series data, showing the most aligned clusters with the real class-labeled dataset. In contrast, though GANs generated clearly categorized time series, they are not well aligned with the real clusters. In terms of Physionet, although VanillaMAF and Vanil-laDDPM demonstrated slight advantages, we reckoned that the six models may not fit the real data distribution well, as their DS all approached 0.5. This indicated that the generated data can be easily distinguished from the real ones by post-hoc trained classifiers. 
+
+## 5.2 Time series forecasting 
+
+Setting We followed one of the most widely used time series forecasting setting [ 45 ], and set both look-back window and predic-tion window length as 96, i.e. 𝐿 obs = 𝐿 pred = 96 , in the multivariate context. Each trained model was inferred 50 times to assemble 
+
+Table 4: Full Results of Class Label-Guided Time Series Syn-thesis. Dataset Model Metrics 
+
+C. FID W. D. P. S. D. S. ECG VanillaVAE 0.557 0.289 0.189 0.442 TimeVQVAE 0.069 0.101 0.191 0.311 
+
+VanillaGAN 0.867 0.492 0.672 0.496 RCGAN 1.160 0.425 0.295 0.486 VanillaDDPM 0.202 0.256 0.238 0.457 VanillaMAF 0.799 0.613 0.373 0.491 Physionet VanillaVAE 10.744 0.306 0.166 0.499 TimeVQVAE 8.015 0.286 0.172 0.499 VanillaGAN 8.280 0.439 0.200 0.500 RCGAN 8.081 0.314 0.179 0.500 VanillaDDPM 3.310 0.153 0.149 0.497 VanillaMAF 11.370 0.353 0.146 0.496 
+
+Spiral2D VanillaVAE 1.300 0.224 0.412 0.282 TimeVQVAE 0.974 0.139 0.408 0.239 VanillaGAN 4.531 0.449 0.417 0.404 RCGAN 4.964 0.556 0.432 0.282 VanillaDDPM 1.721 0.286 0.413 0.075 
+
+VanillaMAF 8.469 0.793 0.516 0.464 probabilistic forecasts, and the deterministic ones were derived by averaging over the sampled 50 predictions. The forecasts were eval-uated by MSE and CRPS, corresponding to point and distributional accuracy. 
+
+Results Table. 5 provides a complete evaluation via metrics of MSE and CRPS. The results revealed that CSDI and TMDM fre-quently rank among the best for both deterministic and probabilistic forecasting. It should be noted that in Stocks, a time series dataset with non-stationarity, TMDM showed absolute advantages over GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea model = VanillaVAE model = TimeVQVAE model = VanillaGAN model = RCGAN model = VanillaDDPM    
+
+> data = ECG
+> model = VanillaMAF
+> data = Physionet  data = Spiral2D
+> real: cls 1 syn: cls 1 real: cls 0 syn: cls 0
+
+Figure 3: t-SNE Visualization of Class Label-guided Time Series Generation. In ECG dataset, we selected first two classes from the total five classes in the ECG dataset for visualization purposes. 
+
+the others, thanks to its backbone [ 29 ], specializing in handling non-stationarity in time series forecasting. We noticed that two baselines, VanillaMAF and VanillaVAE, also demonstrated competitive performance across some datasets, espe-cially on the ETTh, Electricity, and Spiral2D. This implied that for some cases of time series forecasting, less architectural complex-ity may provide satisfying baselines as well. It may guide users to explore their potential in specific applications in vertical industries. 
+
+## 5.3 Time series imputation 
+
+Setting In the task of imputation, we set the length of time series as 𝐿 = 24 , and simulated missing data at the missing rate of 0.2. All the models were also inferred 50 times to have the probabilistic and deterministic predictions the same as the time series forecasting setting. 
+
+Results Table. 6 records the full results of time series imputa-tion. Different from previous tasks, Diffusion-based models dom-inated in this task with absolute superiority over all the datasets. Specifically, CSDI consistently outperformed on most of the tested datasets, followed by ImagenTime and DiffusionTS. This indicated that diffusion-based generative models are particularly effective for time series imputation, offering a strong balance of both accu-rate point predictions and well-calibrated uncertainty estimates. In contrast, Differential Equation-based models and naive baselines generally exhibited weaker performance, rarely achieving top-3 rankings and often showing higher imputation errors. 
+
+## 6 Discussions 
+
+In this section, we will offer some suggestions for generative time series models, according to our previous results, and discuss the potential future research directions. 
+
+Suggestions on model selection . In terms of all the mentioned time series generation tasks, we can see that diffusion-based mod-els were frequently highlighted in our experiments, especially in conditional generation tasks. We also witnessed that DiffusionTS and ImagenTime demonstrated more cross-task versatility than classical GANs and VAEs, achieving competitive performances over synthesis, forecasting, and imputation. Consequently, they stand out as a robust and advisable choice for general-purpose time series generation. On the other hand, task-specific model selection is more nuanced and context-dependent. For time series synthesis, we recommend COSCIGAN and ImagenTime, respectively, for their strong ability to fit closely to the complex data distribution and generate useful time series for downstream tasks. FourierFlow is also recommended for univariate synthesis (see appendix B.1). TimeVQVAE is then advised for class label-guided synthesis. We advocate that users commence with our naive baselines as well, to explore more efficient generative time series models for class label-guided generation. For time series forecasting, we suggest beginning with CSDI, which could produce reasonable predictions in general cases. TMDM is also advisable for the non-stationary time series. For time series imputation, we KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al. 
+
+Table 5: Full results of time series forecasting models on MSE and CRPS metrics. The best model on each dataset is in bold; the second and third-best are underlined. The last row reports the frequency of a model ranking top3.                                                                                                                                                                                                                                                                                                                                                     
+
+> Dataset CSDI DiffusionTS ImagenTime LS4 LatentODE PSAGAN TMDM VanillaDDPM VanillaGAN VanillaMAF VanillaVAE
+> MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS AirQuality 0.436 0.153 0.664 0.200 0.322 0.137 0.724 0.269 0.599 0.242 0.689 0.213 0.759 0.224 0.557 0.188 0.742 0.272 0.690 0.219 0.582 0.196 ECG 0.181 0.097 0.205 0.111 0.245 0.104 2.259 0.520 0.295 0.151 0.712 0.285 0.193 0.110 0.149 0.094 1.067 0.382 0.173 0.091 0.179 0.099 ETTh1 0.729 0.260 0.611 0.246 0.625 0.250 3.671 0.727 0.963 0.360 1.652 0.428 0.844 0.266 0.714 0.272 1.790 0.524 0.541 0.218 0.556 0.239 ETTh2 0.190 0.119 0.173 0.126 0.154 0.120 2.748 0.641 0.343 0.211 0.406 0.206 0.143 0.111 0.794 0.309 1.817 0.532 0.148 0.117 0.135 0.120 Electricity 0.229 0.121 0.265 0.149 0.277 0.149 2.652 0.530 0.397 0.211 1.076 0.323 0.198 0.119 0.358 0.175 1.193 0.386 0.256 0.138 0.264 0.159 Energy 0.427 0.188 0.580 0.259 0.831 0.323 1.697 0.514 0.973 0.378 2.221 0.558 0.533 0.204 0.869 0.344 2.317 0.589 0.891 0.342 0.759 0.321 Exchange 0.078 0.076 0.790 0.357 0.441 0.235 2.904 0.671 0.741 0.340 1.004 0.393 0.117 0.111 0.658 0.345 3.380 0.617 0.394 0.243 0.609 0.319 MuJoCo 2.024 0.264 2.448 0.342 2.784 0.385 76.755 2.195 2.217 0.408 3.725 0.530 2.255 0.320 3.105 0.429 4.341 0.656 2.130 0.296 2.135 0.323 SineND 0.128 0.114 0.202 0.152 0.124 0.115 0.771 0.354 0.125 0.151 0.132 0.159 0.032 0.056 0.133 0.118 0.173 0.171 0.124 0.116 0.125 0.153 Spiral2D 0.005 0.019 0.040 0.069 0.008 0.026 2.519 0.629 0.016 0.037 1.099 0.415 0.001 0.016 0.001 0.010 0.688 0.319 0.001 0.009 0.001 0.010 Stocks 2.775 0.732 6.976 1.240 4.724 0.970 3.003 0.827 4.436 0.947 0.697 0.337 0.156 0.143 2.462 0.749 9.323 1.448 4.733 0.979 0.734 0.381 Traffic 0.367 0.113 0.748 0.185 0.375 0.119 2.268 0.503 0.442 0.158 2.111 0.465 1.603 0.381 0.434 0.134 1.372 0.385 0.416 0.122 0.379 0.139 Weather 0.239 0.103 0.248 0.114 0.283 0.122 82.509 0.890 0.371 0.186 0.527 0.185 0.228 0.102 2.556 0.491 1.805 0.517 0.789 0.121 0.231 0.112
+> Top3 Count 710 22440000116833008685
+
+Table 6: Full results of time series imputation models on MSE and CRPS Metrics. The best model on each dataset is in bold; the second and third-best are underlined. The last row reports the frequency of a model ranking top3. 
+
+Dataset CSDI DiffusionTS ImagenTime LS4 LatentODE VanillaDDPM VanillaGAN VanillaMAF VanillaVAE 
+
+MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS MSE CRPS AirQuality 0.734 0.243 0.737 0.236 0.902 0.209 0.734 0.243 0.734 0.243 0.757 0.190 0.976 0.215 0.812 0.195 0.739 0.193 ECG 0.037 0.018 0.025 0.016 0.018 0.012 0.309 0.077 0.128 0.040 0.022 0.018 0.168 0.068 0.081 0.027 0.034 0.019 ETTh1 0.009 0.010 0.017 0.015 0.015 0.013 0.390 0.091 0.072 0.040 0.052 0.033 0.296 0.087 0.051 0.029 0.040 0.027 ETTh2 0.001 0.004 0.003 0.007 0.002 0.005 0.832 0.136 0.020 0.022 0.021 0.020 0.220 0.083 0.011 0.014 0.012 0.016 Electricity 0.011 0.012 0.019 0.018 0.015 0.015 0.753 0.130 0.058 0.036 0.052 0.032 0.403 0.104 0.030 0.021 0.030 0.024 Energy 0.006 0.003 0.016 0.015 0.012 0.009 0.222 0.078 0.074 0.043 0.053 0.037 0.688 0.143 0.062 0.035 0.041 0.029 Exchange 0.000 0.002 0.057 0.049 0.012 0.018 0.379 0.089 0.125 0.066 0.085 0.058 0.223 0.083 0.039 0.033 0.140 0.068 MuJoCo 0.083 0.013 0.049 0.018 0.292 0.056 37.556 0.640 1.254 0.126 2.581 0.180 14.275 0.434 0.627 0.071 1.700 0.140 SineND 0.000 0.001 0.002 0.006 0.000 0.002 0.098 0.047 0.017 0.022 0.003 0.009 0.021 0.026 0.004 0.008 0.010 0.014 Spiral2D 0.000 0.002 0.001 0.005 0.000 0.001 0.916 0.171 0.072 0.040 0.002 0.007 0.109 0.048 0.002 0.005 0.001 0.004 Stocks 0.071 0.055 0.022 0.029 0.286 0.100 1.423 0.249 0.838 0.184 0.234 0.104 4.409 0.429 1.089 0.211 0.064 0.046 Traffic 0.026 0.011 0.037 0.017 0.034 0.014 0.501 0.095 0.068 0.028 0.070 0.024 0.411 0.104 0.057 0.020 0.050 0.024 Weather 0.006 0.003 0.008 0.004 0.009 0.004 15.008 0.144 0.024 0.019 0.051 0.027 0.955 0.144 0.020 0.010 0.098 0.051 
+
+Top3 Count 12 11 9 11 10 11 1 0 1 0 0 2 0 0 3 1 3 3
+
+highly recommend diffusion-based models, especially CSDI, as the first choice for their absolute advantages compared to others. Besides, we noticed that differential equation-based models gen-erally underperformed on our benchmarks but we believed that their inherent inductive bias suggests they are promising but under-explored for continuous time series generation. 
+
+Potential Future Directions . 1) Generative Time Series Foun-dation Models : Recent models [ 25 , 31 , 41 , 44 , 47 ] are increasingly designed for multiple time series tasks. A critical research direction is to investigate generative time series foundation models. We ex-pect to develop foundation models in a novel generative paradigm, where they are trained to fit the global data distributions and in-ferred controllably for diverse downstream tasks. 2) Robust Evalua-tion : Existing model-based metrics could have robustness issues [ 4 ], especially PS and DS, which are sensitive to the auxiliary evaluator models. Their variants, e.g., using a linear post-hoc regressor [ 25 ], may still limit their downstream application. Therefore, developing more robust and holistic evaluation metrics constitutes a critical research direction. 3) Online Development : Current generative time series models are mostly operated under the static environments and could have large computation burdens (see our appendix B.2), especially Diffusions. Real-world time series, however, are dynam-ically changing, along with complex temporal distribution shifts. How to develop online adaptive paradigms with tolerable latency could be another practical research direction. 
+
+## 7 Conclusion and future works 
+
+In this paper, we first thoroughly investigated both generative time series models and the related libraries, and revealed the lack of a comprehensive benchmark library for versatile generative time series models. Then, we introduced our developed GenTS library, which included multi-domain time series datasets, multi-type SOTA generative models, and various evaluation metrics. It can be easily extended and customized by users owing to the modular design. Finally, based on the developed GenTS , we conducted comprehen-sive benchmarking experiments under different time series tasks. Accordingly, we gave discussions on model selection and future research directions. In the future, we will 1) continuously incorporate more high-quality time series datasets and the most recent promising genera-tive models, 2) broaden our scope for more emerging generative time series analysis tasks, and 3) explore more robust and systematic evaluation frameworks for cross-task and task-specific contexts. GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea 
+
+## References 
+
+[1] Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Flo-rencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shya-mal Anadkat, et al . 2024. Gpt-4 technical report. arXiv:2303.08774 [cs.CL] https://arxiv.org/abs/2303.08774 [2] Ahmed Alaa, Alex James Chan, and Mihaela van der Schaar. 2021. Genera-tive Time-series Modeling with Fourier Flows. In International Conference on Learning Representations. https://openreview.net/forum?id=PpshD0AXfA [3] Alexander Alexandrov, Konstantinos Benidis, Michael Bohlke-Schneider, Valentin Flunkert, Jan Gasthaus, Tim Januschowski, Danielle C. Maddix, Syama Ran-gapuram, David Salinas, Jasper Schulz, Lorenzo Stella, Ali Caner Türkmen, and Yuyang Wang. 2020. GluonTS: Probabilistic and Neural Time Series Mod-eling in Python. Journal of Machine Learning Research 21, 116 (2020), 1–6. http://jmlr.org/papers/v21/19-820.html [4] Yihao Ang, Qiang Huang, Yifan Bao, Anthony K. H. Tung, and Zhiyong Huang. 2023. TSGBench: Time Series Generation Benchmark. Proc. VLDB Endow. 17, 3 (Nov. 2023), 305–318. doi:10.14778/3632093.3632097 [5] Yihao Ang, Qiang Wang, Qiang Huang, Yifan Bao, Xinyu Xi, Anthony K. H. Tung, Chen Jin, and Zhiyong Huang. 2025. CTBench: Cryptocurrency Time Series Generation Benchmark. arXiv:2508.02758 [q-fin.ST] https://arxiv.org/abs/2508. 02758 [6] Nicolas Bonneel, Julien Rabin, Gabriel Peyré, and Hanspeter Pfister. 2015. Sliced and radon wasserstein barycenters of measures. Journal of Mathematical Imaging and Vision 51, 1 (2015), 22–45. [7] Andrew Brock, Jeff Donahue, and Karen Simonyan. 2019. Large Scale GAN Training for High Fidelity Natural Image Synthesis. In International Conference on Learning Representations. https://openreview.net/forum?id=B1xsqj09Fm [8] Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt, and David Duvenaud. 2018. Neural ordinary differential equations. In Proceedings of the 32nd International Conference on Neural Information Processing Systems (Montréal, Canada) (NIPS’18). Curran Associates Inc., Red Hook, NY, USA, 6572–6583. [9] Jonathan Crabbé, Nicolas Huynh, Jan Stanczuk, and Mihaela Van Der Schaar. 2024. Time series diffusion in the frequency domain. In Proceedings of the 41st International Conference on Machine Learning (Vienna, Austria) (ICML’24). JMLR.org, Article 374, 32 pages. [10] Abhyuday Desai, Cynthia Freeman, Zuhui Wang, and Ian Beaver. 2021. TimeVAE: A Variational Auto-Encoder for Multivariate Time Series Generation. arXiv:2111.08095 [cs.LG] https://arxiv.org/abs/2111.08095 [11] Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio. 2017. Density estimation using Real NVP. In International Conference on Learning Representations. https: //openreview.net/forum?id=HkpbnH9lx [12] Cristóbal Esteban, Stephanie L. Hyland, and Gunnar Rätsch. 2017. Real-valued (Medical) Time Series Generation with Recurrent Conditional GANs. arXiv:1706.02633 [stat.ML] https://arxiv.org/abs/1706.02633 [13] Jean-Yves Franceschi, Aymeric Dieuleveut, and Martin Jaggi. 2019. Unsupervised scalable representation learning for multivariate time series . Curran Associates Inc., Red Hook, NY, USA. [14] Asadullah Hill Galib, Pang-Ning Tan, and Lifeng Luo. 2024. Fide: Frequency-inflated conditional diffusion model for extreme-aware time series generation. Advances in Neural Information Processing Systems 37 (2024), 114434–114457. [15] Mathieu Germain, Karol Gregor, Iain Murray, and Hugo Larochelle. 2015. MADE: Masked Autoencoder for Distribution Estimation. In Proceedings of the 32nd International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 37) , Fran-cis Bach and David Blei (Eds.). PMLR, Lille, France, 881–889. https: //proceedings.mlr.press/v37/germain15.html [16] Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. 2014. Generative adversarial nets. In Proceedings of the 28th International Conference on Neural Information Processing Systems - Volume 2 (Montreal, Canada) (NIPS’14). MIT Press, Cambridge, MA, USA, 2672–2680. [17] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al . 2025. DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning. Nature 645, 8081 (Sept. 2025), 633–638. doi:10.1038/s41586-025-09422-z [18] Jonathan Ho, Ajay Jain, and Pieter Abbeel. 2020. Denoising diffusion probabilistic models. Advances in neural information processing systems 33 (2020), 6840– 6851. [19] Paul Jeha, Michael Bohlke-Schneider, Pedro Mercado, Shubham Kapoor, Ra-jbir Singh Nirwan, Valentin Flunkert, Jan Gasthaus, and Tim Januschowski. 2022. PSA-GAN: Progressive self attention GANs for synthetic time series. In The tenth international conference on learning representations. [20] Jinsung Jeon, Jeonghak Kim, Haryong Song, Seunghyeon Cho, and Noseong Park. 2022. Gt-gan: General purpose time series synthesis with generative adversarial networks. Advances in Neural Information Processing Systems 35 (2022), 36999– 37010. [21] Patrick Kidger, James Foster, Xuechen Li, and Terry Lyons. 2021. Efficient and accurate gradients for neural SDEs. In Proceedings of the 35th International Conference on Neural Information Processing Systems (NIPS ’21) . Curran Asso-ciates Inc., Red Hook, NY, USA, Article 1433, 15 pages. [22] Patrick Kidger, James Foster, Xuechen Li, and Terry J Lyons. 2021. Neural SDEs as Infinite-Dimensional GANs. In Proceedings of the 38th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 139) , Marina Meila and Tong Zhang (Eds.). PMLR, 5453–5463. https: //proceedings.mlr.press/v139/kidger21b.html [23] Diederik P. Kingma, Tim Salimans, Rafal Jozefowicz, Xi Chen, Ilya Sutskever, and Max Welling. 2016. Improved variational inference with inverse autoregressive flow. In Proceedings of the 30th International Conference on Neural Information Processing Systems (Barcelona, Spain) (NIPS’16). Curran Associates Inc., Red Hook, NY, USA, 4743–4751. [24] Diederik P Kingma and Max Welling. 2022. Auto-Encoding Variational Bayes. arXiv:1312.6114 [stat.ML] https://arxiv.org/abs/1312.6114 [25] Marcel Kollovieh, Abdul Fatir Ansari, Michael Bohlke-Schneider, Jasper Zschieg-ner, Hao Wang, and Yuyang Bernie Wang. 2023. Predict, refine, synthesize: Self-guiding diffusion models for probabilistic time series forecasting. Advances in Neural Information Processing Systems 36 (2023), 28341–28364. [26] Daesoo Lee, Sara Malacarne, and Erlend Aune. 2023. Vector Quantized Time Series Generation with a Bidirectional Prior Model. In Proceedings of The 26th International Conference on Artificial Intelligence and Statistics (Proceedings of Machine Learning Research, Vol. 206) , Francisco Ruiz, Jennifer Dy, and Jan-Willem van de Meent (Eds.). PMLR, 7665–7693. https://proceedings. mlr.press/v206/lee23d.html [27] Xuechen Li, Ting-Kam Leonard Wong, Ricky T. Q. Chen, and David Duvenaud. 2020. Scalable Gradients for Stochastic Differential Equations. In Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics (Proceedings of Machine Learning Research, Vol. 108) , Silvia Chiappa and Roberto Calandra (Eds.). PMLR, 3870–3882. https://proceedings.mlr.press/ v108/li20i.html [28] Yuxin Li, Wenchao Chen, Xinyue Hu, Bo Chen, Baolin Sun, and Mingyuan Zhou. 2024. Transformer-modulated diffusion models for probabilistic multivariate time series forecasting. In The Twelfth International Conference on Learning Representations. [29] Yong Liu, Haixu Wu, Jianmin Wang, and Mingsheng Long. 2022. Non-stationary transformers: Exploring the stationarity in time series forecasting. Advances in neural information processing systems 35 (2022), 9881–9893. [30] Calvin Luo. 2022. Understanding Diffusion Models: A Unified Perspective. arXiv:2208.11970 [cs.LG] https://arxiv.org/abs/2208.11970 [31] Ilan Naiman, Nimrod Berman, Itai Pemper, Idan Arbiv, Gal Fadlon, and Omri Azencot. 2024. Utilizing image transforms and diffusion models for generative modeling of short and long time series. In Proceedings of the 38th International Conference on Neural Information Processing Systems (Vancouver, BC, Canada) (NIPS ’24). Curran Associates Inc., Red Hook, NY, USA, Article 3868, 32 pages. [32] Ilan Naiman, N. Benjamin Erichson, Pu Ren, Michael W. Mahoney, and Omri Azencot. 2024. Generative Modeling of Regular and Irregular Time Series Data via Koopman VAEs. In The Twelfth International Conference on Learning Representations. https://openreview.net/forum?id=eY7sLb0dVF [33] Alexander Nikitin, Letizia Iannucci, and Samuel Kaski. 2024. TSGM: a flexible framework for generative modeling of synthetic time series. Advances in Neural Information Processing Systems 37 (2024), 129042–129061. [34] George Papamakarios, Theo Pavlakou, and Iain Murray. 2017. Masked autore-gressive flow for density estimation. In Proceedings of the 31st International Conference on Neural Information Processing Systems (Long Beach, California, USA) (NIPS’17). Curran Associates Inc., Red Hook, NY, USA, 2335–2344. [35] William Peebles and Saining Xie. 2023. Scalable Diffusion Models with Transform-ers. In 2023 IEEE/CVF International Conference on Computer Vision (ICCV). 4172–4182. doi:10.1109/ICCV51070.2023.00387 [36] Zhaozhi Qian, Bogdan-Constantin Cebere, and Mihaela van der Schaar. 2023. Synthcity: facilitating innovative use cases of synthetic data in different data modalities. arXiv:2301.07573 [cs.LG] https://arxiv.org/abs/2301.07573 [37] Kashif Rasul, Calvin Seward, Ingmar Schuster, and Roland Vollgraf. 2021. Autore-gressive Denoising Diffusion Models for Multivariate Probabilistic Time Series Forecasting. In Proceedings of the 38th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 139) , Marina Meila and Tong Zhang (Eds.). PMLR, 8857–8868. https://proceedings.mlr.press/v139/ rasul21a.html [38] Ali Razavi, Aäron van den Oord, and Oriol Vinyals. 2019. Generating diverse high-fidelity images with VQ-VAE-2 . Curran Associates Inc., Red Hook, NY, USA. [39] Yulia Rubanova, Ricky T. Q. Chen, and David Duvenaud. 2019. Latent ODEs for irregularly-sampled time series. Curran Associates Inc., Red Hook, NY, USA. [40] Ali Seyfi, Jean-Francois Rajotte, and Raymond Ng. 2022. Generating multivariate time series with COmmon Source CoordInated GAN (COSCI-GAN). Advances in neural information processing systems 35 (2022), 32777–32788. KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al.                     
+
+> [41] Yusuke Tashiro, Jiaming Song, Yang Song, and Stefano Ermon. 2021. Csdi: Con-ditional score-based diffusion models for probabilistic time series imputation. Advances in neural information processing systems 34 (2021), 24804–24816. [42] Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, Katie Mil-lican, et al .2025. Gemini: A Family of Highly Capable Multimodal Models. arXiv:2312.11805 [cs.CL] https://arxiv.org/abs/2312.11805 [43] Aaron Van Den Oord, Sander Dieleman, Heiga Zen, Karen Simonyan, Oriol Vinyals, Alex Graves, Nal Kalchbrenner, Andrew Senior, Koray Kavukcuoglu, et al .2016. Wavenet: A generative model for raw audio. arXiv preprint arXiv:1609.03499 12 (2016), 1. [44] Chenxi Wang, Linxiao Yang, Zhixian Wang, Liang Sun, and Yi Wang. 2025. A Non-isotropic Time Series Diffusion Model with Moving Average Transi-tions. In Proceedings of the 42nd International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 267) , Aarti Singh, Maryam Fazel, Daniel Hsu, Simon Lacoste-Julien, Felix Berkenkamp, Tegan Maharaj, Kiri Wagstaff, and Jerry Zhu (Eds.). PMLR, 65144–65166. https://proceedings. mlr.press/v267/wang25dy.html [45] Yuxuan Wang, Haixu Wu, Jiaxiang Dong, Yong Liu, Chen Wang, Mingsheng Long, and Jianmin Wang. 2025. Deep Time Series Models: A Comprehensive Survey and Benchmark. arXiv:2407.13278 [cs.LG] https://arxiv.org/abs/2407.13278 [46] Jinsung Yoon, Daniel Jarrett, and Mihaela van der Schaar. 2019. Time-series Generative Adversarial Networks. In Advances in Neural Information Processing Systems , H. Wallach, H. Larochelle, A. Beygelzimer, F. d 'Alché-Buc, E. Fox, and R. Garnett (Eds.), Vol. 32. Curran Associates, Inc. https://proceedings.neurips.cc/ paper_files/paper/2019/file/c9efe5f26cd17ba6216bbe2a7d26d490-Paper.pdf [47] Xinyu Yuan and Yan Qiao. 2024. Diffusion-TS: Interpretable Diffusion for General Time Series Generation. In The Twelfth International Conference on Learning Representations. https://openreview.net/forum?id=4h1apFjO99 [48] Jiawen Zhang, Xumeng Wen, Zhenwei Zhang, Shun Zheng, Jia Li, and Jiang Bian. 2024. ProbTS: Benchmarking Point and Distributional Forecasting across Diverse Prediction Horizons. In NeurIPS Datasets and Benchmarks Track. [49] Linqi Zhou, Michael Poli, Winnie Xu, Stefano Massaroli, and Stefano Er-mon. 2023. Deep Latent State Space Models for Time-Series Generation. In Proceedings of the 40th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 202) , Andreas Krause, Emma Brunskill, Kyunghyun Cho, Barbara Engelhardt, Sivan Sabato, and Jonathan Scar-lett (Eds.). PMLR, 42625–42643. https://proceedings.mlr.press/v202/zhou23i.html
+
+## A GenTS Details 
+
+In this appendix, we will complement some details of GenTS .We also provide a comprehensive document website for GenTS ,including installation, tutorials on various cases (including how to customize datasets and models), and detailed API documents. Please check https://willwang1113.github.io/GenTS/ for more information. 
+
+## A.1 Simulation of Spiral2D and SineND 
+
+The Spiral2D dataset is introduced as a synthetic dataset. Each sample in the dataset is a two-dimensional time series representing a spiral curve. The coordinates for a given curve are generated using a parametric equation in polar coordinates, where the radius 
+
+𝑟 (𝑡 ) is a linear function of the angle 𝑡 :
+
+𝑟 (𝑡 ) = 𝑎 + 𝑏𝑡, 
+
+with 𝑎 ∼ U [ 0, 0.5), 𝑏 ∼ U [ 0, 0.2). Specifically, for 𝑡 ranging from 0 to 4 𝜋 , the coordinates (𝑥 1 (𝑡 ), 𝑥 2 (𝑡 )) are given by: 
+
+𝑥 1 (𝑡 ) = ±𝑟 (𝑡 ) cos (𝑡 ),𝑥 2 (𝑡 ) = 𝑟 (𝑡 ) sin (𝑡 ).
+
+The sign of the 𝑥 1 (𝑡 ) is randomly chosen, resulting in two classes: clock-wise and counter clock-wise spirals. Therefore, Spiral2D is a simulated dataset with class labels. Small-variance Gaussian noise is added to each coordinate to ensure diversity. Likewise, the SineND dataset is a synthetic dataset. Each sample is an 𝑁 -variate time series where each dimension represents an independent sine wave. The number of variates can be decided by users. The value for each variate at time 𝑡 is generated by the equation: 
+
+𝑥 (𝑡 ) = sin (𝑎𝑡 + 𝑏 ),
+
+where the frequency 𝑎 ∼ U [ 0.05 , 0.4] and the phase 𝑏 ∼ U [ 0, 1.5]
+
+are drawn independently for each dimension of each sample. Diver-sity across the dataset is ensured by the parameter randomization, and the resulting waves are normalized to the range [0, 1].
+
+## A.2 Vanilla Models 
+
+In our GenTS , we include four naive benchmark models, VanillaVAE, VanillaGAN, VanillaDDPM, and VanillaMAF. 
+
+VanillaVAE : We build a naive VAE with Multilayer Perceptrons (MLP) as encoders and decoders. To integrate conditions like look-back windows, and the observed values, we also utilize MLP as a condition encoder. For class label conditions, we simply use a 
+
+nn.Embedding layer as label encoder. The VanillaVAE is trained in the paradigm of 𝛽 -VAE. 
+
+VanillaGAN : Similar to VanillaVAE, we construct VanillaGAN with MLP as both generator and discriminator. The condition en-coder is also the same as VanillaVAE. The VanillaVAE is trained in the paradigm of Wasserstein GAN. 
+
+VanillaDDPM : For VanillaDDPM, we utilize DiT [ 35 ] (in the 1D version) as the denoising backbone. The condition encoder is also the same as VanillaVAE, and adds the condition embedding to the diffusion step embedding. We also provide choices of noise schedule and predict 𝑥 0 or 𝜖 as arguments for training. 
+
+VanillaMAF : We follow [ 15 ] to construct a naive masked au-toregressive flow model. For the input time series in the shape of 
+
+[𝑁 ,𝑇 , 𝐷 ], we simply flatten into [𝑁 ,𝑇 × 𝐷 ] to fit in the model. The condition encoder is the same as the VanillaVAE. 
+
+## A.3 Evaluation Metrics 
+
+Discriminative Score [46 ]: To calculate DS, we need to train a post-hoc GRU classifier. We mix the generated time series and the real time series, with labels of False and True . Then, we split the mixed dataset into 8 : 2 as training and testing sets. The classifier is trained to tell apart whether the time series is real or not, and then tested on the hold-out set. The accuracy will be recorded. Ideally, if the generated data is highly similar to the real one, then the classifier should randomly guess whether the data sample is generated or not, i.e., the accuracy will be around 0.5. Therefore, DS is calculated to be as close to 0.5 as possible: 
+
+𝐷𝑆 =| 0.5 − 𝑎𝑐𝑐 |
+
+Predictive Score [ 46 ]: For PS, we train a post-hoc GRU regressor. Trained on the synthetic time series, it performs one-step ahead time series forecasting. Then, the test error (Mean Absolute Error, MAE) of the trained RNN will be reported on the real data. This is also known as Train on Synthetic Test on Real (TSTR). 
+
+Context-FID [19 ]: Adapting from the Frechet Inception Dis-tance (FID), it evaluates the quality of synthetic data by measuring the alignment with the local temporal context. Leveraging embed-dings from TS2Vec [ 13 ], C-FID calculats Frechet Distance between the latent representations of generated data and real data. For each time series dataset, TS2Vec will be retrained, thus evaluating the contextual similarity. GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea model = COSCIGAN model = ImagenTime model = LS4 model = TimeVAE   
+
+> data = AirQuality
+> model = VanillaMAF data = ECG  data = Electricity  data = Spiral2D  data = Stocks  data = Traffic
+> real syn
+
+Figure 4: t-SNE Visualization of multivariate synthesis VanillaVAE       
+
+> TimeVAE
+> KoVAE
+> TimeVQVAE
+> VanillaGAN
+> TimeGAN
+> RCGAN
+> PSAGAN
+> COSCIGAN
+> GTGAN
+> VanillaDDPM
+> FourierDiffusion
+> DiffusionTS
+> ImagenTime
+> FIDE
+> VanillaMAF
+> FourierFlow
+> LatentODE
+> LatentSDE
+> SDEGAN
+> LS4
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> Time(s)
+> VAE GAN Diffusion Flow Diff. Eq.
+> Training
+> Inference
+
+Figure 5: Training and inference time of different models in the univariate time series synthesis task VanillaVAE        
+
+> VanillaGAN
+> PSAGAN
+> VanillaDDPM
+> TMDM
+> DiffusionTS
+> CSDI
+> ImagenTime
+> VanillaMAF
+> LatentODE
+> LS4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> Time(s)
+> VAE GAN Diffusion Flow Diff. Eq.
+> Training
+> Inference
+
+Figure 6: Training and inference time of different models in the time series forecasting task VanillaVAE        
+
+> VanillaGAN
+> VanillaDDPM
+> DiffusionTS
+> CSDI
+> ImagenTime
+> VanillaMAF
+> LatentODE
+> LS4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Time(s)
+> VAE GAN Diffusion Flow Diff. Eq.
+> Training
+> Inference
+
+Figure 7: Training and inference time of different models in the time series imputation task 
+
+## B Experiments 
+
+All of our experiments are launched on one NVIDIA GeForce RTX 4090 24GB GPU and four NVIDIA GeForce RTX 3080 Ti 12GB GPUs. All the training processes are unified within a maximum of 300 epochs with an early stopping mechanism (10 epochs patience). 
+
+## B.1 Time Series Synthesis 
+
+Univariate results Table. 7, 8, 9, 10 records the univariate time series synthesis results. Similar to the multivariate results, COSCIGAN and ImagenTime still showed superior performances, respectively, on distributional fidelity and downstream usefulness. Besides, we noticed that Fouri-erFlow demonstrated competitive and balanced performances in the univariate setting on all four metrics, becoming a reasonable model choice in this context. Another univariate time series model, FIDE, showed limited advantages. Designed for capturing extreme values in the time series, FIDE only showed competitive performance over Stocks and ETTh, while it even lagged far behind other models in most cases. Some parallel research works found that it may be suitable for some vertical applications, like financial markets [5]. 
+
+Multivariate full results Table. 11, 12, 13, 14 recorded the full multivariate time series synthesis results, forming the Fig. 2. Compared to the univariate setting, the advantage of COSCI-GAN is more significant because of the special design of a cen-tral discriminator to coordinate multivariate correlation. Besides, the diffusion-based models still showed generally superior perfor-mances. We also provide a t-SNE visualization of representative models and datasets of each type, as shown in Figure 4. We can see that ImagenTime and TimeVAE showed coverage over the real time series data distribution, followed by COSCIGAN, indicating diversity and thoroughness. 
+
+## B.2 Training and inference time 
+
+We measured the training and inference overheads for all models across different tasks. KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al. 
+
+Table 7: Full results of Context-FID on the univariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top-3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.331 0.066 0.078 0.058 0.107 0.177 0.146 0.190 1.291 0.171 0.633 0.038 9DiffusionTS 1.600 0.443 1.087 0.482 0.759 2.326 0.639 6.626 0.231 5.283 1.505 0.605 0
+
+FIDE >100 14.334 0.050 0.116 >100 >100 >100 4.244 >100 0.223 22.427 0.075 2
+
+FourierDiffusion 0.373 0.529 0.298 0.052 0.699 4.584 5.995 0.408 17.114 3.529 3.824 0.055 2
+
+FourierFlow 0.508 0.025 0.048 0.030 0.116 0.105 0.861 1.171 0.212 1.892 0.139 10.003 6GTGAN 4.897 6.909 2.646 0.585 5.382 13.536 0.434 0.302 4.007 2.885 7.131 5.446 0
+
+ImagenTime 0.354 0.031 0.146 0.115 0.014 0.062 0.540 0.291 0.095 0.116 0.024 0.210 7KoVAE 0.283 0.423 1.049 1.234 0.345 0.663 0.141 0.058 1.192 2.479 1.049 0.012 4
+
+LS4 4.897 1.303 2.301 3.651 1.468 8.615 2.365 2.785 2.781 4.117 5.019 0.951 0
+
+LatentODE 4.897 6.351 2.992 3.472 6.984 5.421 4.780 2.863 16.547 2.608 2.987 5.465 0
+
+LatentSDE 1.674 4.269 4.654 1.771 4.570 4.087 0.625 11.981 >100 0.861 11.175 3.178 0
+
+PSAGAN 0.656 1.114 1.244 2.233 2.298 1.942 4.542 1.969 0.918 3.310 3.642 2.373 0
+
+RCGAN 0.564 5.551 1.855 1.726 0.235 4.606 52.276 21.085 83.819 0.459 2.653 5.366 0
+
+SDEGAN 52.795 9.994 7.641 3.705 15.384 3.458 66.702 >100 >100 6.833 7.337 1.038 0
+
+TimeGAN 4.597 0.455 0.618 0.860 4.951 1.126 0.776 1.903 0.501 0.809 5.337 2.233 0
+
+TimeVAE 0.438 0.079 0.275 0.221 0.276 0.559 0.214 0.068 0.380 0.311 0.613 0.100 1
+
+TimeVQVAE 1.323 2.190 0.711 1.185 2.345 3.259 1.705 3.343 0.985 2.617 3.448 1.921 0
+
+VanillaDDPM 2.838 0.235 0.233 1.265 0.247 0.245 0.830 1.929 0.083 0.574 0.069 3.725 2
+
+VanillaGAN 0.758 1.316 5.195 3.437 4.189 2.778 0.515 5.329 >100 2.682 2.680 1.762 0
+
+VanillaMAF 0.518 0.039 0.232 0.626 0.378 0.834 0.108 0.219 0.208 1.371 0.242 0.213 3
+
+VanillaVAE 0.442 1.944 2.038 1.187 1.676 1.499 1.964 0.428 0.933 2.816 2.487 1.100 0
+
+Table 8: Full results of Wasserstein Distance on the univariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.208 0.124 0.134 0.245 0.087 0.140 0.141 0.061 0.296 0.131 0.433 0.101 9DiffusionTS 0.289 0.385 0.423 0.484 0.468 0.523 0.309 0.337 0.162 0.515 0.482 0.474 0
+
+FIDE >100 1.788 0.146 0.235 81.973 >100 3.619 0.277 4.633 0.131 3.062 0.151 3
+
+FourierDiffusion 0.393 0.317 0.209 0.241 0.151 0.167 0.801 0.088 0.518 0.371 0.106 0.111 3
+
+FourierFlow 0.333 0.066 0.091 0.146 0.104 0.098 0.303 0.126 0.075 0.230 0.163 1.751 7GTGAN 0.772 0.922 0.390 0.343 0.451 1.033 0.188 0.065 0.244 0.455 0.586 1.019 0
+
+ImagenTime 0.309 0.101 0.192 0.162 0.068 0.211 0.315 0.082 0.072 0.111 0.098 0.233 6KoVAE 0.284 0.278 0.367 0.451 0.445 0.487 0.118 0.029 0.146 0.373 0.530 0.058 4LS4 0.769 0.877 0.785 1.024 0.489 2.236 0.423 0.244 0.422 0.503 0.964 0.397 0
+
+LatentODE 0.784 0.839 0.880 0.849 0.923 0.965 0.612 0.239 0.611 0.414 0.985 0.791 0
+
+LatentSDE 0.595 0.785 0.589 0.632 0.786 0.838 0.268 0.421 3.149 0.211 0.630 0.629 0
+
+PSAGAN 0.551 0.700 0.459 0.603 0.874 0.892 0.561 0.162 0.240 0.423 0.860 0.579 0
+
+RCGAN 0.400 1.231 0.606 0.660 0.130 0.444 3.066 0.609 1.667 0.141 0.780 1.389 0
+
+SDEGAN 0.778 2.581 0.844 1.147 0.565 0.941 1.906 1.758 1.977 0.442 0.600 0.550 0
+
+TimeGAN 0.755 0.287 0.320 0.580 0.677 0.373 0.252 0.131 0.137 0.215 1.134 0.520 0
+
+TimeVAE 0.284 0.125 0.191 0.293 0.160 0.337 0.150 0.035 0.090 0.158 0.359 0.161 2
+
+TimeVQVAE 0.436 0.624 0.387 0.427 0.447 0.681 0.310 0.224 0.167 0.308 0.688 0.465 0
+
+VanillaDDPM 0.488 0.300 0.185 0.537 0.223 0.232 0.445 0.208 0.099 0.161 0.187 1.000 0
+
+VanillaGAN 0.296 0.765 0.862 0.847 0.915 1.057 0.341 0.335 2.473 0.405 1.047 0.671 0
+
+VanillaMAF 0.308 0.126 0.206 0.427 0.197 0.224 0.107 0.066 0.068 0.297 0.257 0.217 2
+
+VanillaVAE 0.402 0.483 0.506 0.520 0.422 0.534 0.415 0.082 0.204 0.341 0.605 0.437 0
+
+For training, we measured the average time of 10 training steps of a batch of 64 time series samples. Similarly, sampling time was measured by averaging the sampling time at a batch size of 64 over 10 times. As Figure 5, 6, and 7 show, different kinds of models demon-strated distinct training and inference overheads. Most of the com-putation burden of GANs and VAEs lies in training, while their inference process is much faster than others. Diffusion-based mod-els, designed with an iterative denoising process, generally have larger computation overheads on the inference stage, but their train-ing speed is not significantly decreased, thus suitable for offline deployment. On the other hand, differential equation-based models, typically trained via frequently solving initial value problems, are naturally burdened with larger computation graphs for backwards. 
+
+Received 6 February 2025 GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea 
+
+Table 9: Full results of Predictive Score on the univariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.169 0.226 0.258 0.271 0.245 0.308 0.059 0.015 0.282 0.055 0.219 0.024 0
+
+DiffusionTS 0.170 0.225 0.229 0.235 0.251 0.289 0.027 0.020 0.038 0.017 0.194 0.012 0
+
+FIDE 0.323 1.525 0.231 0.230 0.246 0.287 0.061 0.095 1.095 0.031 0.201 0.016 0
+
+FourierDiffusion 0.166 0.251 0.250 0.233 0.264 0.326 0.048 0.058 0.159 0.047 0.246 0.014 0
+
+FourierFlow 0.163 0.167 0.217 0.221 0.230 0.275 0.026 0.009 0.029 0.018 0.162 0.008 8GTGAN 0.448 0.430 0.278 0.374 0.352 0.363 0.026 0.012 0.052 0.027 0.290 0.487 1
+
+ImagenTime 0.162 0.162 0.213 0.219 0.218 0.270 0.025 0.003 0.013 0.016 0.136 0.008 11 KoVAE 0.172 0.344 0.327 0.322 0.232 0.327 0.029 0.003 0.028 0.020 0.198 0.008 1LS4 0.394 0.707 0.555 0.644 0.296 0.602 0.158 0.044 0.318 0.282 0.701 0.117 0
+
+LatentODE 0.445 0.369 0.432 0.374 0.957 0.331 0.086 0.010 0.006 0.024 0.291 0.143 1
+
+LatentSDE 0.178 0.408 0.251 0.247 0.247 0.297 0.026 0.002 0.019 0.016 0.281 0.034 2
+
+PSAGAN 0.228 0.868 0.456 0.461 0.399 0.414 0.192 0.104 0.435 0.056 0.556 0.040 0
+
+RCGAN 0.162 0.861 0.332 0.341 0.247 0.311 0.106 0.414 0.563 0.018 0.257 0.249 1
+
+SDEGAN 0.172 0.442 0.258 0.246 0.254 0.308 0.032 0.068 0.146 0.029 0.275 0.018 0
+
+TimeGAN 0.564 0.465 0.247 0.491 0.338 0.381 0.038 1.031 0.303 0.028 0.592 0.154 0
+
+TimeVAE 0.188 0.179 0.255 0.275 0.225 0.279 0.027 0.008 0.035 0.021 0.165 0.009 3
+
+TimeVQVAE 0.253 0.365 0.304 0.382 0.302 0.391 0.137 0.033 0.105 0.104 0.295 0.086 0
+
+VanillaDDPM 0.177 0.281 0.295 0.421 0.283 0.328 0.025 0.007 0.018 0.016 0.172 0.014 2
+
+VanillaGAN 0.274 0.693 0.420 0.605 0.666 0.489 0.295 0.367 2.084 0.150 0.579 0.292 0
+
+VanillaMAF 0.167 0.174 0.223 0.229 0.238 0.287 0.026 0.002 0.013 0.020 0.170 0.009 5VanillaVAE 0.247 0.224 0.339 0.366 0.262 0.305 0.041 0.002 0.019 0.031 0.238 0.020 1
+
+Table 10: Full results of Discriminative Score on the univariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.337 0.420 0.366 0.310 0.210 0.409 0.399 0.119 0.500 0.482 0.247 0.437 1
+
+DiffusionTS 0.297 0.451 0.313 0.304 0.344 0.401 0.315 0.367 0.489 0.308 0.296 0.360 0
+
+FIDE 0.408 0.500 0.192 0.178 0.208 0.186 0.498 0.499 0.500 0.216 0.262 0.127 4
+
+FourierDiffusion 0.164 0.480 0.373 0.293 0.436 0.455 0.480 0.498 0.496 0.496 0.417 0.048 2
+
+FourierFlow 0.284 0.091 0.133 0.067 0.044 0.133 0.126 0.089 0.314 0.221 0.270 0.363 7GTGAN 0.422 0.496 0.478 0.468 0.482 0.496 0.136 0.446 0.500 0.499 0.494 0.499 0
+
+ImagenTime 0.178 0.173 0.099 0.061 0.029 0.036 0.144 0.101 0.221 0.059 0.057 0.068 10 KoVAE 0.221 0.428 0.470 0.405 0.226 0.283 0.136 0.215 0.475 0.311 0.323 0.028 1LS4 0.422 0.494 0.496 0.493 0.458 0.454 0.489 0.483 0.500 0.500 0.500 0.494 0
+
+LatentODE 0.421 0.499 0.490 0.499 0.500 0.499 0.471 0.492 0.489 0.391 0.495 0.491 0
+
+LatentSDE 0.483 0.499 0.479 0.494 0.497 0.500 0.206 0.380 0.496 0.347 0.498 0.330 0
+
+PSAGAN 0.442 0.497 0.495 0.499 0.494 0.470 0.447 0.458 0.500 0.467 0.500 0.398 0
+
+RCGAN 0.198 0.500 0.338 0.439 0.345 0.423 0.500 0.500 0.500 0.141 0.456 0.468 2
+
+SDEGAN 0.429 0.499 0.400 0.471 0.448 0.456 0.417 0.500 0.486 0.437 0.490 0.438 0
+
+TimeGAN 0.490 0.490 0.403 0.479 0.473 0.434 0.215 0.429 0.493 0.210 0.500 0.441 0
+
+TimeVAE 0.408 0.312 0.441 0.477 0.231 0.227 0.079 0.222 0.321 0.099 0.346 0.045 3
+
+TimeVQVAE 0.394 0.499 0.374 0.487 0.499 0.479 0.478 0.419 0.179 0.478 0.481 0.487 1
+
+VanillaDDPM 0.217 0.434 0.357 0.477 0.405 0.402 0.136 0.243 0.400 0.250 0.403 0.245 0
+
+VanillaGAN 0.480 0.500 0.496 0.499 0.500 0.499 0.500 0.479 0.500 0.489 0.500 0.498 0
+
+VanillaMAF 0.267 0.157 0.195 0.200 0.273 0.238 0.119 0.107 0.279 0.146 0.161 0.154 5VanillaVAE 0.385 0.490 0.490 0.494 0.439 0.433 0.405 0.147 0.454 0.327 0.471 0.155 0KDD ’26, August 09–13, 2026, Jeju, Korea Trovato et al. 
+
+Table 11: Full results of Context-FID on the multivariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Spiral2D Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.178 0.026 0.226 0.852 0.445 0.257 0.416 1.173 2.705 0.353 0.692 0.810 11.990 11 
+
+DiffusionTS 0.677 0.535 0.916 1.308 2.986 1.894 1.529 7.337 1.424 1.749 1.642 1.588 12.520 0
+
+FourierDiffusion 0.056 0.192 1.368 7.640 1.766 0.248 1.022 >100 >100 8.564 >100 2.077 11.409 3
+
+GTGAN 11.139 6.552 6.489 5.770 20.797 12.192 12.194 66.687 7.325 12.092 23.215 28.891 49.642 0
+
+ImagenTime 0.077 0.048 1.074 1.806 0.803 0.857 0.888 7.246 0.374 0.144 0.926 0.175 10.574 10 
+
+KoVAE 1.812 0.315 3.391 4.297 4.319 4.293 4.362 13.799 2.409 2.725 3.556 5.687 14.764 0
+
+LS4 11.140 1.370 16.220 19.190 7.080 10.417 10.824 >100 14.956 16.017 10.241 4.646 >100 0
+
+LatentODE 11.139 5.687 7.791 8.916 7.770 9.799 7.110 22.555 12.261 8.158 7.111 3.802 22.265 0
+
+LatentSDE 5.323 3.514 5.217 3.556 12.480 3.858 3.852 20.274 >100 9.443 9.422 7.777 18.859 0
+
+PSAGAN 5.689 0.980 6.907 7.864 10.057 11.852 9.955 21.827 11.402 6.347 4.573 4.035 23.573 0
+
+RCGAN 1.388 6.284 4.367 1.898 4.220 11.004 30.537 41.695 >100 10.115 11.693 7.764 13.449 0
+
+SDEGAN 6.623 9.896 19.284 8.632 18.196 17.348 60.741 22.363 >100 19.428 23.683 27.418 21.760 0
+
+TimeGAN 12.752 7.920 6.802 9.480 20.876 13.192 8.711 25.644 5.038 2.682 4.190 24.130 24.230 0
+
+TimeVAE 0.439 0.080 0.621 0.633 1.536 0.890 0.423 7.594 1.894 0.334 0.991 1.645 13.262 6
+
+TimeVQVAE 3.776 0.378 3.842 2.233 4.785 6.348 3.409 13.040 3.818 2.521 2.114 5.314 15.157 0
+
+VanillaDDPM 0.527 0.129 0.892 2.171 1.732 1.390 1.980 5.129 0.714 0.758 1.874 0.715 8.744 4
+
+VanillaGAN 2.007 1.266 37.451 9.910 8.390 9.056 17.191 25.659 5.020 4.696 3.529 50.772 71.940 0
+
+VanillaMAF 0.470 0.030 0.329 0.767 >100 9.753 0.450 58.540 15.007 6.788 5.455 13.479 20.286 4
+
+VanillaVAE 1.580 1.212 3.356 3.271 5.336 3.322 5.206 18.739 0.935 4.196 3.480 6.544 15.843 1
+
+Table 12: Full results of Wasserstein Distance on the multivariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Spiral2D Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.182 0.072 0.105 0.332 0.151 0.096 0.153 1.359 0.187 0.157 0.197 0.230 0.296 11 
+
+DiffusionTS 0.383 0.261 0.237 0.389 0.392 0.292 0.265 2.907 0.160 0.328 0.271 0.314 0.328 2
+
+FourierDiffusion 0.245 0.220 0.312 1.192 0.211 0.083 0.202 6.356 3.198 0.745 3.060 0.161 0.200 4
+
+GTGAN 0.921 0.886 0.422 0.803 0.836 0.640 0.802 6.148 0.184 0.675 0.802 0.690 1.534 0
+
+ImagenTime 0.201 0.170 0.328 0.457 0.182 0.236 0.218 5.860 0.064 0.135 0.250 0.092 0.355 6
+
+KoVAE 0.499 0.219 0.401 0.591 0.357 0.506 0.517 4.280 0.149 0.319 0.451 0.433 0.516 0
+
+LS4 0.913 1.111 1.373 1.016 0.569 0.884 1.004 8.827 0.530 1.349 1.015 0.608 13.889 0
+
+LatentODE 0.902 0.866 1.027 0.956 0.886 0.828 0.740 6.956 0.547 1.036 0.587 0.795 0.964 0
+
+LatentSDE 0.455 0.831 0.415 0.515 0.576 0.313 0.495 7.237 3.588 0.759 0.583 0.322 0.528 0
+
+PSAGAN 0.699 0.755 0.628 0.798 0.973 0.836 0.808 6.925 0.475 0.524 0.527 0.712 0.941 0
+
+RCGAN 0.426 1.039 0.529 0.480 0.378 0.548 1.224 8.230 1.261 1.072 0.862 0.723 0.780 0
+
+SDEGAN 0.504 1.518 0.665 0.546 0.591 0.726 1.557 7.210 2.058 1.398 0.909 0.862 0.660 0
+
+TimeGAN 0.978 0.942 0.290 0.951 0.991 0.292 0.769 7.182 0.106 0.304 0.314 0.963 0.978 1
+
+TimeVAE 0.303 0.133 0.226 0.293 0.227 0.185 0.179 4.558 0.139 0.120 0.246 0.229 0.369 7
+
+TimeVQVAE 0.553 0.214 0.490 0.341 0.361 0.553 0.354 3.341 0.168 0.322 0.296 0.375 0.530 0
+
+VanillaDDPM 0.310 0.242 0.246 0.683 0.261 0.271 0.224 2.400 0.090 0.273 0.355 0.149 0.367 3
+
+VanillaGAN 0.524 0.668 1.502 0.970 1.134 0.830 0.919 7.683 0.213 0.523 0.511 1.731 1.629 0
+
+VanillaMAF 0.226 0.068 0.184 0.289 1.611 0.921 0.178 7.832 0.659 0.512 0.586 0.927 0.874 5
+
+VanillaVAE 0.501 0.409 0.518 0.570 0.477 0.497 0.602 7.145 0.122 0.411 0.441 0.551 0.590 0GenTS: A Comprehensive Benchmark Library for Generative Time Series Models KDD ’26, August 09–13, 2026, Jeju, Korea 
+
+Table 13: Full results of Predictive Score on the multivariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Spiral2D Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.449 0.178 0.626 0.585 0.584 0.594 0.458 4.382 0.246 0.417 0.214 0.400 0.660 5
+
+DiffusionTS 0.452 0.259 0.628 0.586 0.585 0.593 0.458 4.385 0.215 0.418 0.202 0.398 0.658 5
+
+FourierDiffusion 0.449 0.262 0.625 0.578 0.586 0.594 0.457 4.388 0.271 0.458 0.269 0.420 0.658 4
+
+GTGAN 0.598 0.451 0.640 0.620 0.638 0.599 0.480 4.412 0.217 0.426 0.199 0.435 0.661 0
+
+ImagenTime 0.448 0.163 0.622 0.577 0.573 0.593 0.455 4.391 0.214 0.417 0.192 0.394 0.658 12 
+
+KoVAE 0.474 0.310 0.649 0.615 0.646 0.599 0.464 4.400 0.221 0.427 0.277 0.426 0.660 0
+
+LS4 0.611 1.339 0.737 0.667 0.677 0.608 0.572 4.426 0.264 0.555 0.391 0.458 0.680 0
+
+LatentODE 0.591 0.399 0.692 0.651 0.652 0.636 0.540 4.423 0.272 0.551 0.264 0.486 0.693 0
+
+LatentSDE 0.462 0.410 0.642 0.586 0.638 0.600 0.480 4.436 0.247 0.443 0.328 0.432 0.691 0
+
+PSAGAN 0.498 0.890 0.717 0.900 0.675 0.642 0.544 4.455 0.263 0.514 0.312 0.545 0.788 0
+
+RCGAN 0.453 2.099 0.632 0.592 0.623 0.602 0.521 4.489 0.607 1.015 0.555 0.437 0.663 0
+
+SDEGAN 0.459 0.415 0.667 0.594 0.655 0.616 0.498 4.499 0.229 0.431 0.239 0.450 0.673 0
+
+TimeGAN 0.650 0.368 0.773 0.626 0.687 0.816 0.595 4.444 0.233 0.448 0.588 0.677 0.698 0
+
+TimeVAE 0.454 0.175 0.628 0.585 0.583 0.593 0.456 4.388 0.219 0.418 0.194 0.405 0.658 5
+
+TimeVQVAE 0.503 0.241 0.655 0.600 1.204 0.621 0.460 4.411 0.219 0.429 0.216 0.567 0.663 0
+
+VanillaDDPM 0.452 0.230 0.629 0.600 0.584 0.595 0.463 4.385 0.214 0.548 0.198 0.403 0.659 4
+
+VanillaGAN 0.463 0.602 0.903 0.663 0.766 0.686 0.576 4.478 0.264 0.546 0.405 0.566 0.725 0
+
+VanillaMAF 0.452 0.159 0.626 0.579 0.810 0.864 0.456 4.423 0.323 0.598 0.493 0.681 0.802 3
+
+VanillaVAE 0.473 0.215 0.639 0.594 0.627 0.596 0.495 4.406 0.214 0.438 0.211 0.440 0.661 1
+
+Table 14: Full results of Discriminative Score on the multivariate time series synthesis task. The best model on each dataset is in bold; the second and third-best are underlined. The last column reports the frequency of a model ranking top3. Model AirQuality ECG ETTh1 ETTh2 Electricity Energy Exchange MuJoCo SineND Spiral2D Stocks Traffic Weather Top3 count 
+
+COSCIGAN 0.073 0.224 0.470 0.431 0.473 0.478 0.348 0.294 0.500 0.082 0.437 0.425 0.490 6
+
+DiffusionTS 0.292 0.474 0.355 0.409 0.496 0.426 0.384 0.419 0.354 0.261 0.329 0.477 0.364 5
+
+FourierDiffusion 0.013 0.486 0.418 0.329 0.489 0.466 0.434 0.493 0.486 0.200 0.498 0.498 0.407 4
+
+GTGAN 0.465 0.497 0.468 0.500 0.500 0.497 0.500 0.496 0.382 0.264 0.490 0.500 0.485 0
+
+ImagenTime 0.056 0.115 0.200 0.195 0.241 0.237 0.175 0.493 0.146 0.089 0.164 0.316 0.449 11 
+
+KoVAE 0.361 0.424 0.484 0.460 0.500 0.497 0.479 0.484 0.336 0.361 0.429 0.499 0.498 0
+
+LS4 0.464 0.499 0.500 0.500 0.500 0.500 0.497 0.500 0.500 0.500 0.500 0.500 0.500 0
+
+LatentODE 0.466 0.499 0.497 0.500 0.500 0.500 0.498 0.494 0.500 0.496 0.496 0.498 0.500 0
+
+LatentSDE 0.382 0.494 0.486 0.452 0.500 0.494 0.454 0.491 0.493 0.375 0.491 0.499 0.500 0
+
+PSAGAN 0.496 0.497 0.499 0.500 0.500 0.500 0.500 0.500 0.500 0.496 0.496 0.500 0.500 0
+
+RCGAN 0.329 0.500 0.499 0.497 0.499 0.500 0.500 0.500 0.500 0.500 0.500 0.500 0.465 0
+
+SDEGAN 0.485 0.494 0.499 0.496 0.500 0.500 0.500 0.500 0.496 0.454 0.497 0.500 0.500 0
+
+TimeGAN 0.499 0.499 0.499 0.500 0.500 0.500 0.500 0.500 0.468 0.321 0.499 0.500 0.500 0
+
+TimeVAE 0.339 0.274 0.385 0.443 0.492 0.454 0.314 0.429 0.250 0.079 0.445 0.495 0.495 4
+
+TimeVQVAE 0.479 0.400 0.460 0.482 0.499 0.500 0.492 0.497 0.421 0.275 0.384 0.497 0.490 1
+
+VanillaDDPM 0.259 0.419 0.353 0.425 0.492 0.453 0.438 0.440 0.350 0.232 0.406 0.479 0.433 3
+
+VanillaGAN 0.466 0.499 0.500 0.499 0.500 0.500 0.499 0.499 0.486 0.257 0.500 0.500 0.500 0
+
+VanillaMAF 0.196 0.114 0.232 0.346 0.500 0.500 0.277 0.500 0.500 0.500 0.499 0.500 0.500 4
+
+VanillaVAE 0.353 0.472 0.453 0.470 0.493 0.489 0.497 0.491 0.318 0.304 0.426 0.495 0.491 1

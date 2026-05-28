@@ -1,0 +1,5118 @@
+Title: DoFormer: Causal Transformer for Gene Perturbation
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.05.02.722054v1.full.pdf
+
+Number of Pages: 40
+
+Markdown Content:
+# DoFormer: Causal Transformer for Gene Perturbation 
+
+Alireza Karbalayghareh 
+
+Biohub New York, NY 
+
+Evan Paull 
+
+Biohub New York, NY 
+
+Andrea Califano 
+
+Biohub & Columbia University New York, NY 
+
+Abstract 
+
+Learning causal gene regulatory mechanisms from single-cell data, and thereby predicting the effects of unseen perturbations, remains challenging. Observational RNA-seq data alone is insufficient for causal modeling, whereas perturbational data is essential. Classical causal inference methods often rely on unrealistic directed acyclic graph (DAG) assumptions and are not well suited to integrating multimodal data. Current transcriptomic foundation models also typically treat observational and perturbational data identically, limiting their ability to model perturbations. We present DoFormer , a causal multimodal Transformer that makes no DAG assump-tions and leverages rich perturbational data to accurately predict previously unseen perturbations. DoFormer enables principled in silico perturbations by adapting the causal do -operator within the attention mechanism: the perturbed gene is set to the intervention value and prevented from attending to other genes, allowing the model to fully distinguish observational from interventional regimes. We train DoFormer using biologically informed loss functions and evaluate it with comprehensive perturbation prediction metrics. DoFormer substantially improves perturbation prediction relative to baseline and prior foundation models, underscoring the im-portance of intervention-aware architectures and biologically grounded objectives for causal modeling in single-cell genomics. 
+
+1 Introduction 
+
+Advances in scalable, fast Transformer-based AI models (Vaswani et al. [2017], Brown et al. [2020], Touvron et al. [2023], Dao [2023], Shah et al. [2024]) and the emergence of atlas-level single-cell RNA expression data across many cell types and tissues (Program et al. [2025], Replogle et al. [2022], Nadig et al. [2025], Zhang et al. [2025], Youngblut et al. [2025]) have led to the development of numerous transcriptomic foundation models aimed at accurately predicting out-of-context as well as unseen cellular perturbations. A central question for these AI models is whether they can advance our understanding of the causal biological mechanisms of cells in health and disease. Before the era of foundation models, causal discovery and inference provided a reliable framework for mechanistic understanding with great promise under restrictive assumptions (Pearl et al. [2000], Spirtes et al. [2000], Peters et al. [2017]). However, due to the probabilistic nature of the framework, classical causal discovery methods have two main limitations. First, they often assume a directed acyclic graph (DAG), which requires highly unrealistic assumptions about gene regulatory networks (GRNs), which frequently contain cycles and feedback loops. Second, they cannot incorporate multiple data modalities, greatly limiting the use of increasingly abundant and valuable datasets that allow us to view different aspects of the cellular phenotype simultaneously–a potentially revolutionary set of technologies. Here, we present DoFormer, a causal multi-modal AI model without any DAG assumption, which uses two complementary sources of information for each gene: RNA expression and the sequence information of its protein, via protein language model (PLM) embeddings. We believe the following four features are required for any reliable causal AI model: 1) scalability, 2) multi-modality, 3) biologically focused loss functions, and 4) correct in silico perturbations. Thanks to Transformer-based architectures, current foundation models already scale and can accept PLM embeddings for 
+
+> Preprint.
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+genes. However, their fundamental limitation is the lack of proper in silico perturbation modeling. The main contribution of DoFormer is to show how to correctly model genetic perturbations. We know from the causality literature that observational data alone are not sufficient to learn causal models Pearl et al. [2000]. Fortunately, we have the opportunity to leverage large-scale perturbational data (CRISPRi/a, KO, overexpression, etc.) in combination with observational scRNA-seq data to simultaneously learn gene–gene interactions and model in silico perturbations. Because the Transformer architecture operates at the gene level, it allows us to perform in silico perturbations using the do -operator, which we borrow from the causality literature to model in silico perturbations. This setup allows us to avoid making unreasonable assumptions that the underlying GRN is a DAG, and by training the model on the effects of perturbations, it will emphasize causal interactions and unlearn correlative interactions induced by scRNA-seq data alone. Thanks to the causal inference literature, we have a mathematically grounded way of performing perturbations: the do -operator. In essence, if we intervene on a gene in a graph, we should remove all edges coming into the targeted gene and set its expression value to the intervened value. We adapted the do -operator in the Transformer architecture and consequently named the model DoFormer. We model in silico perturbations in DoFormer by not letting the perturbed gene attend to other genes and by setting its expression value to zero. In other words, the attention scores from the perturbed gene to all other genes are set to zero, allowing the model to distinguish whether the data are observational or perturbational and modify its structure accordingly. Existing foundation models have been trained in the same way on observational and perturbational data, and we believe that this is why they cannot outperform very simple baseline models (Ahlmann-Eltze et al. [2025], Kernfeld et al. [2025], Csendes et al. [2025]). Another contribution of DoFormer is designing biologically focused loss functions based on the statistics of differential expression (DE) analyses of perturbations. One important note is that in perturbational data, we have perturbations in unmatched cells, whereas in the model we predict perturbations in the same cells. As a result, we should perform unpaired (two-sample) DE tests in real perturbations and paired (one-sample) DE tests in predicted perturbations. We split our training into two stages, pre-training and fine-tuning, as the model learns different tasks at each stage. We first pretrain DoFormer on observational control cells via masked language modeling (MLM) and then fine-tune it on perturbed cells using a weighted mean squared error (WMSE) loss, where weights come from the z-scores of the Wilcoxon rank-sum DE tests. In pretraining, the model learns general gene–gene interactions by predicting the RNA expression values of masked genes. These interactions are not necessarily causal, but they provide a meaningful initialization for fine-tuning. In fine-tuning, the model computes the in silico effect sizes and tries to match the true effect sizes, thereby refining the interactions toward causal ones. 
+
+2 Related work 
+
+Perturbation prediction has long been a goal of transcriptomic AI models. Models such as GEARS (Roohani et al. [2024]) build graph neural networks (GNNs) using knowledge of GRNs and Gene Ontology (GO) and suggest that these priors help improve perturbation prediction. Due to the success of large language models (LLMs), in recent years, we have seen several single-cell foundation models trained on large-scale observational RNA expression data (Cui et al. [2024], Theodoris et al. [2023], Hao et al. [2024], Yang et al. [2022]). These Transformer-based models are trained with MLM loss functions to reconstruct the RNA expression values of masked genes. The main hope for these foundation models is to learn rich representations of genes and cells in atlas-level observational datasets for various downstream tasks, such as cell type annotation and perturbation prediction. However, benchmarking these models has revealed that simple baselines, such as the mean of perturbed cells or a linear model, can sometimes outperform foundation models (Ahlmann-Eltze et al. [2025], Kernfeld et al. [2025], Csendes et al. [2025]). A recent model, STATE (Adduri et al. [2025]), addresses some of the shortcomings of previous models by explicitly modeling perturbations in sets of control cells. STATE is a Transformer-based generative model that takes the RNA expression values of highly variable genes in a set of unperturbed control cells (in any cell type), maps them to a latent space, adds a perturbation token, and decodes the output of the Transformer block back to gene space to generate a set of perturbed cells using the MMD loss function. It performs attention across cells within a set and shows improved performance in perturbation prediction compared to other foundation models. One useful contribution of STATE is 2
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+CELL-Eval, a comprehensive evaluation framework that tests a model’s ability to understand different biological metrics for any perturbation. We adapt CELL-Eval to our setting and show that DoFormer outperforms STATE and baseline models across these metrics. Since STATE outperforms other AI models, such as scGPT (Cui et al. [2024]), scVI (Lopez et al. [2018]), and CPA (Lotfollahi et al. [2023]), on the same dataset (Adduri et al. [2025]), we compare only against STATE and the baseline models (which often outperform STATE). 
+
+3 Methodology 
+
+3.1 Problem Formulation 
+
+Let x(c,p ) 
+
+> i,g
+
+denote the log1p-normalized RNA expression value of gene g ∈ { 1, .., G } in the cell 
+
+i ∈ { 1, ..., N (c,p )} of the cell type c ∈ { 1, ..., C } under perturbation p ∈ { ϕ, 1, ..., P }, where p = ϕ
+
+denotes the unperturbed observational state, and N (c,p ) is the number of cells in the cell type c under perturbation p. For simplicity, we drop the cell index i throughout the paper whenever possible and use x(c,p ) = [ x(c,p )1 , ..., x (c,p ) 
+
+> G
+
+] to represent a cell. The biological question that we are trying to answer is as follows: if we have access to a subset of cell types and perturbations, how well can we predict the effects of unseen perturbations in any cell type. Mathematically, if the model gets the control cells x(c,ϕ ) in the input, how well can it predict the effect sizes of any unseen perturbation 
+
+p: ∆¯ x(c,p ) = ¯ x(c,p ) − ¯x(c,ϕ ) = (1 /N (c,p )) PN (c,p ) 
+
+> i=1
+
+x(c,p ) 
+
+> i
+
+− (1 /N (c,ϕ )) PN (c,ϕ ) 
+
+> i=1
+
+x(c,ϕ ) 
+
+> i
+
+. Note that, unlike many other methods that model perturbations by tokens, we do not assume that the model should see all the perturbations in at least one cell type. This makes DoFormer a very powerful model for predicting the effect sizes of all genetic perturbations in all cell types. If we can build such a model that can predict accurate outcomes of any unseen perturbations, it would be of great use to biologists in designing experiments. Since the search space in biology is infinite, a causal transcriptomic AI model can tremendously shrink the space by nominating highly effective perturbation targets for lab-in-the-loop biological discoveries. 
+
+3.2 Do -operator in DoFormer 
+
+Transformers are universal function classes that have shown great performance in many tasks thanks to their global attention and scalability on HPC systems, and tools like flash attention (Dao [2023], Shah et al. [2024]) have made them a de-facto AI model class. Here we use Transformers and modify it by implementing the do -operator in the attention blocks to do the in silico perturbation. The 
+
+do -operator can only be implemented in models that work in the gene space like Transformers, and the latent space models are not well-suited for it since they lose the gene resolution. We have two states: observational S(ϕ) and perturbational S(p). The observational state does not have any do -operator, and the model is exactly the same as the Transformer. In the perturbational state S(p), the model employs the do -operator to zero out the attention scores of the perturbed gene p
+
+to all other genes and to set its expression value in the input control cells to zero: Model Update : F (ϕ) → F (p),
+
+Input Update : x(c,ϕ ) → do 
+
+
+
+x(c,ϕ )[p]
+
+
+
+, (1) where do(x (c,ϕ )[p]) = [ x(c,ϕ )1 , ..., x (c,ϕ ) 
+
+> p
+
+= τ, ..., x (c,ϕ ) 
+
+> G
+
+], where τ is the RNA expression value of the gene p after perturbation. In the CRISPRi experiments, we use the default value of τ = 0 , assuming complete knockout. In general, to make DoFormer suitable for any form of perturbational data (such as CRISPRi/a, overexpression, etc.), we define τ = kx (c,ϕ ) 
+
+> p
+
+, where k is the knockdown ratio ( k < 1)or the activation ratio ( k > 1). 
+
+F (ϕ) is the original Transformer and F (p) is the Transformer modified by the do -operator. Let 
+
+A(h,l,ϕ ) 
+
+> i,j
+
+, ∀i, j ∈ { 1, ..., G }, h ∈ { 1, ..., H }, l ∈ { 1, ..., L } denote the attention scores from the gene 
+
+i to the gene j in the head h and the layer l in the observational model F (ϕ). The attention scores in 
+
+F (p) with the input do(x (c,ϕ )[p]) are defined as: 
+
+A(h,l,p ) 
+
+> i,j
+
+=
+
+
+
+0 if i = p, j ̸ = p, 
+
+1 if i = j = p, A(h,l,p ) 
+
+> i,j
+
+otherwise .
+
+(2) 3                                  
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint a11 a12 a13 a21 a22 a23 a31 a32 a33 h1(t) h1(t+1) h2(t) h3(t) h2(t+1) h3(t+1) Attention blocks in observational state (control state, no gene perturbed) A(Ø) =a11 a12 a13 a21 a22 a23 a31 a32 a33 a’ 11 =1 a’ 21 a’ 22 a’ 23 a’ 31 a’ 32 a’ 33 h1(t) h1(t+1) h2(t) h3(t) h2(t+1) h3(t+1) Attention blocks in perturbational state (gene 1 perturbed) A(1) =100a’ 21 a’ 22 a’ 23 a’ 31 a’ 32 a’ 33 do(x 1=0) H(t+1) = A (Ø) H(t) ,H(t+1) = A (1) H(t) ,
+
+Figure 1: DoFormer’s attention blocks in observational and perturbational states in a simplified three-gene scenario where gene 1 is perturbed. This is equivalent to masking the p-th row of the attention matrices to zeros except the p-th column. A very simplified schematic of the DoFormer’s attention blocks for a three-gene scenario is depicted in Fig. 1. The complete DoFormer architecture is shown in Fig. 29. 
+
+3.3 Input Gene Embeddings 
+
+We build the gene embeddings using two complementary sources of information: RNA expression and its protein sequence information. The RNA expression of a gene is cell specific as captured by scRNA-seq data, but its sequence representations are cell agnostic as captured by protein language models (PLM). We use the embeddings of ESM2 (Rives et al. [2021]) or ESMC (Hayes et al. [2025]) model to represent the sequence information of the genes and concatenate it with the RNA expression values to define rich gene embeddings for the model. Let E(esm)  
+
+> g
+
+∈ R2560 denote the ESM2 embeddings of the gene g. In order to make the contribution of RNA expression and ESM2 embeddings equal, we map both to the a d/ 2 dimensional space by learnable linear functions: H(esm)  
+
+> g
+
+= E(esm)  
+
+> g
+
+W1 + b1, where W1 ∈ R2560 ×d/ 2 and b1 ∈ Rd/ 2,
+
+H(rna)  
+
+> g
+
+= x(c,p ) 
+
+> g
+
+W2 + b2, where W2 ∈ R1×d/ 2 and b2 ∈ Rd/ 2. The final gene embedding input to the DoFormer model is the concatenation of these two: Hg =
+
+h
+
+H(esm)  
+
+> g
+
+|| H(rna) 
+
+> g
+
+i
+
+∈ Rd.
+
+3.4 Training DoFormer 3.4.1 Pre-training on Unperturbed Cells 
+
+We first pre-train DoFormer in the observational state on control cells based on MLM loss function. We randomly mask the expression values of 15% of the genes in the input and ask the model to reconstruct them in the output supervised by MSE loss function. We do not expect to learn a causal model in this step, as the nature of data is observational and the model will mainly learn correlative patterns. The main goal of this step is to learn a good initial point for causal learning in the next step. If M = {g1, ..., g M } denotes the set of masked genes in a training batch, the masked input is defined as ˜x(c,ϕ ), where ˜x(c,ϕ ) 
+
+> g
+
+= x(c,ϕ ) 
+
+> g
+
+, ∀g / ∈ M and ˜x(c,ϕ ) 
+
+> g
+
+= −1, ∀g ∈ M . Let 
+
+˜y(c,ϕ ) = F (ϕ)(˜ x(c,ϕ )) denote the model output. The loss function is defined as MSE on the masked genes: Lpretrain = (1 /B )(1 /|M| ) PBi=1 
+
+P
+
+> g∈M
+
+
+
+x(c,ϕ ) 
+
+> i,g
+
+− ˜y(c,ϕ )
+
+> i,g
+
+2
+
+, where B is the batch size. 
+
+3.4.2 Fine-tuning on Perturbed Cells 
+
+In the second step, we fine tune the model on the perturbations. This is the core step of enforcing causality in DoFormer model. Before training the model, we first do a differential expression (DE) 4
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint analysis in the Perturb-seq data to calculate the effect size and DE statistics, which will be used during the training. We first filter the data set to keep only the perturbations with a knock-down efficiency of at least 70% and having at least 30 cells. Then for each perturbation p ∈ { 1, .., P }, we use Wilcoxon rank-sum test to calculate the z-score and p-value for any gene g ∈ { 1, ..., G }, denoted respectively by z(c,p ) 
+
+> g
+
+and pval (c,p ) 
+
+> g
+
+. We then define the gene weights w(c,p ) 
+
+> g
+
+by doing the following steps (similar to Mejia et al. [2025]): 1) absolute value of z-score: w(c,p ) 
+
+> g
+
+= |z(c,p ) 
+
+> g
+
+|, 2) min-max normalization to map them to the range [0 , 1] : w(c,p ) 
+
+> g
+
+= ( w(c,p ) 
+
+> g
+
+− min g w(c,p ) 
+
+> g
+
+)/(max g w(c,p ) 
+
+> g
+
+− min g w(c,p ) 
+
+> g
+
+), 3) amplify the effects by taking square: w(c,p ) 
+
+> g
+
+= ( w(c,p ) 
+
+> g
+
+)2, and 4) normalize the weights to sum up to one: w(c,p ) 
+
+> g
+
+= w(c,p ) 
+
+> g
+
+/ P 
+
+> g
+
+w(c,p ) 
+
+> g
+
+. DoFormer will perform two forward passes: 
+
+y(c,ϕ ) = F (ϕ) 
+
+x(c,ϕ )
+
+,
+
+y(c,p ) = F (p) 
+
+do 
+
+
+
+x(c,ϕ )[p]
+
+ 
+
+,
+
+(3) and define ∆y (c,p ) = y (c,p ) − y(c,ϕ ). The loss function will be a weighted MSE between predicted delta mean ∆¯ y(c,p ) and true delta mean ∆¯ x(c,p ) as: 
+
+L(c,p ) = WMSE 
+
+
+
+∆¯ y(c,p ), ∆¯ x(c,p )
+
+=
+
+> G
+
+X
+
+> g=1
+
+w(c,p )
+
+> g
+
+
+
+∆¯ y(c,p ) 
+
+> g
+
+− ∆¯ x(c,p )
+
+> g
+
+2
+
+, (4) where ∆¯ y(c,p ) = (1 /B ) PBi=1 ∆y (c,p ) 
+
+> i
+
+and B denotes the batch size. In each training batch, we randomly sample B control cells x(c,ϕ ) from training tuples (c, p ) ∈ T =
+
+{(ci, p j )|cell type c i and perturbation p j in training } and compute L(c,p ). The overall loss func-tion is defined as: 
+
+L = (1 /|T | ) X
+
+> (c,p )∈T
+
+L(c,p ). (5) If we have access to only one GPU, in each batch DoFormer updates the gradients based on a single 
+
+L(c,p ). If we have access to multiple GPU, DoFormer uses Distributed Data Parallel (DDP) where each GPU gets B cells for a training tuple (c, p ), and the gradient updates are based on an average of multiple L(c,p ).
+
+4 Results 
+
+4.1 Train, Validation, and Test Splits 
+
+The ultimate goal of a genetic perturbation model is to predict the outcome of gene expression in unseen perturbations in any cell type. However, some of these perturbations may have been observed in other cell types. Let (c, p ) denote a tuple for perturbation p ∈ { 1, ..., P } in the cell type 
+
+c ∈ { 1, ..., C }. Similarly to Adduri et al. [2025], we assume a scenario in which we have access to all perturbations in C − 1 cell types and a varying fraction of perturbations in the target (test) cell type, and the goal is to predict the outcome for the remaining perturbations in the target cell type. Let ptrain /p validation /p test denote the percentages of perturbations in the target cell type used for training, validation, and test, respectively. We always use 10% for validation, and we try different splits between train and test. For example, 30 /10 /60 split means 30% (60% ) of perturbations in the target cell type are used for training (test). Figure 2 shows a simple scenario with 4 cell types and 6 perturbations. Note that DoFormer can predict perturbations that have never been seen in other cell types, such as p6 in Fig. 2, which is one of its unique advantages compared to other models. 
+
+4.2 Dataset 
+
+Similar to STATE, we combined two large-scale Perturb-seq datasets, Replogle (Replogle et al. [2022]) and Nadig (Nadig et al. [2025]), and built Replogle-Nadig dataset. It consists of four distinct cell types, K562, RPE1, HEPG2, and JURKAT, and 1,855 genetic perturbations after filtering and keeping the perturbations with knockdown efficiency of greater than 70% and with at least 30 cells. 5    
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint C1 C2 C3 C4 P1 P2 P3 P4 P5 P6 Validation Train Test Training cell types Test cell type Perturbations Not observed
+
+Figure 2: Cell type - perturbation (c, p ) splits for training, validation, and test sets. Table 1: Replogle-Nadig Dataset All K562 RPE1 HEPG2 JURKAT # Cells 615,810 180,773 168,597 91,993 174,447 # Cells – control 39,169 10,692 11,486 4,977 12,014 # Cells – perturbed 576,641 170,081 157,111 87,016 162,433 # Genetic Perturbations 1,855 1,312 1,451 1,251 1,437 Table 2: Distribution of Genetic Perturbations Across Cell Types Perturbed in N cell types N = 1 N = 2 N = 3 N = 4 Sum # Genetic Perturbations 202 346 671 636 1,855 The dataset includes 6,535 genes and 615 ,810 cells, of which 39 ,169 are control and 576 ,641 are perturbed cells. Table 1 shows the numbers per cell type, and the UMAPs are shown in Fig. 6. We were also curious to know in how many cell types each perturbation appears, as shown in Table 2. Note that the perturbations in only one cell type ( N = 1 ) are the hardest ones for prediction, as the model has never seen them in other cell types and should do a zero-shot prediction. We expect a causal model to have even bigger performance gap for zero-shot perturbations. The models like STATE (Adduri et al. [2025]) that formulate perturbations based on tokens cannot even predict zero-shot perturbations, which is a big limitation. 
+
+4.3 Comprehensive Perturbation Prediction Evaluation 
+
+We performed a comprehensive evaluation of DoFormer in the Replogle-Nadig dataset across multiple metrics. The complete definitions of these metrics are in the appendix A. In addition to STATE, we also compared DoFormer with two baseline predictors, the perturbation mean (PMean) and the context mean (CMean), as defined in Adduri et al. [2025]. See the appendix C for detailed definitions. As an example, the prediction for (c4, p 4) in Fig 2 would be as follows: PMean would use the average effect of (c1, p 4) and (c3, p 4) (across training cell types), and CMean would use the average effect of (c4, p 1) and (c4, p 5) (across training perturbations in test cell type). These simple baselines have been shown to outperform various foundation models in perturbation prediction tasks. We first pretrained Doformer on control cells from all C = 4 cell types. We then fine tuned it four times, each time holding out one target cell type. We started with a 80 /10 /10 split in each target cell type. Figure 3 shows that DoFormer significantly outperforms STATE and the baseline models in all metrics in all target cell types. Each point in Fig. 3 is a test perturbation in the target cell type, which is the same for all models. To calculate the significance score, we used Wilcoxon signed-rank test and reported the p-values on top of the distributions (three p-values correspond to DoFormer vs STATE, PMean, and CMean, respectively). Based on these tests, Doformer improvements over STATE, PMean, and CMean are significant in all metrics. 6
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00         
+
+> Pearson  0.42
+> 0.27 0.30
+> 0.22
+> 0.60
+> 0.47
+> 0.27
+> 0.54
+> 0.36
+> 0.28 0.32 0.31
+> 0.39
+> 0.32 0.28 0.31
+> 1e-10 / 1e-16 / 1e-18 8e-06 / 1e-19 / 9e-05 7e-06 / 3e-08 / 2e-10 8e-07 / 1e-10 / 1e-13
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00       
+
+> DE Spearman LFC  0.68
+> 0.47 0.48
+> 0.28
+> 0.74
+> 0.57
+> 0.44
+> 0.58
+> 0.68
+> 0.45 0.50 0.44
+> 0.63
+> 0.42
+> 0.48
+> 0.29
+> 4e-12 / 1e-12 / 3e-22 5e-13 / 6e-14 / 2e-22 1e-11 / 7e-10 / 5e-17 8e-17 / 5e-14 / 1e-21
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> DE Direction Match  0.91
+> 0.79 0.81
+> 0.68
+> 0.93
+> 0.82
+> 0.75
+> 0.89 0.88
+> 0.78
+> 0.82
+> 0.77
+> 0.86
+> 0.77 0.80
+> 0.72
+> 4e-11 / 6e-08 / 2e-18 1e-13 / 3e-13 / 8e-12 9e-07 / 3e-05 / 3e-13 8e-13 / 2e-08 / 5e-16
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8    
+
+> Overlap@N
+> 0.24
+> 0.00
+> 0.19
+> 0.13
+> 0.38
+> 0.09
+> 0.23
+> 0.34
+> 0.21
+> 0.00
+> 0.21
+> 0.11
+> 0.22
+> 0.00
+> 0.22
+> 0.17
+> 2e-23 / 5e-09 / 1e-17 5e-25 / 4e-14 / 4e-06 1e-20 / 2e-02 / 6e-17 8e-25 / 4e-05 / 2e-11
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0     
+
+> PDS (L1)
+> 0.94
+> 0.68
+> 0.86
+> 0.50
+> 0.87
+> 0.71
+> 0.61
+> 0.50
+> 0.90
+> 0.67
+> 0.80
+> 0.50
+> 0.89
+> 0.66 0.69
+> 0.50
+> 4e-15 / 3e-04 / 8e-21 2e-07 / 1e-08 / 2e-14 5e-08 / 2e-02 / 1e-17 5e-11 / 4e-06 / 7e-20
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0    
+
+> PDS (L2)
+> 0.96
+> 0.71
+> 0.95
+> 0.50
+> 0.91
+> 0.74
+> 0.62
+> 0.50
+> 0.94
+> 0.71
+> 0.85
+> 0.50
+> 0.94
+> 0.71
+> 0.81
+> 0.50
+> 4e-16 / 6e-02 / 1e-21 5e-10 / 2e-09 / 2e-17 6e-10 / 6e-02 / 4e-19 1e-13 / 3e-06 / 2e-22
+
+DoFormer STATE PMean CMean Figure 3: DoFormer significantly outperforms other models across all evaluation metrics and cell types. We use an 80/10/10 split. The number of test perturbations is shown below each target cell type. Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution, comparing DoFormer vs STATE, PMean, and CMean, respectively. Higher values are better in all metrics. We find the following observations in Fig. 3 compelling. First, perturbation predictions in some cell types are easier than others; for example, in this case, we see that both DoFormer and STATE have better performance in RPE1 compared to other cell types. This might be because some perturbations create larger changes in gene expression in certain cell types, making them easier for the model to predict. Second, DoFormer outperforms STATE in all-gene metrics (such as Pearson delta) as well as DE-gene metrics; however, the improvement gap is greater for DE-gene metrics such as Overlap N ,for which the median of STATE is zero for three cell types. Third, DoFormer predictions are much more perturbation-specific than STATE, as it gets PDS scores closer to one. DoFormer’s promising performance across all of these metrics comes from its ability to model the in silico perturbation correctly. We can also see the pairwise comparisons of DoFormer and STATE for all the perturbations in Figs. 11 - 14. Next, we trained the models using different splits: 00 /10 /90 (unseen cell type), 10 /10 /80 , 30 /10 /60 ,
+
+50 /10 /40 and 80 /10 /10 with K562 as the target cell type. A causal model is expected to behave better by seeing more perturbational data as the size of its equivalence class decreases and can better generalize to unseen perturbations. Since Doformer is a causal model, we expected to see an increasing trend of all the evaluation metrics by expanding the perturbations in training, and that is exactly what we see in Fig. 4. However, STATE does not show an increasing trend in the metrics by expanding train perturbations, especially DE-related metrics like Overlap N stay in the median value of zero, suggesting that STATE does not behave as a causal model. DoFormer significantly outperforms the STATE and baseline models in all splits. The only split where DoFormer 7
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> Pearson
+> 0.28
+> 0.22
+> 0.29
+> 0.34
+> 0.21
+> 0.29
+> 0.24
+> 0.36
+> 0.23
+> 0.28
+> 0.23
+> 0.38
+> 0.25 0.29
+> 0.22
+> 0.42
+> 0.27 0.30
+> 0.22
+> 2e-01 / 1e+00 1e-73 / 4e-40 / 3e-80 1e-51 / 8e-50 / 5e-87 2e-27 / 7e-38 / 5e-61 1e-10 / 1e-16 / 1e-18
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0      
+
+> DE Spearman LFC
+> 0.54
+> 0.34
+> 0.48
+> 0.59
+> 0.33
+> 0.48
+> 0.28
+> 0.59
+> 0.36
+> 0.49
+> 0.28
+> 0.63
+> 0.39
+> 0.50
+> 0.28
+> 0.68
+> 0.47 0.48
+> 0.28
+> 2e-56 / 1e-17 4e-112 / 3e-39 / 7e-131 9e-63 / 6e-27 / 2e-105 3e-49 / 2e-23 / 3e-74 4e-12 / 1e-12 / 3e-22
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> DE Direction Match  0.80
+> 0.71
+> 0.80
+> 0.84
+> 0.71
+> 0.80
+> 0.69
+> 0.86
+> 0.72
+> 0.80
+> 0.69
+> 0.86
+> 0.74
+> 0.80
+> 0.69
+> 0.91
+> 0.79 0.81
+> 0.68
+> 7e-31 / 1e+00 1e-98 / 4e-15 / 2e-85 2e-65 / 5e-16 / 8e-73 1e-44 / 2e-15 / 2e-55 4e-11 / 6e-08 / 2e-18
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8      
+
+> Overlap@N
+> 0.17
+> 0.00
+> 0.20 0.21
+> 0.00
+> 0.20
+> 0.14
+> 0.23
+> 0.00
+> 0.20
+> 0.14
+> 0.22
+> 0.00
+> 0.20
+> 0.13
+> 0.24
+> 0.00
+> 0.19
+> 0.13
+> 1e-127 / 1e+00 2e-169 / 2e-16 / 2e-90 2e-122 / 1e-28 / 1e-92 5e-83 / 7e-17 / 3e-64 2e-23 / 5e-09 / 1e-17
+
+00/10/90 
+
+(1181) 
+
+10/10/80 
+
+(1050) 
+
+30/10/60 
+
+(788) 
+
+50/10/40 
+
+(525) 
+
+80/10/10 
+
+(132) 
+
+Train/Val/Test Split (%) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> PDS (L1)
+> 0.89
+> 0.66
+> 0.86 0.88
+> 0.64
+> 0.87
+> 0.50
+> 0.89
+> 0.67
+> 0.87
+> 0.50
+> 0.88
+> 0.66
+> 0.87
+> 0.50
+> 0.94
+> 0.68
+> 0.86
+> 0.50
+> 7e-79 / 3e-01 2e-83 / 1e+00 / 5e-144 1e-56 / 1e+00 / 9e-107 3e-34 / 1e+00 / 1e-69 4e-15 / 3e-04 / 8e-21
+
+00/10/90 
+
+(1181) 
+
+10/10/80 
+
+(1050) 
+
+30/10/60 
+
+(788) 
+
+50/10/40 
+
+(525) 
+
+80/10/10 
+
+(132) 
+
+Train/Val/Test Split (%) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> PDS (L2)
+> 0.93
+> 0.69
+> 0.94 0.92
+> 0.67
+> 0.94
+> 0.50
+> 0.93
+> 0.69
+> 0.94
+> 0.50
+> 0.93
+> 0.68
+> 0.94
+> 0.50
+> 0.96
+> 0.71
+> 0.95
+> 0.50
+> 4e-98 / 1e+00 2e-104 / 1e+00 / 1e-155 3e-72 / 1e+00 / 8e-118 3e-45 / 1e+00 / 5e-77 4e-16 / 6e-02 / 1e-21
+
+DoFormer STATE PMean CMean Figure 4: DoFormer significantly outperforms other models across all evaluation metrics and splits. The results are for K562. The number of test perturbations is shown below each split. Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution, comparing DoFormer vs STATE, PMean, and CMean, respectively. Higher values are better in all metrics. cannot consistently outperform PMean is 00 /10 /90 (unseen cell type). This is in fact an important observation, suggesting that we need at least some perturbations in the target cell types for more accurate perturbation predictions for the remaining genes. Finally, we did dive further into the most difficult split 00 /10 /90 in K562. This split means that the models have not seen any perturbations in the target cell type K562 during the training. Similar to Table 2, we split the K562 perturbations into four categories of seen in 0 (unseen), 1, 2, and 3
+
+other cell types. Figure 5 shows that DoFormer outperforms STATE in all four categories. We see in Fig. 5 that STATE yields very poor results for the unseen category, where metrics like Overlap N
+
+is zero for all perturbations, and DE Spearman LFC has a median of 0.14 , while DoFormer’s is 
+
+0.43 . However, DoFormer still yields reasonable metrics in the hardest prediction task of unseen cell type and never seen perturbations. Although DoFormer cannot significantly outperform PMean in all the categories of the split 00 /10 /90 , it does so for the unseen perturbations, which relate to the hardest task of prediction in unseen cell type and never seen perturbations (like (c4, p 6) in Fig. 2). DoFormer outperforms STATE and the baseline models in all other splits 10 /10 /80 to 80 /10 /10 and all categories, shown in the appendix (Figs. 15 - 18). Now that we have shown DoFormer to have promising capability in the prediction of genetic pertur-bations in various metrics, splits, cell types, and categories, we can also investigate its performance visually. Figures 21 - 28 show the clustermaps of the predicted delta and LFC values for the test perturbations in all four cell types in the split 80 /10 /10 . We first clustered both rows (perturbations) and columns (genes) using predicted delta (or LFC) and then plotted the heatmap of true delta (or LFC) values using the same indices so that it is easier to compare visually. We can easily see similarity of perturbation-gene block structures between predicted and true delta (or LFC) values, especially 8
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8       
+
+> Pearson
+> 0.21
+> 0.11
+> 0.19
+> 0.29 0.28 0.27
+> 0.32 0.29
+> 0.33
+> 0.25
+> 0.19
+> 0.28
+> 3e-04 / 4e-02 8e-01 / 4e-06 8e-01 / 1e+00 2e-01 / 1e+00
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0     
+
+> DE Spearman LFC
+> 0.43
+> 0.14
+> 0.20
+> 0.54
+> 0.38
+> 0.45
+> 0.55
+> 0.40
+> 0.49 0.54
+> 0.32
+> 0.50
+> 8e-07 / 9e-07 2e-05 / 4e-06 9e-16 / 3e-09 1e-34 / 4e-04
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> DE Direction Match
+> 0.71
+> 0.60
+> 0.68
+> 0.79
+> 0.73
+> 0.77 0.80
+> 0.76
+> 0.80 0.80
+> 0.70
+> 0.81
+> 2e-06 / 1e-02 1e-04 / 3e-04 9e-09 / 6e-01 1e-17 / 1e+00
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8     
+
+> Overlap@N
+> 0.14
+> 0.00
+> 0.15
+> 0.19
+> 0.00
+> 0.18 0.20
+> 0.00
+> 0.23
+> 0.16
+> 0.00
+> 0.20
+> 8e-10 / 5e-01 1e-12 / 1e-01 7e-41 / 1e+00 3e-70 / 1e+00
+
+unseen 
+
+(53) 
+
+1
+
+(127) 
+
+2
+
+(435) 
+
+3
+
+(566) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> PDS (L1)
+> 0.46
+> 0.24 0.25
+> 0.82
+> 0.59
+> 0.86 0.88
+> 0.64
+> 0.85
+> 0.91
+> 0.72
+> 0.89
+> 8e-03 / 3e-04 3e-09 / 1e+00 4e-32 / 4e-01 2e-40 / 4e-01
+
+unseen 
+
+(53) 
+
+1
+
+(127) 
+
+2
+
+(435) 
+
+3
+
+(566) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> PDS (L2)
+> 0.49
+> 0.27 0.26
+> 0.87
+> 0.66
+> 0.93 0.92
+> 0.68
+> 0.94 0.95
+> 0.75
+> 0.96
+> 2e-03 / 2e-06 1e-10 / 1e+00 2e-38 / 1e+00 8e-52 / 1e+00
+
+K562 (00/10/90) 
+
+DoFormer STATE PMean CMean Figure 5: DoFormer outperforms other models in perturbations unseen in other cell types. The results are for K562 in the split 00 /10 /90 (zero-shot prediction in K562). The number of test perturbations is shown below each category (unseen, and seen in 1, 2, 3 cell types). Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution, comparing DoFormer vs STATE and PMean, respectively. Higher values are better in all metrics. for stronger effect sizes, proving that DoFormer can accurately learn the perturbed gene modules for unseen perturbations. See the appendix B for more ablation analyses of DoFormer. 
+
+5 Conclusions & Limitations 
+
+In this work, we introduce DoFormer, a do -operator–based Transformer model for in silico gene per-turbation. DoFormer can be used to generate gene expression outcomes for any genetic perturbation in any cell type by sampling from control cells. We conducted a comprehensive benchmarking using multiple metrics and showed that DoFormer has a promising capability to predict unseen perturba-tions. DoFormer’s performance mainly stems from do -operator–based modifications in the attention blocks. We propose that a causal transcriptomic AI model should distinguish between observational and perturbational data, and DoFormer is a first step in this direction without abandoning scalable Transformer architectures or introducing additional assumptions such as requiring the underlying GRN to be a DAG. One limitation of the current setup is that we assume complete knockdown of perturbed genes ( k = 0 ), while this might not always be the case. In future work, we will use the estimated knockdown ratios ( 0 < k < 1) in the CRISPRi data and the activation ratios ( k > 1) in the CRISPRa data to test whether DoFormer’s generalization ability can be further improved. 9
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint References 
+
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. Language models are few-shot learners. Advances in neural information processing systems , 33:1877–1901, 2020. Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. Llama: Open and efficient foundation language models. arXiv preprint arXiv:2302.13971 , 2023. Tri Dao. Flashattention-2: Faster attention with better parallelism and work partitioning. arXiv preprint arXiv:2307.08691 , 2023. Jay Shah, Ganesh Bikshandi, Ying Zhang, Vijay Thakkar, Pradeep Ramani, and Tri Dao. Flashattention-3: Fast and accurate attention with asynchrony and low-precision. Advances in Neural Information Processing Systems , 37:68658–68685, 2024. CZI Cell Science Program, Shibla Abdulla, Brian Aevermann, Pedro Assis, Seve Badajoz, Sidney M Bell, Emanuele Bezzi, Batuhan Cakir, Jim Chaffer, Signe Chambers, et al. Cz cellxgene discover: a single-cell data platform for scalable exploration, analysis and modeling of aggregated data. 
+
+Nucleic acids research , 53(D1):D886–D900, 2025. Joseph M Replogle, Reuben A Saunders, Angela N Pogson, Jeffrey A Hussmann, Alexander Lenail, Alina Guna, Lauren Mascibroda, Eric J Wagner, Karen Adelman, Gila Lithwick-Yanai, et al. Mapping information-rich genotype-phenotype landscapes with genome-scale perturb-seq. Cell ,185(14):2559–2575, 2022. Ajay Nadig, Joseph M Replogle, Angela N Pogson, Mukundh Murthy, Steven A McCarroll, Jonathan S Weissman, Elise B Robinson, and Luke J O’Connor. Transcriptome-wide analy-sis of differential expression in perturbation atlases. Nature Genetics , pages 1–10, 2025. Jesse Zhang, Airol A Ubas, Richard de Borja, Valentine Svensson, Nicole Thomas, Neha Thakar, Ian Lai, Aidan Winters, Umair Khan, Matthew G Jones, et al. Tahoe-100m: A giga-scale single-cell perturbation atlas for context-dependent gene function and cellular modeling. BioRxiv , pages 2025–02, 2025. Nicholas D Youngblut, Christopher Carpenter, Jaanak Prashar, Chiara Ricci-Tam, Rajesh Ilango, Noam Teyssier, Silvana Konermann, Patrick D Hsu, Alexander Dobin, David P Burke, et al. scbasecount: an ai agent-curated, uniformly processed, and continually expanding single cell data repository. bioRxiv , pages 2025–02, 2025. Judea Pearl et al. Models, reasoning and inference. Cambridge, UK: CambridgeUniversityPress , 19 (2):3, 2000. Peter Spirtes, Clark N Glymour, and Richard Scheines. Causation, prediction, and search . MIT press, 2000. Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Elements of causal inference: foundations and learning algorithms . The MIT press, 2017. Constantin Ahlmann-Eltze, Wolfgang Huber, and Simon Anders. Deep-learning-based gene pertur-bation effect prediction does not yet outperform simple linear baselines. Nature Methods , 22(8): 1657–1661, 2025. Eric Kernfeld, Yunxiao Yang, Joshua S Weinstock, Alexis Battle, and Patrick Cahan. A comparison of computational methods for expression forecasting. Genome biology , 26(1):388, 2025. Gerold Csendes, Gema Sanz, Kristóf Z Szalay, and Bence Szalai. Benchmarking foundation cell models for post-perturbation rna-seq prediction. BMC genomics , 26(1):393, 2025. 10 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+Yusuf Roohani, Kexin Huang, and Jure Leskovec. Predicting transcriptional outcomes of novel multigene perturbations with gears. Nature Biotechnology , 42(6):927–935, 2024. Haotian Cui, Chloe Wang, Hassaan Maan, Kuan Pang, Fengning Luo, Nan Duan, and Bo Wang. scgpt: toward building a foundation model for single-cell multi-omics using generative ai. Nature methods , 21(8):1470–1480, 2024. Christina V Theodoris, Ling Xiao, Anant Chopra, Mark D Chaffin, Zeina R Al Sayed, Matthew C Hill, Helene Mantineo, Elizabeth M Brydon, Zexian Zeng, X Shirley Liu, et al. Transfer learning enables predictions in network biology. Nature , 618(7965):616–624, 2023. Minsheng Hao, Jing Gong, Xin Zeng, Chiming Liu, Yucheng Guo, Xingyi Cheng, Taifeng Wang, Jianzhu Ma, Xuegong Zhang, and Le Song. Large-scale foundation model on single-cell transcrip-tomics. Nature methods , 21(8):1481–1491, 2024. Fan Yang, Wenchuan Wang, Fang Wang, Yuan Fang, Duyu Tang, Junzhou Huang, Hui Lu, and Jianhua Yao. scbert as a large-scale pretrained deep language model for cell type annotation of single-cell rna-seq data. Nature Machine Intelligence , 4(10):852–866, 2022. Abhinav K Adduri, Dhruv Gautam, Beatrice Bevilacqua, Alishba Imran, Rohan Shah, Mohsen Naghipourfar, Noam Teyssier, Rajesh Ilango, Sanjay Nagaraj, Mingze Dong, et al. Predicting cellular responses to perturbation across diverse contexts with state. BioRxiv , pages 2025–06, 2025. Romain Lopez, Jeffrey Regier, Michael B Cole, Michael I Jordan, and Nir Yosef. Deep generative modeling for single-cell transcriptomics. Nature methods , 15(12):1053–1058, 2018. Mohammad Lotfollahi, Anna Klimovskaia Susmelj, Carlo De Donno, Leon Hetzel, Yuge Ji, Ignacio L Ibarra, Sanjay R Srivatsan, Mohsen Naghipourfar, Riza M Daza, Beth Martin, et al. Predicting cellular responses to complex perturbations in high-throughput screens. Molecular systems biology ,19(6):MSB202211517, 2023. Alexander Rives, Joshua Meier, Tom Sercu, Siddharth Goyal, Zeming Lin, Jason Liu, Demi Guo, Myle Ott, C Lawrence Zitnick, Jerry Ma, et al. Biological structure and function emerge from scaling unsupervised learning to 250 million protein sequences. Proceedings of the national academy of sciences , 118(15):e2016239118, 2021. Thomas Hayes, Roshan Rao, Halil Akin, Nicholas J Sofroniew, Deniz Oktay, Zeming Lin, Robert Verkuil, Vincent Q Tran, Jonathan Deaton, Marius Wiggert, et al. Simulating 500 million years of evolution with a language model. Science , 387(6736):850–858, 2025. Gabriel M Mejia, Henry E Miller, Francis JA Leblanc, Bo Wang, Brendan Swain, and Lucas Paulo de Lima Camillo. Diversity by design: Addressing mode collapse improves scrna-seq perturbation modeling on well-calibrated metrics. arXiv preprint arXiv:2506.22641 , 2025. 
+
+A Comprehensive Evaluation Framework for Perturbation Prediction 
+
+What defines a success in a perturbation prediction model? Here we define a set of useful metrics to measure how effective the model predicts the effects of the unseen perturbations. We adopted some of the important CELL-Eval (Adduri et al. [2025]) metrics to our scenario. Let G(c,p ) 
+
+> k, true
+
+and G(c,p ) 
+
+> k, pred
+
+denote the sets of top-k DE genes in true and predicted perturbation p ∈{1, ..., P } in the cell type c ∈ { 1, ..., C }, ranked by the absolute delta values |∆¯ x(c,p )| and |∆¯ y(c,p )|,respectively. Let G(c,p )DE ,true denote the set of all true significant DE genes ( padj < 0.05 ). To calculate 
+
+∆¯ y(c,p ) during evaluation, we generate M = 1200 perturbed cells for each perturbation in each cell type by randomly sampling M control cells from the same cell type. 11 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+A.1 Pearson Delta 
+
+This metric measures the Pearson correlation between the true and predicted delta of mean expression values of perturbed and control cells in a given cell type. For a perturbation p ∈ { 1, ..P } in a cell type c ∈ { 1, ..., C }, it is defined as: 
+
+r(c,p )∆ = r
+
+
+
+∆¯ x(c,p ), ∆¯ y(c,p )
+
+, (6) where r denotes the Pearson correlation. 
+
+A.2 DE Pearson Delta 
+
+This metric is similar to the Pearson Delta but calculated only for the true DE genes for each (c, p ). It is defined as: 
+
+r(c,p )∆,DE = r
+
+
+
+∆¯ x(c,p )[G(c,p )DE ,true ], ∆¯ y(c,p )[G(c,p )DE ,true ]
+
+
+
+. (7) 
+
+A.3 DE Spearman Delta 
+
+This metric is similar to DE Pearson Delta, but we calculate Spearman’s rank correlation ρ instead. It is defined as: 
+
+ρ(c,p )∆,DE = ρ
+
+
+
+∆¯ x(c,p )[G(c,p )DE ,true ], ∆¯ y(c,p )[G(c,p )DE ,true ]
+
+
+
+, (8) where ρ denotes the Spearman correlation. 
+
+A.4 DE Spearman LFC 
+
+This metric calculates the Spearman correlation between true and predicted log fold change (LFC) of mean expression values of perturbed and control cells in true DE genes. Since the RNA expression values have undergone the transformation log1p(x) = log(1 + x) , we first use the reverse transfor-mation xcount = expm1(x) = exp(x) − 1 to bring them back to the count-based space and then calculate the LFC values as 
+
+LFC (c,p )true = log2 ¯x(c,p )count + ϵ
+
+¯x(c,ϕ )count + ϵ
+
+!
+
+, LFC (c,p )pred = log2 ¯y(c,p )count + ϵ
+
+¯y(c,ϕ )count + ϵ
+
+!
+
+, (9) where ϵ = 10 −10 , and DE Spearman LFC is defined as 
+
+ρ(c,p )LFC ,DE = ρ
+
+
+
+LFC (c,p )true [G(c,p )DE ,true ], LFC (c,p )pred [G(c,p )DE ,true ]
+
+
+
+. (10) 
+
+A.5 DE Directionality Agreement 
+
+This metric measures what fraction of true DE genes have the same sign of true and predicted delta values. If this metric is closer to one, it means that the model can correctly predict whether the DE genes will be up- or down regulated after any perturbation. It is defined as: 
+
+DA (c,p )DE =
+
+{g ∈ G (c,p )DE ,true : sign(∆¯ x(c ,p) [g]) = sign(∆¯ y(c ,p) [g]) }
+
+|G (c,p )DE ,true | . (11) 
+
+A.6 Top-k Overlap Accuracy 
+
+This metric measures overlap between the sets G(c,p ) 
+
+> k, true
+
+and G(c,p ) 
+
+> k, pred
+
+for k ∈ { 50 , 100 , 200 , N }. If 
+
+k = N , it means that k is equal to the number of true DE genes, that is, k = |G (c,p )DE ,true |, which is perturbation specific. This score is in the range [0 , 1] , with 1 showing the perfect prediction of top DE genes. It is defined as: 
+
+Overlap (c,p ) 
+
+> k
+
+=
+
+G(c,p ) 
+
+> k, true
+
+∩ G (c,p )
+
+> k, pred
+
+k . (12) 12 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+A.7 AUROC/AUPRC 
+
+These metrics measure the area under the receiver operating characteristic (AUROC) and area under the precision-recall curve (AUPRC). The genes in the set G(c,p )DE ,true are labeled 1 (significant) and the rest as 0 (non-significant) for any perturbation p at the cell type c. We use |∆¯ y(c,p )| as the confidence score to calculate both metrics. AUROC (c,p ) evaluates how well the model can distinguish significant from non-significant genes for any perturbation p at the cell type c. AUPRC (c,p ) evaluates how well the model can predict the significant genes for any perturbation p at the cell type c when the number of significant DE genes is low. 
+
+A.8 Perturbation Discrimination Score 
+
+This metric measures how perturbation-specific the predictions of the models are. A model works better if it pushes the predicted delta values ∆¯ y(c,p ) closer to the true delta values ∆¯ x(c,p ) and farther from the other true delta values ∆¯ x(c,p ′), p ′̸ = p. For any perturbation p ∈ { 1, ..., P } in the cell type 
+
+c ∈ { 1, ..., C }, it is defined as: 
+
+PDS (c,p ) = 1 −
+
+PPp′=1 ,p ′̸ =p 1(d(∆¯ y(c,p ), ∆¯ x(c,p ′)) < d (∆¯ y(c,p ), ∆¯ x(c,p ))) 
+
+P − 1 , (13) where 1(.) is the indicator function ( 1 if true and 0 otherwise), and d(., . ) can be one of the following distance functions: L1 (Manhattan), L2 (Euclidean), and cosine distance. Note that PDS (c,p ) ∈ [0 , 1] ,with 1 showing the best discrimination. 
+
+B Ablation Study 
+
+Here we ablated different components of DoFormer to understand how they contributed to the predictive performance of the model. We analyzed four main components comparing: 1) PLM embeddings (ESM2 and ESMC) versus non-informative learnable gene embeddings, 2) larger versus smaller model sizes, 3) MSE versus weighted MSE loss functions, and 4) evaluations on all gene set versus highly variable genes (HVG). 
+
+B.1 PLM Embeddings 
+
+We first trained two types of small DoFormer models (see Table 3), first with ESM2 (MIT license) embeddings and the second with learnable gene embeddings. We hypothesized that using ESM2 embeddings should provide rich orthogonal information for the genes, helping to learn more causal gene-gene interactions and enhance the predictive power of the model. Figure 7 confirms this hypothesis, as we see that DoFormer with ESM2 embeddings significantly outperforms DoFormer without those embeddings in all of the evaluation metrics. The results of Fig. 7 are for K562 in the split 80 /10 /10 . We then trained three types of larger DoFormer models (see Table 3), first with ESM2 embeddings, the second with ESM-C (Forge API license) embeddings, and the third with learnable gene embeddings (no ESM). ESMC is the newest model of the ESM family, which outperforms ESM2 in tasks related to protein structures and functions. Interestingly, in the case of large DoFormer models, using ESM embeddings (either ESM2 or ESMC) does not significantly improve performance in all metrics, as shown in Fig. 8. One possible explanation for this behavior could be that adding additional information from the PLM embeddings to the smaller models helps them learn causal interactions; however, the larger models seem to have the capacity to learn causal interactions without any extra information from the PLM embeddings. Since we have no prior idea about which model sizes prevent the need for PLM embeddings in each dataset, we recommend using them as a default in DoFormer. 
+
+B.2 Model Size 
+
+We investigated the role of model size on its performance. To this end, we trained two DoFormer models: small and large. The difference is in the number of Transformer layers ( L), heads ( H), model dimension dmodel and feed-forward dimension ( df f ). The small model has L = H = 4 ,13 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+Table 3: Model size configurations in DoFormer. 
+
+DoFormer-Small DoFormer-Large 
+
+# Transformer layers ( L) 4 8# Attention heads ( H) 4 8Model dimension ( dmodel ) 128 512 Feed-forward dimension ( df f ) 1024 2048 # Parameters (approx.) 1.7M 27M 
+
+dmodel = 128 , and df f = 1024 , with approximately 1.7M parameters. The large model has 
+
+L = H = 8 , dmodel = 512 , and df f = 2048 , with approximately 27 M parameters (Table 3). Figure 9 shows that the large model significantly outperforms the small model in all evaluation metrics in all cell types. This is an interesting observation, as it is not trivial to improve the model performance across all metrics consistently by only scaling. However, it is possible in DoFormer due to its inherent capability in learning causal gene-gene interactions, which makes it benefit from model scaling. All the results in the paper are from the larger DoFormer model by default. 
+
+B.3 Loss Function 
+
+Although we used a weighted MSE loss function in DoFormer to encourage prioritization of DE genes, we were interested in understanding how the model would work compared to MSE loss function without using weights. Figure 10 shows this comparison in all cell types for the split 80 /10 /10 . It is interesting to see that unlike the model size, there is no clear winner in this case, as it is metric dependent. MSE works better in evaluation metrics that consider all genes, such as Pearson Delta, and WMSE significantly outperforms MSE in DE-related metrics, such as DE Spearman LFC. It is also interesting that using WMSE leads to significantly higher perturbation discrimination scores, which suggests WMSE help the models escape the mode collapse and generate perturbation-specific predictions. Based on these results, we recommend WMSE over MSE, unless one really cares about Pearson Delta, in which case MSE sounds a better choice. 
+
+B.4 All versus Highly Variable Genes 
+
+Usually foundation models use 2000 highly variable genes (HVGs) as the feature set to reduce the complexity of the model. However, it is useful to predict the effects of genetic perturbations on the set of all genes. That is why we used all genes in the Replogle-Nadig dataset ( 6535 genes after merging and filtering) in DoFormer models and performed all evaluation benchmarks based on all genes. Here, we subset the genes to HVGs and performed the same evaluations on this subset to see how they compare to the full gene set. Figure 19 compares the evaluation metrics of DoFormer and baseline models (PMean and CMean) using all genes versus HVGs in the split 80 /10 /10 in all target cell types. Figure 20 also compares them in all the splits ( 00 /10 /90 to 80 /10 /10 ) of K562 cells. In general, we can see that the evaluation metrics are higher (better) using HVGs (compared to all genes), especially in DE-related metrics. This makes intuitive sense since HVGs are a smaller set of genes, and accurate prediction of perturbation outcomes in all genes is more difficult. 
+
+C Baseline Models 
+
+We consider two baseline models for perturbation predictions that have been shown to sometimes outperform foundation models: the perturbation mean (PMean) and the context mean (CMean). 
+
+C.1 Perturbation Mean (PMean) Baseline 
+
+Assume that we want to predict the effect of perturbation p ∈ { 1, ..., P } in the test cell type 
+
+ct ∈ { 1, ..., C }. PMean uses the average of delta values for the perturbation p seen in the cell types other than ct. Let Cp denote the set of all the cell types in training data that have the perturbation p. If 
+
+|C p| > 0, PMean predictor for the test cell type ct and the perturbation p is defined as: 14 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+∆¯ y(ct,p )PMean = 1
+
+|C p|
+
+X
+
+> c∈C p
+
+∆¯ x(c,p ). (14) If |C p| = 0 (perturbation in the test cell type never seen in other cell types), we define PMean as the average of all training (c, p ) pairs in all cell types except ct:
+
+∆¯ y(ct,p )PMean = 1
+
+|(c, p ) ∈ T , c ̸ = ct|
+
+X 
+
+> (c,p )∈T ,c ̸=ct
+
+∆¯ x(c,p ). (15) 
+
+C.2 Context Mean (CMean) Baseline 
+
+Let assume we want to predict the effect of perturbation p ∈ { 1, ..., P } in the target cell type 
+
+ct ∈ { 1, ..., C }. CMean uses the delta of control cells and all perturbed cells in the training data in the target cell type: 
+
+∆¯ y(ct,p )CMean = 1
+
+N (ct, ¯ϕ)  
+
+> N(ct,¯ϕ)
+
+X
+
+> i=1
+
+x(ct, ¯ϕ) 
+
+> i
+
+− 1
+
+N (ct,ϕ ) 
+
+> N(ct,ϕ )
+
+X
+
+> i=1
+
+x(ct,ϕ ) 
+
+> i
+
+, (16) where N (ct, ¯ϕ) denotes the number of all perturbed cells of the cell type ct in the training set. Note that CMean uses the same delta prediction for all test perturbations, and CMean is not defined for the split 
+
+00 /10 /90 since there are no perturbed cells in the training set for the target cell type ( N (ct, ¯ϕ) = 0 ). 
+
+D Compute Resources 
+
+We have trained DoFormer models in an SLURM-based HPC cluster with access to H100 (80G VRAM) and H200 (140G VRAM) GPUs, where each compute node has 8 GPUs. We have always trained the models on one node (either H100 or H200) and usually distributed over 4 GPUs using DDP. For each run, we also requested 16 CPUs per task and 200G RAM per GPU (800G overall). As such, in the Replogle-Nadig dataset, pre-training took almost 15 hours and fine-tuning almost 1 day. 
+
+E Training Details and Hyperparameters 
+
+We used the batch size of 32 cells per GPU during pre-training DoFormer. With 4 GPUs, the effective batch size would be 128 cells. We used 90% of the control cells for training and 10% for validation to monitor the MSE loss functions. For fine-tuning, we used the batch size of 24 cells per GPU, with the effective batch size of 96 cells with 4 GPUs. The train, test, and validation splits have been explained in the paper. We saved the model checkpoints every 500 steps and recorded the validation loss every 500 steps. We used an early stopping criterion with patience of 20, meaning that the model will stop training if there is no improvement over 10,000 steps. We used AdamW optimizer with the base learning rate of 1e − 4 and weight decay of 1e − 5. We adopted a cosine annealing with a warm-up strategy for the learning rate, where it increases linearly from zero to the maximum value of 1e − 4
+
+in 1000 steps and decreases to the minimum value of 1e − 5 in 100 epochs (maximum epoch size) following a cosine function. Regarding the STATE model, we used their ST model and followed their code at https://github. com/ArcInstitute/state (CC BY-NC-SA 4.0 license) to train them from scratch on exactly the same training, validation, and test sets that we used in DoFormer to make comparisons fair. 
+
+F Dataset 
+
+The Replogle-Nadig dataset consists of 4 cell types. K562 and RPE1 are from the Replogle dataset (Replogle et al. [2022]), which can be downloaded from this link: Figshare (CC BY 4.0 license). HEPG2 and JURKAT are from the Nadig dataset (Nadig et al. [2025]), which can be downloaded from this link: GEO. We merged these two datasets and performed the basic preprocessing of the single cells. We normalized the cells to have total counts of 10,000 and applied the log 1p transformations 15 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+to all expression values. For filtering perturbations, we followed the steps of cell-load package (cell-load) with the default values of residual _expression = 0 .30 (meaning 70% knockdown efficiency), 
+
+cell _residual _expression = 0 .50 (cell-level threshold), and min _cells = 30 (minimum cells per perturbation after filtering). We only kept the perturbations that are within the full gene set after merging the datasets since we need them to be in the DoFormer model for the in silico perturbations. 
+
+G Code Availability 
+
+The DoFormer code will be made available to the public after the publication of the manuscript. 
+
+H Broader Impacts 
+
+This paper introduces a novel model, DoFormer, for the prediction of genetic perturbations. DoFormer can have multiple positive societal impacts in curing or preventing diseases. Biologists and scientists might find it very helpful in finding the target genes that cause various diseases without running millions of costly experiments in the labs. DoFormer can be used to perform low-cost in silico 
+
+perturbations across all human cells and diseases to discover the causal genes driving each disease. Then, the top predicted targets can be further validated in the experimental labs with a fraction of the cost. Regarding the negative societal impacts, like any biological AI model, DoFormer can also carry inherent dual-use risks such as the theoretical potential to identify vulnerabilities for harmful cellular manipulation. 16 
+
+> .CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
+
+UMAP1 
+
+> UMAP2
+
+Cell Type 
+
+HEPG2 
+
+JURKAT 
+
+K562 
+
+RPE1 
+
+UMAP1 
+
+> UMAP2
+
+condition 
+
+Perturbed 
+
+Control Figure 6: UMAP of Replogle-Nadig dataset with 4 cell types. 17 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Pearson
+> 0.39
+> 0.29
+> p=5.6e-14
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+> DE Spearman LFC
+> 0.58
+> 0.46
+> p=4.5e-10
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match  0.86
+> 0.78
+> p=2.0e-08
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+1.0 
+
+> AUROC  0.79
+> 0.76
+> p=1.7e-08
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8  
+
+> AUPR
+> 0.18 0.15
+> p=4.5e-10
+
+0.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7  
+
+> Overlap@N
+> 0.23 0.20
+> p=2.0e-07
+
+Doformer Doformer 
+
+wo ESM 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+> 0.86
+> 0.76
+> p=3.8e-10
+
+Doformer Doformer 
+
+wo ESM 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (Cosine)
+> 0.91
+> 0.82
+> p=9.1e-14
+
+n=132 
+
+Doformer Doformer wo ESM Figure 7: Small DoFormer model with ESM2 embeddings significantly outperforms small DoFormer model without ESM2 embeddings across all evaluation metrics. The results are for K562, small model, and split 80 /10 /10 . Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 18 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> Pearson
+
+0.42 0.41 0.43 
+
+0.60 0.57 0.57 
+
+0.36 
+
+0.42 0.37 0.39 0.40 0.37 
+
+6e-01 / 5e-01 3e-01 / 2e-01 5e-01 / 3e-01 5e-01 / 4e-01 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Pearson
+
+0.84 0.81 0.84 0.87 0.87 0.83 0.79 0.83 0.78 0.79 0.75 0.74 
+
+4e-01 / 8e-01 7e-02 / 3e-02 5e-01 / 1e-01 1e-01 / 3e-01 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman
+
+0.72 0.68 0.70 
+
+0.80 0.81 0.78 0.73 0.80 0.74 0.69 0.67 0.66 
+
+3e-01 / 5e-01 3e-01 / 1e-01 5e-01 / 9e-02 1e-01 / 4e-01 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.68 0.63 0.63 
+
+0.74 0.77 0.73 0.68 0.71 0.67 0.63 0.58 0.58 
+
+3e-01 / 6e-01 2e-01 / 3e-02 4e-01 / 1e-01 2e-02 / 3e-01 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> AUROC
+
+0.80 0.81 0.81 
+
+0.85 0.84 0.84 
+
+0.79 0.80 0.79 0.80 0.79 0.81 
+
+8e-01 / 7e-01 4e-01 / 2e-01 6e-01 / 1e-01 9e-01 / 9e-01 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> AUPR
+
+0.19 0.22 0.20 
+
+0.35 0.33 0.34 
+
+0.14 
+
+0.20 
+
+0.14 
+
+0.19 0.19 0.19 
+
+6e-01 / 3e-01 3e-01 / 2e-01 7e-01 / 2e-01 6e-01 / 5e-01 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.91 0.89 0.87 
+
+0.93 0.92 0.91 0.88 0.90 0.88 0.86 0.88 0.86 
+
+2e-01 / 5e-01 8e-02 / 6e-02 4e-01 / 1e-01 1e-01 / 3e-01 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+> Overlap@N
+
+0.24 0.27 0.25 
+
+0.38 0.37 0.39 
+
+0.21 
+
+0.27 
+
+0.17 
+
+0.22 0.25 0.24 
+
+7e-01 / 4e-01 4e-01 / 3e-01 6e-01 / 1e-01 8e-01 / 4e-01 
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.94 0.90 0.92 
+
+0.87 0.89 
+
+0.79 
+
+0.90 0.90 0.89 0.89 0.87 
+
+0.82 
+
+2e-01 / 7e-01 3e-02 / 2e-02 3e-01 / 4e-01 1e-01 / 2e-01 
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.96 0.95 0.95 0.91 0.92 
+
+0.83 
+
+0.94 0.91 0.93 0.94 0.90 0.90 
+
+2e-01 / 7e-01 2e-02 / 6e-03 3e-01 / 5e-01 2e-01 / 4e-01 
+
+ESM2 ESMC No ESM Figure 8: Large DoFormer model with ESM2/ESMC embeddings do not significantly outperform large DoFormer model without ESM embeddings across all evaluation metrics. The results are for K562 and split 80 /10 /10 . Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution, comparing ESM2 vs ESMC and No-ESM, respectively. 19 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75         
+
+> Pearson  0.42 0.39
+> 0.60 0.54
+> 0.36 0.34 0.39 0.35
+> p=7.2e-11 p=1.4e-12 p=4.8e-06 p=3.3e-08
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00        
+
+> DE Spearman LFC  0.68
+> 0.58
+> 0.74 0.70 0.68 0.62 0.63
+> 0.54
+> p=2.8e-11 p=3.1e-06 p=1.3e-06 p=2.6e-09
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9         
+
+> AUROC
+> 0.80 0.79
+> 0.85 0.84
+> 0.79 0.78 0.80 0.78
+> p=1.8e-01 p=1.6e-01 p=4.9e-02 p=3.7e-01
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8        
+
+> AUPR
+> 0.19 0.18
+> 0.35 0.33
+> 0.14 0.13
+> 0.19 0.18
+> p=1.5e-04 p=5.2e-08 p=2.3e-05 p=7.1e-04
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0          
+
+> DE Direction Match  0.91 0.86
+> 0.93 0.89 0.88 0.85 0.86 0.83
+> p=3.1e-09 p=1.9e-10 p=9.2e-03 p=2.1e-05
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6        
+
+> Overlap@N
+> 0.24 0.23
+> 0.38 0.38
+> 0.21 0.17
+> 0.22 0.23
+> p=8.5e-04 p=7.2e-05 p=3.6e-05 p=9.8e-02
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> PDS (L1)
+> 0.94
+> 0.86 0.87
+> 0.76
+> 0.90 0.85 0.89
+> 0.81
+> p=6.9e-09 p=6.2e-08 p=3.3e-03 p=1.8e-04
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> PDS (Cosine)
+> 0.95 0.91
+> 0.82
+> 0.69
+> 0.80 0.74
+> 0.92
+> 0.85
+> p=8.9e-06 p=2.6e-07 p=9.5e-03 p=5.1e-05
+
+Large Small Figure 9: Large DoFormer model significantly outperforms small DoFormer model across all evaluation metrics and cell types. The results are for split 80 /10 /10 . The number of test perturbations is shown below each cell type. Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 20 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0         
+
+> Pearson  0.42 0.44
+> 0.60 0.61
+> 0.36 0.41 0.39 0.41
+> p=7.0e-14 p=7.9e-04 p=4.1e-10 p=5.0e-08
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0       
+
+> DE Spearman LFC  0.68
+> 0.57
+> 0.74 0.65 0.68
+> 0.57 0.63
+> 0.53
+> p=3.9e-12 p=8.4e-13 p=7.2e-10 p=5.8e-15
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9         
+
+> AUROC  0.80
+> 0.83 0.85 0.85
+> 0.79 0.80 0.80 0.81
+> p=9.0e-10 p=1.3e-02 p=9.2e-05 p=3.1e-09
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8        
+
+> AUPR
+> 0.19
+> 0.26
+> 0.35 0.38
+> 0.14 0.16 0.19 0.22
+> p=2.8e-13 p=2.3e-03 p=2.6e-08 p=2.2e-13
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0           
+
+> DE Direction Match  0.91 0.90 0.93 0.91 0.88 0.88 0.86 0.86
+> p=6.7e-01 p=8.9e-05 p=6.9e-01 p=2.7e-01
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8      
+
+> Overlap@N
+> 0.24
+> 0.29
+> 0.38
+> 0.43
+> 0.21 0.23 0.22
+> 0.28
+> p=2.1e-08 p=2.7e-02 p=1.2e-04 p=2.3e-11
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> PDS (L1)
+> 0.94
+> 0.84 0.87
+> 0.70
+> 0.90 0.86 0.89
+> 0.76
+> p=2.7e-10 p=5.5e-07 p=4.8e-02 p=6.9e-08
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0       
+
+> PDS (Cosine)
+> 0.95 0.96
+> 0.82
+> 0.73
+> 0.80
+> 0.92 0.92 0.94
+> p=2.0e-01 p=4.0e-04 p=1.9e-05 p=4.7e-02
+
+WMSE MSE Figure 10: WMSE versus MSE loss function in DoFormer’s performance. WMSE leads to better DE-related metrics, while MSE leads to better all-gene metrics like Pearson Delta. Neither loss function outperforms the other in all metrics. The results are for split 80 /10 /10 . The number of test perturbations is shown below each cell type. Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 21 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.00 0.25 0.50 0.75 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> STATE
+> Doformer: 68.9%
+> STATE: 31.1%
+
+Pearson 
+
+0.5 0.0 0.5 1.0 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 Doformer: 75.0% 
+
+> STATE: 25.0%
+
+DE Spearman LFC 
+
+0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 75.0%
+> STATE: 25.0%
+
+DE Direction Match 
+
+0.0 0.2 0.4 0.6 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+> Doformer: 98.5%
+> STATE: 1.5%
+
+Overlap@N 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 73.5%
+> STATE: 26.5%
+
+PDS (L1) 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 Doformer: 72.7% 
+
+> STATE: 27.3%
+
+PDS (Cosine) 
+
+10 1
+
+10 2
+
+10 3
+
+> Number of true significant DE genes
+
+K562 (n=132) Figure 11: Scatter plots of evaluation metrics comparing DoFormer versus STATE for each test perturbation. The results are for K562 and split 80 /10 /10 . For the perturbations below the diagonal line, DoFormer’s performance is better than STATE. The percentages of the perturbations for which either model works better are shown in each plot. The perturbations are colored by their true significant DE genes (effect size). 22 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.5 0.0 0.5 1.0 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+> STATE
+> Doformer: 58.9%
+> STATE: 41.1%
+
+Pearson 
+
+0.5 0.0 0.5 1.0 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 Doformer: 76.7% 
+
+> STATE: 23.3%
+
+DE Spearman LFC 
+
+0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 81.5%
+> STATE: 18.5%
+
+DE Direction Match 
+
+0.0 0.2 0.4 0.6 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+> Doformer: 95.9%
+> STATE: 4.1%
+
+Overlap@N 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 65.1%
+> STATE: 34.9%
+
+PDS (L1) 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 Doformer: 69.2% 
+
+> STATE: 30.8%
+
+PDS (Cosine) 
+
+10 2
+
+10 3
+
+> Number of true significant DE genes
+
+RPE1 (n=146) Figure 12: Scatter plots of evaluation metrics comparing DoFormer versus STATE for each test perturbation. The results are for RPE1 and split 80 /10 /10 . For the perturbations below the diagonal line, DoFormer’s performance is better than STATE. The percentages of the perturbations for which either model works better are shown in each plot. The perturbations are colored by their true significant DE genes (effect size). 23 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.25 0.00 0.25 0.50 0.75 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> STATE
+> Doformer: 58.7%
+> STATE: 41.3%
+
+Pearson 
+
+0.5 0.0 0.5 1.0 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 Doformer: 75.4% 
+
+> STATE: 24.6%
+
+DE Spearman LFC 
+
+0.4 0.6 0.8 1.0 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+1.0 
+
+> STATE
+> Doformer: 69.8%
+> STATE: 30.2%
+
+DE Direction Match 
+
+0.0 0.2 0.4 0.6 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+> Doformer: 89.7%
+> STATE: 10.3%
+
+Overlap@N 
+
+0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 65.9%
+> STATE: 34.1%
+
+PDS (L1) 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 Doformer: 50.0% 
+
+> STATE: 50.0%
+
+PDS (Cosine) 
+
+10 1
+
+10 2
+
+10 3
+
+> Number of true significant DE genes
+
+HEPG2 (n=126) Figure 13: Scatter plots of evaluation metrics comparing DoFormer versus STATE for each test perturbation. The results are for HEPG2 and split 80 /10 /10 . For the perturbations below the diagonal line, DoFormer’s performance is better than STATE. The percentages of the perturbations for which either model works better are shown in each plot. The perturbations are colored by their true significant DE genes (effect size). 24 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.25 0.00 0.25 0.50 0.75 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> STATE
+> Doformer: 66.9%
+> STATE: 33.1%
+
+Pearson 
+
+0.5 0.0 0.5 
+
+0.4 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 Doformer: 82.8% 
+
+> STATE: 17.2%
+
+DE Spearman LFC 
+
+0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 78.6%
+> STATE: 21.4%
+
+DE Direction Match 
+
+0.0 0.2 0.4 0.6 0.8 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 Doformer: 95.9% 
+
+> STATE: 4.1%
+
+Overlap@N 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> STATE
+> Doformer: 70.3%
+> STATE: 29.7%
+
+PDS (L1) 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+Doformer 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 Doformer: 71.0% 
+
+> STATE: 29.0%
+
+PDS (Cosine) 
+
+10 1
+
+10 2
+
+10 3
+
+> Number of true significant DE genes
+
+JURKAT (n=145) Figure 14: Scatter plots of evaluation metrics comparing DoFormer versus STATE for each test perturbation. The results are for JURKAT and split 80 /10 /10 . For the perturbations below the diagonal line, DoFormer’s performance is better than STATE. The percentages of the perturbations for which either model works better are shown in each plot. The perturbations are colored by their true significant DE genes (effect size). 25 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Pearson
+
+0.25 
+
+0.12 
+
+0.18 
+
+0.29 
+
+0.40 
+
+0.29 0.27 0.30 
+
+0.39 
+
+0.29 
+
+0.33 
+
+0.25 
+
+0.29 
+
+0.17 
+
+0.28 
+
+0.21 
+
+2e-08 / 2e-06 / 6e-01 5e-07 / 2e-13 / 2e-09 2e-25 / 4e-24 / 2e-36 5e-40 / 7e-07 / 4e-41 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.46 
+
+0.11 
+
+0.21 
+
+0.35 
+
+0.61 
+
+0.42 0.45 
+
+0.32 
+
+0.62 
+
+0.40 
+
+0.49 
+
+0.32 
+
+0.57 
+
+0.29 
+
+0.50 
+
+0.25 
+
+3e-10 / 8e-09 / 9e-05 1e-11 / 3e-09 / 1e-14 1e-36 / 3e-20 / 7e-52 7e-61 / 7e-11 / 9e-65 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.76 
+
+0.58 
+
+0.68 
+
+0.73 
+
+0.86 
+
+0.76 0.77 
+
+0.70 
+
+0.86 
+
+0.75 
+
+0.80 
+
+0.69 
+
+0.83 
+
+0.69 
+
+0.81 
+
+0.68 
+
+8e-08 / 2e-04 / 2e-01 7e-12 / 2e-09 / 7e-12 2e-37 / 4e-11 / 3e-39 1e-48 / 6e-02 / 4e-39 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+> Overlap@N
+
+0.19 
+
+0.00 
+
+0.15 
+
+0.18 
+
+0.24 
+
+0.00 
+
+0.19 0.20 
+
+0.25 
+
+0.00 
+
+0.23 
+
+0.17 0.17 
+
+0.00 
+
+0.19 
+
+0.12 
+
+1e-09 / 6e-04 / 2e-01 5e-19 / 4e-11 / 2e-08 2e-64 / 7e-14 / 5e-37 2e-82 / 1e-01 / 6e-51 
+
+unseen 
+
+(48) 
+
+1
+
+(112) 
+
+2
+
+(389) 
+
+3
+
+(501) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.49 
+
+0.28 0.27 0.26 
+
+0.82 
+
+0.57 
+
+0.87 
+
+0.36 
+
+0.90 
+
+0.62 
+
+0.86 
+
+0.43 
+
+0.89 
+
+0.71 
+
+0.89 
+
+0.59 
+
+2e-04 / 1e-04 / 7e-05 3e-12 / 1e+00 / 6e-18 7e-34 / 9e-01 / 1e-56 5e-39 / 1e+00 / 3e-70 
+
+unseen 
+
+(48) 
+
+1
+
+(112) 
+
+2
+
+(389) 
+
+3
+
+(501) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.51 
+
+0.29 0.30 0.28 
+
+0.86 
+
+0.60 
+
+0.95 
+
+0.40 
+
+0.94 
+
+0.66 
+
+0.94 
+
+0.43 
+
+0.93 
+
+0.73 
+
+0.95 
+
+0.59 
+
+2e-05 / 5e-06 / 1e-06 5e-15 / 1e+00 / 8e-19 3e-40 / 1e+00 / 5e-60 5e-50 / 1e+00 / 5e-76 
+
+K562 (10/10/80) 
+
+DoFormer STATE PMean CMean Figure 15: DoFormer outperforms STATE regardless of perturbations seen or unseen in other cell types. The results are for K562 in the split 10 /10 /80 . The number of test perturbations is shown below each category (unseen, and seen in 1, 2, 3 cell types). Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 26 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Pearson
+
+0.28 
+
+0.15 0.19 
+
+0.31 
+
+0.40 
+
+0.30 
+
+0.24 0.29 
+
+0.43 
+
+0.32 0.32 
+
+0.26 
+
+0.31 
+
+0.17 
+
+0.28 
+
+0.20 
+
+7e-07 / 5e-06 / 8e-02 4e-05 / 2e-13 / 7e-11 1e-17 / 9e-25 / 4e-35 3e-28 / 3e-13 / 1e-45 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.44 
+
+0.22 0.19 
+
+0.31 
+
+0.62 
+
+0.48 0.45 
+
+0.34 
+
+0.61 
+
+0.47 0.49 
+
+0.29 
+
+0.58 
+
+0.30 
+
+0.51 
+
+0.25 
+
+1e-05 / 1e-06 / 1e-04 8e-07 / 2e-08 / 1e-13 4e-19 / 7e-14 / 2e-39 1e-37 / 5e-07 / 7e-54 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.77 
+
+0.63 0.67 
+
+0.72 
+
+0.89 
+
+0.75 0.76 
+
+0.69 
+
+0.86 
+
+0.75 
+
+0.80 
+
+0.71 
+
+0.84 
+
+0.69 
+
+0.81 
+
+0.68 
+
+4e-06 / 1e-04 / 5e-02 4e-08 / 3e-10 / 2e-10 1e-24 / 2e-10 / 7e-31 1e-32 / 5e-02 / 7e-35 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Overlap@N
+
+0.23 
+
+0.00 
+
+0.15 
+
+0.20 
+
+0.25 
+
+0.00 
+
+0.17 0.18 
+
+0.29 
+
+0.00 
+
+0.23 
+
+0.17 
+
+0.20 
+
+0.00 
+
+0.19 
+
+0.12 
+
+6e-11 / 5e-06 / 7e-03 6e-14 / 3e-11 / 2e-10 5e-47 / 1e-16 / 4e-34 8e-60 / 4e-05 / 9e-50 
+
+unseen 
+
+(34) 
+
+1
+
+(84) 
+
+2
+
+(295) 
+
+3
+
+(375) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.41 
+
+0.21 0.21 0.20 
+
+0.80 
+
+0.59 
+
+0.85 
+
+0.40 
+
+0.90 
+
+0.64 
+
+0.86 
+
+0.43 
+
+0.90 
+
+0.72 
+
+0.90 
+
+0.59 
+
+1e-03 / 3e-05 / 8e-05 4e-09 / 1e+00 / 1e-13 7e-24 / 9e-01 / 4e-43 6e-26 / 1e+00 / 2e-51 
+
+unseen 
+
+(34) 
+
+1
+
+(84) 
+
+2
+
+(295) 
+
+3
+
+(375) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.50 
+
+0.24 
+
+0.21 0.21 
+
+0.86 
+
+0.62 
+
+0.93 
+
+0.43 
+
+0.94 
+
+0.68 
+
+0.95 
+
+0.42 
+
+0.94 
+
+0.76 
+
+0.96 
+
+0.58 
+
+3e-04 / 1e-05 / 2e-05 2e-10 / 1e+00 / 7e-15 1e-29 / 1e+00 / 1e-46 6e-34 / 1e+00 / 6e-57 
+
+K562 (30/10/60) 
+
+DoFormer STATE PMean CMean Figure 16: DoFormer outperforms STATE regardless of perturbations seen or unseen in other cell types. The results are for K562 in the split 30 /10 /60 . The number of test perturbations is shown below each category (unseen, and seen in 1, 2, 3 cell types). Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 27 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Pearson
+
+0.27 
+
+0.13 
+
+0.19 
+
+0.32 
+
+0.44 
+
+0.30 0.26 0.28 
+
+0.44 
+
+0.34 0.32 
+
+0.25 
+
+0.33 
+
+0.21 
+
+0.28 
+
+0.19 
+
+1e-05 / 3e-05 / 4e-01 4e-03 / 8e-10 / 8e-08 8e-08 / 3e-17 / 1e-22 2e-17 / 2e-12 / 6e-35 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.39 
+
+0.13 
+
+0.23 
+
+0.36 
+
+0.68 
+
+0.52 
+
+0.45 
+
+0.34 
+
+0.65 
+
+0.45 0.49 
+
+0.28 
+
+0.62 
+
+0.37 
+
+0.53 
+
+0.24 
+
+2e-05 / 3e-06 / 5e-03 5e-05 / 1e-07 / 6e-10 2e-15 / 5e-11 / 3e-29 4e-30 / 6e-07 / 1e-37 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.76 
+
+0.55 
+
+0.64 
+
+0.73 
+
+0.90 
+
+0.77 0.74 
+
+0.70 
+
+0.88 
+
+0.78 0.80 
+
+0.71 
+
+0.85 
+
+0.70 
+
+0.81 
+
+0.66 
+
+7e-05 / 3e-04 / 3e-01 8e-06 / 6e-09 / 2e-08 1e-15 / 5e-09 / 3e-21 6e-24 / 1e-02 / 8e-30 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Overlap@N
+
+0.26 
+
+0.00 
+
+0.18 
+
+0.21 
+
+0.26 
+
+0.00 
+
+0.17 0.17 
+
+0.27 
+
+0.00 
+
+0.21 
+
+0.15 
+
+0.19 
+
+0.00 
+
+0.19 
+
+0.11 
+
+4e-05 / 7e-04 / 1e-01 1e-10 / 2e-08 / 5e-08 8e-32 / 1e-09 / 3e-24 6e-41 / 2e-03 / 5e-35 
+
+unseen 
+
+(21) 
+
+1
+
+(57) 
+
+2
+
+(198) 
+
+3
+
+(249) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.32 
+
+0.17 0.16 0.15 
+
+0.83 
+
+0.61 
+
+0.83 
+
+0.33 
+
+0.87 
+
+0.63 
+
+0.84 
+
+0.45 
+
+0.90 
+
+0.73 
+
+0.90 
+
+0.59 
+
+4e-02 / 5e-03 / 8e-03 2e-06 / 4e-01 / 3e-10 1e-13 / 9e-01 / 4e-28 3e-17 / 1e+00 / 2e-33 
+
+unseen 
+
+(21) 
+
+1
+
+(57) 
+
+2
+
+(198) 
+
+3
+
+(249) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.35 
+
+0.17 0.18 0.16 
+
+0.86 
+
+0.63 
+
+0.90 
+
+0.34 
+
+0.93 
+
+0.68 
+
+0.94 
+
+0.45 
+
+0.94 
+
+0.74 
+
+0.96 
+
+0.58 
+
+2e-02 / 1e-03 / 2e-03 6e-08 / 6e-01 / 6e-11 4e-16 / 1e+00 / 9e-31 2e-24 / 1e+00 / 2e-37 
+
+K562 (50/10/40) 
+
+DoFormer STATE PMean CMean Figure 17: DoFormer outperforms STATE regardless of perturbations seen or unseen in other cell types. The results are for K562 in the split 50 /10 /40 . The number of test perturbations is shown below each category (unseen, and seen in 1, 2, 3 cell types). Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 28 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8    
+
+> Pearson  0.51
+> 0.05
+> 0.21
+> 0.31
+> 0.41
+> 0.19 0.19
+> 0.27
+> 0.47
+> 0.41
+> 0.35
+> 0.26
+> 0.31
+> 0.19
+> 0.29
+> 0.16
+> 1e-01 / 2e-04 / 3e-04 3e-05 / 2e-08 / 7e-08 3e-07 / 3e-07 / 1e-10
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00     
+
+> DE Spearman LFC  0.65
+> 0.24 0.22
+> 0.44
+> 0.60
+> 0.41 0.46
+> 0.33
+> 0.69
+> 0.59
+> 0.45
+> 0.29
+> 0.67
+> 0.38
+> 0.52
+> 0.22
+> 1e-02 / 4e-02 / 3e-05 1e-04 / 4e-08 / 9e-10 5e-08 / 2e-05 / 1e-11
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0      
+
+> DE Direction Match  0.89
+> 0.51
+> 0.60
+> 0.77
+> 0.86
+> 0.71 0.69 0.67
+> 0.92
+> 0.84 0.81
+> 0.72
+> 0.88
+> 0.78
+> 0.83
+> 0.63
+> 7e-02 / 8e-03 / 7e-04 9e-06 / 5e-05 / 1e-07 1e-06 / 6e-03 / 3e-10
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6     
+
+> Overlap@N
+> 0.31
+> 0.00
+> 0.14
+> 0.19
+> 0.24
+> 0.00
+> 0.15 0.15
+> 0.31
+> 0.00
+> 0.21
+> 0.18 0.18
+> 0.00
+> 0.19
+> 0.09
+> 2e-05 / 5e-04 / 7e-04 1e-10 / 5e-06 / 7e-08 9e-12 / 1e-02 / 8e-10
+
+unseen 
+
+(2) 
+
+1
+
+(16) 
+
+2
+
+(53) 
+
+3
+
+(61) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0     
+
+> PDS (L1)  0.62
+> 0.13 0.13 0.13
+> 0.84
+> 0.44
+> 0.66
+> 0.38
+> 0.95
+> 0.66
+> 0.87
+> 0.42
+> 0.94
+> 0.78
+> 0.91
+> 0.56
+> 2e-04 / 1e-01 / 8e-05 1e-07 / 4e-03 / 2e-09 2e-06 / 3e-02 / 2e-10
+
+unseen 
+
+(2) 
+
+1
+
+(16) 
+
+2
+
+(53) 
+
+3
+
+(61) 
+
+# Other Cell Types with Perturbation 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0     
+
+> PDS (L2)  0.67
+> 0.14 0.16 0.15
+> 0.89
+> 0.51
+> 0.76
+> 0.41
+> 0.98
+> 0.64
+> 0.95
+> 0.42
+> 0.97
+> 0.82
+> 0.95
+> 0.59
+> 8e-04 / 4e-01 / 5e-04 5e-08 / 3e-02 / 5e-10 3e-07 / 5e-01 / 1e-10
+
+K562 (80/10/10) 
+
+DoFormer STATE PMean CMean Figure 18: DoFormer outperforms STATE regardless of perturbations seen or unseen in other cell types. The results are for K562 in the split 80 /10 /10 . The number of test perturbations is shown below each category (unseen, and seen in 1, 2, 3 cell types). Each point represents a perturbation, and the median of each distribution is printed. P-values from Wilcoxon signed-rank tests are shown above each distribution. 29 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.4 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Pearson
+
+0.42 0.43 
+
+0.30 0.30 
+
+0.22 
+
+0.26 
+
+0.60 
+
+0.66 
+
+0.27 0.29 
+
+0.54 
+
+0.64 
+
+0.36 
+
+0.43 
+
+0.32 
+
+0.36 
+
+0.31 
+
+0.41 0.39 0.39 
+
+0.28 0.27 0.31 0.29 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Pearson
+
+0.84 0.85 
+
+0.71 0.66 
+
+0.38 
+
+0.55 
+
+0.87 0.88 
+
+0.60 0.59 
+
+0.70 
+
+0.76 0.79 
+
+0.85 
+
+0.69 0.67 
+
+0.57 
+
+0.71 
+
+0.79 0.77 
+
+0.68 
+
+0.62 
+
+0.43 
+
+0.48 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman
+
+0.72 
+
+0.79 
+
+0.59 0.60 
+
+0.36 
+
+0.50 
+
+0.80 0.82 
+
+0.52 0.52 
+
+0.74 0.77 0.73 
+
+0.81 
+
+0.65 0.63 0.60 
+
+0.72 0.69 0.70 
+
+0.59 0.55 
+
+0.47 0.49 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.68 
+
+0.75 
+
+0.48 0.53 
+
+0.28 
+
+0.46 
+
+0.74 0.73 
+
+0.44 0.44 
+
+0.58 0.54 
+
+0.68 
+
+0.73 
+
+0.50 0.53 
+
+0.44 0.49 
+
+0.63 0.65 
+
+0.48 
+
+0.42 
+
+0.29 0.29 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> AUROC
+
+0.80 
+
+0.84 
+
+0.71 0.73 0.71 
+
+0.76 
+
+0.85 0.86 
+
+0.71 0.70 
+
+0.83 0.84 
+
+0.79 
+
+0.83 
+
+0.73 0.74 0.73 
+
+0.78 0.80 0.81 
+
+0.72 0.73 
+
+0.76 0.78 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> AUPR
+
+0.19 
+
+0.30 
+
+0.15 
+
+0.18 
+
+0.08 
+
+0.13 
+
+0.35 
+
+0.46 
+
+0.20 
+
+0.25 
+
+0.29 
+
+0.35 
+
+0.14 
+
+0.21 
+
+0.17 
+
+0.21 
+
+0.06 
+
+0.09 
+
+0.19 
+
+0.24 
+
+0.17 0.19 
+
+0.11 
+
+0.19 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.91 0.92 
+
+0.81 0.79 
+
+0.68 
+
+0.73 
+
+0.93 0.94 
+
+0.75 0.74 
+
+0.89 0.88 0.88 
+
+0.92 
+
+0.82 0.82 
+
+0.77 
+
+0.83 
+
+0.86 0.89 
+
+0.80 
+
+0.77 
+
+0.72 0.74 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Overlap@N
+
+0.24 
+
+0.33 
+
+0.19 
+
+0.22 
+
+0.13 
+
+0.18 
+
+0.38 
+
+0.45 
+
+0.23 
+
+0.28 
+
+0.34 
+
+0.39 
+
+0.21 
+
+0.25 
+
+0.21 
+
+0.28 
+
+0.11 
+
+0.16 
+
+0.22 
+
+0.28 
+
+0.22 0.23 
+
+0.17 
+
+0.24 
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.94 0.95 
+
+0.86 0.88 
+
+0.50 0.50 
+
+0.87 0.88 
+
+0.61 
+
+0.57 
+
+0.50 0.50 
+
+0.90 0.90 
+
+0.80 0.80 
+
+0.50 0.50 
+
+0.89 0.87 
+
+0.69 0.71 
+
+0.50 0.50 
+
+K562 
+
+(132) 
+
+RPE1 
+
+(146) 
+
+HEPG2 
+
+(126) 
+
+JURKAT 
+
+(145) 
+
+Cell Type 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.96 0.97 0.95 0.93 
+
+0.50 0.50 
+
+0.91 0.90 
+
+0.62 
+
+0.58 
+
+0.50 0.50 
+
+0.94 0.94 
+
+0.85 0.82 
+
+0.50 0.50 
+
+0.94 0.92 
+
+0.81 
+
+0.76 
+
+0.50 0.50 
+
+DoFormer DoFormer (HVG) PMean PMean (HVG) CMean CMean (HVG) Figure 19: DoFormer’s evaluation metrics are better in HVGs than all genes. The results are for the split 80 /10 /10 .30 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint 0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Pearson
+
+0.28 0.27 0.29 0.30 
+
+0.34 0.34 
+
+0.29 0.30 
+
+0.24 
+
+0.27 
+
+0.36 0.36 
+
+0.28 0.29 
+
+0.23 0.26 
+
+0.38 0.38 
+
+0.29 0.29 
+
+0.22 0.24 
+
+0.42 0.43 
+
+0.30 0.30 
+
+0.22 
+
+0.26 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Pearson
+
+0.69 0.66 0.69 0.65 
+
+0.76 0.77 
+
+0.69 0.65 
+
+0.41 
+
+0.53 
+
+0.77 0.79 
+
+0.69 0.66 
+
+0.40 
+
+0.52 
+
+0.78 0.82 
+
+0.69 0.66 
+
+0.38 
+
+0.53 
+
+0.84 0.85 
+
+0.71 0.66 
+
+0.38 
+
+0.55 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman
+
+0.56 0.59 0.58 0.60 0.64 
+
+0.71 
+
+0.58 0.61 
+
+0.40 
+
+0.50 
+
+0.66 
+
+0.72 
+
+0.58 0.61 
+
+0.39 
+
+0.50 
+
+0.68 
+
+0.74 
+
+0.59 0.62 
+
+0.38 
+
+0.50 
+
+0.72 
+
+0.79 
+
+0.59 0.60 
+
+0.36 
+
+0.50 
+
+1.0 
+
+0.5 
+
+0.0 
+
+0.5 
+
+1.0 
+
+> DE Spearman LFC
+
+0.54 0.56 
+
+0.48 0.53 
+
+0.59 
+
+0.66 
+
+0.48 0.52 
+
+0.28 
+
+0.43 
+
+0.59 
+
+0.67 
+
+0.49 0.52 
+
+0.28 
+
+0.42 
+
+0.63 
+
+0.71 
+
+0.50 0.55 
+
+0.28 
+
+0.42 
+
+0.68 
+
+0.75 
+
+0.48 0.53 
+
+0.28 
+
+0.46 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> AUROC
+
+0.72 0.73 0.72 0.73 
+
+0.77 0.79 
+
+0.72 0.73 0.72 
+
+0.77 0.79 
+
+0.82 
+
+0.72 0.73 0.72 
+
+0.75 
+
+0.79 
+
+0.83 
+
+0.72 0.73 0.72 
+
+0.76 
+
+0.80 
+
+0.84 
+
+0.71 0.73 0.71 
+
+0.76 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> AUPR
+
+0.13 
+
+0.16 0.16 
+
+0.18 0.16 
+
+0.23 
+
+0.16 
+
+0.18 
+
+0.10 
+
+0.15 0.17 
+
+0.24 
+
+0.15 
+
+0.18 
+
+0.09 
+
+0.13 
+
+0.17 
+
+0.26 
+
+0.15 
+
+0.18 
+
+0.08 
+
+0.13 
+
+0.19 
+
+0.30 
+
+0.15 
+
+0.18 
+
+0.08 
+
+0.13 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> DE Direction Match
+
+0.80 0.79 0.80 0.80 
+
+0.84 0.85 
+
+0.80 0.79 
+
+0.69 
+
+0.74 
+
+0.86 0.87 
+
+0.80 0.80 
+
+0.69 
+
+0.73 
+
+0.86 0.88 
+
+0.80 0.80 
+
+0.69 
+
+0.73 
+
+0.91 0.92 
+
+0.81 0.79 
+
+0.68 
+
+0.73 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Overlap@N
+
+0.17 
+
+0.20 0.20 
+
+0.23 0.21 
+
+0.28 
+
+0.20 
+
+0.23 
+
+0.14 
+
+0.20 
+
+0.23 
+
+0.29 
+
+0.20 0.22 
+
+0.14 
+
+0.19 
+
+0.22 
+
+0.30 
+
+0.20 0.22 
+
+0.13 
+
+0.18 
+
+0.24 
+
+0.33 
+
+0.19 
+
+0.22 
+
+0.13 
+
+0.18 
+
+00/10/90 
+
+(1181) 
+
+10/10/80 
+
+(1050) 
+
+30/10/60 
+
+(788) 
+
+50/10/40 
+
+(525) 
+
+80/10/10 
+
+(132) 
+
+Train/Val/Test Split (%) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L1)
+
+0.89 0.88 0.86 0.88 0.88 0.88 0.87 0.88 
+
+0.50 0.50 
+
+0.89 0.89 0.87 0.88 
+
+0.50 0.50 
+
+0.88 0.89 0.87 0.88 
+
+0.50 0.50 
+
+0.94 0.95 
+
+0.86 0.88 
+
+0.50 0.50 
+
+00/10/90 
+
+(1181) 
+
+10/10/80 
+
+(1050) 
+
+30/10/60 
+
+(788) 
+
+50/10/40 
+
+(525) 
+
+80/10/10 
+
+(132) 
+
+Train/Val/Test Split (%) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> PDS (L2)
+
+0.93 0.92 0.94 0.93 0.92 0.92 0.94 0.93 
+
+0.50 0.50 
+
+0.93 0.93 0.94 0.93 
+
+0.50 0.50 
+
+0.93 0.93 0.94 0.93 
+
+0.50 0.50 
+
+0.96 0.97 0.95 0.93 
+
+0.50 0.50 
+
+DoFormer DoFormer (HVG) PMean PMean (HVG) CMean CMean (HVG) Figure 20: DoFormer’s evaluation metrics are better in HVGs than all genes. The results are for all the splits in K562 cells. 31 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+
+Figure 21: Clustermaps of DoFormer predicted and true delta values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for K562 and split 80 /10 /10 .32 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+
+Figure 22: Clustermaps of DoFormer predicted and true LFC values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for K562 and split 80 /10 /10 .33 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+
+Figure 23: Clustermaps of DoFormer predicted and true delta values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for RPE1 and split 80 /10 /10 .34 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+
+Figure 24: Clustermaps of DoFormer predicted and true LFC values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for RPE1 and split 80 /10 /10 .35 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+
+Figure 25: Clustermaps of DoFormer predicted and true delta values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for HEPG2 and split 80 /10 /10 .36 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+
+Figure 26: Clustermaps of DoFormer predicted and true LFC values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for HEPG2 and split 80 /10 /10 .37 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+> 0.20
+> 0.15
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> Delta
+
+Figure 27: Clustermaps of DoFormer predicted and true delta values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for JURKAT and split 
+
+80 /10 /10 .38 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint Perturbations 
+
+Predicted 
+
+Genes 
+
+> Perturbations
+
+Ground Truth 
+
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Log2 FC
+
+Figure 28: Clustermaps of DoFormer predicted and true LFC values showing similarity of perturbation-gene structures, especially for the stronger effects. The results are for JURKAT and split 
+
+80 /10 /10 .39 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint a Model Overview 
+
+ESM2 Embeddings  
+
+> (B×G×2560 )
+
+Gene Expression  
+
+> (B×G×1)
+
+Linear 
+
+> (d/ 2)
+
+Linear 
+
+> (d/ 2)
+
+⊕
+
+Concat + LayerNorm + GELU  
+
+> (B×G×d)
+
+Transformer Block ( S(p))
+
+> (×L)
+
+LayerNorm  
+
+> (B×G×d)
+
+Expression Head  
+
+> (B×G×1)
+
+Predicted Expression     
+
+> (y∈RG
+> ≥0,B×G×1)
+
+b Detailed diagrams 
+
+Multi-Head Attention ( S(p)) 
+
+> (B×G×d)
+
++
+
+LayerNorm  
+
+> (B×G×d)
+
+FFN     
+
+> (Linear →GELU →Linear) (d→dff →d)
+
++
+
+LayerNorm  
+
+> (B×G×d)
+
+Transformer Block ( S(p))
+
+Linear → GELU  
+
+> (dff /2)
+
+Dropout Linear → GELU  
+
+> (dff /4)
+
+Dropout Linear → ReLU  
+
+> (B×G×1)
+
+Expression Head   
+
+> Query Key Value
+
+WQ WK WV
+
+Reshape to H Heads     
+
+> (B, H, G, d k;dk=d/H )
+
+Scaled Dot-Product Attention   
+
+> A(h,l,ϕ )
+> i,j =
+> 
+> softmax
+> QiK⊤
+> √dk
+> 
+> j
+
+out i = P 
+
+> j
+
+A(h,l,ϕ ) 
+
+> i,j
+
+Vj
+
+Concat Heads → WO 
+
+> (B×G×d)
+
+MHA — Observational S(ϕ)  
+
+> Query Key Value
+
+WQ WK WV
+
+Reshape to H Heads         
+
+> (B, H, G, d k;dk=d/H )
+> A(h,l,p )
+> i,j =
+> 
+> 0i=p, j ̸=p
+> 1i=j=pA(h,l,p )
+> i,j else
+
+out i = P 
+
+> j
+
+A(h,l,p ) 
+
+> i,j
+
+Vj
+
+Concat Heads → WO 
+
+> (B×G×d)
+
+MHA — Perturbational S(p)
+
+Figure 29: DoFormer Architecture. (a) Each gene is tokenized by concatenating its projected ESM embedding ( d/ 2) with its projected expression value ( d/ 2), normalized, and processed by L
+
+Transformer blocks. (b) The Transformer block applies multi-head attention with residual connections and LayerNorm. The expression head is a three-layer MLP with a final ReLU. In S(ϕ), standard attention is used. In S(p), the do -operator sets gene p’s input to τ and enforces A(h,l,p )
+
+p,p = 1 , A(h,l,p )
+
+p,j = 0 
+
+for j̸ = p.40 
+
+.CC-BY-NC 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 4, 2026. ;https://doi.org/10.64898/2026.05.02.722054 doi: bioRxiv preprint
