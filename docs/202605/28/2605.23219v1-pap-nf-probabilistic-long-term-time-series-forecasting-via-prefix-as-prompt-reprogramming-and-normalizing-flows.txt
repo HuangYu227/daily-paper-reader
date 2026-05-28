@@ -1,0 +1,271 @@
+Title: PaP-NF: Probabilistic Long-Term Time Series Forecasting via Prefix-as-Prompt Reprogramming and Normalizing Flows
+
+URL Source: https://arxiv.org/pdf/2605.23219v1
+
+Published Time: Mon, 25 May 2026 00:26:32 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# PaP-NF: Probabilistic Long-Term Time Series Forecasting via Prefix-as-Prompt Reprogramming and Normalizing Flows 
+
+Minju Kim [0009 −0004 −7965 −6252] and Youngbum Hur [0000 −0002 −1113 −1730] 
+
+Department of Industrial Engineering, Inha University, Incheon, Republic of Korea 
+
+12213093kmj@inha.edu , youngbum.hur@inha.ac.kr 
+
+Abstract. Time series forecasting plays a central role in many real-world ap-plications and has been studied extensively. Most existing approaches have used deterministic models. However, real-world environments exhibit inherently un-certain and complex future behaviors, making single-point predictions insuf-ficient. This highlights the need for probabilistic forecasting that can quantify and represent uncertainty. In this work, we propose PaP-NF, a probabilistic fore-casting framework that aligns continuous time series with a frozen LLM using a Prefix-as-Prompt mechanism, and conditions a normalizing flow decoder on the global context extracted by the LLM. The quality of the resulting predictive dis-tributions is evaluated using the Continuous Ranked Probability Score (CRPS), a standard metric in probabilistic forecasting. Across a variety of long-term fore-casting benchmarks, PaP-NF captures multi-modal uncertainty robustly while maintaining competitive point-forecast accuracy. Our official code is available at: https://github.com/democracy04/PaP-NF 
+
+Keywords: Time Series Forecasting, Large Language Models, Probabilistic Fore-casting, Normalizing Flows, Long-term Prediction 
+
+## 1 Introduction 
+
+Long-term time series forecasting is critical for various fields, including energy management, healthcare, and traffic control [8]. Compared to short-term tasks, predicting long horizons demands a sophisticated approach to modeling extended temporal dependencies and uncertain future trajectories [5]. Notably, real-world scenarios often involve multiple plausible evolution paths that cannot be fully represented by deterministic outcomes. Most established forecasting methods rely on deterministic regression objectives such as Mean Squared Error (MSE), which produce smooth forecasts that may not fully capture multi-modal behav-iors or extreme events. Furthermore, recent architectures leveraging patch-level representations focus on local numerical patterns within confined windows. This localized focus inherently overlooks global temporal contexts essential for un-derstanding complex evolution paths such as distribution shifts and long-term trend transitions. Meanwhile, Large Language Models (LLMs) have emerged as promising candidates for time series forecasting, leveraging their exceptional contextual reasoning capabilities. Yet, a fundamental challenge remains: most  
+
+> arXiv:2605.23219v1 [cs.LG] 22 May 2026 2M. Kim and Y. Hur
+
+LLM-based approaches rely on tokenization, which fragments continuous values and inherently degrades numerical precision. Moreover, using LLMs as direct predictors often provides no principled mechanism for continuous density esti-mation. This makes it difficult to quantify uncertainty accurately, leaving the capture of diverse, multi-modal future trajectories as a significant open challenge. In this paper, we propose PaP-NF, a novel probabilistic forecasting framework designed to address these limitations by utilizing pre-trained LLMs exclusively as global context encoders. Our approach introduces a principled architectural separation between global semantic extraction and local probabilistic generation. This decoupled design enables the model to exploit the high-level reasoning of LLMs without sacrificing the numerical accuracy of continuous time series. By bridging the gap between deterministic predictors and generative probabilistic models, PaP-NF facilitates the estimation of flexible, multi-modal predictive distributions. The major contributions of this work are summarized as follows: 
+
+– Principled hybrid framework: We propose a unified architecture that preserves local numerical precision via linear embeddings while utilizing frozen LLMs for global semantic reasoning. This hybrid design alleviates the discretization issues of LLM-only predictors. 
+
+– Prefix-based alignment with frozen LLMs: We introduce a Prefix-as-Prompt (PaP) reprogramming mechanism that aligns numerical embeddings with pre-trained LLMs, enabling global context extraction without modify-ing LLM parameters. 
+
+– Uncertainty-aware long-horizon prediction: PaP-NF conditions nor-malizing flows on joint numerical and LLM contexts, effectively synergizing global context extraction with flexible distribution modeling. This integrated approach allows for robust, multi-modal uncertainty modeling beyond deter-ministic limitations. 
+
+## 2 Related Work 
+
+Deep Learning Models for Long-Term Time Series Forecasting. Early studies on time series forecasting relied on recurrent architectures such as RNNs and LSTMs, while Transformer-based models later enabled more effective mod-eling of long-range temporal dependencies. Informer [27] introduced sparse self-attention for efficient long-term forecasting, followed by variants such as FED-former [28] and Autoformer [24] which leverage frequency domain analysis and decomposition mechanisms. More recently, TimesNet [23] captures multi-scale temporal variations via 2D tensor transformations, and ETSformer [22] inte-grates exponential smoothing into Transformers. Despite their success in model-ing temporal patterns, these methods predominantly focus on point forecasting, leaving predictive uncertainty largely unaddressed. 
+
+Time Series Analysis with Large Language Models. Recent studies have explored leveraging the contextual reasoning capabilities of LLMs for the time PaP-NF: Probabilistic Long-Term Time Series Forecasting 3
+
+series domain, although there are ongoing discussions regarding their actual util-ity in forecasting tasks [19]. GPT4TS [29] adopts a parameter-efficient strategy by training lightweight adapters, while Lag-LLaMA [15] directly uses LLMs as predictors via probabilistic token sampling. Although these approaches demon-strate the potential of LLMs for forecasting, they face inherent limitations in representing continuous numerical signals. In particular, converting real-valued time series into discrete token or prompt representations can degrade fine-grained numerical fidelity, reflecting information loss introduced by discretization rather than insufficient model capacity. This line of work is closely related to parameter-efficient prompt tuning and prefix-tuning methods in NLP [9,10]. 
+
+Probabilistic Time Series Forecasting. Probabilistic forecasting aims to characterize the uncertainty of future trajectories. DeepAR [16] employs an au-toregressive framework with fixed parametric assumptions, such as Gaussian dis-tributions. In contrast, Normalizing Flows [4,14] provide greater flexibility via in-vertible transformations for flexible distribution modeling. While diffusion-based models [20] have demonstrated high generative fidelity, their iterative sampling process is often expensive for long horizons. Normalizing Flows offer an effi-cient alternative, enabling non-iterative sampling while maintaining high model expressivity. 
+
+Positioning of PaP-NF. Existing prefix-based methods like Time-LLM [7] typ-ically utilize the LLM as the primary forecasting backbone. In contrast, PaP-NF adopts a decoupled architecture: the LLM serves exclusively as a global con-text encoder via prefix-based alignment, while the generative task is offloaded to a conditional Normalizing Flow [13]. This separation leverages the semantic reasoning of LLMs alongside the continuous density estimation of flows. Conse-quently, PaP-NF circumvents the discretization artifacts of LLM-centric predic-tors and the sampling latency of diffusion-based frameworks. 
+
+## 3 Methodology 
+
+PaP-NF combines a lightweight numerical encoder with a frozen LLM that pro-vides high-level contextual reasoning. The numerical component captures local-ized temporal variations, while the LLM contributes broader semantic structure. These two representations are integrated within a unified probabilistic frame-work. Unlike existing LLM-based forecasters that force the model to produce numerical predictions directly, we use the LLM exclusively as a context encoder. To model predictive uncertainty, we employ a conditional normalizing flow. This module receives both the numerical features and the global context extracted by the LLM, and generates a full predictive distribution. The overall architecture and stage-wise data flow of PaP-NF are summarized in Fig.1. 4 M. Kim and Y. Hur NF Decoder      
+
+> (Planar Flows)
+> Local Pattern
+> Encoding
+> Global Context
+> Extraction
+> (PaP -aligned
+> Frozen LLM)
+> Probabilistic
+> Future
+> Generation (NF)
+> Stage 1
+> Stage 2
+> Stage 3
+> Linear TS Encoder
+> Local patterns
+> Stability
+> LLM -aligned representation
+> PReprogramming Layer
+> Input Time Series(X)
+> z(Numerical Context)
+> LLM Input (X LLM )
+> Prefix(P)
+> LLM Token
+> Embeddings
+> Frozen LLM ( LLaMA )
+> Context Encoder
+> (No Prediction)
+> Self -Attention
+> c (Global Context)
+> Fusion Layer
+> Fusion
+> (h)
+> Context Fusion(h)
+> Flexible
+> Distributions
+> Efficient
+> Sampling
+> z (Numerical Context)
+> h = Fuse(z, c)
+> Future Distribution
+> p(Y|X)
+
+Fig. 1. Overview of the PaP-NF framework. Given input time series X, a linear en-coder extracts localized temporal patterns as z. Learnable prefixes P align z with a frozen LLM, which produces a global context vector c via average pooling. The fused representation h = Fuse( z, c) conditions a normalizing flow to generate the forecast distribution. 
+
+3.1 Problem Formulation 
+
+Given an input time series X = {x1, . . . , x L} ∈ RL×C , our goal is to esti-mate the conditional distribution p(Y | X) of a future multivariate time series 
+
+Y = {y1, . . . , y H } ∈ RH×C over the next H steps, where L denotes the look-back window length and C is the number of variables. Whereas conventional regression-based approaches output a single point estimate ˆY , real-world future trajectories typically admit multiple plausible outcomes, which calls for explicit probabilistic modeling. To achieve this, the proposed framework extracts two complementary representations from the input time series. First, fnum (·) denotes a numerical encoder that transforms the input X into a numerical representa-tion z ∈ Rdn via linear embedding, where dn is the dimension of the numerical embedding vector and d denotes the token embedding dimension of the frozen LLM used in subsequent alignment. Second, fglob (·) extracts a global context representation c ∈ Rdc , where dc is a fixed context dimension obtained by lin-early projecting the LLM hidden states. The Prefix-as-Prompt reprogrammed input is passed through the frozen LLM, and the resulting hidden states are aggregated via average pooling to form c.When these two representations are combined, the conditional distribution of the future time series can be expressed as: 
+
+p(Y | X) = p Y | z, c. (1) PaP-NF: Probabilistic Long-Term Time Series Forecasting 5
+
+By explicitly modeling local numerical information and global contextual in-formation separately and integrating them only at the probabilistic generation stage, the proposed framework aims to alleviate representational bottlenecks that often arise in long-term forecasting. As illustrated in Fig. 1, the proposed framework consists of three stages: numerical encoding for local pattern repre-sentation, Prefix-as-Prompt-based global context extraction using a frozen LLM, and conditional probabilistic generation via normalizing flows. 
+
+3.2 Numerical Temporal Encoding and Reprogramming 
+
+To represent the input time series, we adopt a linear embedding instead of a deep temporal encoder. Motivated by recent findings that linear mappings can be competitive with more complex architectures for forecasting [25], this choice reduces overfitting risk and alleviates structural mismatch between numerical time series representations and the LLM embedding space. As illustrated in Fig.2, the input sequence X ∈ RL×C is first partitioned into localized segments. Each segment is then flattened and concatenated to form the vectorized rep-resentation x ∈ RLC , where LC is the flattened dimension ( L × C). A linear transformation is then applied to generate the numerical representation z:
+
+z = W x + b, (2) where W ∈ Rdn×LC and b ∈ Rdn are learnable parameters. This linear transfor-mation produces a compact numerical representation z that summarizes local temporal variations and inter-variable correlations.           
+
+> Fig. 2. Detailed illustration of the temporal encoding and prompt-based reprogram-ming process. The input time series Xis partitioned into segments and flattened into a numerical vector zvia a linear layer, projected into the LLM token embedding space to obtain Erep , and concatenated with learnable prefix vectors Pto form the aligned input XLLM for the frozen LLM.
+
+To align z with the LLM input space, we apply a lightweight reprogramming layer that projects z into the d-dimensional token embedding space of the frozen LLM, producing a projected vector e ∈ Rd:
+
+e = Wpz + bp. (3) 6 M. Kim and Y. Hur 
+
+In practice, the input sequence is partitioned into M patches, and each patch is projected into the LLM embedding space, forming the reprogrammed token sequence Erep ∈ RM ×d. We then prepend a learnable prefix matrix P ∈ RK×d
+
+to Erep , where K denotes the prefix length. The aligned LLM input is finally constructed as: 
+
+XLLM = [ P; Erep ]. (4) This mapping aligns the local temporal features with the semantic space of the frozen LLM, completing the numerical encoding process z = fnum (X) introduced in Section 3.1. 
+
+3.3 Global Context Modeling with Frozen LLM 
+
+In PaP-NF, the frozen LLM functions as a semantic pattern encoder that ab-stracts high-level temporal structures, rather than a direct numerical predic-tor. The linear encoder retains local numerical structure but is not sufficient for capturing long-range temporal dependencies or regime-level variations. The LLM compensates for this limitation by modeling global temporal semantics. By aligning numerical representations with the LLM embedding space via Prefix-as-Prompt reprogramming, the LLM’s self-attention aggregates these represen-tations into a global context vector that reflects the semantic organization of temporal dynamics and complements local numerical features. The aligned input XLLM is processed by the frozen LLM, producing contex-tualized hidden representations for the reprogrammed tokens. The LLM’s self-attention mechanism integrates global interactions across the entire sequence, producing token-wise hidden states {hn}Nn=1 ∈ Rd. To obtain the global con-text representation c ∈ Rdc , these hidden states are projected into the context dimension dc using a linear layer Wc ∈ Rdc×d with bias bc ∈ Rdc , and then aggregated via average pooling. This projection-plus-pooling strategy provides a simple and robust summarization of long-term trends and high-level tempo-ral semantics without introducing excessive learnable parameters. Formally, the global context extractor fglob (·) is defined as: 
+
+c = fglob (X) = 1
+
+N
+
+> N
+
+X
+
+> n=1
+
+ Wchn + bc
+
+, (5) where hn ∈ Rd denotes the hidden state of the n-th token from the frozen LLM, 
+
+Wc ∈ Rdc×d and bc ∈ Rdc are learnable projection parameters, and N = K + M
+
+denotes the total sequence length of the aligned input XLLM . This summary vector c ∈ Rdc serves as a global context encapsulating long-term trends and high-level interpretations of local patterns, and is subsequently used as a condi-tioning signal in the probabilistic generation stage. 
+
+3.4 Conditional Normalizing Flow for Probabilistic Forecasting 
+
+In the final stage, a conditional normalizing flow generates the predictive dis-tribution of the future time series using a condition vector h that combines the PaP-NF: Probabilistic Long-Term Time Series Forecasting 7
+
+local numerical representation z and the global context representation c. The condition vector is defined as: 
+
+h = Fuse( z, c), (6) where Fuse( ·) denotes a fusion operator that integrates local and global features through concatenation and linear projection to a dh-dimensional space. In our implementation, we concatenate z and c and apply a linear projection, yielding 
+
+h = Wh[z; c] + bh, where Wh ∈ Rdh×(dn+dc) and bh ∈ Rdh are learnable pa-rameters. The overall framework of the normalizing flow decoder is illustrated in Fig. 3. Instead of directly mapping to the data space via a likelihood-based formulation, we employ a latent-variable formulation in which a Gaussian latent variable u0 ∼ N (0 , I ) is first sampled and then transformed through a sequence of planar flow layers conditioned on h:
+
+uTflow = fTflow ◦ · · · ◦ f1(u0; h), (7) where ft(·) denotes the t-th planar flow transformation. The transformed latent representation uTflow is then concatenated with the conditioning vector h and passed through a reconstruction network to generate the future sample: ˆY = g([ uTflow ; h]) . (8) This formulation enables efficient stochastic generation of multiple future tra-jectories, facilitating uncertainty-aware forecasting. 
+
+Fig. 3. Illustration of the normalizing flow framework. A simple base distribution u0 ∼N (0 , I ) is transformed into a complex target distribution uTflow through a sequence of invertible mappings f1, . . . , f T , enabling flexible distribution modeling and efficient sampling of diverse future trajectories. 
+
+## 4 Experiments 
+
+We evaluate the PaP-NF framework through: (i) point forecasting comparisons on long-term benchmarks, (ii) probabilistic performance analysis via density es-timation, and (iii) ablation studies to verify the contribution of each component. 8 M. Kim and Y. Hur 
+
+Our evaluation follows the standard protocols and data split strategies estab-lished in prior long-term forecasting literature [7,25]. To ensure a fair comparison, all input lengths and prediction horizons are kept identical to those in baseline studies. 
+
+4.1 Experimental Setup 
+
+We evaluate PaP-NF on the ETT (ETTh1, ETTh2, ETTm1, ETTm2) and Traf-fic benchmarks with horizons H ∈ { 96 , 192 , 336 , 720 }. For each dataset, we select hyperparameters by grid-searching look-back windows L ∈ { 96 , 192 , 336 , 720 },batch sizes in B ∈ [1 , 16], and learning rates in [10 −5, 10 −3]. The model uses a frozen Meta-Llama-3.1 backbone [12,21] and is trained for 15 epochs on an NVIDIA RTX A5000. Hyperparameters are selected based on validation perfor-mance. Additionally, to assess probabilistic accuracy, we report weighted CRPS at a short horizon ( H = 24). We adopt the 24-step horizon to align with estab-lished practice in probabilistic forecasting literature [15], which typically eval-uates distributional accuracy at short horizons. CRPS is estimated from 100 stochastic samples drawn from the normalizing flow at each time step. Prob-abilistic baselines use the standard AutoGluon [1] implementations to ensure consistent model configurations across datasets. During training, the model is optimized using a reconstruction objective between the predicted output and the ground truth future sequence. At inference time, multiple stochastic samples are generated by repeatedly sampling from the latent space and passing through the flow-based decoder. 
+
+4.2 Main Results: Point Forecasting Performance 
+
+Table 1 compares the point forecasting performance of PaP-NF against state-of-the-art baselines. PaP-NF consistently achieves competitive results across all benchmarks and maintains robustness even as the prediction horizon H in-creases. Notably, on the ETTh2 and ETTm2 datasets with H = 720, PaP-NF outperforms TimesNet—a strong Transformer-based competitor—reducing MSE by 2.4% and 3.2%, respectively. Furthermore, PaP-NF yields the lowest MSE across all horizons on the Traffic dataset, highlighting its stability in mod-eling high-dimensional volatility. Overall, these results indicate that PaP-NF effectively mitigates error accumulation in long-term forecasting, particularly as the prediction horizon extends. 
+
+4.3 Probabilistic Forecasting Performance 
+
+We evaluate probabilistic accuracy using the Continuous Ranked Probability Score (CRPS) at a 24-step horizon. This short horizon setting is standard in probabilistic forecasting benchmarks [15], as it isolates distributional quality from long-range error accumulation. We compute CRPS by drawing 100 stochas-tic samples from the normalizing flow for each time step. PaP-NF: Probabilistic Long-Term Time Series Forecasting 9
+
+Table 1. Long-term forecasting performance comparison with major baselines (H ∈ { 96 , 192 , 336 , 720 }). Results are reported as MSE /MAE , with lower values indicating better performance. The best performance is shown in bold .Dataset Model Prediction Horizon ( H)96 192 336 720 ETTh1 Autoformer [24] 0.449/0.459 0.500/0.482 0.521/0.496 0.514/0.512 FEDformer [28] 0.376/0.419 0.420 /0.448 0.459/0.465 0.506/0.507 Stationary [11] 0.513/0.491 0.534/0.504 0.588/0.535 0.643/0.616 ETSformer [22] 0.494/0.479 0.538/0.504 0.574/0.521 0.562/0.535 TimesNet [23] 0.384/0.402 0.436/0.429 0.491/0.469 0.521/0.500 LightTS [26] 0.424/0.432 0.475/0.462 0.518/0.488 0.547/0.533 
+
+Ours 0.366 /0.397 0.420 /0.426 0.458 /0.455 0.503 /0.496 
+
+ETTh2 Autoformer [24] 0.346/0.388 0.456/0.452 0.482/0.486 0.515/0.511 FEDformer [28] 0.358/0.397 0.429/0.439 0.496/0.487 0.463/0.474 Stationary [11] 0.476/0.458 0.512/0.493 0.552/0.551 0.562/0.560 ETSformer [22] 0.340/0.391 0.430/0.439 0.485/0.479 0.500/0.497 TimesNet [23] 0.340/0.374 0.402/0.414 0.452/0.452 0.462/0.468 LightTS [26] 0.397/0.437 0.520/0.504 0.626/0.559 0.863/0.672 
+
+Ours 0.337 /0.368 0.399 /0.409 0.437 /0.443 0.451 /0.463 
+
+ETTm1 Autoformer [24] 0.505/0.475 0.553/0.496 0.621/0.537 0.671/0.561 FEDformer [28] 0.379/0.419 0.426/0.441 0.445/0.459 0.543/0.490 Stationary [11] 0.386/0.398 0.459/0.444 0.495/0.464 0.585/0.516 ETSformer [22] 0.375/0.398 0.408/0.410 0.435/0.428 0.499/0.462 TimesNet [23] 0.338/0.375 0.374/0.387 0.410/ 0.411 0.478/0.450 LightTS [26] 0.374/0.400 0.400/0.407 0.438/0.438 0.527/0.502 
+
+Ours 0.334 /0.365 0.382 /0.371 0.408 /0.411 0.462 /0.441 
+
+ETTm2 Autoformer [24] 0.255/0.339 0.281/0.340 0.339/0.372 0.433/0.432 FEDformer [28] 0.203/0.287 0.269/0.328 0.325/0.366 0.421/0.415 Stationary [11] 0.192/0.274 0.280/0.339 0.334/0.361 0.417/0.413 ETSformer [22] 0.189/0.280 0.253/0.319 0.314/0.357 0.414/0.413 TimesNet [23] 0.187/ 0.267 0.249/0.309 0.321/0.351 0.408/0.403 LightTS [26] 0.209/0.308 0.311/0.382 0.442/0.466 0.675/0.587 
+
+Ours 0.176 /0.283 0.237 /0.300 0.294 /0.342 0.395 /0.391 
+
+Traffic Autoformer [24] 0.613/0.388 0.616/0.382 0.622/0.337 0.660/0.408 FEDformer [28] 0.587/0.366 0.604/0.373 0.621/0.383 0.626/0.382 Stationary [11] 0.612/0.338 0.613/0.340 0.618/ 0.328 0.653/0.355 ETSformer [22] 0.607/0.392 0.621/0.399 0.622/0.396 0.632/0.396 TimesNet [23] 0.593/0.321 0.617/0.336 0.629/0.336 0.640/0.350 LightTS [26] 0.615/0.391 0.601/0.382 0.613/0.386 0.658/0.407 
+
+Ours 0.579 /0.315 0.595 /0.305 0.612 /0.328 0.618 /0.337 
+
+Table 2 compares PaP-NF with native probabilistic baselines, including Au-toETS, DynOptTheta, NPTS, CrostonSBA, and DeepAR. These baselines are drawn from the AutoGluon implementations [1] to ensure consistent configura-10 M. Kim and Y. Hur 
+
+tion across datasets. Deterministic long-term models are not included, as they lack native density estimation and require implementation-dependent modifica-tions for CRPS evaluation. PaP-NF achieves consistently competitive CRPS performance across all five datasets. It attains the best score on ETTh1 and matches the strongest baseline on ETTh2, while ranking second on ETTm1, ETTm2, and Traffic. This pattern demonstrates that PaP-NF not only maintains accuracy in stable regimes but also preserves stable uncertainty in more irregular settings.                                         
+
+> Table 2. CRPS comparison against native probabilistic baselines ( H= 24). The best results are in bold , and the second-best are underlined.
+> Model ETTh1 ETTh2 ETTm1 ETTm2 Traffic
+> NPTS [17] 0.268 0.216 0.162 0.139 0.191 CrostonSBA [3,18] 0.123 0.112 0.094 0.102 0.414 AutoETS [6] 0.117 0.105 0.073 0.081 0.492 DynOptTheta [2] 0.117 0.085 0.070 0.049 0.383 DeepAR [16] 0.105 0.082 0.074 0.068 0.100 PaP-NF (Ours) 0.103 0.082 0.071 0.068 0.181
+
+4.4 Ablation Study 
+
+We conduct ablation studies to evaluate the contributions of the PaP module, pre-trained LLM, global context, and prefix length. To avoid redundancy, we report representative settings that best highlight each component’s impact. 
+
+Effectiveness of Prefix-as-Prompt Table 3 quantifies the contribution of the PaP module to forecasting accuracy. Removing the PaP alignment (w/o PaP) leads to a significant MSE increase of 9.4% at H = 720, indicating a substantial loss in predictive stability. This performance drop is particularly pronounced as the horizon H increases, confirming that the PaP structure is a requisite for handling long-range dependencies. These results empirically validate that the PaP module effectively bridges the internal representation of time series with the LLM backbone, a necessity that becomes more evident in extended forecasting tasks. 
+
+Impact of Pre-trained Knowledge To verify the contribution of pre-trained knowledge in the LLM, we compare PaP-NF with and without a pre-trained backbone. In the w/o pre-trained LLM variant, the frozen LLaMA-3.1-8B back-bone is replaced by a randomly initialized Transformer with the same architec-ture. All other components, including the PaP module and the normalizing flow PaP-NF: Probabilistic Long-Term Time Series Forecasting 11                 
+
+> Table 3. Ablation on PaP structure (ETTh1). Relative performance gap with respect to the ablated variant (w/o PaP) is reported in parentheses. Horizon Model MSE MAE
+> H= 96 w/o PaP 0.388 0.435
+> PaP-NF (Ours) 0.366 (-5.7%) 0.417 (-4.1%)
+> H= 720 w/o PaP 0.521 0.536
+> PaP-NF (Ours) 0.472 (-9.4%) 0.495 (-7.7%)
+
+decoder, remain unchanged. As shown in Table 4, the pre-trained LLM version achieves consistently lower MSE and MAE than the w/o pre-trained LLM vari-ant across all horizons. The gap widens with the forecast horizon and is most pronounced at H = 720, where MSE decreases by 7.8% and MAE by 6.6%.         
+
+> Table 4. Comparison of PaP-NF with and without a pre-trained LLM on ETTh1 (H= 720).
+> Model MSE MAE PaP-NF (w/o pre-trained LLM) 0.498 0.487 PaP-NF (pre-trained LLM) 0.459 0.455
+
+Effect of Global Context To verify the contribution of the LLM-derived global context, we compare the full PaP-NF model with a variant that removes the global context branch. As shown in Table 5, removing the global context increases prediction errors on ETTh1 at H = 720, with MSE rising from 0.459 to 0.481 and MAE from 0.455 to 0.477. These results indicate that the global context provides complementary long-range information beyond local numerical patterns, which is particularly important for long-horizon forecasting.         
+
+> Table 5. Comparison of PaP-NF with and without global context on ETTh1 ( H=720).
+> Model MSE MAE PaP-NF (w/o global context) 0.481 0.477 PaP-NF (full) 0.459 0.455
+
+Sensitivity to Prefix Length The performance variation with respect to the prefix length K is analyzed in Table 6, where the best performance is observed at 
+
+K = 5 across all horizons. We observe a clear performance trade-off: a minimal length ( K = 1) provides insufficient alignment context, while excessively large values ( K = 12) introduce redundant information that disperses the LLM’s attention. Using K = 5 gives the most consistent performance, suggesting that 12 M. Kim and Y. Hur 
+
+it provides enough context without adding unnecessary tokens to the attention computation. Such balance is crucial for maintaining the semantic stability of the PaP module in long-term forecasting tasks.                                                                   
+
+> Table 6. Sensitivity analysis of Prefix Length Kon ETTh1. K= 5 yields the best trade-off. Length ( K)H= 96 H= 192 H= 336 H= 720 MSE MAE MSE MAE MSE MAE MSE MAE
+> K= 1 0.380 0.425 0.438 0.448 0.461 0.501 0.485 0.510
+> K= 3 0.370 0.419 0.428 0.438 0.449 0.491 0.478 0.501
+> K=5 (Ours) 0.366 0.417 0.424 0.435 0.442 0.488 0.472 0.495
+> K= 8 0.371 0.421 0.430 0.440 0.450 0.495 0.480 0.505
+> K= 12 0.378 0.429 0.435 0.445 0.458 0.502 0.489 0.511
+
+Model Efficiency A common concern with LLM-based forecasting is compu-tational overhead. However, PaP-NF remains parameter-efficient by keeping the LLM backbone frozen and training only lightweight PaP and projection mod-ules. Regarding inference latency, while probabilistic sampling naturally incurs a cost compared to deterministic point prediction, our Normalizing Flow decoder generates samples in a single forward pass, making it significantly faster than it-erative diffusion-based models (e.g., CSDI [20]). This offers a favorable trade-off for risk-sensitive applications requiring robust uncertainty quantification. 
+
+## 5 Discussion 
+
+The empirical results in Table 1 and Fig. 4 suggest the efficacy of decoupling global semantic reasoning from local numerical dynamics. Unlike deterministic baselines that collapse future uncertainty into a single, often erroneous trajec-tory, PaP-NF dynamically adjusts its predictive distribution via conditional nor-malizing flows. This capability helps the model remain more stable against the error accumulation typically seen in long-term horizons, as the pre-trained LLM provides a stable semantic reference that guides the generation process even under high volatility. Further analysis through the ablation results shows that the model’s gains mainly come from the alignment mechanism and the use of pre-trained LLM representa-tions. The degradation observed without the PaP module confirms its necessity as a bridge for the modality gap, while the underperformance of the untrained backbone proves that the model leverages the high-level contextual reasoning inherent in pre-trained weights rather than mere architectural depth. In terms of computational cost and output quality, PaP-NF provides a practical balance relative to other generative approaches. While diffusion-based models like CSDI [20] suffer from O(T ) iterative sampling latency, our NF-based decoder achieves O(1) efficiency in a single forward pass. Although the memory footprint PaP-NF: Probabilistic Long-Term Time Series Forecasting 13 
+
+of the LLaMA-3.1 backbone is larger than that of lightweight MLP-based models, the frozen parameter strategy ensures that training remains feasible on standard hardware. The additional memory cost is compensated by improved calibration and coverage. 
+
+Qualitative Analysis of Uncertainty Coverage. Fig. 4 provides a qualita-tive comparison between PaP-NF and a deterministic baseline on ETTm2 for 
+
+H = 720. We use this setting because ETTm2 exhibits stronger non-stationarity than the hourly datasets, and H = 720 represents the most challenging horizon among our benchmarks. We focus on time steps where the baseline exhibits the highest absolute errors (top 10%), highlighted with star markers. These challeng-ing points are largely covered by PaP-NF’s 90% and 95% prediction intervals. The model adapts the width of its uncertainty bands to local variation in the signal, maintaining coverage even when the underlying trajectory shifts rapidly. This shows that PaP-NF captures both central tendencies and distributional structure in a calibrated manner, supporting more reliable decisions in settings where risk and uncertainty must be explicitly managed.   
+
+> Fig. 4. Qualitative comparison on ETTm2 ( H= 720). PaP-NF generates prediction intervals versus deterministic point forecasts. Stars mark time steps where the deter-ministic baseline exhibits the highest absolute errors (top 10%). PaP-NF captures these challenging points within its 90% prediction intervals, illustrating its ability to model uncertainty and manage high-risk regions.
+
+## 6 Conclusion 
+
+We presented PaP-NF, a hybrid probabilistic framework that leverages pre-trained LLMs as global context encoders for long-term time series forecasting. By integrating Prefix-as-Prompt reprogramming with conditional normalizing flows, our model effectively captures complex, multi-modal future trajectories while bypassing the precision loss inherent in discrete tokenization. Extensive evaluations demonstrate that PaP-NF provides reasonable uncertainty quantifi-cation and maintains competitive point accuracy across diverse benchmarks. 14 M. Kim and Y. Hur 
+
+The core insight of this study is that stable temporal reasoning is supported by the disjoint representation of numerical dynamics and semantic context. By pre-venting the collapse of heterogeneous temporal patterns into a single latent space, PaP-NF provides a practical direction for utilizing foundation models in time series analysis. Future research will focus on enhancing the deployability of this framework through backbone distillation and quantization, extending the reach of LLM-guided probabilistic reasoning to resource-constrained environments. 
+
+Acknowledgments. This work was supported by the Inha University Research Grant. 
+
+Disclosure of Interests. The authors have no competing interests to declare that are relevant to the content of this article. 
+
+## References 
+
+1. A. Alexandrov, K. Benidis, M. Bohlke-Schneider, et al., “GluonTS: Probabilis-tic and Neural Time Series Modeling in Python,” Journal of Machine Learning Research (JMLR) , vol. 21, no. 116, pp. 1–6, 2020. 2. G. Box and G. Jenkins, Time Series Analysis: Forecasting and Control , Holden-Day, 1976. 3. J. D. Croston, “Forecasting and stock control for intermittent demands,” Opera-tional Research Quarterly , vol. 23, no. 3, pp. 289–303, 1972. 4. L. Dinh, J. Sohl-Dickstein, and S. Bengio, “Density estimation using Real NVP,” in International Conference on Learning Representations (ICLR) , 2017. 5. R. J. Hyndman and G. Athanasopoulos, “Forecasting: principles and practice,” OTexts, 2018. 6. R. J. Hyndman and Y. Khandakar, “Automatic time series forecasting: The fore-cast package for R,” Journal of Statistical Software , vol. 27, no. 3, pp. 1–22, 2008. 7. M. Jin, S. Wang, L. Ma, et al., “Time-LLM: Time Series Forecasting by Repro-gramming Large Language Models,” in International Conference on Learning Rep-resentations (ICLR) , 2024. 8. J. Kim, H. Kim, H. Kim, D. Lee, and S. Yoon, “A Comprehensive Survey of Deep Learning for Time Series Forecasting: Architectural Diversity and Open Chal-lenges,” Artificial Intelligence Review , vol. 58, no. 7, pp. 1–95, 2025. 9. B. Lester, R. Al-Rfou, and N. Constant, “The Power of Scale for Parameter-Efficient Prompt Tuning,” in Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP) , 2021. 10. X. Li and P. Liang, “Prefix-Tuning: Optimizing Continuous Prompts for Genera-tion,” in Proceedings of the 59th Annual Meeting of the Association for Computa-tional Linguistics (ACL) , 2021. 11. Y. Liu, H. Wu, J. Wang, and M. Long, “Non-stationary Transformers: Exploring the Stationarity in Time Series Forecasting,” in Advances in Neural Information Processing Systems (NeurIPS) , 2022. 12. Meta AI, “Meta-Llama-3.1-8B,” Hugging Face model card , https://huggingfac e.co/meta-llama/Meta-Llama-3.1-8B , 2024. 13. G. Papamakarios, E. Nalisnick, D. J. Rezende, S. Mohamed, and B. Lakshmi-narayanan, “Normalizing Flows for Probabilistic Modeling and Inference,” Journal of Machine Learning Research , vol. 22, no. 57, pp. 1–64, 2021. PaP-NF: Probabilistic Long-Term Time Series Forecasting 15 14. K. Rasul, A. Sheikh, I. Schuster, U. Bergmann, and R. Vollgraf, “Multivariate Probabilistic Time Series Forecasting via Conditioned Normalizing Flows,” in In-ternational Conference on Learning Representations (ICLR) , 2021. 15. K. Rasul, A. Ashok, A. R. Williams, et al., “Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting,” arXiv:2310.08278, 2023. 16. D. Salinas, V. Flunkert, J. Gasthaus, and T. Januschowski, “DeepAR: Probabilistic Forecasting with Autoregressive Recurrent Networks,” International Journal of Forecasting , vol. 36, no. 3, pp. 1181–1191, 2020. 17. O. Shchur, A. C. Turkmen, N. Erickson, et al., “Autogluon-timeseries: AutoML for probabilistic time series forecasting,” in AutoML Conference 2023 (ABCD Track) ,2023. 18. A. A. Syntetos and J. E. Boylan, “The accuracy of intermittent demand estimates,” 
+
+International Journal of Forecasting , vol. 21, no. 2, pp. 303–314, 2005. 19. M. Tan, M. Merrill, V. Gupta, et al., “Are Language Models Actually Useful for Time Series Forecasting?” in Advances in Neural Information Processing Systems (NeurIPS) , 2024. 20. Y. Tashiro, J. Song, Y. Song, and S. Ermon, “CSDI: Conditional Score-Based Diffusion Models for Probabilistic Time Series Imputation,” in Advances in Neural Information Processing Systems (NeurIPS) , 2021. 21. H. Touvron, T. Lavril, G. Izacard, et al., “LLaMA: Open and Efficient Foundation Language Models,” arXiv:2302.13971 , 2023. 22. G. Woo, C. Liu, D. Sahoo, A. Kumar, and S. Hoi, “ETSformer: Exponential Smoothing Transformers for Time-series Forecasting,” arXivpreprintarXiv: 2202.01381 , 2022. 23. H. Wu, T. Hu, Y. Liu, et al., “TimesNet: Temporal 2D-Variation Modeling for General Time Series Analysis,” in International Conference on Learning Repre-sentations (ICLR) , 2023. 24. H. Wu, J. Xu, J. Wang, and M. Long, “Autoformer: Decomposition Transformers with Auto-Correlation for Long-Term Series Forecasting,” in Advances in Neural Information Processing Systems (NeurIPS) , 2021. 25. A. Zeng, M. Chen, L. Zhang, and Q. Xu, “Are Transformers Effective for Time Series Forecasting?” in AAAI Conference on Artificial Intelligence (AAAI) , 2023. 26. T. Zhang, Y. Zhang, W. Cao, et al., “Less Is More: Fast Multivariate Time Series Forecasting with Light Sampling-oriented MLP Structures,” arXivpreprintarX iv:2207.01186 , 2022. 27. H. Zhou, S. Zhang, J. Peng, et al., “Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting,” in Proceedings of the AAAI Conference on Artificial Intelligence , vol. 35, no. 12, pp. 11106–11115, 2021. 28. T. Zhou, Z. Ma, Q. Wen, et al., “FEDformer: Frequency Enhanced Decomposed Transformer for Long-term Series Forecasting,” in International Conference on Machine Learning (ICML) , 2022. 29. T. Zhou, P. Niu, L. Sun, and R. Jin, “One Fits All: Power General Time Series Analysis by Pretrained LM,” in Advances in Neural Information Processing Sys-tems (NeurIPS) , vol. 36, pp. 43322–43355, 2023.

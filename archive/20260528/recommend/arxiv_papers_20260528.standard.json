@@ -1,0 +1,434 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-28T21:52:39.668990+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 9,
+    "quick_skim_target": 11,
+    "quick_selected": 9
+  },
+  "deep_dive": [
+    {
+      "id": "2605.22043v1",
+      "source": "arxiv",
+      "title": "CASE-NET: Deep Spatio-Temporal Representation Learning via Causal Attention and Channel Recalibration for Multivariate Time Series Classification",
+      "abstract": "Multivariate time series (MTS) classification is foundational to pervasive computing and financial analysis, yet existing multi-scale paradigms are often constrained by suboptimal representation fidelity. We identify two critical bottlenecks: temporal non-causality in standard encoders that induces temporal confounding in non-stationary dynamics, and the absence of explicit channel saliency mechanisms that allows noise to contaminate the latent space. To address these challenges, we propose the Causal Attention and Spatio-temporal Encoder Network (CASE-NET), an architecture designed for structural manifold pre-conditioning. CASE-NET synergizes a Causal Temporal Encoder, which enforces physical arrow-of-time constraints via masked self-attention and causal convolutions, with an Adaptive Channel Recalibration module functioning as an information bottleneck to suppress detrimental noise. Comprehensive evaluations across six heterogeneous domains demonstrate that CASE-NET establishes new state-of-the-art benchmarks on four tasks, achieving a peak accuracy of 98.6% on the AWR dataset and superior robustness in non-stationary regimes.",
+      "authors": [
+        "Fan Zhang",
+        "Yating Cui",
+        "Hua Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-21T06:30:35+00:00",
+      "link": "https://arxiv.org/pdf/2605.22043v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal attention for time series representation learning",
+      "llm_evidence_cn": "时间序列表示的因果注意力学习",
+      "llm_evidence": "时间序列表示的因果注意力学习",
+      "canonical_evidence": "时间序列表示的因果注意力学习",
+      "llm_tldr_en": "Proposes CASE-NET which uses causal temporal encoder to mitigate temporal confounding and channel recalibration for multivariate time series classification.",
+      "llm_tldr_cn": "多变量时间序列分类面临时间非因果性和通道噪声问题。本文提出CASE-NET架构，通过因果时间编码器避免时间混淆，并引入通道重校准机制净化潜空间。实验表明该方法在分类任务上提升了表示保真度。",
+      "llm_tldr": "多变量时间序列分类面临时间非因果性和通道噪声问题。本文提出CASE-NET架构，通过因果时间编码器避免时间混淆，并引入通道重校准机制净化潜空间。实验表明该方法在分类任务上提升了表示保真度。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.22335v1",
+      "source": "arxiv",
+      "title": "Learning Causal Orderings for In-Context Tabular Prediction",
+      "abstract": "In-context learning for tabular data sets strong predictive standards in observational settings; it however primarily relies on correlational structure, which becomes unreliable under distribution shift or intervention. While established methods to discover causal structure exist, they are often focused on structure identifiability and decoupled from the predictive architectures that could benefit from them.   To bridge these perspectives, we study how to simultaneously infer and enforce causal structure in the form of topological variable orderings into tabular prediction. Unlike standard architectures, our model TabOrder uses causal order-constrained attention, basing predictions only on features that precede a target under a learned causal order. Similar to causal discovery methods, TabOrder learns the optimal variable ordering in an unsupervised manner through a likelihood-based objective. We justify this choice under standard functional model classes and also study how sample missingness, a common challenge in tabular data, interacts with causal direction identification. Empirically, we confirm that TabOrder recovers accurate variable orderings while addressing prediction and imputation tasks, as well as gives insight into real-world biological data under intervention.",
+      "authors": [
+        "Sascha Xu",
+        "Sarah Mameche",
+        "Jilles Vreeken"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-21T11:22:56+00:00",
+      "link": "https://arxiv.org/pdf/2605.22335v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "learning causal orderings for in-context tabular prediction",
+      "llm_evidence_cn": "为上下文表格预测学习因果顺序",
+      "llm_evidence": "为上下文表格预测学习因果顺序",
+      "canonical_evidence": "为上下文表格预测学习因果顺序",
+      "llm_tldr_en": "Proposes TabOrder that learns causal orderings for tabular prediction, enhancing robustness under distribution shift.",
+      "llm_tldr_cn": "本文提出TabOrder模型，为表格数据预测同时推断和利用因果顺序约束注意力机制，仅基于前驱特征预测目标。在分布偏移下优于纯相关方法，展示了因果学习在预测中的价值。",
+      "llm_tldr": "本文提出TabOrder模型，为表格数据预测同时推断和利用因果顺序约束注意力机制，仅基于前驱特征预测目标。在分布偏移下优于纯相关方法，展示了因果学习在预测中的价值。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.23219v1",
+      "source": "arxiv",
+      "title": "PaP-NF: Probabilistic Long-Term Time Series Forecasting via Prefix-as-Prompt Reprogramming and Normalizing Flows",
+      "abstract": "Time series forecasting plays a central role in many real-world applications and has been extensively studied. Most existing approaches rely on deterministic models. However, real-world environments exhibit inherently uncertain and complex future behaviors, making single-point predictions insufficient. This highlights the need for probabilistic forecasting methods that can quantify and represent uncertainty. In this work, we propose PaP-NF, a probabilistic forecasting framework that aligns continuous time series representations with a frozen large language model (LLM) using a Prefix-as-Prompt mechanism, and conditions a normalizing flow decoder on the global context extracted by the LLM. The quality of the resulting predictive distributions is evaluated using the Continuous Ranked Probability Score (CRPS), a standard metric in probabilistic forecasting. Across a variety of long-term forecasting benchmarks, PaP-NF robustly captures multi-modal uncertainty while maintaining competitive point forecasting accuracy. The official implementation is available at: https://github.com/democracy04/PaP-NF",
+      "authors": [
+        "Minju Kim",
+        "Youngbum Hur"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-22T04:22:14+00:00",
+      "link": "https://arxiv.org/pdf/2605.23219v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Probabilistic forecasting using normalizing flows as generative model",
+      "llm_evidence_cn": "使用归一化流作为生成模型进行概率预测",
+      "llm_evidence": "使用归一化流作为生成模型进行概率预测",
+      "canonical_evidence": "使用归一化流作为生成模型进行概率预测",
+      "llm_tldr_en": "PaP-NF uses a frozen LLM and normalizing flows for probabilistic time series forecasting, generating distributional predictions.",
+      "llm_tldr_cn": "确定性预测无法量化不确定性。PaP-NF将时间序列表示对齐到冻结的LLM，并用归一化流解码器生成概率分布。在长期预测任务上，该方法提供了可靠的不确定性估计和准确的点预测。",
+      "llm_tldr": "确定性预测无法量化不确定性。PaP-NF将时间序列表示对齐到冻结的LLM，并用归一化流解码器生成概率分布。在长期预测任务上，该方法提供了可靠的不确定性估计和准确的点预测。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.20547v1",
+      "source": "arxiv",
+      "title": "Latent Process Generator Matching",
+      "abstract": "Many recent flow-matching and diffusion-style generative models rely on auxiliary stochastic dynamics during training: a richer process is simulated to define conditional targets, but the auxiliary state is either intractable to sample at generation time or simply not part of the desired output. Existing Generator Matching theory formalises conditioning on static latent random variables, and several recent papers prove special cases of projection results for particular augmented-state constructions. We introduce latent process generator matching, a general framework that treats the observed generative state as a deterministic image $X_t=Φ(Y_t)$ of a tractable Markov process $Y_t$. We show that in this setting one may learn the generator of a stochastic process on the image space which has the same one-time marginal distributions as the projected process. This generalizes and subsumes the discrete latent process results from the literature, and extends Generator Matching from static latent variables to a rich family of time-dependent latent conditional processes.",
+      "authors": [
+        "Lukas Billera",
+        "Hedwig Nora Nordlinder",
+        "Ben Murrell"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "stat.ML"
+      ],
+      "published": "2026-05-19T22:49:05+00:00",
+      "link": "https://arxiv.org/pdf/2605.20547v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative model for stochastic processes",
+      "llm_evidence_cn": "随机过程生成模型",
+      "llm_evidence": "随机过程生成模型",
+      "canonical_evidence": "随机过程生成模型",
+      "llm_tldr_en": "Latent Process Generator Matching provides a theoretical framework for learning generators of stochastic processes from latent Markov processes, applicable to time series generation.",
+      "llm_tldr_cn": "该工作提出潜在过程生成器匹配，一个通用框架，将观测生成状态视为可处理马尔可夫过程的确定性投影，从而学习随机过程的生成器。虽未明确针对时间序列，但其理论可直接用于时间序列生成，为流匹配和扩散模型提供了更一般的理论基础。",
+      "llm_tldr": "该工作提出潜在过程生成器匹配，一个通用框架，将观测生成状态视为可处理马尔可夫过程的确定性投影，从而学习随机过程的生成器。虽未明确针对时间序列，但其理论可直接用于时间序列生成，为流匹配和扩散模型提供了更一般的理论基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.23402v1",
+      "source": "arxiv",
+      "title": "Parametric Prior Mapping Framework for Non-stationary Probabilistic Time Series Forecasting",
+      "abstract": "Effectively modeling non-stationary dynamics in probabilistic multivariate time series(MTS) forecasting requires balancing expressiveness with robustness. Existing parametric approaches benefit from strong inductive biases but lack flexibility, whereas deep generative models struggle to capture complex temporal dependencies without extensive data and computation. We introduce Parametric Prior Mapping (PPM), a framework that injects parametric structural priors into a generative modeling process. Specifically, PPM utilizes a parametric estimator to derive a dynamic, adaptive prior that guides the learning of a complex predictive distribution via a learnable mapping. This design allows the model to retain the efficiency of parametric methods while exploiting the expressive power of generative models. Trained with a hybrid objective, PPM yields precise forecasts with well-calibrated uncertainty estimates. Empirical results show that PPM outperforms existing baselines in handling non-stationary data, offering a superior trade-off between accuracy and computational efficiency. The code is available at https://github.com/ljl8336/PPM.",
+      "authors": [
+        "Jinglin Li",
+        "Jun Tan",
+        "QI Fang",
+        "Ning Gui"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-22T09:13:29+00:00",
+      "link": "https://arxiv.org/pdf/2605.23402v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "proposes a generative framework with parametric priors for time series",
+      "llm_evidence_cn": "提出带参数先验的生成框架用于时间序列",
+      "llm_evidence": "提出带参数先验的生成框架用于时间序列",
+      "canonical_evidence": "提出带参数先验的生成框架用于时间序列",
+      "llm_tldr_en": "Introduces Parametric Prior Mapping (PPM) that injects parametric structural priors into generative modeling for non-stationary probabilistic multivariate time series forecasting, balancing expressiveness and efficiency.",
+      "llm_tldr_cn": "现有时间序列预测方法在非平稳动态建模中面临表达性与鲁棒性的权衡。该文提出参数先验映射（PPM）框架，通过注入参数化结构先验到生成建模过程中，利用可学习映射指导复杂预测分布的学习，既保留了参数方法的效率，又具备了生成模型的灵活性。在概率多变量时间序列预测任务上展示了有效性。",
+      "llm_tldr": "现有时间序列预测方法在非平稳动态建模中面临表达性与鲁棒性的权衡。该文提出参数先验映射（PPM）框架，通过注入参数化结构先验到生成建模过程中，利用可学习映射指导复杂预测分布的学习，既保留了参数方法的效率，又具备了生成模型的灵活性。在概率多变量时间序列预测任务上展示了有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.23632v1",
+      "source": "arxiv",
+      "title": "Valid and Expressive Copulas for Irregular Multivariate Time Series",
+      "abstract": "We introduce CopFITi, a copula model for probabilistic forecasting of irregular multivariate time series (IMTS). Our model combines the expressivity of normalizing flows for univariate marginals with the consistency and flexibility of a Gaussian Mixture Copula for the joint dependency structure. Our experiments show that copula-based approaches, which decouple the marginals from the joint, yield better marginal models than architectures that directly fit the full joint. With CopFITi, we propose the first IMTS copula that is marginalization-consistent by construction and establish a new state of the art in joint IMTS density modeling.",
+      "authors": [
+        "Christian Klötergens",
+        "Tom Hanika",
+        "Lars Schmidt-Thieme",
+        "Vijaya Krishna Yalavarthi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-22T13:46:53+00:00",
+      "link": "https://arxiv.org/pdf/2605.23632v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "uses normalizing flows and copulas for density modeling of irregular time series, a generative approach",
+      "llm_evidence_cn": "使用归一化流和copula对不规则时间序列进行密度建模，属于生成式方法",
+      "llm_evidence": "使用归一化流和copula对不规则时间序列进行密度建模，属于生成式方法",
+      "canonical_evidence": "使用归一化流和copula对不规则时间序列进行密度建模，属于生成式方法",
+      "llm_tldr_en": "Proposes CopFITi, a copula model combining normalizing flows for marginals and Gaussian Mixture Copula for joint dependency, achieving state-of-the-art in probabilistic forecasting of irregular multivariate time series.",
+      "llm_tldr_cn": "针对不规则多变量时间序列的概率预测，现有方法难以同时处理边缘分布和联合依赖结构。该文提出CopFITi模型，将归一化流用于边缘分布，高斯混合Copula用于联合依赖结构，首次实现了边缘化一致的IMTS copula。实验表明解耦边缘和联合能获得更好的边缘模型，并在联合密度建模上达到新最优。",
+      "llm_tldr": "针对不规则多变量时间序列的概率预测，现有方法难以同时处理边缘分布和联合依赖结构。该文提出CopFITi模型，将归一化流用于边缘分布，高斯混合Copula用于联合依赖结构，首次实现了边缘化一致的IMTS copula。实验表明解耦边缘和联合能获得更好的边缘模型，并在联合密度建模上达到新最优。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.23861v1",
+      "source": "arxiv",
+      "title": "Leveraging Foundation Models for Causal Generative Modeling",
+      "abstract": "Causal generative modeling is essential for developing reliable and transparent AI systems capable of counterfactual reasoning. While existing approaches focus on integrating causal constraints during the training of generative models, they often lack a unified framework to leverage the zero-shot reasoning capabilities of pretrained foundation models. We introduce FM-CGM, a modular framework for end-to-end visual causal reasoning using pretrained foundation models. FM-CGM formalizes the causal pipeline through three core components: a concept extractor, a concept manipulator, and a counterfactual generator. By leveraging a large reasoning model for causal inference and a text-to-image diffusion model for generation, our approach enables zero-shot causal discovery, intervention, and counterfactual generation. We then develop Causal Semantic Guidance (CSG), a cross-attention-based mechanism that ensures semantic interventions propagate to descendant concepts while preserving invariant regions. We empirically show that our approach can identify plausible causal structures and is suitable for faithful counterfactual image generation.",
+      "authors": [
+        "Aneesh Komanduri",
+        "Xintao Wu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CV"
+      ],
+      "published": "2026-05-22T17:20:17+00:00",
+      "link": "https://arxiv.org/pdf/2605.23861v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal generative modeling framework using foundation models",
+      "llm_evidence_cn": "利用基础模型进行因果生成建模的框架",
+      "llm_evidence": "利用基础模型进行因果生成建模的框架",
+      "canonical_evidence": "利用基础模型进行因果生成建模的框架",
+      "llm_tldr_en": "Introduces FM-CGM, a modular framework for end-to-end visual causal reasoning using pretrained foundation models, enabling zero-shot causal discovery.",
+      "llm_tldr_cn": "该论文提出FM-CGM，一个利用预训练基础模型进行端到端视觉因果推理的模块化框架。它通过概念提取器、操作器和反事实生成器三个组件，结合大型推理模型和文本到图像扩散模型，实现零样本因果发现。虽然主要应用于视觉领域，但其方法可推广至其他因果生成任务。",
+      "llm_tldr": "该论文提出FM-CGM，一个利用预训练基础模型进行端到端视觉因果推理的模块化框架。它通过概念提取器、操作器和反事实生成器三个组件，结合大型推理模型和文本到图像扩散模型，实现零样本因果发现。虽然主要应用于视觉领域，但其方法可推广至其他因果生成任务。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.25211v1",
+      "source": "arxiv",
+      "title": "Evolving Causal Regulatory Networks (ECR-Net)",
+      "abstract": "Modern machine learning models excel at pattern recognition but remain brittle, often failing to generalize out of distribution (OOD) because they capture spurious correlations rather than the underlying causal data-generating process. Current causal discovery methods, while powerful, typically assume a static graph structure, rendering them unable to model systems that adapt or undergo structural changes across different environments. We introduce ECR-Net, Evolving Causal Regulatory Networks, a novel, bio-inspired framework for adaptive causal mechanism discovery. Our approach models the data-generating process not as a static graph, but as a dynamic system analogous to a Gene Regulatory Network (GRN), composed of localized, recursive functions where variables can activate and inhibit one another. To discover the latent structure of this network, we employ an evolutionary search algorithm that evolves a population of candidate regulatory graphs, optimizing for a fitness function that measures how well the simulated system dynamics reconstruct the observed data. The key innovation of ECR-Net is its ability to model structural adaptation, it explicitly ingests shifts in the data's statistical properties as signals of an environmental shock. In response, the evolutionary search identifies parsimonious modifications to the causal graph topology, such as link inhibitions or activations that explain the new data regime. We posit that ECR-Net represents a new class of adaptive Structural Causal Models capable of discovering how and why a system's fundamental rules change, offering a path toward robust generalization in complex, non-stationary systems.",
+      "authors": [
+        "Govind Vallabhasseri Binish",
+        "Abdhul Ahadh",
+        "Rano Roy Kavanal",
+        "Arya Ukunde"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-24T18:19:59+00:00",
+      "link": "https://arxiv.org/pdf/2605.25211v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive causal mechanism discovery for dynamic systems",
+      "llm_evidence_cn": "针对动态系统的自适应因果机制发现",
+      "llm_evidence": "针对动态系统的自适应因果机制发现",
+      "canonical_evidence": "针对动态系统的自适应因果机制发现",
+      "llm_tldr_en": "Introduces ECR-Net, a bio-inspired framework for adaptive causal discovery in evolving systems, modeling data-generating process as a dynamic regulatory network.",
+      "llm_tldr_cn": "该论文提出ECR-Net，受基因调控网络启发，用于自适应因果机制发现。将数据生成过程建模为动态系统，而非静态图，由局部递归函数组成，变量可相互激活。适用于环境变化下的因果结构学习。",
+      "llm_tldr": "该论文提出ECR-Net，受基因调控网络启发，用于自适应因果机制发现。将数据生成过程建模为动态系统，而非静态图，由局部递归函数组成，变量可相互激活。适用于环境变化下的因果结构学习。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.26515v1",
+      "source": "arxiv",
+      "title": "Learning a directed acyclic graph with additive heteroscedastic errors",
+      "abstract": "This paper studies causal discovery for a directed acyclic graph under a structural equation model with additive heteroscedastic errors. We first establish new identifiability results for location-scale noise models, showing that heteroscedasticity can be leveraged to recover causal directions. Based on these insights, we propose a novel iterative procedure, Residual Simultaneous Quantile Estimation (RESQUE), where each iteration consists of a residual-construction stage and a composite quantile regression stage, enabling recursive identification of sink nodes via the invariance of conditional scale coefficients across quantiles. We then establish its theoretical guarantees for recovering topological order and graph structure, even when the number of variables diverges with the sample size. Simulation studies and application to benchmark datasets show that RESQUE performs favorably compared with existing methods, especially when causal information is partly encoded in the variance component. These results highlight exploiting structured variance signals for causal discovery and provide a principled framework for multivariate causal discovery beyond mean-based modeling.",
+      "authors": [
+        "Xintao Xia",
+        "Li Chen",
+        "Yue Hu",
+        "Chunlin Li"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME"
+      ],
+      "published": "2026-05-26T03:57:58+00:00",
+      "link": "https://arxiv.org/pdf/2605.26515v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal discovery method leveraging heteroscedasticity",
+      "llm_evidence_cn": "利用异方差性进行因果发现的方法",
+      "llm_evidence": "利用异方差性进行因果发现的方法",
+      "canonical_evidence": "利用异方差性进行因果发现的方法",
+      "llm_tldr_en": "Proposes RESQUE, an iterative procedure for causal discovery in DAGs with heteroscedastic errors, using residual construction and composite quantile regression to identify sink nodes.",
+      "llm_tldr_cn": "该论文针对加性异方差结构方程模型，提出RESQUE算法，通过残差构建和复合分位数回归的迭代过程，利用条件尺度系数跨分位数不变性识别拓扑顺序，理论保证图结构可恢复，即使变量数量较多时仍有效。",
+      "llm_tldr": "该论文针对加性异方差结构方程模型，提出RESQUE算法，通过残差构建和复合分位数回归的迭代过程，利用条件尺度系数跨分位数不变性识别拓扑顺序，理论保证图结构可恢复，即使变量数量较多时仍有效。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.28324v1",
+      "source": "arxiv",
+      "title": "Inpainting-Style Conditional Diffusion for Multivariable Time Series Forecasting",
+      "abstract": "In this paper, we propose a novel conditional diffusion-based framework for multivariable time-series solar power forecasting. The proposed method reformulates temporal PV data as structured two-dimensional representations (images) using a sliding-window patch construction, enabling the application of Denoising Diffusion Probabilistic Models (DDPM) within a unified spatiotemporal learning paradigm. A key contribution of this work is the formulation of solar forecasting as an inpainting problem, where future time steps are treated as missing regions to be reconstructed. This is achieved through a mask-based conditional diffusion mechanism, in which historical observations are preserved as conditioning context while the target (future) region is progressively corrupted and subsequently recovered via reverse diffusion. The model learns to generate coherent future sequences conditioned on observed data, effectively performing time-series inpainting. To fully utilize all available features and ensure compatibility with U-Net architectural constraints, a zero-padding strategy is introduced to construct fixed-size inputs. The model is trained using a supervised denoising objective to predict injected noise, enabling accurate iterative reconstruction during the reverse process. Extensive experiments conducted on benchmark PV dataset, including GEFCom2014, demonstrate that the proposed approach achieves high forecasting accuracy, particularly for short-term horizons. The results highlight the effectiveness of integrating diffusion-based generative modeling with an inpainting formulation for robust, flexible, and high-fidelity solar power forecasting.",
+      "authors": [
+        "Kourosh Kiani",
+        "S. M. Muyeen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-05-27T11:25:28+00:00",
+      "link": "https://arxiv.org/pdf/2605.28324v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Conditional diffusion model for time series forecasting as generative approach",
+      "llm_evidence_cn": "条件扩散模型用于时间序列预测，作为生成方法",
+      "llm_evidence": "条件扩散模型用于时间序列预测，作为生成方法",
+      "canonical_evidence": "条件扩散模型用于时间序列预测，作为生成方法",
+      "llm_tldr_en": "Inpainting-style conditional diffusion reformulates solar forecasting as image inpainting, enabling DDPM for multivariate time series.",
+      "llm_tldr_cn": "现有扩散模型用于时间序列预测时面临结构适配问题。本文提出将时间序列通过滑动窗口构造为二维图像，将未来预测视为图像修复任务，利用条件扩散模型进行生成式预测。在太阳能数据上验证了有效性。",
+      "llm_tldr": "现有扩散模型用于时间序列预测时面临结构适配问题。本文提出将时间序列通过滑动窗口构造为二维图像，将未来预测视为图像修复任务，利用条件扩散模型进行生成式预测。在太阳能数据上验证了有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.28355v1",
+      "source": "arxiv",
+      "title": "Detecting Diffusion-Generated Time Series Under Generator Shift",
+      "abstract": "The boundary between real and diffusion-generated time series is becoming increasingly difficult to draw, yet detection in this domain remains underexplored, especially when the generator is unknown. We compare white-box detection, which requires access to the generator, against black-box detection, which operates on the raw signal alone. The white-box approach, a reconstruction-based detector adapted from the image domain, works well in in-distribution but breaks down under generator shift: reconstruction-based detection in images succeeds because large generic generators provide a near-universal reconstruction prior, and no analogous generator exists for time series. In contrast, a simple off-the-shelf classifier used as a black-box detector performs remarkably well, achieving an average F1 of 79.2, a 22.1% relative improvement over the white-box approach, and a TPR@1%FPR of 57.2. Diffusion-generated time series detection is therefore not a direct transfer of the image domain problem. This work provides the first systematic exploration of white-box and black-box detection for diffusion-generated time series. We close by identifying several open and promising directions.",
+      "authors": [
+        "Zhi Wen Soi",
+        "Aditya Shankar",
+        "Gert Lek",
+        "Abele Mălan",
+        "Daniel Neider",
+        "Jian-Jia Chen",
+        "Lydia Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-27T11:54:35+00:00",
+      "link": "https://arxiv.org/pdf/2605.28355v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "detection of diffusion-generated time series",
+      "llm_evidence_cn": "检测扩散生成的时间序列",
+      "llm_evidence": "检测扩散生成的时间序列",
+      "canonical_evidence": "检测扩散生成的时间序列",
+      "llm_tldr_en": "Compares white-box vs black-box detection for diffusion-generated time series, contributing to time series generation detection.",
+      "llm_tldr_cn": "本文研究扩散模型生成的时间序列检测问题，对比白盒和黑盒方法，发现白盒检测在生成器偏移下失效，而简单黑盒分类器表现鲁棒，揭示时间序列生成检测的特殊性。",
+      "llm_tldr": "本文研究扩散模型生成的时间序列检测问题，对比白盒和黑盒方法，发现白盒检测在生成器偏移下失效，而简单黑盒分类器表现鲁棒，揭示时间序列生成检测的特殊性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
