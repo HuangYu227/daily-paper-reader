@@ -1,0 +1,753 @@
+Title: Causal Intelligence for Constraint-Aware Intervention Design to Induce State Transitions
+
+URL Source: https://arxiv.org/pdf/2605.29008v1
+
+Published Time: Fri, 29 May 2026 00:13:14 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# Causal Intelligence for Constraint-Aware Intervention Design to Induce State Transitions 
+
+## Zixuan Song 1†, Uwe Mueller 1, Dimitris V. Manatakis 1* †
+
+> 1
+
+MRL, Merck & Co., Inc., 33 Avenue Louis Pasteur, Boston, 02115, MA, USA. *Corresponding author(s). E-mail(s): dimitrios.manatakis@merck.com; Contributing authors: zixuan.song@merck.com; uwe.mueller@merck.com; 
+
+> †
+
+These authors contributed equally to this work. 
+
+Abstract 
+
+Driving a system from one state to another through targeted interventions is a fundamental challenge in science, yet most predictive models offer limited mechanistic insight and no principled framework for decision-making. Here we present COAST (Causally Optimal Actions for State Transitions), a causal-intelligence approach for the in-silico design of constrained interventions that induce user-defined state transitions. Given data characterizing source and target states, COAST learns context-specific causal graphs and structural causal models, attributes observed distributional shifts to mechanism-level causal drivers, and introduces a novel constraint-aware multi-objective optimization formulation that balances transition efficacy, intervention complexity, and target-state stability. The approach is modular and domain-agnostic, integrating feature selection, causal discovery, causal modeling, and intervention identification and evaluation through interchangeable components. Across synthetic benchmarks and real biological datasets, COAST recovers key causal drivers and identifies robust single- and multi-target intervention strategies that achieve desired state transitions, accompanied by transparent mechanistic rationales to guide experimental validation.  
+
+> Keywords: Causal intelligence; Causal inference; Optimal intervention design; State transitions; Multi-objective optimization; Precision medicine
+
+# 1 Introduction 
+
+Identifying minimal yet effective interventions to drive a complex system from one state to another is a fundamental challenge across science and engineering [1]. In biomedicine, state transitions encompass pro-gression from health to disease, shifts across disease stages or tumor subtypes, and lineage decisions during differentiation, phenomena commonly represented as networks of interacting entities [2–4]. These dynamics are governed by causal principles. Learning the causal relationships that structure such mechanisms is there-fore a fundamental prerequisite for models that not only explain observations but also reliably predict the effects of single or combinatorial interventions. This capability enables in-silico identification and prioriti-zation of interventions that achieve desired outcomes, such as halting pathological progression or reversing disease states, while reducing experimental burden and accelerating discovery. Conventional AI/ML systems are optimized to capture statistical associations and maximize predictive accuracy. By design, they do not identify causes and therefore rarely provide the mechanistic insight required for hypothesis-driven reasoning or counterfactual what-if analysis [5, 6]. Robust decision support in complex systems requires methods that embed causal reasoning at their core, moving beyond pattern recognition toward explicit models of mechanisms, interventions, and their consequences. A central challenge in biology and drug discovery is identifying the minimal set of targets, often in combination, that causally drive a specific biological process or disease mechanism. Addressing this challenge requires models that can (i) distinguish causal drivers from correlated effects, (ii) attribute observed state 1
+
+> arXiv:2605.29008v1 [cs.LG] 27 May 2026
+
+differences to specific mechanisms, and (iii) reason explicitly about the outcomes of constrained interventions. This defines an inverse design problem, fundamentally distinct from forward response prediction [7–11]. Rather than predicting how a system responds to a known perturbation, the goal is to identify which interventions will drive it toward a desired state while respecting mechanistic and practical constraints. Recent computational frameworks have made substantial progress in predicting transcriptional responses to genetic and chemical perturbations. Methods such as scGen [7], CPA [8], GEARS [10], and CellOT [11] employ deep generative or optimal-transport formulations to extrapolate perturbation effects and demon-strate generalization to unseen conditions. These approaches are highly effective for response prediction and data augmentation, but are not designed to address the inverse design problem. They neither infer experiment-specific causal structure nor provide mechanism-level attribution that supports interpretable causal decision-making. PDGrapher targets the inverse design objective more directly by formulating the identification of effec-tive perturbations as a supervised learning task that leverages large-scale genetic and chemical perturbation libraries and graph-based architectures to predict perturbagens capable of inducing a desired transcriptional state change [12]. This paradigm achieves strong empirical performance when paired perturbation–response data at scale are available. However, PDGrapher does not perform causal structure learning, instead operat-ing on predefined biological interaction networks and learning predictive relationships between perturbations and transcriptional outcomes rather than explicitly estimating causal effects or constructing a mechanistic graph. Consequently, it does not identify which upstream regulators causally explain the observed differ-ences between source and target states or attribute state transitions to specific dysregulated mechanisms. As a result, it does not support experiment-specific mechanistic reasoning, such as why a given state differ-ence exists and which causal pathways drive it that is required to prioritize targets with biological rationale. Furthermore, practical constraints on interventions, such as druggability, toxicity thresholds, or combi-natorial feasibility, are not explicitly incorporated into its objective. The questions of which mechanisms causally explain the transition between two states , and how to optimally intervene under explicit biological and practical constraints , therefore remain open. We introduce COAST (Causally Optimal Actions for State Transitions), a modular, domain-agnostic causal-intelligence framework for identifying constraint-aware interventions that induce user-defined state transitions. Given data characterizing source and target states, COAST is designed to identify single or combinatorial interventions whose causal effects are sufficient to induce a desired state transition, while explicitly taking into account mechanistic, biological, and practical feasibility constraints. To enable this optimization, COAST (i) performs context-specific feature selection to define a biologi-cally meaningful modeling universe from the data at hand; (ii) learns context-specific causal graph(s) and associated structural causal models that capture the mechanisms operative in the system under study; and (iii) attributes observed distributional shifts between source and target states to mechanism-level causal drivers. These components jointly support the core innovation of COAST: a multi-objective causal optimiza-tion formulation that directly searches over feasible intervention sets under explicit constraints, balancing transition efficacy, target-state stability, and intervention sparsity. Importantly, feature selection, causal discovery, and modeling components are modular and interchangeable, enabling COAST to accommodate diverse data modalities and modeling assumptions without altering the underlying optimization problem. Although COAST is domain-agnostic by construction, we focus here on biomedical applications, where identifying causal drivers and interpretable intervention strategies is central to hypothesis generation and experimental prioritization. In this setting, COAST enables principled intervention design by linking mechanism-level attribution to constrained optimization, allowing trade-offs between transition efficacy and intervention complexity while ensuring that proposed interventions satisfy biological and practical feasibility constraints. The framework produces inspectable mechanistic rationales that directly inform experimental prioritization. By solving this optimization across a range of regularization strengths ( λ), COAST yields a spectrum of intervention strategies that vary in density; targets that recur consistently across sparse and dense solutions provide an intrinsic robustness signal whose persistence is independent of any particular regularization choice. Together, these properties enable COAST to address a class of problems not targeted by large-scale perturbation models: deriving principled, mechanistically grounded intervention strategies directly from observational or interventional data, without reliance on perturbation atlases. This makes COAST particularly well suited to settings where such libraries are unavailable, but data characterizing source and target states can be obtained, including early-stage disease studies and under-characterized biological contexts, where observational data can be collected but systematic perturbation resources and mechanistic knowledge remain limited. 2Feature Selection               
+
+> Root Cause Analysis Optimal Intervention
+> Identifier
+> Post -Interventional
+> Analysis
+> Incorporation of
+> Domain -informed
+> Features (optional)
+> 𝑥 5
+> 𝑐 =෍
+> 𝑖 ∈{2,3}
+> 𝑓 5𝑖
+> 𝑐 (𝑥 𝑖
+> 𝑐 ;𝜁 5𝑖
+> 𝑐 )+𝑈 5
+> 𝑐
+> Causal Discovery
+> Intervention Optimization
+> in a Constrained Manifold
+> Optimal Solutions
+> Intervention
+> Combinations
+> Optimal Intervention
+> Ranking
+> Domain
+> Evaluation
+> Prior Knowledge of
+> Causal Relations
+> (optional)
+> Dysregulated
+> Variables Attributions
+> 𝑥 1
+> 𝑐 {𝑥 1
+> 𝑐 }
+> 𝑥 2
+> 𝑐 {𝑥 1
+> 𝑐 ,𝑥 2
+> 𝑐 }
+> 𝑥 3
+> 𝑐 {𝑥 1
+> 𝑐 ,𝑥 3
+> 𝑐 }
+> 𝑥 5
+> 𝑐 {𝑥 1
+> 𝑐 ,𝑥 2
+> 𝑐 ,𝑥 3
+> 𝑐 ,𝑥 5
+> 𝑐 }
+> Statistical identification of
+> Environment -Specific
+> Features
+> ML -Driven Regulator
+> Expansion
+> Topology -Aware
+> Regulator
+> Refinement
+> (optional)
+
+𝑥 1
+
+> 𝑐
+> Causal Modeling
+
+𝑥 2 
+
+> 𝑐
+
+𝑥 3
+
+> 𝑐
+
+𝑥 4 
+
+> 𝑐
+
+𝑥 5                       
+
+> 𝑐
+> 𝑈 1
+> 𝐶
+> 𝑥 4
+> 𝑐 =𝑓 42
+> 𝑐 (𝑥 2
+> 𝑐 ;𝜁 42
+> 𝑐 )+𝑈 4
+> 𝑐
+> 𝑥 2
+> 𝑐 =𝑓 21
+> 𝑐 (𝑥 1
+> 𝑐 ;𝜁 21
+> 𝑐 )+𝑈 2
+> 𝑐
+> 𝑥 3
+> 𝑐 =𝑓 31
+> 𝑐 (𝑥 1
+> 𝑐 ;𝜁 31
+> 𝑐 )+𝑈 3
+> 𝑐
+> 𝑥 1
+> 𝑐
+> 𝑥 2
+> 𝑐 𝑥 3
+> 𝑐
+> 𝑥 4
+> 𝑐 𝑥 5
+> 𝑐
+> Significantly
+> dysregulated
+> Not Significantly
+> dysregulated
+> Input Datasets
+> Evaluation of
+> Interventions
+
+𝑥 1
+
+> 𝑐
+
+𝑥 2 
+
+> 𝑐
+
+𝑥 3
+
+> 𝑐
+
+𝑥 5
+
+> 𝑐
+
+𝑥 4
+
+> 𝑐
+
+Fig. 1 : Overview of the COAST framework. COAST identifies single or combinatorial interventions that drive a system from a source state S to a target state T through six tightly coupled modules: fea-ture selection, causal discovery, causal modeling, root cause analysis, optimal intervention identifier, and evaluation of interventions. Starting from source and target data ( DS and DT ), COAST first performs context-specific feature selection and learns causal graph structure(s). Given the inferred graph structure(s) and the corresponding data, COAST then fits context-specific causal models Mc, c ∈ {S , T } . COAST subsequently attributes observed state differences to mechanism-level causal drivers and solves a novel constraint-aware multi-objective optimization problem to propose feasible intervention sets. Candidate inter-ventions are then ranked, simulated in-silico , and evaluated using domain-specific criteria. 
+
+# 2 Results 
+
+We evaluate COAST by assessing its ability to identify correct and biologically meaningful interventions that drive systems between distinct states. First, using controlled synthetic benchmarks with known ground truth, we test whether COAST recovers the true causal drivers and intervention targets underlying the observed state shift. Second, using Perturb-seq data, we evaluate whether COAST correctly identifies the actual genetic perturbations responsible for the observed transcriptional changes. Finally, using single-cell RNA-seq data capturing transitions between cell states, we assess whether COAST proposes interventions whose downstream effects activate the biological pathways governing the corresponding state transition. 
+
+## 2.1 COAST overview 
+
+COAST is a causal-intelligence approach for identifying single or combinatorial interventions that drive a system from a source state S to a desired target state T (Fig. 1). It implements a principled end-to-end causal pipeline composed of six tightly coupled modules, each producing outputs that serve as necessary inputs to subsequent stages. Together, these modules form a causally coherent chain that maps observational or interventional data to actionable intervention strategies. Full methodological details are provided in Section 4. The pipeline begins with feature selection , which defines a context-specific modeling universe by identifying features that exhibit significant differential behavior between S and T , augmented optionally with prior-knowledge variables and upstream regulators inferred through regulatory network analysis. This focused feature set is then passed to causal discovery , which learns the directed acyclic graph(s) (DAGs) encoding putative cause-effect relationships among the selected features. Rather than pooling DS and DT ,COAST treats them as distinct regimes, supporting multi-environment structure learning strategies that can recover either a shared causal backbone or state-specific graphs depending on domain assumptions. The inferred graph(s) is subsequently used by causal modeling to fit state-specific structural causal models (SCMs) MS and MT , which parameterize the causal mechanisms operative in each state and serve as 
+
+in-silico surrogates for simulating the downstream effects of candidate interventions. Building on the learned causal structure, root cause analysis employs mechanism-level attribution to quantify how changes in each variable’s conditional distribution contribute to the observed state differ-ence, yielding a ranked list of causal drivers that defines and narrows the intervention search space. These ranked drivers directly inform the optimal intervention identifier , which formulates a novel constrained multi-objective optimization problem that outputs minimal intervention sets whose post-interventional distribution maximally aligns S with T , jointly trading off transition efficacy, intervention sparsity, and target-state stability, while enforcing practical feasibility constraints such as druggability and relative-change 3Fig. 2 : Results on synthetic datasets. Comparison of COAST and the marginal distributional analysis (MDA) baseline on 100-node graphs across noise levels (low: σ = 1, medium: σ = 3, high: σ = 5). Within each row, panels correspond to different numbers of ground-truth intervention targets ( k ∈ { 1, 5, 10 }). Bar heights denote means over five random seeds, and black dots show individual seed values. (a) Recall@ k,measuring the fraction of selected targets that are true intervention targets, where selection is based on the top-k ranked targets (with k matched to the ground-truth number of targets). COAST achieves near-perfect recall across settings, whereas MDA exhibits substantially lower recall, particularly as k increases. (b) 
+
+Transition percentage@ k, quantifying the fraction of the source-to-target distributional shift explained by the identified intervention, evaluated at the solution whose intervention size matches the ground truth. COAST consistently outperforms MDA by 21–31%. (c) Average transition percentage, computed over all non-zero solution sizes along the regularization path (different λ values), providing a comprehensive assessment across different intervention budgets. COAST maintains stable performance above 92% regardless of noise level or number of targets, while MDA shows greater variability and systematically lower values. bounds. By solving this optimization across a range of regularization strengths ( λ), COAST produces a spec-trum of solutions, from which intervention strategies that recur consistently across regularization values are identified as robust. Finally, evaluation of interventions ranks candidate strategies by transition percent-age, quantifies downstream effects via in-silico simulation under the fitted SCMs, and contextualizes results through domain-specific criteria — in biomedical settings, pathway enrichment and disease-association analyses — to prioritize interventions for experimental follow-up. 
+
+## 2.2 Validation on controlled synthetic benchmarks 
+
+We evaluate COAST on synthetic datasets and compare it to a non-causal baseline based on marginal distributional analysis (MDA). MDA scores each variable by its univariate source–target shift (e.g., absolute 4mean difference or an associated test statistic) and selects intervention targets as the top k variables with the largest MDA scores, with k matched to the ground-truth number of intervened variables. For each experimental configuration, we simulate a single structural causal model (SCM) with a known directed acyclic graph (DAG) and fixed causal mechanisms, which are shared between the source and target regimes. We generate source state observational samples by drawing from the SCM of the observational (non-interventional) distribution. To generate the target state, we randomly select k intervention targets and apply ground-truth (surgical) interventions to these variables; the resulting perturbations propagate to downstream nodes according to the same SCM, thereby inducing a shifted target distribution. The procedures for data generation and intervention follow [13], with standardization performed as in [14]. We then evaluate the performance of each method (COAST and MDA) by assessing whether it (i) recovers the true intervention targets and (ii) explains the induced transition from the source to the target distribution. We vary the number of intervention targets ( k ∈ { 1, 5, 10 }) and the noise level (low, medium, high; σ ∈ { 1, 3, 5}), repeating each configuration across five random seeds. Fig. 2 reports results for 100-node graphs; additional results for graph sizes 10 and 500 are provided in the supplementary material (see Fig. S1 and Fig. S2). 
+
+Evaluation metrics 
+
+We report three complementary metrics. Recall@ k is the fraction of selected targets that are true inter-vention targets, with k fixed to the ground-truth intervention size. For COAST, targets are ranked by a three-stage procedure: (i) frequency of appearance across the regularization path (across different λ values), (ii) attribution score of distributional change, and (iii) random tie-breaking. For MDA, variables are ranked by their univariate marginal shift scores and the top-k are selected. Transition percentage@ k measures the fraction of the total source–target distributional shift explained by the identified intervention, evaluated at the solution whose intervention size matches the ground truth (see Section 4.5). Average transition percentage averages transition percentage over all non-zero solution sizes along the regularization path, thereby capturing performance across a range of intervention budgets (see Appendix A). Figure 2a summarizes recall@ k across noise levels and intervention sizes. COAST achieves near-perfect recall in most settings, with mean recall@ k of 1.00 for k = 1 across all noise levels, 0.99 for k = 5 (decreasing modestly to 0.96 at high noise), and 0.95 for k = 10. In contrast, MDA yields substantially lower recall, averaging 0.6 for k = 1, 0.4 for k = 5, and 0.24 for k = 10. Across all configurations of different numbers of ground truth intervention targets and different noise levels, COAST improves recall over MDA by 40–74%, highlighting the benefit of causal structure and mechanism-level attribution over purely marginal criteria for identifying intervention targets. Figure 2b reports transition percentage@ k at the solution whose intervention size matches the ground truth. COAST achieves consistently high transition percentages@ k, ranging from 81% in the single-target, high-noise regime to above 98% in all multi-target settings ( k ∈ { 5, 10 }). MDA attains transition percentages@ k between 55% and 78%, trailing COAST by 21–31%. The gap is most pronounced in the single-target regime: at medium noise, COAST achieves a mean transition percentage@ k of 93%, compared to 62% for MDA. Note the reason why COAST obtains a lower transition percentage@ k in single-target cases is the state transition is intrinsically difficult when there is only one variable to intervene, especially when there is large noise; on the other hand, with multiple variables to intervene, there will be more flexibility as they may compensate for the noise. Figure 2c reports average transition percentage across the regularization path. COAST attains mean values between 93% and 98% across all configurations, whereas MDA ranges from 55% to 70%, with improve-ments in the range of 28–38% separately. Similar results are observed for 10-node and 500-node graphs (see supplementary material). Together, these indicate that causal-model-guided optimization yields more accurate and more robust intervention identification than baselines based solely on marginal distributional shifts. 
+
+## 2.3 Recovery of true perturbation targets on Perturb–seq data 
+
+To evaluate COAST on real biological data, we applied it to a Perturb-CITE-seq dataset from [15], which profiled gene expression in a melanoma cell line under pooled CRISPR perturbations across three exper-imental conditions (control, IFN-γ, and co-culture). Similar to [14], we used only the control screen and focused on a curated set of 36 genes selected based on cofunctional modules and coregulated transcrip-tional programs identified in the original study [15], which are involved in cancer immune evasion pathways including interferon-gamma signaling, antigen presentation, and cell cycle regulation. As multi-target inter-ventional samples are extremely scarce in this dataset, with most such interventions having no more than one sample, we selected single-gene knockouts with the largest sample sizes for validation. 5Table 1 : Single-gene targets identified by COAST as the most frequently selected along the regularization path in three Perturb-seq case studies.                    
+
+> Study Single-target ( xi)Recall@1 Transition percentage (%) Intervention value Case 1 CTSD 174.8 −2.65 ↓
+> Case 2 TGFB1 157.0 −1.87 ↓
+> Case 3 B2M 127.7 −0.92 ↓
+
+Table 2 : Multi-gene intervention sets identified by COAST yielding the highest transition percentages in three Perturb-seq case studies.                            
+
+> Study Intervention Set ( I)Transition percentage (%) Intervention value(s) Case 1 (CTSD, DNMT1, NPC2) 82.0 (−2.82 ↓,0.34 ↑,0.42 ↑)Case 2 (TGFB1, CDK6) 65.0 (−1.91 ↓,0.55 ↑)Case 3 (B2M, CTSB, CDK6, NPC2) 65.7 (−1.49 ↓,0.27 ↑,0.49 ↑,0.91 ↑)
+
+Following [14], we used the greedy sparsest permutation (GSP) algorithm with partial correlation tests and learnt a causal graph over the 36 genes (Fig. S3). A structural causal model (SCM) was then fitted on the observational (unperturbed) data from 5,039 control cells with no detected guide RNAs, serving as the source state model for all subsequent analyses. We demonstrate COAST’s ability to identify ground truth perturbation targets through three case studies: knockout of CTSD (Cathepsin D), knockout of TGFB1 (Transforming Growth Factor Beta 1), and knockout of B2M (Beta-2-Microglobulin). Results are shown in Table 1 and 2. In all three case studies, COAST successfully identified the true knockout gene as the top-ranked root cause and the optimal single-node intervention target (Table 1). In case 1, the source state consisted of 5,039 unperturbed control cells and the target state consisted of 170 cells with a single-gene CTSD knockout. COAST assigned the highest distribution-change attribution to CTSD, selected it as the most stable inter-vention target with a transition percentage of 75% (i.e., intervening on CTSD alone explains roughly 75% of the shift), and returned an optimal intervention value of −2.65( ↓), indicating strong downregulation con-sistent with a knockout; CTSD remained selected along the regularization path as λ increased, underscoring its dominance. In case 2, where the target state consisted of 164 cells with a single-gene TGFB1 knockout, COAST likewise ranked TGFB1 highest, found it to dominate across all sparsity levels, and reported a tran-sition percentage of 57% with an optimal intervention of −1.87( ↓). In case 3, the target state consisted of 132 cells with a single-gene B2M knockout, and COAST assigned B2M the highest attribution score (1.58), well separated from the next best genes CTSB (0.062) and CDK6 (0.061); regularization confirmed B2M as the dominant target (it was the last gene regularized to zero across λ values), and the optimal interventions were consistently downregulations ( ↓). On top of ranking individual genes and identifying the optimal single-gene intervention, COAST can also propose multi-gene intervention sets that yield higher transition percentages. As Table 2 shows, in case 1, a CTSD intervention combined with two additional genes achieves a transition percentage above 80%, and case 2 shows a similar pattern, that a two-gene intervention that includes the ground-truth knockout TGFB1 increases the transition percentage by about 8% relative to the best single-gene intervention. In case 3, the optimal multi-gene intervention identified by COAST, which consists of 4 intervened genes, substantially improved the transition percentage compared with intervening on B2M alone. These improvements may reflect common off-target effects in CRISPR experiments and the ability of multi-target interventions to average out noises in the data. Together, these results demonstrate COAST’s advantage in identifying combinations of interventions that achieve superior transitions compared with single-gene interventions. Overall, across three single-gene knockout case studies, COAST correctly identified the true causal genes and returned coherent single-gene interventions, while additionally identifying multi-gene intervention sets that substantially improve transition percentages in some cases. These results show that COAST can recover known perturbation targets from real Perturb-seq data using only an observational causal model and the observed distributional shift, and that its ability to propose multi-target interventions helps capture more distributed or noisy responses, yielding more effective transitions than single-gene interventions alone. 
+
+## 2.4 Biologically coherent intervention design for cell-state transitions 
+
+We applied COAST to a real single-cell RNA-Seq dataset from [16], who profiled the adult mouse hypotha-lamus and identified 45 cell types through clustering analysis. We focused on 5,282 cells belonging to two non-neuronal clusters: oligodendrocyte precursor cells (OPCs) and myelinating oligodendrocytes (MOs), 6Fig. 3 : COAST intervention targets and pathway enrichment compared to null intervention baselines in the OPC-to-MO transition. (a) Frequencies of intervention target genes across the regu-larization path. Frequencies were computed as the fraction of unique solutions in which each gene retained a non-zero intervention value. Genes are ranked by decreasing frequency, and the top 30 genes are shown. Known oligodendrocyte maturation and myelination markers are bolded and colored in red. (b) Top 20 enriched pathways (g:Profiler) among downstream genes significantly affected by in silico perturbation of all 38 COAST-identified intervention targets. Bar lengths represent − log 10 (p-value). Pathways related to oligodendrocyte maturation are bolded and colored in red. (c,d) Pathway enrichment comparison between COAST-identified intervention targets (c) and null intervention targets (d) for interventions comprising 20 genes. Null intervention results were obtained by aggregating g:Profiler enrichment across five independent random samplings using Fisher’s method; the number appended to each GO term indicates the number of runs in which the term was detected. (e,f) Corresponding comparison for interventions comprising 6 genes, illustrating the persistence of pathway specificity under increasingly constrained intervention budgets. which represent two distinct stages of oligodendrocyte maturation. Following standard single-cell RNA-Seq preprocessing, genes expressed in fewer than 30% of cells were filtered out, leaving 1,046 genes for analysis. Raw gene expression was transformed using log(TPM + 1). 
+
+Feature selection: Differential expression (DE) analysis was performed using Welch’s t-test between the OPC (source) and MO (target) populations. Applying thresholds of FDR-adjusted p-value < 0.05 and 
+
+|log fold-change | > 2 yielded 262 target DE genes. After the third step of the feature selection pipeline (see 7Section 4.1), which augmented the DE gene set with inferred upstream regulators and applied network-based prioritization, 263 genes were retained for downstream causal analysis. 
+
+Causal discovery and modeling: The IMaGES (Independent Multi-sample Greedy Equivalence Search) algorithm was employed to learn a single causal DAG from the combined OPC and MO datasets [17]. Two separate structural causal models (SCMs) were then fitted on the source-state (OPC) and target-state (MO) data using the inferred DAG, with additive noise models assigned to each node. These SCMs serve as digital-twin surrogates for subsequent in-silico experimentation. 
+
+Root cause analysis and optimal intervention identification: Mechanism-level attribution scores were computed via Shapley value-based decomposition (see Section 4.4), and through adaptive selection the top 38 genes were identified as candidate intervention targets. Using the regularization-based optimization approach, COAST generated a series of intervention solutions along the regularization path, trading off transition effectiveness against sparsity (see supplementary material Fig. S4). Analysis of gene frequencies across the regularization path revealed a stable core of intervention targets (Fig. 3a). To compute these frequencies, we counted the fraction of unique solutions in which each gene retained a non-zero intervention value across the full range of regularization penalties. Four genes— Cldn11 ,
+
+Trf (transferrin), Mobp , and Mag —appeared in 100% of unique solutions, identifying them as the most robust intervention targets. These were followed by Mbp and Serpine2 at 94.4% frequency, Car2 (carbonic anhydrase 2), Apod (apolipoprotein D), Cnp , Sept4 , Ermn , and Mal at 88.9% frequency, and a group of 8 genes including Mog , Opalin , Ptgds , and Ndrg1 at 83.3% frequency. Critically, the highest-frequency genes are dominated by known oligodendrocyte maturation and myelination markers. Mobp distinguishes myelinating oligodendrocytes from precursor stages [16, 18]. Cldn11 is a tight junction protein essential for CNS myelin formation [19]. Trf is required for iron delivery to oligodendrocytes during myelination [20, 21], while Apod 
+
+is involved in protection from oxidative stress through the control of lipid peroxidation [22]. Mag , Mal , Mog ,
+
+Mbp , Plp1 , and Cnp are canonical myelin structural proteins and myelination regulators [23, 24]. Ermn [25] and Opalin [26] are markers specific to mature myelinating oligodendrocytes. The consistent selection of these biologically validated genes across different levels of sparsity provides strong evidence that COAST identifies interventions grounded in the true underlying biology of the OPC-to-MO transition. 
+
+Evaluation of interventions: To assess whether the identified interventions induce biologically coher-ent downstream effects, we performed in-silico perturbation experiments followed by pathway enrichment analysis using g:Profiler [27]. With the full set of 38 intervention genes (see also supplementary material Fig. S4), the in-silico per-turbation produced significant expression changes in 53 downstream genes. Pathway enrichment analysis of these affected genes revealed terms that are highly specific to the OPC-to-MO transition (Fig. 3b): glial cell differentiation ( p = 1 .67 × 10 −13 ), gliogenesis ( p = 4 .42 × 10 −13 ), myelin sheath ( p = 6 .77 × 10 −13 ), ensheathment of neurons ( p = 7 .77 × 10 −11 ), myelination ( p = 2 .73 × 10 −9), oligodendrocyte differentiation (p = 3 .13 × 10 −9), and structural constituent of myelin sheath ( p = 1 .49 × 10 −6) etc. These terms directly correspond to the hallmark biological processes of oligodendrocyte maturation—the progressive acquisition of a myelinating phenotype involving myelin membrane assembly and axon ensheathment [28]—providing strong evidence that the COAST-identified interventions faithfully recapitulate the transcriptional program driving the OPC-to-MO transition. To assess robustness under more practical intervention budgets, we repeated the in-silico perturbation with smaller intervention sets identified by COAST, and the core myelination-related pathways remained significantly enriched. With 20 intervention genes (Fig. 3c), the top enriched terms included myelin sheath (p = 1 .07 ×10 −8), axon ensheathment ( p = 7 .23 ×10 −8), myelination ( p = 9 .25 ×10 −6), and oligodendrocyte differentiation ( p = 2 .05 ×10 −2). With only 6 intervention genes (Fig. 3e), the enrichment remained striking: ensheathment of neurons ( p = 9 .06 × 10 −10 ), myelination ( p = 3 .47 × 10 −7), myelin assembly ( p = 2 .14 ×
+
+10 −5), myelin sheath ( p = 2 .24 ×10 −5), and central nervous system myelination ( p = 1 .78 ×10 −2) etc. These results demonstrate that even when the intervention set is substantially reduced, with correspondingly lower transition percentages, the downstream effects remain centered on the biological processes most specific to the OPC-to-MO differentiation, indicating that COAST prioritizes the most mechanistically critical targets first. 
+
+Comparison with null intervention targets 
+
+To verify that the observed pathway activation and transition efficiencies arise from alignment with the inferred causal structure rather than from arbitrary gene perturbations, we compared COAST-identified targets against null intervention targets of matched cardinality. Null intervention targets were generated by uniform sampling over the admissible intervention space and serve as a statistical null model in which 8perturbations are, in expectation, not aligned with the causal pathways governing the OPC-to-MO transi-tion. For practical intervention budgets (20 and 6 genes), five independent null intervention target sets were generated using distinct random seeds and evaluated using the same in-silico intervention and downstream pathway enrichment pipeline. To obtain robust enrichment estimates across the five null intervention replicates, g:Profiler results were combined by taking the union of all enriched GO terms across runs. For terms identified in multiple runs, 
+
+p-values were aggregated using Fisher’s method, where the test statistic χ2 = −2 Pki=1 ln( pi) was evaluated against a χ2 distribution with 2 k degrees of freedom, and k denotes the number of runs in which the term was detected. COAST-identified targets consistently achieved substantially higher transition percentages than matched null intervention baselines, with even more pronounced differences in downstream pathway activation. For interventions comprising 20 genes, COAST yielded 44 enriched pathways dominated by myelination-related terms (including myelin sheath, axon ensheathment, and myelination, as described above), whereas the Fisher-combined results across five null-intervention target sets produced only 12 enriched pathways—none associated with myelination or oligodendrocyte biology (Fig. 3d); the most significant combined terms reflected generic cellular functions, including volume-sensitive chloride channel activity ( p = 1 .40 × 10 −3), myosin II binding ( p = 6 .29 × 10 −3), nitrogen metabolism ( p = 7 .64 × 10 −3), and regulation of molecular function ( p = 3 .69 × 10 −2). A similarly pronounced disparity was observed for smaller interventions of 6 genes. COAST identified 33 enriched pathways, again including highly significant myelination-related processes (such as ensheathment of neurons and myelination), whereas aggregated results from five null-intervention target sets yielded only 8 enriched pathways (Fig. 3f), led by mitochondrion transport along microtubule ( p = 1 .13 ×10 −2) and myosin II heavy chain binding ( p = 1 .74 × 10 −2), which are unrelated to oligodendrocyte differentiation. Notably, even after aggregating results across 5 independent null interventions, no myelination- or oligodendrocyte-related pathway emerged. Together, these results demonstrate that COAST’s performance is driven by its identification of causally effective intervention targets within the inferred DAG, rather than by perturbations that do not align with the causal pathways underlying the OPC-to-MO transition. 
+
+# 3 Discussion 
+
+Designing interventions that reliably drive complex systems between distinct states is a central challenge across scientific domains, particularly in settings where mechanistic understanding, interpretability, and feasibility constraints are critical. In this work, we introduced COAST, a causal-intelligence framework that, given data characterizing source and target states, learns context-specific causal graph(s) and structural causal models, attributes observed distributional shifts to mechanism-level causal drivers, and formulates intervention design as a constraint-aware multi-objective optimization problem balancing transition efficacy, intervention complexity, and target-state stability. Unlike predictive or response-forecasting models, COAST addresses an inverse causal design problem: determining which actions to take, and how to take them, in order to causally drive a system toward a desired target state. Across controlled synthetic benchmarks and multiple real biological datasets, COAST consistently iden-tified interventions that were not only effective in inducing state transitions, but also mechanistically grounded and robust to modeling and regularization choices. On synthetic data with known ground truth, COAST reliably recovered the true intervention targets and achieved near-complete explanation of the induced distributional shift, substantially outperforming marginal, non-causal baselines – particularly as noise levels increased, a regime that closely mirrors the variability encountered in real biological systems. On Perturb-seq datasets, COAST accurately recovered the true genetic perturbations by leveraging inferred causal models and observed state differences, without access to perturbation labels. In single-cell RNA-seq data capturing oligodendrocyte maturation, COAST identified intervention targets whose downstream effects activated pathway programs directly tied to the biological processes governing the transition, substan-tially outperforming null intervention baselines, with these effects persisting even as intervention budgets were reduced. A central distinguishing feature of COAST is its principled integration of feature selection, causal dis-covery, causal modeling, root cause analysis, and constrained optimization within a unified, end-to-end framework. Rather than treating intervention design as a purely predictive or heuristic exercise, COAST leverages learned causal structure and models to attribute observed state differences to underlying mech-anisms and to reason explicitly about how interventions propagate through the system. By incorporating persistence along the regularization path as an intrinsic robustness criterion, COAST prioritizes intervention 9strategies not only by transition effectiveness but also by their persistence across intervention sparsity lev-els, reducing sensitivity to arbitrary tuning choices. This shifts the focus from identifying a single nominally “optimal” solution to characterizing a set of plausible, mechanistically grounded intervention strategies that explicitly balance effectiveness, sparsity, and robustness. COAST’s formulation emphasizes practical relevance by incorporating multiple feasibility constraints directly into the optimization objective, which enable biologically realistic intervention proposals, such as limiting perturbations to actionable variables, bounding relative changes to preserve essential system functions, and maintaining target-state stability. In biomedical contexts, this design is particularly important for minimizing unintended effects and ensuring that computational recommendations remain compatible with experimental and therapeutic constraints. This consideration is critical for target identification and biomarker discovery, where neglecting practicability can yield findings that are statistically significant yet biologically implausible or difficult to reproduce experimentally. At the same time, COAST is intentionally modular and domain-agnostic. Individual components for feature selection, causal discovery, mechanism attribution, and optimization can be replaced without altering the overall framework, allowing the method to adapt to different data modalities, modeling assumptions, and scientific questions. This flexibility contrasts with approaches that rely on large perturbation atlases or fixed predictive architectures: COAST can operate in data-sparse settings where observational measurements of source and target states are available, but systematic perturbation data are not. A key limitation of COAST is that the quality of its recommendations depends on the fidelity of the learned causal models. Although COAST supports multi-environment causal discovery and incorporates graph falsification procedures, reliable causal structure learning from finite observational or interven-tional data remains challenging, particularly in high-dimensional regimes. Future extensions could improve robustness by explicitly modeling uncertainty over causal graphs or by more formally integrating partial mechanistic priors and domain knowledge into the discovery and inference process. More broadly, COAST is not intended to replace predictive perturbation models, but rather to comple-ment them. While predictive and generative approaches excel at forecasting system responses for prespecified candidate interventions, COAST addresses the upstream problem of intervention selection and mechanis-tic prioritization. Integrating these paradigms, for example, by using causally guided intervention design to propose candidate perturbations that are subsequently evaluated using high-fidelity predictive models, represents a promising direction for future research. In summary, COAST demonstrates that causal modeling and constrained optimization can be com-bined to address the inverse problem of intervention design in complex systems. By grounding intervention strategies in learned causal mechanisms, enforcing domain-relevant constraints, and emphasizing robustness across solution paths, COAST provides a principled foundation for mechanistically informed intervention design. We expect this causal-intelligence perspective to be valuable not only in biomedicine, but also in other domains where state transitions must be induced reliably under uncertainty and practical constraints. 
+
+# 4 Methods 
+
+In this section we present the technical details of each module of the COAST framework. Throughout, we use italic lowercase (uppercase) letters for vectors (matrices), regular font for scalars, and calligraphic letters for directed acyclic graph (DAG), functions, sets, and states. COAST aims to identify single or combinatorial intervention targets, together with their optimal mag-nitudes, that induce a transition from a source state S to a target state T . To this end, COAST integrates a sequence of modular components— Feature Selection , Causal Discovery , Causal Modeling , Root Cause Anal-ysis , an Optimal Intervention Identifier , and Evaluation of Interventions —which together enable principled intervention design. Each module is described in detail below. 
+
+## 4.1 Feature Selection 
+
+This module receives as input the source and target datasets, DS ∈ RnS ×p and DT ∈ RnT ×p (where n S ,nT are the number of samples, and p is the number of features 1; [ p] := {1, . . . , p} denotes the index set of all features), and selects the features to be used downstream for causal discovery and causal modeling. Restricting attention to a set of relevant and informative features reduces computational complexity by shrinking the search space and mitigates estimation noise by excluding weak or spurious variables. This, in turn, improves statistical efficiency and the stability of learned causal graph structures, while enhancing     
+
+> 1Throughout the manuscript we use features and variables interchangeably.
+
+10 the transparency and interpretability of the resulting causal model [29–32]. The feature selection workflow comprises four sequential steps (see Fig. 1). 
+
+Step 1: Statistical identification of environment-specific features. We first identify variables that exhibit statistically significant differences between the source and target datasets, DS and DT . To this end, univariate hypothesis tests are applied to each variable: Welch’s t-test is used when approximate normality is satisfied, and the Mann–Whitney U test otherwise [33]. For categorical variables, appropriate alternatives such as the χ2 test or Fisher’s exact test are employed [33]. To account for multiple hypothesis testing, 
+
+p-values are adjusted using procedures such as the Benjamini–Hochberg method to control the false discovery rate (FDR) [33]. In high-dimensional omics settings (e.g., transcriptomics, proteomics, metabolomics), we instead rely on established differential-analysis frameworks, including DESeq2 , edgeR , and limma-voom ,which explicitly model count-based noise and mean-variance relationships [34–36]. 
+
+Step 2 (optional): Incorporation of domain-informed features. The statistically identified vari-ables are optionally augmented with features informed by prior domain knowledge, e.g. curated genes or molecular markers of known biological relevance. This step enables the inclusion of variables that may not exhibit strong marginal effects yet are hypothesized to play a mechanistic role. The union of statistically selected and domain-informed variables defines the subset of “key” features [ t] ⊂ [p]. 
+
+Step 3: ML-driven regulator expansion. Identify additional features (putative regulators) that may causally influence on the key feature set [ t]. 
+
+Biomedical instantiation: COAST employs GENIE3 to infer regulatory dependencies by learning an ensemble of tree-based models and deriving a weighted adjacency matrix [37]. For each “key” feature t ∈ [t], the top N candidate regulators are selected according to their inferred importance scores. The union of the “key” features and their corresponding top-ranked regulators defines the expanded candidate feature set [ r], which is passed to the subsequent (optional) step. 
+
+Framework generality: this module is fully modular. GENIE3 can be replaced with alternative feature-selection or regulator-inference procedures, such as elastic-net or stability-selection neighborhoods, mutual-information based screening etc. [38–40], that can provide a ranked list of candidate regulators for each “key” feature t ∈ [t]. 
+
+Step 4 (optional): Topology-aware regulator refinement. For omics inputs, COAST optionally refines the set of top-ranked regulators identified in Step 3 by incorporating network topology, thereby further reducing the regulator set carried forward for causal modeling. Starting from the candidate features identified in the previous steps, we re-estimate regulatory associations using GENIE3 and compute, for each regulator-target pair (r , t) with t drawn from the key features identified in Step 2, a hybrid prioritization score h rt :hrt = α wrt + (1 − α) b r, (1) where w rt denotes the normalized GENIE3 edge weight capturing the predictive influence of regulator r on key feature t, and b r denotes the betweenness centrality of regulator r in the inferred regulatory network. For each key feature t, candidate regulators are ranked according to h rt , and a user-specified number K of top-scoring regulators (e.g., the top 3 per feature) is retained. This per-feature ranking yields a refined subset of influential regulators that balances predictive strength and topological importance. Betweenness centrality quantifies the extent to which a regulator lies on shortest paths connecting otherwise weakly cou-pled network modules, thereby identifying bottleneck regulators that disproportionately control information flow. In biological regulatory networks, such bottlenecks are often more indicative of functional importance than highly connected hubs, particularly in directed settings where causal flow is well defined [41–43]. From an intervention standpoint, targeting high-betweenness regulators enables coordinated modulation of mul-tiple downstream pathways, allowing system-level state transitions to be achieved with fewer, more focused interventions [41, 42]. The coefficient α controls the relative contribution of predictive and topological signals and is specified 
+
+a priori to reflect domain preferences rather than learned from data. Unless otherwise stated, we use an equal weighting of the two signals. The output of this step is a consolidated candidate feature set [ q], defined as the union of the key features [t] and the subset of top regulators retained per key feature. This reduced and topology-informed feature set is subsequently used for causal structure learning and intervention design. 11 4.2 Causal Discovery 
+
+Causal discovery aims to infer cause-effect relations among variables from observational data and, when available, interventional data. We represent causal structure as a directed acyclic graph (DAG) G = ( V, E), where V denotes variables and E ⊆ V × V directed edges encode direct causal influence. Under the causal Markov condition and faithfulness, conditional independence patterns constrain admissible structures and enable systematic structure learning [5, 45]. A range of structure learning algorithms can be used to estimate G [44], including constraint-based methods (e.g., PC, FCI) that leverage conditional independence tests [45], score-based methods (e.g., GES, NOTEARS) that optimize penalized likelihood or information criteria under acyclicity constraints [46, 47], and functional causal model approaches (e.g., LiNGAM) that impose additional assumptions to improve identifiability [48]. With purely observational data, the learned structure is generally identifiable only up to a Markov Equivalence Class (MEC). Incorporating interventional or multi-context information can refine identifiability and orient additional edges [49]. In practice, background knowledge (required/forbidden edges) can be incorporated to constrain the search space and improve recovery accuracy [50]. COAST focuses on settings with two environments, corresponding to a source state S and a target 
+
+state T (e.g., disease and healthy). Rather than na¨ ıvely pooling samples from S and T and learning a single-regime graph, which can induce statistical dependencies that do not hold within either state, COAST supports multi-environment structure learning strategies that explicitly leverage both datasets. Based on domain assumptions, COAST supports two complementary regimes: 1. Shared-backbone discovery (single graph). When S and T are assumed to reflect the same under-lying regulatory system (e.g., the same cell type), COAST adopts a shared-backbone assumption: the 
+
+interaction topology is stable across states (invariant parent sets), while regulatory strengths and noise 
+
+may differ between S and T . This regime naturally assumes T as a perturbation effect (soft intervention) of the S that alters causal mechanisms without rewiring the graph, consistent with invariance-based perspectives on multi-environment causality. Accordingly, COAST learns a single causal backbone G
+
+using multi-sample extensions of greedy equivalence search such as IMaGES scoring across datasets [17], and then fits two state-specific SCM parameterizations ( MS and MT ) on the same backbone (one for 
+
+S and one for T ) to capture state-dependent mechanism changes. 2. State-specific discovery (two graphs). When genuine rewiring between S and T is plausible (e.g., cancer lineage switching), COAST can learn two related graphs GS and GT . In this regime, COAST supports separate or joint estimation approaches (e.g. jointGES) that share statistical strength across states while allowing a number of state-specific edges when supported by the data [51]. Shared edges can be interpreted as conserved circuitry, while state-specific edges provide candidate rewiring hypotheses for downstream validation. Users may select the causal discovery method that best matches domain assumptions, data modality, and expected mechanism changes. As a guideline, COAST recommends using a shared-backbone regime when interactions are expected to be stable and differences arise primarily from mechanism/parameter shifts, and using a state-specific regime when genuine wiring changes are expected between S and T [51]. Regard-less of the chosen regime, background knowledge (required/forbidden edges, ordering constraints, restricted candidate parent sets) may be incorporated to improve identifiability and biological interpretability [50]. Before downstream causal modeling and optimization, COAST applies multiple graph falsification (refuta-tion) tests to assess whether the learned structure(s) are statistically compatible with the observed data, using the DoWhy causal modeling framework [52]. 
+
+## 4.3 Causal Modeling 
+
+After structure learning, COAST fits state-specific structural causal models (SCMs) for S and T using the learned parent sets. For each state c ∈ {S , T } , let Gc denote the learned graph (with GS = GT under a shared backbone – see Section 4.2), and let pa c(i) denote the parents of node i in Gc. The induced state-specific joint distribution then factorizes as 
+
+Pc(xc) = 
+
+> q
+
+Y
+
+> i=1
+
+P c
+
+xci | xc
+
+> pa c(i)
+
+
+
+, (2) 12 where xci denotes the realization of the same underlying variable xi in state c ∈ {S , T } , and each conditional distribution P c(xci | xc
+
+> pa c(i)
+
+) corresponds to a state-specific causal mechanism. Structural causal models characterize how each variable is generated from its direct causes and an exogenous disturbance term [5]. Given learned graph structure(s) GS and GT , we assume that each variable xci , for i ∈ { 1, . . . , q}, is generated according to 
+
+xci = X
+
+> j∈pa c(i)
+
+f cij 
+
+ xcj ; ζcij 
+
+ + U ci , (3) where pa c(i) denotes the parent set of node i in Gc, f cij (·; ζcij ) is a (potentially nonlinear) function encoding the causal influence of parent variable xcj on xci in state c, and ζcij are the corresponding state-specific parameters. The term U ci represents an exogenous disturbance, which may follow a Gaussian or non-Gaussian distribution. An SCM associated with Gc encodes both functional and probabilistic assumptions about the underlying data-generating process in state c. Under these assumptions, interventional quantities such as P (yc | do( xc)) are identifiable via Pearl’s do-calculus and related graphical criteria whenever the effect is identifiable in 
+
+Gc [5]. More broadly, SCMs enable principled interventional simulation, and mechanism-level attribution grounded in the learned structural equations and noise terms. In COAST, the causal modeling module takes as input the inferred graph structure(s) GS and GT
+
+together with the corresponding datasets and fits state-specific mechanisms f cij for c ∈ {S , T } . The resulting causal models Mc, together with the source and target datasets ( DS and DT ), are subsequently passed to the Root Cause Analysis module. 
+
+## 4.4 Root Cause Analysis 
+
+This module identifies and ranks the mechanisms that explain why the system’s distribution differs between the source and target states. We adopt the mechanism-change attribution framework of Budhathoki 
+
+et al. [53], which explains distribution shifts by attributing them to changes in node-wise conditional distributions (“causal mechanisms”) in a probabilistic causal model consistent with the learned DAG. 
+
+4.4.1 Attributing changes in distributions 
+
+The central idea of this attribution method is to explain the observed distributional shift between the source and target states in terms of changes in individual causal mechanisms. Given state-specific causal models 
+
+MS and MT learned from DS and DT , respectively, the method progressively replaces mechanisms from the source model with their counterparts inferred in the target model. Concretely, let Γ ⊆ { 1, . . . , q} denote a set of nodes whose mechanisms have been replaced. For a given node i, define the hybrid interventional distribution obtained by using target-state mechanisms for nodes in Γ and source-state mechanisms for all other nodes: 
+
+PΓ(xi) = X
+
+> x−i
+
+Y
+
+> j∈Γ
+
+P T 
+
+xT 
+
+> j
+
+| xT 
+
+> pa T(j)
+
+ Y 
+
+> j / ∈Γ
+
+P S 
+
+xS 
+
+> j
+
+| xS 
+
+> pa S(j)
+
+
+
+,
+
+where x−i denotes all variables except xi, and the distributions on the right-hand side are induced by the corresponding structural equations in MS and MT . Replacing mechanisms that differ across states alters downstream marginal distributions, whereas replacing unchanged mechanisms leaves them invariant. To fairly attribute the overall distributional shift to individual nodes, the method employs Shapley symmetrization [53, 54], which averages marginal contributions over all possible orders in which mechanisms are replaced. For each node i, its attribution score is computed by comparing the marginal distribution of 
+
+xi with and without replacing node j’s mechanism, averaged across all subsets Γ ⊆ { 1, . . . , q} \ { j}.The discrepancy between marginals can be quantified using any suitable distance measure. While prior work commonly employs information-theoretic divergences (e.g., KL divergence), in COAST we quantify distributional change using differences in node-wise means. This choice aligns naturally with our transition percentage metric (Section 4.5.1) and yields a stable, interpretable measure of state transition in the settings considered. Importantly, the attribution framework is agnostic to the specific choice of discrepancy measure, which only specifies how distributional change is quantified. Finally, we emphasize that a change in a causal mechanism is interpreted in the standard SCM sense: a change in the conditional distribution governing a variable given its parents. Such changes may arise from differences in the functional form f cij , from parameter shifts ζcij , or from changes in the associated disturbance 13 term U ci . From a causal attribution perspective, these effects are equivalent, as all correspond to state-specific differences in the mechanism generating xci and thus contribute to the observed source-to-target distributional shift. 
+
+4.4.2 Calculating cumulative attribution scores 
+
+To quantify the contribution of each node in the causal graph to the overall distributional shift between the source and target states, we compute accumulated attribution scores by aggregating node-level Shapley-based attributions across variables exhibiting statistically significant marginal shifts between the two conditions. For each such variable, we apply the distribution change attribution method described above to obtain node-specific attributions. To derive a global measure of each node’s influence across the full set of responsive variables, we aggregate these contributions by summing the absolute values of its Shapley-based attribution scores. Formally, let ψij denote the attribution score of node j with respect to variable i. The accumulated attribution score for node j is defined as uj = X
+
+> i∈[ω]
+
+|ψij |, (4) where [ ω] denotes the set of variables exhibiting statistically significant marginal shifts between the source and target states. Taking absolute values prevents cancellations between contributions of opposite sign and captures the total magnitude of each node’s influence on the observed distributional changes. The resulting accumulated scores are used to rank and prioritize candidate intervention targets. 
+
+4.4.3 Determining the set of candidate intervention targets 
+
+To determine the number of candidate intervention targets from the ranked list of accumulated attribu-tion scores, we employed an adaptive selection procedure based on a diminishing-returns criterion. The accumulated attribution scores were first normalized so that they sum to 100, representing each node’s percentage contribution to the total attribution. Starting from the highest-scoring node, candidates were added sequentially in descending order of their normalized scores. At each step, the normalized score of the next candidate was compared to the cumulative sum of the scores of all previously selected candidates. The selection process terminated when the ratio of the next candidate’s score to the cumulative score fell below a predefined threshold δ (e.g., δ = 0 .01), indicating that the marginal contribution of additional candidates had become negligible relative to the already-selected set. This adaptive stopping rule avoids the need for a fixed, arbitrary cutoff on the number of intervention targets, and instead selects a parsimonious set of nodes that collectively account for the dominant share of the total attribution. 
+
+## 4.5 Optimal Intervention Identifier 
+
+The Optimal Intervention Identifier converts causal insights into actionable intervention strategies that drive the system from a source to a target state. Given influential drivers identified by root cause analysis, this module determines both the identities and magnitudes of interventions while enforcing feasibility, stability, and sparsity constraints. COAST supports two operating modes: a hypothesis-agnostic mode, in which intervention targets and their cardinality are inferred directly from data, and a hypothesis-guided mode, in which prior knowledge constrains the intervention size and/or admissible targets. 
+
+4.5.1 Hypothesis-Agnostic Sparse Optimal Intervention Design 
+
+The Optimal Intervention Identifier module takes as input a set of candidate intervention targets, such as the k most influential drivers of change identified by the root cause analysis (Section 4.4). Its goal is to select parsimonious subsets of these drivers and determine corresponding intervention values that induce an effective transition from the source state to the target state. An intervention is represented by a vector α = ( α1, . . . , α k) ∈ Rk and is defined as a modification of the causal mechanisms generating a subset of variables. Specifically, interventions act by altering the conditional distributions 
+
+P c
+
+xci | xc
+
+> pa c(i)
+
+
+
+−→ ˙P c
+
+xci | xc
+
+> pa c(i)
+
+
+
+, i = {1, . . . , q}, c ∈ {S , T } , (5) where the dot notation indicates quantities evaluated under the post-intervention regime. 14 Any variable in index set [ m] ⊆ [k] ⊆ [q], where αi̸ = 0 , ∀ i ∈ [m] is referred to as an interventional target .Without loss of generality, we focus on shift interventions [55, 56], a special class of soft interventions [57]. Under a shift intervention, the structural assignment in Eq. (3) is modified as ˙xci = X
+
+> j∈pa c(i)
+
+f cij 
+
+ xcj ; ζ cij 
+
+ + αi + U ci , ∀ i ∈ [m], c ∈ {S , T } . (6) Determining whether an intervention achieves the desired outcome relies on samples drawn from the intervened source regime, denoted ˙ xS ∼ ˙P S . Since ˙ xS is a random vector, we estimate relevant expecta-tions (e.g., distributional means or other summary statistics) using empirical averages over Monte-Carlo samples [55, 56]. 
+
+Constrained multi-objective optimization design 
+
+We introduce a novel unified constrained multi-objective optimization formulation for causal intervention design under distribution shift, which jointly accounts for source-to-target alignment, target-state stability, and sparsity of interventions. COAST formulates the search for optimal interventions as a constrained multi-objective optimization that handles conflicting goals and incorporates fixed as well as custom constraints. arg min 
+
+> α∈Rk
+
+˙¯xS − ¯xT 22
+
+| {z }
+
+> source →target alignment
+
++ γ ˙¯xT − ¯xT 22
+
+| {z }
+
+> target-state stability
+
++ λ
+
+> k
+
+X
+
+> i=1
+
+wi|αi|
+
+| {z }  
+
+> weighted ℓ1sparsity
+
+. (7) subject to a set of user-defined, feasibility and stability constraints: 
+
+(C1) Range constraints: ˙¯xS 
+
+> i
+
+, ˙¯xT 
+
+> i
+
+∈ [min , max] , ∀i ∈ { 1, . . . , q},
+
+(C2) Actionable variables: αi = 0 , ∀ i / ∈ [m] ⊆ [k] ⊆ [q]
+
+(C3) Relative-change preservation: ˙¯xS
+
+> i
+
+¯xS
+
+> i
+
+≤ RC , ˙¯xT
+
+> i
+
+¯xT
+
+> i
+
+≤ RC , ∀i ∈ { 1, . . . , q}.
+
+Here, ¯ xS , ¯xT ∈ Rq denote the empirical means under the unperturbed source and target environments, respectively, and ˙ ¯xS , ˙¯xT ∈ Rq the corresponding means under intervention. The discrepancy between ˙ ¯xS
+
+and ¯ xT defines the primary objective to be minimized. Parameters are defined as follows: 
+
+• wi ∈ [0 , 1] denote normalized feature weights derived from the reciprocals of the accumulated attribution scores u i (see Eq. (4)). 
+
+• γ ∈ [0 , 1] is user-defined and application-dependent parameter, reflecting the relative importance assigned to target-state stability versus source-to-target alignment. 
+
+• λ ∈ R regulates sparsity of the intervention vector α.
+
+• RC ∈ [0 , max] bounds allowable relative changes. For interpretation of constraints: 
+
+(C1) enforces physically valid, operable, or regulation-compliant ranges post-intervention. This prevents non-physiological or model-invalid values e.g. negative gene expression levels, extreme activity outside assay-defined ranges etc. 
+
+(C2) limits interventions to a (controllable/permitted) subset [ m] of the k most influential drivers of change identified by the root cause analysis. 
+
+(C3) caps relative deviations to preserve critical behaviors, such as safety margins and application-specific constraints, while still enabling progress toward the target state. The proposed formulation (see eq.(7)) integrates three complementary terms that jointly balance 
+
+alignment , stability , and sparsity :
+
+• Alignment term ˙¯xS − ¯xT 22 encourages the shifted source mean to approach the target mean, reducing distributional divergence between intervened source and target states. 15 • Target-state stability term γ ˙¯xT − ¯xT 22 penalizes deviations from the original target-state, thereby encouraging post-intervention stability in the target environment. When γ = 0, the optimization ignores target-state homeostasis entirely. As γ increases, deviations in the target environment become more heavily penalized. This term is particularly important in reversibility settings (e.g., steering diseased cells toward healthy phenotypes while ensuring that healthy cells remain minimally perturbed). 
+
+• Weighted sparsity term λ Pki=1 wi|αi| promotes parsimonious interventions, focusing changes on the most influential variables (via w i) to reduce complexity and enhance interpretability. The optimization in eq.(7) is typically solved along a grid of λ ∈ R to regulate sparsity (and hence the number of interventional targets). Next we present the method used to determine the range of λ values. 
+
+Determining the Range of λ for Sparse-to-Dense Solutions 
+
+Given the objective in eq.(7), we determine a principled range for the regularization parameter λ using the Karush–Kuhn–Tucker (KKT) conditions for weighted ℓ1-penalized optimization [58, 59]. Let L(α) denote the smooth part of the objective, comprising the source-to-target alignment and target stability terms. We consider the fully sparse candidate solution α = 0 and evaluate the stationarity condition at this point. Under the additive intervention model implicit in eq.(7), the perturbed source and target centroids satisfy ˙ ¯xS = ¯ xS + α and ˙ ¯xT = ¯ xT + α, respectively, so that the corresponding Jacobians with respect to α
+
+are identity matrices. The gradient of the smooth loss evaluated at α = 0 therefore reduces to 
+
+g = ∇αL(α) α=0 = 2  ¯xS − ¯xT .
+
+For each coordinate i, the subgradient of |αi| is [58, 59]: ui =
+
+(
+
+sign( αi) · wi, αi̸ = 0 ,
+
+∈ [−wi, wi], αi = 0 .
+
+This means: 
+
+• If αi̸ = 0, the subgradient is fixed at ±wi.
+
+• If αi = 0, the subgradient can take any value in [ −wi, wi]. At the fully sparse solution ( αi = 0 for all i): gi = ∂L (α)
+
+∂α i α=0
+
+.
+
+The KKT stationarity condition requires: gi + λui = 0 , ui ∈ [−wi, wi].
+
+For u i to be in [ −wi, wi], we need: 
+
+− gi
+
+λ ∈ [−wi, wi] = ⇒ | gi| ≤ λwi.
+
+If |gi| > λ wi, then even the largest possible subgradient ( ±wi) scaled by λ cannot cancel g i, so αi = 0 cannot be optimal. To guarantee all coefficients remain zero [59, 60]: 
+
+λmax = max 
+
+> i
+
+|gi|
+
+wi
+
+.
+
+For any λ ≥ λmax , the zero solution satisfies KKT and is optimal. For smaller λ, coefficients begin to enter the model, creating a path from sparse to dense solutions [60]. Then, we define: 
+
+λmin = ϵ · λmax , ϵ ∈ [10 −3, 10 −4],
+
+16 and generate a logarithmic sequence of Θ values between λmax and λmin :
+
+λθ = λmax 
+
+ λmin 
+
+λmax 
+
+ θ−1Θ−1
+
+, θ = {1, . . . , Θ}.
+
+This approach avoids heuristic choices and guarantees coverage from fully sparse to nearly dense solu-tions. When weights w i are derived from attribution scores, the penalty becomes context-aware, prioritizing interventions on less influential variables and delaying adjustments to highly influential ones unless λ is suf-ficiently small. This causally informed regularization path improves interpretability and aligns intervention sparsity with domain knowledge [59, 61]. Collectively, this construction yields a controlled regularization path {α(λ)} that enables systematic exploration of parsimonious versus more complex intervention sets. 
+
+Persistence along the regularization path 
+
+Let ℓ = {λ1, . . . , λ L} denote the set of sparsity (regularization) parameters evaluated. For each λ ∈ ℓ, solving the intervention optimization problem yields a candidate solution in the form of an intervention set Iλ (that is, the subset of variables selected for intervention). Depending on λ, Iλ may contain a single target or multiple targets, reflecting different sparsity-effectiveness trade-offs along the regularization path. We define the persistence of a candidate intervention set I as Pers( I) = 1
+
+|ℓ|
+
+X
+
+> λ∈ℓ
+
+1{I λ = I} , (8) where 1{·} is the indicator function. Pers( I) quantifies robustness to the choice of sparsity parameter by measuring how frequently the same single- or multi-target intervention set reappears across the solutions {I λ}λ∈ℓ.Analogously, we define the persistence for a single variable xi as Pers( xi) = 1
+
+|ℓ|
+
+X
+
+> λ∈ℓ
+
+1{xi ∈ I λ} , (9) which captures how consistently xi is selected as a member of the candidate intervention sets across sparsity levels. In contrast to Pers( I), which assesses persistence of an entire combination, Pers( xi) measures the marginal consistency of individual targets aggregated over all candidate solutions. Intervention sets and variables that persist over a broad range of λ values are less sensitive to regulariza-tion tuning and thus reflect robust trade-offs between transition effectiveness and sparsity. While persistence does not imply optimality, it provides a principled robustness criterion that complements objective value and supports prioritization of intervention strategies for downstream evaluation and experimental validation. 
+
+Transition percentage 
+
+To evaluate the effectiveness of a given intervention in driving the system from a source state toward a target state, we define a normalized metric termed the transition percentage . Let ¯ xS = (¯ xS 
+
+> 1
+
+, . . . , ¯xS 
+
+> q
+
+) and ¯xT = (¯ xT 
+
+> 1
+
+, . . . , ¯xT 
+
+> q
+
+) denote the vectors of node-wise sample means under the source and target states, respectively, where q is the number of variables (nodes) in the causal graph. The total baseline distance between the two states is defined as dtotal =
+
+> q
+
+X
+
+> i=1
+
+ ¯xS 
+
+> i
+
+− ¯xT
+
+> i
+
+2 .
+
+After applying an intervention to a selected subset of nodes, samples are generated from the intervened causal model, yielding node-wise means ˙ ¯x = ( ˙ ¯x1, . . . , ˙¯xq). The residual distance from the target state is then dres =
+
+> q
+
+X
+
+> i=1
+
+  ˙¯xS 
+
+> i
+
+− ¯xT
+
+> i
+
+2 .
+
+The transition percentage is defined as 
+
+s =
+
+
+
+1 − dres 
+
+dtotal 
+
+
+
+× 100% . (10) 17 This metric quantifies the fraction of the total source-to-target shift that is explained by the intervention. A value of 100% indicates that the intervention fully recapitulates the target state at the level of node-wise means, whereas a value of 0% indicates no progress relative to the source state. Intermediate values reflect partial transitions toward the target state. By normalizing against the baseline source–target dis-tance, the transition percentage enables consistent comparison of intervention effectiveness across different experimental settings and scales. 
+
+4.5.2 Hypothesis-Guided Fixed-Cardinality Intervention Design 
+
+The regularized formulation described above (Section 4.5.1) supports hypothesis-agnostic discovery of sparse intervention sets when the appropriate level of intervention sparsity is not specified a priori . In many practical settings, however, domain knowledge or operational constraints restrict the intervention space for example, when only a curated set of targets is considered actionable, or when no more than a fixed number of targets can be perturbed simultaneously. COAST accommodates such hypothesis-guided scenarios by constraining the search to a user-specified candidate set and enforcing a fixed intervention cardinality. Let [ z] ⊆ [q] denote a set of candidate intervention targets derived from prior knowledge, and let k be the prescribed intervention cardinality. The objective is to identify a subset [ ϵ] ⊆ [z] with |[ϵ]| =k that maximizes the source-to-target transition objective. Exhaustive evaluation of all  |[z]|
+
+> k
+
+ candidate combinations is typically computationally infeasible; COAST therefore employs a two-stage prioritization strategy to focus computation on the most promising subsets. 
+
+Stage 1 (single-target screening): For each candidate target node i ∈ [z], we solve the transition-optimization problem in Eq. (7) with the sparsity regularizer removed and the intervention restricted to target node i only. This yields an optimal single-target intervention magnitude αi together with an associated transition percentage si (see Eq. 10), which quantifies the impact of intervening on target node i.
+
+Stage 2 (combination prioritization): Candidate k-target subsets are ranked using an aggregate heuristic based on their constituent single-target scores. In this work, we use the mean score ¯s([ ϵ]) = 1
+
+|[ϵ]|
+
+X
+
+> i∈[ϵ]
+
+si, (11) though alternative aggregation schemes can be employed. This screening strategy is motivated by the observation that the transition objective typically exhibits strong concentration around high-impact tar-gets: single-target screening provides a low-cost surrogate for each variable’s marginal causal contribution, enabling efficient elimination of “weak” combinations. Under mild assumptions of approximate additivity or diminishing returns, targets with strong individual effects are likely to appear in near-optimal multi-target solutions. Consequently, ranking combinations by aggregated single-target scores concentrates evaluation on a small region of the combinatorial search space that, with high probability, contains the most effective state-transition solutions. COAST subsequently evaluates top ranked combinations using the unregularized transition objective (without the sparsity term) and returns the optimal intervention values, subject to the constraint that inter-ventions are permitted only on the variables in [ ϵ]. This two-stage strategy substantially reduces the number of expensive objective evaluations while preserving a direct and principled connection to the underlying causal optimization problem. 
+
+## 4.6 Evaluation of Interventions 
+
+This module evaluates the solutions proposed by the Optimal Intervention Identifier and provides multiple layers of interpretability. First, it summarizes solution characteristics through visual analytics. A persistence diagram quantifies the persistence of each candidate intervention by reporting how consistently specific intervention sets or individual variables reoccur across the regularization path. Additional plots illustrate how the number of intervention targets varies as the regularization parameter λ changes, together with the corresponding transition percentage achieved by each solution. These visualizations facilitate a clear assess-ment of the trade-offs between intervention sparsity, transition performance, and robustness with regard to regularization tuning. Finally, a heatmap depicts the intervention intensity associated with each influential variable across all candidate solutions, enabling fine-grained comparison of intervention magnitudes. 
+
+Biomedical instantiation: To deepen biological insights, COAST enable us to perform in-silico simulations of the proposed interventions using the learned causal model. Post-intervention, we identify genes with significantly altered expression and conduct pathway enrichment analysis leveraging resources such as Gene 18 Ontology (GO), Kyoto Encyclopedia Genes Genomes (KEGG), and Gene Set Enrichment Analysis (GSEA) [62–64]. This analysis highlights biological pathways modulated by the interventions. Finally, the pipeline compiles pathway analysis results, including visualizations and statistical metrics, to facilitate interpretation and evaluation of the biological impact of each intervention strategy. For the disease reversibility application, our pipeline further integrates with the Open Targets platform via its API [65]. For each identified target, we retrieve disease-association scores, which offer additional context to support interpretation and prioritization of subsequent experimental validation. 
+
+Acknowledgements 
+
+We thank Dr. Michael Kavana for reviewing the manuscript, providing valuable feedback, and for his continued support and encouragement in pursuing and implementing this work. 
+
+# Declarations 
+
+Conflict of interest/Competing interests. 
+
+Z.S., U.M., and D.V.M. are employees of Merck Sharp & Dohme LLC, a subsidiary of Merck & Co., Inc., Rahway, NJ, USA, and may hold Merck & Co., Inc., Rahway, NJ, USA stock. 
+
+Ethics approval and consent to participate 
+
+Not applicable. 
+
+Consent for publication 
+
+Not applicable 
+
+Data availability 
+
+The data supporting the findings of this study will be made publicly available upon publication of the manuscript in a peer-reviewed journal. 
+
+Materials availability 
+
+All materials associated with this study will be made available upon publication of the manuscript in a peer-reviewed journal. 
+
+Code availability 
+
+The code used to implement the COAST pipeline will be released upon publication of the manuscript in a peer-reviewed journal. 
+
+Author contribution 
+
+Z.S. and D.V.M. developed and implemented the COAST framework. Z.S. and D.V.M. designed the exper-iments. Z.S. performed the experiments, analyzed the data, and integrated the resulting analyses into the manuscript. Z.S. and D.V.M. interpreted the results and wrote the manuscript. U.M. contributed to the experimental design, reviewed the manuscript, and provided critical feedback and comments. D.V.M. conceptualized, initiated, and supervised the study. 
+
+# References 
+
+[1] Scheffer, M., Bascompte, J., Brock, W. A. et al. Early-warning signals for critical transitions. Nature 
+
+461 , 53–59 (2009). doi:10.1038/nature08227 [2] Correia, C., Ung, C.-Y., Li, H. & Costello, J. C. State-of-the-art hypothesis-driven systems pharmacology and artificial intelligence approaches to decipher disease complexity. Front. Pharmacol. 16 , 1593164 (2025). doi:10.3389/fphar.2025.1593164 [3] Yang, X. Multitissue multiomics systems biology to dissect complex diseases. Trends Mol. Med. 26 ,718–728 (2020). doi:10.1016/j.molmed.2020.04.006 [4] Panditrao, G., Bhowmick, R., Meena, C. & Sarkar, R. R. Emerging landscape of molecular interaction networks: opportunities, challenges and prospects. J. Biosci. 47 , 24 (2022). doi:10.1007/s12038-022-00253-y 19 [5] Pearl, J. Causality: Models, Reasoning, and Inference . 2nd edn. Cambridge Univ. Press (2009). [6] Sch¨ olkopf, B., Locatello, F., Bauer, S., Ke, N. R., Kalchbrenner, N., Goyal, A. & Bengio, Y. Toward causal representation learning. Proc. IEEE 109 , 612–634 (2021). doi:10.1109/JPROC.2021.3058954 [7] Lotfollahi, M., Wolf, F. A. & Theis, F. J. scGen predicts single-cell perturbation responses. Nat. Methods 
+
+16 , 715–721 (2019). doi:10.1038/s41592-019-0494-8 [8] Lotfollahi, M., Klimovskaia Susmelj, A., De Donno, C., Hetzel, L., Ji, Y., Ibarra, I., Srivatsan, S., Naghipourfar, M., Daza, R., Martin, B. & Others Predicting cellular responses to complex perturbations in high-throughput screens. Molecular Systems Biology . 19 , MSB202211517 (2023) [9] Hetzel, L., B¨ ohm, S., Kilbertus, N., G¨ unnemann, S., Lotfollahi, M. & Theis, F. J. Predicting cellular responses to novel drug perturbations at single-cell resolution. Adv. Neural Inf. Process. Syst. 35 (2022). [10] Roohani, Y., Huang, K. & Leskovec, J. Predicting transcriptional outcomes of novel multigene perturbations with GEARS. Nature Biotechnology . 42 , 927-935 (2024) [11] Bunne, C., Stark, S. G., Gut, G., Sarabia del Castillo, J., Levesque, M., Lehmann, K.-V., Pelkmans, L., Krause, A. & R¨ atsch, G. Learning single-cell perturbation responses using neural optimal transport. 
+
+Nat. Methods 20 , 1759-1768 (2023). doi:10.1038/s41592-023-01969-x [12] Gonzalez, G., Lin, X., Herath, I. et al. Combinatorial prediction of therapeutic perturbations using causally inspired neural networks. Nat. Biomed. Eng. (2025). doi:10.1038/s41551-025-01481-x [13] Zhu, S., Ng, I. & Chen, Z. Causal discovery with reinforcement learning. International Conference On Learning Representations (2020). [14] Zhang, J., Cammarata, L., Squires, C., Sapsis, T. & Uhler, C. Active learning for optimal intervention design in causal models. Nature Machine Intelligence . 5, 1066-1075 (2023). [15] Frangieh, C., Melms, J., Thakore, et al. Multimodal pooled Perturb-CITE-seq screens in patient models define mechanisms of cancer immune evasion. Nature Genetics . 53 , 332-341 (2021). [16] Chen, R., Wu, X., Jiang, L., and Zhang, Y. Single-cell RNA-Seq reveals hypothalamic cell diversity. 
+
+Cell Reports , 18 (13), 3227–3241 (2017). [17] Ramsey, J. D., Hanson, S. J., Hanson, C., Halchenko, Y. O., Poldrack, R. A. & Glymour, C. Six problems for causal inference from fMRI. NeuroImage 49 , 1545–1558 (2010). [18] Marques, S., Zeisel, A., Codeluppi, S., van Bruggen, D., et al. Oligodendrocyte heterogeneity in the mouse juvenile and adult central nervous system. Science , 352 (6291), 1326–1329 (2016). [19] Morita, K., Sasaki, H., Fujimoto, K., Furuse, M., and Tsukita, S. Claudin-11/OSP-based tight junctions of myelin sheaths in brain and Sertoli cells in testis. Journal of Cell Biology , 145 (3), 579–588 (1999). [20] Connor, J.R. and Menzies, S.L. Relationship of iron to oligodendrocytes and myelination. Glia , 17 (2), 83–93 (1996). [21] Ortiz, E., Pasquini, J.M., Thompson, K., Felt, B., Butkus, G., Beard, J., and Connor, J.R. Effect of manipulation of iron storage, transport, or availability on myelin composition and brain iron content in three different animal models. Journal of Neuroscience Research , 77 (5), 681–689 (2004). [22] Ganfornina, M.D., Do Carmo, S., Lora, J.M., Torres-Schumann, S., Vogel, M., Allhorn, M., Gonz´ alez, C., Bastiani, M.J., Rassart, E., and Sanchez, D. Apolipoprotein D is involved in the mechanisms regulating protection from oxidative stress. Aging Cell , 7(4), 506–515 (2008). [23] Baumann, N. and Pham-Dinh, D. Biology of oligodendrocyte and myelin in the mammalian central nervous system. Physiological Reviews , 81 (2), 871–927 (2001). 20 [24] Nave, K.A. and Werner, H.B. Myelination of the nervous system: mechanisms and functions. Annual Review of Cell and Developmental Biology , 30 , 503–533 (2014). [25] Brockschnieder, D., Sabanay, H., Riethmacher, D., and Peles, E. Ermin, a myelinating oligodendrocyte-specific protein that regulates cell morphology. Journal of Neuroscience , 26 (3), 757–762 (2006). [26] Golan, N., Adamsky, K., Kartvelishvily, E., Brockschnieder, D., M¨ obius, W., Spiegel, I., Roth, A.D., Thomson, C.E., Rechavi, G., and Peles, E. Identification of Tmem10/Opalin as an oligodendrocyte enriched gene using expression profiling combined with genetic cell ablation. Glia , 56 (11), 1176–1186 (2008). [27] Kolberg, L., Raudvere, U., Kuzmin, I., Adler, P., Vilo, J. & Peterson, H. g:Profiler—interoperable web service for functional enrichment analysis and gene identifier mapping (2023 update). Nucleic Acids Res. 
+
+51 (W1), W207–W212 (2023). https://doi.org/10.1093/nar/gkad347 [28] Emery, B. and Lu, Q.R. Transcriptional and epigenetic regulation of oligodendrocyte development and myelination in the central nervous system. Cold Spring Harbor Perspectives in Biology , 7(9), a020461 (2015). [29] Guyon, I. & Elisseeff, A. An introduction to variable and feature selection. J. Mach. Learn. Res. 3,1157–1182 (2003). [30] Fan, J. & Lv, J. A selective overview of variable selection in high-dimensional feature space. Stat. Sin. 
+
+20 , 101–148 (2010). [31] Meinshausen, N. & B¨ uhlmann, P. High-dimensional graphs and variable selection with the lasso. Ann. Stat. 34 , 1436–1462 (2006). [32] Peters, J., Janzing, D. & Sch¨ olkopf, B. Elements of Causal Inference: Foundations and Learning Algorithms . MIT Press (2017). [33] Sheskin, D. J. Handbook of Parametric and Nonparametric Statistical Procedures . 5th edn. Chapman & Hall/CRC (2011). [34] Love, M. I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol. 15 , 550 (2014). [35] Robinson, M. D., McCarthy, D. J. & Smyth, G. K. edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics 26 , 139–140 (2010). [36] Law, C. W., Chen, Y., Shi, W. & Smyth, G. K. voom: Precision weights unlock linear model analysis tools for RNA-seq read counts. Genome Biol. 15 , R29 (2014). [37] Huynh-Thu, V. A., Irrthum, A., Wehenkel, L. & Geurts, P. Inferring regulatory networks from expression data using tree-based methods. PLoS One 5, e12776 (2010). [38] Zou, H. & Hastie, T. Regularization and variable selection via the elastic net. J. R. Stat. Soc. B 67 ,301–320 (2005). [39] Meinshausen, N. & B¨ uhlmann, P. Stability selection. J. R. Stat. Soc. B 72 , 417–473 (2010). [40] Cover, T. M. & Thomas, J. A. Elements of Information Theory . 2nd edn. Wiley (2006). [41] Yu, H., Kim, P. M., Sprecher, E., Trifonov, V. & Gerstein, M. The importance of bottlenecks in protein networks: correlation with gene essentiality and expression dynamics. PLoS Comput. Biol. 3, e59 (2007). [42] Nithya C., Kiran M., Nagarajaram H.A. Dissection of hubs and bottlenecks in a protein-protein interaction network. Computational Biology and Chemistry , 102:107802 (2023). doi: 10.1016/j.compbiolchem.2022.107802 [43] Freeman, L. C. A set of measures of centrality based on betweenness. Sociometry 40 , 35–41 (1977). 21 [44] Glymour, C., Zhang, K. & Spirtes, P. Review of causal discovery methods based on graphical models. 
+
+Front. Genet. 10 , 524 (2019). doi:10.3389/fgene.2019.00524 [45] Spirtes, P., Glymour, C. & Scheines, R. Causation, Prediction, and Search . 2nd edn. MIT Press (2000). [46] Chickering, D. M. Optimal structure identification with greedy search. J. Mach. Learn. Res. 3, 507–554 (2002). doi:10.1162/153244303321897717 [47] Zheng, X., Aragam, B., Ravikumar, P. & Xing, E. P. DAGs with NO TEARS: continuous optimization for structure learning. Adv. Neural Inf. Process. Syst. 31 , 9472–9483 (2018). [48] Shimizu, S., Hoyer, P. O., Hyv¨ arinen, A. & Kerminen, A. A linear non-Gaussian acyclic model for causal discovery. J. Mach. Learn. Res. 7, 2003–2030 (2006). [49] Hauser, A. & B¨ uhlmann, P. Characterization and greedy learning of interventional Markov equivalence classes of directed acyclic graphs. J. Mach. Learn. Res. 13 , 2409–2464 (2012). [50] J. D. Ramsey, K. Zhang, M. Glymour, R. Sanchez-Romero, B. Huang, I. Ebert-Uphoff, S. Samarasinghe, E. A. Barnes, and C. Glymour, TETRAD—A Toolbox for Causal Discovery, in Proceedings of the 8th International Workshop on Climate Informatics , Sept. 19-21, 2018. [51] Wang, Y., Segarra, S. & Uhler, C. High-dimensional joint estimation of multiple directed Gaussian graphical models. Electron. J. Stat. 14 , 2439–2483 (2020). [52] Sharma, A. et al. DoWhy: a Python library for causal inference. https://www.pywhy.org/dowhy/ (accessed 2026). [53] Budhathoki, K., Janzing, D., Bl¨ obaum, P. & Ng, H. Why did the distribution change? In Proc. 24th Int. Conf. Artificial Intelligence and Statistics (AISTATS) . PMLR 130 , 1666–1674 (2021). [54] Shapley, L. S. A value for n-person games. In Kuhn, H. W. & Tucker, A. W. (eds) Contributions to the Theory of Games, Volume II . Annals of Mathematics Studies 28 , 307–317 (Princeton Univ. Press, 1953). [55] Sen, R., Shanmugam, K., Dimakis, A. G. & Shakkottai, S. Identifying best interventions through online importance sampling. In Proc. 34th Int. Conf. Machine Learning (ICML) 3057–3066 (2017). [56] Zhang, J., Squires, C. & Uhler, C. Matching a desired causal state via shift interventions. Adv. Neural Inf. Process. Syst. 34 (2021). [57] Eberhardt, F. & Scheines, R. Interventions and causal inference. Philos. Sci. 74 , 981–995 (2007). [58] Boyd, S. & Vandenberghe, L. Convex Optimization . Cambridge Univ. Press (2004). [59] Tibshirani, R. Regression shrinkage and selection via the lasso. J. R. Stat. Soc. B 58 , 267–288 (1996). [60] Friedman, J., Hastie, T. & Tibshirani, R. Regularization paths for generalized linear models via coordinate descent. J. Stat. Softw. 33 , 1–22 (2010). [61] Zou, H. The adaptive lasso and its oracle properties. J. Am. Stat. Assoc. 101 , 1418–1429 (2006). [62] Ashburner, M. et al. Gene ontology: tool for the unification of biology. Nat. Genet. 25 , 25–29 (2000). [63] Kanehisa, M. & Goto, S. KEGG: Kyoto Encyclopedia of Genes and Genomes. Nucleic Acids Res. 28 ,27–30 (2000). [64] Subramanian, A. et al. Gene set enrichment analysis: a knowledge-based approach for interpreting genome-wide expression profiles. Proc. Natl Acad. Sci. USA 102 , 15545–15550 (2005). [65] Buniello, A. et al. Open Targets Platform: facilitating therapeutic hypothesis building in drug discovery. 
+
+Nucleic Acids Res. 53 , D1467–D1475 (2025). 22 Appendix A Average transition percentage 
+
+As COAST identifies a series of solutions with different numbers of intervention targets using different values of the regularization strength λ, average transition percentage is defined as the mean of transition percentages over all non-zero solutions along the regularization path. It can represent the overall performance of COAST across a range of intervention solutions. To compare COAST with the MDA baseline, we generated transition percentages of MDA using the same sizes of interventions, i.e., the top k variables with the largest MDA scores, with k matched to the numbers of intervention targets identified by COAST on its regularization path (Fig. A1). 
+
+Fig. A1 : Comparison of COAST and the MDA baseline on the transition percentages along the regulariza-tion path. Average transition percentage is calculated as the mean of the transition percentages at different number of intervention targets except 0. 23 Supplementary Information 
+
+## Supplementary results on synthetic experiments 
+
+We present additional synthetic experiment results for 10-node and 500-node graphs, complementing the 100-node results reported in the main text. The same experimental protocol, evaluation metrics, and baseline comparison are used throughout: five random seeds per configuration, noise levels σ ∈ { 1, 3, 5}, and numbers of intervention targets k ∈ { 1, 5, 10 }.Figure S1 summarizes the comparison between COAST and the MDA baseline on 10-node graphs. In this small-graph regime, both methods achieve strong performance, reflecting the reduced combinatorial complexity of the intervention identification problem. For recall@ k, COAST achieves perfect recall across all single-target and 10-target settings, with a slight reduction to 0.96 at k = 5 under medium and high noise. The MDA baseline also performs well, reaching 1.00 in all single-target and 10-target configurations but dropping to 0.92 at k = 5, yielding a modest advantage of 4–8% for COAST. Transition percentage@ k
+
+values are similarly close: COAST ranges from 95% to 100% and the MDA baseline from 91% to 100%, with both methods achieving near-perfect scores in the 10-target setting where the intervention set spans the full variable space. The average transition percentage follows a comparable pattern, with COAST ranging from 73% to 100% and MDA from 70% to 100%; here the gap is most apparent in the multi-target settings (k ∈ { 5, 10 }), where COAST leads by 2–5%. Overall, the small graph size limits the room for differentiation, as both methods can effectively leverage the limited variable space. Figure S2 presents the corresponding results for 500-node graphs, where the substantially larger search space provides a more challenging test of each method’s ability to pinpoint the correct intervention targets. COAST maintains excellent recall@ k across all settings, ranging from 0.94 to 1.00, while the MDA baseline deteriorates dramatically: recall drops to 0.40 for k = 1, falls to 0.00 for k = 5 (indicating complete failure to identify any true target among the top-ranked variables), and recovers only slightly to 0.08 for 
+
+k = 10. COAST outperforms MDA by 60–96% across all conditions, underscoring the critical advantage of causal-model-guided attribution over marginal distributional comparisons as the variable space grows. For transition percentage@ k, COAST achieves values between 94% and 100%, whereas MDA ranges from only 50% to 66%, resulting in an absolute improvement of 34–46%. The average transition percentage further confirms this trend: COAST maintains consistently high values of 94%–100%, while MDA falls to 40%– 57%, with COAST leading by 40–54%. Notably, COAST’s performance remains remarkably stable across noise levels and numbers of targets even in this high-dimensional setting, whereas MDA shows both lower absolute performance and greater sensitivity to the problem configuration. 24 Fig. S1 : Results of synthetic datasets on 10-node graphs. Comparison of COAST and the MDA baseline on 10-node graphs across noise levels (low: σ = 1, medium: σ = 3, high: σ = 5). Within each row, the three panels correspond to different numbers of intervention targets ( k ∈ { 1, 5, 10 }). Bar heights represent means over five random seeds, and black dots show individual seed values. (a) Recall@ k. Both methods achieve high recall in this small-graph regime, with COAST maintaining a slight advantage at 
+
+k = 5. (b) Transition percentage@ k. Performance is comparable between methods, with both approaching 100% in the 10-target setting. (c) Average transition percentage across all non-zero solution sizes along the regularization path. COAST holds a consistent 2–5% lead in multi-target configurations. 25 Fig. S2 : Results of synthetic datasets on 500-node graphs. Comparison of COAST and the MDA baseline on 500-node graphs across noise levels (low: σ = 1, medium: σ = 3, high: σ = 5). Within each row, the three panels correspond to different numbers of intervention targets ( k ∈ { 1, 5, 10 }). Bar heights represent means over five random seeds, and black dots show individual seed values. (a) Recall@ k. COAST achieves near-perfect recall (0.94–1.00) across all settings, while the MDA baseline drops to 0.00–0.40, demonstrating COAST’s scalability advantage. (b) Transition percentage@ k. COAST outperforms MDA by 34–46%, with MDA unable to exceed 66% in any configuration. (c) Average transition percentage across the regularization path. COAST maintains values above 94% regardless of noise or number of targets, whereas MDA ranges from 40% to 57%, confirming the robustness of COAST’s causal-model-guided optimization in high-dimensional settings. 26 The causal graph structure of the Perturb-seq data 
+
+Fig. S3 : Directed acyclic graph (DAG) structure learnt over 36 genes using the greedy sparsest permutation (GSP) algorithm with known module-to-program regulatory relationships as prior information. Genes that are ground truth perturbation targets of the 3 case studies are highlighted. 27 Supplementary results of COAST on the single-cell RNA-seq data 
+
+Figure S4 shows the results of COAST using the regularization approach on the scRNA-seq datasets in [16]. With a series of regularization values, the numbers of intervention targets of the identified solutions are 38, 35, 29, 24, 20, 12, 6, 4. 
+
+Fig. S4 : Results of COAST on the scRNA-seq dataset across a range of regularization strengths. As regularization increases, the number of inferred intervention targets progressively decreases from 38 (full candidate target set) to 4. 28

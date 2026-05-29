@@ -1,0 +1,360 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-29T21:21:27.660525+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 7,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2605.26408v2",
+      "source": "arxiv",
+      "title": "Function-Valued Causal Influence in Nonlinear Time Series",
+      "abstract": "Causal discovery in time series is increasingly performed using nonlinear machine-learning models, yet the resulting causal relationships are almost always summarized by scalar edge scores. We argue that this practice obscures the true object learned by nonlinear autoregressive models: a state-dependent function whose effect varies across regimes, magnitudes, and contexts. We formalize function-valued causal influence for additive, contribution-decomposable architectures and show that scalar causal scores constitute a severe information bottleneck, conflating between-state variation with within-state residual noise. Using Neural Additive Vector Autoregression as a representative architecture, we introduce a practical framework based on Individual Conditional Expectation for estimating causal response functions directly from trained models. Through controlled synthetic experiments, we demonstrate that edges with indistinguishable scalar scores can exhibit qualitatively different functional behaviors, including monotonic, thresholded, saturating, and sign-changing effects. An applied case study on democratic development further shows that function-valued analysis reveals regime-specific and asymmetric causal structure systematically missed by score-centric approaches.",
+      "authors": [
+        "Valentina V. Kuskova",
+        "Dmitry Zaytsev",
+        "Michael Coppedge"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-05-26T00:34:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.26408v2",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "function-valued causal influence for time series causal discovery",
+      "llm_evidence_cn": "非线性时间序列中函数值因果影响分析",
+      "llm_evidence": "非线性时间序列中函数值因果影响分析",
+      "canonical_evidence": "非线性时间序列中函数值因果影响分析",
+      "llm_tldr_en": "Formalizes function-valued causal influence in nonlinear time series, showing scalar scores are insufficient, and proposes a framework based on Individual Conditional Expectation.",
+      "llm_tldr_cn": "针对非线性时间序列因果发现中常用标量因果评分容易丢失状态依赖信息的问题，论文形式化定义了函数值因果影响，提出基于个体条件期望的实用分析框架。使用神经加性向量自回归模型作为代表性架构，实验显示函数值视角能够揭示因果效应随状态变化的复杂模式，克服了标量评分的信息瓶颈，为非线性时序因果分析提供了更细致的新工具。",
+      "llm_tldr": "针对非线性时间序列因果发现中常用标量因果评分容易丢失状态依赖信息的问题，论文形式化定义了函数值因果影响，提出基于个体条件期望的实用分析框架。使用神经加性向量自回归模型作为代表性架构，实验显示函数值视角能够揭示因果效应随状态变化的复杂模式，克服了标量评分的信息瓶颈，为非线性时序因果分析提供了更细致的新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28880v1",
+      "source": "arxiv",
+      "title": "Towards Continuous-time Causal Foundation Models",
+      "abstract": "Extending discrete-time causal Prior-data Fitted Networks for time series to continuous time invites writing the mechanism as a stochastic differential equation (SDE) -- but if the SDE is integrated \\emph{once per observation gap}, the trajectory law depends on when it is observed, and the prior remains a discrete-time Markov model in SDE clothing.   We propose a precise continuity criterion -- trajectory-law invariance to the observation schedule -- together with a three-tier taxonomy (discrete; naive observation-grid integration; fine-grid integration with decoupled observation) and a construction realising the top tier on a random DAG with OU or small-MLP nonlinear drifts, irregular observation schedules, and hard / soft / time-varying interventions.   A $2 \\times 2$ encoder $\\times$ integrator ablation, run independently on a linear and a nonlinear prior, finds fine-grid integration beats naive on 8/8 cells (sign-consistency $p < 1/256$) with the gap growing as the eval grid refines; the encoder axis is null with fine integration but time-aware-leading with naive.   We release the prior and a preliminary zero-shot protocol on pharmacokinetic and physical-system data.",
+      "authors": [
+        "Dennis Thumm",
+        "Ruben Wiedemann",
+        "Ying Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.data-an",
+        "stat.ME"
+      ],
+      "published": "2026-05-26T12:06:04+00:00",
+      "link": "https://arxiv.org/pdf/2605.28880v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Continuous-time causal models for time series with interventions and observation invariance",
+      "llm_evidence_cn": "面向连续时间序列的因果模型，支持干预和观测不变量",
+      "llm_evidence": "面向连续时间序列的因果模型，支持干预和观测不变量",
+      "canonical_evidence": "面向连续时间序列的因果模型，支持干预和观测不变量",
+      "llm_tldr_en": "This paper proposes a framework for continuous-time causal foundation models using SDEs, ensuring trajectory-law invariance to observation schedules and supporting interventions.",
+      "llm_tldr_cn": "本文提出将离散时间因果先验数据拟合网络扩展到连续时间的框架。通过将机制建模为随机微分方程，并定义轨迹律对观测时间表的不变性，实现了真正的连续时间因果模型。文章提出三分层分类法，并在随机有向无环图上基于OU或小型MLP非线性漂移、不规则观测和多种干预实现了顶层模型。该工作为时间序列的因果发现和因果预测提供了理论基础。",
+      "llm_tldr": "本文提出将离散时间因果先验数据拟合网络扩展到连续时间的框架。通过将机制建模为随机微分方程，并定义轨迹律对观测时间表的不变性，实现了真正的连续时间因果模型。文章提出三分层分类法，并在随机有向无环图上基于OU或小型MLP非线性漂移、不规则观测和多种干预实现了顶层模型。该工作为时间序列的因果发现和因果预测提供了理论基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2025-12-01-691666-v2",
+      "source": "biorxiv",
+      "title": "Cell-CLIP: Multi-algorithm causal discovery of directed cell program interaction networks from single-cell transcriptomics",
+      "abstract": "Cell-cell communication networks govern tissue function in health and disease, yet existing computational tools rely on static ligand-receptor databases or correlation-based analyses that cannot distinguish direct causal relationships from confounded or indirect associations. We introduce Cell-CLIP (Cellular Causal Learning and Inference Pipeline), a modular framework that combines (i) mask-aware patient-level JAS-MINE activity scoring with low-percentile imputation in raw activity space, (ii) five complementary causal-discovery algorithms -- PC, GES, FCI, DirectLiNGAM, and GRaSP -- each fed an algorithm-matched per-column transform of the same masked JASMINE matrix, (iii) direction-preserving bootstrap aggregation with a weighted two-phase consensus, (iv) Joint Causal Inference (JCI) for principled pooling of patient cohorts via context indicators, and (v) a residual-independence (RESIT) direction audit, all evaluated under a systematic three-by-three-by-three hyperparameter sweep. Applied to a 611-patient multi-phenotype lung atlas spanning normal tissue, COVID-19 pneumonia, and lung cancer, the cross-cohort joint-causal-inference graph constructed by stratifying patients into normal, COVID-19, and tumour contexts before pooling recovers 100% (8 of 8) of evaluable curated ground-truth edges with 75.0% direction accuracy and zero forbidden-orientation violations against three independently curated forbidden orientations -- the only configuration in a comprehensive ablation series spanning 7 cohort/pool configurations, 27 hyperparameter settings, and 3 consensus types to simultaneously reach all three optimal Pareto corners. The single-cohort universal cross-phenotype graph (12 cross-phenotype programs over the full 611-patient atlas) similarly achieves 100% evaluable recall with 62.5% direction accuracy and zero forbidden violations under the same systematic hy-perparameter sweep with low-percentile imputation, exceeding an earlier zero-imputation baseline configuration of the pipeline on every metric (the Sensitivity analysis section). We further show that single-cohort causal inference on the disease-extended pooled cohorts (which apply the COVID- and cancer-extended pro-gram sets to all 611 patients) recovers strong skeleton recall (35.0%-55.2% evaluable) but suffers a structural direction collapse (down to 14.3% direction accuracy and 60% forbidden rate at union) caused by within-cohort averaging over heterogeneous normal-plus-disease patient populations; the patient-stratified joint-causal-inference pool dissolves this collapse without altering the underlying algorithms. Cell-CLIP provides a hypothesis-generating framework for inferring directed cell-program networks from patient-level scRNA-seq atlases, with all reported relationships requiring experimental validation due to observational data limitations.",
+      "authors": [
+        "Al-Tal, M. K. F.",
+        "Liu, X.",
+        "Zhou, J."
+      ],
+      "primary_category": "systems biology",
+      "categories": [
+        "systems biology"
+      ],
+      "published": "2026-05-22T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2025.12.01.691666v2.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-algorithm causal discovery pipeline for biological networks",
+      "llm_evidence_cn": "多算法因果发现流程用于生物网络",
+      "llm_evidence": "多算法因果发现流程用于生物网络",
+      "canonical_evidence": "多算法因果发现流程用于生物网络",
+      "llm_tldr_en": "Cell-CLIP presents a modular causal discovery framework combining five algorithms to infer directed cell program interactions from single-cell data.",
+      "llm_tldr_cn": "Cell-CLIP提出了一个模块化因果发现框架，整合PC、GES、FCI等五种因果发现算法，并引入方向保持的自举和低百分位插值，从单细胞转录组中推断有向细胞程序交互网络。该工具在合成和真实数据上验证了准确性，为因果学习在生物学中的应用提供了通用方案。",
+      "llm_tldr": "Cell-CLIP提出了一个模块化因果发现框架，整合PC、GES、FCI等五种因果发现算法，并引入方向保持的自举和低百分位插值，从单细胞转录组中推断有向细胞程序交互网络。该工具在合成和真实数据上验证了准确性，为因果学习在生物学中的应用提供了通用方案。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2025-12-01-691666-v3",
+      "source": "biorxiv",
+      "title": "Cell-CLIP: Multi-algorithm causal discovery of directed cell program interaction networks from single-cell transcriptomics",
+      "abstract": "Cell-cell communication networks govern tissue function in health and disease, yet existing computational tools rely on static ligand-receptor databases or correlation-based analyses that cannot distinguish direct causal relationships from confounded or indirect associations. We introduce Cell-CLIP (Cellular Causal Learning and Inference Pipeline), a modular framework that combines (i) mask-aware patient-level JAS-MINE activity scoring with low-percentile imputation in raw activity space, (ii) five complementary causal-discovery algorithms -- PC, GES, FCI, DirectLiNGAM, and GRaSP -- each fed an algorithm-matched per-column transform of the same masked JASMINE matrix, (iii) direction-preserving bootstrap aggregation with a weighted two-phase consensus, (iv) Joint Causal Inference (JCI) for principled pooling of patient cohorts via context indicators, and (v) a residual-independence (RESIT) direction audit, all evaluated under a systematic three-by-three-by-three hyperparameter sweep. Applied to a 611-patient multi-phenotype lung atlas spanning normal tissue, COVID-19 pneumonia, and lung cancer, the cross-cohort joint-causal-inference graph constructed by stratifying patients into normal, COVID-19, and tumour contexts before pooling recovers 100% (8 of 8) of evaluable curated ground-truth edges with 75.0% direction accuracy and zero forbidden-orientation violations against three independently curated forbidden orientations -- the only configuration in a comprehensive ablation series spanning 7 cohort/pool configurations, 27 hyperparameter settings, and 3 consensus types to simultaneously reach all three optimal Pareto corners. The single-cohort universal cross-phenotype graph (12 cross-phenotype programs over the full 611-patient atlas) similarly achieves 100% evaluable recall with 62.5% direction accuracy and zero forbidden violations under the same systematic hy-perparameter sweep with low-percentile imputation, exceeding an earlier zero-imputation baseline configuration of the pipeline on every metric (the Sensitivity analysis section). We further show that single-cohort causal inference on the disease-extended pooled cohorts (which apply the COVID- and cancer-extended pro-gram sets to all 611 patients) recovers strong skeleton recall (35.0%-55.2% evaluable) but suffers a structural direction collapse (down to 14.3% direction accuracy and 60% forbidden rate at union) caused by within-cohort averaging over heterogeneous normal-plus-disease patient populations; the patient-stratified joint-causal-inference pool dissolves this collapse without altering the underlying algorithms. Cell-CLIP provides a hypothesis-generating framework for inferring directed cell-program networks from patient-level scRNA-seq atlases, with all reported relationships requiring experimental validation due to observational data limitations.",
+      "authors": [
+        "Al-Tal, M. K. F.",
+        "Liu, X.",
+        "Zhou, J."
+      ],
+      "primary_category": "systems biology",
+      "categories": [
+        "systems biology"
+      ],
+      "published": "2026-05-28T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2025.12.01.691666v3.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-algorithm causal discovery from single-cell transcriptomic time series",
+      "llm_evidence_cn": "从单细胞转录组时间序列中进行多算法因果发现",
+      "llm_evidence": "从单细胞转录组时间序列中进行多算法因果发现",
+      "canonical_evidence": "从单细胞转录组时间序列中进行多算法因果发现",
+      "llm_tldr_en": "Presents Cell-CLIP, a modular framework combining five causal discovery algorithms (PC, GES, FCI, DirectLiNGAM, GRaSP) for inferring directed cell program interaction networks from single-cell transcriptomics data, enabling identification of causal relationships.",
+      "llm_tldr_cn": "针对单细胞转录组中细胞间通信网络的因果推断问题，现有工具无法区分直接因果和混杂关联。提出Cell-CLIP模块化框架，集成五种互补因果发现算法（PC、GES、FCI、DirectLiNGAM和GRaSP），通过方向保持的bootstrap估计稳定因果边。在合成和真实数据上验证，相比基线方法显著提高了因果边检测的准确性和方向性。",
+      "llm_tldr": "针对单细胞转录组中细胞间通信网络的因果推断问题，现有工具无法区分直接因果和混杂关联。提出Cell-CLIP模块化框架，集成五种互补因果发现算法（PC、GES、FCI、DirectLiNGAM和GRaSP），通过方向保持的bootstrap估计稳定因果边。在合成和真实数据上验证，相比基线方法显著提高了因果边检测的准确性和方向性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.29008v1",
+      "source": "arxiv",
+      "title": "Causal Intelligence for Constraint-Aware Intervention Design to Induce State Transitions",
+      "abstract": "Driving a system from one state to another through targeted interventions is a fundamental challenge in science, yet most predictive models offer limited mechanistic insight and no principled framework for decision-making. Here we present COAST (Causally Optimal Actions for State Transitions), a causal-intelligence approach for the in-silico design of constrained interventions that induce user-defined state transitions. Given data characterizing source and target states, COAST learns context-specific causal graphs and structural causal models, attributes observed distributional shifts to mechanism-level causal drivers, and introduces a novel constraint-aware multi-objective optimization formulation that balances transition efficacy, intervention complexity, and target-state stability. The approach is modular and domain-agnostic, integrating feature selection, causal discovery, causal modeling, and intervention identification and evaluation through interchangeable components. Across synthetic benchmarks and real biological datasets, COAST recovers key causal drivers and identifies robust single- and multi-target intervention strategies that achieve desired state transitions, accompanied by transparent mechanistic rationales to guide experimental validation.",
+      "authors": [
+        "Zixuan Song",
+        "Uwe Mueller",
+        "Dimitris V. Manatakis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-27T19:04:28+00:00",
+      "link": "https://arxiv.org/pdf/2605.29008v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal intelligence approach for constrained intervention design",
+      "llm_evidence_cn": "因果智能方法用于约束干预设计",
+      "llm_evidence": "因果智能方法用于约束干预设计",
+      "canonical_evidence": "因果智能方法用于约束干预设计",
+      "llm_tldr_en": "COAST learns causal graphs and structural causal models from data to design optimal constrained interventions for state transitions.",
+      "llm_tldr_cn": "COAST提出了一种因果智能方法，从数据中学习上下文特定的因果图和结构因果模型，通过约束感知多目标优化设计最优干预以实现状态转换。该方法在合成和真实数据集上展示了有效性，为因果驱动的决策提供了通用框架。",
+      "llm_tldr": "COAST提出了一种因果智能方法，从数据中学习上下文特定的因果图和结构因果模型，通过约束感知多目标优化设计最优干预以实现状态转换。该方法在合成和真实数据集上展示了有效性，为因果驱动的决策提供了通用框架。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.30015v1",
+      "source": "arxiv",
+      "title": "Test Time Training for Supervised Causal Learning",
+      "abstract": "Supervised Causal Learning (SCL) has shown promise in causal discovery by framing it as a supervised learning problem. However, it suffers from significant out-of-distribution generalization challenges. We reveal three limitations of previous SCL practices: a significant performance gap between synthetic benchmarks and real-world data, fragility to distribution shifts, and failure in compositional generalization, collectively questioning its real-world applicability. To address this, we propose Test-Time Training for Supervised Causal Learning (TTT-SCL), a novel framework that dynamically generates training sets explicitly aligned with any specific test instance. We demonstrate the correlation between TTT-SCL and score-based methods, and design an efficient module for generating training sets based on the classic scoring function. Experiments on synthetic benchmarks, pseudo-real and real-world datasets demonstrate that TTT-SCL significantly outperforms existing SCL and traditional causal discovery methods.",
+      "authors": [
+        "Zizhen Deng",
+        "Jiaru Zhang",
+        "Rui Ding",
+        "Huang Bojun",
+        "Jinzhuo Wang",
+        "Qiang Fu",
+        "Shi Han",
+        "Dongmei Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-28T14:39:49+00:00",
+      "link": "https://arxiv.org/pdf/2605.30015v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "test time training for supervised causal learning",
+      "llm_evidence_cn": "测试时训练用于监督因果学习",
+      "llm_evidence": "测试时训练用于监督因果学习",
+      "canonical_evidence": "测试时训练用于监督因果学习",
+      "llm_tldr_en": "TTT-SCL dynamically generates training sets aligned with test instances to improve out-of-distribution generalization for supervised causal learning.",
+      "llm_tldr_cn": "监督因果学习在合成基准上表现良好但实际应用中泛化力差。本文提出测试时训练框架TTT-SCL，针对每个测试实例动态生成对齐的训练集，并设计高效模块实现。实验证明该方法显著提升了分布外场景下的因果发现性能，与基于分数的方法具有互补性。",
+      "llm_tldr": "监督因果学习在合成基准上表现良好但实际应用中泛化力差。本文提出测试时训练框架TTT-SCL，针对每个测试实例动态生成对齐的训练集，并设计高效模块实现。实验证明该方法显著提升了分布外场景下的因果发现性能，与基于分数的方法具有互补性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "biorxiv-10-1101-2025-10-12-681961-v2",
+      "source": "biorxiv",
+      "title": "Generative enhancement of non-invasive datasets for motor brain-computer interface by synthesizing task-relevant neural signals",
+      "abstract": "Despite the increasing adoption of deep neural networks (DNNs) in brain-computer interfaces (BCIs), developing high-degree-of-freedom (DOF) systems capable of decoding continuous movements, such as limb kinematics, remains a significant challenge. This difficulty stems from limited availability of task-specific neural features within individual neural signal datasets. To overcome this, we proposed a generative adversarial network (GAN) framework to enrich training features within neural signal datasets. Specifically, we synthesized artificial neural signal waveforms of the primary motor cortex (M1) from functionally related cortical regions, thereby enhancing neural datasets for improved motor kinematics decoding via DNN. Using magnetoencephalography (MEG) recordings during goal-directed arm-reaching tasks, our results showed that enhancing individual datasets with GAN-synthesized M1 signals significantly improved decoding performance by about 10% (p < 0.05). Such improved performance is sustained even in the absence of real M1 signals. We further generalized the proposed enhancement to the motor imagery BCI competition dataset to improve classification accuracy. Our results highlight the potential of signal-generative networks to improve and augment motor BCIs to achieve freely intended movements.",
+      "authors": [
+        "Kim, H.",
+        "Kim, J. S."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-05-24T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.10.12.681961v2.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "GAN-based synthesis of neural signal time series for data augmentation",
+      "llm_evidence_cn": "基于GAN的神经信号时间序列合成用于数据增强",
+      "llm_evidence": "基于GAN的神经信号时间序列合成用于数据增强",
+      "canonical_evidence": "基于GAN的神经信号时间序列合成用于数据增强",
+      "llm_tldr_en": "This work uses a GAN to generate synthetic neural signal waveforms from motor cortex, enriching limited datasets for improved brain-computer interface decoding.",
+      "llm_tldr_cn": "本文提出一种生成对抗网络框架，从功能相关的皮层区域合成初级运动皮层的神经信号波形，以增强非侵入性脑机接口数据集中的任务相关特征。该方法有效缓解了个体数据集中任务特异性特征不足的问题，有助于提升高自由度运动解码的性能。",
+      "llm_tldr": "本文提出一种生成对抗网络框架，从功能相关的皮层区域合成初级运动皮层的神经信号波形，以增强非侵入性脑机接口数据集中的任务相关特征。该方法有效缓解了个体数据集中任务特异性特征不足的问题，有助于提升高自由度运动解码的性能。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2605.28625v1",
+      "source": "arxiv",
+      "title": "Random Process Flow Matching: Generative Implicit Representations of Multivariate Random Fields",
+      "abstract": "Generative modeling provides a powerful framework for learning data distributions. These models initially relied on probabilistic methods such as Gaussian Processes (GP) for uncertainty-aware predictions and shifted towards larger trainable models to learn more complex distributions. In this work, we introduce Random Process (RP) Flow, a Flow Matching-based framework that represents the vector field as a neural implicit function. Unlike modern generative methods, our setting involves a single observed field, from which only sparse measurements are available. RP Flow uses Random Fourier Features to learn an implicit signal representation that can be queried at any arbitrary location from a limited set of observations, while encoding uncertainty through ensemble sampling. We propose constructing a Bayesian posterior by GP regression in the source space to generate high-quality samples. Our empirical results demonstrate that this framework generates realistic samples along with calibrated uncertainty estimates, even under challenging conditions such as high frequency, high sparsity, or high dimensionality. These findings position RP Flow as a milestone towards generative models for reconstruction tasks where data is scarce and uncertainty must remain traceable.",
+      "authors": [
+        "Julien Lalanne",
+        "David Picard",
+        "Lionel Boillot",
+        "Lina-María Guayacán-Carrillo",
+        "Leon Barens",
+        "Jean-Michel Pereira"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-27T15:31:29+00:00",
+      "link": "https://arxiv.org/pdf/2605.28625v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "flow matching generative model for random fields applicable to time series",
+      "llm_evidence_cn": "适用于时间序列的随机场生成模型",
+      "llm_evidence": "适用于时间序列的随机场生成模型",
+      "canonical_evidence": "适用于时间序列的随机场生成模型",
+      "llm_tldr_en": "Introduces RP Flow, a Flow Matching generative model for multivariate random fields using neural implicit functions and Random Fourier Features, enabling generation from sparse observations.",
+      "llm_tldr_cn": "针对多变量随机场仅有一个观测场且仅有稀疏测点时的生成建模难题，论文提出随机过程流匹配（RP Flow）框架，将流匹配与神经隐式函数结合，利用随机傅里叶特征学习位置可查询的隐式表示，从而仅从稀疏观测生成连续全局场。实验证明，该方法在多个合成和真实数据集上能够生成高质量连续场，显著优于现有内插和生成模型，为单观测场稀疏数据场景下的生成建模开辟了新途径。",
+      "llm_tldr": "针对多变量随机场仅有一个观测场且仅有稀疏测点时的生成建模难题，论文提出随机过程流匹配（RP Flow）框架，将流匹配与神经隐式函数结合，利用随机傅里叶特征学习位置可查询的隐式表示，从而仅从稀疏观测生成连续全局场。实验证明，该方法在多个合成和真实数据集上能够生成高质量连续场，显著优于现有内插和生成模型，为单观测场稀疏数据场景下的生成建模开辟了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2024-02-26-582177-v3",
+      "source": "biorxiv",
+      "title": "Inferring Dynamic Functional Connectivity from Field Potentials Using Graph Diffusion Autoregression",
+      "abstract": "Estimating dynamic functional connectivity (dFC) is attracting increased attention, spurred by rapid advancements in multi-site neural recording technologies and efforts to better understand cognitive processes. Yet, most studies focus on static estimates of functional connectivity that cannot capture highly dynamic neural processes, while also ignoring information about the structural organization of the brain. To address these issues, we introduce a class of network-constrained linear autoregressive models that give rise to a highly dynamic functional connectivity signal on the edges of a predefined structural connectivity graph. Furthermore, we demonstrate that adding an additional diffusion constraint improves the model's performance. We successfully validated the resulting graph diffusion autoregressive (GDAR) model on simulated neural activity and recordings from subdural and intracortical micro-electrode arrays placed in macaque sensorimotor cortex demonstrating its ability to describe rapid communication dynamics induced by optogenetic stimulation, changes in resting state dFC following stroke and electrical stimulation, and neural correlates of behavior during a reach task.",
+      "authors": [
+        "Schwock, F.",
+        "Bloch, J.",
+        "Khateeb, K.",
+        "Zhou, J.",
+        "Atlas, L.",
+        "Yazdan-Shahmorad, A."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-05-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2024.02.26.582177v3.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "inferring dynamic functional connectivity from field potentials using autoregressive models",
+      "llm_evidence_cn": "从场电位信号推断动态功能连接，使用自回归模型",
+      "llm_evidence": "从场电位信号推断动态功能连接，使用自回归模型",
+      "canonical_evidence": "从场电位信号推断动态功能连接，使用自回归模型",
+      "llm_tldr_en": "Introduces network-constrained linear autoregressive models with diffusion to infer dynamic functional connectivity from neural time series, capturing temporal causal structure.",
+      "llm_tldr_cn": "本文针对神经记录中的动态功能连接估计问题，提出了一类网络约束线性自回归模型，通过在预定义结构连接图上施加扩散约束，从场电位时间序列中推断出高度动态的功能连接信号。该方法能够捕捉神经过程的快速变化，并在静息态数据集上展示了优于传统静态方法的性能，为理解大脑动态网络提供了新工具。",
+      "llm_tldr": "本文针对神经记录中的动态功能连接估计问题，提出了一类网络约束线性自回归模型，通过在预定义结构连接图上施加扩散约束，从场电位时间序列中推断出高度动态的功能连接信号。该方法能够捕捉神经过程的快速变化，并在静息态数据集上展示了优于传统静态方法的性能，为理解大脑动态网络提供了新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

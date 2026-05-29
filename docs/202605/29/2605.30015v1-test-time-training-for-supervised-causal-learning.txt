@@ -1,0 +1,558 @@
+Title: Test Time Training for Supervised Causal Learning
+
+URL Source: https://arxiv.org/pdf/2605.30015v1
+
+Published Time: Fri, 29 May 2026 01:49:53 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# Test Time Training for Supervised Causal Learning 
+
+Zizhen Deng ∗
+
+Peking University 
+
+zzdeng25@stu.pku.edu.cn 
+
+Jiaru Zhang 
+
+Shanghai Jiao Tong University 
+
+jiaruzhang@sjtu.edu.cn 
+
+Rui Ding †
+
+Microsoft 
+
+juding@microsoft.com 
+
+Huang Bojun 
+
+Sony Research 
+
+bojhuang@gmail.com 
+
+Jinzhuo Wang 
+
+Peking University 
+
+wangjinzhuo@pku.edu.cn 
+
+Qiang Fu 
+
+Microsoft 
+
+qifu@microsoft.com 
+
+Shi Han 
+
+Microsoft 
+
+shihan@microsoft.com 
+
+Dongmei Zhang 
+
+Microsoft 
+
+dongmeiz@microsoft.com 
+
+## Abstract 
+
+Supervised Causal Learning (SCL) has shown promise in causal discovery by framing it as a supervised learning problem. However, it suffers from significant out-of-distribution generalization challenges. We reveal three limitations of previ-ous SCL practices: a significant performance gap between synthetic benchmarks and real-world data, fragility to distribution shifts, and failure in compositional gen-eralization, collectively questioning its real-world applicability. To address this, we propose Test-Time Training for Supervised Causal Learning (TTT-SCL), a novel framework that dynamically generates training sets explicitly aligned with any specific test instance. We demonstrate the correlation between TTT-SCL and score-based methods, and design an efficient module for generating training sets based on the classic scoring function. Experiments on synthetic benchmarks, pseudo-real and real-world datasets demonstrate that TTT-SCL significantly outperforms existing SCL and traditional causal discovery methods. 
+
+## 1 Introduction 
+
+Causal discovery aims to infer causal relationships from observational data [ 17 , 25 ]. While tradi-tionally approached as an unsupervised problem (Fig. 1 (A)), Supervised Causal Learning (SCL) has recently emerged as a promising alternative [ 5, 9, 13 , 31 ]. SCL treats causal discovery as a supervised learning task: a model is trained on a set of synthetic causal instances, each comprising a causal graph and its corresponding sampled dataset, and learns to map datasets to their underlying causal graphs (Fig. 1 (B)). A pivotal factor for SCL’s success is the design of its training set. What properties should these synthetic training sets possess to ensure the model performs well on a real-world, unseen test instance? Two complementary principles guide this design: diversity and concentration . Diversity seeks broad coverage of possible causal models by varying key components such as graph structures, mechanisms, and noise characteristics, thereby encouraging generalization. Concentration, in contrast, aims to align the training set closely with the specific characteristics of the test domain of interest. 
+
+> ∗The work was done during his internship at Microsoft.
+> †Corresponding author. Preprint.
+> arXiv:2605.30015v1 [cs.LG] 28 May 2026
+
+Figure 1: Test time training supervised causal learning compare with causal discovery (unsupervised causal learning) and supervised causal learning. Current SCL methods heavily prioritize diversity, pre-training on large, static training sets generated from wide-ranging synthetic distributions [ 9 , 13 ]. However, we demonstrate that this paradigm suffers from critical limitations. Through experiments, we observe a notable generalization gap where strong performance on synthetic benchmarks fails to translate to real - world data, thereby questioning the practical utility of existing SCL approaches. Within the synthetic domain, we further find that these models are fragile under distribution shifts, showing significant performance degradation when the test instance differs from the training set in graph structure, causal mechanism, or noise distribution. More fundamentally, they fail to generalize compositionally; even when trained on all individual components, they cannot handle novel combinations of these components. These findings motivate a paradigm shift from diversity to concentration. We argue that robust generalization requires moving beyond a single, fixed training set and instead dynamically adapting to each test instance. To this end, we introduce a Test-Time Training for Supervised Causal Learning (TTT-SCL) framework. The core idea is that for a given test dataset, we dynamically generate a new, customized training set that is explicitly aligned with its distribution, train a specialized SCL model, and utilize this model to infer the causal graph (Fig. 1 (C)). Meanwhile, we established a connection between TTT-SCL and score-based methods, under which score-based methods can be considered a special case of TTT-SCL. Based on this, we established a theoretical basis for TTT-SCL and designed a module for efficiently generating training sets. Experi-ments on synthetic, pseudo-real, and real-world data show that TTT-SCL significantly outperforms existing SCL and traditional causal discovery methods. Our main contributions are: • We reveal three limitations of static SCL pre - training: a significant performance gap between syn-thetic benchmarks and real - world data, fragility to distribution shifts, and failure in compositional generalization, collectively questioning its real-world applicability. • We introduce the TTT-SCL framework, enabling dynamic generation of aligned training sets at test time. We demonstrate that the score-based method can be regarded as a special case of TTT-SCL, thereby establishing a theoretical basis for TTT-SCL and designing a module for efficiently generating training data. • Our experiments confirme that TTT-SCL achieves good performance across both synthetic, pseudo-real and real-world datasets. 
+
+## 2 Background 
+
+We begin by formalizing the core components of causal learning. A Structural Causal Model (SCM) consists of three key elements: causal graph, causal mechanisms, and noise distributions [ 17 , 18 ]. Specifically: 2• Causal Graph: Let G = ( V, E ) be a Directed Acyclic Graph (DAG) with vertex set V =
+
+{X1, . . . , X d} and edge set E ⊆ V × V , where d is the number of variables. The adjacency matrix A ∈ { 0, 1}d×d encodes edge relationships where Aij = 1 iff Xi → Xj ∈ E.• Causal mechanisms and noise: Each variable Xi is generated by a causal mechanism and exogenous noise, following the Structural Causal Model (SCM) framework [ 17 ]. The data-generating process is characterized by the structural equations: 
+
+Xi := fi(Pa G(Xi), ε i), (1) where Pa G(Xi) denotes parents of Xi in G, fi : R|Pa G(Xi)| × E i → R is the causal mechanism, and εi ∼ Pεi is exogenous noise from distribution Pεi . The full SCM is thus characterized by the tuple (G, {fi}di=1 , {εi}di=1 ), which comprehensively captures the causal structure, functional relationships, and exogenous noise. In supervised causal learning, we work with causal instances . A causal instance is defined by a graph G and a dataset D containing n observations {x(1) , . . . , x(n)} ∈ Rn×d, generated from the SCM (G, {fi}di=1 , {εi}di=1 ). The training set comprises K such instances, denoted as 
+
+{(Dktrain , G ktrain )}Kk=1 , where each Dktrain is generated from its corresponding Gktrain . Similarly, at test time, we are given a single test instance (Dtest , G test ), where Dtest is observed but Gtest 
+
+is unknown. To avoid notation clutter, we adopt the following conventions: indices i, j refer to variable/node indices within a graph, and subscripts “train" and “test" distinguish between training and test entities. Causal discovery aims to estimate the causal graph Gtest from Dtest using a model or algorithm 
+
+M . Supervised causal learning (SCL) frames this as a supervised learning problem, where a model (typically a neural network) is trained on synthetic causal instances to learn a mapping from observational data to graph structures. Formally, the SCL objective is to learn: 
+
+M : Rn×d → { 0, 1}d×d, (2) which maps an input data matrix (e.g., Dtest ) to an output adjacency matrix (representing Gtest ). The model is trained on synthetic pairs {(Dktrain , G ktrain )}Kk=1 .Previous SCL methods rely on training with synthetic data, where the generative distribution is explicitly controlled along three dimensions consistent with the SCM framework: graph structure, causal mechanisms, and noise distributions [6, 9, 13]. 
+
+## 3 Out-of-distribution Challenges for SCL 
+
+Supervised causal learning (SCL) relies almost entirely on synthetic data for training because real-world causal graphs are rarely available, which naturally raises the concern that performance measured on synthetic benchmarks may not faithfully reflect performance on real-world data. Our results on the Sachs dataset confirm this concern, as competitive performance on synthetic benchmarks does not translate into comparable accuracy on real-world data ( Issue 1 ). A closer look within the synthetic domain further reveals why static pre-training breaks down. The training distribution is jointly characterized by three dimensions, namely graph structure, causal mechanism, and noise distribution, and a mismatch in any single dimension between training and test already causes substantial performance degradation, exposing the fragility of SCL under distribution shifts ( Issue 2). More fundamentally, even when the model has encountered all individual settings across these dimensions during training, it still fails on unseen combinations of them, demonstrating a clear failure of compositional generalization ( Issue 3 ). The experiments below illustrate these three limitations. 
+
+3.1 Experiment Setup Datasets. To comprehensively evaluate generalization, we use both synthetic benchmarks, pseudo-real and real-world datasets. • Synthetic data: We generate test instances from a factorial combination of mechanism, graph and noise distribution. We use three mechanism classes: Linear, Random Fourier Features (RFF) [ 20 ], and Chebyshev polynomials [ 6]. We use two random graph models: Erdos-Renyi (ER) 3and Scale-Free (SF) [ 1, 7]. Gaussian noise is used for RFF and Chebyshev mechanisms, while Uniform noise is used for Linear mechanisms to ensure identifiability. This yields six test settings: RFF_G_ER, RFF_G_SF, Linear_U_ER, Linear_U_SF, Chebyshev_G_ER, and Chebyshev_G_SF. • Pseudo-real data : We also incorporate pseudo-real datasets generated by the SynTReN generator [ 27 ]. This generator is specifically designed to simulate synthetic transcriptional regulatory net-works with biologically plausible structures and parameters, producing gene expression data that closely resembles experimental microarray data. • Real-world data: We use the Sachs dataset [ 22 ], a well-established benchmark in causal discovery. It contains 853 measurements of 11 proteins and a consensus causal graph derived from biological knowledge. 
+
+Model & Training setting. : We mainly use AVICI as the model backbone [ 13 ], a DNN-based architecture which is currently widely followed by the community and open-sourced. To assess different generalization aspects, we compare several training settings, more detailed configurations can be found in Appendix A: • i.i.d : The training data and test data are exactly the same distribution. • Graph/Noise/Mechanism shift : The mechanism/graph/noise of the training data is different from that of the test data, but the other two distributions are the same. • Component-mixed : This training setup contains all individual components (mechanisms, graph types, noise distributions) seen in isolation during training, but crucially excludes the specific combinations present in the test instances. This tests whether the model can perform compositional generalization by recombining learned components, rather than merely memorizing training configurations. • AVICI (scm-v0) : This model was trained on SCM data simulated from a large variety of graph models with up to 100 nodes, both linear and nonlinear causal mechanisms, and homogeneous and heterogeneous additive noise from Gaussian, Laplace, and Cauchy distributions. It can be considered one of the strongest model of open source under the SCL paradigm 3.Table 1: Divergent generalization patterns. Strong synthetic performance does not guarantee effec-tiveness on real-world data. Results are presented as AUROC (standard deviation). RFF_G Linear_U Chebyshev_G Sachs Syntren PC 61.1 (4.9) 60.9 (4.7) 59.8 (6.6) 67.1 58.1 AVICI (scm-v0) 97.8 (1.3) 75.6 (13.8) 81.7 (10.5) 62.3 65.4 
+
+3.2 Limitations of Current SCL Paradigms 
+
+Our experimental results validate the three issues outlined above, collectively exposing the limitations of static pre-training in SCL. 
+
+Issue 1 . The results in Table 1 question the value of synthetic benchmarks by demonstrating that strong synthetic performance fails to guarantee effectiveness on real-world data. Here, we merge the dimensions of the graph and analyze more from the perspective of the mechanism. While AVICI (scm-v0) excels on synthetic data similar to its training distribution (e.g., RFF_G, 97.8), its performance collapses on the real-world Sachs dataset (62.3). In contrast, traditional methods like PC maintain consistent, albeit lower, performance across domains. This divergence reveals that SCL models overfit to the artifacts of their synthetic training set, lacking the cross-domain consistency required for real-world applicability. 
+
+Issue 2 . The results in Fig. 2 demonstrate that distribution shifts across all three dimensions (graph structure, causal mechanism, and noise distribution) significantly degrade SCL performance. Models struggle when the test-time graph structure (“Graph shift" compared to “i.i.d"), causal mechanism (“Mechanism shift" compared to “i.i.d"), or noise distribution (“Noise shift" compared to “i.i.d") differs categorically from those seen during training. While performance drops are observed in all cases, “Mechanism shifts" emerge as particularly damaging, underscoring the profound impact of the underlying mechanism functional form on model generalization. 
+
+> 3https://github.com/larslorch/avici
+
+4Figure 2: Two limitations of static SCL: fragility to distribution shifts and failure in compositional generalization. Each column represents a test setting, and each row shows the specific distribution of test data. The specific training distribution for the 5 test settings can be found in Appendix A. 
+
+Issue 3 . Even when trained on data containing all individual components, the model still exhibits per-formance drop on unseen combinations of these components, as seen when comparing “Component-mixed” to “i.i.d” in Fig. 2. This compositional failure indicates that SCL models memorize specific 
+
+(G, f, ε ) configurations rather than learning a modular understanding of causal factors. In summary, the dual failure of fragility under distribution shifts and inconsistency across domains fundamentally undermines the static pre-training paradigm. These limitations are not artifacts of a specific architecture, as validated by consistent failure patterns using the SiCL backbone (Appendix B). The results compellingly argue that robust causal discovery requires a shift from static, diversity-seeking pre-training to dynamic, test-time adaptation. 
+
+## 4 Test-Time Training for Supervised Causal Learning 
+
+Given an observed test dataset Dtest , TTT-SCL infers its underlying causal graph by training a supervised model at test time on data that are causally aligned with Dtest , as illustrated in Fig. 1(C). The workflow proceeds as follows: a training set tailored to Dtest is first generated under the guidance of a score function, and a supervised causal learning model is then trained on this set and applied to 
+
+Dtest for inference. In our work, the design and acquisition of the test-time training set constitutes the core technical contribution, while the supervised causal learning module can leverage any existing architecture. Therefore, we focus on the generation of the training set in the following, and use the score as a bridge to analyze the relationship between TTT-SCL and classical score-based methods. 
+
+4.1 Causally Aligned Training Set Generation 
+
+To generate a training set that is causally aligned with Dtest , we need a principled measure of alignment quality, which motivates our adoption of a score function that evaluates how well a candidate graph G fits the observed data Dtest . Formally, we adopt a score 
+
+score( G, D test ) = AD( G, D test ) − ∥ AG∥0, (3) 5where the alignment-of-distribution (AD) term is defined as the average log-likelihood of the variables under the mechanisms induced by G:
+
+AD( G, D test ) := 1
+
+d
+
+> d
+
+X
+
+> i=1
+
+1
+
+n
+
+> n
+
+X
+
+> t=1
+
+log p x(t) 
+
+> i
+
+| f Gi (x(t)Pa G(i)). (4) Here f Gi denotes the causal mechanism of variable Xi given its parents in G, fitted on Dtest by regressing Xi on Pa G(Xi) via Structure-Induced Mechanism (SIM). For a candidate graph, SIM estimates each variable’s functional relationship with its parents and the residual noise from the test data, enabling the likelihood evaluation above as well as the generation of causally aligned synthetic datasets described later (see Appendix C for details). The term ∥AG∥0 counts the number of edges and penalizes graph complexity, in the spirit of classical information criteria. Guided by this score, we can obtain a collection of high-scoring graphs. However, finding these graphs is difficult as exhaustively searching the entire DAG space is in-tractable. To solve this problem, we propose an informed construction approach which combines good initializations with guided refinement. Concretely, it proceeds in three stages: 1. Seed Initialization. We start from an initial graph G0 obtained by applying a traditional causal discovery method (e.g., PC, NOTEARS) on Dtest . Note that the initial graph can also be a random DAG, while using a better initial graph provides a useful prior and accelerates the whole process. 2. Iterative Stochastic Graph Refinement. From the current graph Gcurr , we iteratively propose local modifications to the graph and obtain Gcand . The possible modifications include single-edge additions, deletions, and reversals do not break the acyclicity. After that, the candidate Gcand is evaluated using the joint score function in Eq. (3) and is accepted with probability proportional 
+
+α = min 
+
+h
+
+1, score (Gcand ,D test ) 
+
+> score (Gcurr ,D test )
+
+i
+
+. This stochastic refinement process is repeated iteratively and yields multiple graphs during the last multiple iterations. 3. Training Data Generation. For each graph Gktrain , we regress its mechanism with Dtest via SIM, and then forward-sample a synthetic dataset Dktrain based on the regressed mechanism. All causal instances ( Dktrain , Gktrain ) then assemble the final training sets {(Dktrain , G ktrain )}Kk=1 .The complete TTT-SCL workflow is formalized in Algorithm 1. By combining score and stochastic refinement, this approach realizes an efficient and directed method for searching the graph space at test time. All hyperparameter details are described in the Appendix A. A diagram illustrating the workflow of training sets generation can be found in Appendix E. 
+
+4.2 Relation to Classical Score-Based Causal Discovery 
+
+Classical score-based causal discovery methods [ 4, 10 , 33 ] find an optimal graph based on the score, while TTT-SCL gives the score a richer meaning and more flexible usage. First , we move from selecting a single optimal graph to building a set of candidate graphs, thus replacing a point estimate with a collection that is more informative for learning. Under finite samples, multiple graphs often more plausible due to statistical uncertainty and score approximation error. Second ,we do not simply select the top K graphs by score value. Instead, the set of candidate graphs preserves sturtural diversity, effectively covering a neighborhood of plausible structures around the test instance’s underlying causal graph, as described in Sec 4.1. This neighborhood captures the intrinsic uncertainty that arises from finite samples and score imprecision. Third , we do not use the score as a final decision rule; rather, we train a supervised model on these instance -specific training sets to further optimize predictive accuracy. This learned model can combine evidence across the entire candidate set and exploit patterns that are not fully captured by the scalar score alone. In Sec 5.3, our experimental results confirm the performance improvement brought about by supervised learning. 
+
+Further, score -based methods can be regarded as a special case of TTT - SCL. Given a test dataset Dtest and a set of training pairs {(Dktrain , G ktrain )}Kk=1 , let sk := score( Gktrain ; Dtest )
+
+and k⋆ = arg max k sk. A score - based method returns Gk⋆ . If we instantiate TTT - SCL with the same training set and choose the supervised predictor f as the 1-nearest-neighbor classifier based 6Algorithm 1 Test-Time Training for Supervised Causal Learning (TTT-SCL) 
+
+Input: 
+
+Test dataset Dtest ∈ Rn×d, Number of refinement steps Nsteps , number of training graphs K.
+
+Output: Predicted causal graph Gpred ∈ { 0, 1}d×d. 
+
+> 1:
+
+G0 ← InitialGraph (Dtest ) ▷ e.g., NOTEARS, or a random DAG  
+
+> 2:
+
+Initialize graph list G ← []  
+
+> 3:
+
+Gcurr ← G0 
+
+> 4:
+
+for t = 1 to Nsteps do  
+
+> 5:
+
+Gcand ← Local (Gcurr ) ▷ Add, delete, or reverse an edge while preserving acyclicity  
+
+> 6:
+
+scurr ← Score (Gcurr , D test ) 
+
+> 7:
+
+scand ← Score (Gcand , D test ) 
+
+> 8:
+
+α ← min  1, s cand /s curr 
+
+ 
+
+> 9:
+
+if random (0 , 1) < α then  
+
+> 10:
+
+Gcurr ← Gcand  
+
+> 11:
+
+end if  
+
+> 12:
+
+if t > N steps − K then  
+
+> 13:
+
+G.append (Gcurr ) ▷ Collect the last K graphs  
+
+> 14:
+
+end if  
+
+> 15:
+
+end for  
+
+> 16:
+
+Initialize training set T ← ∅  
+
+> 17:
+
+for each Gktrain ∈ G do  
+
+> 18:
+
+{fi, ˆPϵi }di=1 ← SIM (Gktrain , D test ) ▷ Regress mechanisms using Dtest via SIM  
+
+> 19:
+
+Dktrain ← Sample (Gktrain , {fi, ˆPϵi }di=1 , n ) 
+
+> 20:
+
+T ← T ∪ { (Dktrain , G ktrain )} 
+
+> 21:
+
+end for  
+
+> 22:
+
+Train a supervised causal learning model M on T ▷ e.g., AVICI  
+
+> 23:
+
+Gpred ← M (Dtest ) 
+
+> 24:
+
+return Gpred 
+
+on the score values, then the TTT -SCL output on Dtest coincides exactly with the score - based output: f (Dtest ) = Gk⋆ . Thus, classical score - based selection corresponds to a particular, restricted configuration of TTT-SCL. Because TTT -SCL generalizes the score - based principle, it inherits the theoretical guarantees of the underlying score. Under standard identifiability assumptions on the data - generating process, such as linear non - Gaussian models, additive noise models, and other settings where the causal graph is uniquely determined by the observational distribution [ 8 , 23 , 32 ], maximizing a properly defined score recovers the true causal graph [ 10 ]. Since our score instantiates the same likelihood-plus-sparsity structure, high -scoring graphs concentrate around the true causal structure, and the learner trained on data generated by these graphs is at least as reliable as the single highest - scoring graph. Moreover, the supervised model can outperform score - based selection in finite samples by exploiting the richer information contained in the collection of candidates. This flexibility also allows TTT - SCL to accommodate different score designs tailored to specific model classes without changing the overall framework. 
+
+## 5 Experiments 
+
+In this section, we compare the performance of TTT-SCL with multiple baseline methods on various synthetic data, pseudo-real data and real data. These datasets are consistent with the content of Section 3.1. 
+
+Baselines: We compare against traditional causal discovery methods PC [ 25 ], GES [ 4], NOTEARS [33 ], RESIT [ 19 ], SCORE [ 21 ], NoGAM [ 16 ] and AVICI [ 13 ], a DNN-based SCL method which is currently widely followed by the community and open source. We use the open-source pre-trained AVICI (scm-v0) model, which is trained on a vast mixture of synthetic data and represents the strongest publicly available SCL baseline. 7Our Method (TTT-SCL): For our TTT-SCL approach, we set the number of dynamically generated training graphs to K = 200 . The number of variables d is 10 for synthetic data, 11 for Sachs and 20 for Syntren. The observation n for each generated dataset matches that of the test data. We evaluate two variants of our method: TTT-SCL (random) which initializes the seed graph with a random DAG, and TTT-SCL (Notears) which uses a graph estimated from Dtest by the NOTEARS algorithm as a smarter starting point. 
+
+Evaluation metrics: We use multiple metrics to evaluate the predicted graphs, including Area Under the Receiver Operating Curve (AUROC), Area Under the Precision-Recall Curve (AUPRC), F1 score and Accuracy (ACC). In the main text, we primarily report AUROC for edge prediction to succinctly explore the impact of training data quality on model performance. 
+
+5.1 The Performance of TTT-SCL 
+
+Table 2: TTT-SCL performance on synthetic, real and pseudo-real datasets. Results are presented as AUROC (standard deviation). RFF_G Linear_U Chebyshev_G Sachs Syntren PC 61.1 (4.9) 60.9 (4.7) 59.8 (6.6) 67.1 58.1 GES 66.0 (10.6) 69.0 (10.8) 59.6 (5.9) 61.8 36.8 Notears 80.5 (4.0) 82.0 (4.6) 52.2 (3.5) 61.8 49.8 RESIT 54.3 (5.4) 54.1 (5.2) 49.8 (4.7) 62.3 64.6 SCORE 86.9 (3.2) 82.2 (18.7) 69.2 (7.6) 64.9 41.0 NoGAM 87.6 (2.9) 79.2 (18.6) 72.3 (6.4) 64.9 41.0 AVICI (scm-v0) 97.8 (1.3) 75.6 (13.8) 81.7 (10.5) 62.3 65.4 TTT-SCL (random) 88.4 (7.0) 82.3 (7.0) 79.6 (6.7) 58.6 72.0 TTT-SCL (Notears) 91.8 (3.1) 86.3 (4.4) 83.0 (8.7) 78.9 80.1 
+
+The results are summarized in Table 2. Overall, TTT-SCL demonstrates robust and highly competitive performance. The pre-trained AVICI (scm-v0) model achieves optimal performance on the RFF_G datasets, as it was explicitly trained on this distribution. TTT-SCL’s performance on RFF_G is slightly lower but remains strong, indicating its ability to approximate even in-distribution performance without prior exposure. Crucially, TTT-SCL achieves state-of-the-art performance on all other datasets, including Linear_U, Chebyshev_G, real-world Sachs, and pseudo-real Syntren dataset. This confirms that TTT-SCL excels in the most challenging and realistic scenarios involving distribution shifts, where static pre-training fails. These conclusions hold consistently across multiple evaluation metrics, as demonstrated in Ap-pendix F, where TTT-SCL maintains superior performance in ACC, F1-score, and AUPRC under various distribution shifts. Appendix G presents results on four additional established benchmark causal graphs from the bnlearn repository (Asia, Cancer, Earthquake, and Survey), demonstrating TTT-SCL’s robust performance across diverse real-world causal structures. The complexity analysis and runtime variation with the number of nodes are detailed in Appendix J. TTT-SCL (Notears) consistently outperforms TTT-SCL (random), indicating that a reasonable initial graph provides a useful prior and accelerates the refinement process. At the same time, the competitive performance of TTT-SCL (random) confirms the inherent robustness of our stochastic search. We further note that the gap between the two variants can be substantially narrowed by increasing the search budget, suggesting that sensitivity to the seed graph primarily reflects computational efficiency rather than a fundamental limitation. A detailed analysis is given in Appendix H. 
+
+5.2 Ablation Study 
+
+We design experiments to empirically validate how these two components contribute to the quality of the generated training data. We first ablate the sparsity term in the optimization objective to isolate its effect. We compare the full TTT-SCL (Notears) method against a variant, TTT-SCL (Notears-s), where the sparsity penalty is removed, thus optimizing for AD alone. Results in Table 3 show that removing the sparsity term leads to a consistent and significant performance drop across all test settings. 8Table 3: Ablation experiment of sparsity. Results are presented as AUROC. RFF_G Linear_U Chebyshev_G Sachs Syntren TTT-SCL (Notears) 91.8 (3.1) 86.3 (4.4) 83.0 (8.7) 78.9 80.1 TTT-SCL (Notears-s) 86.8 (2.9) 84.3 (7.9) 69.7 (12.4) 63.5 76.1 To further demonstrate the effectiveness of AD and the necessity of sparsity, the AD, sparsity, score of the training data obtained by different methods under different test data, as well as the AUROC on the test data were recorded in Appendix I. The results show that both AD and sparsity are indispensable and important elements, and they have certain indicative significance for performance. 
+
+5.3 Relationship with Score-based Methods 
+
+To clearly distinguish our approach from classical score-based methods, we provide a detailed stage-wise analysis comparing three key outputs: the seed graph, the highest-scoring graph found during TTT-SCL’s search, and the final SCL prediction. The consistent performance improvement across these stages demonstrates the added value of the supervised learning phase. Specifically, we conducted experiments comparing three different outputs across four test domains (RFF, Linear, Chebyshev, and Sachs) for detailed analysis: 1. Seed graph : Initial graph from proxy methods 2. Highest-score graph : Highest-score graph found during TTT-SCL’s stochastic refinement 3. Final output : Graph predicted by the SCL model trained on TTT-SCL-generated data Table 4: Performance comparison (AUROC) across different stages of TTT-SCL.                
+
+> RFF_G Linear_U Chebyshev_G Sachs Seed graph 80.5 82.0 52.2 61.8 Highest-score graph in TTT-SCL search 88.9 80.1 75.8 66.6 Final graph from trained SCL model 91.8 86.3 83.0 78.9
+
+The results in Table 4 clearly demonstrate the two-stage improvement of our approach: • 1→2 (Search Improvement) : The higher AUROC of the highest-score graph compared to the seed graph shows that TTT-SCL’s stochastic refinement effectively improves graph quality through distributional alignment. • 2→3 (Learning Improvement) : The consistent and substantial performance gain of the final SCL output over the highest-score graph demonstrates the crucial advantage of our approach. While score-based methods would stop at the highest-scoring graph, TTT-SCL uses this graph to generate training data that enables an SCL model to learn more accurate causal relationships. This two-stage process, where we optimize for training data quality rather than directly for the final graph, constitutes the fundamental distinction between TTT-SCL and classical score-based causal discovery. 
+
+## 6 Related Work 
+
+Causal discovery has traditionally been approached as an unsupervised problem, with constraint-based methods (e.g., PC, FCI [ 25 ]), function-based methods (e.g., LiNGAM [ 23 ], ANM [ 8]), and score-based methods (e.g., GES [ 4], NOTEARS [ 33 ], DAG-GNN [ 29 ], GraN-DAG [ 10 ]) inferring causal graphs directly from observational data. While principled, these methods often suffer from high sample complexity, sensitivity to faithfulness violations, and limited scalability. Supervised Causal Learning (SCL) has recently emerged as a promising alternative that frames causal discovery as a supervised learning problem [ 5, 9, 13 ]. Prior SCL methods employ diverse architectures, including cascade classifiers for sequential independence testing [ 14 ], attention-based 9transformers operating on data as 3D tensors [ 6, 9 , 13 ], and pairwise attention networks [ 31 ]. Their target outputs also vary, ranging from undirected skeletons [ 14 ] and local v-structure classifications [ 5] to full directed adjacency matrices [ 9, 13 ], with some methods only guaranteeing recovery up to Markov equivalence [6, 31]. Regarding training data strategy, [ 15 ] recently investigated SCL generalization challenges but at-tributed performance drops primarily to unseen individual components and advocated increased pre-training diversity. In contrast, we identify a more fundamental limitation: compositional gener-alization failure, where SCL models fail on novel combinations of seen components, revealing the intractability of exhaustive static pre-training and motivating our TTT-SCL paradigm. Finally, while test-time adaptation has shown promise in general machine learning [ 11 , 12 , 24 , 26 ,28 , 30 ], its application to causal discovery is gaining traction. Concurrently, TICL [ 3 ] addresses interventional settings with discrete data via self-augmentation, whereas our TTT-SCL provides a general framework for observational settings with continuous data, generating causally aligned training data at test time. 
+
+## 7 Conclusion 
+
+In this work, we identified limitations of static SCL paradigms, demonstrating their fragility under dis-tribution shifts, failure in compositional generalization, and poor transfer from synthetic benchmarks to real-world data. To address these out-of-distribution generalization challenges, we introduced TTT-SCL, a paradigm-shifting framework through test-time training of causally-aligned data. TTT-SCL dynamically generates high-quality training data tailored to each test instance, achieving good performance on both synthetic, pseudo-real and real-world datasets. This work not only advances the field of supervised causal learning but also opens new avenues for robust and adaptive causal discovery in real-world settings. 
+
+## References 
+
+[1] Albert-László Barabási. Scale-free networks: a decade and beyond. science , 325(5939):412– 413, 2009. [2] Bradley Butcher, Vincent S. Huang, Christopher Robinson, Jeremy Reffin, Sema K. Sgaier, Grace Charles, and Novi Quadrianto. Causal datasheet for datasets: An evaluation guide for real-world data analysis and data collection design using bayesian networks. Frontiers in Artificial Intelligence , Volume 4 - 2021, 2021. [3] Wei Chen, Rui Ding, Bojun Huang, Yang Zhang, Qiang Fu, Yuxuan Liang, Han Shi, and Dongmei Zhang. Test-time learning of causal structure from interventional data. arXiv preprint arXiv:2602.19131 , 2026. [4] David Maxwell Chickering. Optimal structure identification with greedy search. Journal of machine learning research , 3(Nov):507–554, 2002. [5] Haoyue Dai, Rui Ding, Yuanyuan Jiang, Shi Han, and Dongmei Zhang. Ml4c: Seeing causality through latent vicinity. In Proceedings of the 2023 SIAM International Conference on Data Mining (SDM) , pages 226–234. SIAM, 2023. [6] Philipp Froehlich and Heinz Koeppl. Graph structure inference with bam: neural dependency processing via bilinear attention. In Proceedings of the 38th International Conference on Neural Information Processing Systems , pages 128847–128885, 2024. [7] Edgar N Gilbert. Random graphs. The Annals of Mathematical Statistics , 30(4):1141–1144, 1959. [8] Patrik O. Hoyer, Dominik Janzing, Joris Mooij, Jonas Peters, and Bernhard Schölkopf. Non-linear causal discovery with additive noise models. In Proceedings of the 22nd International Conference on Neural Information Processing Systems , page 689–696, 2008. [9] Nan Rosemary Ke, Silvia Chiappa, Jane Wang, Anirudh Goyal, Jorg Bornschein, Melanie Rey, Theophane Weber, Matthew Botvinic, Michael Mozer, and Danilo Jimenez Rezende. Learning to induce causal structure. arXiv preprint arXiv:2204.04875 , 2022. 10 [10] Sébastien Lachapelle, Philippe Brouillard, Tristan Deleu, and Simon Lacoste-Julien. Gradient-based neural dag learning. In International Conference on Learning Representations , 2020. [11] Jian Liang, Ran He, and Tieniu Tan. A comprehensive survey on test-time adaptation under distribution shifts. International Journal of Computer Vision , 133(1):31–64, 2025. [12] Yuejiang Liu, Parth Kothari, Bastien van Delft, Baptiste Bellot-Gurlet, Taylor Mordan, and Alexandre Alahi. Ttt++: when does self-supervised test-time training fail or thrive? In 
+
+Proceedings of the 35th International Conference on Neural Information Processing Systems ,pages 21808–21820, 2021. [13] Lars Lorch, Scott Sussex, Jonas Rothfuss, Andreas Krause, and Bernhard Schölkopf. Amortized inference for causal structure learning. In Proceedings of the 36th International Conference on Neural Information Processing Systems , pages 13104 – 13118, 2022. [14] Pingchuan Ma, Rui Ding, Haoyue Dai, Yuanyuan Jiang, Shuai Wang, Shi Han, and Dongmei Zhang. Ml4s: Learning causal skeleton from vicinal graphs. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pages 1213–1223, 2022. [15] Francesco Montagna, Max Cairney-Leeming, Dhanya Sridhar, and Francesco Locatello. De-mystifying amortized causal discovery with transformers. arXiv preprint arXiv:2405.16924 ,2024. [16] Francesco Montagna, Nicoletta Noceti, Lorenzo Rosasco, Kun Zhang, and Francesco Locatello. Causal discovery with score matching on additive models with arbitrary noise. In Conference on Causal Learning and Reasoning , pages 726–751. PMLR, 2023. [17] Judea Pearl. Causality . Cambridge university press, 2009. [18] Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Elements of causal inference: founda-tions and learning algorithms . The MIT press, 2017. [19] Jonas Peters, Joris M Mooij, Dominik Janzing, and Bernhard Schölkopf. Causal discovery with continuous additive noise models. The Journal of Machine Learning Research , 15(1):2009– 2053, 2014. [20] Ali Rahimi and Benjamin Recht. Random features for large-scale kernel machines. In Pro-ceedings of the 21st International Conference on Neural Information Processing Systems , page 1177–1184, 2007. [21] Paul Rolland, Volkan Cevher, Matthäus Kleindessner, Chris Russell, Dominik Janzing, Bernhard Schölkopf, and Francesco Locatello. Score matching enables causal discovery of nonlinear additive noise models. In International Conference on Machine Learning , pages 18741–18753. PMLR, 2022. [22] Karen Sachs, Omar Perez, Dana Pe’er, Douglas A. Lauffenburger, and Garry P. Nolan. Causal protein-signaling networks derived from multiparameter single-cell data. Science ,308(5721):523–529, 2005. [23] Shohei Shimizu, Patrik O Hoyer, Aapo Hyvärinen, Antti Kerminen, and Michael Jordan. A linear non-gaussian acyclic model for causal discovery. Journal of Machine Learning Research ,7(10), 2006. [24] Samarth Sinha, Peter Gehler, Francesco Locatello, and Bernt Schiele. Test: Test-time self-training under distribution shift. In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision , pages 2759–2769, 2023. [25] Peter Spirtes, Clark N Glymour, and Richard Scheines. Causation, prediction, and search . MIT press, 2000. [26] Yu Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei Efros, and Moritz Hardt. Test-time training with self-supervision for generalization under distribution shifts. In International conference on machine learning , pages 9229–9248. PMLR, 2020. 11 [27] Tim Van den Bulcke, Koenraad Van Leemput, Bart Naudts, Piet van Remortel, Hongwu Ma, Alain Verschoren, Bart De Moor, and Kathleen Marchal. Syntren: a generator of synthetic gene expression data for design and analysis of structure learning algorithms. BMC bioinformatics ,7(1):43, 2006. [28] Dequan Wang, Evan Shelhamer, Shaoteng Liu, Bruno Olshausen, and Trevor Darrell. Tent: Fully test-time adaptation by entropy minimization. arXiv preprint arXiv:2006.10726 , 2020. [29] Yue Yu, Jie Chen, Tian Gao, and Mo Yu. Dag-gnn: Dag structure learning with graph neural networks. In International conference on machine learning , pages 7154–7163. PMLR, 2019. [30] Mert Yuksekgonul, Daniel Koceja, Xinhao Li, Federico Bianchi, Jed McCaleb, Xiaolong Wang, Jan Kautz, Yejin Choi, James Zou, Carlos Guestrin, et al. Learning to discover at test time. 
+
+arXiv preprint arXiv:2601.16175 , 2026. [31] Jiaru Zhang, Rui Ding, Qiang Fu, Huang Bojun, zizhen Deng, Yang Hua, Haibing Guan, Shi Han, and Dongmei Zhang. Learning identifiable structures avoids bias in DNN-based supervised causal learning. In The 28th International Conference on Artificial Intelligence and Statistics ,2025. [32] Kun Zhang and Aapo Hyvärinen. On the identifiability of the post-nonlinear causal model. UAI ’09, page 647–655, Arlington, Virginia, USA, 2009. AUAI Press. [33] Xun Zheng, Bryon Aragam, Pradeep Ravikumar, and Eric P. Xing. Dags with no tears: continuous optimization for structure learning. In Proceedings of the 32nd International Conference on Neural Information Processing Systems , page 9492–9503, 2018. 
+
+## A Detailed configuration 
+
+A.1 Setting of static training data 
+
+For all static SCL training setups evaluated(including i.i.d., Graph/Noise/Mechanism shift), we use a total of K = 2 , 000 synthetic training instances. Each instance contains n = 200 i.i.d. observations. The specific training settings for different test instances are as follows: Table 5: Graph/Noise/Mechanism shift training data setting                        
+
+> RFF_G_ER RFF_G_SF Linear_U_ER Linear_U_SF Chebyshev_G_ER Chebyshev_G_SF Graph shift RFF_G_SF RFF_G_ER Linear_U_SF Linear_U_ER Chebyshev_G_SF Chebyshev_G_ER Noise shift RFF_U_ER RFF_U_SF Linear_L_ER Linear_L_SF Chebyshev_U_ER Chebyshev_U_SF Mechanism shift Chebyshev_G_ER Chebyshev_G_SF RFF_U_ER RFF_U_SF RFF_G_ER RFF_G_SF
+
+In the Component-mixed setting, these 2,000 instances are uniformly distributed across the 6 mecha-nism_noise_graph combinations, resulting in approximately 330 instances per specific combination. The training data is a mixture of RFF_U_ER, RFF_U_SF, Linear_G_ER, Linear_G_SF, Cheby-shev_U_ER, and Chebyshev_U_SF. This makes the model see all components, mechanism (RFF, Linear, Chebyshev), graph (ER, SF), noise (G, U), but not see the specific combination in the test instance, such as RFF_G_ER. 
+
+A.2 Hyperparameter settings 
+
+Our score function, score (G) = AD (G, D test ) − ∥ AG∥0, is conceptually aligned with the Akaike Information Criterion (AIC), a well-established model selection criterion formulated as AIC =2k − 2 ln( L), where k is the number of parameters and L is the likelihood. In our formulation, 
+
+∥AG∥0 is analogous to the number of parameters k, and the negative log-likelihood − log p(X | f )
+
+is analogous to − ln( L).We perform Nsteps = 2000 stochastic refinement steps per test instance. Our current K is fixed at 200, and we have achieved good results on all our current datasets. It is foreseeable that performance will further improve as K increases, but this depends on our balance between performance and time consumption. 12 B Consistency on other model backbones 
+
+To further validate the generality of the TTT-SCL framework and the observed o.o.d generalization challenges across different model architectures, we conduct experiments using the Pairwise Attention from [ 31 ] ( SiCL ) as an alternative model backbone. Unlike the AVICI transformer used in the main experiments, which predicts a full directed adjacency matrix (DAG), SiCL incorporates pairwise attention mechanisms and is trained to predict the undirected skeleton and v-structures of the causal graph. This setup allows us to investigate whether the identified o.o.d failure patterns persist when using a fundamentally different architecture (with pairwise attention) and a different learning target (skeleton and v-structures instead of a full DAG), thereby testing the robustness of our conclusions. 
+
+B.1 Experimental Setup 
+
+Backbone Model is SiCL (Pairwise Attention Network) [ 31 ]. Learning Target is Undirected graph skeleton. The training strategy for the static baseline models (i.i.d. and SiCL(mixed)) follows the same data generation procedures described in Section 5.1.1 of the main text, but the ground-truth labels are converted to the appropriate representation for SiCL (skeleton labels). Evaluation Metric is AUROC for edge presence in the predicted skeleton. OOD Settings is identical to those defined for Table 1 in the main text: i.i.d. , Graph shift , Noise shift , Mechanism shift . The AVICI(mixed) is replaced with SiCL(mixed) , respectively. 
+
+B.2 Results and Analysis 
+
+Table 6 presents the AUROC for skeleton discovery under different distribution shifts.Consistent with the findings in Fig 2 using the AVICI backbone, the SiCL backbone—which employs a fundamentally different pairwise attention architecture and learns undirected skeletons rather than full DAGs—exhibits the same pattern of out-of-distribution generalization failure. Under i.i.d. conditions, SiCL achieves perfect or near-perfect performance. However, significant performance degradation occurs across all types of distribution shifts, with mechanism shifts proving particularly damaging (e.g., dropping to 66.5 on RFF_G_SF and 58.4 on Chebyshev_G_SF). Critically, the SiCL(mixed) variant, while trained on data containing all individual distributional components (graph types, mechanisms, and noise distributions), still fails to generalize to novel combinations of these factors. This demonstrates that SCL models struggle with compositional generalization—they memorize specific configuration patterns rather than learning modular causal representations. These results demonstrate that the OOD generalization challenge is not specific to a particular model architecture or output representation, but represents a fundamental limitation of the static pre-training paradigm in supervised causal learning. The consistent failure patterns across both transformer-based (AVICI) and pairwise-attention-based (SiCL) models strongly validate the need for test-time adaptation frameworks like TTT-SCL. Table 6: OOD generalization performance for skeleton using the SiCL (Pairwise Attention) backbone. RFF_G_ER RFF_G_SF Linear_U_ER Linear_U_SF Chebyshev_G_ER Chebyshev_G_SF iid 82.1(6.7) 100.0(0.0) 81.4(6.9) 100.0(0.0) 94.3(2.8) 100.0(0.0) Graph shift 66.4(9.0) 85.4(4.1) 65.8(6.9) 94.0(2.5) 73.0(5.7) 92.9(4.3) Noise shift 60.0(8.9) 91.7(3.8) 65.3(7.4) 84.0(7.7) 88.6(5.3) 89.3(5.4) Mechanism shift 62.1(7.4) 66.5(6.3) 59.4(4.7) 83.8(4.8) 76.1(8.9) 58.4(9.7) SiCL(mixed) 64.4(8.0) 74.4(10.7) 66.7(7.3) 82.7(8.2) 85.6(3.7) 91.2(4.1) 
+
+## C Structure-Induced Mechanism (SIM) 
+
+Intuition Given an observed test dataset Dtest = {x(t)}nt=1 and a candidate DAG Gk, SIM (structure-induced mechanism) produces a synthetic dataset Dk whose distribution is induced by the pair (Gk, Θk), where Θk denotes the parameterized mechanisms (and noise laws) fitted from Dtest .13 Formal description. Assume variables X1, . . . , X d. For each node i with parent set Pa Gk (Xi),we estimate a mechanism fk,i ∈ F and a noise distribution Pϵk,i by solving 
+
+ˆfk,i = arg min  
+
+> f∈F
+> n
+
+X
+
+> t=1
+
+ℓ x(t) 
+
+> i
+
+, f  x(t)Pa Gk (Xi)
+
+ 
+
+where ℓ(·, ·) is a suitable loss (e.g. squared error for continuous targets) and x(t)Pa denotes observed parent-values in sample t. Residuals are computed as 
+
+ˆϵ(t) 
+
+> k,i
+
+= x(t) 
+
+> i
+
+− ˆfk,i 
+
+ x(t)Pa Gk (Xi)
+
+.
+
+The fitted mechanism set is denoted Θk = { ˆfk,i , ˆPϵk,i }di=1 , where ˆPϵk,i is obtained either paramet-rically (e.g. Gaussian fit) or non-parametrically (empirical residual distribution / bootstrap). Once 
+
+Θk is obtained, generate n synthetic samples ˜x(1) , . . . , ˜x(n) by ancestral (topological) sampling: for 
+
+t = 1 , . . . , n and nodes in topological order set 
+
+˜X(t) 
+
+> i
+
+= ˆfk,i 
+
+  ˜X(t)Pa Gk (Xi)
+
+ + ˜ ϵ(t)
+
+> k,i
+
+,
+
+where ˜ϵ(t) 
+
+> k,i
+
+∼ ˆPϵk,i . The resulting synthetic dataset is Dk = {˜x(t)}nt=1 .
+
+## D Implementation of AD 
+
+In the main text, we propose the Alignment of Distribution (AD) metric as a core measure of causal similarity between the generated training data Dtrain and the test instance Dtest . While the likelihood-based implementation was used in our primary experiments, we provide alternative formulations here to accommodate different data distributions and modeling assumptions. 
+
+D.1 R2-based AD 
+
+For continuous variables under additive noise models, the coefficient of determination ( R2) provides an intuitive measure of goodness-of-fit for each causal mechanism: 
+
+AD R2 (Gtrain , D test ) = 1
+
+d
+
+> d
+
+X
+
+> i=1
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+R2 
+
+f ki (Pa k(Xi)) , X i
+
+#
+
+This value approaches 1 when the fitted mechanisms explain the variance in Dtest well, indicating strong alignment. 
+
+D.2 Normalized Wasserstein Distance-based AD 
+
+For multi-modal or heavy-tailed distributions, the Wasserstein distance offers a robust metric for comparing empirical distributions. We define a Normalized Wasserstein Distance (NWD) based AD metric as follows: For a given variable Xi and a candidate graph Gk with its fitted mechanism f ki , we compute: NWD (f ki , G k, D test ) := 1 −
+
+W1
+
+
+
+{xi}, {f ki (Pa k(Xi)) }
+
+
+
+max (U) − min (U)
+
+where: • {xi} are the observed values of Xi in Dtest .• {f ki (Pa k(Xi)) } are the values generated by applying the fitted mechanism f ki to the parent values in Dtest .• W1 is the 1-Wasserstein distance (Earth Mover’s Distance). For two equally sized, sorted collections of values {a(j)} and {b(j)}, it is defined as: 
+
+W1({a}, {b}) = 1
+
+n
+
+> n
+
+X
+
+> j=1
+
+|a(j) − b(j)|
+
+14 • U = {xi} ∪ { f ki (Pa k(Xi)) } is the union of the observed and generated values for Xi.• The denominator, max (U)−min (U), is the range of the combined set, used for normalization. The resulting NWD value lies between 0 and 1, where 1 indicates a perfect match between the generated and observed distributions for that variable. The overall AD metric is then the average NWD across all variables and generated graphs: 
+
+AD NWD (Gtrain , D test ) = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+"
+
+1
+
+d
+
+> d
+
+X
+
+> i=1
+
+NWD (f ki , G k, D test )
+
+#
+
+D.3 Selection Guidance 
+
+The likelihood-based AD is most natural for probabilistic models and was used in our main experi-ments. The R2-based AD is suitable for continuous variables under additive noise assumptions, often leading to computationally efficient and intuitive scores. The NWD-based AD is recommended for complex, non-Gaussian, or heavy-tailed distributions where likelihood or R2 might be less informa-tive or robust. The TTT-SCL framework is agnostic to the specific choice of AD metric, allowing users to select the most appropriate one for their domain. 
+
+## E Workflow of Training Sets Generation 
+
+To further illustrate the generation of training sets, we have drawn a workflow to visualize the process, as shown in Fig. 3. 
+
+Figure 3: Workflow of training sets generation 
+
+## F Performance in Other Metrics 
+
+In the main text, we primarily reported the AUROC for edge prediction to succinctly demonstrate the impact of training data quality on model performance. For a more comprehensive evaluation, we provide results on additional standard causal discovery metrics in this appendix: • Accuracy (ACC) : The proportion of correctly predicted edge presence/absence across all possible edges. Higher is better. This metric can be viewed as a normalized version of the Structural Hamming Distance (SHD), where instead of counting the number of incorrect edges, it measures the proportion of correct edge predictions relative to the total possible edges. 15 • F1-Score : The harmonic mean of precision and recall for edge prediction. Higher is better. • Area Under the Precision-Recall Curve (AUPRC) : Particularly informative under class imbalance (sparse graphs). Higher is better. Table 7: Comprehensive evaluation across multiple datasets and metrics. Mean (standard deviation) over multiple runs are reported for synthetic data. Best results are in bold .Method RFF_G Linear_U Chebyshev_G Sachs Syntren ACC ↑ F1 ↑ AUPRC ↑ ACC ↑ F1 ↑ AUPRC ↑ ACC ↑ F1 ↑ AUPRC ↑ ACC ↑ F1 ↑ AUPRC ↑ ACC ↑ F1 ↑ AUPRC ↑                                                                                          
+
+> PC 75.6(4.2) 39.5(9.7) 37.5(6.3) 74.0(4.4) 40.4(8.4) 37.2(6.2) 73.7(5.1) 37.4(12.6) 36.8(7.8) 84.2 45.7 30.1 84.75 16.43 6.89 GES 76.7(7.7) 49.8(16.3) 43.5(12.3) 71.9(9.8) 55.4(12.9) 45.3(9.3) 72.1(5.1) 38.5(10.5) 35.7(6.6) 82.6 36.3 24.2 65.50 1.42 4.79 NOTEARS 86.6(3.3) 73.2(6.2) 64.1(7.4) 89.1(2.9) 76.6(7.3) 69.7(8.6) 72.3(2.7) 14.5(8.7) 29.8(3.3) 82.6 36.3 24.2 94.75 0.00 5.00 AVICI(scm-v0) 93.1(1.6) 87.3(3.4) 94.9(3.1) 73.9(7.1) 41.8(18.4) 52.8(17.0) 80.6(5.4) 58.4(14.5) 69.3(14.2) 83.4 23.0 31.6 93.00 22.22 25.53 TTT-SCL (random) 83.2(5.3) 72.8(9.4) 68.8(10.8) 75.9(6.1) 59.8(11.8) 56.2(11.5) 75.5(7.0) 56.6(10.8) 60.0(10.0) 68.5 24.0 24.5 72.50 16.66 53.91
+> TTT-SCL (Notears) 86.8(3.5) 78.4(6.1) 76.0(8.6) 78.7(3.9) 65.4(8.0) 65.0(9.9) 77.1(6.7) 61.9(10.2) 66.0(16.3) 85.9 56.4 53.6 90.50 32.14 51.85
+
+Table 7 presents the performance of all compared methods across three distinct synthetic data settings (RFF_G, Linear_U, and Chebyshev_G) and the real-world Sachs dataset. TTT-SCL (Notears) achieves highly competitive performance across all datasets and evaluation metrics (ACC, F1, AUPRC), demonstrating its robustness to distribution shifts. It consistently outperforms traditional methods (PC, GES, NOTEARS) and the strong pre-trained SCL baseline AVICI(scm-v0) on most settings, particularly on the challenging Chebyshev_G and real-world Sachs dataset. While AVICI(scm-v0) excels in the RFF_G setting it was trained on, its performance degrades significantly under mechanism shifts (Linear_U) and on real data, highlighting the limitation of static pre-training. The superior performance of TTT-SCL across multiple metrics confirms that its test-time training strategy generates high-quality, causally-aligned training data, leading to more accurate and reliable causal discovery. 
+
+## G Additional Experiments on Benchmark Causal Graphs 
+
+To further validate TTT-SCL’s performance on real-world causal structures, we conducted additional experiments on well-established benchmark causal graphs from the bnlearn repository. The scarcity of real-world causal datasets with ground truth is a fundamental challenge in causal discovery research. While most works primarily rely on synthetic data and a limited number of real datasets (e.g., Sachs), benchmark causal graphs from bnlearn provide valuable testbeds as they represent causal structures derived from real-world domains and expert knowledge. We selected four representative graphs from bnlearn: • Asia: A classic medical diagnostic network modeling the relationships between visiting Asia, smoking, tuberculosis, lung cancer, bronchitis, and various test results. This graph represents a well-known benchmark in causal inference with clear medical relevance. • Cancer: A compact but meaningful graph modeling causal relationships in cancer epidemiology, including pollution, smoking, and genetic factors. Its small size belies its representativeness of real-world medical causal reasoning. • Earthquake: Models causal relationships between burglary, earthquake, alarm triggers, and neighbor responses. This graph exemplifies causal reasoning in security and monitoring systems. • Survey: Represents causal relationships in social science research, including age, sex, educa-tion, occupation, and transportation preferences. This graph demonstrates causal structures in sociological studies. These benchmark graphs are representative because they: (1) capture diverse real-world domains (medical, social, security), (2) are widely recognized and validated in the causal inference literature, and (3) reflect expert-curated causal knowledge rather than purely synthetic constructions. We parameterized these graphs using Chebyshev polynomial mechanisms to generate pseudo-real datasets, maintaining the authentic causal structures while incorporating realistic nonlinear relation-ships. Table 8 shows that TTT-SCL consistently achieves state-of-the-art performance across all benchmark graphs, demonstrating its robustness to diverse real-world causal structures. The superior performance of TTT-SCL across these diverse benchmark graphs further validates its effectiveness in handling real-world causal structures. 16 Table 8: Performance comparison (AUROC) on benchmark causal graphs from bnlearn repository. Method Asia Cancer Earthquake Survey PC 74.1 70.2 75.5 90.0 GES 46.4 85.1 80.3 88.3 NOTEARS 68.7 87.5 60.1 64.9 AVICI (scm-v0) 83.3 86.9 94.0 89.4 TTT-SCL (random) 86.8 84.5 84.5 92.7 TTT-SCL (NOTEARS) 91.0 91.6 98.8 95.5 
+
+## H Sensitivity to Seed Graph Initialization 
+
+As shown in Table 2, TTT-SCL (Notears) consistently outperforms TTT-SCL (random), raising the question of sensitivity to initialization. We argue that this gap reflects the finite search budget rather than a fundamental limitation. To verify this, we introduce a variant TTT-SCL (random-long) that uses a random seed but extends the stochastic refinement steps to Nsteps = 5000 (vs. the default 
+
+2000 ). Table 9: Effect of seed quality and search budget on AUROC. RFF_G Sachs TTT-SCL (Notears) 91.8 78.9 TTT-SCL (random) 88.4 58.6 TTT-SCL (random-long) 89.1 71.9 The results in Table 9 clearly show that with a larger computational budget, the performance gap narrows considerably. On the Sachs dataset, TTT-SCL (random-long) reaches 71.9 AUROC, a substantial improvement over 58.6, and approaches the 78.9 achieved with a Notears seed. This confirms that the stochastic refinement process is effective on its own, and a poorer seed can be compensated by additional search steps. Therefore, using a strong initializer like Notears is a practical recommendation for efficiency, not a strict requirement. 
+
+## I Ablation study 
+
+The main text established the necessity of the sparsity constraint in the TTT-SCL optimization objective to prevent degenerate, overly dense solutions. This appendix provides further empirical evidence to dissect the roles of the AD metric and the sparsity constraint. 
+
+I.1 The role of AD and sparsity 
+
+To further demonstrate the effectiveness of AD and the necessity of sparsity, the AD, sparsity, score of the training data obtained by different methods under different test data, as well as the AUROC on the test data were recorded in Table 10. The combined optimization of AD and sparsity is critical for generating high-quality training data. Without sparsity constraints (TTT-SCL(Notears-s)), high AD values alone lead to overly dense graphs that overfit the test distribution, violating causal minimality and resulting in lower AUROC. In contrast, jointly optimizing AD and sparsity (TTT-SCL(Notears)) yields training data that is both distributionally aligned and structurally sparse, closely matching the true causal graph. The resulting composite score strongly correlates with final model AUROC, confirming that both components are essential for robust generalization under distribution shifts, especially mechanism shifts. 
+
+I.2 Control AD, change sparsity 
+
+To control sparsity independent of AD, we design a controlled experiment based on the ground-truth test graph Gtest . For a given Gtest and its observational data Dtest , we generate alternative candidate training graphs Gtrain by gradually adding extra edges to Gtest (while ensuring the resulting graph remains a DAG). This creates a series of graphs that are supergraphs of the true graph. 17 Table 10: AD and Sparsity characterize the quality of the training data. Metric Methods RFF_G Linear_U Chebyshev_G AD TTT-SCL(random) -370.0 -258.5 -303.5 TTT-SCL(Notears-s) -357.5 -217.5 -298.0 TTT-SCL(Notears) -363.0 -220.5 -308.0 Sparsity TTT-SCL(random) 33.15 34.00 29.49 TTT-SCL(Notears-s) 38.80 38.75 38.85 TTT-SCL(Notears) 31.95 35.65 27.25 Score TTT-SCL(random) -403.3 -293.0 -333.3 TTT-SCL(Notears-s) -397.0 -256.8 -337.8 TTT-SCL(Notears) -395.0 -256.5 -335.5 AUROC TTT-SCL(random) 0.884 0.823 0.796 TTT-SCL(Notears-s) 0.868 0.843 0.697 TTT-SCL(Notears) 0.918 0.863 0.830 
+
+> Note: AD/Score/AUROC (Higher is better), Sparsity (Low is better)
+
+• Setting 1 (Sparse) : Add a small number of extra edges ( |Eadd | = m1). • Setting 2 (Medium) : Add a medium number of extra edges ( |Eadd | = m2, m2 > m 1). • Setting 3 (Dense) : Add a large number of extra edges ( |Eadd | = m3, m3 > m 2). For each generated supergraph Gtrain in these settings, we then: 1. Parameter Fitting: Regress the mechanisms fi and noise distributions from Dtest using Gtrain (via SIM). 2. Forward Sampling: Generate synthetic training data Dtrain from the fitted SCM (Gtrain , f, ϵ ). 3. Calculate Metrics: Compute the AD score between Dtrain and Dtest , and the sparsity of Gtrain . 4. Train & Evaluate: For each (Gtrain , D train ) pair, train an SCL model (AVICI backbone) and evaluate its AUROC on recovering the true Gtest from Dtest .This procedure is repeated for K graphs per setting. The key insight is that by construction, all generated Gtrain graphs are capable of representing the data distribution Dtest . Therefore, we expect them to achieve similar, high AD scores. However, only the sparsest graph ( Gtest itself) represents the true causal structure. Table 11 shows the results for the RFF_ER_G dataset, which are representative of the overall trend. Table 11: Control AD, change sparsity RFF_ER_G setting AD sparsity AUROC Control AD, change sparsity 1 -375 25.91 1.0(0) 2 -368 (+1.8%) 32.32(+24.7%) 0.972(0.017) 3 -362(+3.4%) 36.59(+41.2%) 0.908(0.023) The results clearly demonstrate the critical, independent role of the sparsity constraint. All supergraphs achieve a high and similar AD score (variation < 4% ), confirming that many different graphs can explain the observed data distribution nearly equally well. This illustrates the identifiability crisis without further constraints. As expected, adding more edges increases the sparsity metric (number of edges). Crucially, the downstream performance (AUROC) of the SCL model degrades significantly as the graphs become denser , even though the AD score remains high. The model trained on the true graph (Setting 1, perfect sparsity) achieves perfect AUROC. Performance drops to 0.972 for medium density and further to 0.908 for high density. 
+
+## J Scalability analysis and limitation 
+
+The computational complexity of TTT-SCL is dominated by the Stochastic Graph Refinement step. The search space for Directed Acyclic Graphs (DAGs) with d variables is super-exponential, rendering 18 exhaustive search intractable. Our stochastic search conducts a guided walk through this space, and its complexity is determined by the number of steps Nsteps and the cost of evaluating the Alignment of Distribution (AD) score for each candidate graph. The evaluation for a single candidate graph G involves: • Mechanism Fitting : For each node Xi, we fit a causal mechanism fi (using a Generalized Additive Model) based on its parent set Pa G(Xi) from the test data Dtest with n samples. Let 
+
+ki = |Pa G(Xi)| be the in-degree of Xi. The cost of fitting for one node is typically O(n · ki · l),where l is the number of GAM iterations. Due to the sparsity constraint Sparsity (G) in our joint score function (Eq. 5), which actively penalizes dense graphs, the in-degrees ki encountered during the search are small. Letting H represent the small, approximately constant maximum in-degree enforced by this constraint, the cost per node becomes O(n · H · l). Aggregated across all d nodes, the total fitting cost is O(n · H · d · l), which simplifies to O(n · d) since H and l are constants. • Likelihood Calculation : After fitting, computing the log-likelihood for all n samples and d
+
+variables has a cost of O(n · d).Thus, the per-step AD evaluation cost is O(n · d). The total complexity of the Stochastic Graph Refinement phase is therefore O(Nsteps · n · d). The subsequent Training Data Generation step involves fitting mechanisms and forward-sampling for only the final K selected graphs, contributing a minor additive term of O(K · n · d), which is negligible since Nsteps ≫ K (in our experiments, 
+
+Nsteps = 2000 and K = 200 ). To empirically validate this theoretical analysis, we present a runtime breakdown in Table 12. The results confirm that Stochastic Graph Refinement is indeed the computational bottleneck, as it involves thousands of AD evaluations. The subsequent Training Data Generation step, which performs SIM fitting on only the final K selected graphs, constitutes a minor fraction of the total time. Model training time is also relatively modest compared to the graph refinement phase. Our experiment used an 80G A100 GPU, and when the number of nodes was 10, it only used about 4G of memory. At the same time, we would like to emphasize that causal discovery is fundamentally a scientific inference task where high computational cost is often acceptable in exchange for accurate and reliable results. For example, when exploring the interactions between different proteins [ 22 ], or the relationships between different physiological factors in children with heart disease [ 2], we don’t care whether it’s 1 minute or 1 hour, or even days or weeks; we want to get a more reliable result. Table 12: Runtime breakdown of TTT-SCL for a test instance with varying number of nodes. Component 10 nodes 20 nodes 30 nodes Stochastic Graph Refinement 26 min 61 min 113 min Training Data Generation (SIM fitting) 1.3 min 3.2 min 5.6 min Model Training 3.3 min 5.8 min 8.3 min 19

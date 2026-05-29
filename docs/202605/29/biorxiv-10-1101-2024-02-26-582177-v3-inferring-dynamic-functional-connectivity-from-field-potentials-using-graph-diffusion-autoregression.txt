@@ -1,0 +1,3011 @@
+Title: 2024.02.26.582177v3.full.pdf
+
+URL Source: https://www.biorxiv.org/content/10.1101/2024.02.26.582177v3.full.pdf
+
+Number of Pages: 43
+
+Markdown Content:
+1Department of Electrical and Computer Engineering, University of Washington, Seattle, WA, USA. 2Department of Bioengineering, University of Washington, Seattle, WA, USA. 3Washington National Biomedical Research Center, Seattle, WA, USA. *e-mail: fschwock@uw.edu; azadehy@uw.edu 
+
+# Inferring Dynamic Functional Connectivity from Field Potentials 1
+
+# Using Graph Diffusion Autoregressi on 2
+
+Felix Schwock 1,3* , Julien Bloch 2,3 , Karam Khateeb 2,3 , Jasmine Zhou 2,3 , Les Atlas 1 , Azadeh 3
+
+Yazdan-Shahmorad 1,2,3* 4
+
+Estimating dynamic functional connectivity (dFC) is attracting increased attention, 5
+
+spurred by rapid advancements in multi-site neural recording technologies and e ff orts 6
+
+to better understand cognitive processes. Yet, most studies focus on static estimates 7
+
+of functional connectivity that cannot capture highly dynamic neural processes, while 8
+
+also ignoring information about the structural organization of the brain. To address 9
+
+these issues, we introduce a class of network-constrained linear autoregressive models 10 
+
+that give rise to a highly dynamic functional connectivity signal on the edges of a 11 
+
+predefined structural connectivity graph. Furthermore, we demonstrate that adding 12 
+
+an additional diffusion constraint improves the model’s performance. We successfully 13 
+
+validated the resulting graph diffusion autoregressive (GDAR) model on simulated 14 
+
+neural activity and recordings from subdural and intracortical micro-electrode arrays 15 
+
+placed in macaque sensorimotor cortex demonstrating its ability to describe rapid 16 
+
+communication dynamics induced by optogenetic stimulation, changes in resting state 17 
+
+dFC following stroke and electrical stimulation, and neural correlates of behavior 18 
+
+during a reach task. 19 
+
+20 
+
+Introduction 21 
+
+The coordinated interactions across different brain networks and subnetworks underlies cognitive 22 
+
+processes 1–6 , and disruptions of these interactions are linked to a range of neurological disorders 7– 23 10 . Despite this demonstrated importance, we still do not fully understand how brain networks 24 
+
+perform computations through the coordinated signaling of connected neurons and neural 25 
+
+populations during natural behavior, following a disease or injury, or as the result of rehabilitative 26 
+
+intervention. The development of new electrophysiological recording technologies such as large-27 
+
+scale micro-electrode arrays provides unique opportunities for addressing this gap by measuring 28 
+
+brain network activity simultaneously over multiple areas with high spatial and temporal 29 
+
+resolution 11–16 .30 
+
+A common signal extracted from subdural and intracortical micro-electrode arrays is the local 31 
+
+field potential (LFP) , which describes voltage fluctuations in the extracellular space of neuronal 32 
+
+tissue. For these signals, the most common approach for estimating neural communication is 33 
+
+through functional connectivity (FC) analysis 17,18 . In general, FC measures define neural 34 
+
+communication as the undirected (symmetric) or directed (asymmetric) statistical dependence 35 
+
+between different measurements that can be inferred from data using either model-free approaches 36 
+
+or very general model classes such as vector autoregressive (VAR) models 19–22 . While these 37 
+
+techniques are a popular choice for electrophysiology analysis, they predominantly yield static 38 
+
+estimates of neural communication. Additionally, they rarely incorporate information about the 39 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+structural network connectivity of the underlying brain region, particularly when analyzing 40 
+
+recordings from high-resolution intracranial electrophysiology arrays. 41 
+
+To address these limitations, we propose a new approach for estimating dynamic functional 42 
+
+connectivity (dFC) that 1) naturally incorporates the spatial layout of the recording array and 43 
+
+the local connectivity structure of the cortex 23 as a structural prior and 2 ) produces a highly 44 
+
+dynamic and directed connectivity signal that can be used to study transient network events. Our 45 
+
+approach is based on a class of network-constrained linear autoregressive models that can be fit 46 
+
+to neural data. We consider two specific models of this class: 1) a standard vector autoregressive 47 
+
+model whose parameters are constrained to a predefined structural connectivity graph called graph 48 
+
+autoregressive (GAR) model and 2) a Laplacian autoregressive model, where network interactions 49 
+
+are modeled via the graph Laplacian. Because the graph Laplacian is commonly used to model 50 
+
+diffusion processes on networks 24 , we refer to the latter approach as the graph diffusion 51 
+
+autoregressive (GDAR) model . Furthermore, we introduce new post processing techniques for 52 
+
+analyzing the graph-spectral properties of network-constrained directed FC estimates that are 53 
+
+based on the Hodge decomposition 25–28 .54 
+
+To demonstrate the utility of our framework, we tested the GAR and GDAR model on five highly 55 
+
+diverse datasets. First, using synthetic data from various networks of Wilson-Cowan oscillators 56 
+
+we demonstrate that the high-resolution dFC signal estimated by the GDAR model better 57 
+
+captures the simulated communication signal than GAR and standard VAR model s. Furthermore, 58 
+
+we show that GAR and GDAR model s better generalize to unseen data than VAR models. Finally, 59 
+
+using three micro-electrocorticography ( 𝜇𝜇 ECoG) and one Utah array dataset we demonstrate that 60 
+
+the GDAR model can be used to uncover transient communication dynamics evoked during 61 
+
+cortical optogenetic stimulation, characterize changes in resting state FC after stroke and electrical 62 
+
+stimulation, and uncover network-level dFC correlates of a monkey’s reach behavior that are 63 
+
+dependent on the spatial frequency. W e show that the GDAR model outperforms alternative 64 
+
+approaches and provides insights that cannot be obtained by other models. 65 
+
+Results 66 
+
+Graph autoregressive (GAR) and graph diffusion autoregressive (GDAR) model. 67 
+
+GAR and GDAR models are linear vector autoregressive (VAR) models, whose parameters are 68 
+
+constrained to the connections of a predefined structural connectivity graph. A n overview of both 69 
+
+models is shown in  Fig. 1  and a more detailed mathematical description can be found in Methods. 70 
+
+First, the electrode layout of the recording array is used to construct a sparse and locally connected 71 
+
+graph, with each electrode representing a node and with edges connecting nearby nodes  Fig. 1 a72 
+
+left ). This graph serves as a structural prior that incorporates information about the local 73 
+
+connectivity of the cortex into the model 23 . The models then transform the neural activity into 74 
+
+directed FC or flow signals defined on the graph edges ( Fig. 1 a right). Th ese signals, which we will 75 
+
+refer to as 
+
+GAR flow and 
+
+GDAR flow , respectively, describe the predictive information flow 76 
+
+between the nodes. Unlike classical FC analysis, which aggregates information over multiple time 77 
+
+points, thereby estimating an average information flow , the GAR and GDAR models transform 78 
+
+the neural activity at each time point into a flow signal without losing temporal resolution .79 
+
+Therefore, they can be used to study highly transient communication events in the brain. 80 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+GAR and GDAR flow are obtained by deconstructing the prediction of a 𝑝𝑝 th order vector 81 
+
+autoregressive model at time 𝑡𝑡 and node 𝑖𝑖 into its contribution from the past of node 𝑖𝑖 itself, and 82 
+
+the information provided by the neighbors of node 𝑖𝑖 (Fig. 1 b and c ). Formally, let 𝑠𝑠 𝑖𝑖 [𝑡𝑡 ] be the 83 
+
+neural activity at node 𝑖𝑖 and time 𝑡𝑡 , then 84 
+
+𝑠𝑠 𝑖𝑖 [𝑡𝑡 ] = � 𝑚𝑚 𝑘𝑘 
+
+> {𝑖𝑖 }
+
+𝑠𝑠 𝑖𝑖 [𝑡𝑡 − 𝑘𝑘 ] + 
+
+⎩
+
+⎪
+
+⎨
+
+⎪
+
+⎧ � 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ], 
+
+> 𝑗𝑗∈𝒩𝒩 (𝑖𝑖 )
+
+GAR 
+
+� 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } [𝑡𝑡 ], 
+
+> 𝑗𝑗 ∈𝒩𝒩 (𝑖𝑖 )
+
+GDAR 
+
+> 𝑝𝑝 𝑘𝑘=1
+
+(1)
+
+where 𝒩𝒩 (𝑖𝑖 ) is the set of neighbors of node 𝑖𝑖 . GAR flow 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] and GDAR flow  𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } [𝑡𝑡 ] are given 85 
+
+by 86 
+
+GAR: 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] = � 𝑤𝑤 𝑘𝑘 
+
+> {𝑗𝑗→𝑖𝑖 }
+
+𝑠𝑠 𝑗𝑗 [𝑡𝑡 − 𝑘𝑘 ]
+
+> 𝑝𝑝
+> 𝑘𝑘=1
+
+,GDAR: 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } [𝑡𝑡 ] = � 𝑤𝑤 𝑘𝑘 
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+�𝑠𝑠 𝑗𝑗 [𝑡𝑡 − 𝑘𝑘 ] − 𝑠𝑠 𝑖𝑖 [𝑡𝑡 − 𝑘𝑘 ]�𝑝𝑝 𝑘𝑘=1 
+
+.
+
+(2)
+
+The main difference between the GAR and GDAR model is that the predictive information flow 87 
+
+for the GDAR model is driven by gradients of activity, whereas for the GAR model it is driven 88 
+
+by the activity itself. The GDAR flow can therefore be considered analogous to classical heat 89 
+
+diffusion , where heat gradients drive changes in temperature. The idea of modeling neural 90 
+
+interactions via a diffusive process has also been proposed in other neuroscience contexts 29,30 .91 
+
+The parameters of the models 𝑚𝑚 𝑘𝑘 
+
+> {𝑖𝑖 }
+
+, 𝑤𝑤 𝑘𝑘 
+
+> {𝑗𝑗→𝑖𝑖 }
+
+, and 𝑤𝑤 𝑘𝑘  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+can be estimated from neural recordings 92 
+
+using linear regression (see Methods) and are assumed to be static within a predefined time 93 
+
+window. It is worth noting that the GDAR model only has one direction agnostic parameter 𝑤𝑤 𝑘𝑘 
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+94 
+
+per edge and lag, whereas the GAR model uses direction specific weights 𝑤𝑤 𝑘𝑘  
+
+> {𝑗𝑗→𝑖𝑖 }
+
+and 𝑤𝑤 𝑘𝑘  
+
+> {𝑖𝑖→𝑗𝑗 }
+
+that 95 
+
+are generally not equal. Since the activity gradient from node 𝑖𝑖 to 𝑗𝑗 is the negative of the activity 96 
+
+gradient from 𝑗𝑗 to 𝑖𝑖 , a positive flow from node 𝑗𝑗 to 𝑖𝑖 (which is equivalent to a negative flow from 97 
+
+𝑖𝑖 to 𝑗𝑗 ) causes an increase in activity at node 𝑖𝑖 and an equal amount of decrease at node 𝑗𝑗 . Therefore, 98 
+
+the GDAR model produces a consistent flow across the network . On the other hand, the GAR 99 
+
+model does not have this property as the flow from 𝑗𝑗 to 𝑖𝑖 does not affect the predicted activity at 100 
+
+node 𝑗𝑗 . We note that both GAR and GDAR flow are directed dFC estimates. However, while the 101 
+
+GAR flow is bidirectional at each time point, where the flow in each direction can be positive or 102 
+
+negative, the GDAR flow is unidirectional and can be interpreted as the 
+
+net flow between two 103 
+
+nodes. However, the direction of the GDAR flow across each edge can, and generally does, change 104 
+
+over time. 105 
+
+For a model order 𝑝𝑝 = 1 and constant weights 𝑤𝑤 {𝑖𝑖 ,𝑗𝑗 }, the GDAR model is equivalent to computing 106 
+
+current source densities (CSDs), which is a popular technique for analyzing field potential 107 
+
+recordings obtained from technologies such as ECoG or electroencephalography (EEG) 31,32 .108 
+
+Therefore, the GDAR model can also be considered a combination of CSD analysis and VAR 109 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+model. For field potential recordings the model parameters 𝑤𝑤 1 
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+, … , 𝑤𝑤 𝑝𝑝  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+can be interpreted as 110 
+
+conductivities such that voltage gradients multiplied by conductivities yields current flow s. 111 
+
+Summing the current flows at each node is analogous to computing the current sources and sinks 112 
+
+in CSD analysis. 113 
+
+The high temporal resolution of the GAR and GDAR flow signal is ideal for studying transient 114 
+
+signaling events. For example, the propagation of neural activity due to cortical stimulation can 115 
+
+be tracked by analyzing the spatiotemporal evolution of consecutive time steps of 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } [𝑡𝑡 ] or 116 
+
+𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] (Fig. 1 d). Alternatively, the model s can be applied to resting state recordings by 117 
+
+computing power spectra of the time varying GAR/GDAR flow resulting in a similar frequency 118 
+
+decomposition that is typical for standard VAR based FC measures ( Fig. 1 e) . Furthermore, 119 
+
+modeling FC on top of a graph allows us to use recently developed theory from signal processing 120 
+
+over simplicial complexes 25–27 to decompose the flow signal s into gradient ( non-circular ) and curl 121 
+
+(circular) modes of different spatial frequencies ( see Methods,  Fig. 1 f and g, and  Extended Fig. 1 122 
+
+for examples). The resulting gradient and curl flow spectra can be used to quantify the degree of 123 
+
+smoothness or coordination of the neural signaling (e.g., flow spectra with stronger low -frequency 124 
+
+components are considered to represent more coordinated signaling). Since the decomposition 125 
+
+requires unidirectional flow signals, this analysis tool is better suited for the GDAR model; 126 
+
+however, it can also be adopted for the GAR model by converting the bidirectional GAR flow into 127 
+
+a unidirectional flow (e.g., by computing 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] − 𝑓𝑓 {𝑖𝑖→𝑗𝑗 } [𝑡𝑡 ]). 128 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Fig. 1: Overview of the graph autoregressive (GAR) and graph diffusion autoregressive (GDAR) model. (a) The 
+
+recording array is used to form a sparse, locally connected graph, where each electrode represents a node, and edges 
+
+connect neighboring nodes. GAR/GDAR mod els then transform the neural activity observed at the nodes into a directed 
+
+flow signal defined on the graph edges, representing the real -time signaling between nodes. (b) The models incorporate 
+
+an order p autoregressive system, where at time 𝑡𝑡 each node's neural activity is modeled using a combination of its past p samples and the flow from all adjacent nodes. (c) The GAR flow 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] from node 𝑗𝑗 to 𝑖𝑖 at time 𝑡𝑡 is given by a 
+
+weighted sum of the previous 𝑝𝑝 samples from node 𝑗𝑗 . The GDAR flow 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } [𝑡𝑡 ], is calculated as the weighted sum of the 
+
+previous 𝑝𝑝 activity gradients between 𝑖𝑖 and 𝑗𝑗 . In analogy to current source density analysis, the edge parameters of the 
+
+GDAR flow 𝑤𝑤 1 
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+, … , 𝑤𝑤 𝑝𝑝  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+can be interpreted as conductivities for local field potential measurements, such that 
+
+conductivity times potential gradient yields a current flow. The model parameters are assumed to be static within a 
+
+particular time window and can be estimated using lin ear regression (see Methods). (d) The GAR/GDAR flow can be 
+
+used to study transient communication events, for example due to cortical stimulation. (e) For resting state recordings, 
+
+power spectral density estimates of the flow signals can be used to study f requency specific communication patterns. 
+
+(f) , (g) Akin to classical Fourier analysis for time series, the GDAR flow signal can also be decomposed into gradient (non -circular) and curl (circular) flow modes of different spatial frequency to study the smoothness and spatial 
+
+composition of the flow signal across the network. 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+The GDAR model outperforms VAR and GAR models in inferring communication 129 
+
+dynamics in a network of coupled Wilson-Cowan oscillators: To assess the accuracy of 130 
+
+the GAR/GDAR flow, we use simulated data generated by 10 randomly connected 16-node 131 
+
+networks of coupled Wilson-Cowan oscillators (Fig. 2  and  Extended Fig. 2 a). The networks are 132 
+
+used to generate a ground truth neural flow signal, as well as simulated neural activity, which is 133 
+
+used to fit GAR, GDAR , and VAR models of varying model order s (see Methods). All models are 134 
+
+used to transform the simulated neural activity into a neural flow signal, which is compared to the 135 
+
+ground truth neural flow using various metrics (Fig. 2a). Furthermore, we have estimated 136 
+
+traditional FC metrics via coherence or metrics from the Granger causality (GC) family. GC can 137 
+
+be computed from the spectral representation of VAR model parameters leading to two metrics 138 
+
+that are popular in neuroscience: partial directed coherence (PDC) 22 and directed transfer function 139 
+
+(DTF) 21 . For all VAR -based metrics (VAR flow, PDC, DTF) , which assume fully connected model 140 
+
+matrices, the resulting FC estimate is only compared over edges that are present in the structural 141 
+
+connectivity networks. 142 
+
+First, we assessed the accuracy of the estimate flow signal using spectral analysis for a single model 143 
+
+order ( 𝑝𝑝 = 24 ). In  Fig. 2 b, we compared the spectral magnitudes of coherence, PDC, DTF, and 144 
+
+estimated flow with the ground truth flow spectral magnitude using Peason correlation coefficients. 145 
+
+We found that the GDAR flow yields significantly higher correlations than any other metric ( Fig. 146 
+
+2d; Wilcoxon rank-sum test, 𝑝𝑝 < 0.05 ). Since GDAR and GAR are based on autoregressive models, 147 
+
+we can compute equivalent PDC and DTF metrics from their model parameters (see Methods). 148 
+
+While GDAR -PDC/DTF outperform GAR - and traditional PDC/DTF they do not outperform 149 
+
+any of the flow metrics ( Extended Fig. 2 d). Furthermore, w e found that the GDAR model exhibits 150 
+
+consistently lower magnitude errors than the VAR and G AR models for all frequencies and lower 151 
+
+phase errors for frequencies below 50 Hz ( Fig. 2 c). These findings also generalize to other model 152 
+
+orders. Specifically, for all 𝑝𝑝 ≥ 4, correlations with the ground truth magnitude spectra were 153 
+
+highest for the GDAR model ( Fig. 2 d) suggesting that it captures neural interactions more 154 
+
+accurately than the alternative metrics. We found that the same observation also holds when 155 
+
+computing correlation between estimated and ground truth flows in the time domain ( Extended 156 
+
+Fig. 2 f). 157 
+
+A notable observation is that the spectral magnitude of the ground truth flow is well approximated 158 
+
+by lower order VAR, GAR, and GDAR models. Specifically, the median correlation between 159 
+
+estimated and ground truth spectral magnitude for VAR and GAR models decreases with 160 
+
+increasing model order. In contrast, the correlation for the GDAR model reaches another local 161 
+
+maximum at higher orders, where it significantly outperforms the other two models ( Fig. 2 d). 162 
+
+Despite this second maximum, the highest median correlations for the GDAR model still occur at 163 
+
+low model orders. At the same time, because low-order models rely on fewer past time steps for 164 
+
+predicting future activity, they may have limited capacity to capture more complex spatiotemporal 165 
+
+dynamics that are not fully reflected in spectral magnitude alone. To test this , we used a recently 166 
+
+developed tool from dynamical systems theory, called dynamical similarity analysis (DSA) 33 , which 167 
+
+uses dynamical mode decomposition and shape analysis to provide a dissimilarity score between 168 
+
+two (high -dimensional) time series . We found that with increasing model order the accuracy in 169 
+
+capturing the spatiotemporal dynamics improves for all models (decreased DSA dissimilarity 170 
+
+score) before plateauing at an order around 𝑝𝑝 = 24 (Fig. 2 e). Hence, to accurately capture the 171 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+complex dynamic properties of the flow signal, higher order models are needed. For these higher 172 
+
+orders, the GDAR model perform significantly better than VAR and GAR models at 173 
+
+approximating the ground truth flow ( Fig. 2 b-d;  Extended Fig. 2 f). 174 
+
+Finally, we tested the models’ ability to generalize to unseen data by evaluating their one-step 175 
+
+ahead prediction performance on data that were not included during model fitting. Using simulated 176 
+
+neural activity from a 7-node network of Wilson-Cowan oscillators shown in  Extended Fig. 2 g177 
+
+(100 independent trials with 5s of simulated neural activity per trial), VAR, GAR and GDAR 178 
+
+models were trained on the initial 𝑁𝑁 samples of each trial and then tested on the remaining samples 179 
+
+(see Methods). An advantage of the GDAR model, owing to its fewer parameters compared to 180 
+
+both VAR and GAR models, is its reduced need for extensive training data to accurately estimate 181 
+
+model parameters. This results in flatter root-mean-square error ( RMSE ) curves for both train 182 
+
+and test set (Fig. 2 f left and middle) as well as the lowest generalization gap (difference between 183 
+
+test and train RMSE) among all models ( Fig. 2 f, right). Notably, the generalization gap for the 184 
+
+GDAR model is nearly an order of magnitude smaller than that for the GAR model despite having 185 
+
+only 37% fewer parameters . Similarly, the GDAR model provides near perfect generalization on a 186 
+
+range of electrophysiology datasets and significantly outperforms GAR and VAR models especially 187 
+
+when only limited data is available for model fitting (Extended Fig. 2 h).188 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+189 
+
+Fig. 2: Evaluation of the GAR and GDAR model's accuracy in capturing neural communication dynamics using 
+
+networks of Wilson Cowan oscillators. (a) 10 randomly connected 16 -node toy networks were used to simulate neural activity at each network node as well as compute a ground truth flow across each edge (see Methods). The estimated neural activity is transformed into the estimated neural flow signal using VAR, GAR, and GDAR models of different model orders, as well as the CSD approach. Ground truth and estimated neural flow are then compared using various metrics. (b) Distribution of Pearson correlation coefficients (medians, upper and lower quartiles, interquartile range) 
+
+between ground truth flow spectrum and coherence, partial directed coherence (PDC), directed transfer function (DTF), and estimated flow spectrum pooled over all graph edges from 100 independent simulation trials (10 per network). The GDAR flow spectrum significantly outperforms all other metrics. (c) Magnitude and phase difference between the spectrum of ground truth and estimated flow (median, upper and lower quartile). The GDAR model shows consistently lower magnitude errors for all frequencies and phase errors below 50 Hz. (d) Same as (b) but for different model orders. The GDAR model significantly outperforms all other metrics for 𝑝𝑝 ≥ 4. (e) Dissimilarity scores between estimated and ground truth flow signals obtained via dynamical similarity analysis (DSA) to assess the accuracy of the estimated flow dynamics. Low dissimilarity scores for high model orders ( 𝑝𝑝 ≥ 24) suggest an accurate estimation of the flow dynamics by all three models. (f) Generalization performance of 10 th order VAR, GAR, and GDAR models. All models were fit to the first 𝑁𝑁 samples (train length) of neural activity simulated by a 7 -node network of Wilson -
+
+Cowan oscillators (see  Extended Fig. 2e) independently for each of the 100 simulation trials. The model coefficients are then used to perform a one -step ahead prediction on the training data as well as the remaining samples in the trial (test data). The left and middle panel show the mean, 10 th , and 90 th percentile of the root -mean -square prediction error (RMSEs). The generalization gap (right panel) is defined as the difference between mean test and train RMSE. The GDAR model generalizes significantly better to unseen data than the VAR and GAR model. All statistical tests use Wilcoxon rank -sum tests at a significance level 𝑝𝑝 ≤ 0.05. (d) Significance markers compare GDAR with GAR model. (b) -(e) Exact p -values can be found in  Supplementary Table 1 and  Supplementary Table 2.
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Application of GDAR model to electrophysiological recordings: Due to better 190 
+
+performance of the GDA R over the GAR model on simulated data, we will focus on the GDAR 191 
+
+model for the remainder of the paper. To show the versatility of the GDAR model for analyzing 192 
+
+network-level dFC evoked by cortical stimulation, during behavior, and at rest, we have applied 193 
+
+the model to electrophysiological recordings from four separate experiments that either use μ ECoG 194 
+
+arrays (3 datasets) or a Utah array (1 dataset) to record LFPs from the sensorimotor cortex of 195 
+
+macaque monkeys . For all datasets, the layout of the recording array was first used to construct 196 
+
+a locally connected and sparse graph—with nodes corresponding to the recording channels— 197 
+
+mimicking the local connectivity structure of the cortex 23 . Next, GDAR models of different orders 198 
+
+were fit to the recorded LFPs. The resulting model coefficients were then used to transform the 199 
+
+LFPs into GDAR flow signals, which were post -processed depending on the experimental 200 
+
+paradigm. 201 
+
+The GDAR model uncovers communication dynamics evoked by cortical o ptogenetic stimulation: 202 
+
+First, we show that the GDAR model can uncover fast, stimulation induced communication 203 
+
+dynamics that match the experimental protocol. To do so we used three sessions from an 204 
+
+optogenetic stimulation experiment performed in macaques, where two lasers repeatedly 205 
+
+stimulated different locations of the primary motor (M1) and somatosensory (S1) cortex expressing 206 
+
+the opsin C1V1, and fit a 5 th order GDAR model to the LFPs recorded by a 96 -channel 𝜇𝜇 ECoG 207 
+
+array during stimulation (see  Fig. 3 a and b and Methods) 11,34,35 . GDAR flow signals averaged over 208 
+
+all stimulation trials in the milliseconds before and after stimulation for Session 1 are shown in 209 
+
+Fig. 3 c and Supplementary Video 1. When the network is at rest, flow levels across the network 210 
+
+are small. Activation by the first laser located in M1 causes the GDAR flow to immediately 211 
+
+increase near the stimulation location before spreading further into the network and reaching S1. 212 
+
+After the second laser was activated, the flow increases near the second stimulation location and 213 
+
+spreads into most parts of the network within the next few milliseconds. 214 
+
+It is apparent from  Fig. 3 c that the GDAR flow exhibits complex spatiotemporal dynamics within 215 
+
+milliseconds after stimulation. To test how these dynamics depend on the stimulation pattern, we 216 
+
+project the high-dimensional flow signal from three sessions , which only differ in their stimulation 217 
+
+location (see  Fig. 3 a), onto their first two principal components (PCs) and compare the flow 218 
+
+dynamics in this lower dimensional subspace (see Methods). We found that these low dimensional 219 
+
+GDAR flow dynamics are very consistent within each session and strongly differ between sessions 220 
+
+(Fig. 3 d). Furthermore, the flow dynamics show some remarkable similarities with the stimulation 221 
+
+patterns. For Sessions 1 and 2, where the flow trajectories largely align in the PC space, the 222 
+
+stimulation patterns are similar in that the second stimulation occurs to the top right of the first 223 
+
+stimulation. On the other hand, for Session 3, which results in flow trajectories orthogonal to 224 
+
+Session 1 and 2, the second stimulation occurs to the top left of the first stimulation. Furthermore, 225 
+
+the magnitude of the PC reduced GDAR flow dynamics is noticeably smaller for Session 2 226 
+
+compared to Sessions 1 and 3. This might be a result of the spatial separation between Laser 1 227 
+
+and 2, which is smallest for Session 2. Our findings extend previous work showing that LFP power 228 
+
+in monkeys and humans distinctly depend on stimulation parameters such as amplitude and 229 
+
+frequency 36,37 .230 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+We also tested whether the GAR or VAR flow , or node signal like raw LFPs or its second spatial 231 
+
+derivative, which resembles traditional current source density, can uncover dynamics that depend 232 
+
+on the stimulation pattern but found that this is not the case ( Fig. 3 e-g, and  Extended Fig. 3 a-233 
+
+c). Perhaps it is not surprising that the raw LFPs or simple, model -free transformations thereof 234 
+
+(e.g., second spatial derivative of raw LFP) fail to describe stimulation dependent dynamics using 235 
+
+PC analysis as these signals may be dominated by noise and non -stimulation specific variation. In 236 
+
+contrast, a utoregressive models may effectively filter out some of these non -stimulation noise 237 
+
+sources. Our results suggest that the GDAR model is more effective at uncovering such transient 238 
+
+stimulation-dependent communication dynamics compared to alternative autoregression based 239 
+
+models. We also note that the dependence on the stimulation location can be observed when 240 
+
+plotting a low-dimensional representation of the model parameters itself, where the GDAR model 241 
+
+shows a stronger separation between sessions than the VAR model ( Extended Fig. 3 g and h ). 242 
+
+Finally, the model can also be adapted to model longer signal propagation paths between specific 243 
+
+nodes in the network as it may be the case for connections across the sulcus between M1 and S1 244 
+
+(see  Extended Fig. 3 f, Supplementary Video 2, and Supplementary Note) .245 
+
+246 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+The GDAR model can characterize network and graph-spectral changes in resting state FC that 247 
+
+are complementary to previous FC techniques: One of the most common applications of FC 248 
+
+analysis is comparing functional network connectivity across resting state recordings—for example, 249 
+
+to assess changes related to mental states, disease, injury, or rehabilitation. While the GDAR 250 
+
+model was primarily designed to resolve fine temporal comm unication dynamics, here we 251 
+
+demonstrate using LFP data from two distinct experiments that the GDAR model is also well 252 
+
+suited for analyzing frequency-specific resting state FC networks and that it can provide 253 
+
+Fig. 3: GDAR model applied to optogenetic stimulation experiment to study transient communication events. (a) 
+
+LFPs from the primary motor (M1) and somatosensory (S1) cortex of a macaque monkey were recorded using a 96 -
+
+channel μECoG array, while repeated paired stimulation was performed using two lasers. The relative positions of the electrodes after rejecting bad channels and the locations of the two lasers are shown for the three sessions that were analyzed in this work. The location of the sulcus between M1 and S1 is approximated by the thick gray line. The electrode array was not moved between the sessions. (b) Illustration of the stimulation protocol, where each laser stimulates alternatingly for 5 ms, with a 10 ms delay between stimulation by Laser 1 and 2. This paired stimulation is repeated every 143 ms. Each stimulation block lasts approximately 7 min and is intermitted by 20 s long resting blogs during which no stimulation is performed. (c) The GDAR flow for Session 1 averaged over all stimulation blocks and trials is shown for different time steps before (first plot) and after (remaining four plots) onset of stimulation from the first laser. The graphs suggest complex spatiotemporal signaling patterns evoked by cortical stimulation. (d) Flow snapshots from the first 25 ms after onset of the first laser stimulation for all trials, blocks, and sessions were stacked into a single matrix and the flow snapshots were projected onto its first two principal components (PCs). The PC reduced GDAR flow trajectories for different sessions are indicated by different colors. Average trajectories are shown as black solid lines with markers indicating different times point after the onset of stimulation by the first laser. Thin colored lines show trajectories by individual paired pulse trials. The GDAR flow trajectories are very consistent within and distinct between sessions, demonstrating that transient flow dynamics depend on the stimulation parameters. (e), (f) PC reduced flow trajectories as in (d) but using 5 th order GAR and VAR models. In contrast to the GDAR flow, GAR and VAR flow do not exhibit significant time and session dependent dynamics, thus, highlighting the utility of the GDAR model in uncovering stimulation induced transient communication dynamics. 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+complementary insights to existing approaches . The first dataset contains cortical surface field 254 
+
+potentials recorded using two 32-channel μ ECoG array s before and after the induction of an 255 
+
+ischemic lesion as well as following cortical stimulation in the acute phase after stroke (Fig. 4 a256 
+
+and b ). The second dataset contains intercortical recordings by a 96-channel microelectrode array 257 
+
+(Utah array) before and after repeated electrical stimulation (Fig. 5 ). All experiments were 258 
+
+performed in the non-human primate sensorimotor cortex. All model-based techniques use a model 259 
+
+order of 10 and connectivity/flow changes are tested for statistical significance using a two-sample 260 
+
+Kolmogorov-Smirnov test (see Methods). 261 
+
+For the ischemic stroke experiment we qualitatively compare changes in gamma (30 -70 Hz) GDAR 262 
+
+flow power across the ipsi - and contralesional hemispheres with changes in coherence, PDC, and 263 
+
+DTF. All methods showed decreased gamma connectivity for edges within the lesioned area 264 
+
+consistent with the occurrence of neuronal death (Fig. 4 a) . In perilesional and contralesional areas, 265 
+
+all methods show increased FC consistent with previous findings 38,39 ; however, the location and 266 
+
+extent of decreased FC vary greatly between techniques. Electrical stimulation in the acute phase 267 
+
+after stroke (Fig. 4 b) caused a decrease in GDAR flow power across most of the ipsi- and 268 
+
+contralesional network, particularly for edges connected to the stimulation site. This is consistent 269 
+
+with previous findings from our lab demonstrating that electrical stimulation reduces post -stroke 270 
+
+neural and c-Fos activity 40,41 . In contrast, PDC and DTF show more mixed connectivity changes, 271 
+
+while coherence shows increased connectivity across both hemispheres. Taken together, these 272 
+
+results reveal broad qualitative agreement between GDAR flow, PDC, and DTF in characterizing 273 
+
+FC changes due to stroke and cortical stimulation. Nonetheless, the GDAR model also captures 274 
+
+changes not detected by the other methods, suggesting it can provide complementary insights into 275 
+
+resting-state FC analysis. 276 
+
+In addition, GDAR inherently models FC on top of a structural graph that allows for performing 277 
+
+a graph spectral analysis as illustrated in  Fig. 1 f and g and  Extended Fig. 1 . Specifically, at each 278 
+
+time point, we can compute the gradient and curl flow spectrum 𝐹𝐹 grad and 𝐹𝐹 curl from the GDAR 279 
+
+flow signal 𝑓𝑓 , which describe the magnitude of non-circular (gradient) and circular (curl ) flow 280 
+
+patterns , where each pattern exhibits different degrees of spatial smoothness. Similar to the GDAR 281 
+
+flow, the gradient and curl flow spectra are time varying resulting in a time series for each spectral 282 
+
+coefficient. This time series can be analyzed using classical Fourier spectral analysis resulting in 283 
+
+spatiotemporal spectra for the gradient and curl flow (see Methods).  Fig. 4 c and d show changes 284 
+
+in the spatiotemporal spectral power due to cortical lesioning (Fig. 4 c) and following electrical 285 
+
+stimulation in the acute phase after stroke (Fig. 4 d) for both hemispheres. Most notably, changes 286 
+
+in spectral power are different between the gradient and curl flow with the curl flow showing 287 
+
+overall larger power increases across some temporal frequency bands particularly in the 288 
+
+contralesional hemisphere. This suggests increases in feedback signaling following stroke and 289 
+
+cortical stimulation as cortical feedback loops may give rise to circular communication patterns. 290 
+
+To demonstrate that the GDAR model can also be applied to field potentials from other recording 291 
+
+modalities, we analyzed intracortical microelectrode array (Utha array) data from three sessions 292 
+
+using either single-site or paired stimulation. For single site stimulation, we observe an increase in 293 
+
+gamma GDAR flow power proximal to the stimulation site ( Fig. 5 b, left). For paired stimulations ,294 
+
+a localized increase was only observed near the first stimulation site ( Fig. 5 b, middle and right), 295 
+
+with no notable changes near the second site. We quantified this increase by computing the average 296 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+flow magnitude over all edges connected to the stimulation site and adjusted it for changes in LFP 297 
+
+power ( Fig. 5 c-e; also see Methods and  Extended Fig. 4 ). Across all sessions, stimulation led to a 298 
+
+sustained increase in resting-state flow near the first stimulation site above baseline levels. Notably, 299 
+
+for paired stimulation sessions, this augmented flow persisted for at least 17 minutes following the 300 
+
+final stimulation block. 301 
+
+302 
+
+Fig. 4: Application of GDAR model for resting -state FC analysis using LFP data recorded from macaque 
+
+sensorimotor cortex during an ischemic lesion and cortical stimulation experiment. (a) Changes in gamma (30 -70 Hz) GDAR flow power, coherence, PDC, and DTF due to stroke in ipsilesional (left) and contralesional (right) hemisphere. The first column shows the relative locations of the recording electrodes and corresponding structural connectivity graphs. The black patch indicates the extent of the cortical lesion for the stroke experiment. (b) Same as (a) but now showing changes following electrical stimulation in the acute phase after stroke. Yellow markers show the location of electrical stimulation. Only edges with significant changes are shown (p<0.01, two -sample Kolmogorov -
+
+Smirnov test). (c), (d) Changes in spatiotemporal spectral power due to (c) stroke and (d) cortical stimulation after stroke. Spatiotemporal spectra are calculated by first computing the time varying gradient and curl spectrum for each time step of the GDAR flow followed by estimating the time power spectral density of the gradient and curl spectral coefficient time series using Welch’s method. In general, the curl flow exhibits an increase in spectral power over larger spatial and temporal frequency ranges for both hemispheres suggesting an increase in feedback communication. For all model -based techniques a model order of 𝑝𝑝 = 10 was used. 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+The GDAR flow shows frequency specific correlations with reach velocity and exhibits directional 303 
+
+tuning during a center-out reach task: Previous studies have shown that reach movements have 304 
+
+strong neural correlates in M1 that can be detected from single neuron recordings as well as 305 
+
+intracortical and surface field potentials 42–47 . Using μ ECoG recordings from M1 of a macaque 306 
+
+monkey performing a center-out reach task ( Fig. 6 a), we show that the GDAR model can be used 307 
+
+to study such neural correlates of behavior on the level of network FC dynamics. To do so, we 308 
+
+leverage the graph spectral decomposition of the GDAR flow signal described above and in 309 
+
+Methods to decompose the high-gamma GDAR flow into its gradient and curl flow spectrum 310 
+
+(Extended Fig. 5 a-e ). An example of the time-varying flow spectra for a single reach trial along 311 
+
+with the corresponding reach velocity is shown in  Fig. 6 b. Furthermore, using data from all 312 
+
+directions and trials,  Fig. 6 c shows how the spectral power time series at each spatial frequency 313 
+
+correlates with reach velocity. We found that an increase in reach velocity generally correlates with 314 
+
+Fig. 5: Application of GDAR model to LFP data recorded from a macaque monkey using a Utah array during a 
+
+paired electrical stimulation experiment. (a) The locations of the electrodes were used to construct a locally connected sparse graph as input to the GDAR model. Electrode A and B are used for single -site and paired stimulation. For paired stimulation, electrode A stimulates before electrode B. (b) Changes in gamma (30 -70 Hz) GDAR flow power due to stimulation are shown for three separate sessions. For the single -stim session, only electrode B stimulates. For the paired -stim sessions, electrode A and B stimulate repeatedly and alternatingly for a total of 50 minutes divided into five 10min blocks (see Methods for more details on the stimulation protocol). An increase in gamma GDAR flow power near the first stimulation location can be observed for all sessions. (c) -(e) Temporal evolution of the normalized gamma GDAR flow power averaged over all edges adjacent to the first stimulation site for all three sessions. The 2 -minute blocks immediately after stimulation are highlighted in red. The gamma GDAR flow power has been corrected for linear changes in LFP power at the stimulation site (see Methods). For the paired stimulation sessions, the GDAR flow power remains elevated even after the stimulation period ends. 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+increases in gradient and curl flow powe r. Remarkably, the increase in gradient flow power is most 315 
+
+pronounced only for the 15 lowest spatial frequencies. In contrast to higher frequencies, such low-316 
+
+frequency flow patterns are more coherent across the graph (see  Extended Fig. 5 b for examples) ,317 
+
+suggesting that coordinated activity across a larger cortical area facilitates reach movements. 318 
+
+To quantify the extent to which the gradient flow spectrum is dominated by low frequencies, we 319 
+
+defined the gradient alignment index, which is computed as the ratio of the average power within 320 
+
+the 15 lowest spatial frequencies to the average power within the 15 highest spatial frequencies 321 
+
+(see Methods). The alignment index shows strong directional tuning with a preference for the 90° 322 
+
+(up) and 135° (up -left) directions (Fig. 6d, and  Extended Fig. 5g) and a similar cosine 323 
+
+characteristic as reported in the literature for other recording modalities 42,43,46 . We also observe a 324 
+
+similarly strong directional tuning characteristic for the average power of the curl spectrum ( Fig. 325 
+
+6e and  Extended Fig. 5 h) . In contrast, the directional tuning for the high-gamma envelope of the 326 
+
+raw LFP signal averaged across all channels is significantly weaker (Extended Fig. 5 i) . This 327 
+
+suggests that latent patterns of network activity extracted by the GDAR model rather than overall 328 
+
+changes in signal power are better correlated with different behaviors. 329 
+
+Finally, we investigated if spectral network features derived from the GDAR flow are correlated 330 
+
+to preparatory activity prior to movement onset. We found that both gradient and curl flow power 331 
+
+computed during the last 100 ms prior to the go cue show negative correlations with the reaction 332 
+
+time, which is defined as the time between go cue and initiation of movement , for most spatial 333 
+
+frequencies (Fig. 6 f and  Extended Fig. 5 j). This effect is most significant for low -frequency gradient 334 
+
+modes (Fig. 6 f and g) suggesting that a higher degree of neural coordination not only correlates 335 
+
+with faster movements, but also indicates better movement preparation. We have shown that this 336 
+
+effect cannot be explained by any premature movement activity (Extended Fig. 5 k). 337 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Discussion 338 
+
+By drawing insights from computational neuroscience, statistical modeling, and signal processing 339 
+
+over networks, we have introduced the GAR and GDAR model as members of a class of graphically 340 
+
+constrained autoregressive models for estimating network-level dFC from field potential recordings. 341 
+
+In contrast to classical VAR models that are a popular tool for electrophysiological FC analysis, 342 
+
+our approach incorporates the spatial layout of the recording array as a structural prior, thereby 343 
+
+significantly reduc ing the model complexity while mimicking cortical connectivity on a344 
+
+macroscopic scale. Furthermore, we demonstrate how our models give rise to a flow signal with 345 
+
+the same temporal resolution as the original recordings, making them well suited for analyzing 346 
+
+both transient and long-term FC patterns. Finally, network communication in the GDAR model 347 
+
+is driven by gradients of neural activity—rather than activity itself as is the case for GAR and 348 
+
+VAR model s—resulting in a diffusion -like process. Using simulations and four electrophysiology 349 
+
+Fig. 6: Applying the GDAR model to ECoG recordings during a center -out reach tasks. (a) A macaque monkey 
+
+performed an eight directional reach tasks with 25 trials per direction while LFPs were recorded using a 96 -channel μECoG array placed over the primary motor (M1) cortex. The GDAR flow was computed for each reach trial, bandpass filtered between 70 -200 Hz and decomposed into its gradient and curl spectrum for each time bin (see Methods). (b) Gradient and curl spectrogram for a single reach trial. The black line shows the reach velocity. Durin g
+
+the reach we observe an increase in curl flow power across all frequencies and gradient flow power for low spatial frequencies. (c) Correlation (median and interquartile range) between reach velocity and flow spectral power for all spatial frequencies pooled across all trials and directions. Low -frequency gradient flow components show the highest correlation with reach velocity suggestion more activity is coordinated across the M1 cortical network during reaching. (d) Gradient alignment index, defined as the ratio of the 15 lowest to the 15 highest gradient flow spectral coefficients for all eight reach directions (shown are quartiles, 1.5 times the interquartile range, and outliers). The alignment index forms a cosine -like tuning curve with a preference for the 90° (up) and 135° (up -left) directions. (e) Same as in (d) but for the average curl flow power. (f) Correlation between average gradient spectral power during the last 100 ms before the go cue and the reaction time, defined as the time between the go cue and movement onset, for each gradient frequency. Especially low frequencies show a significant negative correlation with reaction time ( g)Reaction time, as a function of the low gradient frequency spectral power during the last 100 ms before the go cue. The strong negative correlation suggests that more coordinated network activity leads to a faster reaction time 
+
+(correlation coefficient: -0.483; p -value: 9 .42·10 -7 ).
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+datasets from macaque sensory motor cortex, we have demonstrated that the GDAR model 350 
+
+outperforms competing approaches (GAR and standard VAR models) in estimating transient flow 351 
+
+dynamics, provides complementary insights into resting state FC , and can uncover neural flow 352 
+
+dynamics that correlate with behavior. 353 
+
+A drawback of standard VAR models is that they ignore spatial relations between the recording 354 
+
+electrodes, which means that interactions between nearby sensors are treated equally to 355 
+
+interactions between distant ones. However, especially for cortical recordings it is likely that signal 356 
+
+propagation is dominated by short range connections due to the local connectivity structure of 357 
+
+the cortex found in mice and macaque monkeys 23 . The idea of integrating spatial information in 358 
+
+the form of structural priors into standard VAR models and other FC measures has recently been 359 
+
+proposed in magnetic resonance imaging (MRI), electroencephalography (EEG), and 360 
+
+magnetoencephalography (MEG) studies, where it has been shown to improve the estimation of 361 
+
+FC networks 48–51 . However, to the best of our knowledge, it has not been applied to localized 362 
+
+recording arrays that focus on network dynamics within one or two cortices. By adding structurally 363 
+
+informed priors, the GAR and GDAR model have approximately five to ten times fewer parameters 364 
+
+than the full VAR model for the electrode arrays used in our analysis resulting in less overfitting 365 
+
+to idiosyncrasies in the data. The problem of overfitting is particularly evident in the poor 366 
+
+generalization performance of the VAR model in simulations and for the reach dataset where 367 
+
+model fitting relies on a limited number of observations (see  Fig. 2 f and  Extended Fig. 2 h). 368 
+
+Modeling dFC on top of a network also has the advantage that we can perform graph spectral 369 
+
+analysis on the resulting dFC signal. This allows us to decompose complicated network-wide 370 
+
+communication patterns into simpler and more interpretable modes representing feedforward 371 
+
+(gradient) and feedback (curl ) signal flow dynamics. Similar node -centric graph spectral 372 
+
+decomposition techniques have recently been proposed to analyze neural data 52–57 , however these 373 
+
+have exclusively focus on node signals rather than FC networks. 374 
+
+An important finding of our study is that the GDAR model outperforms the GAR model on 375 
+
+simulated data even though the GAR model uses the same structural prior and is more expressive. 376 
+
+Therefore, the better performance of the GDAR model must be attributed to the additional 377 
+
+diffusion constraint incorporated into the model. Indeed, diffusive processes have previously been 378 
+
+proposed as possible a mechanism for neural communication 29,30 . It has also been shown that 379 
+
+diffusion processes can explain FC estimates 58 and model the propagation of activity evoked by 380 
+
+intracranial stimulation more accurately than alternative models of neural communication 59 .381 
+
+Furthermore, the Laplacian that drives the diffusion process in the GDAR model has been used 382 
+
+in neural field models to simulate realistic large -scale brain dynamics 60,61 . Therefore, on a383 
+
+macroscopic level, the diffusion constraint may add a biophysically realistic mechanism to the 384 
+
+model that aids in its overall performance. Nevertheless, we want to emphasize that the GDAR 385 
+
+model is still a phenomenological model which is in contrast with dynamic causal modeling where 386 
+
+the goal is to provide insights into biological mechanisms of neural communication 62–65 .387 
+
+Using activity gradients as a driver of neural communication also has additional practical 388 
+
+advantages for processing field potential signals . Such signals often suffer from spurious 389 
+
+correlations due to volume conduction, signal artifacts that are shared across channels, and the 390 
+
+common reference signal problem. These spurious correlations are known to cause erroneous 391 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+connectivity estimates in many FC approaches such as coherence, phase locking value, or metrics 392 
+
+based on standard VAR models 17 and are commonly addressed by preprocessing field potentials 393 
+
+using, common average referencing, current source density analysis (i.e., the second spatial 394 
+
+derivative) or activity gradients (i.e., the first spatial derivative) instead of using the raw neural 395 
+
+activity 17,66,67 . Since the GDAR model employs the second spatial derivative, a mitigation strategy 396 
+
+against spurious correlations is naturally incorporated into the model making it more robust in a 397 
+
+real-world setting. 398 
+
+Another key difference between existing dFC frameworks and our approach is that we propose a 399 
+
+new mechanism for obtaining temporally resolved connectivity estimates. Existing approaches 400 
+
+typically derive such dynamics through sliding windows 68–70 or adaptive parameter estimation 51,71 .401 
+
+In contrast, we achieve this by combining static model parameter with the recorded neural activity 402 
+
+resulting in a dynamic FC signal with maximal temporal resolution . This approach offers several 403 
+
+advantages: it reduces the number of parameters that need to be estimated, and it enables the 404 
+
+detection of short, transient communication events that may be smoothed out by sliding window 405 
+
+approaches or are difficult to track using linear adaptive parameter estimation techniques. Using 406 
+
+simulations, we also demonstrated that combining parameters with neural activity produces more 407 
+
+accurate FC estimates than purely parameter-based techniques such as PDC and DTF (Fig. 2 b408 
+
+and  Extended Fig. 2 d) .409 
+
+Our approach has several limitations. The assumption of a locally connected nearest neighbor 410 
+
+graph as a structural prior inspired by the local connectivity structure of the cortex neglects the 411 
+
+potential existence of any direct long-range propagation paths. Since it can be difficult to 412 
+
+determine the best underlying network structure as precise structural information is often not 413 
+
+available, we suggest that in the future the structural connectivity graph could be designed in a 414 
+
+more data-driven way, for example, using sparsity and distance regularizers. Furthermore, we 415 
+
+currently make no distinction between nodes corresponding to electrodes in the interior versus the 416 
+
+boundary of the array. Especially the boundary nodes may exhibit a large exchange of information 417 
+
+with regions outside the array, which is not captured by the model, but could be incorporated by 418 
+
+adding additional input terms. Another promising avenue would be to explore how other proposed 419 
+
+mechanisms of neural signaling, such as biased random walks or shortest path routing 29,30 , could 420 
+
+be incorporated as constraints into data-driven dFC models. Furthermore, the GAR and GDAR 421 
+
+model only capture linear interactions, but could be extended to model non-linear communication 422 
+
+dynamics by introducing activation functions into the model. 423 
+
+Although we developed and tested our new framework using field potential recordings , we believe 424 
+
+it can be extended to other neural recording modalities and applications. For instance, proposed 425 
+
+models may be adapted for spiking data, either by modifying the autoregressive component to 426 
+
+accommodate for discrete point processes—such as through generalized linear models 72 —or by 427 
+
+first converting spikes into firing rate s. The models should also be readily applicable to human 428 
+
+ECoG and stereoelectroencephalography (sEEG) recordings, which share similar signal properties 429 
+
+with the recordings analyzed here. Finally, GAR and GDAR models can be applied to brain-wide 430 
+
+recoding modalities such as EEG , MEG or functional MRI (fMRI), which —combined with 431 
+
+estimated structural connectivity networks—can enable the analysis of large-scale brain dynamics. 432 
+
+In a preliminary investigation, we found that the GDAR model reliably estimates network-level 433 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+dFC from resting-state fMRI data and is sensitive to age-related changes in neural flow 73 ,434 
+
+highlighting its potential for broader applications in systems neuroscience and clinical research. 435 
+
+436 
+
+Acknowledgements 437 
+
+We thank Daniel Silversmith and Joseph O’Doherty for their help with data collection and Philip 438 
+
+Sabes for his laboratory in which some of the data was collected. We also thank Toni Haun, Sandi 439 
+
+Thelen, and Christopher English for their help with animal surgeries and experimentation for the 440 
+
+stroke experiment. This work was supported by the American Heart Association (FS, AY) the 441 
+
+IEEE Signal Processing Society (FS), the National Institute of Health R01NS119593 (JB, AY) 442 
+
+and R01MH125429 (FS, AY), the Washington Research Foundation (AY), the Big Data for 443 
+
+Genomics and Neuroscience Training Grant NIH 5T32LM012419 (JB), the Center for 444 
+
+Neurotechnology NSFERC 1028725 (JB), the Washington National Primate Research Center NIH 445 
+
+P51OD010425 , U42 OD011123 (AY), the Eunice Kennedy Shriver National Institute of Child 446 
+
+Health and Human Development NIH K12HD073945 (AY), the National Institute of Neurological 447 
+
+Disorders and Stroke of the National Institute of Health R01NS116464 (AY, JZ ), the University 448 
+
+of Washington Royalty Research Fund ( AY, KK ), the National Science Foundation Graduate 449 
+
+Research Fellowship Program (K K), the Graduate Education for Minorities Fellowship (J B), and 450 
+
+the Weill Neurohub (J Z). 451 
+
+452 
+
+Methods 453 
+
+Graph Autoregressive (GAR) and Graph Diffusion Autoregressive (GDAR ) Model 454 
+
+Representation as constrained VAR model: Denoting the recorded neural activity at time 𝑡𝑡 455 
+
+across all 𝑁𝑁 recording channels as 𝑠𝑠 [𝑡𝑡 ] ∈ ℝ 𝑁𝑁 , the classic vectorautoregressive (VAR) model can be 456 
+
+written as 457 
+
+𝑠𝑠 [𝑡𝑡 ] = � 𝐀𝐀 𝑘𝑘 𝑠𝑠 [𝑡𝑡 − 𝑘𝑘 ]
+
+> 𝑝𝑝
+> 𝑘𝑘 =1
+
++ 𝑢𝑢 [𝑡𝑡 ], 
+
+> (3)
+
+where 𝑝𝑝 is the model order, 𝐀𝐀 𝑘𝑘 ∈ ℝ 𝑁𝑁 ×𝑁𝑁 contains the VAR model parameters , and 𝑢𝑢 [𝑡𝑡 ] ∈ ℝ 𝑁𝑁 is a 458 
+
+white Gaussian noise term . The GAR model can be obtained by constraining the model parameters 459 
+
+to be zero for connections not included in the structural connectivity graph 𝒢𝒢 , that is (𝐀𝐀 𝑘𝑘 )𝑖𝑖 ,𝑗𝑗 =460 
+
+0, if ( 𝑖𝑖 , 𝑗𝑗 ) ∉ 𝒢𝒢 . The GDAR model is obtained by additionally enforcing a symmetry constraint on 461 
+
+the matrix 𝐀𝐀 𝑘𝑘 , that is (𝐀𝐀 𝑘𝑘 )𝑖𝑖 ,𝑗𝑗 = ( 𝐀𝐀 𝑘𝑘 )𝑗𝑗 ,𝑖𝑖 , if ( 𝑖𝑖 , 𝑗𝑗 ) ∈ 𝒢𝒢 . While this representation is most useful for 462 
+
+estimating the model parameters from data, next we will provide an alternative and more intuitive 463 
+
+interpretation for the GDAR model. 464 
+
+Derivation and Interpretation of the GDAR model as a network diffusion process : An 465 
+
+alternative starting point for deriving the GDAR model is to describe the spatiotemporal dynamics 466 
+
+of the neural activity 𝑠𝑠 as a heat diffusion process 467 
+
+𝑠𝑠 ̇ = 𝑤𝑤 Δ𝑠𝑠 ,
+
+> (4)
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+where temporal changes in activity ( 𝑠𝑠̇ ) are driven by spatial activity gradients ( Δ𝑠𝑠 , where Δ is the 468 
+
+surface Laplacian) multiplied by the diffusion rate 𝑤𝑤 . The right-hand side of  (4) is equivalent to 469 
+
+current source density (CSD) which is a common technique for analyzing neurophysiological 470 
+
+recordings. The surface Laplacian Δ is equivalent to the second spatial derivative and thus 471 
+
+describes local interactions within the brain network. In a discrete measurement setup with activity 472 
+
+recorded from 𝑁𝑁 recording channels, this can be encoded by constructing a locally connected graph 473 
+
+from the locations of the electrodes within the recording array 74 . Thereby, each electrode 474 
+
+corresponds to a node in the graph and edges connect neighboring electrodes such as illustrated 475 
+
+in  Fig. 1 a. The resulting unweighted graph consisting of 𝑁𝑁 vertices and 𝐸𝐸 edges can be represented 476 
+
+algebraically using the node-to-edge incident matrix 𝐁𝐁 ∈ ℝ 𝑁𝑁 ×𝐸𝐸 , where the 𝑒𝑒 th column 𝑏𝑏 (𝑒𝑒 )
+
+477 
+
+corresponds to the 𝑒𝑒 th edge in the graph. Each edge is defined by a tail node 𝑖𝑖 and head node 𝑗𝑗 478 
+
+such that 𝑏𝑏 𝑖𝑖  
+
+> (𝑒𝑒 )
+
+= −𝑏𝑏 𝑗𝑗  
+
+> (𝑒𝑒 )
+
+= −1 and all other entries 𝑏𝑏 𝑘𝑘  
+
+> (𝑒𝑒 )
+
+= 0 for 𝑘𝑘 ≠ 𝑖𝑖 , 𝑗𝑗 . For each edge it is thereby 479 
+
+arbitrary which incident node is defined as head and tail node. Using 𝐁𝐁 , the continuous surface 480 
+
+Laplacian Δ can be approximated using the negative of the graph Laplacian operator 𝐁𝐁𝐁𝐁 𝑇𝑇 .481 
+
+Furthermore, the first temporal derivative 𝑠𝑠̇ can be approximated by the first temporal difference 482 
+
+𝑠𝑠 [𝑡𝑡 ] − 𝑠𝑠 [𝑡𝑡 − 1] . Thus,  (4) can be approximated by 483 
+
+𝑠𝑠 [𝑡𝑡 ] = (𝐈𝐈 𝑁𝑁 − 𝑤𝑤𝐁𝐁𝐁𝐁 𝑇𝑇 )𝑠𝑠 [𝑡𝑡 − 1] + 𝑢𝑢 [𝑡𝑡 ] = 𝐈𝐈 𝑁𝑁 𝑠𝑠 [𝑡𝑡 − 1] − 𝐁𝐁𝑤𝑤𝐁𝐁 𝑇𝑇 𝑠𝑠 [𝑡𝑡 − 1] + 𝑢𝑢 [𝑡𝑡 ],
+
+> (5)
+
+Where, 𝐈𝐈 𝑁𝑁 is the 𝑁𝑁 × 𝑁𝑁 identity matrix and 𝑢𝑢 [𝑡𝑡 ] is a white noise term. Previously, it has been 484 
+
+shown that the matrices 𝐁𝐁 𝑇𝑇 and 𝐁𝐁 can be interpreted as discrete approximations of the gradient 485 
+
+and divergence operators, respectively 26 . Thus, the term 𝐁𝐁𝑤𝑤𝐁𝐁 𝑇𝑇 𝑠𝑠 [𝑡𝑡 − 1] has a clear physical 486 
+
+meaning in the context of LFP recordings: 487 
+
+1. 𝐁𝐁 𝑇𝑇 𝑠𝑠 [𝑡𝑡 − 1] = ∇𝑠𝑠 [𝑡𝑡 − 1] : computes the voltage gradient for each node in the graph. 488 
+
+2. 𝑤𝑤∇𝑠𝑠 [𝑡𝑡 − 1] = 𝑓𝑓 [𝑡𝑡 ]: In analogy to resistive circuits and CSD analysis, 𝑤𝑤 can be interpreted 489 
+
+as a conductivity such that conductivity times voltage gradient yields a current flow 𝑓𝑓 [𝑡𝑡 ].490 
+
+3. 𝐁𝐁𝑓𝑓 [𝑡𝑡 ]: For each node, the net flow, i.e., the sum of all inflows minus the sum of all outflows, 491 
+
+is computed. This is equivalent to computing the current sources and sinks in CSD analysis. 492 
+
+Equation  (5) effectively expresses CSD analysis as a first order vector autoregressive (VAR) model .493 
+
+However, the model in Eq.  (5) has limited expressivity as the only learnable parameter is the 494 
+
+conductivity 𝑤𝑤 . Thus, to improve its expressivity, we can 1) add parameterized node dynamics, 2) 495 
+
+assume a spatially varying conductivity, and 3) extend the model order from one to 𝑝𝑝 . The 496 
+
+resulting graph diffusion autoregressive (GDAR) model is given by 497 
+
+𝑠𝑠 [𝑡𝑡 ] = �(𝐌𝐌 𝑘𝑘 − 𝐁𝐁𝐖𝐖 𝑘𝑘 𝐁𝐁 𝑇𝑇 )𝑠𝑠 [𝑡𝑡 − 𝑘𝑘 ]
+
+> 𝑝𝑝
+> 𝑘𝑘 =1
+
++ 𝑢𝑢 [𝑡𝑡 ], 
+
+> (6)
+
+where 𝐌𝐌 𝑘𝑘 = diag( 𝒎𝒎 𝑘𝑘 ) ∈ ℝ 𝑁𝑁 ×𝑁𝑁 and 𝐖𝐖 𝑘𝑘 = diag( 𝒘𝒘 𝑘𝑘 ) ∈ ℝ 𝐸𝐸 ×𝐸𝐸 are diagonal matrices containing the 498 
+
+node and edge parameters 𝒎𝒎 𝑘𝑘 ∈ ℝ 𝑁𝑁 and 𝒘𝒘 𝑘𝑘 ∈ ℝ 𝐸𝐸 of the 𝑘𝑘 th lag, respectively. The term 𝐁𝐁𝐖𝐖 𝑘𝑘 𝐁𝐁 𝑇𝑇 
+
+499 
+
+can also be regarded as a weighted graph Laplacian matrix. The GDAR flow is defined as 500 
+
+𝑓𝑓 [𝑡𝑡 ] = � 𝐖𝐖 𝑘𝑘 𝐁𝐁 𝑇𝑇 𝑠𝑠 [𝑡𝑡 − 𝑘𝑘 ]
+
+> 𝑝𝑝
+> 𝑘𝑘 =1
+> (7)
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+It can be shown that the GDAR model in  (6) can be rewritten to match the standard notation of 501 
+
+a VAR model in Eq.  (3) by setting (𝐀𝐀 𝑘𝑘 )𝑖𝑖 ,𝑗𝑗 = ( 𝐀𝐀 𝑘𝑘 )𝑗𝑗 ,𝑖𝑖 = ( 𝐖𝐖 𝑘𝑘 )𝑙𝑙 ,𝑙𝑙 if 𝑙𝑙 corresponds to the edge between 502 
+
+node 𝑖𝑖 and 𝑗𝑗 and (𝐌𝐌 𝑘𝑘 )𝑖𝑖 ,𝑖𝑖 = ( 𝐀𝐀 𝑘𝑘 )𝑖𝑖 ,𝑖𝑖 + ∑ (𝐀𝐀 𝑘𝑘 )𝑖𝑖 ,𝑗𝑗 𝑗𝑗∈𝒩𝒩 (𝑖𝑖 ) , where 𝒩𝒩 (𝑖𝑖 ) are the set of neighbors of node 𝑖𝑖 .503 
+
+Model fitting: Using the VAR representation in Eq.  (3), the model parameters 𝐌𝐌 𝑘𝑘 and 𝐖𝐖 𝑘𝑘 can 504 
+
+be estimated using least squares regression following the procedure described by Lütkepohl 75 .505 
+
+Given 𝑇𝑇 + 𝑝𝑝 snapshots of neural activity by an 𝑁𝑁 -channel recording array, where 𝑇𝑇 is the number 506 
+
+of samples used for model fitting , the predicted neural activity can be collected in the data matrix 507 
+
+𝐘𝐘 = �𝑠𝑠 [𝑝𝑝 + 1], … , 𝑠𝑠 [𝑝𝑝 + 𝑇𝑇 ]� ∈ ℝ 𝑁𝑁 ×𝑇𝑇 and its vectorized version 𝛾𝛾 = vec( 𝐘𝐘 ). The regressors can be 508 
+
+expressed as 𝐒𝐒 = [ 𝑆𝑆 1, … , 𝑆𝑆 𝑇𝑇 ] ∈ ℝ 𝑁𝑁 𝑝𝑝 ×𝑇𝑇 , where 𝑆𝑆 𝑡𝑡 = [ 𝑠𝑠 [𝑡𝑡 + 𝑝𝑝 − 1] 𝑇𝑇 , … , 𝑠𝑠 [𝑡𝑡 ]𝑇𝑇 ]𝑇𝑇 ∈ ℝ 𝑁𝑁 𝑝𝑝 ×1. The 509 
+
+coefficients 𝐀𝐀 𝑘𝑘 can be expressed as 𝐀𝐀 = �𝐀𝐀 1, … , 𝐀𝐀 𝑝𝑝 � ∈ ℝ 𝑁𝑁 ×𝑁𝑁 𝑝𝑝  and 𝛼𝛼 = vec( 𝐀𝐀 ). As shown in the 510 
+
+previous section, 𝐀𝐀 𝑘𝑘 is spare for the GAR and sparse and symmetric for the GDAR model .511 
+
+Therefore, there exist a matrix 𝐑𝐑 such that 𝛼𝛼 = 𝐑𝐑𝛼𝛼 � and 𝛼𝛼 � only contains the non-zero entries of 𝐀𝐀 512 
+
+(GAR) or the non -zero upper triangle entries of 𝐀𝐀 (GDAR) . Now  (3) can be written as 513 
+
+𝛾𝛾 = (𝐒𝐒 𝑇𝑇 ⨂𝐈𝐈 𝑁𝑁 )𝐑𝐑𝛼𝛼 � + 𝑢𝑢 ,
+
+(8)
+
+where ⨂ is the Kronecker product. Furthermore, we assume that 𝑢𝑢 is white noise with covariance 514 
+
+matrix 𝚺𝚺 𝑢𝑢 . Eq.  (8) can be solved in close form by minimizing 𝑢𝑢 𝑇𝑇 (𝐈𝐈 𝑇𝑇 ⨂𝚺𝚺 𝑢𝑢 −1 )𝑢𝑢 , where 𝐈𝐈 𝑇𝑇 is the 𝑇𝑇 × 𝑇𝑇 515 
+
+identity matrix, to obtain the optimal parameters 𝛼𝛼 � ∗:516 
+
+𝛼𝛼 �∗ = [𝐑𝐑 𝑇𝑇 (𝐒𝐒 𝐒𝐒 𝑇𝑇 ⨂𝚺𝚺 𝑢𝑢 −1 )𝐑𝐑 ]−1 𝐑𝐑 𝑇𝑇 (𝐒𝐒⨂𝚺𝚺 𝑢𝑢 −1 )𝛾𝛾 .
+
+(9)
+
+Eq.  (9) is the solution to the generalized least squares (GLS) estimator, which is generally different 517 
+
+from the ordinary least squares (OLS) estimator due to the sparsity and symmetry contraints 75 .518 
+
+However, it requires knowledge of the noise covariance matrix 𝚺𝚺 𝑢𝑢 , which is unknown in practice. 519 
+
+Therefore, we first estimate the 𝚺𝚺 𝑢𝑢 by solving the OLS estimator 𝑢𝑢 𝑇𝑇 𝑢𝑢 to compute 𝛼𝛼 �� as 520 
+
+𝛼𝛼 �� = [𝐑𝐑 𝑇𝑇 (𝐒𝐒 𝐒𝐒 𝑇𝑇 ⨂𝐈𝐈 𝑁𝑁 )𝐑𝐑 ]−1 𝐑𝐑 𝑇𝑇 (𝐒𝐒⨂𝐈𝐈 𝑁𝑁 )𝛾𝛾 
+
+(10 )
+
+and denote 𝛼𝛼 � = 𝑅𝑅𝛼𝛼 ��. The corresponding coefficient matrix is 𝐀𝐀 � with 𝑣𝑣 𝑒𝑒 𝑣𝑣�𝐀𝐀 �� = 𝛼𝛼 �. Then we estimate 521 
+
+𝚺𝚺 𝑢𝑢 as 522 
+
+𝚺𝚺 𝑢𝑢 = 1
+
+𝑇𝑇  �𝐘𝐘 − 𝐀𝐀 �𝐒𝐒��𝐘𝐘 − 𝐀𝐀 �𝐒𝐒� 𝑇𝑇 
+
+(11 )
+
+It is also noted that for the GDAR model, Eq.  (6) can be directly cast as a least squares 523 
+
+minimization problem. However, we found that it is more efficient to compute the optimal 524 
+
+parameters according to  (8).525 
+
+Power spectrum of GAR and GDAR flow: If the models are applied to resting state neural 526 
+
+activity, the GAR and GDAR flow may exhibit a similar oscillatory behavior as the neural activity. 527 
+
+Therefore, it may be reasonable to compute its power spectrum to study frequency specific dFC 528 
+
+patterns. Using Eq.  (7) and recognizing that it expresses the flow as the convolution between the 529 
+
+model parameters 𝐖𝐖 𝑘𝑘 and the activity 𝑠𝑠 [𝑡𝑡 ] (activity gradients 𝐁𝐁 𝑇𝑇 𝑠𝑠 [𝑡𝑡 ] for GDAR), the flow power 530 
+
+spectrum between nodes 𝑖𝑖 and 𝑗𝑗 is given by 531 
+
+�𝐹𝐹 GAR  
+
+> {𝑖𝑖→𝑗𝑗 }
+
+(𝜔𝜔 )�2
+
+= �𝑊𝑊 {𝑖𝑖→𝑗𝑗 } (𝜔𝜔 )�2 ⋅ |𝑆𝑆 𝑖𝑖 (𝜔𝜔 )| 2
+
+�𝐹𝐹 GDAR  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+(𝜔𝜔 )� 2
+
+= �𝑊𝑊 {𝑖𝑖 ,𝑗𝑗 } (𝜔𝜔 )�2 ⋅ �𝑆𝑆 𝑗𝑗 (𝜔𝜔 ) − 𝑆𝑆 𝑖𝑖 (𝜔𝜔 )�2,
+
+(12 )
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+where 𝑊𝑊 {𝑖𝑖 ,𝑗𝑗 } (𝜔𝜔 ), 𝑆𝑆 𝑖𝑖 (𝜔𝜔 ), and 𝑆𝑆 𝑗𝑗 (𝜔𝜔 ) are the Fourier transforms of the parameters, as well as the 532 
+
+neural activity of the two channels, and 𝜔𝜔 is the frequency variable. An interesting case occurs 533 
+
+for the GDAR model when the spectra of both channels have the same magnitude for a given 534 
+
+frequency. Assuming |𝑆𝑆 𝑖𝑖 (𝜔𝜔 )| = �𝑆𝑆 𝑗𝑗 (𝜔𝜔 )� = 1 , Eq.  (12 ) can be simplified to 535 
+
+�𝐹𝐹 GDAR  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+(𝜔𝜔 )� 2
+
+2 = �𝑊𝑊 {𝑖𝑖 ,𝑗𝑗 } (𝜔𝜔 )�2 ⋅ � 1 − cos �𝜙𝜙 𝑗𝑗 − 𝜙𝜙 𝑖𝑖 �� ,
+
+> (13 )
+
+where 𝜙𝜙 𝑖𝑖 and 𝜙𝜙 𝑗𝑗 are the phase of the 𝑆𝑆 𝑖𝑖 (𝜔𝜔 ), and 𝑆𝑆 𝑗𝑗 (𝜔𝜔 ), respectively. That is, in this case the 536 
+
+GDAR flow dynamics are driven only by phase differences between connected nodes. In general, 537 
+
+however, GDAR flow dynamics will be determined by differences in magnitude and phase 538 
+
+modulated by 𝑊𝑊 {𝑖𝑖 ,𝑗𝑗 } (𝜔𝜔 ), which was estimated with the objective of predicting future neural 539 
+
+activity. 540 
+
+Decomposition into gradient and curl flow spectra: Similar to the classical Fourier 541 
+
+transform for time series, where a signal can be decomposed into a series of oscillatory components 542 
+
+of increasing frequency, a flow signal can be decomposed into a set of spatial components (flow 543 
+
+signals) with increasing spatial frequency. Furthermore, a flow signal can be decomposed into 544 
+
+gradient ( non-circular ) components, which have non -zero divergence (sum of in -flow minus out-545 
+
+flow) for some or all nodes of the graph, and curl components, which have zero divergence for all 546 
+
+graph nodes. This can be achieved via the Hodge-decomposition that defines two orthogonal sets 547 
+
+of spatial basis functions (defined on the edge domain) for a given graph 25–27 . A directional graph 548 
+
+flow signal, such as the GDAR flow at each timestep 𝑡𝑡 , can then be projected onto these sets of 549 
+
+basis functions to obtain the gradient and curl flow spectrum. Note that this decomposition 550 
+
+assumes a unidirectional flow 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } for each edge in the graph, where the sign of 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } together 551 
+
+with the edge reference direction defined in 𝐁𝐁 determines the flow direction. For bidirectional flow 552 
+
+signals 𝑓𝑓 {𝑖𝑖→𝑗𝑗 } ≠ 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } such as for the GAR or VAR models, we first need to obtain a unidirectional 553 
+
+flow, which we generally define as 𝑓𝑓 {𝑖𝑖 ,𝑗𝑗 } = 𝑓𝑓 {𝑖𝑖→𝑗𝑗 } − 𝑓𝑓 {𝑗𝑗→𝑖𝑖 }
+
+554 
+
+To obtain the gradient basis, we first compute the eigenvectors 𝐕𝐕 �grad ∈ ℝ 𝑁𝑁 ×𝑁𝑁 of the graph 555 
+
+Laplacian 𝐁𝐁𝐁𝐁 𝑇𝑇 . The orthonormal gradient flow basis 𝐕𝐕 grad ∈ ℝ 𝐸𝐸 ×𝑁𝑁 is then obtained by 556 
+
+𝐕𝐕 grad = 𝐁𝐁 𝑇𝑇 𝐕𝐕 �grad ��𝐁𝐁 𝑇𝑇 𝐕𝐕 �grad �� 𝐹𝐹 
+
+.
+
+> (14 )
+
+The eigenvalues 𝜆𝜆 grad associated with each eigenvector define a natural ordering of the 557 
+
+eigenvectors in terms of spatial frequency. Specifically, if we compute the divergence of the 558 
+
+eigenvectors 𝐕𝐕 grad , we find that eigenvectors corresponding to small eigenvalues have small 559 
+
+divergence, whereas eigenvectors associated with large eigenvectors have large divergence. Small-560 
+
+divergence eigenvectors correspond to flow signals that are smooth (or low -frequency) across the 561 
+
+graph, that is flow signals where the direction of flow is largely preserved or only slowly changes 562 
+
+within a local neighborhood (see  Extended Fig. 1 a for an example) . High-divergence eigenvectors 563 
+
+on the other hand correspond to flow patterns that rapidly change direction within a local 564 
+
+neighborhood and can therefore be considered as non-smooth or being high-frequency. We can 565 
+
+now obtain a gradient flow spectrum for each flow snapshot by projecting 𝑓𝑓 [𝑡𝑡 ] onto 𝐕𝐕 grad :566 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+𝐹𝐹 grad �𝜆𝜆 grad , 𝑡𝑡� = 𝐕𝐕 grad 𝑇𝑇 𝑓𝑓 [𝑡𝑡 ].
+
+(15 )
+
+To obtain the curl basis, we first must define a set of triangles in the graph, which can be obtained, 567 
+
+for example, by finding all possible triangles in the graph. Mathematically, the triangle set is 568 
+
+captured by the edge-to-triangle incident matrix 𝐁𝐁 tri ∈ ℝ 𝐸𝐸 ×𝑇𝑇 , where 𝑇𝑇 is the number of triangles 569 
+
+and where the 𝑡𝑡 th column 𝑏𝑏 tri  
+
+> (𝑡𝑡 )
+
+corresponds to the 𝑡𝑡 th triangle in the graph. Each triangle is defined 570 
+
+by three edges 𝑒𝑒 𝑖𝑖 , 𝑒𝑒 𝑗𝑗 , and 𝑒𝑒 𝑘𝑘 and an arbitrarily chosen reference direction. If the edge direction 571 
+
+across 𝑒𝑒 𝑖𝑖 (as defined in 𝐁𝐁 ) aligns with that reference direction 𝑏𝑏 tri  
+
+> (𝑡𝑡 )
+
+(𝑒𝑒 𝑖𝑖 ) = 1 . Otherwise 𝑏𝑏 tri  
+
+> (𝑡𝑡 )
+
+(𝑒𝑒 𝑖𝑖 ) = 572 
+
+−1 (t he same logic applies to 𝑒𝑒 𝑗𝑗 , and 𝑒𝑒 𝑘𝑘 ). For edges not involved in the triangle we have 𝑏𝑏 tri  
+
+> (𝑡𝑡 )
+
+(⋅) = 573 
+
+0. To compute the curl basis, we then follow the same procedure as above. That is, we first 574 
+
+compute the eigenvectors 𝐕𝐕 �rot ∈ ℝ 𝑇𝑇 ×𝑇𝑇 of the Laplacian 𝐁𝐁 tri 𝑇𝑇 𝐁𝐁 tri and then project 𝐕𝐕 �rot onto 𝐁𝐁 tri and 575 
+
+normalize: 576 
+
+𝐕𝐕 rot = 𝐁𝐁 tri 𝐕𝐕 �rot ��𝐁𝐁 tri 𝐕𝐕 �rot �� 𝐹𝐹 
+
+.
+
+(16 )
+
+Similar to the gradient flow, the eigenvalues 𝜆𝜆 rot corresponding to the eigenvectors 𝐕𝐕 rot can be 577 
+
+used to define an ordering in terms of spatial frequency. Specifically, eigenvectors with small 578 
+
+eigenvalues correspond to global curl flows (akin to global currents) across the graph that maintain 579 
+
+or only slowly change orientation between local neighborhoods. On the other hand, eigenvectors 580 
+
+with small eigenvalues exhibit localized curl flows (akin to local eddy currents) that rapidly change 581 
+
+orientation across local neighborhoods (see  Extended Fig. 1 b for an example) . Finally, we can 582 
+
+obtain a curl flow spectrum for each flow snapshot by projecting 𝑓𝑓 [𝑡𝑡 ] onto 𝐕𝐕 rot :583 
+
+𝐹𝐹 rot [𝜆𝜆 rot , 𝑡𝑡 ] = 𝐕𝐕 rot 𝑇𝑇 𝑓𝑓 [𝑡𝑡 ].
+
+(17 )
+
+Finally, temporal changes in the time-varying gradient and curl flow spectra can be analyzed using 584 
+
+classical Fourier-based spectral analysis techniques, resulting in spatiotemporal spectra 585 
+
+𝐹𝐹 �grad �𝜆𝜆 grad , 𝜔𝜔� , and 𝐹𝐹 �rot [𝜆𝜆 rot , 𝜔𝜔 ], where 𝜔𝜔 denotes the temporal frequency. 586 
+
+587 
+
+Wilson-Cowan Simulations 588 
+
+Simulating neural activity: We simulated neural activity using various networks of Wilson-589 
+
+Cowan oscillators 76,77 shown in  Fig. 2  and  Extended Fig. 2 . Each node consists of an excitatory 590 
+
+and inhibitory subpopulation whose dynamics are governed by the following differential equations: 591 
+
+𝜏𝜏 𝑒𝑒 𝑑𝑑𝑒𝑒 𝑖𝑖 (𝑡𝑡 )
+
+𝑑𝑑 𝑡𝑡  = −𝑒𝑒 𝑖𝑖 (𝑡𝑡 ) + 𝑆𝑆 � 𝑣𝑣 𝑒𝑒𝑒𝑒 𝑒𝑒 𝑘𝑘 (𝑡𝑡 ) +  𝑣𝑣 𝑖𝑖 𝑒𝑒 𝑖𝑖 𝑘𝑘 (𝑡𝑡 ) + 𝑃𝑃 + 𝜉𝜉 (𝑡𝑡 ) + � 𝑤𝑤 𝑗𝑗→𝑖𝑖 𝑒𝑒 𝑗𝑗 �𝑡𝑡 − 𝜏𝜏 𝑗𝑗 𝑘𝑘 �𝑗𝑗∈𝒩𝒩 (𝑖𝑖 )
+
+�
+
+(18 )
+
+𝜏𝜏 𝑖𝑖 𝑑𝑑𝑖𝑖 𝑖𝑖 (𝑡𝑡 )
+
+𝑑𝑑 𝑡𝑡  = −𝑖𝑖 𝑖𝑖 (𝑡𝑡 ) + 𝑆𝑆� 𝑣𝑣 𝑒𝑒 𝑖𝑖 𝑒𝑒 𝑖𝑖 (𝑡𝑡 ) + 𝜉𝜉 (𝑡𝑡 )�
+
+(19 )
+
+where 𝑆𝑆 is the sigmoid function: 592 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+𝑆𝑆 (𝑥𝑥 ) = 11 + 𝑒𝑒 𝑥𝑥−𝜇𝜇 𝜎𝜎 
+
+(20 )
+
+The description of the parameters and their values are listed in  Table  . The values are based on 593 
+
+previous work by Abeysuriya et al. 78 and Deco et al. 79 and result in a power spectrum with a 594 
+
+pronounced beta oscillation around 18 Hz and a 1 𝜔𝜔 ⁄ slope for higher frequencies. Coupling 595 
+
+between excitatory populations of neighboring nodes is determined by the parameter 𝑤𝑤 𝑗𝑗→𝑖𝑖 where 596 
+
+each edge in the graph has two coupling parameters ( 𝑤𝑤 𝑗𝑗→𝑖𝑖 and 𝑤𝑤 𝑖𝑖→𝑗𝑗 ) resulting in bidirectional 597 
+
+coupling. For the 16-node random graphs, we simulated 10 independent trials per graph, resulting 598 
+
+in a total of 100 trials for 10 graphs, where for each trial the values of the edge weights 𝑤𝑤 𝑗𝑗→𝑖𝑖 are 599 
+
+randomly sampled from a uniform distribution (see  Table 1  for range of 𝑤𝑤 𝑗𝑗→𝑖𝑖 ). For the 7-node 600 
+
+graph, we simulated 100 independent trials respectively. The ranges of 𝑤𝑤 𝑗𝑗→𝑖𝑖 were chosen such that 601 
+
+neural activity whose power spectrum resembles realistic local field potential signals was generated 602 
+
+by the network. We integrated the system with a time step of 0.1 ms seconds using a 4th order 603 
+
+Runge-Kutta scheme for 20 seconds and discarded the first 5 seconds to eliminate transien t effects 604 
+
+of the simulation. The resultant 15 seconds of excitatory activity 𝑒𝑒 [𝑡𝑡 ] was then downsampled to 605 
+
+1 kHz using an 8th order Chebyshev type I anti-aliasing filter and denoted as the simulated neural 606 
+
+activity. Power spectral d ensity (PSD) estimates of the simulated activity for the 16-node random 607 
+
+graphs averaged over all trials, graphs, and edges are shown in  Extended Fig. 2 b. 608  Table 1: Simulation parameters of Wilson-Cowan model adapted from Abeysuriya et al. 78 
+
+and Deco et al. 79 609 
+
+Parameter  Description  Value 
+
+𝜏𝜏 𝑒𝑒  Excitatory time constant  0.002 
+
+𝜏𝜏 𝑖𝑖  Inhibitory time constant  0.004 
+
+𝑣𝑣 𝑒𝑒𝑒𝑒  Local e xcitatory to excitatory coupling  3.5 
+
+𝑣𝑣 𝑖𝑖 𝑒𝑒  Local inhibitory to excitatory coupling  -2.5 
+
+𝑣𝑣 𝑒𝑒 𝑖𝑖  Local excitatory to inhibitory coupling  3.75 
+
+𝑃𝑃  Constant excitatory input  0.31 
+
+𝜇𝜇  Firing response threshold  1
+
+𝜎𝜎  Firing threshold variability  0.25 
+
+𝜉𝜉  Random noise input  𝒩𝒩 (0, 0.05 )
+
+𝑤𝑤 𝑖𝑖 →𝑗𝑗  Excitatory to excitatory connectivity (16 node random graphs ) 0.05, …, 0. 3
+
+𝑤𝑤 𝑖𝑖 →𝑗𝑗  Excitatory to excitatory connectivity (7 node graph)  0. 05 , …, 0. 55
+
+Simulating ground truth neural fl ow: We simulated the ground truth flow by calculating the 610 
+
+moment-to-moment influence that each excitatory node exert s on its neighbors. To do so, we first 611 
+
+executed each integration step with the full set of parameters to obtain 𝑒𝑒 [𝑡𝑡 ]. Then, for each 612 
+
+excitatory coupling parameter 𝑤𝑤 𝑗𝑗→𝑖𝑖 , we repeated the integration step with 𝑤𝑤 𝑗𝑗→𝑖𝑖 = 0 to obtain 613 
+
+𝑒𝑒 𝑖𝑖 [𝑡𝑡 ]| 𝑤𝑤 𝑗𝑗→𝑖𝑖 =0 , which denotes the activity at node 𝑖𝑖 in the absence of an influence from node 𝑗𝑗 at 614 
+
+time 𝑡𝑡 . The flow from node 𝑗𝑗 to node 𝑖𝑖 was then defined as 𝑓𝑓 {𝑗𝑗→𝑖𝑖 } [𝑡𝑡 ] = 𝑒𝑒 𝑗𝑗 [𝑡𝑡 ] − 𝑒𝑒 𝑖𝑖 [𝑡𝑡 ]| 𝑤𝑤 𝑗𝑗→𝑖𝑖 =0 . This 615 
+
+second step is repeated for all excitatory coupling parameters. The full two-step procedure is 616 
+
+repeated for each integration step. The resulting bidirectional ground truth flow 𝑓𝑓 gt ,b[𝑡𝑡 ] was 617 
+
+downsampled using the same anti-aliasing filter as used for the simulated neural activity. As our 618 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+GDAR model only produced a unidirectional flow at each point in time, we define the 619 
+
+unidirectional ground truth flow 𝑓𝑓 gt [𝑡𝑡 ] between node 𝑖𝑖 and 𝑗𝑗 as 𝑓𝑓 gt  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+[𝑡𝑡 ] = 𝑓𝑓 gt ,b 
+
+> {𝑖𝑖→𝑗𝑗 }
+
+[𝑡𝑡 ] − 𝑓𝑓 gt ,b 
+
+> {𝑗𝑗→𝑖𝑖 }
+
+[𝑡𝑡 ]. It 620 
+
+is noted that while 𝑓𝑓 gt [𝑡𝑡 ] is unidirectional at each time point, the flow direction across each edge 621 
+
+can change over time and is determined by the sign of 𝑓𝑓 gt [𝑡𝑡 ]. PSD estimates of the unidirectional 622 
+
+ground truth flow for the 16-node random graphs averaged over all trials, graphs, and edges are 623 
+
+shown in  Extended Fig. 2 c. 624 
+
+VAR, GAR and GDAR flow: For each trial, we used the last 15 seconds of simulated neural 625 
+
+activity to estimate the parameters of VAR, GAR and GDAR model s for varying model orders as 626 
+
+described above . The graph used for fitting the model is equal to the graph used for the 627 
+
+simulations. The estimated model parameters were then used to transform the simulated neural 628 
+
+activity into an estimated flow signal according to Eq.  (2). For the VAR and GAR models, the 629 
+
+unidirectional flow is defined as 𝑓𝑓 VAR /GAR  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+[𝑡𝑡 ] = 𝑓𝑓 VAR /GAR ,b 
+
+> {𝑖𝑖→𝑗𝑗 }
+
+[𝑡𝑡 ] − 𝑓𝑓 VAR /GAR ,b 
+
+> {𝑗𝑗→𝑖𝑖 }
+
+[𝑡𝑡 ]. Since the VAR model 630 
+
+assumes a fully connected graph, we generally obtain non-zero flow signals across connections that 631 
+
+are not part of the network. For fair comparison with the ground truth flow, we only extract the 632 
+
+VAR flow for edges that exist in the ground truth network. For the GAR models , we also compute 633 
+
+a bidirectional flow 𝑓𝑓 GAR ,b[𝑡𝑡 ] and compare it to the ground truth bidirectional flow 𝑓𝑓 gt ,b[𝑡𝑡 ].634 
+
+However, we found that this does not result in higher correlation coefficients than the 635 
+
+unidirectional flow (see  Extended Fig. 2 e). 636 
+
+Partial directed coherence (PDC) and directed transfer function (DTF): GAR, GDAR, 637 
+
+and VAR models (order 𝑝𝑝 = 24 ) were also used to compute PDC 22 and DTF 21 from the model 638 
+
+parameters, which were then correlated with the ground truth flow spectra. Traditional PDC and 639 
+
+DTF estimates ( Fig. 2 b) were computed from the VAR model parameters for each directed edge 640 
+
+pair 𝑗𝑗 → 𝑖𝑖 using the following equations: 641 
+
+𝑃𝑃𝑃𝑃𝐶𝐶 𝑗𝑗→𝑖𝑖 (𝜔𝜔 ) = �𝐴𝐴 𝑖𝑖 ,𝑗𝑗 (𝜔𝜔 )�2∑ �𝐴𝐴 𝑙𝑙 ,𝑗𝑗 (𝜔𝜔 )�2𝑁𝑁 𝑙𝑙=1 
+
+,
+
+(21 )
+
+𝑃𝑃𝑇𝑇 𝐹𝐹 𝑗𝑗→𝑖𝑖 (𝜔𝜔 ) = �𝐻𝐻 𝑖𝑖 ,𝑗𝑗 (𝜔𝜔 )�2∑ �𝐻𝐻 𝑖𝑖 ,𝑙𝑙 (𝜔𝜔 )�2𝑁𝑁 𝑙𝑙=1 
+
+,
+
+(22 )
+
+where 𝐴𝐴 𝑖𝑖 ,𝑗𝑗 (𝜔𝜔 ) is the Fourier transform of (𝐴𝐴 𝑘𝑘 )𝑖𝑖 ,𝑗𝑗 (note that here 𝑘𝑘 is the time variable), and 𝐻𝐻 𝑖𝑖 ,𝑗𝑗 (𝜔𝜔 )642 
+
+is the (𝑖𝑖 , 𝑗𝑗 ) entry of the Fourier transform of the inverse of 𝐴𝐴 𝑘𝑘 . Equivalent metrics can be obtained 643 
+
+for the GAR and GDAR models by computing the sum in the denominator only over the nodes 644 
+
+connected to 𝑗𝑗 and 𝑖𝑖 respectively (Extended Fig. 2 d) . For the GDAR model, the estimated PDC 645 
+
+and DTF spectra are compared to the flow spectra obtained from the unidirectional ground truth 646 
+
+flow (see above). For GAR and VAR models, bidirectional PDC and DTF estimates are obtained 647 
+
+and compared to the bidirectional ground truth flow spectra. 648 
+
+Comparing ground truth and estimated neural flow: The ground truth and estimated flow 649 
+
+signals are first z -scored independently for each trial and model and then compared using various 650 
+
+metrics. First, p ower spectral density (PSD) estimates of the flow across each edge was estimated 651 
+
+using Welch’s method 80 with a Hann window of size 256 samples and 50% overlap and PSDs of 652 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+the ground truth and estimated flow signals were correlated using Pearson correlation coefficients 653 
+
+and compared between models using Wilcoxon rank-sum tests ( Fig. 2 b and d ). Furthermore, 654 
+
+correlation coefficients between raw time series of ground truth and estimated neural flow were 655 
+
+computed and pooled across all edges and trials ( Extended Fig. 2 f). Next, we computed the error 656 
+
+between magnitude and phase spectrum of ground truth and estimated flow for each graph edge 657 
+
+and trial (Fig. 2 c). Magnitude errors are defined as the absolute difference (in dB) between ground 658 
+
+truth and estimated flow PSD. To compare the phase error, the 1 5s of neural flow obtained for 659 
+
+each trial were first divided into 58 non-overlapping segments of 256 samples and then the discrete 660 
+
+Fourier transform for each segment was computed. Afterwards, the phase difference between 661 
+
+ground truth and estimated phase was computed and mapped into the range from 0 to 𝜋𝜋 for each 662 
+
+segment before being averaged over all 58 segments. Finally, we compared the dynamics of the 663 
+
+estimated flow with the dynamics of the ground truth flow using dynamical similarity analysis 664 
+
+(DSA) in  Fig. 2 e33 . To do so, Hankel dynamic mode decomposition (DMD) models are first 665 
+
+independently fitted to the high -dimensional ground truth and estimated flow signal and the 666 
+
+resultant DMD matrices 𝐀𝐀 est and 𝐀𝐀 gt are compared using a modified version of Procrustes 667 
+
+analysis. To fit the Hankel -DMD models we used 15 delay time steps to construct the Hankel 668 
+
+matrices and full rank regression. Optimization during the Procrustes analysis used 1000 iterations 669 
+
+at a learning rate of 10 −2 .670 
+
+Generalization performance: According to Eq.  (6), the GDAR model can predict neural 671 
+
+activity at the current time step using the past 𝑝𝑝 samples. To assess the generalization performance 672 
+
+of the model, we computed the normalized root mean square error (RMSE) between the observed 673 
+
+neural activity 𝑠𝑠 [𝑡𝑡 ] and predicted neural activity 𝑠𝑠̂ [𝑡𝑡 ] as follows: 674 
+
+𝑅𝑅𝑅𝑅 𝑆𝑆𝐸𝐸  = �∑ (𝑠𝑠̂ 𝑛𝑛 [𝑡𝑡 ] − 𝑠𝑠 𝑛𝑛 [𝑡𝑡 ]) 2𝑡𝑡 ,𝑛𝑛 
+
+�∑ (𝑠𝑠 𝑛𝑛 [𝑡𝑡 ]) 2𝑡𝑡 ,𝑛𝑛 
+
+.
+
+(23 )
+
+The summation is performed over all time points 𝑡𝑡 within a segment, as well as over all nodes 𝑛𝑛 .675 
+
+To compute the train RMSEs, the predictions 𝑠𝑠̂ [𝑡𝑡 ] are computed for the same time points that 676 
+
+were used for model fitting. For the test RMSEs, the models are applied to data immediately 677 
+
+following the training set. For the simulations in  Fig. 2 f, RMSEs were evaluated using 100 678 
+
+independent trials from the 7-node graph shown in  Extended Fig. 2 g. We used 10 th order models 679 
+
+and the length of train and test segments were set equal . The generalization gap is defined as the 680 
+
+difference between test and train RSME after averaging over all edges and trials. 681 
+
+To compute the generalization gap for the in-vivo experiments ( Extended Fig. 2 h), the models 682 
+
+were fitted to 10 s training segments (optogenetic stimulation, stroke, and Utah array) and 683 
+
+evaluated on the subsequent 10 s segment. For the reach dataset, the models are tested on the 684 
+
+subsequent reach trial in the same direction. test RMSEs for the optogenetic stimulation, stroke, 685 
+
+and Utah array datasets described above, the prediction RMSEs are computed for the 10 s segment 686 
+
+that immediately follows the segment used for model fitting. For the center -out reach experiment, 687 
+
+the same data as described above was used. For the optogenetic stimulation, Utah array, and reach 688 
+
+experiment the same data as described below were used. For the stroke experiment in addition to 689 
+
+the data described below, an additional 30 min of baseline recording at the end of the experiment 690 
+
+was used. 691 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Optogenetic Stimulation Experiment 692 
+
+One adult male rhesus macaque (monkey G: 8 years old, 17.5 kg) was used in this experiment. All 693 
+
+procedures were performed under the approval of the University of California, San Francisco 694 
+
+Institutional Animal Care and Use Committee and were compliant with the Guide for the Care 695 
+
+and Use of Laboratory Animals. 696 
+
+Neural stimulation and recording interface: In this study, we used a subset of neural data 697 
+
+recorded by a large-scale optogenetic neural interface 11 that has previously been utilized to study 698 
+
+changes in network FC due to cortical stimulation 34,35 . The interface was composed of several key 699 
+
+components: a semi-transparent micro-electrode array, a semi-transparent artificial dura, a700 
+
+titanium implant, and a laser system for delivering optical stimulation. First, neurons in the 701 
+
+primary sensorimotor cortex were rendered light-sensitive through a viral-mediated expression of 702 
+
+the C1V1 opsin. To do so, 200 𝜇𝜇 L of the viral cocktail AAV5 -CamKIIa-C1V1(E122T/E162T) -TS-703 
+
+eYFP -WPRE -hGH (2.5 × 10 12 virus molecules/mL; Penn Vector Core, University of 704 
+
+Pennsylvania, PA, USA, Addgene number: 35499) was administered across four sites into the 705 
+
+primary somato sensory (S1) and primary motor (M1) cortices of the left hemisphere using 706 
+
+convection-enhanced delivery 11,34,81 . Next, the chronic neural interface was surgically implanted by 707 
+
+performing a 25mm craniotomy over the primary sensorimotor cortex, replacing the dura mater 708 
+
+beneath the craniotomy with a chronic transparent artificial dura housed in a titanium chamber. 709 
+
+During each experimental session, the artificial dura was removed and a custom 96 channel micro-710 
+
+electrocorticography array consisting of platinum-gold-platinum electrodes and traces encapsuled 711 
+
+in Parylene -C 12 was placed on the cortical surface. Optical stimulation was performed by two 488 712 
+
+nm lasers (PhoxX 488 -60, Omicron-Laserage, Germany) connected to a fiber optic cable 713 
+
+(core/cladding diameter: 62.5/125 μm, Fiber Systems, TX, USA) and position ed above the array 714 
+
+such that the tip of the fiber -optic cable touched the array. Neural data in the form of local field 715 
+
+potentials was recorded by the micro-ECoG array at a sampling frequency of 24 kHz using a 716 
+
+Tucker-Davis Technologies system (FL, USA) . It was verified that evoked neural responses were 717 
+
+due to optogenetic activation and not other effects such as photoelectric artifacts or heating 11,12,35 .718 
+
+Stimulation protocol: For the stimulation-evoked analysis, we used data from three 719 
+
+experimental sessions all performed on the same day. T he only difference between the sessions was 720 
+
+the location of stimulation, which is depicted in  Fig. 3 b. As the micro-ECoG array was not 721 
+
+removed between sessions its location on the cortex remains unchanged. Each experimental session 722 
+
+consists of 5 stimulation blocks during which two lasers alternatingly and repeatedly stimulate. 723 
+
+Each stimulation block lasts approximately 7 min and is intermittent by shorter resting state 724 
+
+blocks during which no stimulation is performed. The stimulation pulse width for both lasers was 725 
+
+5 ms with a delay of 10 ms between stimulation by lasers 1 and 2. This paired stimulation is 726 
+
+repeated at a frequency of 7 Hz (143 ms) resulting in a total of approximately 2970 pulse pairs for 727 
+
+each stimulation block . All stimulation parameters (except for stimulation location s) are identical 728 
+
+for the three sessions analyzed in  Fig. 3 .729 
+
+Signal preprocessing: First, bad channels were identified as 1) electrodes with high impedance 730 
+
+and 2) channels with a low signal -to-noise ratio, and excluded from the analysis 35 . The location of 731 
+
+the remaining 67 good channels was used to construct a sparse and locally connected graph, where 732 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+each electrode corresponds to a node in the graph and each node is connected approximately to it 733 
+
+8 nearest neighbors (see  Fig. 3 c top). The raw time series data was downsampled to 1 017.25 Hz 734 
+
+using a low-pass Chebyshev anti-aliasing filter and the mean activity within each channel was 735 
+
+subtracted from the respective time series. 736 
+
+GDAR model fitting: The preprocessed LPFs during each stimulation block were divided into 737 
+
+segments of 10004 samples (approximately 10 s) with 4 samples overlap between segments and a 738 
+
+5th order GDAR, GAR, and VAR models were fitted to each segment as described above. The 739 
+
+estimated model parameters were used to transform the neural activity into a flow signal according 740 
+
+to equation  (7) . The overlap between segments was chosen such that a continuous flow signal was 741 
+
+obtained from the segmented LFPs without relying on zero padding. A model order of 5 was 742 
+
+chosen for this application due to the short (10 ms) delay between stimulation by laser s 1 and 2. 743 
+
+For larger model orders, the flow evoked by the second laser would increasingly be influenced by 744 
+
+the neural activity evoked by the first laser resulting in a mixing of the neural responses to both 745 
+
+stimulation pulses. Flow dynamics akin to the plots in  Fig. 3 d for a model order 𝑝𝑝 = 10 are shown 746 
+
+in  Extended Fig. 3 c and d. 747 
+
+Visualizing flow dynamics: To visualize the flow dynamics evoked by paired cortical 748 
+
+stimulation, we must project the high dimensional flow signals 𝑓𝑓 [𝑡𝑡 ] ∈ ℝ 𝐸𝐸 , where 𝐸𝐸 is the number 749 
+
+of edges in the graph , for the GAR and GDAR flow onto a lower dimensional subspace. To so so, 750 
+
+we first pool ed the first 25 flow sn apshots from the onset of stimulation by the first laser from all 751 
+
+sessions, blocks, and pulse pairs in a single data matrix 𝐅𝐅 ∈ ℝ 𝐸𝐸 ×𝑀𝑀 , where  𝑅𝑅  ≈ 3 ⋅ 5 ⋅ 2970 ⋅ 25 (3 752 
+
+sessions, 5 blocks per session, approximately 2970 pulse pairs per block, 25 flow snapsots per pulse 753 
+
+pair). Afterwards we performed principle component analysis (PCA) and project ed 𝐅𝐅 onto its first 754 
+
+two principal components (PCs) to obtain 𝐅𝐅 � ∈ ℝ 2×𝑀𝑀 . Fig. 3 d and e show the PCA reduced GDAR ,755 
+
+and GAR flow dynamics where each trace illustrates a 25 snapshot long flow trajectory from a 756 
+
+single pulse pair. For better visualization only 250 individual trajectories per stimulation block 757 
+
+selected at random are plotted.  Fig. 3 f shows the same dynamics but instead using the VAR flow. 758 
+
+Since the number of edges for the VAR model is very large, computing the PCs of the associated 759 
+
+matrix  𝑅𝑅  was not feasible. Therefore we first averaged the flow snapshots over 20 consequitive 760 
+
+trials before computing the PCs (resulting in  𝑅𝑅  ≈ 3 ⋅ 5 ⋅ 148 ⋅ 25 , where 148 is the number of 761 
+
+averaged trials). For comparison, we performed the same trial averaing for the GDAR flow and 762 
+
+recomputed the flow trajectories ( Extended Fig. 3 e). The averaging does not seem to have a 763 
+
+negative effect on the discriminability of the trajectories between different sessions .764 
+
+Modeling increased delay across sulcus: The GDAR model can easily be augmented to model 765 
+
+variable delay across different edges. For example, it is reasonable to assume that signals that 766 
+
+travel across the sulcus between M1 and S1 experience larger delays than signals traveling within 767 
+
+each cortex. Larger delays in the GDAR model across an edge between node 𝑖𝑖 and 𝑗𝑗 can be 768 
+
+incorporated by constraining edge coefficients 𝑤𝑤 𝑘𝑘  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+= 0 for small delays (i.e., 𝑘𝑘 = 1, 2, … ), which 769 
+
+can be achieved by augmenting the matrix 𝐑𝐑 in equation  (8). We have used this approach to 770 
+
+model larger delays across the sulcus by setting 𝑤𝑤 𝑘𝑘  
+
+> {𝑖𝑖 ,𝑗𝑗 }
+
+= 0 for edges that connect nodes in M1 to 771 
+
+nodes in S1 for 𝑘𝑘 = 1, 2, 3 . That is, the minimum delay across each sulcus edge is constrained to 772 
+
+be 4 ( see  Extended Fig. 3 f and Supplementary Video 2 for corresponding GDAR flow dynamics). 773 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Changes in resting-state FC: 774 
+
+To demonstrate the GDAR model’s ability to uncover changes in FC during resting state, we 775 
+
+analyze data from a stroke and cortical stimulation experiment using two 32-channel ECoG array s, 776 
+
+and an intracortical stimulation experiment using a 96-channel microelectrode array (Utah array). 777 
+
+Stroke and cortical stimulation experimental procedure: One adult macaque ( 
+
+Macaca 778 nemestrina , 14.6 kg, 7 years, male) was used in this study. All procedures were performed under 779 
+
+the approval of the University of Washington Institutional Animal Care and Use Committee and 780 
+
+were compliant with the Guide for the Care and Use of Laboratory Animals. The experimental 781 
+
+procedure was previously described elsewhere 13,41,82 . The animal was first anesthetized with 782 
+
+isoflurane and a craniotomy with 25mm diameter was performed in each hemisphere over the 783 
+
+sensorimotor cortex. A focal ischemic lesion in the left hemisphere was created by photo-activation 784 
+
+of a previously injected light-sensitive dye (Rose Bengal). Following illumination, the dye causes 785 
+
+platelet aggregation, thrombi formation, and interruption of local blood flow, leading to local 786 
+
+neural cell death near the illuminated area. The location and extent of the lesion were estimated 787 
+
+through post-mortem histological analysis of coronal slices and is illustrated as a black patch in 788 
+
+Fig. 5 . Electrical activity was recorded before (30 min) , during (60 min) , and after lesion induction 789 
+
+(60 min) simultaneously in the ipsi- and contralesional hemisphere using two 32-channel ECoG 790 
+
+arrays (Fig. 5c) 83,84 . Approximately 60 min after the end of lesioning, repeated electrical 791 
+
+stimulation was performed 8 mm away from the lesion center. 1 kHz stimulation charge-balanced 792 
+
+pulses (60 μA, 450 μs pulse width, 50 μs interphase interval) were given in 5 Hz bursts (5 pulses 793 
+
+per burst) consecutively for 10 minutes, where each stimulation block was followed by 2 min of 794 
+
+baseline recording. The experiments included a total of six 10 min stimulation blocks. We used 795 
+
+the 30 min of neural recordings before lesion induction, 60 min of neural recording after lesion 796 
+
+induction but before stimulation (pre stim), as well as the 2 min blocks of baseline recording in 797 
+
+between the stimulation blocks (post stim) in both hemispheres. In total we used 4 blocks of post 798 
+
+stimulation recordings as the recordings in the other blocks were corrupted. All data were digitally 799 
+
+notch-filtered at 60, 180, and 300 Hz using the function scipy.signal.iirnotch with -3 dB bandwidth 800 
+
+of 3 Hz. 801 
+
+Intracortical stimulation experimental procedure (Utah array): One adult rhesus 802 
+
+macaque (
+
+Macaca mulatta, 12 kg, 11 years, male ) was used in this study. All procedures were 803 
+
+performed under the approval of the University of California, San Francisco Institutional Animal 804 
+
+Care and Use Committee and were compliant with the Guide for the Care and Use of Laboratory 805 
+
+Animals. The experimental procedure was previously described by Bloch et al. 85 . A 96-channel 806 
+
+Utah array was implanted in S1 and LFPs were recorded at a sampling frequency of 24 kHz before 807 
+
+being downsampled to a frequency of 1017 Hz (8 th order Chebychev anti-aliasing filter). The 808 
+
+dataset consists of resting state recordings intermitted by five 10 min stimulation blocks that 809 
+
+contain repeated single site or paired electrical stimulation. For the single site stimulation session, 810 
+
+stimulation is performed in in the form of five pulses (1 kHz burst frequency) that are repeated 811 
+
+every 200 ms. The paired stimulation sessions use the same stimulation patterns for each 812 
+
+stimulation site. For session paired-stim 1, electrode B stimulated 100 ms after electrode A. For 813 
+
+session paired-stim 2, the delay between stimulation sites A and B is chosen uniformly at random 814 
+
+between -100 ms and 100 ms for each paired stimulation trial. 815 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Signal preprocessing: The preprocessing for both datasets was performed akin to the 816 
+
+optogenetic stimulation experiment. The location of the ECoG channels was used to construct a 817 
+
+sparse and locally connected graph, where each node (electrode) is connected approximately to its 818 
+
+8 nearest neighbors. When necessary, the raw time series data were downsampled to 1 kHz using 819 
+
+low-pass Chebyshev anti-aliasing filter and the mean was removed from each channel. 820 
+
+Additionally, artifacts— defined as signal values that deviate by ten or more standard deviations 821 
+
+from the mean simultaneously for all channels—were removed by linearly interpolating between 822 
+
+the sample immediately before and after the artifact for the stroke dataset. 823 
+
+Model fitting and postprocessing: The preprocessed L FP s for all datasets during each block 824 
+
+were divided into 10,009 sample long segments (approximately 10 s) with 9 samples overlap 825 
+
+between segments and 10 th order GDAR and and VAR models were fitted to each segment as 826 
+
+described above. For the GDA R model, the estimated model parameters were used to transform 827 
+
+the neural activity into a flow signal according to equatio n (2), where each segment contains 10000 828 
+
+samples. To assess FC changes in different frequency bands, we then computed the GDAR flow 829 
+
+power spectral density (PSD) using Welch’s method 80 (Hann window of size 1000 samples with 830 
+
+50% overlap) for each segment, and stored the average flow PSD within the gamma band ( 30 −831 
+
+70 Hz). Finally, we computed the change in average flow PSD due to stroke and stimulation. 832 
+
+Specifically, if we denote 𝐹𝐹 𝑘𝑘 pre and 𝐹𝐹 𝑘𝑘 post as the average gamma flow PSD before and after 833 
+
+stroke/stimulation of the 𝑘𝑘 th segment, the relative change in GDAR flow magnitude Δ stim is given 834 
+
+by 835 
+
+Δ stim = 〈𝐹𝐹 𝑘𝑘 post 〉𝑘𝑘 − 〈𝐹𝐹 𝑘𝑘 pre 〉𝑘𝑘 〈𝐹𝐹 𝑘𝑘 pre 〉𝑘𝑘 
+
+,
+
+(24 )
+
+where 〈⋅〉 𝑘𝑘 denotes the average over all segments. W e assessed the statistical significance of Δ stim 836 
+
+for each edge by forming sample distributions for the pre and post condition from all segments 837 
+
+and compared the distributions using a two-sample Kolmogorov-Smirnov test. If the distributions 838 
+
+for a given edge differ with a significance level of 𝑝𝑝 ≤ 0.01 , the edge is plotted in the graph. For 839 
+
+partial directed coherence (PDC) and directed transfer function (DTF), the same procedure is 840 
+
+followed with PDC and DTF spectra being computed over each 10 -second segment according to 841 
+
+equation  (21 ) and  (22 ) using the VAR model parameters .842 
+
+Spatiotemporal spectra 𝐹𝐹 �grad �𝜆𝜆 grad , 𝜔𝜔� , and 𝐹𝐹 �rot [𝜆𝜆 rot , 𝜔𝜔 ] in  Fig. 4 c and d were first calculated for 843 
+
+each segment of the pre and post condition as described above using Welch’s method 80 (Hann 844 
+
+window of size 1000 samples with 50% overlap) for the temporal Fourier analysis. Afterwards 845 
+
+spectral power was calculated by taking the magnitude square of 𝐹𝐹 �grad �𝜆𝜆 grad , 𝜔𝜔� , and 𝐹𝐹 �rot [𝜆𝜆 rot , 𝜔𝜔 ]846 
+
+and averaged over all segments. 847 
+
+For the Utah array data, changes in gamma GDAR flow power due to stimulation ( Fig. 5 b) were 848 
+
+computed using all data before stimulation (pre stim) as well as the five 2 -minute resting state 849 
+
+blocks following the stimulation blocks (post stim) for each session. To compute the temporal 850 
+
+evolution of the normalized and averaged gamma GDAR flow power ( Fig. 4 c-e), the GDAR flow 851 
+
+power in the gamma band was first averaged over all edges connected to the stimulation node. 852 
+
+Then GDAR flow and LFP power were z -scored using the mean and standard deviation from the 853 
+
+pre stim period for each session independently. We then computed the best linear fit between the 854 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+z-scored LFP and average GDAR flow power 𝐹𝐹 �GDAR using all segments (pre and post stim; 855 
+
+Extended Fig. 4 )856 
+
+𝐹𝐹 �GDAR = 𝑠𝑠 ⋅ 𝐿𝐿 𝐹𝐹𝑃𝑃  + 𝑜𝑜 .
+
+(25 )
+
+The goal is to test whether the GDAR flow power changes beyond what can be linearly explained 857 
+
+by changes in LFP power. Hence, we subtract the linear regression line from the average GDAR 858 
+
+flow power 859 
+
+𝐹𝐹 �GDAR ,corrected = 𝐹𝐹 �GDAR − 𝑠𝑠 ⋅ 𝐿𝐿 𝐹𝐹𝑃𝑃 
+
+(26 )
+
+and plotted the result in  Fig. 4 c-e. 860 
+
+Center-out Reach Task 861 
+
+One adult male rhesus macaque (7 years old, 16.5 kg) was used in this study. All procedures were 862 
+
+performed under the approval of the University of California, San Francisco Institutional Animal 863 
+
+Care and Use Committee and were compliant with the Guide for the Care and Use of Laboratory 864 
+
+Animals. Surgical procedure, neural interface, and signal preprocessing are the same as described 865 
+
+in Optogenetic Stimulation Experiment. However, for the center-out reach task, the ECoG was 866 
+
+placed fully over the primary motor (M1) cortex. Channels with persistent distortions were 867 
+
+identified and excluded from the analysis resulting in 77 good channels used to construct a sparsely 868 
+
+connected nearest neighbor graph as described previously. The animal performed a total of 200 869 
+
+successful reach trials , 25 for each of the eight directions (see  Fig. 6 a). Each individual reach trial 870 
+
+is divided into start, instructed delay, and reach phase. During the start phase, the monkey places 871 
+
+its hand on the center of the screen. After that the instructed delay phase begins where first the 872 
+
+target direction is presented before a randomly selected delay period terminated by a go-tone is 873 
+
+introduced. The reach phase starts once the go-tone appears and ends when the monkey touches 874 
+
+the target. The finger position of the monkey was tracked throughout the experiment using and 875 
+
+electromagnetic position sensor (Polhemus Liberty, Colchester, VT) at 240 Hz 86 .876 
+
+GDAR model fitting and post-processing: To ensure accurate model fitting, recorded LFP s877 
+
+from all three phases were used to estimate the parameters of the GDAR model. The model order 878 
+
+was set to 𝑝𝑝 = 5 to ensure enough independent samples for each parameter. After the model 879 
+
+parameters have been estimated, the GDAR flow is computed according to Eq.  (7) and filtered 880 
+
+into the high-gamma band using a 3 rd order Butterworth filter with cutoff frequencies of 70 and 881 
+
+200 Hz. The high-gamma GDAR flow signal 𝑓𝑓 [𝑡𝑡 ] is then decomposed into its gradient and curl 882 
+
+flow spectrum 𝐹𝐹 grad �𝜆𝜆 grad , 𝑡𝑡� and 𝐹𝐹 rot [𝜆𝜆 rot , 𝑡𝑡 ] according to Eq. (14 )-(17 ). To obtain the flow power 883 
+
+spectrogram in  Fig. 6 b, we compute the magnitude square of 𝐹𝐹 grad �𝜆𝜆 grad , 𝑡𝑡� and 𝐹𝐹 rot [𝜆𝜆 rot , 𝑡𝑡 ]. Flow 884 
+
+power spectra as well as reach velocities are temporally smoothed using a 51 sample 3 rd order 885 
+
+Savitzky-Golay filter. To account for the time delay between motor commands observable in M1 886 
+
+and actual movement onset 87 , we calculated the median correlation across all gradient frequencies 887 
+
+between 𝐹𝐹 grad �𝜆𝜆 grad , 𝑡𝑡 − 𝑑𝑑� and the reach velocity for varying delays 𝑑𝑑 (Extended Fig. 5 f). We 888 
+
+found a maximum correlation for a delay of 104 ms, which we corrected for in all subsequent 889 
+
+analysis. 890 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+To quantify the extent to which the gradient flow spectrum is dominated by low frequencies during 891 
+
+reaching, we defined the alignment index as 892 
+
+aligment index = ∑ ∑ 𝐹𝐹 grad �𝜆𝜆 grad ,𝑖𝑖 , 𝑡𝑡� 15 𝑖𝑖=1 𝑡𝑡 ∑ ∑ 𝐹𝐹 grad �𝜆𝜆 grad ,N−𝑖𝑖 , 𝑡𝑡� 15 𝑖𝑖=1 𝑡𝑡 
+
+,
+
+(27 )
+
+where 𝑁𝑁 is the total number of gradient frequencies. The temporal averaging is performed over all 893 
+
+time points where the reach velocity is above a threshold of 0.1 for the tuning curve analysis ( Fig. 894 
+
+6d and e ). For the curl flow spectrum , we do not observe spectral changes during reaching that 895 
+
+are strongly dependent on the spatial frequency. Therefore, we simply use the average over all 896 
+
+spatial frequencies in  Fig. 6 e. 897 
+
+The reaction time is defined as the time between the go cue and when the finger displacement 898 
+
+reaches 5mm (approximately 10% of the full path length) from the resting position during the 899 
+
+delay period. This reaction time is then correlated with the average GDAR flow power for each 900 
+
+spatial frequency over the last 100 ms prior to the go-tone ( Fig. 6 f and  Extended Fig. 5 j). 901 
+
+Furthermore, we have excluded trials with a reaction time smaller than 150 ms and larger than 902 
+
+500 ms resulting in a total of 93 valid trials. The correlation in  Fig. 6 g uses the average GDAR 903 
+
+flow power over the five lowest gradient frequencies. 904 
+
+905 
+
+Data availability: 906 
+
+Data will be made available upon reasonable request from the authors. 907 
+
+Code Availability: 908 
+
+Source code for the GDAR model will be made available prior to publication. 909 
+
+910 
+
+References: 911 
+
+1. Zeki, S. & Shipp, S. The functional logic of cortical connections. Nature 335 , 311–317 (1988). 912 
+
+2. Bressler, S. L. Large -scale cortical networks and cognition. Brain Res. Rev. 20 , 288–304 (1995). 913 
+
+3. Friston, K. Beyond Phrenology: What Can Neuroimaging Tell Us About Distributed Circuitry? Annu. 914 
+
+Rev. Neurosci. 25 , 221–250 (2002). 915 
+
+4. McIntosh, A. R. Towards a network theory of cognition. Neural Netw. 13 , 861–870 (2000). 916 
+
+5. Duncan, J., Humphreys, G. & Ward, R. Competitive brain activity in visual attention. Curr. Opin. 917 
+
+Neurobiol. 7, 255–261 (1997). 918 
+
+6. Bressler, S. L. & Menon, V. Large -scale brain networks in cognition: emerging methods and 919 
+
+principles. Trends Cogn. Sci. 14 , 277–290 (2010). 920 
+
+7. Voytek, B. & Knight, R. T. Dynamic Network Communication as a Unifying Neural Basis for Cognition, 921 
+
+Development, Aging, and Disease. Biol. Psychiatry 77 , 1089–1097 (2015). 922 
+
+8. He, B. J., Shulman, G. L., Snyder, A. Z. & Corbetta, M. The role of impaired neuronal communication 923 
+
+in neurological disorders. Curr. Opin. Neurol. 20 , 655 (2007). 924 
+
+9. Seeley, W. W., Crawford, R. K., Zhou, J., Miller, B. L. & Greicius, M. D. Neurodegenerative Diseases 925 
+
+Target Large -Scale Human Brain Networks. Neuron 62 , 42–52 (2009). 926 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+10. Shing, N., Walker, M. C. & Chang, P. The role of aberrant neural oscillations in the hippocampal -927 
+
+medial prefrontal cortex circuit in neurodevelopmental and neurological disorders. Neurobiol. Learn. 928 
+
+Mem. 195 , 107683 (2022). 929 
+
+11. Yazdan -Shahmorad, A. et al. A Large -Scale Interface for Optogenetic Stimulation and Recording in 930 
+
+Nonhuman Primates. Neuron 89 , 927–939 (2016). 931 
+
+12. Ledochowitsch, P. et al. Strategies for optical control and simultaneous electrical readout of 932 
+
+extended cortical circuits. J. Neurosci. Methods 256 , 220–231 (2015). 933 
+
+13. Khateeb, K. et al. A versatile toolbox for studying cortical physiology in primates. Cell Rep. Methods 934 
+
+2, 100183 (2022). 935 
+
+14. Griggs, D. J. et al. Optimized large -scale optogenetic interface for non -human primates. in 936 
+
+Optogenetics and Optical Manipulation 2019 (eds Mohanty, S. K. & Jansen, E. D.) 3 (SPIE, San 937 
+
+Francisco, United States, 2019). doi:10.1117/12.2511317. 938 
+
+15. Vázquez -Guardado, A., Yang, Y., Bandodkar, A. J. & Rogers, J. A. Recent advances in 939 
+
+neurotechnologies with broad potential for neuroscience research. Nat. Neurosci. 23 , 1522–1536 940 (2020). 941 
+
+16. Chang, E. F. Towards Large -Scale, Human -Based, Mesoscopic Neurotechnologies. Neuron 86 , 68–78 942 (2015). 943 
+
+17. Bastos, A. M. & Schoffelen, J. -M. A Tutorial Review of Functional Connectivity Analysis Methods and 944 
+
+Their Interpretational Pitfalls. Front. Syst. Neurosci. 9, (2016). 945 
+
+18. He, B. et al. Electrophysiological Brain Connectivity: Theory and Implementation. IEEE Trans. Biomed. 946 
+
+Eng. 66 , 2115–2137 (2019). 947 
+
+19. Granger, C. W. J. Investigating Causal Relations by Econometric Models and Cross -spectral Methods. 948 
+
+Econometrica 37 , 424–438 (1969). 949 
+
+20. Geweke, J. F. Measures of Conditional Linear Dependence and Feedback between Time Series. J. Am. 950 
+
+Stat. Assoc. 79 , 907–915 (1984). 951 
+
+21. Kaminski, M. J. & Blinowska, K. J. A new method of the description of the information flow in the 952 
+
+brain structures. Biol. Cybern. 65 , 203–210 (1991). 953 
+
+22. Baccalá, L. A. & Sameshima, K. Partial directed coherence: a new concept in neural structure 954 
+
+determination. Biol. Cybern. 84 , 463–474 (2001). 955 
+
+23. Horvát, S. et al. Spatial Embedding and Wiring Cost Constrain the Functional Layout of the Cortical 956 
+
+Network of Rodents and Primates. PLOS Biol. 14 , e1002512 (2016). 957 
+
+24. Coifman, R. R. & Lafon, S. Diffusion maps. Appl. Comput. Harmon. Anal. 21 , 5–30 (2006). 958 
+
+25. Schaub, M. T. & Segarra, S. FLOW SMOOTHING AND DENOISING: GRAPH SIGNAL PROCESSING IN THE 959 
+
+EDGE -SPACE. in 2018 IEEE Global Conference on Signal and Information Processing (GlobalSIP) 735– 960 
+
+739 (IEEE, Anaheim, CA, USA, 2018). doi:10.1109/GlobalSIP.2018.8646701. 961 
+
+26. Schaub, M. T., Zhu, Y., Seby, J. -B., Roddenberry, T. M. & Segarra, S. Signal processing on higher -order 962 
+
+networks: Livin’ on the edge... and beyond. Signal Process. 187 , 108149 (2021). 963 
+
+27. Barbarossa, S. & Sardellitti, S. Topological Signal Processing Over Simplicial Complexes. IEEE Trans. 964 
+
+Signal Process. 68 , 2992–3007 (2020). 965 
+
+28. Schwock, F., Bloch, J., Atlas, L., Abadi, S. & Yazdan -Shahmorad, A. Estimating and Analyzing Neural 966 
+
+Information flow using Signal Processing on Graphs. in ICASSP 2023 -2023 IEEE International 967 
+
+Conference on Acoustics, Speech and Signal Processing (ICASSP) 1– 5 (IEEE, 2023). 968 
+
+doi:10.1109/ICASSP49357.2023.10096497. 969 
+
+29. Avena -Koenigsberger, A., Misic, B. & Sporns, O. Communication dynamics in complex brain 970 
+
+networks. Nat. Rev. Neurosci. 19 , 17–33 (2018). 971 
+
+30. Seguin, C., Sporns, O. & Zalesky, A. Brain network communication: concepts, models and 972 
+
+applications. Nat. Rev. Neurosci. 24 , 557–574 (2023). 973 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+31. Carvalhaes, C. & de Barros, J. A. The surface Laplacian technique in EEG: Theory and methods. Int. J. 974 
+
+Psychophysiol. 97 , 174–188 (2015). 975 
+
+32. Mitzdorf, U. Current source -density method and application in cat cerebral cortex: investigation of 976 
+
+evoked potentials and EEG phenomena. Physiol. Rev. 65 , 37–100 (1985). 977 
+
+33. Ostrow, M., Eisen, A., Kozachkov, L. & Fiete, I. Beyond Geometry: Comparing the Temporal Structure 978 
+
+of Computation in Neural Circuits with Dynamical Similarity Analysis. Adv. Neural Inf. Process. Syst. 979 
+
+36 , 33824–33837 (2023). 980 
+
+34. Yazdan -Shahmorad, A., Silversmith, D. B., Kharazia, V. & Sabes, P. N. Targeted cortical reorganization 981 
+
+using optogenetics in non -human primates. eLife 7, e31034 (2018). 982 
+
+35. Bloch, J. et al. Network structure mediates functional reorganization induced by optogenetic 983 
+
+stimulation of non -human primate sensorimotor cortex. iScience 25 , 104285 (2022). 984 
+
+36. Yang, Y. et al. Modelling and prediction of the dynamic responses of large -scale brain networks 985 
+
+during direct electrical stimulation. Nat. Biomed. Eng. 5, 324–345 (2021). 986 
+
+37. Sun, S. et al. Human intracortical responses to varying electrical stimulation conditions are separable 987 
+
+in low -dimensional subspaces. in 2022 IEEE International Conference on Systems, Man, and 988 
+
+Cybernetics (SMC) 2663– 2668 (2022). doi:10.1109/SMC53654.2022.9945369. 989 
+
+38. Wann, E. G., Wodeyar, A., Srinivasan, R. & Frostig, R. D. Rapid development of strong, persistent, 990 
+
+spatiotemporally extensive cortical synchrony and underlying oscillations following acute MCA focal 991 
+
+ischemia. Sci. Rep. 10 , 21441 (2020). 992 
+
+39. Dubovik, S. et al. The behavioral significance of coherent resting -state oscillations after stroke. 993 
+
+NeuroImage 61 , 249–257 (2012). 994 
+
+40. Zhou, J., Khateeb, K. & Yazdan -Shahmorad, A. Early intervention with electrical stimulation reduces 995 
+
+neural damage after stroke in non -human primates. Nat. Commun. 16 , 6701 (2025). 996 
+
+41. Zhou, J. et al. Neuroprotective Effects of Electrical Stimulation Following Ischemic Stroke in Non -997 
+
+Human Primates. in 2022 44th Annual International Conference of the IEEE Engineering in Medicine 998 
+
+& Biology Society (EMBC) 3085– 3088 (2022). doi:10.1109/EMBC48229.2022.9871335. 999 
+
+42. Georgopoulos, A. P., Kalaska, J. F., Caminiti, R. & Massey, J. T. On the relations between the direction 1000 
+
+of two -dimensional arm movements and cell discharge in primate motor cortex. J. Neurosci. 2,1001 1527–1537 (1982). 1002 
+
+43. Schwartz, A. B., Kettner, R. E. & Georgopoulos, A. P. Primate motor cortex and free arm movements 1003 
+
+to visual targets in three - dimensional space. I. Relations between single cell discharge and direction 1004 
+
+of movement. J. Neurosci. 8, 2913–2927 (1988). 1005 
+
+44. Moran, D. W. & Schwartz, A. B. Motor Cortical Representation of Speed and Direction During 1006 
+
+Reaching. J. Neurophysiol. 82 , 2676–2692 (1999). 1007 
+
+45. Miller, K. J. et al. Spectral Changes in Cortical Surface Potentials during Motor Movement. J. 1008 
+
+Neurosci. 27 , 2424–2432 (2007). 1009 
+
+46. Rickert, J. et al. Encoding of Movement Direction in Different Frequency Ranges of Motor Cortical 1010 
+
+Local Field Potentials. J. Neurosci. 25 , 8815–8824 (2005). 1011 
+
+47. Heldman, D. A., Wang, W., Chan, S. S. & Moran, D. W. Local field potential spectral tuning in motor 1012 
+
+cortex during reaching. IEEE Trans. Neural Syst. Rehabil. Eng. 14 , 180–183 (2006). 1013 
+
+48. Ng, B., Varoquaux, G., Poline, J. -B. & Thirion, B. A Novel Sparse Graphical Approach for Multimodal 1014 
+
+Brain Connectivity Inference. in Medical Image Computing and Computer -Assisted Intervention –1015 
+
+MICCAI 2012 (eds Ayache, N., Delingette, H., Golland, P. & Mori, K.) 707 –714 (Springer, Berlin, 1016 
+
+Heidelberg, 2012). doi:10.1007/978 -3-642-33415-3_87. 1017 
+
+49. Hinne, M., Ambrogioni, L., Janssen, R. J., Heskes, T. & van Gerven, M. A. J. Structurally -informed 1018 
+
+Bayesian functional connectivity analysis. NeuroImage 86 , 294–305 (2014). 1019 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+50. Pineda -Pardo, J. A. et al. Guiding functional connectivity estimation by structural connectivity in 1020 
+
+MEG: an application to discrimination of conditions of mild cognitive impairment. NeuroImage 101 ,1021 765–777 (2014). 1022 
+
+51. Pascucci, D. et al. Structure supports function: Informing directed and dynamic functional 1023 
+
+connectivity with anatomical priors. Netw. Neurosci. 6, 401–419 (2022). 1024 
+
+52. Huang, W. et al. A Graph Signal Processing Perspective on Functional Brain Imaging. Proc. IEEE 106 ,1025 868–885 (2018). 1026 
+
+53. Huang, W. et al. Graph Frequency Analysis of Brain Signals. IEEE J. Sel. Top. Signal Process. 10 , 1189– 1027 1203 (2016). 1028 
+
+54. Ferritto, C., Preti, M. G., Moia, S., Ville, D. V. D. & Behjat, H. Brain fingerprinting using fMRI spectral 1029 
+
+signatures on high -resolution cortical graphs. 2023.03.14.532594 Preprint at 1030 
+
+https://doi.org/10.1101/2023.03.14.532594 (2023). 1031 
+
+55. Lioi, G., Gripon, V., Brahim, A., Rousseau, F. & Farrugia, N. Gradients of connectivity as graph Fourier 1032 
+
+bases of brain activity. Netw. Neurosci. 5, 322–336 (2021). 1033 
+
+56. Mortaheb, S. et al. A Graph Signal Processing Approach to Study High Density EEG Signals in Patients 1034 
+
+with Disorders of Consciousness. in 2019 41st Annual International Conference of the IEEE 1035 
+
+Engineering in Medicine and Biology Society (EMBC) 4549– 4553 (IEEE, Berlin, Germany, 2019). 1036 
+
+doi:10.1109/EMBC.2019.8856436. 1037 
+
+57. Miri, M., Abootalebi, V., Saeedi -Sourck, H., Ville, D. V. D. & Behjat, H. Spectral Representation of EEG 1038 
+
+Data using Learned Graphs with Application to Motor Imagery Decoding. 2022.08.13.503836 1039 
+
+Preprint at https://doi.org/10.1101/2022.08.13.503836 (2023). 1040 
+
+58. Abdelnour, F., Voss, H. U. & Raj, A. Network diffusion accurately models the relationship between 1041 
+
+structural and functional brain connectivity networks. NeuroImage 90 , 335–347 (2014). 1042 
+
+59. Seguin, C. et al. Communication dynamics in the human connectome shape the cortex -wide 1043 
+
+propagation of direct electrical stimulation. Neuron 111 , 1391-1401.e5 (2023). 1044 
+
+60. Breakspear, M. Dynamic models of large -scale brain activity. Nat. Neurosci. 20 , 340–352 (2017). 1045 
+
+61. Jirsa, V. K. & Haken, H. Field Theory of Electromagnetic Brain Activity. Phys. Rev. Lett. 77 , 960–963 1046 (1996). 1047 
+
+62. Friston, K. J., Harrison, L. & Penny, W. Dynamic causal modelling. NeuroImage 19 , 1273–1302 (2003). 1048 
+
+63. Friston, K. J. et al. Dynamic causal modelling revisited. NeuroImage 199 , 730–744 (2019). 1049 
+
+64. Friston, K. J. Functional and Effective Connectivity: A Review. Brain Connect. 1, 13–36 (2011). 1050 
+
+65. Moran, R. J., Pinotsis, D. A. & Friston, K. J. Neural masses and fields in dynamic causal modeling. 1051 
+
+Front. Comput. Neurosci. 7, (2013). 1052 
+
+66. Trongnetrpunya, A. et al. Assessing Granger Causality in Electrophysiological Data: Removing the 1053 
+
+Adverse Effects of Common Signals via Bipolar Derivations. Front. Syst. Neurosci. 9, (2016). 1054 
+
+67. Pesaran, B. et al. Investigating large -scale brain dynamics using field potential recordings: analysis 1055 
+
+and interpretation. Nat. Neurosci. 21 , 903–919 (2018). 1056 
+
+68. Shakil, S., Lee, C. -H. & Keilholz, S. D. Evaluation of sliding window correlation performance for 1057 
+
+characterizing dynamic functional connectivity and brain states. NeuroImage 133 , 111–128 (2016). 1058 
+
+69. Scheid, B. H. et al. Time -evolving controllability of effective connectivity networks during seizure 1059 
+
+progression. Proc. Natl. Acad. Sci. 118 , e2006436118 (2021). 1060 
+
+70. Allen, E. A., Damaraju, E., Eichele, T., Wu, L. & Calhoun, V. D. EEG Signatures of Dynamic Functional 1061 
+
+Network Connectivity States. Brain Topogr. 31 , 101–116 (2018). 1062 
+
+71. Milde, T. et al. A new Kalman filter approach for the estimation of high -dimensional time -variant 1063 
+
+multivariate AR models and its application in analysis of laser -evoked brain potentials. NeuroImage 1064 
+
+50 , 960–969 (2010). 1065 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+72. Truccolo, W., Eden, U. T., Fellows, M. R., Donoghue, J. P. & Brown, E. N. A Point Process Framework 1066 
+
+for Relating Neural Spiking Activity to Spiking History, Neural Ensemble, and Extrinsic Covariate 1067 
+
+Effects. J. Neurophysiol. 93 , 1074–1089 (2005). 1068 
+
+73. Schwock, F., Nordgren, D., Atlas, L., Yazdan -Shahmorad, A. & Hesamoddin, J. Integrating Structural 1069 
+
+and Functional Connectivity for Dynamic fMRI Modeling Via Graph Diffusion Autoregression. in 2025 1070 
+
+47th Annual International Conference of the IEEE Engineering in Medicine and Biology Scociety 1071 
+
+(EMBC) (2025). 1072 
+
+74. Burago, D., Ivanov, S. & Kurylev, Y. A graph discretization of the Laplace –Beltrami operator. J. Spectr. 1073 
+
+Theory 4, 675–714 (2015). 1074 
+
+75. Lütkepohl, H. New Introduction to Multiple Time Series Analysis . (New York : Springer, Berlin, 2005). 1075 
+
+76. Wilson, H. R. & Cowan, J. D. Excitatory and Inhibitory Interactions in Localized Populations of Model 1076 
+
+Neurons. Biophys. J. 12 , 1–24 (1972). 1077 
+
+77. Wilson, H. R. & Cowan, J. D. A mathematical theory of the functional dynamics of cortical and 1078 
+
+thalamic nervous tissue. Kybernetik 13 , 55–80 (1973). 1079 
+
+78. Abeysuriya, R. G. et al. A biophysical model of dynamic balancing of excitation and inhibition in fast 1080 
+
+oscillatory large -scale networks. PLOS Comput. Biol. 14 , e1006007 (2018). 1081 
+
+79. Deco, G., Jirsa, V., McIntosh, A. R., Sporns, O. & Kötter, R. Key role of coupling, delay, and noise in 1082 
+
+resting brain fluctuations. Proc. Natl. Acad. Sci. 106 , 10302–10307 (2009). 1083 
+
+80. Welch, P. The use of fast Fourier transform for the estimation of power spectra: A method based on 1084 
+
+time averaging over short, modified periodograms. IEEE Trans. Audio Electroacoustics 15 , 70–73 1085 (1967). 1086 
+
+81. Khateeb, K., Griggs, D. J., Sabes, P. N. & Yazdan -Shahmorad, A. Convection Enhanced Delivery of 1087 
+
+Optogenetic Adeno -associated Viral Vector to the Cortex of Rhesus Macaque Under Guidance of 1088 
+
+Online MRI Images. JoVE J. Vis. Exp. e59232 (2019) doi:10.3791/59232. 1089 
+
+82. Khateeb, K. et al. A Practical Method for Creating Targeted Focal Ischemic Stroke in the Cortex of 1090 
+
+Nonhuman Primates. in 2019 41st Annual International Conference of the IEEE Engineering in 1091 
+
+Medicine and Biology Society (EMBC) 3515– 3518 (IEEE, Berlin, Germany, 2019). 1092 
+
+doi:10.1109/EMBC.2019.8857741. 1093 
+
+83. Griggs, D. J. et al. Multi -modal artificial dura for simultaneous large -scale optical access and large -1094 
+
+scale electrophysiology in non -human primate cortex. J. Neural Eng. 18 , 055006 (2021). 1095 
+
+84. Griggs, D. J. et al. Demonstration of an Optimized Large -scale Optogenetic Cortical Interface for Non -1096 
+
+human Primates. in 2022 44th Annual International Conference of the IEEE Engineering in Medicine 1097 
+
+& Biology Society (EMBC) 3081– 3084 (2022). doi:10.1109/EMBC48229.2022.9871332. 1098 
+
+85. Bloch, J. A. et al.  Cortical Stimulation Induces Network -Wide Coherence Change In Non -Human 1099 
+
+Primate Somatosensory Cortex. in 2019 41st Annual International Conference of the IEEE 1100 
+
+Engineering in Medicine and Biology Society (EMBC) 6446–6449 (2019). 1101 
+
+doi:10.1109/EMBC.2019.8856633. 1102 
+
+86. Dadarlat, M. C., O’Doherty, J. E. & Sabes, P. N. A learning -based approach to artificial sensory 1103 
+
+feedback leads to optimal integration. Nat. Neurosci. 18 , 138–144 (2015). 1104 
+
+87. Van Acker, G. M., III, Luchies, C. W. & Cheney, P. D. Timing of Cortico -Muscle Transmission During 1105 
+
+Active Movement. Cereb. Cortex 26 , 3335–3344 (2016). 1106 
+
+1107 
+
+1108 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Extended data figures 1109 
+
+1110 
+
+Extended Fig. 1: Basis functions for flow spectral decomposition of the structural connectivity graph used in the stroke 1111 
+
+experiment. (a) First three and last gradient basis function 𝑉𝑉 𝑔𝑔𝑔𝑔𝑔𝑔𝑔𝑔 and their corresponding eigenvalue describing non -1112 
+
+circular flow patterns. The top row shows the basis function as a flow signal on top of the structural connectivity graph. 1113 
+
+To better visualize the spatial frequency characteristics, we compute the flow fields (net -flow magnitude and direction at 1114 
+
+each node) and potential fields (divergence of flow at each node) for each basis function (bottom row). The eigenvalues 1115 
+
+can be interpreted as spatial frequencies with basis functions corresponding to larger eigenvalues exhibiting more localized 1116 
+
+and chaotic flow patterns. (b) Same as (a) but for the curl basis functions 𝑉𝑉 𝑔𝑔 𝑟𝑟 𝑡𝑡  describing circular flow patterns. The 1117 
+
+gray arrows in the flow fields are manually drawn for better visual identification of the dominant flow patterns. Gradient 1118 
+
+and curl flow spectra are computed by projecting a flow signal 𝑓𝑓 onto the corresponding basis functions (top rows of (a) 1119 
+
+and (b)). 1120 
+
+1121 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+1122 
+
+Extended Fig. 2: (a) 10 randomly connected 16 -node networks used for conducting the simulations in  Fig. 2 . Each graph 1123 
+
+was used to generate 10 independent simulation trials. (b), (c) Power spectral densities of simulated field potentials and 1124 
+
+ground truth flow, respectively. The black line shows the average across all edges and trials. The gray shaded area 1125 
+
+indicated one half of the standard deviation. The simulation parameters produce a strong oscillation around 18Hz. The 1126 
+
+steep drop -off above 400 Hz can be attributed to the 8 th order Chebyshev filter that was used for downsampling the data 1127 
+
+to a sampling frequency of 1 kHz. (d) Distribution of Pearson correlation coefficients (CC) (medians, upper and lower 1128 
+
+quartiles, interquartile range) between ground truth flow spectrum and partial directed coherence (PDC) and directed 1129 
+
+transfer function (DTF) computed using VAR (traditional), GAR and GDAR model. Correlation with flow spectrum 1130 
+
+(same as in  Fig. 2 b) is shown for reference as well . (e) CC between power spectral density (PSD) of unidirectional 1131 
+
+ground truth and GAR flow, as well as bidirectional ground truth and GAR flow for various model orders. For model 1132 
+
+orders 𝑝𝑝 ≥ 18 , the unidirectional GAR flow yields significantly higher median CCs than the bidirectional GAR flow. (f ) 1133 
+
+CC between time -domain ground truth and estimated neural flow for varying model orders. Markers indicate whether 1134 
+
+the GDAR model significantly outperforms the GAR model (Wilcoxon ranked -sum test, 𝑝𝑝 ≤ 0.05 ) The GDAR model 1135 
+
+significantly outperforms all other models for orders 𝑝𝑝 ≥ 8. (g) 7 -node graph used for assessing the generalization 1136 
+
+performance of the VAR, GAR, an GDAR model on simulated data. (h) Generalization gap of all models for four 1137 
+
+electrophysiology datasets. GAR and GDAR model almost perfectly generalize to unseen data. On the other hand, the 1138 
+
+VAR model always shows some degree of overfitting (Wilcoxon rank -sum test, 𝑝𝑝 ≤ 0.001 ). 1139 
+
+1140 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+1141 
+
+Extended Fig. 3: (a) -(f ) Stimulation evoked dynamics using different signals and modeling approaches similar to the 1142 
+
+plots in  Fig. 3 e. Neither LFP (a), classical CSD (b), i.e., the second spatial derivative computed via the graph Laplacian, 1143 
+
+nor LFP gradients (c) show significant temporal dynamics that are distinct between the sessions. (d) Using a 10 th order 1144 
+
+GDAR model results in reduced separability between sessions when compared to a 5 th order model shown in  Fig. 3 e. This 1145 
+
+is likely a result of the time scale of the paired stimulation (the onset of the second laser pulse occurs 5 ms after the 1146 
+
+offset of the first pulse) causing a mixing of the effects of the two lasers when fitting the models. (e) Averaging the flow 1147 
+
+signal over 20 consecutive trials before computing the low dimensional embedding does not have a negative effect on the 1148 
+
+dynamics. (f ) PC reduced GDAR flow dynamics when constraining edges crossing the sulcus between M1 and S1 to 1149 
+
+exhibit a minimum signal propagation delay of 4ms. The dynamics are almost identical to the dynamics from the 1150 
+
+unconstrained GDAR model ( Fig. 3 e), suggesting that the stimulation induced communication dynamics uncovered by 1151 
+
+our model are robust to such constraints. (g), (h) The parameters of the 5 th order GDAR and VAR model for all 1152 
+
+segments, blocks, and sessions were stacked into a single matrix and projected onto its first two PCs. Each dot represents 1153 
+
+the PC reduced parameters of a single 10 s segment used for model fitting. The parameters from the three different 1154 
+
+sessions are well separated in this low dimensional subspace for the GDAR model, but not for the VAR model where 1155 
+
+Session 2 and 3 are not separable .1156 
+
+1157 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+1158 
+
+Extended Fig. 4: Relation between average gamma GDAR flow and LFP power for the stimulation electrodes in the Utah 1159 
+
+array dataset. The best linear regression lines are also shown (Single -stim: 𝑠𝑠 𝑙𝑙𝑜𝑜𝑝𝑝𝑒𝑒  = −0.0692 , 𝑝𝑝 = 0.827 ; Paired -stim 1: 1160 
+
+𝑠𝑠 𝑙𝑙𝑜𝑜𝑝𝑝𝑒𝑒  = 2.41 , 𝑝𝑝 = 1.05 𝑒𝑒 − 19 ; Paired -stim 2: 𝑠𝑠 𝑙𝑙𝑜𝑜𝑝𝑝𝑒𝑒  = 2.15 , 𝑝𝑝 = 2.1 𝑒𝑒 − 43 ). The two paired stim sessions show a strong 1161 
+
+linear relation between LFP and average GDAR flow power. Nevertheless, the GDAR flow power increase due to 1162 
+
+stimulation is larger than what can be explained by linear changes in LFP power. 1163 
+
+1164 
+
+1165 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+1166 
+
+Extended Fig. 5: Extended plots for reach data shown in  Fig. 6. (a) Example gradient flow component as well as flow 1167 
+
+and potential field corresponding to the 6 th lowest spatial frequency. (b) Average spectrum of the gradient flow component 1168 
+
+(median and interquartile range) across all time points, trials and directions. Note that the spectrum largely resembles 1169 
+
+white noise with a few stronger spectral components at the low, mid, and high frequencies. (c) Flow and potential fields 1170 
+
+for three spectral components marked in (b). As the frequency increases, the flow becomes more disorganized with an 1171 
+
+increasing number of local sources and sinks and the overall divergence (measure of spatial frequency) increases. (d) and 1172 
+
+(e) Same as (b) and (c), but for curl flow. The average curl flow spectrum is primarily marked by an increase in power 1173 
+
+for some high -frequency components. (f ) Correlation (median and interquartile range) between average gradient flow 1174 
+
+power (averaged over all spatial frequencies) and reach velocity for different delays between the neural signal and the 1175 
+
+recorded velocity. The maximum correlation occurs at 104 ms, which we assume to be transmission delay between motor 1176 
+
+commands in the brain and observable movements. (g) and (h) Average gradient and curl power spectra for the 90° (up) 1177 
+
+and 225° (bottom -left) directions. The 90° direction shows a substantially larger increase in the low frequency gradient 1178 
+
+flow power, as well as curl flow power across almost all frequencies than the 225° direction, highlighting the directional 1179 
+
+tuning of the GDAR flow. ( i) Directional tuning curves (quartiles, 1.5 times interquartile range, and outliers) for 1180 
+
+envelope of high gamma ( 70 − 200 Hz) filtered local field potential signal averaged over all recording electrodes. The 1181 
+
+same trend as for the GDAR flow alignment index ( Fig. 6d) and average curl flow power ( Fig. 6e) can be observed, 1182 
+
+however differences between directions are not significant. (j) Correlation between average curl spectral power and 1183 
+
+reaction time for each curl frequency. (k) Correlation (median and interquartile range) between average gradient flow 1184 
+
+power during the last 100 ms prior to the go -cue and reach velocity 104 ms later. The median correlation of zero 1185 
+
+suggests that there is no residual movement occurring during that period that could explain the correlation between the 1186 
+
+alignment index and the reaction time in  Fig. 6g. 1187 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Supplementary Material: 1188 
+
+1189 
+
+Supplementary Table 1: p -values (one -sided Wilcoxon rank -sum tests) comparing GDAR and GAR model for differences 1190 
+
+in Pearson correlation coefficients (PCC) of the flow power spectral density (PSD;  Fig. 2d), dynamical similarity analysis 1191 
+
+(DSA) dissimilarity scores ( Fig. 2 de), and PCC of the raw flow (Extended Fig. 2f ). We used one -sided Wilcoxon rank -1192 
+
+sum tests with the alternative hypothesis that the GDAR model outperforms the GAR model. Furthermore, p -values for 1193 
+
+comparing PSD correlations between the bidirectional and unidirectional GAR flow ( Extended Fig. 2e) are shown. We 1194 
+
+used one -sided Wilcoxon rank -sum tests with the alternative hypothesis that the bidirectional outperforms the 1195 
+
+unidirectional GAR flow. 1196 
+
+Model 
+
+order 
+
+PCC – PSD of flow  DSA dissimilarity  PCC – raw flow  GAR bidirectional vs. 
+
+GAR unidirectional 
+
+2 0.59  0.373  0.982  0.999999977 
+
+4 3.8 ⋅ 10 −4 0.157  0.51  0.9998 
+
+6 1.39 ⋅ 10 −5 0.397  0.0694  0.933 
+
+8 2.6 ⋅ 10 −6 0.728  0.00148  0.613 
+
+10  2.69 ⋅ 10 −6 0.916  8.36 ⋅ 10 −7 0.307 
+
+12  1.66 ⋅ 10 −6 0.99  2.15 ⋅ 10 −13  0.103 
+
+14  8.53 ⋅ 10 −8 0.99939  5.82 ⋅ 10 −33  0.105 
+
+16  4.66 ⋅ 10 −10  0.999995  2.11 ⋅ 10 −57  0.0775 
+
+18  1.39 ⋅ 10 −11  0.9999988  5.76 ⋅ 10 −60  0.0345 
+
+20  8.95 ⋅ 10 −15  0.9999967  3.02 ⋅ 10 −69  0.0279 
+
+22  1.28 ⋅ 10 −14  0.987  1.35 ⋅ 10 −61  0.00511 
+
+24  1.13 ⋅ 10 −15  0.806  6.82 ⋅ 10 −66  0.00556 
+
+26  1.42 ⋅ 10 −12  0.536  4.65 ⋅ 10 −71  0.00263 
+
+28  1.34 ⋅ 10 −11  0.147  3.38 ⋅ 10 −67  0.00223 
+
+30  1.92 ⋅ 10 −9 0.134  4.04 ⋅ 10 −64  0.000544 
+
+1197 
+
+Supplementary Table 2: p -values (two -sided Wilcoxon rank -sum tests) for comparisons in  Fig. 2 b and  Extended Fig. 2e. 1198 
+
+all comparisons in  Fig. 2 d. Shown are the within group comparisons partial directed coherence (PDC), directed transfer 1199 
+
+function (DTF), and flow power ( Extended Fig. 2e), as well as the comparison between GDAR flow power and coherence, 1200 
+
+VAR -based PDC, and VAR -based DTF ( Fig. 2 b; p -values for those comparisons not marked in figure.) 1201 
+
+Group  Comparison  p-value 
+
+PDC 
+
+VAR – GAR  0.143 
+
+VAR – GDAR  1.62 ⋅ 10 −20 
+
+GAR – GDAR  1.42 ⋅ 10 −18 
+
+DTF 
+
+VAR – GAR  1.02 ⋅ 10 −6
+
+VAR – GDAR  7.64 ⋅ 10 −8
+
+GAR – GDAR  4.19 ⋅ 10 −11 
+
+flow 
+
+VAR – GAR  0.0947 
+
+VAR – GDAR  1.86 ⋅ 10 −19 
+
+GAR – GDAR  2.26 ⋅ 10 −15 
+
+GDAR flow – Coherence  3.11 ⋅ 10 −34 
+
+GDAR flow – PDC  2.52 ⋅ 10 −34 
+
+GDAR flow – DTF  2.52 ⋅ 10 −34 
+
+1202 
+
+Supplementary Table 3: p -values (one -sided Wilcoxon rank -sum test) for tuning curves in  Fig. 6d and e. Only significant 1203 
+
+comparisons are shown. All p -values are corrected for multiple comparisons via the Bonferroni method. 0° and 90° 1204 
+
+correspond to the right and top direction, respectively. 1205 
+
+> .CC-BY-NC-ND 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted May 29, 2026. ;https://doi.org/10.1101/2024.02.26.582177 doi: bioRxiv preprint
+
+Gradient spectrum alignment index (Fig. 6 e)  Curl spectrum average spectral power ( Fig. 6 f) 
+
+90° - 0°: 0.0165  0° - 90°: 0.0165 
+
+90° - 225°: 4.42 ⋅ 10 −5 0° - 135°: 0.0165 
+
+90° - 270°: 0.00111  45° - 225°: 0.0165 
+
+90° - 225°: 7.04 ⋅ 10 −6
+
+135° - 225°: 4.42 ⋅ 10 −5
+
+180° - 225°: 0.00455 
+
+315° - 225°: 4.42 ⋅ 10 −5
+
+1206 
+
+Supplementary Table 4: p -values (two -sided Wilcoxon rank -sum test) for differences in generalization gap between GAR, 1207 
+
+GDAR and VAR model for four electrophysiological datasets in  Extended Fig. 2h.1208 
+
+Opto  Reach  Rest Utah  Stroke 
+
+VAR - GAR  3.51 ⋅ 10 −15  2.65 ⋅ 10 −60  4.72 ⋅ 10 −39  1.19 ⋅ 10 −6
+
+GDAR – GAR  0.768  0.598  0.735  0.329 
+
+GDAR – VAR  8.27 ⋅ 10 −16  1.76 ⋅ 10 −60  4.05 ⋅ 10 −40  1.07 ⋅ 10 −8
+
+1209 
+
+Supplementary Notes: 1210 
+
+Modeling signal propagation delay across sulcus for optogenetic stimulation experiment: The 1211 
+
+GDAR model can also be adapted to model longer signal propagation paths between specific 1212 
+
+nodes in the network. For example, this may be the case for connections across the sulcus that 1213 
+
+separate M1 and S1. To model this, we have constrained the GDAR model to enforce a 1214 
+
+minimum propagation delay of 4 ms for all edges that connect nodes in M1 with nodes in S1 1215 
+
+(see Methods). The evolution of the GDAR flow for Session 1 averaged over all trials is shown in 1216 
+
+Supplementary Video 2 and is similar to the dynamics observed in  Fig. 3 d and Supplementary 1217 
+
+Video 1, but with noticeably less flow across the sulcus. The PC reduced flow dynamics across 1218 
+
+all sessions are shown in  Extended Fig. 3 f and are almost identical to the dynamics shown in 1219 
+
+Fig. 3 e, suggesting that adding signal propagation constraints to the model does not negatively 1220 
+
+impact the sensitivity of the GDAR flow signal to the stimulation parameters. 1221

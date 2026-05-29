@@ -6,53 +6,47 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-28
-- 运行时间：2026-05-28 21:59:30 UTC
+- 最新运行日期：2026-05-29
+- 运行时间：2026-05-29 21:25:30 UTC
 - 运行状态：成功
-- 本次总论文数：11
-- 精读区：2
-- 速读区：9
+- 本次总论文数：9
+- 精读区：6
+- 速读区：3
 
 ### 今日简报（AI）
-今日完成11篇论文阅读，其中精读2篇、速读9篇，聚焦时间序列与因果建模前沿。推荐精读的CASE-NET（因果注意力+通道重校准的时序分类）和《Learning Causal Orderings》一文（上下文表格数据因果排序）。建议重点关注因果机制在时间序列与表格预测中的融合应用。
-- 详情：[/202605/28/README](/202605/28/README)
+今日共处理9篇论文，精读6篇、速读3篇；重点关注非线性时间序列的函数值因果影响与连续时间因果基础模型两篇高分研究；建议普通读者可继续探索生成式脑机接口数据增强与随机过程流匹配等新颖方向。
+- 详情：[/202605/29/README](/202605/29/README)
 
 ### 精读区论文标签
-1. [CASE-NET: Deep Spatio-Temporal Representation Learning via Causal Attention and Channel Recalibration for Multivariate Time Series Classification](/202605/28/2605.22043v1-case-net-deep-spatio-temporal-representation-learning-via-causal-attention-and-channel-recalibration-for-multivariate-time-series-classification)  
+1. [Function-Valued Causal Influence in Nonlinear Time Series](/202605/29/2605.26408v2-function-valued-causal-influence-in-nonlinear-time-series)  
+   标签：评分：9.0/10、query:tsc
+   evidence：非线性时间序列中函数值因果影响分析
+2. [Towards Continuous-time Causal Foundation Models](/202605/29/2605.28880v1-towards-continuous-time-causal-foundation-models)  
+   标签：评分：9.0/10、query:tsc
+   evidence：面向连续时间序列的因果模型，支持干预和观测不变量
+3. [Cell-CLIP: Multi-algorithm causal discovery of directed cell program interaction networks from single-cell transcriptomics](/202605/29/biorxiv-10-64898-2025-12-01-691666-v2-cell-clip-multi-algorithm-causal-discovery-of-directed-cell-program-interaction-networks-from-single-cell-transcriptomics)  
+   标签：评分：9.0/10、query:tsc
+   evidence：多算法因果发现流程用于生物网络
+4. [Cell-CLIP: Multi-algorithm causal discovery of directed cell program interaction networks from single-cell transcriptomics](/202605/29/biorxiv-10-64898-2025-12-01-691666-v3-cell-clip-multi-algorithm-causal-discovery-of-directed-cell-program-interaction-networks-from-single-cell-transcriptomics)  
+   标签：评分：9.0/10、query:tsc
+   evidence：从单细胞转录组时间序列中进行多算法因果发现
+5. [Causal Intelligence for Constraint-Aware Intervention Design to Induce State Transitions](/202605/29/2605.29008v1-causal-intelligence-for-constraint-aware-intervention-design-to-induce-state-transitions)  
    标签：评分：8.0/10、query:tsc
-   evidence：时间序列表示的因果注意力学习
-2. [Learning Causal Orderings for In-Context Tabular Prediction](/202605/28/2605.22335v1-learning-causal-orderings-for-in-context-tabular-prediction)  
+   evidence：因果智能方法用于约束干预设计
+6. [Test Time Training for Supervised Causal Learning](/202605/29/2605.30015v1-test-time-training-for-supervised-causal-learning)  
    标签：评分：8.0/10、query:tsc
-   evidence：为上下文表格预测学习因果顺序
+   evidence：测试时训练用于监督因果学习
 
 ### 速读区论文标签
-1. [PaP-NF: Probabilistic Long-Term Time Series Forecasting via Prefix-as-Prompt Reprogramming and Normalizing Flows](/202605/28/2605.23219v1-pap-nf-probabilistic-long-term-time-series-forecasting-via-prefix-as-prompt-reprogramming-and-normalizing-flows)  
+1. [Generative enhancement of non-invasive datasets for motor brain-computer interface by synthesizing task-relevant neural signals](/202605/29/biorxiv-10-1101-2025-10-12-681961-v2-generative-enhancement-of-non-invasive-datasets-for-motor-brain-computer-interface-by-synthesizing-task-relevant-neural-signals)  
+   标签：评分：8.0/10、query:tsc
+   evidence：基于GAN的神经信号时间序列合成用于数据增强
+2. [Random Process Flow Matching: Generative Implicit Representations of Multivariate Random Fields](/202605/29/2605.28625v1-random-process-flow-matching-generative-implicit-representations-of-multivariate-random-fields)  
    标签：评分：7.0/10、query:tsc
-   evidence：使用归一化流作为生成模型进行概率预测
-2. [Parametric Prior Mapping Framework for Non-stationary Probabilistic Time Series Forecasting](/202605/28/2605.23402v1-parametric-prior-mapping-framework-for-non-stationary-probabilistic-time-series-forecasting)  
+   evidence：适用于时间序列的随机场生成模型
+3. [Inferring Dynamic Functional Connectivity from Field Potentials Using Graph Diffusion Autoregression](/202605/29/biorxiv-10-1101-2024-02-26-582177-v3-inferring-dynamic-functional-connectivity-from-field-potentials-using-graph-diffusion-autoregression)  
    标签：评分：7.0/10、query:tsc
-   evidence：提出带参数先验的生成框架用于时间序列
-3. [Leveraging Foundation Models for Causal Generative Modeling](/202605/28/2605.23861v1-leveraging-foundation-models-for-causal-generative-modeling)  
-   标签：评分：7.0/10、query:tsc
-   evidence：利用基础模型进行因果生成建模的框架
-4. [Learning a directed acyclic graph with additive heteroscedastic errors](/202605/28/2605.26515v1-learning-a-directed-acyclic-graph-with-additive-heteroscedastic-errors)  
-   标签：评分：7.0/10、query:tsc
-   evidence：利用异方差性进行因果发现的方法
-5. [Inpainting-Style Conditional Diffusion for Multivariable Time Series Forecasting](/202605/28/2605.28324v1-inpainting-style-conditional-diffusion-for-multivariable-time-series-forecasting)  
-   标签：评分：7.0/10、query:tsc
-   evidence：条件扩散模型用于时间序列预测，作为生成方法
-6. [Detecting Diffusion-Generated Time Series Under Generator Shift](/202605/28/2605.28355v1-detecting-diffusion-generated-time-series-under-generator-shift)  
-   标签：评分：7.0/10、query:tsc
-   evidence：检测扩散生成的时间序列
-7. [Latent Process Generator Matching](/202605/28/2605.20547v1-latent-process-generator-matching)  
-   标签：评分：6.0/10、query:tsc
-   evidence：随机过程生成模型
-8. [Valid and Expressive Copulas for Irregular Multivariate Time Series](/202605/28/2605.23632v1-valid-and-expressive-copulas-for-irregular-multivariate-time-series)  
-   标签：评分：6.0/10、query:tsc
-   evidence：使用归一化流和copula对不规则时间序列进行密度建模，属于生成式方法
-9. [Evolving Causal Regulatory Networks (ECR-Net)](/202605/28/2605.25211v1-evolving-causal-regulatory-networks-ecr-net)  
-   标签：评分：6.0/10、query:tsc
-   evidence：针对动态系统的自适应因果机制发现
+   evidence：从场电位信号推断动态功能连接，使用自回归模型
 
 
 <div class="dpr-home-promo-card">
