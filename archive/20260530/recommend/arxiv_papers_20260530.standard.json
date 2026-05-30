@@ -1,0 +1,92 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-05-30T20:55:54.774644+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2605.28520v1",
+      "source": "arxiv",
+      "title": "GS-FUSE: Granger-Supervised Gated Fusion and Multi-Granularity Alignment for Event-Driven Financial Forecasting",
+      "abstract": "Accurately forecasting the impact of salient financial events on markets is critical for investors and policymakers. However, existing multimodal time-series models typically fuse text and prices symmetrically, without an explicit way to decide when event text is truly predictive, and thus struggle to exploit the directional event-to-price structure and the heterogeneous roles of textual and price signals. In this work, we propose GS-Fuse, a multimodal event-based forecasting framework that employs (i) a Granger-supervised, causal-aware gated fusion module, which learns to open toward event text only when it provides incremental predictive value beyond historical prices, and (ii) a multi-granularity alignment mechanism that jointly aligns high-level event representations and fine-grained textual cues with future market trajectories. Built as a flexible, plug-and-play adapter on top of off-the-shelf large language models and time-series foundation models, GS-Fuse can be instantiated across diverse backbones and market settings. Extensive experiments on real-world financial datasets show that GS-Fuse consistently outperforms state-of-the-art time-series and multimodal baselines across multiple assets and forecasting horizons.",
+      "authors": [
+        "Yang Zhang",
+        "En Chun",
+        "Ziyun Mao",
+        "Yulu Wu",
+        "Jun Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-27T14:19:55+00:00",
+      "link": "https://arxiv.org/pdf/2605.28520v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Granger-supervised causal-aware fusion for financial time series forecasting",
+      "llm_evidence_cn": "格兰杰监督的因果感知融合用于金融时间序列预测",
+      "llm_evidence": "格兰杰监督的因果感知融合用于金融时间序列预测",
+      "canonical_evidence": "格兰杰监督的因果感知融合用于金融时间序列预测",
+      "llm_tldr_en": "GS-Fuse uses Granger supervision to learn a causal-aware gated fusion for multimodal event-driven financial forecasting, achieving superior accuracy and interpretability.",
+      "llm_tldr_cn": "针对事件驱动金融预测中多模态模型无法有效判断事件文本增量预测价值的问题，提出了GS-Fuse框架。该框架包含格兰杰监督的因果感知门控融合模块，仅在事件文本提供增量价值时开启；并结合多粒度对齐机制，融合文本与价格信号。在真实金融数据集上，GS-Fuse在预测准确性和因果方向性上均优于现有模型，验证了因果感知融合的有效性，为可解释金融预测提供了新范式。",
+      "llm_tldr": "针对事件驱动金融预测中多模态模型无法有效判断事件文本增量预测价值的问题，提出了GS-Fuse框架。该框架包含格兰杰监督的因果感知门控融合模块，仅在事件文本提供增量价值时开启；并结合多粒度对齐机制，融合文本与价格信号。在真实金融数据集上，GS-Fuse在预测准确性和因果方向性上均优于现有模型，验证了因果感知融合的有效性，为可解释金融预测提供了新范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.28166v2",
+      "source": "arxiv",
+      "title": "QuITE: Query-Based Irregular Time Series Embedding",
+      "abstract": "Irregular Multivariate Time Series (IMTS) are common in practice, yet their irregular sampling complicates effective modeling. Existing approaches typically either (i) design specialized architectures that limit the reuse of proven Multivariate Time Series (MTS) models, or (ii) map IMTS onto regular temporal grids through interpolation, which may distort temporal dynamics by introducing artificial values. To address these limitations, we propose a new input-embedding-based approach. We identify that the key bottleneck lies not in the backbone architecture, but in conventional embedding layers that assume uniform sampling. In this work, we introduce QuITE (Query-Based Irregular Time Series Embedding), a simple yet effective plug-and-play embedding module for IMTS. QuITE employs learnable query tokens to aggregate irregular observations through a single self-attention layer, directly producing backbone-compatible latent representations without artificial value generation or architectural modification. Extensive experiments on real-world benchmarks show that QuITE consistently improves MTS models, yielding average relative gains of up to $54.7\\%$ in forecasting and $15.8\\%$ in classification across diverse datasets and backbone architectures. Code is available at: https://github.com/Meaningfull9502/QuITE.",
+      "authors": [
+        "JungHoon Lim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-27T08:48:58+00:00",
+      "link": "https://arxiv.org/pdf/2605.28166v2",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "irregular time series embedding enabling downstream generation tasks",
+      "llm_evidence_cn": "不规则时间序列嵌入，支持下游生成任务",
+      "llm_evidence": "不规则时间序列嵌入，支持下游生成任务",
+      "canonical_evidence": "不规则时间序列嵌入，支持下游生成任务",
+      "llm_tldr_en": "Proposes QuITE, a plug-and-play embedding module for irregular time series that maps arbitrary observations to a query-based representation, compatible with any backbone.",
+      "llm_tldr_cn": "针对不规则多变量时间序列的建模难题，提出即插即用的嵌入模块QuITE，通过基于查询的方式将不规则样本映射到规则嵌入空间，无需插值。该模块可无缝集成到任何时间序列模型中，有效支持下游生成和分析任务。",
+      "llm_tldr": "针对不规则多变量时间序列的建模难题，提出即插即用的嵌入模块QuITE，通过基于查询的方式将不规则样本映射到规则嵌入空间，无需插值。该模块可无缝集成到任何时间序列模型中，有效支持下游生成和分析任务。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

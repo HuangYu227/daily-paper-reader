@@ -1,0 +1,39 @@
+{
+  "label": "2026-05-30",
+  "date": "2026-05-30",
+  "generated_at": "2026-05-30T20:59:04",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202605/30/2605.28520v1-gs-fuse-granger-supervised-gated-fusion-and-multi-granularity-alignment-for-event-driven-financial-forecasting",
+      "section": "deep",
+      "title_en": "GS-FUSE: Granger-Supervised Gated Fusion and Multi-Granularity Alignment for Event-Driven Financial Forecasting",
+      "authors": "Yang Zhang, En Chun, Ziyun Mao, Yulu Wu, Jun Wang",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.28520v1",
+      "score": "8.0",
+      "evidence": "格兰杰监督的因果感知融合用于金融时间序列预测",
+      "tldr": "现有多模态时间序列模型对称融合文本和价格，难以捕捉事件对价格的定向预测作用。本文提出GS-Fuse框架，通过Granger监督的因果感知门控融合模块，仅在事件文本提供增量预测价值时开启文本通道；并设计多粒度对齐机制，联合高层事件表示和细粒度文本线索与未来市场轨迹对齐。在多个资产和预测周期上，GS-Fuse一致超越现有基线，且可作为即插即用适配器集成到现有基础模型。",
+      "tags": "query:tsc",
+      "abstract_en": "Accurately forecasting the impact of salient financial events on markets is critical for investors and policymakers. However, existing multimodal time-series models typically fuse text and prices symmetrically, without an explicit way to decide when event text is truly predictive, and thus struggle to exploit the directional event-to-price structure and the heterogeneous roles of textual and price signals. In this work, we propose GS-Fuse, a multimodal event-based forecasting framework that employs (i) a Granger-supervised, causal-aware gated fusion module, which learns to open toward event text only when it provides incremental predictive value beyond historical prices, and (ii) a multi-granularity alignment mechanism that jointly aligns high-level event representations and fine-grained textual cues with future market trajectories. Built as a flexible, plug-and-play adapter on top of off-the-shelf large language models and time-series foundation models, GS-Fuse can be instantiated across diverse backbones and market settings. Extensive experiments on real-world financial datasets show that GS-Fuse consistently outperforms state-of-the-art time-series and multimodal baselines across multiple assets and forecasting horizons.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202605/30/2605.28166v2-quite-query-based-irregular-time-series-embedding",
+      "section": "quick",
+      "title_en": "QuITE: Query-Based Irregular Time Series Embedding",
+      "authors": "JungHoon Lim",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.28166v2",
+      "score": "7.0",
+      "evidence": "不规则时间序列嵌入，支持下游生成任务",
+      "tldr": "不规则多变量时间序列的采样不规则性导致建模困难，现有方法或限制架构复用或插值引入失真。本文提出QuITE嵌入模块，利用可学习查询令牌通过单层自注意力聚合不规则观测，生成与常规骨干兼容的潜在表示。在多个数据集上，预测和分类任务分别平均提升54.7%和15.8%，且无需修改现有架构。QuITE为不规则时间序列提供了一种即插即用、高效通用的嵌入方法。",
+      "tags": "query:tsc",
+      "abstract_en": "Irregular Multivariate Time Series (IMTS) are common in practice, yet their irregular sampling complicates effective modeling. Existing approaches typically either (i) design specialized architectures that limit the reuse of proven Multivariate Time Series (MTS) models, or (ii) map IMTS onto regular temporal grids through interpolation, which may distort temporal dynamics by introducing artificial values. To address these limitations, we propose a new input-embedding-based approach. We identify that the key bottleneck lies not in the backbone architecture, but in conventional embedding layers that assume uniform sampling. In this work, we introduce QuITE (Query-Based Irregular Time Series Embedding), a simple yet effective plug-and-play embedding module for IMTS. QuITE employs learnable query tokens to aggregate irregular observations through a single self-attention layer, directly producing backbone-compatible latent representations without artificial value generation or architectural modification. Extensive experiments on real-world benchmarks show that QuITE consistently improves MTS models, yielding average relative gains of up to $54.7\\%$ in forecasting and $15.8\\%$ in classification across diverse datasets and backbone architectures. Code is available at: https://github.com/Meaningfull9502/QuITE.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
