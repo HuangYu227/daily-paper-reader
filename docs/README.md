@@ -6,28 +6,32 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-30
-- 运行时间：2026-05-30 20:58:58 UTC
+- 最新运行日期：2026-05-31
+- 运行时间：2026-05-31 20:33:46 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：4
+- 精读区：2
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读1篇事件驱动金融预测论文（8.0分），速读1篇不规则时序嵌入研究（7.0分）。  
-最值得关注的是《GS-FUSE》提出的格兰杰监督门控融合与多粒度对齐方法，可有效提升事件驱动下的金融预测准确性。  
-建议重点阅读该篇精读论文，尤其关注其如何结合时间因果与异质事件信息。
-- 详情：[/202605/30/README](/202605/30/README)
+今日推荐4篇论文，精读2篇获9.0高分，涉及脑功能影像生成与视频生成因果视角。最值得关注FM-fMRI的静息-任务状态转换合成方法及YoCausal的视频生成世界模型因果分析。建议优先精读高分文献，速读内容用于拓宽思路。
+- 详情：[/202605/31/README](/202605/31/README)
 
 ### 精读区论文标签
-1. [GS-FUSE: Granger-Supervised Gated Fusion and Multi-Granularity Alignment for Event-Driven Financial Forecasting](/202605/30/2605.28520v1-gs-fuse-granger-supervised-gated-fusion-and-multi-granularity-alignment-for-event-driven-financial-forecasting)  
-   标签：评分：8.0/10、query:tsc
-   evidence：格兰杰监督的因果感知融合用于金融时间序列预测
+1. [FM-fMRI: Event Conditioned Flow Matching for Rest-to-Task fMRI Time-Series Synthesis](/202605/31/2605.26423v1-fm-fmri-event-conditioned-flow-matching-for-rest-to-task-fmri-time-series-synthesis)  
+   标签：评分：9.0/10、query:tsc
+   evidence：事件条件流匹配用于时间序列生成（fMRI）
+2. [YoCausal: How Far is Video Generation from World Model? A Causality Perspective](/202605/31/2605.30346v1-yocausal-how-far-is-video-generation-from-world-model-a-causality-perspective)  
+   标签：评分：9.0/10、query:tsc
+   evidence：评估视频生成模型中的因果理解，与因果学习需求直接相关
 
 ### 速读区论文标签
-1. [QuITE: Query-Based Irregular Time Series Embedding](/202605/30/2605.28166v2-quite-query-based-irregular-time-series-embedding)  
-   标签：评分：7.0/10、query:tsc
-   evidence：不规则时间序列嵌入，支持下游生成任务
+1. [Exponential mixing properties of nonlinear functional autoregressive models](/202605/31/2605.25633v1-exponential-mixing-properties-of-nonlinear-functional-autoregressive-models)  
+   标签：评分：6.0/10、query:tsc
+   evidence：非线性函数自回归模型用于时间序列生成
+2. [QuITE: Query-Based Irregular Time Series Embedding](/202605/31/2605.28166v1-quite-query-based-irregular-time-series-embedding)  
+   标签：评分：6.0/10、query:tsc
+   evidence：提供了基于查询的不规则时间序列嵌入模块，可用于生成式时间序列模型
 
 
 <div class="dpr-home-promo-card">

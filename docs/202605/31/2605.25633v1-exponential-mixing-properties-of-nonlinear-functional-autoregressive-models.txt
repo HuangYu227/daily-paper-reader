@@ -1,0 +1,5678 @@
+Title: Exponential mixing properties of nonlinear functional autoregressive models
+
+URL Source: https://arxiv.org/pdf/2605.25633v1
+
+Published Time: Tue, 26 May 2026 02:03:11 GMT
+
+Number of Pages: 37
+
+Markdown Content:
+EXPONENTIAL MIXING PROPERTIES OF NONLINEAR FUNCTIONAL AUTOREGRESSIVE MODELS 
+
+BY SHUNTAROU SUZUKI 1,a YOSHIKAZU TERADA 1,2,b  
+
+> 1Graduate School of Engineering Science, The University of Osaka, Osaka, Japan, as-suzuki@sigmath.es.osaka-u.ac.jp;
+> bterada.yoshikazu.es@osaka-u.ac.jp
+> 2Center for Advanced Integrated Intelligence Research, RIKEN
+
+The importance of functional data analysis has increased substantially in recent years. In machine learning, nonlinear function regression based on deep neural networks is referred to as operator learning, and many of its ap-plications involve functional time series data. However, the theoretical un-derstanding of nonlinear models in functional time series analysis remains limited, as most existing works focus on linear models. In this paper, we de-rive basic properties for analyzing adaptive learning in nonlinear functional autoregressive (NFAR) models. Specifically, we derive sufficient conditions for NFAR models to be exponentially mixing. We provide an example with a Hammerstein operator under which these conditions are satisfied. As an application of exponential mixing, we consider operator learning for NFAR models with Urysohn operators and derive convergence rates for adaptive es-timators based on deep neural networks. 
+
+1. Introduction. In recent years, advances in measurement technology have enabled the collection of data in which each observational unit is densely observed over a continuum, as in spectrometric or longitudinal studies. Functional data analysis (FDA), introduced by Ram-say (1982), provides a systematic framework for analyzing such data. In FDA, a functional time series is a time series whose observations are functions, arising in a wide range of appli-cations. For example, a year-long record of daily electricity demand yields a curve for each day, viewed as a function of time, while a three-month record of daily temperature fields yields a surface for each day, viewed as a function of latitude and longitude. The analy-sis of functional time series has attracted considerable attention (Bosq, 2000; Horváth and Kokoszka, 2012; Kokoszka and Reimherr, 2017). One of the most important models for functional time series is the functional autoregres-sive (FAR) model. Let H := 
+
+n
+
+f : [0 , 1] d → R R 
+
+> [0 ,1] d
+
+|f (u)|2du < ∞
+
+o
+
+and let {Xt}t∈N be an H-valued time series. The FAR model is defined by 
+
+Xt+1 = Ψ 0(Xt) + ξt, t ∈ N,(1) where Ψ0 is an operator from H to H, and {ξt}t∈N is a sequence of i.i.d. random elements in 
+
+H with mean zero. Most existing studies consider the case where Ψ0 is a Hilbert-Schmidt op-erator. Studies on the estimation of Ψ0 include Bosq (1991), Antoniadis and Sapatinas (2003), and Kargin and Onatski (2008). Statistical inference other than the estimation of Ψ0, such as stability testing and order determination, has also been actively studied; see, for example, Horváth, Hušková and Kokoszka (2010) and Kokoszka and Reimherr (2013). However, clas-sical FAR models are restricted to linear operators and thus have limited expressive power 
+
+MSC2020 subject classifications: Primary 62R10, 37A25; secondary 62G05. 
+
+Keywords and phrases: functional data analysis, operator learning, nonparametric estimation, deep neural net-works. 
+
+1
+
+> arXiv:2605.25633v1 [math.ST] 25 May 2026 2
+
+for temporal dynamics. We consider a nonlinear functional autoregressive (NFAR) model in which Ψ0 is a nonlinear operator. NFAR models are closely related to operator learning, which has recently attracted consid-erable attention in machine learning. Operator learning aims to approximate (possibly non-linear) operators via deep neural networks (DNNs). For further details, we refer the reader to Subedi and Tewari (2025). One practical advantage of these methods is that, after train-ing, they can provide fast approximations to computationally expensive input-output maps between function spaces. This feature is useful in the simulation and prediction of physical systems. A representative problem is to learn an operator that describes the time evolution of spatiotemporal data. For example, Kissas et al. (2022) proposed models based on Deep Op-erator Networks (DeepONets; Lu et al., 2021) and Fourier neural operators (FNOs; Li et al., 2023) for predicting flow past a cylinder, while Pathak et al. (2022) applied an FNO-based architecture to global weather forecasting; see also Choi, Jin and Lkhagvasuren (2024). Be-cause these applications involve learning nonlinear maps from current or past spatial fields to future spatial fields, they can naturally be interpreted as learning nonlinear transition opera-tors for functional time series. Accordingly, NFAR models are closely connected to practical applications of operator learning and are an important subject of study in both functional time series analysis and operator learning. However, the theoretical foundations for estimating and learning Ψ0 in NFAR models are still underdeveloped. In the context of operator learning, recent studies have treated the problem of learning an unknown target operator from input–output pairs of functions as non-parametric regression between function spaces, and have derived generalization error bounds for the resulting estimators. The available theory is largely restricted to independent and iden-tically distributed observations, and temporally dependent data have received comparatively little attention. For example, Reinhardt, Wang and Zech (2024) consider nonparametric re-gression between separable Hilbert spaces, a setting closely related to function-on-function regression in FDA. They derive concentration inequalities for least-squares empirical risk minimizers over general operator classes. Related studies have also developed generalization-error bounds for specific DNN-based operator estimators; see, for example, Liu et al. (2024). These studies are also based on i.i.d. sampling schemes. In the functional time series litera-ture, only a few studies consider the estimation of Ψ0 in NFAR models. One representative study is Zhu and Politis (2017), which proposed a kernel estimator for Ψ0 and established the asymptotic normality of the resulting estimator. Their analysis, however, relies on the as-sumption that the mixing coefficients of the functional time series decay at a sufficiently fast rate. As discussed below, verifying such mixing conditions for NFAR models is nontrivial and has not been systematically addressed. A detailed verification of this assumption was outside the scope of Zhu and Politis (2017). Mixing conditions are assumptions that characterize the strength of dependence among observations in dependent data settings, such as time series or spatial models. For further details on mixing conditions, see Rio (2017). In statistics, mixing conditions are applied to show asymptotic properties of nonparametric estimators, including deep learning-based methods, for samples with dependence (Kreiss and Neumann, 1998; Tjøstheim and Auestad, 1994; Kurisu, Fukami and Koike, 2025). Accordingly, the verification of mixing conditions has been studied extensively. For instance, Chen and Chen (2000) gave sufficient conditions under which nonlinear AR models are exponentially β-mixing in the finite-dimensional case. Moreover, Meyn and Tweedie (2009a) and Hairer and Mattingly (2011) provided sufficient conditions for exponential β-mixing of a broader class of Markov chains. However, it is non-trivial for stochastic processes taking values in infinite dimensional spaces to satisfy mixing conditions. This difficulty stems from the fact that probability measures on infinite dimen-sional spaces can be mutually singular. For example, whether a stochastic partial differential 3
+
+equation (i.e., an infinite dimensional stochastic process) exhibits exponential mixing has typically been studied on a case-by-case basis (Hairer, 2002; Goldys and Maslowski, 2005). Although broadly applicable conditions for guaranteeing exponential mixing in large classes of stochastic partial differential equations remain limited, similar difficulties also arise for NFAR models. While establishing sufficient conditions for NFAR models to be exponentially mixing is crucial for deriving the asymptotic behavior of estimators of Ψ0 and the general-ization error of learning methods, this problem has not been systematically addressed. In this paper, we first establish sufficient conditions under which the FAR model (1) is exponentially β-mixing, including the case where Ψ0 is nonlinear. As an application of this result, we derive an oracle inequality for operator learning methods targeting Ψ0. Further-more, we consider the case in which Ψ0 has the following form: 
+
+Ψ0(x)( u) = 
+
+Z
+
+> [0 ,1] d
+
+ψ0(u, v, x (v)) dv, u ∈ [0 , 1] d, x ∈ H .
+
+In this setting, Ψ0 is referred to as a Urysohn operator and ψ0 as a Urysohn kernel. Urysohn operators are closely related to recent applications of operator learning to physical simula-tion. Indeed, solution operators for partial differential equations, such as the Burgers and Navier–Stokes equations, can often be represented or approximated, under suitable condi-tions, through integral equations or nonlocal integral operators. Such nonlinear integral op-erators can be naturally described within the Urysohn-operator framework. Thus, estimating the Urysohn kernel ψ0, and hence the induced operator Ψ0, is naturally connected to opera-tor learning problems arising in physical simulation. This connection is also reflected in the neural integral equation framework of Zappala et al. (2024), where spatiotemporal data are formulated as solutions to integral equations and the integral terms are parameterized by neu-ral networks and learned from data. Motivated by this connection, we propose an operator learning method for estimating Ψ0 by approximating the Urysohn kernel ψ0 with a DNN. We then use the derived oracle inequality to establish an upper bound on the generalization error of the proposed method. In summary, the main contributions of this work are as follows: • We derive sufficient conditions under which NFAR models are exponentially β-mixing, including cases where Ψ0 is nonlinear. • As an application, we derive an oracle inequality for an estimator of Ψ0 in (1) under the assumption that the NFAR model is exponentially β-mixing. • We propose a novel operator learning model for NFAR models in which Ψ0 is a Urysohn operator, and establish an upper bound on its generalization error. The rest of the paper is organized as follows. Section 2 introduces notation and assump-tions for the nonlinear functional autoregressive model. Section 3 provides sufficient condi-tions ensuring that NFAR models are exponentially β-mixing. As an application, Section 4 develops an oracle inequality for estimators of Ψ0 under suitable regularity and derives the corresponding convergence rates when the true operator is restricted to Urysohn operators and its Urysohn kernel is learned via ReLU DNNs. Moreover, Section 5 empirically investi-gates the generalization error via numerical experiments for the setting considered in Section 4. The appendix presents the proofs of the main results. 
+
+2. Preliminaries. 
+
+2.1. Notation. For any subset A ⊂ H , let A denote its closure. For an operator Φ : H → H, let Im(Φ) denote its image. Let L denote the space of all bounded linear operators from 
+
+H to H. For Φ ∈ L , let Ker(Φ) := {x ∈ H | Φ( x) = 0 } and ∥Φ∥L := sup ∥x∥H=1 ∥Φ( x)∥H4
+
+denote its null space and operator norm, respectively. Let (ej )j∈N be an orthonormal basis of 
+
+H and let T denote the space of trace-class operators on H:
+
+T := 
+
+T ∈ L | 
+
+> ∞
+
+X
+
+> j=1
+
+D
+
+(T T ∗) 12 ej , e j
+
+E 
+
+> H
+
+< ∞
+
+ ,
+
+where T ∗ : H → H denotes the adjoint operator of T . For T ∈ T, its trace norm is defined by 
+
+∥T ∥T := 
+
+> ∞
+
+X
+
+> j=1
+
+D
+
+(T T ∗) 12 ej , e j
+
+E
+
+> H
+
+.
+
+For R > 0, let VR := {x ∈ H | ∥ x∥H ≤ R} and define 
+
+Cb(H) := 
+
+n
+
+ϕ : H → R measurable sup 
+
+> x∈H
+
+|ϕ(x)| < ∞
+
+o
+
+,(2) equipped with the norm ∥ϕ∥Cb := sup x∈H |ϕ(x)|. Let B (H) be the Borel σ-algebra of H.For μ ∈ H and a self-adjoint, positive-definite Q ∈ T, we denote by N (μ, Q ) the Gaussian measure on (H, B (H)) with mean μ and covariance operator Q. For any x ∈ R, let ⌊x⌋ de-note the integer satisfying ⌊x⌋ ≤ x < ⌊x⌋ + 1 . For v ∈ Rr, let vi denote its i-th component, 
+
+i = 1 , . . . , r . We denote by |v|0 the number of nonzero components of v. We define |v|∞ := max 1≤i≤r|vi|. Let U be a subset of Rr. For a continuous function f : U → R, we define 
+
+∥f ∥∞ := sup u∈U |f (u)|. For a continuous function f : U → Rd; u 7 → (f1(u), . . . , f d(u)) ⊤,we define ∥f ∥∞ := max 1≤i≤d ∥fi∥∞. Moreover, for an operator Ψ : H → H , we define 
+
+∥Ψ∥∞ := sup x∈H ∥Ψ( x)∥H. Let M be any fixed positive constant. For any operator Ψ : H → H, we define the operator ¯Ψ(M ) by 
+
+¯Ψ(M )(x) := Ψ( x)1{∥ x∥∞≤M }, x ∈ H ,(3) and for any function ψ : [0 , 1] d × [0 , 1] d × R → R, we define ¯ψ(M ) by 
+
+¯ψ(M )(u, v, x ) := ψ(u, v, x )1[−M,M ](x), u, v ∈ [0 , 1] d, x ∈ R.
+
+In addition, for two sequences (an) and (bn), if there exists a constant C such that for all 
+
+n ∈ N, an ≤ Cb n, we write an ≲ bn. Furthermore, if an ≲ bn and bn ≲ an, we write an ≍ bn.2.2. Nonlinear functional autoregressive model. Let (Ω , I, {F t}, P) be a stochastic ba-sis. We consider the following NFAR process {Xt}t∈N taking values in H:
+
+Xt+1 (u) = Ψ 0 (Xt) ( u) + ξt(u), u ∈ [0 , 1] d, t ∈ N,(4) where Ψ0 is a nonlinear operator from H to H, and {ξt}t∈N is an i.i.d. sequence of H-valued random elements with mean zero such that, for each t ∈ N, ξt is independent of Ft.For notational simplicity, write D := [0 , 1] d. The covariance function k : D × D → R is defined by k(u, v) := E [ξ1(u)ξ1(v)] for u, v ∈ D. We assume that R 
+
+> D
+
+k(u, u)du < ∞. The covariance operator Q : H → H is defined by 
+
+(Qf )( u) := 
+
+Z
+
+> D
+
+k(u, v)f (v) dv, f ∈ H , u ∈ D. 
+
+Throughout this paper, we impose a Gaussianity assumption on the noise sequence 
+
+{ξt}t∈N.ASSUMPTION 1. For each t ∈ N, ξt is distributed as N (0, Q ).5
+
+REMARK . The Gaussianity assumption plays a crucial role in the proofs of our main results. To establish that NFAR models are exponentially β-mixing, we adopt an approach analogous to that used for Markov chains in finite dimensional settings, which relies on the existence of the density ratio dP h/dP 0 between the distributions of ξt and ξt + h for h ∈ H . In infinite dimensional spaces, however, probability measures are often mutually singular, and hence such a density ratio need not exist. On the other hand, when ξt is Gaussian, Lemma A.1 ensures the existence of dP h/dP 0 under a suitable condition. Therefore, to ensure that the density ratio is well defined in the infinite dimensional setting, we impose Assumption 1. 
+
+3. Main Results. 
+
+3.1. Importance of the mixing property. We first discuss the role of mixing properties in the theoretical analysis of nonparametric estimators for NFAR models. To derive the gener-alization error of a nonparametric estimator of the true operator Ψ0 constructed from a given time series XT +1 = {Xt}T +1  
+
+> t=1
+
+, it is necessary to bound the expectation of 
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+∥Ψ( Xt) − Ψ0(Xt)∥2 
+
+> H
+
+,(5) for Ψ ∈ F , where F is a given hypothesis set. In our setting, the sequence XT +1 exhibits temporal dependence, and we allow both Ψ0 and Ψ ∈ F to be nonlinear. As a result, standard concentration inequalities are not directly applicable, and it is therefore difficult to bound the expectation in (5). In such cases, a common approach is to introduce a simpler coupling sequence ˜XT +1 = { ˜Xt}T +1  
+
+> t=1
+
+that approximates the original sequence in a suitable sense. The coupling sequence ˜XT +1 has the same marginal distribution as XT +1 but exhibits substan-tially weaker dependence, thereby enabling the use of classical concentration inequalities. By introducing ˜XT +1 , we decompose (5) as 
+
+> T
+
+X
+
+> t=1
+
+∥Ψ( Xt) − Ψ0(Xt)∥2 
+
+> H
+
+=
+
+> T
+
+X
+
+> t=1
+
+Ψ( ˜Xt) − Ψ0( ˜Xt) 2
+
+> H
+
++
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Ψ( Xt) − Ψ0(Xt)∥2 
+
+> H
+
+− Ψ( ˜Xt) − Ψ0( ˜Xt) 2
+
+> H
+
+
+
+.(6) We then apply concentration inequalities to the first term, while bounding the approximation error 
+
+∥Ψ( Xt) − Ψ0(Xt)∥2 
+
+> H
+
+− Ψ( ˜Xt) − Ψ0( ˜Xt) 2 
+
+> H
+
+.(7) The evaluation of the approximation error in (7) depends on the specific construction of the coupling sequence ˜XT +1 .Two representative frameworks for constructing coupling sequences are Lp-m approxima-tion (Hörmann and Kokoszka, 2010) and mixing. The Lp-m approximation is convenient to use, since it applies to NFAR models under relatively mild conditions, such as the integra-bility of the noise {ξt}t∈N and Lipschitz continuity of Ψ0 with the Lipschitz constant strictly less than one. However, it controls moments of Xt − ˜Xt, but does not necessarily yield cor-responding bounds for Ψ( Xt) − Ψ( ˜Xt). This issue is particularly pronounced when Ψ lacks smoothness. Such a situation arises, for example, when Ψ0 is learned using methods based on DNNs, such as operator learning models. The reason is that, in these settings, the approxima-tion error between the DNN-based model and the true operator Ψ0 is derived by considering 6
+
+the following hypothesis set, consisting of operators whose input domain is restricted to a bounded set: 
+
+F =
+
+n
+
+Ψ1A | Ψ ∈ ˜F
+
+o
+
+,
+
+where A is a bounded subset of H and ˜F denotes the class of operators to which the estimator belongs. This type of restriction is common in the analysis of generalization error for deep learning models. For example, Kurisu, Fukami and Koike (2025) derived generalization error bounds for deep learning methods applied to prediction in finite dimensional nonlinear AR models under the restriction that the input of the regression function is confined to a bounded set. In this case, each Ψ ∈ F is discontinuous on H.Consequently, under Lp-m approximation one typically needs to restrict attention to set-tings where these difficulties do not arise. In contrast, under a mixing framework, for any bounded measurable Ψ, we can derive a bound on the error Ψ( Xt) − Ψ( ˜Xt) in terms of the error Xt − ˜Xt. Motivated by this advantage, we show in this section that NFAR models are exponentially β-mixing. 3.2. Exponential β-mixing. We show that NFAR models are exponentially β-mixing un-der suitable conditions. First, we show exponential ergodicity of NFAR models and then derive the desired mixing result. We also provide an example satisfying these conditions. We begin by introducing notation for Markov chains. Let {Xt}t∈N be a time-homogeneous Markov chain on the stochastic basis (Ω , I, {F t}, P). For any t ∈ N, define 
+
+Pt(x, A ) := P(Xt+1 ∈ A | X1 = x), A ∈ B (H) , x ∈ H ,
+
+and 
+
+ Ptϕ (x) := 
+
+Z
+
+> H
+
+ϕ(z)Pt(x, dz ), ϕ ∈ C b (H) , x ∈ H .
+
+Moreover, define the Markov kernel 
+
+P (x, A ) := P (X2 ∈ A | X1 = x) , A ∈ B (H) , x ∈ H ,
+
+and 
+
+(Pϕ) ( x) := 
+
+Z
+
+> H
+
+ϕ(y)P(x, dy ), ϕ ∈ C b(H), x ∈ H .
+
+We also define the β-mixing coefficient and exponential β-mixing. For j ∈ N, the β-mixing coefficient β(j) is defined by 
+
+β(j) := sup 
+
+> n∈N
+
+E
+
+
+
+sup 
+
+> B∈F ∞
+> j+n
+
+P(B) − P(B | Xn, . . . , X 1)
+
+
+
+,
+
+where F∞ 
+
+> j+n
+
+:= σ
+
+S∞ 
+
+> l=j+n
+
+σ(Xl)
+
+
+
+for n ∈ N. The Markov chain {Xt}t∈N is said to be expo-nentially β-mixing if there exist positive constants C1 and C2 such that for any j ∈ N,
+
+β(j) ≤ C1 exp( −C2j).
+
+We impose the following assumptions on the covariance operator of the noise sequence 
+
+{ξt}t∈N and the operator Ψ0. In the finite dimensional case, Assumption 2 and Assumption 3 are automatically satisfied, while the Gaussianity assumption in Assumption 1 can be weak-ened to allow for a broader class of noise distributions; see Chen and Chen (2000). ASSUMPTION 2. Im( Q) = H.7
+
+ASSUMPTION 3. There exists a nonlinear operator m0 : H → H such that Ψ0 = Q ◦ m0.ASSUMPTION 4. Under Assumption 3, there exist constants c1, c 2 > 0 such that 
+
+c1∥Q∥L < 1 and ∀x ∈ H ; ∥m0(x)∥H ≤ c1∥x∥H + c2.
+
+REMARK . Regarding Assumption 2, the condition Im( Q) = H is equivalent to Ker( Q) = 
+
+{0}. A sufficient condition for this is that all eigenvalues of Q are strictly positive. Applying Lemma 2.4 in the supplementary material, a restatement of Theorem 1.2 of Hairer and Mattingly (2011), we establish exponential ergodicity for NFAR models. THEOREM 3.1 (Exponential ergodicity). Consider the time series {Xt}t∈N defined by 
+
+(4) . Suppose that Assumption 1, Assumption 2–Assumption 4 hold. Then, {Xt}t∈N admits a unique invariant distribution π. Moreover, there exist constants γ ∈ (0 , 1) and C > 0 such that, for any t ∈ N
+
+sup 
+
+> ϕ∈C b(H)
+> ∥ϕ∥Cb(H)≤1
+
+ Ptϕ (x) −
+
+Z
+
+> H
+
+ϕ(z)π(dz ) ≤ Cγ t(1 + ∥x∥H), x ∈ H .
+
+Based on Theorem 3.1, it follows that the time series {Xt}t∈N defined by (4) is exponen-tially β-mixing under Assumption 1 and Assumption 2–Assumption 4: COROLLARY 3.2 (Exponential β-mixing). Suppose that Assumption 1 and Assumption 2–Assumption 4 hold. Assume further that the time series {Xt}t∈N defined by (4) is station-ary. Then, {Xt}t∈N is exponentially β-mixing. 
+
+REMARK . In many cases, the existence of a stationary distribution follows from As-sumption 4 alone. To establish exponential ergodicity in total variation, however, additional conditions such as Assumption 1, Assumption 2 and Assumption 3 are required. This is be-cause we consider the infinite dimensional state space H, where probability measures are often mutually singular as stated in Remark 2.2. In particular, for two points x1, x 2 ∈ H , the transition kernels P(x1, ·) and P(x2, ·) may be mutually singular. Such singularity precludes exponential ergodicity, which requires that the total variation distance between P(x1, ·) and 
+
+P(x2, ·) contracts at a uniform rate for any x1, x 2 ∈ H . Assumption 1, Assumption 2 and Assumption 3 ensure sufficient overlap between P(x1, ·) and P(x2, ·) for any x1, x 2 ∈ H and hence yield uniform contraction. EXAMPLE . We now present a class of examples for which Ψ0 satisfies Assumption 3. In particular, we focus on the case where Ψ0 is of the form 
+
+Ψ0(x)( u) := 
+
+Z
+
+> D
+
+f (u, v)τ (v, x (v)) dv, u ∈ D, x ∈ H ,
+
+where f : D × D → R and τ : D × R → R. This class is a special case of the class of operators considered in Section 4.2. We investigate conditions on f and τ under which Assumption 3 holds. To this end, we introduce some notation. Let {λi}∞ 
+
+> i=1
+
+be the sequence of eigenvalues of the covariance operator Q of the noise, satisfying P∞ 
+
+> i=1
+
+λi < ∞, and let {ei}∞ 
+
+> i=1
+
+⊂H be the corresponding eigenfunctions. We define the sequence {fij }i,j ∈N by fij := 8
+
+R 
+
+> D×D
+
+f (u, v)ei(u)ej (v)dudv. We also define, for each i ∈ N, an operator τi : H → R by 
+
+τi(x) := ⟨τ (·, x (·)) , e i⟩H, x ∈ H . We further define a function ˜k : D × D → R by 
+
+˜k(u, v) = 
+
+> ∞
+
+X
+
+> i=1
+
+λ2 
+
+> i
+
+ei(u)ei(v), u, v ∈ D. 
+
+Let H˜k denote the reproducing kernel Hilbert space associated with ˜k. We then consider the tensor product space H˜k ⊗ H ˜k, which is given by 
+
+H˜k ⊗ H ˜k := 
+
+f : D × D → R
+
+> ∞
+
+X
+
+> i,j =1
+
+f 2
+
+> ij
+
+λ2 
+
+> i
+
+λ2
+
+> j
+
+< ∞
+
+ .
+
+With this notation, we now identify conditions on f and τ . Noting that the operator Ψ0 can be written as 
+
+Ψ0(x)( u) = 
+
+> ∞
+
+X
+
+> i=1
+
+
+
+> ∞
+
+X
+
+> j=1
+
+fij τj (x)
+
+ ei(u), u ∈ D, x ∈ H ,
+
+we define, for each i, an operator gi : H → R by gi(x) := P∞ 
+
+> j=1
+
+fij τj (x) ( x ∈ H ). A suffi-cient condition for Assumption 3 to hold is that, for all x ∈ H ,
+
+> ∞
+
+X
+
+> i=1
+
+g2 
+
+> i
+
+(x)
+
+λ2
+
+> i
+
+< ∞.(8) Indeed, if (8) holds for all x ∈ H , then the operator m0 : H → H is well defined by m0(x) := P∞ 
+
+> i=1
+
+(gi(x)/λ i) ei, x ∈ H and with m0 one has Ψ0 = Q ◦ m0, from which Assumption 3 follows. We therefore seek conditions on f and τ sufficient for (8) to hold. Note that, for any 
+
+x ∈ H ,
+
+> ∞
+
+X
+
+> i=1
+
+g2 
+
+> i
+
+(x)
+
+λ2
+
+> i
+
+≤
+
+> ∞
+
+X
+
+> i,j =1
+
+f 2
+
+> ij
+
+λ2
+
+> i
+
+τ 2 
+
+> j
+
+(x).
+
+Therefore, Assumption 3 holds if 
+
+> ∞
+
+X
+
+> i,j =1
+
+f 2
+
+> ij
+
+λ2
+
+> i
+
+< ∞, sup 
+
+> x∈H
+> ∞
+
+X
+
+> i=1
+
+τ 2 
+
+> i
+
+(x)
+
+!
+
+< ∞.(9) For instance, (9) holds if f ∈ H ˜k ⊗ H ˜k and sup u∈D,x ∈R|τ (u, x )| < ∞. The condition f ∈H˜k ⊗ H ˜k can be interpreted as a smoothness assumption on f .
+
+4. Applications of exponential mixing. In this section, we use the exponential β-mixing property of NFAR models to derive an oracle inequality for learning methods of the true operator Ψ0. In Section 4.1, we derive an upper bound on the generalization error of an estimator taking values in a given hypothesis set. In Section 4.2, we address more practical settings. We restrict attention to the case where the true operator Ψ0 is a Urysohn operator and estimate Ψ0 by learning its Urysohn kernel using DNNs. As noted at the beginning of Section 3.1, we derive an upper bound on the generalization error of estimators of Ψ0 by adopting a hypothesis set whose input domain is restricted to a bounded subset of H. This restriction is necessary to derive approximation error bounds for deep learning models, as such models are unable to represent complex functions in regions far from the origin. Indeed, many results on the approximation and generalization error of deep learning impose boundedness assumptions on the input domain (DeVore, Hanin and Petrova, 2021; Liu, Cheng and Liao, 2025; Schmidt-Hieber, 2020). Accordingly, in Section 4 we impose boundedness on the input domain of the hypothesis set. As discussed in Section 3, this restriction necessitates the mixing assumption. 9
+
+4.1. Nonparametric estimator for a nonlinear functional autoregressive model. In this section, we derive an oracle inequality for estimators of the true operator Ψ0 in (4). We first introduce the statistical setting and additional assumptions. Throughout Section 4, we consider the time series {Xt}T +1  
+
+> t=1
+
+defined by (4) and impose the following assumptions: ASSUMPTION 5. For each t ∈ N, the map u 7 → Xt(u) is continuous on D.ASSUMPTION 6. The time series {Xt}t∈N is exponentially β-mixing; that is, its β-mixing coefficient β(j) satisfies 
+
+β(j) ≤ C1,β exp( −C2,β j)
+
+for some positive constants C1,β and C2,β and for all j ∈ N.REMARK . Corollary 3.2 in Section 3.2 provides a sufficient condition for Assumption 6. Moreover, a concrete example of an operator Ψ0 satisfying Assumption 3 is given in Example 3.2. We also introduce a hypothesis set and related assumptions. Let F be a class of measur-able mappings from H to H, which serves as a hypothesis set. We impose the following assumptions on F.ASSUMPTION 7. There exists a positive constant M > 0 such that for any Ψ ∈ F and 
+
+x ∈ H with ∥x∥∞ > M , we have Ψ( x) = 0 .ASSUMPTION 8. The metric space (F, ∥ · ∥ ∞) is compact. For any estimator bΨT taking values in F, we also introduce its generalization error. As noted at the beginning of Section 4, our analysis is carried out on a subset of H that is bounded with respect to the sup norm ∥ · ∥ ∞. Accordingly, we compare ˆΨT with the truncated operator 
+
+¯Ψ(M )0 on the same bounded domain. We therefore define the generalization error of bΨT by 
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+:= E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+bΨT
+
+ X′
+
+> t
+
+ − ¯Ψ(M )0
+
+ X′
+
+> t
+
+ 2
+
+> H
+
+#
+
+,(10) where M is the constant appearing in Assumption 7, and {X′
+
+> t
+
+}T +1  
+
+> t=1
+
+is an independent copy of 
+
+{Xt}T +1  
+
+> t=1
+
+with the same distribution. If {X′
+
+> t
+
+}T +1  
+
+> t=1
+
+and {Xt}T +1  
+
+> t=1
+
+are stationary, we can write 
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+= E
+
+bΨT
+
+ X′
+
+> 1
+
+ − ¯Ψ(M )0
+
+ X′
+
+> 1
+
+ 2
+
+> H
+
+
+
+.
+
+In addition, for any Ψ ∈ F , define the empirical risk by 
+
+ˆℓT (Ψ) = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+∥Xt+1 − Ψ( Xt)∥2 
+
+> H
+
+.
+
+For any Ψ1, Ψ2 ∈ F , define 
+
+∆ (Ψ 1, Ψ2) := E
+
+hˆℓT (Ψ 1) − ˆℓT (Ψ 2)
+
+i
+
+,
+
+Furthermore, for any Ψ ∈ F define 
+
+∆(Ψ) := E
+
+
+
+ˆℓT (Ψ) − min 
+
+> Φ∈F
+
+ˆℓT (Φ) 
+
+
+
+.
+
+Note that the existence of a minimizer is guaranteed by Assumption 8. 10 
+
+REMARK . In this study, we work with a sup-norm bounded domain for operators Ψ ∈ F ,rather than an H-norm bounded one. This choice is natural for the setting in Section 4.2, where the true operator Ψ0 is given by a Urysohn operator. The estimator is obtained by learning its Urysohn kernel, which is a real-valued function on a Euclidean space. Therefore, evaluating the approximation error of the operator learning model reduces to evaluating the approximation error of deep learning models for finite dimensional functions. Consequently, boundedness must be imposed pointwise on D, rather than through an L2-type average over 
+
+D.We introduce the following notation. For δ > 0, a finite set ˜F ⊂ F is called a δ-covering of 
+
+F with respect to ∥ · ∥ ∞ if, for every Ψ ∈ F , there exists Φ ∈ ˜F such that ∥Ψ − Φ∥∞ ≤ δ. The minimal cardinality of such a δ-covering is the covering number of F with respect to ∥ · ∥ ∞,denoted N (δ, F, ∥ · ∥ ∞). In addition, under Assumption 1, there exists a constant K′ > 0
+
+such that 
+
+E exp ∥ξ∥2
+
+> H
+
+/(K′)2  ≤ 2,(11) where ξ is distributed as ξ1. Since ξ is a Gaussian process, the existence of such a constant 
+
+K′ follows from Lemma 2.8 in the supplementary material. The following theorem provides an upper bound for the generalization error of the estima-tor. THEOREM 4.1 (Oracle inequality). Consider the NFAR model (4) . Suppose that Assump-tion 1, Assumption 5, and Assumption 6 hold, and that F satisfies Assumption 7–Assumption 8. Let δ > 0 and assume that N (δ, F, ∥ · ∥ ∞) < ∞. Let Nδ be an integer such that Nδ ≥
+
+N (δ, F, ∥ · ∥ ∞) ∨ exp(10) . Let bΨT be any estimator taking values in F. Let M be the con-stant in Assumption 7, and suppose that ∥ ¯Ψ(M )0 ∥∞ ≤ F for some F ≥ 1. Let C1,β and C2,β 
+
+be the constants appearing in Assumption 6. Then, for any ε ∈ (0 , 1) , there exists a constant 
+
+Cε > 0, depending only on (ε, K, C 1,β , C 2,β ), where K := max 
+
+np∥Q∥L, p∥Q∥T, K ′, 1
+
+o
+
+,
+
+such that for any T ∈ N with log T ≥ 2 and C2,β ≥ 2 log T /T ,
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≲ 1 + ε
+
+1 − ε
+
+
+
+∆( bΨT ) + inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ CεF 2 (log Nδ)(log T )
+
+T .(12) The above theorem is an infinite dimensional extension of Theorem 3.1 in Kurisu, Fukami and Koike (2025). The proof is deferred to the supplementary material. 4.2. Estimation via deep neural networks. In this section, we address more practical settings. We will restrict attention to the case where the true operator Ψ0 in (4) takes the form 
+
+Ψ0(x)( u) := 
+
+Z
+
+> D
+
+ψ0(u, v, x (v)) dv, u ∈ D, x ∈ H ,(13) where ψ0 : D × D × R → R is a continuous function. We estimate Ψ0 by learning ψ0 using DNNs. We first introduce the notation used in this section. Let M > 0. For a function ψ :
+
+D × D × [−M, M ] → R, we define the operator Ψψ : H → H by 
+
+Ψψ(x)( u) := 
+
+ R  
+
+> D
+
+ψ(u, v, x (v)) dv, if ∥x∥∞ ≤ M, 
+
+0, if ∥x∥∞ > M, , u ∈ D, x ∈ H .(14) When Ψ0 is of the form (13), the truncated operator ¯Ψ(M )0 satisfies ¯Ψ(M )0 = Ψ ¯ψ(M )0
+
+for any 
+
+M > 0. Although ¯ψ(M )0 is originally defined on D × D × R, it is identically zero whenever 11 
+
+|x| > M . Therefore, we identify ¯ψ(M )0 with its restriction to D × D × [−M, M ]. Accordingly, throughout this part, we use the notation Ψ ¯ψ(M )0
+
+for ¯Ψ(M )0 . For a bounded set U ⊂ Rr, we define the ball of β-Hölder functions with radius R by 
+
+Cβr (U, R ) := 
+
+f : U → R | X
+
+> α:|α|1<β
+
+∥∂αf ∥∞ + X
+
+> α:|α|=⌊β⌋
+
+sup 
+
+> x,y∈U
+> x̸=y
+
+|∂αf (x) − ∂αf (y)
+
+|x − y|β−⌊ β⌋∞
+
+≤ R
+
+ ,
+
+where we use the multi-index notation, i.e., ∂α = ∂α1 · · · ∂αr with α = ( α1, . . . , α r) ∈ Zr
+
+> ≥0
+
+and |α|1 := Prj=1 αj . For q ∈ N, d := ( d0, d 1, . . . , d q) ∈ Nq+1 , t := ( t0, t 1, . . . , t q) ∈ Nq+1 
+
+with ti < d i for all i, β := ( β0, . . . , β q) ∈ (0 , ∞)q+1 , and R > 0, we define the class of com-posite functions C (q, d, t, β, R ) by 
+
+C (q, d, t, β, R ) := 
+
+
+
+f = gq ◦ · · · ◦ g1
+
+gi = ( gij )j : [ ai, b i]di → [ai+1 , b i+1 ]di+1 ,gij ∈ Cβi
+
+> ti
+
+ [ai, b i]ti , R  for some |ai|, |bi| ≤ R
+
+
+
+.
+
+We next describe the architecture of DNNs. The network architecture (L, p) consists of a positive integer L called the number of hidden layers or depth and a width vector p =(p0, . . . , p L+1 ) ∈ NL+2 . A DNN with network architecture (L, p) is then any function of the form 
+
+f : Rp0 → RpL+1 : x 7 → (AL+1 ◦ σL ◦ AL ◦ σL−1 ◦ · · · ◦ σ1 ◦ A1)( x)(15) where Al : Rpl−1 → Rpl ; x 7 → Wlx + bl is an affine linear map for given weight matrix 
+
+Wl and a shift vector bl ∈ Rpl , and σl : Rpl → Rpl is an element-wise nonlinear activa-tion function map defined as σl(z) := ( σ(z1), . . . , σ (zpl )) ⊤ , z ∈ Rpl with ReLU activa-tion function σ(x) := max {x, 0}, x ∈ R. For a neural network of the form (15), we define 
+
+θ(f ) :=  vec( W1)⊤, b⊤ 
+
+> 1
+
+, . . . , vec( WL+1 )⊤, b⊤
+
+> L+1
+
+⊤ where vec( W ) transforms the matrix W
+
+into the corresponding vector by concatenating the column vectors. We let Fp0,p L+1 be the class of DNNs which take p0-dimensional input to pL+1 -dimensional output with the ReLU activation function. In this section, we focus on estimating the function ¯ψ(M )0 : D × D × [−M, M ] → R. Ac-cordingly, we set p0 = 2 d + 1 and pL+1 = 1 . For positive constants M, B, F and positive integers L, N , we set 
+
+F(M ) 
+
+> p0
+
+(L, N, B ) := f 1D×D×[−M,M ] | f ∈ F p0,1 : depth( f ) ≤ L, width( f ) ≤ N, |θ(f )|∞ ≤ B ,
+
+and 
+
+F(M ) 
+
+> p0
+
+(L, N, B, F ) := 
+
+n
+
+f ∈ F (M ) 
+
+> p0
+
+(L, N, B ) | ∥ f ∥∞ ≤ F
+
+o
+
+.
+
+Moreover, we define a class of sparsity constrained DNNs with sparsity level S > 0 by 
+
+F(M ) 
+
+> p0
+
+(L, N, B, F, S ) := 
+
+n
+
+f ∈ F (M ) 
+
+> p0
+
+(L, N, B, F ) | | θ(f )|0 ≤ S
+
+o
+
+.
+
+We adopt as the hypothesis set the operator family G := (Ψ ψ)ψ∈G with G := F(M ) 
+
+> p0
+
+(L, N, B, F, S ).Specifically, for an input pair (u, x ) ∈ D × H with ∥x∥∞ ≤ M , the model first com-putes ψ(u, v, x (v)) for each v ∈ D (See Figure 1), and then outputs Ψψ(x)( u) = R 
+
+> D
+
+ψ(u, v, x (v)) dv. We estimate the true operator Ψ0 via the estimator 
+
+bΨT := Ψ bψT
+
+, bψT := arg min 
+
+> ψ∈G
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+∥Xt+1 − Ψψ(Xt)∥2 
+
+> H
+
+.(16) To derive an upper bound on the generalization error of bΨT , we impose an additional as-sumption on the true function ψ0:12 
+
+Fig 1: The learning architecture of G for Urysohn kernels ASSUMPTION 9. Let M ≥ 1. There exist q ∈ N, d ∈ Nq+1 with d0 = 2 d + 1 and dq = 1 ,
+
+t ∈ Nq+1 , and β ∈ (0 , ∞)q+1 such that ψ(M )0 ∈ C (q, d, t, β, M ).An upper bound on the generalization error of bΨT is given in Theorem 4.2. THEOREM 4.2. Suppose that Assumption 1, Assumption 5 and Assumption 6 hold for the model (4) . Let M ≥ 1 and B ≥ 1 be positive constants. Let L, S as well as N be any integers with L ≍ log N, S ≍ N log N and N ≍ max 0≤i≤q T ti 
+
+> 2βi+ti
+
+. Suppose further that the true Urysohn kernel ¯ψ(M )0 satisfies Assumption 9. Then, the estimator bΨT , defined in (16) ,satisfies 
+
+R( bΨT , Ψ ¯ψ0(M ) ) ≲ (log T )4 max  
+
+> 0≤i≤q
+
+T − 2βi 
+
+> 2βi+ti
+
+.
+
+REMARK . We consider the class of functions ψ0 for which Ψ0 satisfies Assumption 3 and ¯ψ(M )0 satisfies Assumption 9 for a given M ≥ 1. In particular, we focus on the case where 
+
+ψ0 admits the representation 
+
+ψ0(u, v, x ) = f (u, v) τ (v, x ), u, v ∈ D, x ∈ R,
+
+for some functions f : D × D → R and τ : D × R → R. From Example 3.2, the following class satisfies Assumption 3 and Assumption 9: 
+
+f (u, v)τ (v, x )1{| x|≤ M }
+
+f ∈ C (q, d, t, β, 1) ,τ ∈ C (q′, d′, t′, β′, M ),
+
+where f and τ satisfy (9) 
+
+ ,
+
+where q, q ′ ∈ N are arbitrary, β ∈ (0 , ∞)q+1 , β′ ∈ (0 , ∞)q′+1 , t ∈ Nq+1 , t′ ∈ Nq′+1 , d ∈
+
+Nq+1 with d0 = 2 d and dq = 1 , and d′ ∈ Nq′+1 with d′ 
+
+> 0
+
+= d + 1 and d′ 
+
+> q′
+
+= 1 .
+
+5. Numerical experiments. In this section, we study the case considered in Section 4.2 and conduct numerical experiments by estimating the Urysohn kernel using a deep learning approach. The notation in this section follows that of Section 4.2. We begin by introducing additional notation needed to describe the simulation setting. For any function ψ : [0 , 1] 2 ×
+
+[0 , 1] 2 × R → R, we define ˜Ψψ : R25 ×25 → R25 ×25 by 
+
+˜Ψψ(z)
+
+ i1
+
+25 , j1
+
+25 
+
+
+
+:= 125 224 X
+
+> i2,j 2=0
+
+ψ
+
+ i1
+
+25 , j1
+
+25 , i2
+
+25 , j2
+
+25 , z i2j2
+
+
+
+,13 
+
+for z = {zi2j2 }0≤i2,j 2≤24 ∈ R25 ×25 and 0 ≤ i1, j 1 ≤ 24 . Consider the following NFAR model: 
+
+Xt+1 (u1, u 2) = 
+
+Z 10
+
+Z 10
+
+5KG(u1 − v1, u 2 − v2)τ (Xt(v1, v 2)) dv 1dv 2 + ξt(u1, u 2),(17) for u1, u 2 ∈ [0 , 1] , t ∈ N, where the function KG : R2 → R is defined by KG(h1, h 2) = exp {− 5( |h1|2 + |h2|2)}, h 1, h 2 ∈ R, and τ : R → R is given by τ (x) = 1 .5 + 2 .5 cos( x) + 2.0 sin(2 x), x ∈ R. The function τ is the one introduced in Example 3.2 of Section 3, speci-fied here explicitly in this section. The sequence {ξt}t∈N consists of i.i.d. Gaussian processes with mean function 0 and covariance function KG(the same kernel KG as above), where 
+
+E[ξ1(u1, u 2) ξ1(v1, v 2)] = KG(u1 − v1, u 2 − v2), u 1, u 2, v 1, v 2 ∈ [0 , 1] . In this setting, the true Urysohn kernel ψ0 is 
+
+ψ0(u1, u 2, v 1, v 2, x ) := 5 KG(u1 − v1, u 2 − v2)τ (x), u1, u 2, v 1, v 2 ∈ [0 , 1] , x ∈ R,
+
+and the true operator Ψ0 is given by 
+
+Ψ0(x)( u1, u 2) := 
+
+Z 10
+
+Z 10
+
+ψ0(u1, u 2, v 1, v 2, x (v1, v 2)) dv 1dv 2, u1, u 2 ∈ [0 , 1] , x ∈ H .
+
+Note that the NFAR model (17) satisfies Assumption 1 and Assumption 2–Assumption 4. Therefore, by Theorem 3.1 and Corollary 3.2, the time series {Xt}t∈N is exponentially er-godic and exponentially β-mixing. We next describe how the generalization error is evaluated numerically. Based on data 
+
+XT := {Xt}Tt=1 generated according to (17), we train an estimator of Ψ0 using the method proposed in Section 4.2 and evaluate its generalization error in (10). As shown in Section 4, the generalization error can be expressed as 
+
+E
+
+bΨT ( ˜X) − ¯Ψ(M )0 ( ˜X) 2
+
+> H
+
+
+
+,
+
+where ˜X has the same distribution as X1 and is independent of XT . In this numerical ex-periment, however, we use the true operator Ψ0 instead of the truncated operator ¯Ψ(M )0 for simplicity. Accordingly, we consider 
+
+E
+
+bΨT ( ˜X) − Ψ0( ˜X) 2
+
+> H
+
+
+
+.(18) To approximate the above expectation, we generate B independent sample paths {X(b) 
+
+> T
+
+}Bb=1 
+
+of length T , where X(b) 
+
+> T
+
+:= {X(b) 
+
+> t
+
+}Tt=1 is defined by (17). For each b, we then generate a random element ˜X(b) independently of X(b) 
+
+> T
+
+such that ˜X(b) has the same distribution as 
+
+X(b)1 . Therefore, the simulation data consist of B independent pairs {(X(b) 
+
+> T
+
+, ˜X(b))}Bb=1 . By the law of large numbers, for sufficiently large B,
+
+E
+
+bΨT ( ˜X) − Ψ0( ˜X) 2
+
+> H
+
+
+
+≈ 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+bΨ(b) 
+
+> T
+
+( ˜X(b)) − Ψ0( ˜X(b)) 2 
+
+> H
+
+,(19) where the estimator bΨ(b) 
+
+> T
+
+: H → H is defined by 
+
+bΨ(b) 
+
+> T
+
+:= Ψ bψT
+
+, bψ(b) 
+
+> T
+
+:= arg min 
+
+> ψ∈F p0,p L+1
+
+1
+
+T − 1 
+
+> T−1
+
+X
+
+> t=1
+
+X(b) 
+
+> t+1
+
+− Ψψ(X(b) 
+
+> t
+
+) 2 
+
+> H
+
+,(20) where Fp0,p L+1 denotes the DNN class defined in Section 4.2 and we adopt it with p0 =5, p L+1 = 1 .14 
+
+Fig 2: Surface plots of the data Zt at times t = 1 , 500 , 1000 , indexed by spatial coordinates i
+
+and j.In what follows, we describe how to generate the time series defined by (17). Since gen-erating fully continuous functional data is generally difficult, we instead simulate time series obtained by discretizing (17) in the spatial domain. Specifically, we generate data from the following 100 × 100 -dimensional nonlinear autoregressive model: 
+
+Zt+1 
+
+ i1
+
+100 , j1
+
+100 
+
+
+
+= 1100 299 X
+
+> i2,j 2=0
+
+5KG
+
+ i1 − i2
+
+100 , j1 − j2
+
+100 
+
+
+
+τ
+
+
+
+Zt
+
+ i2
+
+100 , j2
+
+100 
+
+ 
+
++ ξt
+
+ i1
+
+100 , j1
+
+100 
+
+
+
+,
+
+(21) where i1, j 1 = 0 , . . . , 99 . For each b = 1 , . . . , B and t ∈ N, define Z(b) 
+
+> t
+
+:= 
+
+n
+
+Z(b) 
+
+> t
+
+(i/ 100 , j/ 100) 
+
+o
+
+> 0≤i,j ≤99
+
+and let Z(b) 
+
+> T
+
+:= 
+
+n
+
+Z(b)
+
+> t
+
+oTt=1 . Let ˜Z(b) ∈ R100 ×100 be a random variable that is inde-pendent of Z(b) 
+
+> T
+
+and has the same distribution as Z(b)1 . Similarly, we write ˜Z(b) =n ˜Z(b)(i/ 100 , j/ 100) 
+
+o
+
+> 0≤i,j ≤99
+
+. Further details of the data generation procedure are provided in Section 3 in the supplementary material. Figure 2 illustrates the structure of the generated data. Each plot visualizes the surface of {Zt (i/ 100 , j/ 100) }99  
+
+> i,j =0
+
+at time points t = 1 , 500 ,
+
+and 1000 .We then downsample the pairs 
+
+n
+
+(Z(b) 
+
+> T
+
+, ˜Z(b))
+
+oBb=1 . Specifically, for each b = 1 , . . . , B and 
+
+t = 1 , . . . , T , we extract 
+
+n
+
+Z(b) 
+
+> t
+
+(i/ 25 , j/ 25) 
+
+o24  
+
+> i,j =0
+
+from Z(b) 
+
+> t
+
+=
+
+n
+
+Z(b) 
+
+> t
+
+(i/ 100 , j/ 100) 
+
+o99 
+
+> i,j =0
+
+.The same procedure is applied to ˜Z(b). For simplicity, we continue to denote the resulting downsampled data by {(Z(b) 
+
+> T
+
+, ˜Z(b))}Bb=1 .To compute bψ(b) 
+
+> T
+
+numerically from the observations Z(b) 
+
+> T
+
+for each b, we replace the inte-grals in (20) and (14) with finite sums. This yields the estimator ˜ψ(b) 
+
+> T
+
+defined by 
+
+˜ψ(b) 
+
+> T
+
+:= arg min 
+
+> ψ∈F p0,p L+1
+
+125 2(T − 1)  
+
+> T−1
+
+X
+
+> t=1 24
+
+X
+
+> i,j =0
+
+
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ(Z(b) 
+
+> t
+
+)
+
+ i
+
+25 , j
+
+25 
+
+  2
+
+.
+
+(22) We then define ˜Ψ(b) 
+
+> T
+
+by ˜Ψ(b) 
+
+> T
+
+:= ˜Ψ ˜ψ(b)
+
+> T
+
+. Detailed specifications of the DNN training procedure, including the hyperparameter settings and the optimization algorithm, are provided in Section 3 in the supplementary material. Using ˜ψ(b) 
+
+> T
+
+and ˜Z(b), we calculate 
+
+gb,T := 125 224 X
+
+> i,j =0
+
+
+
+˜Ψ ˜ψ(b)
+
+> T
+
+( ˜Z(b))
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ0 ( ˜Z(b))
+
+ i
+
+25 , j
+
+25 
+
+  2
+
+,15  
+
+> (a) (b)
+
+Fig 3: Results of the numerical experiments on the generalization error and visualization of predictions. (a) Decrease in GB,T as the sample size increases. (b) Output functions obtained by applying the true operator ˜Ψψ0 (left) and the learned operator ˜Ψ ˜ψ(b)
+
+> T
+
+(right) to test data. The indices i and j denote spatial coordinates. which is the discretized counterpart of bΨ(b) 
+
+> T
+
+( ˜X(b)) − Ψ0( ˜X(b)) 2
+
+> H
+
+, for each b = 1 , . . . , B .Then, we approximate the generalization error by GB,T := PBb=1 gb,T /B. The overall pro-cedure for numerically evaluating the generalization error is summarized as follows: i. For each b, compute ˜ψ(b) 
+
+> T
+
+, defined in (57), using Z(b) 
+
+> T
+
+.ii. For each b, compute the least squares distance gb,T using ˜ψ(b) 
+
+> T
+
+.iii. Report the generalization error GB,T = PBb=1 gb,T /B .We examined GB,T for B = 161 while varying T across 250 , 500 , 750 , 1000 , 1250 , 1500 , 1750 ,
+
+2000 , 3000 , 4000 and 5000 . Multidimensional summations arise in this numerical experi-ment. Details of their computation are provided in Section 3 of the supplementary material. The numerical results under the above settings are presented below. Figure 3a depicts how 
+
+GB,T varies with the sample size. The horizontal axis in Figure 3a represents the sample size T , and the vertical axis shows the corresponding generalization error. Both axes are displayed on a logarithmic scale. Figure 3a shows that the generalization error approaches 0
+
+as the sample size increases. Furthermore, Figure 3b compares the true transformation 
+
+n ˜Ψψ0 ( ˜Z(b))
+
+ i 
+
+> 25
+
+, j
+
+> 25
+
+o 
+
+> 0≤i,j ≤24
+
+and the predicted transformation 
+
+n ˜Ψ ˜ψ(b)
+
+> T
+
+( ˜Z(b))
+
+ i 
+
+> 25
+
+, j
+
+> 25
+
+o  
+
+> 0≤i,j ≤24
+
+for a representative repli-cation b. The visual comparison indicates that the proposed method in Section 4 accurately captures the underlying transformation. 
+
+6. Conclusion. In this paper, we established sufficient conditions for NFAR models to be exponentially β-mixing by applying the Harris-type framework of Hairer and Mattingly (2011). As an application of the exponential β-mixing properties of NFAR models, we de-rived the oracle inequality in Theorem 4.1 for a nonparametric estimator of the true operator 
+
+Ψ0 in the NFAR model (4). These results can be regarded as an infinite dimensional exten-sion of Kurisu, Fukami and Koike (2025). Furthermore, when the true operator is a Urysohn operator, we estimated its Urysohn kernel using DNNs and obtained an upper bound on the convergence rate. A limitation of our results is that Corollary 3.2 relies essentially on the assumption that the noise sequence {ξt}t∈N follows a Gaussian process (see Assumption 1). Extending this 16 
+
+assumption to broader classes of noise distributions, such as sub-Gaussian distributions, ap-pears to be difficult and possible only in limited settings; see Corollary 3 in Rao (1966) for related discussion. In this sense, the assumption is stronger than the sufficient conditions required for Lp-m approximation. We conclude by noting several directions for future work. We should derive bounds on the error induced by discrete observations of functional time series. In practice, data are available only on a grid, and estimators must be constructed from discrete observations. It would also be of interest to characterize how the convergence rate depends on the mesh size (sampling frequency) from the perspective of statistical inference for stochastic processes. It is also important to identify alternative sufficient conditions for NFAR models to be exponentially mixing. When the nonlinear operator admits an explicit form of how it transforms the input function, as in the case of a bilinear operator, it may be possible to establish exponential 
+
+β-mixing properties under weaker assumptions by applying an appropriate Lyapunov drift condition. Furthermore, establishing the minimax optimality of the estimator proposed in Section 4 remains an important open problem, since both the input and output spaces are infinite dimensional. APPENDIX A: PROOFS OF THE RESULTS IN SECTION 3.2 In this section, we provide proofs of lemmas and theorems in Section 3. We begin by showing that {Xt}t∈N defined by (4) is a time-homogeneous Markov chain. Indeed, since ξt
+
+is independent of Ft in (4) (see Section 2), we have that for any t ∈ N,
+
+P (Xt+1 ∈ A | Xt = x) = P (Ψ 0(x) + ξt ∈ A) = N (Ψ 0(x), Q ) ( A), A ∈ B (H) ,
+
+which shows that the chain {Xt}t∈N is time-homogeneous. A useful tool for establishing exponential β-mixing is Lemma 2.7 in the supplementary material. Based on Lemma 2.7, it suffices to establish the following: (C1) The Markov chain {Xt}t∈N admits an invariant distribution π.(C2) There exists a measurable function C : H → R and a constant γ ∈ (0 , 1) such that, for all t ∈ N and ϕ ∈ C b(H),
+
+(Ptϕ)( x) −
+
+Z
+
+> H
+
+ϕ(z)π(dz ) ≤ γtC(x), x ∈ H .
+
+(C3) With the function C as in (C2) and π as in (C1), 
+
+Z
+
+> H
+
+C(x) π(dx ) < ∞.
+
+Conditions (C1) and (C2) are ensured by Theorem 3.1. We now prove Theorem 3.1. It follows by applying Lemma 2.4 in the supplementary material to the time series {Xt}t∈N defined by (4). Lemma 2.4 is a restatement of Theorem 1.2 of Hairer and Mattingly (2011), which gives a version of Harris’ ergodic theorem. PROOF OF THEOREM 3.1. Set V (x) := ∥x∥H, x ∈ H . By Lemma 2.4 in the supplemen-tary material, it suffices to verify the following conditions: (A) There exist constants ρ ∈ (0 , 1) and κ ≥ 0 such that 
+
+(PV )( x) ≤ ρ V (x) + κ, x ∈ H .
+
+(B) For some R > 2κ/ (1 − ρ) there exists a probability measure νR on  H, B(H) and a constant εR ∈ (0 , 1] such that, for all x ∈ VR := {x ∈ H : V (x) ≤ R},
+
+P(x, ·) ≥ εR νR(·).17 
+
+We first verify the condition (A). From Assumption 3 and Assumption 4, we have that there exist positive numbers c1, c 2 > 0 such that for any x ∈ H ,
+
+(PV ) ( x) = E [∥Ψ0 (x) + ξ1∥H] ≤ c1 ∥Q∥L ∥x∥H + c2 ∥Q∥L +
+
+q
+
+∥Q∥T.(23) Set ρ := c1 ∥Q∥L and κ := c2 ∥Q∥L + p∥Q∥T. Then, we find that ρ ∈ (0 , 1) from Assump-tion 4, which yields (A) combined with (23). We now prove (B). Let μQ be a probability measure on (H, B(H)) defined by μQ(·) := 
+
+N (0 , Q )( ·). Let Hk be the reproducing kernel Hilbert space associated with the covariance function k. Let I∗ be the canonical embedding from H into 
+
+L2(μQ) := 
+
+
+
+f : H → R :
+
+Z
+
+> H
+
+|f (x)|2 dμ Q(x) < ∞
+
+
+
+,
+
+and let I : L2(μQ) → H denote the adjoint operator of I∗. We denote the closure of I∗(H)
+
+in L2(μQ) by H∗
+
+> k
+
+. To verify the condition (B), we apply the following lemmas. The proof of Lemma A.2 is given in Section 1 of the supplementary material. LEMMA A.1 (Cameron-Martin Theorem; see Theorem 5.1 in Lifshits (2012)). Let h ∈H, and let μh, Q(·) := N (h, Q )( ·). Then, μh,Q ≪ μQ if and only if h ∈ H k. If h ∈ H k, then the density dN (h, Q )/d N (0 , Q ) has a form 
+
+dN (h, Q )
+
+dN (0 , Q ) (x) = exp 
+
+(
+
+z(x) − ∥h∥2
+
+> Hk
+
+2
+
+)
+
+,
+
+where z ∈ H ∗ 
+
+> k
+
+is a measurable linear functional such that Iz = h.
+
+LEMMA A.2. Let h ∈ H be of the form h = Qg for some g ∈ H . Then, 
+
+(I−1h)( x) = ⟨g, x ⟩H, x ∈ H ,(24) 
+
+∥h∥2 
+
+> Hk
+
+= ⟨Qg, g ⟩H.(25) Fix R > 0 and x ∈ VR. From Lemma A.1, Assumption 1, Assumption 2, and Assumption 3, we find that for any A ∈ B (H),
+
+P (x, A ) = 
+
+Z
+
+> A
+
+dN (Ψ 0 (x) , Q )
+
+dN (0 , Q ) (h) μQ (dh ) ,
+
+where 
+
+dN (Ψ 0 (x) , Q )
+
+dN (0 , Q ) (h) := exp 
+
+ I−1Ψ0 (x) (h) − 12 ∥Ψ0(x)∥2
+
+> Hk
+
+
+
+, h ∈ H .
+
+Moreover, from Lemma A.2 and Assumption 3, we obtain 
+
+dN (Ψ 0 (x) , Q )
+
+dN (0 , Q ) (h) = exp 
+
+
+
+⟨m0 (x) , h ⟩H − 12 ⟨Qm 0 (x) , m 0 (x)⟩H
+
+
+
+.
+
+For any x ∈ H , set fx : H → R by fx(h) := ⟨m0 (x) , h ⟩H − 12 ⟨Qm 0 (x) , m 0 (x)⟩H , h ∈ H .Note that, for any x, h ∈ H ,
+
+fx(h) ≥ − ∥ m0 (x)∥H ∥h∥H − 12 ∥Q∥L ∥m0(x)∥2 
+
+> H
+
+.18 
+
+Hence, from Assumption 4, we have that there exist positive constants c1, c 2 > 0 for x, h ∈
+
+VR,
+
+fx (h) ≥ − (c1 ∥x∥H + c2) ∥h∥H − 12 ∥Q∥L (c1 ∥x∥H + c2)2
+
+≥ − (c1R + c2) R − 12 ∥Q∥L (c1R + c2)2 =: −ϵ, 
+
+and therefore 
+
+P (x, A ) = 
+
+Z
+
+> A
+
+exp {fx(h)} μQ (dh ) ≥
+
+Z
+
+> A∩VR
+
+exp {fx(h)} μQ (dh )
+
+≥
+
+Z
+
+> A∩VR
+
+exp( −ϵ) μQ (dh ) = exp( −ϵ) μQ (VR) μQ (A ∩ VR)
+
+μQ (VR) = δν R(A),(26) where δ = exp( −ϵ)μQ (VR) and νR is a probability measure on (H, B(H)) defined by 
+
+νR(A) := μQ (A ∩ VR) /μ Q (VR) (A ∈ B (H)) . Here we use that μQ(VR) > 0 in the def-inition of νR, which follows from Assumption 2. By definition, δ ∈ (0 , 1) , and hence (B) follows from (26). The following lemma establishes (C3). LEMMA A.3. Suppose that Assumption 1, Assumption 2–Assumption 4 hold for (4) .Then, any invariant measure π of the time series {Xt}t∈N defined by (4) satisfies that 
+
+Z
+
+> H
+
+∥x∥H π(dx ) < ∞.
+
+PROOF . Set V : H → R≥0 by V (x) := ∥x∥H , x ∈ H . Then, we have that there exist con-stants ρ ∈ (0 , 1) and κ > 0 such that 
+
+(PV ) ( x) ≤ ρV (x) + κ, x ∈ H ,
+
+as in the proof of Theorem 3.1. Setting ˜V := 1 + V and adjusting κ > 0 if necessary, we obtain 
+
+P ˜V
+
+
+
+(x) ≤ ρ ˜V (x) + κ, x ∈ H .
+
+By Lemma 2.5 in the supplementary material, there exist constants R > 0, ρ′
+
+> 0, and b > 0
+
+such that 
+
+P ˜V
+
+
+
+(x) − ˜V (x) ≤ − ρ′ ˜V (x) + b1 ˜VR (x), x ∈ H ,
+
+where ˜VR := {x ∈ H | ˜V (x) ≤ R}. Applying Lemma 2.6 in the supplementary material, the claim follows. We are now ready to prove Corollary 3.2. PROOF OF COROLLARY 3.2. Since {Xt}t∈N is stationary, the Riesz representation theo-rem and Lemma 2.7 in the supplementary material imply that for any j ∈ N,
+
+β(j) = 
+
+Z
+
+> H
+
+sup 
+
+> ϕ∈C b(H)
+> ∥ϕ∥Cb(H)≤1
+
+(Pj ϕ)( x) −
+
+Z
+
+> H
+
+ϕ(z)π(dz ) π(dx ).(27) 19 
+
+Moreover, by Lemma A.3, we have Z
+
+> H
+
+∥x∥H π(dx ) < ∞.(28) Combining (27) and (28) and applying Theorem 3.1, we obtain 
+
+β(j) ≲ γj
+
+Z
+
+> H
+
+ 1 + ∥x∥H
+
+ π(dx ) ≲ γj ,
+
+which completes the proof. APPENDIX B: PROOFS OF THE RESULTS IN SECTION 4.2 In this section, we provide proofs of theorems and lemmas in Section 4.2. To apply Theo-rem 4.1 to G, we first verify that G satisfies Assumption 7 and Assumption 8. LEMMA B.1. Let M > 0. Fix L ∈ N, B ≥ 1, F ≥ 1, S > 0, and N ∈ N. Set G := 
+
+F(M ) 
+
+> p0
+
+(L, N, B, F, S ) and G := (Ψ ψ)ψ∈G . Then, G satisfies Assumption 7 and Assumption 8. 
+
+PROOF OF LEMMA B.1. Let ψ ∈ G . From the definition of Ψψ, we have that the domain of Ψψ is included in the bounded set {x ∈ H : ∥x∥∞ ≤ M }, which verifies Assumption 7. We now prove Assumption 8. Define I : G → G by I(ψ) := Ψ ψ, ψ ∈ G . Then I is continuous from the normed space  G, ∥ · ∥ ∞
+
+ to the normed space  G, ∥ · ∥ ∞
+
+. Since G is compact in 
+
+RP with P = 2( d + 1) N + ( L − 1)( N 2 + N ) + ( N + 1) , it follows from the continuity of I
+
+that Im( I) is compact. Finally, because Im( I) = G, we conclude that G is compact, which is precisely Assumption 8. Building on the above, we can apply Theorem 4.1 to the hypothesis set G. Consequently, to derive the generalization error R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+it suffices to prove the following two lemmas. LEMMA B.2. Let M > 0. Fix L ∈ N, B ≥ 1, F ≥ 1, S > 0, and N ∈ N. Set G := 
+
+F(M ) 
+
+> p0
+
+(L, N, B, F, S ) and G := (Ψ ψ)ψ∈G . Then, we have that for any δ > 0log N (δ, G, ∥ · ∥ ∞) ≤ 2S(L + 1) log 
+
+ (L + 1)( N + 1) Bδ
+
+
+
+.
+
+PROOF . Let ψ1, ψ 2 ∈ G . We have that for any x ∈ H with ∥x∥∞ ≤ M ,
+
+Ψψ1 (x) − Ψψ2 (x) H =
+
+( Z
+
+> D
+
+ Z
+
+> D
+
+ ψ1(u, v, x (v)) − ψ2(u, v, x (v))  dv
+
+2
+
+du 
+
+)1/2
+
+≤
+
+Z
+
+> D
+
+Z
+
+> D
+
+ψ1(u, v, x (v)) − ψ2(u, v, x (v)) 2 du dv
+
+!1/2
+
+≤ ∥ ψ1 − ψ2∥∞ .
+
+Hence, we have 
+
+∥Ψψ1 − Ψψ2 ∥∞ ≤ ∥ ψ1 − ψ2∥∞ .(29) 20 
+
+It follows that N (δ, G, ∥ · ∥ ∞) ≤ N (δ, G, ∥ · ∥ ∞). By Lemma 2.9 in the supplementary mate-rial, 
+
+log N (δ, G, ∥ · ∥ ∞) ≤ 2S(L + 1) log 
+
+ (L + 1)( N + 1) Bδ
+
+
+
+,
+
+which proves the claim. LEMMA B.3. Let M ≥ 1. Fix L ∈ N, B ≥ 1, F ≥ 1, S > 0, and N ∈ N. Set G := 
+
+F(M ) 
+
+> p0
+
+(L, N, B, F, S ) and G := (Ψ ψ)ψ∈G . Suppose the true Urysohn kernel ψ0 satisfies As-sumption 9. Then 
+
+inf  
+
+> Ψ∈G
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
+≲ max  
+
+> i=0 ,...,q
+
+N − 2βiti .
+
+PROOF . For any ψ ∈ G , we have that 
+
+R(Ψ ψ, ¯Ψ(M )0 ) = E
+
+Z 
+
+> D
+
+ Z
+
+> D
+
+ψ(u, v, X (v)) dv −
+
+Z
+
+> D
+
+¯ψ(M )0 (u, v, X (v)) dv
+
+2
+
+du
+
+
+
+≤ ψ − ¯ψ(M )0 
+
+> 2
+> ∞
+
+.
+
+Consequently, 
+
+inf  
+
+> Ψ∈G
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
+≤ inf  
+
+> ψ∈G
+
+ψ − ¯ψ(M )0 
+
+> 2
+> ∞
+
+.
+
+From Assumption 9, we can apply the equation (26) of Schmidt-Hieber (2020), which yields the desired result. From these lemmas, Theorem 4.2 follows. PROOF OF THEOREM 4.2. By Lemma B.1, the hypothesis set G satisfies Assumption 7 and Assumption 8, and for any δ > 0,
+
+log N (δ, G, ∥ · ∥ ∞) ≤ 2S(L + 1) log 
+
+ (L + 1)( N + 1) Bδ
+
+
+
+.
+
+Applying Theorem 4.1, we find that for any ε ∈ (0 , 1) there exists a constant Cε > 0 de-pending only on (ε, C 1,β , C 2,β , K ) with K = max {p∥Q∥L, p∥Q∥T, K ′
+
+, 1} such that for all 
+
+T ∈ N with log T ≥ 2 and C2,β ≥ 2 log TT ,
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 1 + ε
+
+1 − ε
+
+
+
+∆( bΨT ) + inf  
+
+> Ψ∈G
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ CεF 2 log N (δ, G, ∥ · ∥ ∞)   log T 
+
+T .
+
+(30) Let NT := N   1 
+
+> T
+
+, G, ∥ · ∥ ∞
+
+ ∨ ⌊ exp(10) + 1 ⌋. Then there exists a constant c1 > 0 such that 
+
+log NT ≤ c1 S (L + 1) log  (L + 1)( N + 1) BT .
+
+Moreover, from Lemma B.3 and the assumption that N ≍ max 0≤i≤q T ti 
+
+> 2βi+ti
+
+, we obtain that 
+
+inf  
+
+> Ψ∈G
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
+≲ max  
+
+> 0≤i≤q
+
+N − 2βiti ≲ max  
+
+> 0≤i≤q
+
+T − 2βi 
+
+> 2βi+ti
+
+,(31) 21 
+
+Furthermore, from the assumption that L ≍ log N, S ≍ N log N and N ≍ max 0≤i≤q T ti 
+
+> 2βi+ti
+
+,
+
+log NT (log T )
+
+T ≲ (log T )( N log N )(log 2 N T )
+
+T ≲ (log T )4 max  
+
+> 0≤i≤q
+
+T − 2βi 
+
+> 2βi+ti
+
+.(32) Combining (39), (31) and (32), for any ε ∈ (0 , 1) ,
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≲ (log T )4 max  
+
+> 0≤i≤q
+
+T − 2βi 
+
+> 2βi+ti
+
+.
+
+APPENDIX C: PROOFS FOR THEOREMS AND LEMMAS In this supplementary material, all notation is consistent with that used in the main paper. 
+
+C.1. Proofs of Theorem 4.1. In this part, we provide proofs of the theorems and lemmas in Section 4.1. In this paper, we prove Theorem 4.1 in Section 4.1 following the argument of Kurisu, Fukami and Koike (2025). Our contribution is essentially an extension of their result to the infinite-dimensional setting. For completeness, we include the full proof in the appendix so that the paper is self-contained. We begin by proving the following two lemmas, which are used to prove Theorem 4.1. LEMMA C.1. Suppose that Assumption 4.2 holds. Let δ > 0 and suppose that N (δ, F, ∥ · ∥∞) < ∞. Let Nδ be an integer such that Nδ ≥ N (δ, F, ∥ · ∥ ∞) ∨ exp(10) . Also, let aT be a positive number such that μT := 
+
+j T
+
+> 2aT
+
+k
+
+> 0. In addition, suppose that there is a number 
+
+F ≥ 1 such that ∥Ψ∥∞ ≤ F for all Ψ ∈ F ∪ 
+
+n ¯Ψ(M )0
+
+o
+
+. Then, for all ε ∈ (0 , 1] ,
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤(1 + ε) bRT
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 21(1 + ε)2
+
+ε · F 2 log Nδ
+
+μT
+
++ 4F 2
+
+μT
+
++ 4(2 + ε)F 2β(aT ) + 4(2 + ε)F δ. 
+
+LEMMA C.2. Suppose that Assumption 2.1, Assumption 4.1 hold and that F satisfies As-sumption 4.3 – 4.4. Let T satisfy log T ≥ 2. Let δ > 0 and assume that N (δ, F, ∥·∥ ∞) < ∞.Let Nδ be an integer such that Nδ ≥ N (δ, F, ∥·∥ ∞) ∨ exp(10) . Moreover, suppose that there is a number F ≥ 1 such that ∥Ψ∥∞ ≤ F for all Ψ ∈ F ∪ 
+
+n ¯Ψ(M )0
+
+o
+
+. Then, for all ε ∈ (0 , 1) there exists a constant Cε depending only on (ε, K, C 1,β , C 2,β ) with K := max {p∥Q∥L, p∥Q∥T, K ′
+
+, 1} such that 
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 11 − ε ∆( bΨT ) + 11 − ε inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ CεF 2γδ,T ,
+
+where γδ,T := δ + (log T )(log Nδ ) 
+
+> T
+
++ 1 
+
+> T
+
+.
+
+We prove Theorem 4.1 by combining Lemma C.1 and Lemma C.2. PROOF OF THEOREM 4.1. Let aT be any integer such that μT := ⌊ T 
+
+> 2aT
+
+⌋ > 0. Then, from Lemma C.1, we have that for any ε ∈ (0 , 1) and δ > 0,
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤(1 + ε) bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 4 (2 + ε) F δ + 21 F 2 (1 + ε)2
+
+ε
+
+log Nδ
+
+μT
+
++ 4 (2 + ε) F 2β(aT ) + 4F 2
+
+μT
+
+.22 
+
+Further, by Lemma C.2, we have that for any ε ∈ (0 , 1) there exists a positive constant Cε
+
+depending only on (ε, K, C 1,β , C 2,β ) such that 
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 1 + ε
+
+1 − ε
+
+
+
+∆( bΨT ) + inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ (1 + ε) CεF 2
+
+
+
+δ + 1
+
+T + (log T ) (log Nδ)
+
+T
+
+
+
++ 21(1 + ε)2
+
+ε · F 2 log Nδ
+
+μT
+
++ 4F 2
+
+μT
+
++ 4(2 + ε)F 2β(aT ) + 4(2 + ε)F δ. 
+
+Letting aT := ⌊C−12,β log T ⌋, which implies β(aT ) ≲ 1 
+
+> T
+
+, we find that μT > 0 under the as-sumption C2,β ≥ 2 log TT . We also have that 1 
+
+> μT
+
+≲ log TT from the definition of μT . Based on the above estimates, we obtain that 
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 1 + ε
+
+1 − ε
+
+
+
+∆( bΨT ) + inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ (1 + ε) CεF 2 (log T ) (log Nδ)
+
+T
+
++ (8 (2 + ε) + 2 Cε(1 + ε)) F 2
+
+T +
+
+
+
+21 (1 + ε)2
+
+ε log Nδ + 4 
+
+
+
+F 2 log TT
+
+≲ 1 + ε
+
+1 − ε
+
+
+
+∆( bΨT ) + inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ C′
+
+> ε
+
+F 2 (log Nδ) (log T )
+
+T ,
+
+where C′ 
+
+> ε
+
+is a constant depending only on (ε, K, C 1,β , C 2,β ), which is the desired bound and hence proves Theorem 4.1. 
+
+C.2. Proofs of lemma C.1 and C.2. We will provide the proof for Lemma C.1 and Lemma C.2. We begin by proving Lemma C.1. PROOF OF LEMMA C.1. Let δ be any positive number and {Ψ1, . . . , ΨNδ } be a δ covering of F with respect to ∥·∥ ∞. Let J be a random variable taking values in {1, . . . , Nδ} satisfying 
+
+ΨJ − bΨT ∞ ≤ δ.
+
+Step 1 (Reduction to independence). We rely on the coupling technique for β-mixing sequences to construct independent blocks. See Rio (2017). For ℓ = 0 , . . . , μ T − 1, let I1,ℓ =
+
+{2ℓa T + 1 , . . . , (2 ℓ + 1) aT }, I 2,ℓ = {(2 ℓ + 1) aT + 1 , . . . , 2( ℓ + 1) aT }. Define 
+
+˜gℓ := (˜ g1,ℓ , . . . , ˜gNδ ,ℓ )⊤ =
+
+ X
+
+> t∈I1,ℓ
+
+Ψ1(Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+, . . . , X
+
+> t∈I1,ℓ
+
+ΨNδ (Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
+
+
+> ⊤
+
+,
+
+˜g′ 
+
+> ℓ
+
+:= (˜ g′
+
+> 1,ℓ
+
+, . . . , ˜g′Nδ ,ℓ )⊤ =
+
+ X
+
+> t∈I1,ℓ
+
+Ψ1(X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2 
+
+> H
+
+, . . . , X
+
+> t∈I1,ℓ
+
+ΨNδ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2
+
+> H
+
+
+
+> ⊤
+
+.
+
+In the following, we extend the probability space if necessary and assume that there is a sequence {Uℓ}∞ 
+
+> ℓ=0
+
+of i.i.d. uniform random variables over [0 , 1] independent of {Xt}Tt=1 .We will show that there exist two sequences of independent RNδ -valued random variables 
+
+{gℓ}μT −1 
+
+> ℓ=0
+
+and {g′
+
+> ℓ
+
+}μT −1 
+
+> ℓ=0
+
+such that for all ℓ = 0 , . . . , μ T − 1,
+
+|E[gj,ℓ ] − E[˜ gj,ℓ ]| ≤ 4F 2aT β(aT ),(33) 
+
+|E[g′
+
+> j,ℓ
+
+] − E[˜ g′
+
+> j,ℓ
+
+]| ≤ 4F 2aT β(aT ).(34) where gj,ℓ and g′ 
+
+> j,ℓ
+
+are the j-th component of gℓ and g′
+
+> ℓ
+
+, respectively. We only prove (33) since the proof of (34) is similar. 23 
+
+First we will show that there exists a sequence {gℓ}μT −1 
+
+> ℓ=0
+
+of independent random vectors in RNδ such that 
+
+gℓd
+
+= ˜ gℓ, P(gℓ̸ = ˜ gℓ) ≤ β(aT ) for 0 ≤ ℓ ≤ μT − 1.
+
+For all ℓ1, ℓ 2, define the σ-field A(ℓ1, ℓ 2) generated by {Xt}t∈I(ℓ1,ℓ 2) where I(ℓ1, ℓ 2) := 
+
+Sℓ2 
+
+> ℓ=ℓ1
+
+I1,ℓ . From the definition of ˜gℓ, we find that σ(˜ gℓ) ⊂ A (ℓ, ℓ ) for all ℓ. From Assumption 4.2 and Lemma D.1 in the supplementary material, there exists a random vector gℓ such that 
+
+gℓd
+
+= ˜ gℓ, independent of A(0 , ℓ − 1) , and P(gℓ̸ = ˜ gℓ) ≤ β(aT ). Moreover, gℓ is measurable with respect to the σ-field generated by A(0 , ℓ ) ∪ σ(Uℓ). Therefore, for any ℓ, gℓ is indepen-dent of {gℓ′ }ℓ−1 
+
+> ℓ′=0
+
+since for ℓ1 < ℓ 2, gℓ2 is independent of the σ-field generated by A(0 , ℓ 1)
+
+and Uℓ1 . This implies that {gℓ}μT −1 
+
+> ℓ=0
+
+is a sequence of independent random variables. Next we will show (33). By definition we have 0 ≤ ˜gj,ℓ ≤ 4F 2aT for all j. Since gℓ has the same law as ˜gℓ, we also have 0 ≤ gj,ℓ ≤ 4F 2aT a.s. for all j. Consequently, we have 
+
+|E[gj,ℓ ] − E[˜ gj,ℓ ]| ≤ E[|gj,ℓ − ˜gj,ℓ | 1{gℓ̸ =˜ gℓ}] ≤ 4F 2aT P(gℓ̸ = ˜ gℓ) ≤ 4F 2aT β(aT ).
+
+Step 2 (Bounding the difference of the sum of independent blocks). In this step, we will show that for any ε ∈ (0 , 1] ,
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+g′
+
+> J,ℓ
+
+#
+
+≤ (1 + ε) E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#
+
++ 21 (1 + ε)2
+
+ε F 2aT log Nδ,(35) 
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+˜g′
+
+> J,ℓ
+
+#
+
+≤ (1 + ε) E
+
+"μT −1X
+
+> ℓ=0
+
+˜gJ,ℓ 
+
+#
+
++ 21 (1 + ε)2
+
+ε F 2aT log Nδ.(36) For j = 1 , . . . , Nδ, define rj and B as 
+
+rj := 4F 2aT log Nδ
+
+μT
+
+∨ 1
+
+μTμT −1X
+
+> ℓ=0
+
+E [gj,ℓ ]
+
+!1/2
+
+, B := max 
+
+> 1≤j≤N δ
+
+PμT −1
+
+> ℓ=0
+
+
+
+gj,ℓ − g′
+
+> j,ℓ
+
+
+
+2F r j
+
+.
+
+Then, using the Cauchy-Schwarz inequality, we obtain that 
+
+E gJ,ℓ − g′
+
+> J,ℓ
+
+ ≤ 2F E [rJ B]
+
+≤ 2E
+
+ 1
+
+μTμT −1X
+
+> ℓ=0
+
+E [gJ,ℓ ]
+
+!1/2
+
+× B1/2
+
+ + 2 
+
+s
+
+4F 2aT log Nδ
+
+μT
+
+E [B]
+
+≤ 2
+
+s
+
+E[B2]
+
+μT
+
+× E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#1/2
+
++ 2 
+
+s
+
+4F 2aT log Nδ
+
+μT
+
+E [B] .(37) Combining this with (C.4) in Schmidt-Hieber (2020), we find that for any ε ∈ (0 , 1] ,
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+g′
+
+> J,ℓ
+
+#
+
+≤ (1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#
+
++ 4 F 2(1 + ε)
+
+s
+
+aT log Nδ
+
+μT
+
+E [B] + (1 + ε)2
+
+ε
+
+E[B2]
+
+μT
+
+.
+
+Now, we show that 
+
+E [B] ≤ 3paT μT log Nδ, E B2 ≤ 9aT μT log Nδ,(38) 24 
+
+We find that for j = 1 , . . . , Nδ
+
+gj,ℓ − g′
+
+> j,ℓ
+
+2rj F ≤
+
+r aT μT
+
+log Nδ
+
+, 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+E
+
+ gj,ℓ − g′
+
+> j,ℓ
+
+2F r j
+
+> 2
+
+ ≤ 2 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+E
+
+" g2
+
+> j,ℓ
+
+(2 F r j )2
+
+#
+
+≤ 2 4F 2aT
+
+4F 2 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+E [gj,ℓ ]
+
+> 1
+> μT
+
+PμT −1 
+
+> ℓ=0
+
+E [gj,ℓ ] = 2 aT μT .
+
+Thus, applying Bernstein’s inequality (see Lemma 2.2.9 in van der Vaart and Wellner (1996)), we have that for j = 1 , . . . , Nδ,
+
+P (B ≥ u) ≤ 2 exp 
+
+− 
+
+> 12
+
+u2
+
+2aT μT + 13
+
+q log Nδ  
+
+> aTμT
+
+u
+
+ , u ∈ (0 , ∞) .
+
+Here, let γ > 0 be a positive number satisfying 3γ2 − 12 γ − 2 = 0 and define α =
+
+γ√aT μT log Nδ. Then, we find that for u ≥ α
+
+exp 
+
+− 
+
+> 12
+
+u2
+
+2aT μT + 13
+
+q log Nδ  
+
+> aTμT
+
+u
+
+ ≤ exp 
+
+
+
+− log Nδ
+
+α u
+
+
+
+.
+
+Combining these results, we obtain that 
+
+E [B] = 
+
+Z ∞
+
+> 0
+
+P (B > u ) du ≤ α +
+
+Z
+
+> α
+
+P (B ≥ u) du 
+
+≤α + 2 
+
+Z ∞
+
+> α
+
+Nδ exp 
+
+
+
+− log Nδ
+
+α x
+
+
+
+dx 
+
+=α + 2 Nδ
+
+α
+
+log Nδ
+
+exp 
+
+
+
+− log Nδ
+
+α α
+
+
+
+=
+
+
+
+1 + 2log Nδ
+
+
+
+γpaT μT log Nδ
+
+≤3paT μT log Nδ,
+
+and 
+
+E B2 =2 
+
+Z ∞
+
+> 0
+
+uP (B ≥ u) du ≤ 2
+
+Z α
+
+> 0
+
+udu + 2 
+
+Z ∞
+
+> α
+
+uP (B ≥ u) du 
+
+≤α2 + 4 
+
+Z ∞
+
+> α
+
+u exp 
+
+
+
+− log Nδ
+
+α u
+
+
+
+du 
+
+≤α2 + 4 Nδ
+
+ α2
+
+log Nδ
+
++ α2
+
+log 2 Nδ
+
+
+
+exp 
+
+
+
+− log Nδ
+
+α α
+
+
+
+≤1.44 γ2aT μT log Nδ ≤ 9aT μT log Nδ.
+
+Therefore, combining (37) and (38), we find that 
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+g′
+
+> J,ℓ
+
+#
+
+≤ (1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#
+
++ 4 F 2(1 + ε)aT log Nδ + 9 F 2 (1 + ε)2
+
+ε aT log Nδ
+
+≤ (1 + ε) E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#
+
++ 21 (1 + ε)2
+
+ε F 2aT log Nδ,25 
+
+where the last line follows from 1 ≤ (1 + ε)/ε .
+
+Step 3 (Conclusion). From (34) and (35), we have 
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+eg′
+
+> J,ℓ
+
+#
+
+≤ E
+
+"μT −1X
+
+> ℓ=0
+
+g′
+
+> J,ℓ
+
+#
+
++ 4 F 2aT μT β(aT )
+
+≤ (1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+gJ,ℓ 
+
+#
+
++ 21(1 + ε)2
+
+ε F 2aT log Nδ + 4 F 2aT μT β(aT )
+
+≤ (1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+egJ,ℓ 
+
+#
+
++ 21(1 + ε)2
+
+ε F 2aT log Nδ + 4(2 + ε)F 2aT μT β(aT ).(39) Additionally, define 
+
+ehJ,ℓ := X
+
+> t∈I2,ℓ
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+, eh′ 
+
+> J,ℓ
+
+:= X
+
+> t∈I2,ℓ
+
+ΨJ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2 
+
+> H
+
+.
+
+Then a similar argument to derive (39) yields 
+
+E
+
+"μT −1X
+
+> ℓ=0
+
+eh′
+
+> J,ℓ
+
+#
+
+≤(1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+ehJ,ℓ 
+
+#
+
++ 21(1 + ε)2
+
+ε F 2aT log Nδ
+
++ 4(2 + ε)F 2aT μT β(aT ).(40) Now, note that 
+
+R
+
+
+
+ΨJ , ¯Ψ(M )0
+
+
+
+= 1
+
+T E
+
+ 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+eg′ 
+
+> J,ℓ
+
++ 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+eh′ 
+
+> J,ℓ
+
++
+
+> T
+
+X  
+
+> t=2 aTμT+1
+
+ΨJ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2
+
+> H
+
+ ,
+
+bR
+
+
+
+ΨJ , ¯Ψ(M )0
+
+
+
+= 1
+
+T E
+
+ 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+egJ,ℓ + 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+ehJ,ℓ +
+
+> T
+
+X  
+
+> t=2 aTμT+1
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+.
+
+ .
+
+Together with (39) and (40), we have 
+
+R
+
+
+
+ΨJ , ¯Ψ(M )0
+
+
+
+≤ 1
+
+T
+
+(1 + ε)E
+
+"μT −1X
+
+> ℓ=0
+
+egJ,ℓ + 
+
+> μT−1
+
+X
+
+> ℓ=0
+
+ehJ,ℓ 
+
+#
+
++ E
+
+
+
+> T
+
+X  
+
+> t=2 aTμT+1
+
+ΨJ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2
+
+> H
+
+
+
++ 2
+
+T
+
+ 21(1 + ε)2
+
+ε F 2aT log Nδ + 4(2 + ε)F 2aT μT β(aT )
+
+
+
+≤ (1 + ε) bR
+
+
+
+ΨJ , ¯Ψ(M )0
+
+
+
++ 21(1 + ε)2
+
+εF 2 log Nδ
+
+μT
+
++ 4(2 + ε)F 2β(aT )+ 1
+
+T E
+
+
+
+> T
+
+X  
+
+> t=2 aTμT+1
+
+
+
+ΨJ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2 
+
+> H
+
+− ΨJ (Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
+ .
+
+Since 
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+− ΨJ (X′
+
+> t
+
+) − ¯Ψ(M )0 (X′
+
+> t
+
+) 2 
+
+> H
+
+≤ 4F 2,
+
+bΨT (x) − ¯Ψ(M )0 (x) 2 
+
+> H
+
+− ΨJ (x) − ¯Ψ(M )0 (x) 2 
+
+> H
+
+≤ 4F δ, x ∈ H ,(41) 26 
+
+we obtain 
+
+R
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 4F δ + (1 + ε)
+
+n bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 4 F δ 
+
+o
+
++ 21(1 + ε)2
+
+εF 2 log Nδ
+
+μT
+
++ 4(2 + ε)F 2β(aT ) + 4F 2 · 2aT
+
+T
+
+≤ (1 + ε) bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 21(1 + ε)2
+
+εF 2 log Nδ
+
+μT
+
++ 4F 2
+
+μT
+
++ 4(2 + ε)F 2β(aT ) + 4(2 + ε)F δ. 
+
+We now prove Lemma C.2 PROOF OF LEMMA C.2. Let δ be any positive number and {Ψ1, . . . , ΨNδ } be a δ covering of F with respect to ∥·∥ ∞.
+
+Step 1. First, we show that for any Ψ ∈ F :
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+= ∆( bΨT , Ψ) + R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 2 E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D bΨT (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+.
+
+(42) Indeed, we obtain that 
+
+∥Xt+1 ∥2 
+
+> H
+
+− ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+= Xt+1 − bΨT (Xt) 2 
+
+> H
+
+− bΨT (Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
++ 2 
+
+D bΨT (Xt), Ψ0(Xt) − ¯Ψ(M )0 (Xt) + ξt
+
+E 
+
+> H
+
+,
+
+= Xt+1 − bΨT (Xt) 2 
+
+> H
+
+− bΨT (Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
++ 2 
+
+D bΨT (Xt), ξ t
+
+E 
+
+> H
+
+,
+
+where the second equality follows since 
+
+D bΨT (Xt), Ψ0(Xt) − ¯Ψ(M )0 (Xt) + ξt
+
+E
+
+> H
+
+=
+
+Z
+
+> D
+
+ bΨT (Xt)
+
+
+
+(u)
+
+
+
+Ψ0(Xt)1{∥ Xt∥∞>M }
+
+
+
+(u) du +
+
+D bΨT (Xt), ξ t
+
+E 
+
+> H
+
+,
+
+and the right-hand side equals zero, the latter being a consequence of Assumption 4.3. We also obtain that for any Ψ ∈ F ∥Xt+1 ∥2 
+
+> H
+
+− ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+= ∥Xt+1 − Ψ( Xt) + Ψ( Xt)∥2
+
+> H
+
+− Ψ( Xt) − Ψ( Xt) + ¯Ψ(M )0 (Xt) 2
+
+> H
+
+= ∥Xt+1 − Ψ( Xt)∥2 
+
+> H
+
+− Ψ( Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
++ 2 ⟨Ψ( Xt), ξ t⟩H .27 
+
+Thus, we obtain that 
+
+E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Xt+1 − bΨT (Xt) 2
+
+> H
+
+#
+
+− E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+bΨT (Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
+#
+
+− 2E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D bΨT (Xt), ξ t
+
+E
+
+> H
+
+#
+
+= E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+∥Xt+1 − Ψ( Xt)∥2
+
+> H
+
+#
+
+− E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Ψ( Xt) − ¯Ψ(M )0 (Xt) 2
+
+> H
+
+#
+
+,
+
+which implies that 
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+= ∆( bΨT , Ψ) + R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 2 E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D bΨT (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+.
+
+Step 2. In this step, we will show 
+
+E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+≤ 4K (log T )(log Nδ + 12 log 2) 
+
+T
+
+!1/2 bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ F δ + 4F 2
+
+T
+
+1/2
+
+.(43) For each j = 1 , . . . , Nδ, define 
+
+Aj := 
+
+> T
+
+X
+
+> t=1
+
+D
+
+Ψj (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E 
+
+> H
+
+,Bj := 
+
+> T
+
+X
+
+> t=1
+
+D
+
+Ψj (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E2 
+
+> H
+
++
+
+D
+
+Q
+
+
+
+Ψj (Xt) − ¯Ψ(M )0 (Xt)
+
+
+
+, Ψj (Xt) − ¯Ψ(M )0 (Xt)
+
+E
+
+> H
+
+!1/2
+
+,
+
+and 
+
+ξj := Aj
+
+2
+
+q
+
+B2 
+
+> j
+
++ EB2
+
+> J
+
+ .
+
+If the denominator is zero, then ξj := 0 . By the Cauchy - Schwarz inequality, 
+
+E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+≤ 2
+
+T E
+
+h
+
+|ξJ |  B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]1/2i
+
+≤ 2
+
+T E ξ2
+
+> J
+
+1/2 (2 E[B2 
+
+> J
+
+]) 1/2.(44) If E[B2 
+
+> J
+
+] > 0, then, by the fact Xt+1 is Ft-measurable for t = 1 , . . . , T and from Lemma D.2 in the supplementary material, and Lemma D.3 therein applied with y =
+
+q
+
+E[B2 
+
+> J
+
+],
+
+E
+
+q
+
+E[B2 
+
+> J
+
+]
+
+q
+
+B2 
+
+> j
+
++ E[B2 
+
+> J
+
+]exp  2ξ2
+
+> j
+
+ ≤ 1.
+
+Hence 
+
+E
+
+q
+
+E[B2 
+
+> J
+
+]
+
+q
+
+B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]exp  2ξ2
+
+> J
+
+ ≤ E
+
+ max 
+
+> 1≤j≤N δ
+
+q
+
+E[B2 
+
+> j
+
+]
+
+q
+
+B2 
+
+> j
+
++ E[B2 
+
+> j
+
+]exp  2ξ2
+
+> j
+
+ ≤ N δ.28 
+
+By the Cauchy - Schwarz inequality, 
+
+E exp( ξ2 
+
+> J
+
+) ≤
+
+vuuutE
+
+q
+
+E[B2 
+
+> J
+
+]
+
+q
+
+B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]exp(2 ξ2 
+
+> J
+
+)
+
+ E
+
+q
+
+B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]
+
+q
+
+E[B2 
+
+> J
+
+]
+
+ ≤
+
+vuuutNδE
+
+q
+
+B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]
+
+q
+
+E[B2 
+
+> J
+
+]
+
+.
+
+Since 
+
+E
+
+q
+
+B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]
+
+q
+
+E[B2 
+
+> J
+
+]
+
+ ≤
+
+s
+
+E
+
+ B2 
+
+> J
+
++ E[B2 
+
+> J
+
+]
+
+E[B2 
+
+> J
+
+]
+
+
+
+≤ √2,
+
+we conclude 
+
+E exp( ξ2 
+
+> J
+
+) ≤ 21/4pNδ.
+
+This bound also holds if E[B2 
+
+> j
+
+] = 0 (then ξj = 0 ). Finally, by Jensen’s inequality, (45) E ξ2
+
+> J
+
+ ≤ log E exp( ξ2 
+
+> J
+
+) ≤ 12 log Nδ + 14 log 2 .
+
+Using Assumption 2.1 and (41), we have 
+
+E[B2 
+
+> J
+
+] ≤E
+
+" TX
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+> 2
+
+#
+
++ E
+
+" TX
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), Q 
+
+
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt)
+
+E 
+
+> H
+> 2
+
+#
+
+≤E
+
+" TX
+
+> t=1
+
+D bΨT (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+> 2
+
+#
+
++ E
+
+" TX
+
+> t=1
+
+D bΨT (Xt) − ¯Ψ(M )0 (Xt), Q 
+
+ bΨT (Xt) − ¯Ψ(M )0 (Xt)
+
+E 
+
+> H
+> 2
+
+#
+
++ 8 F 2δT ∥Q∥L
+
+≤E
+
+" TX
+
+> t=1
+
+bΨT (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+∥ξt∥2
+
+> H
+
+#
+
++ ∥Q∥L bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 8 F 2δT ∥Q∥L .(46) Decompose the first term as 
+
+E
+
+" TX
+
+> t=1
+
+bΨT (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+∥ξt∥2
+
+> H
+
+#
+
+≤ E
+
+" TX
+
+> t=1
+
+bΨT (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+∥ξt∥2 
+
+> H
+
+1n
+
+> ∥ξt∥H≤
+
+√2( K′ )2 log T
+
+> o
+
+#
+
++ E
+
+" TX
+
+> t=1
+
+bΨT (Xt) − ¯Ψ(M )0 (Xt) 2 
+
+> H
+
+∥ξt∥2 
+
+> H
+
+1n
+
+> ∥ξt∥H>
+
+√2( K′ )2 log T
+
+> o
+
+#
+
+≤ 2( K′
+
+)2T log T bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 4 F 2 
+
+K′ 2
+
+T E
+
+"
+
+∥ξt∥2
+
+2( K′
+
+)2 1{∥ ξt∥>√2( K′ )2 log T }
+
+#
+
+.(47) 29 
+
+Since K′ > 0 satisfies (4.2) in the main paper, 
+
+E
+
+"
+
+∥ξt∥2
+
+> H
+
+2( K′
+
+)2 1n
+
+> ∥ξt∥H>
+
+√2( K′ )2 log T
+
+> o
+
+#
+
+≤E
+
+"
+
+exp ∥ξt∥2
+
+> H
+
+2( K′
+
+)2
+
+!
+
+1n
+
+> ∥ξt∥H>
+
+√2( K′ )2 log T
+
+> o
+
+#
+
+≤E
+
+"
+
+exp 
+
+(
+
+∥ξt∥2
+
+> H
+
+(K′
+
+)2
+
+)
+
+exp 
+
+(
+
+− ∥ξt∥2
+
+> H
+
+2( K′
+
+)2
+
+)
+
+1n
+
+> ∥ξt∥H>
+
+√2( K′ )2 log T
+
+> o
+
+#
+
+≤E
+
+"
+
+exp 
+
+(
+
+∥ξt∥2
+
+> H
+
+(K′
+
+)2
+
+)
+
+exp {− log T }
+
+#
+
+≤ 2
+
+T .(48) Combining inequalities (46)–(48) with the assumption log T ≥ 2 and the definition of K,we obtain 
+
+E[B2 
+
+> J
+
+] ≤ 2( K′
+
+)2T log T bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 8 F 2(K′
+
+)2 + ∥Q∥L bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 8 F 2δT ∥Q∥L
+
+≤ 4K2T log T bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 16 F 2K2 + 8 F δT K 2
+
+≤ 4K2T log T
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 4F 2
+
+T + F δ 
+
+
+
+.
+
+(49) Combining (44), (45), and (49), we obtain the inequality (43). 
+
+Step 3. In this step, we complete the proof. By (43) and the AM - GM inequality, 
+
+E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+≤ ε
+
+2 bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ γε,
+
+where 
+
+γε = 16 K2(log T ) (2 log Nδ + log 2) 
+
+ε T + F δ ε 
+
+2 + 2F 2εT .
+
+Combining this with (42), we have for any Ψ ∈ F ,
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+= ∆( bΨT , Ψ) + bR
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 2 E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D bΨT (Xt) − ΨJ (Xt), ξ t
+
+E
+
+> H
+
+#
+
++ 2 E
+
+"
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+D
+
+ΨJ (Xt) − ¯Ψ(M )0 (Xt), ξ t
+
+E
+
+> H
+
+#
+
+≤ ∆
+
+ bΨT
+
+
+
++ bR
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 2 δ
+
+q
+
+∥Q∥T + ε bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 2 γε
+
+≤ ∆( bΨT ) + bR
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 2 δK + ε bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
++ 2 γε.
+
+Since bR
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
+= R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
+, it follows that 
+
+(1 − ε) bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ ∆( bΨT ) + R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ γ′
+
+> ε
+
+,
+
+where γ′ 
+
+> ε
+
+:= 2 δK + 2 γε. Taking the infimum over Ψ ∈ F , we conclude that 
+
+bR
+
+ bΨT , ¯Ψ(M )0
+
+
+
+≤ 11 − ε ∆( bΨT ) + 11 − ε inf  
+
+> Ψ∈F
+
+R
+
+
+
+Ψ, ¯Ψ(M )0
+
+
+
++ 11 − ε γ′
+
+> ε
+
+.
+
+Noting that F ≥ 1, we obtain the desired result. 30 
+
+C.3. Proof of Lemma A.2. In this section, we provide the proof of Lemma A.2. We add some notation needed to prove Lemma A.2. For any f, g ∈ H , define the operator f ⊗ g :
+
+H → H by (f ⊗ g)( h) = f ⟨g, h ⟩H, h ∈ H .PROOF OF LEMMA A.2. Since H is a separable Hilbert space, there exist eigenvalues 
+
+{λi}∞ 
+
+> i=1
+
+and eigenfunctions {ei}∞ 
+
+> i=1
+
+of Q such that 
+
+Q =
+
+> ∞
+
+X
+
+> i=1
+
+λi ei ⊗ ei.
+
+By the discussion in Example 4.2 of Section 2, Chapter 4 of Lifshits (2012), for any h ∈ H k,
+
+I−1h =
+
+> ∞
+
+X
+
+> i=1
+
+⟨ei, h ⟩H
+
+λi
+
+ei.(50) Hence, for x ∈ H ,
+
+(I−1h)( x) = 
+
+> ∞
+
+X
+
+> i=1
+
+⟨ei, Qg ⟩H
+
+λi
+
+⟨ei, x ⟩H =
+
+> ∞
+
+X
+
+> i=1
+
+⟨ei, g ⟩H⟨ei, x ⟩H = ⟨g, x ⟩H,
+
+which proves (A.2). Moreover, from (50), 
+
+∥h∥2 
+
+> Hk
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+|⟨ h, e i⟩H|2
+
+λi
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+|⟨ Qg, e i⟩H|2
+
+λi
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+|⟨ g, Qe i⟩H|2
+
+λi
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+λi |⟨ g, e i⟩H|2 = ⟨Qg, g ⟩H,
+
+establishing (A.3). APPENDIX D: TECHNICAL LEMMAS In this section, we collect several technical lemmas used in the proofs. Let A and B be two σ-fields of a probability space (Ω , T , P). The β-mixing coefficient between A and B is defined by 
+
+β(A, B) = 12 sup 
+
+X
+
+> i∈I
+
+X
+
+> j∈J
+
+|P(Ai ∩ Bj ) − P(Ai) P(Bj )|
+
+ ,
+
+where the maximum is taken over all finite partitions {Ai}i∈I ⊂ A and {Bj }j∈J ⊂ B of 
+
+Ω. Moreover, for two probability measures μ and ν on a measurable space (Ω , I), the total variation distance between them is defined by 
+
+∥ν − μ∥TV := sup 
+
+> A∈I
+
+|ν(A) − μ(A)|.
+
+LEMMA D.1 (Lemma 5.1 in Rio (2017)). Let A be a σ-field in a probability space 
+
+(Ω , T , P) and X be a random variable with values in some Polish space. Let U be a ran-dom variable with uniform distribution over [0 , 1] , independent of the σ-field generated by X
+
+and A. Then there exists a random variable X′, with the same law as X, independent of X,such that 
+
+P(X̸ = X′) = β(A, σ (X)) ,
+
+where σ(X) denotes the σ-field generated by X. Furthermore, X′ is measurable with respect to the σ-field generated by A and (X, U ).31 
+
+LEMMA D.2 (Lemma E.3 in Kurisu, Fukami and Koike (2025)). Let {di} be a martin-gale difference sequence with respect to a filtration {F i}. Assume E[d2 
+
+> i
+
+] < ∞ for all i. Then 
+
+E
+
+"
+
+exp λ
+
+> n
+
+X
+
+> i=1
+
+di − λ2
+
+2
+
+> n
+
+X
+
+> i=1
+
+d2 
+
+> i
+
++
+
+> n
+
+X
+
+> i=1
+
+E[d2 
+
+> i
+
+| F i−1]
+
+!!# 
+
+≤ 1
+
+for all n ≥ 1 and λ ∈ R.
+
+LEMMA D.3 (Theorem 1.2 in de la Peña, Klass and Lai (2004)). Let B ≥ 0 and A be two random variables satisfying 
+
+E
+
+
+
+exp 
+
+
+
+λA − λ2
+
+2 B2
+
+ 
+
+≤ 1 for all λ ∈ R.
+
+Then for all y > 0,
+
+E
+
+"
+
+y
+
+pB2 + y2 exp 
+
+ A2
+
+2( B2 + y2)
+
+#
+
+≤ 1.
+
+LEMMA D.4 (Theorem 1.2 in Hairer and Mattingly (2011)). Let {Xt}t∈N be a Markov chain on  H, B(H). Suppose that there exist a measurable function V : H → R+ and con-stants 0 < ρ < 1, κ ≥ 0 such that 
+
+(PV )( x) ≤ ρ V (x) + κ, x ∈ H .(A) 
+
+Moreover, for some R > 2κ/ (1 − ρ) there exist a probability measure νR on  H, B(H) and a constant εR ∈ (0 , 1] such that, for all x ∈ VR := {x ∈ H : V (x) ≤ R},
+
+P(x, ·) ≥ εR νR(·).(B) 
+
+Then, the chain admits a unique invariant probability measure π, and there exist constants 
+
+λ ∈ (0 , 1) and C > 0 such that, for every measurable f : H → R with 
+
+∥f ∥V := sup 
+
+> x∈H
+
+|f (x)|
+
+1 + V (x) < ∞,
+
+we have for all t ∈ N and x ∈ H ,
+
+(Ptf )( x) − πf ≤ C λ t (1 + V (x)) ∥f ∥V .
+
+Lemmas D.5 and D.6 are restated from Meyn and Tweedie (2009b). We use the notation and terminology of Meyn and Tweedie (2009b). Let X := {Xt}t∈N be a Markov chain on 
+
+(H, B(H)) . We begin by recalling the geometric drift condition (V4) of Meyn and Tweedie (2009b). There exist an extended-real-valued function V : H → [1 , ∞], a measurable set C ⊂H, and constants β > 0 and b < ∞ such that 
+
+PV (x) − V (x) ≤ − βV (x) + b1C (x), x ∈ H .(51) For any measurable set C ⊂ H , let τC := inf {t ∈ N : t ≥ 2, X t ∈ C}.LEMMA D.5 (Lemma 15.2.8 in Meyn and Tweedie (2009b)). The drift condition (51) 
+
+holds with a petite set C if and only if V is unbounded off petite sets and 
+
+(52) (PV )( x) ≤ λV (x) + L, x ∈ H ,
+
+for some λ < 1 and L < ∞.32 
+
+We shall use the following part of Theorem 14.1 of Meyn and Tweedie (2009b). LEMMA D.6. Suppose that X is ψ-irreducible and aperiodic, and let f : H → [1 , ∞) be a measurable function. Then the following conditions are equivalent: 
+
+i. The chain is positive recurrent with invariant probability measure π and 
+
+Z
+
+> H
+
+f (x)π(dx ) < ∞.
+
+ii. There exists some petite set C ∈ B (H) such that 
+
+sup 
+
+> x∈C
+
+E
+
+"τC −1X
+
+> t=1
+
+f (Xt) X1 = x
+
+#
+
+< ∞.
+
+iii. There exist a petite set C, an extended-real-valued nonnegative function V satisfying 
+
+V (x0) < ∞ for some x0 ∈ H , and a constant b < ∞ such that 
+
+PV (x) − V (x) ≤ − f (x) + b1C (x), x ∈ H .
+
+LEMMA D.7 (Proposition 1 in Davydov (1973)). Suppose that {Xt}t∈N is stationary and admits the unique invariant measure. Then, the following statement holds: 
+
+β(j) = 
+
+Z
+
+> H
+
+∥P(Xj ∈ · ) − P(Xj ∈ · | x)∥TV π(dx ).
+
+LEMMA D.8 (Theorem 1 in Giorgobiani, Kvaratskhelia and Tarieladze (2019)). Let ξ be a separably valued Gaussian random element in H. Then there exists λ > 0 such that 
+
+E exp  λ∥ξ∥2
+
+> H
+
+ < +∞.
+
+LEMMA D.9 (Proposition 8 in Ohn and Kim (2022)). Let M > 0. Let L ∈ N, N ∈ N,
+
+B ≥ 1, F > 0, and S > 0. Then for any δ ∈ (0 , 1) ,
+
+log N
+
+
+
+δ, F(M ) 
+
+> p0
+
+(L, N, B, F, S ), ∥ · ∥ ∞
+
+
+
+≤ 2S(L + 1) log  (L + 1)( N + 1) Bδ −1 .
+
+APPENDIX E: DETAILS FOR NUMERICAL EXPERIMENTS IN SECTION 5 In this section, we describe the data-generating procedure and the learning method. Let 
+
+{ui}Sg −1 
+
+> i=0
+
+and {vi}Sg −1 
+
+> i=0
+
+be the one-dimensional grid points defined by ui = vi = i/S g. As discussed in Section 5, we construct a high dimensional time series ZT = {Zt}Tt=1 , where each observation is given by Zt = {Zt(ui, uj )}0≤i,j ≤Sg −1. The process ZT is defined by 
+
+Zt+1 (ui1 , uj1 ) = 1
+
+S2 
+
+> gSg−1
+
+X
+
+> i2,j 2=0
+
+5KG(ui1 − vi2 , uj1 − vj2 ) τ (Zt(vi2 , vj2 )) + ξt(ui1 , uj1 ),(53) for each t ∈ N and 0 ≤ i1, j 1 ≤ Sg − 1. Here, the kernel function is defined as KG(h1, h 2) := exp {− 5( h21 + h22)} for h1, h 2 ∈ R, and the nonlinear transformation τ : R → R is given by τ (x) := 1 .5 + 2 .5 cos( x) + 2 .0 sin(2 x) for x ∈ R. The noise term ξt is a zero-mean Gaussian process whose covariance function is given by the same kernel KG, that is, 
+
+E [ξ1(u1, u 2)ξ1(v1, v 2)] = KG(u1 − v1, u 2 − v2) for u1, u 2, v 1, v 2 ∈ [0 , 1] . We now describe how we approximate stationarity of ZT and generate the Gaussian noise process ξt := 
+
+{ξt(ui, uj )}0≤i,j ≤Sg −1. To approximate stationarity, we first generate a functional time se-ries {Zt}T +500  
+
+> t=1
+
+according to (53), discard the first 500 observations as burn-in, and retain 33 
+
+{Zt}T +500  
+
+> t=501
+
+as the simulated sample. To generate the Gaussian process, we adopt the method introduced by Dietrich and Newsam (1997), and we restate the relevant steps here for com-pleteness. We begin by introducing the necessary notation. For any integer ℓper ≥ 2, define the function class 
+
+L2per 
+
+ [0 , ℓ per )2 := 
+
+
+
+f : R2 → R
+
+f (x1 + ℓper , x 2) = f (x1, x 2), (x1, x 2) ∈ R2,f (x1, x 2 + ℓper ) = f (x1, x 2), (x1, x 2) ∈ R2,
+
+Z
+
+> [0 ,ℓ per )2
+
+|f (x1, x 2)|2 dx 1dx 2 < ∞
+
+
+
+.(54) For any f ∈ L2per 
+
+ [0 , ℓ per )2 and z1, z 2 ∈ Z, define its Fourier coefficients by 
+
+bf (z1, z 2) = 1
+
+ℓ2
+
+> per
+
+Z
+
+> [0 ,ℓ per )2
+
+f (x1, x 2) exp 
+
+
+
+−2π√−1 z1x1 + z2x2
+
+ℓper 
+
+
+
+dx 1 dx 2,
+
+where √−1 denotes the imaginary unit. We further introduce the periodic extension Kper :(−ℓper , ℓ per )2 → R≥0 defined by 
+
+Kper (h1, h 2) := X
+
+> (p,q )∈Z2
+
+KG(h1 + ℓper p, h 2 + ℓper q).
+
+Since KG is a Gaussian kernel, the above series is well defined. Similarly, define Kcirc :[0 , ℓ per )2 → R≥0 by 
+
+Kcirc (u1, u 2) := KG (min {u1, ℓ per − u1}, min {u2, ℓ per − u2}) , (u1, u 2) ∈ [0 , ℓ per )2.
+
+Throughout the following discussion, unless otherwise specified, we take ℓper = 2 . We in-troduce the remaining necessary notation. For any z ∈ C, let Re( z) denote its real part. Let 
+
+A = ( aij ) ∈ Rm×n. The vectorization operator vec : Rm×n → Rmn is defined by stacking the columns of A into a single vector: vec( A) := [ a11 , a 21 , . . . , a m1, a 12 , a 22 , . . . , a m2, . . . , a 1n, a 2n, . . . , a mn ]⊤.We now describe the procedure for generating {ξ(ui, uj )}0≤i,j ≤Sg −1. In this study, instead of directly generating ξ, we construct a Gaussian process ξper := ( ξper (u1, u 2)) (u1,u 2)∈[0 ,2) 2
+
+with periodicity on [0 , 2) 2. Specifically, we generate the evaluations {ξper (ui, uj )}0≤i,j ≤Sg −1
+
+on the grid points {(ui, uj )}0≤i,j ≤Sg −1. The periodic Gaussian field ξper with covariance function Kper is represented through the Fourier expansion 
+
+ξper (u1, u 2) = Re X
+
+> (p,q )∈Z2
+
+qbKper (p, q ) ˜ zpq exp 
+
+
+
+−2π√−1 pu 1 + qu 2
+
+2
+
+ !
+
+, (u1, u 2) ∈ [0 , 2) 2,
+
+(55) where {˜zpq }(p,q )∈Z2 is an i.i.d. sequence of complex-valued random variables such that the real and imaginary parts of ˜zpq are independent standard normal random variables for each 
+
+p, q . In Section 5, we approximate the infinite series in (55) by 
+
+˜ξper (ui, u j ) := Re 
+
+ 
+
+> 2Sg−1
+
+X
+
+> p,q =0
+
+qbKper (p, q ) ˜ zpq exp 
+
+
+
+−2π√−1 pu i + qu j
+
+2
+
+ .
+
+The Fourier coefficients bKper (p, q ) are also approximated by the finite sums 
+
+1(2 Sg)22Sg −1
+
+X
+
+> i,j =0
+
+Kper 
+
+ iSg
+
+, jSg
+
+
+
+exp 
+
+
+
+−2π√−1 ip + jq 
+
+2Sg
+
+
+
+.(56) 34 
+
+Since evaluating Kper itself involves an infinite series, we replace Kper in (56) with Kcirc in the actual computation. Specifically, for p, q = 0 , . . . , 2Sg − 1, we compute 
+
+λpq :=  
+
+> 2Sg−1
+
+X
+
+> i,j =0
+
+Kcirc (ui, u j ) exp 
+
+
+
+−2π√−1 pi + qj 
+
+2Sg
+
+
+
+,
+
+and use λpq /(2 Sg)2 as the discrete approximation to bKper (p, q ). Consequently, for i, j =0, . . . , S g − 1, we compute 
+
+˜ξcirc (ui, u j ) = Re 
+
+ 
+
+> 2Sg−1
+
+X
+
+> p,q =0
+
+pλpq 
+
+2Sg
+
+˜zpq exp 
+
+
+
+2π√−1 pi + qj 
+
+2Sg
+
+ ,
+
+and use the process ˜ξcirc := 
+
+n ˜ξcirc (ui, u j )
+
+o  
+
+> 0≤i,j ≤Sg−1
+
+in the numerical experiments. To ac-celerate the computation of these finite sums, we use the fast Fourier transform (FFT) of Cooley and Tukey (1965) to compute {λpq }2Sg −1 
+
+> p,q =0
+
+. We then compute { ˜ξcirc (ui, u j )}2Sg −1
+
+> i,j =0
+
+from {λpq }2Sg −1 
+
+> p,q =0
+
+and {˜zpq }2Sg −1 
+
+> p,q =0
+
+using the inverse fast Fourier transform (IFFT) of Cooley and Tukey (1965), and retain the sub-array indexed by 0 ≤ i, j ≤ Sg − 1.The overall procedure for generating the data is summarized as follows: i. Set the initial value to Z1(ui, uj ) = 0 for any 0 ≤ i, j ≤ Sg − 1.ii. Given the value Zt−1 = {Zt−1(ui, uj )}0≤i,j ≤Sg −1 ∈ RSg ×Sg , update Zt = {Zt(ui, uj )}0≤i,j ≤Sg −1
+
+as follows: a) Compute {Ψ( Zt−1)( ui, uj )}0≤i,j ≤Sg −1 ∈ RSg ×Sg .b) Generate the Gaussian process ˜ξcirc =
+
+n ˜ξcirc (ui, uj )
+
+o  
+
+> 0≤i,j ≤Sg−1
+
+∈ RSg ×Sg .c) Update 
+
+Zt(ui, uj ) := Ψ( Zt−1)( ui, uj ) + ˜ξcirc (ui, uj ), 0 ≤ i, j ≤ Sg − 1.
+
+iii. For t = 2 , . . . , T + 500 , repeat Step 2 to obtain {Zt}T +500  
+
+> t=1
+
+. The first 500 observations, 
+
+{Zt}500 
+
+> t=1
+
+, are discarded as burn-in, and the remaining sequence is used as the sample. iv. Repeat Steps 1–3 independently B times. The process 
+
+n ˜ξcirc (ui, uj )
+
+o  
+
+> 0≤i,j ≤Sg−1
+
+is generated as follows: i. For p, q = 0 , . . . , 2Sg − 1, compute λpq via FFT. ii. For 0 ≤ i, j ≤ 2Sg − 1, compute via IFFT: 
+
+˜ξcirc (ui, uj ) = Re 
+
+ 
+
+> 2Sg−1
+
+X
+
+> p,q =0
+
+pλpq 
+
+2Sg
+
+˜zpq exp 
+
+
+
+2π√−1 pui + quj
+
+2
+
+ .
+
+iii. Extract the sub-array 
+
+n ˜ξcirc (ui, uj )
+
+o  
+
+> 0≤i,j ≤Sg−1
+
+from the computed 
+
+n ˜ξcirc (ui, uj )
+
+o 
+
+> 0≤i,j ≤2Sg−1
+
+and return this as the final noise field. Following the above procedure, we generate the simulated data with Sg = 100 .We now describe the DNN training procedure used in the numerical experiments in Sec-tion 5. The notation in this section follows that in Section 5. As noted there, we compute the DNN estimator ˜ψ(b) 
+
+> T
+
+defined by 
+
+˜ψ(b) 
+
+> T
+
+:= arg min 
+
+> ψ∈F p0,p L+1
+
+125 2(T − 1)  
+
+> T−1
+
+X
+
+> t=1 24
+
+X
+
+> i,j =0
+
+
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ(Z(b) 
+
+> t
+
+)
+
+ i
+
+25 , j
+
+25 
+
+  2
+
+.
+
+(57) 35 
+
+We recall that {Z(b) 
+
+> t
+
+}Tt=1 is obtained by downsampling the 100 × 100 -dimensional time series generated according to (53) to a 25 × 25 grid. We set the network architecture Fp0,p L+1 as 
+
+L = 5 , p0 = 5 , p 6 = 1 , and p1 = p2 = p3 = p4 = p5 = 32 with the ReLU activation function 
+
+σ(x) = max {x, 0}. The network weights were trained by Adam (Kingma and Ba, 2015) with learning rate 10 −3 and minibatch size of 128. To avoid overfitting, we employ the following early stopping scheme. Let E ∈ N be the number of epochs and PES ∈ Z≥0 the patience parameter, with PES ≤ E. Let ˜ψ(b,e ) 
+
+> T
+
+denote the network obtained after training for epoch 
+
+e. For initialization at e = 0 , we define the bias vectors b1, . . . , b6 as zero vectors and, for 
+
+i = 1 , . . . , 6, draw each entry of each weight matrix Wi independently from the uniform distribution on −p6/(ni, in + ni, out ), p6/(ni, in + ni, out ), where ni, in and ni, out denote the input and output dimensions of the i th layer, respectively. Before training, we split the sample {Z(b) 
+
+> t
+
+}Tt=1 into a training sample {Z(b) 
+
+> t
+
+}Ttrain  
+
+> t=1
+
+and a validation sample {Z(b) 
+
+> t
+
+}Tt=Ttrain +1 ,where Ttrain := ⌊4T / 5⌋. For each epoch e = 1 , . . . , E , we update the network weights using the training sample. Given {Z(b) 
+
+> t
+
+}Ttrain  
+
+> t=1
+
+and the previous-epoch estimator ˜ψ(b,e −1)  
+
+> T
+
+, we update the weights according to Adam (Kingma and Ba (2015)) with the loss function defined by 
+
+L(ψ) := 125 2(Ttrain − 1) 
+
+> Ttrain −1
+
+X
+
+> t=1 24
+
+X
+
+> i,j =0
+
+
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ(Z(b) 
+
+> t
+
+)
+
+ i
+
+25 , j
+
+25 
+
+  2
+
+, ψ ∈ F p0,p L+1 .
+
+(58) We then evaluate the validation error on 
+
+n
+
+Z(b)
+
+> t
+
+oTt=Ttrain +1 via 
+
+125 2(T − Ttrain − 1)  
+
+> T−1
+
+X
+
+> t=Ttrain +1 24
+
+X
+
+> i,j =0
+
+
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψ ˜ψ(b,e )
+
+> T
+
+
+
+Z(b)
+
+> t
+
+  i
+
+25 , j
+
+25 
+
+  2
+
+.
+
+(59) The procedure is iterated for at most E epochs and terminated early if the validation error fails to improve for PES consecutive epochs. Let E′ be the resulting number of epochs at termination. In this experiment, we take ˜ψ(b,E ′) 
+
+> T
+
+as the DNN estimator in place of ˜ψ(b) 
+
+> T
+
+in (57). In our numerical experiments, we run the above training procedure with E = 200 and 
+
+PES = 20 .Finally, we describe how to compute, for each t, the sum 
+
+125 224 X
+
+> i,j =0
+
+
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ(Z(b) 
+
+> t
+
+)
+
+ i
+
+25 , j
+
+25 
+
+  2
+
+,
+
+as well as how to evaluate ˜Ψψ(Z(b) 
+
+> t
+
+). A naive implementation of the former via nested loops is computationally expensive; instead, we use matrix operations. Specifically, given Z(b) 
+
+> t+1
+
+∈
+
+R25 ×25 and ˜Ψψ(Z(b) 
+
+> t
+
+) ∈ R25 ×25 , define 
+
+A := 
+
+(
+
+Z(b)
+
+> t+1
+
+ i
+
+25 , j
+
+25 
+
+
+
+− ˜Ψψ(Z(b) 
+
+> t
+
+)
+
+ i
+
+25 , j
+
+25 
+
+ 2)
+
+> 0≤i,j ≤24
+
+.
+
+Then the sum is computed as vec( A)⊤w, where w := 125 2 125 2 ∈ R25 2
+
+and 125 2 := [1 , . . . , 1
+
+| {z }
+
+> 25 2
+
+]⊤ ∈ R25 2
+
+. For the evaluation of ˜Ψψ(Z(b) 
+
+> t
+
+), it would likewise be desirable to express the computation in terms of vector–matrix operations. However, applying this approach to 36 
+
+both quantities is prohibitive in terms of memory. We therefore approximate ˜Ψψ(Z(b) 
+
+> t
+
+) via Monte Carlo sampling. Specifically, fix an integer SMC < 25 2. With replacement, we draw 
+
+SMC points {(v0,1, v 0,2), (v1,1, v 1,2), . . . , (vSMC −1,1, v SMC −1,2)} uniformly at random from 
+
+0, 125 , . . . , 24 25 
+
+> 2
+
+. We then compute ˜Ψψ(Z)
+
+ i 
+
+> 25
+
+, j
+
+> 25
+
+
+
+, 0 ≤ i, j ≤ 24 by 
+
+1
+
+SMC 
+
+> SMC −1
+
+X
+
+> s=0
+
+ψ
+
+ i
+
+25 , j
+
+25 , v s, 1, v s, 2, Z (vs, 1, v s, 2)
+
+
+
+.
+
+By carrying out the above steps, we numerically compute the estimator defined in (57). In this study, we set SMC = 500 .
+
+Acknowledgments. The authors would like to thank Daisuke Kurisu for his helpful com-ments. 
+
+Funding. The first author was supported by JST BOOST (JPMJBS2502). The sec-ond author was supported in part by JSPS KAKENHI Grants (JP24K14855, JP25K15032, JP25K21806). REFERENCES 
+
+ANTONIADIS , A. and S APATINAS , T. (2003). Wavelet methods for continuous-time prediction using Hilbert-valued autoregressive processes. Journal of Multivariate Analysis 87 133–158. BOSQ , D. (1991). Modelization, nonparametric estimation and prediction for continuous time processes. In Non-parametric Functional Estimation and Related Topics 509–529. Springer, Dordrecht. BOSQ , D. (2000). Linear processes in function spaces: theory and applications 149 . Springer. CHEN , M. and C HEN , G. (2000). Geometric ergodicity of nonlinear autoregressive models with changing condi-tional variances. Canadian Journal of Statistics 28 605–614. CHOI , B. J., J IN , H. S. and L KHAGVASUREN , B. (2024). Applications of the Fourier neural operator in a regional ocean modeling and prediction. Frontiers in Marine Science 11 1383997. COOLEY , J. W. and T UKEY , J. W. (1965). An algorithm for the machine calculation of complex Fourier series. 
+
+Mathematics of Computation 19 297–301. DAVYDOV , Y. A. (1973). Mixing conditions for Markov chains. Theory of Probability and its Applications 18 
+
+312–328.  
+
+> DE LA
+
+PEÑA , V. H., K LASS , M. J. and L AI , T. L. (2004). Self-normalized processes: Exponential inequalities, moment bounds and iterated logarithm laws. Annals of Probability 32 1902–1933. DEVORE , R., H ANIN , B. and P ETROVA , G. (2021). Neural network approximation. Acta Numerica 30 327–444. DIETRICH , C. R. and N EWSAM , G. N. (1997). Fast and exact simulation of stationary Gaussian processes through circulant embedding of the covariance matrix. SIAM Journal on Scientific Computing 18 1088–1107. GIORGOBIANI , G., K VARATSKHELIA , V. and T ARIELADZE , V. (2019). Notes on sub-Gaussian random ele-ments. In International Conference on Applications of Mathematics and Informatics in Natural Sciences and Engineering 197–203. Springer International Publishing, Cham. GOLDYS , B. and M ASLOWSKI , B. (2005). Exponential ergodicity for stochastic Burgers and 2D Navier–Stokes equations. Journal of Functional Analysis 226 230–255. HAIRER , M. (2002). Exponential mixing properties of stochastic PDEs through asymptotic coupling. Probability Theory and Related Fields 124 345–380. HAIRER , M. and M ATTINGLY , J. C. (2011). Yet another look at Harris’ ergodic theorem for Markov chains. In 
+
+Seminar on Stochastic Analysis, Random Fields and Applications VI 109–117. Springer, Basel. HÖRMANN , S. and K OKOSZKA , P. (2010). Weakly dependent functional data. Annals of Statistics 38 1845–1884. HORVÁTH , L., H UŠKOVÁ , M. and K OKOSZKA , P. (2010). Testing the stability of the functional autoregressive process. Journal of Multivariate Analysis 101 352–367. HORVÁTH , L. and K OKOSZKA , P. (2012). Inference for functional data with applications 200 . Springer. KARGIN , V. and O NATSKI , A. (2008). Curve forecasting by functional autoregression. Journal of Multivariate Analysis 99 2508–2526. KINGMA , D. P. and B A, J. L. (2015). Adam: A Method for Stochastic Optimization. In 3rd International Con-ference on Learning Representations (ICLR 2015) (Y. B ENGIO and Y. L ECUN , eds.). Conference Track Pro-ceedings. 37 
+
+KISSAS , G., S EIDMAN , J. H., G UILHOTO , L. F., P RECIADO , V. M., P APPAS , G. J. and P ERDIKARIS , P. (2022). Learning operators with coupled attention. Journal of Machine Learning Research 23 1–63. KOKOSZKA , P. and R EIMHERR , M. (2013). Determining the order of the functional autoregressive model. Jour-nal of Time Series Analysis 34 116–129. KOKOSZKA , P. and R EIMHERR , M. (2017). Introduction to Functional Data Analysis . CRC Press. KREISS , J.-P. and N EUMANN , M. H. (1998). Regression-Type Inference in Nonparametric Autoregression. The Annals of Statistics 26 1570–1613. KURISU , D., F UKAMI , R. and K OIKE , Y. (2025). Adaptive deep learning for nonlinear time series models. 
+
+Bernoulli 31 240–270. LI, Z., K OVACHKI , N., A ZIZZADENESHELI , K., L IU , B., B HATTACHARYA , K., S TUART , A. and A NAND -
+
+> KUMAR
+
+, A. (2023). Fourier neural operator for parametric partial differential equations. Journal of Machine Learning Research 24 1–58. LIFSHITS , M. (2012). Lectures on Gaussian Processes . SpringerBriefs in Mathematics . Springer, Berlin, Heidel-berg. LIU , H., C HENG , J. and L IAO , W. (2025). Deep Neural Networks are Adaptive to Function Regularity and Data Distribution in Approximation and Estimation. Journal of Machine Learning Research 26 1–56. LIU , H., Y ANG , H., C HEN , M., Z HAO , T. and L IAO , W. (2024). Deep nonparametric estimation of operators between infinite dimensional spaces. Journal of Machine Learning Research 25 1–67. LU, L., J IN , P., P ANG , G., Z HANG , Z. and K ARNIADAKIS , G. E. (2021). Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nature Machine Intelligence 3 218– 229. MEYN , S. P. and T WEEDIE , R. L. (2009a). Markov Chains and Stochastic Stability , 2nd ed. Cambridge Univer-sity Press, Cambridge. MEYN , S. P. and T WEEDIE , R. L. (2009b). Markov Chains and Stochastic Stability , 2 ed. Cambridge University Press, Cambridge. OHN , I. and K IM , Y. (2022). Nonconvex sparse regularization for deep neural networks and its optimality. Neural Computation 34 476–517. PATHAK , J., S UBRAMANIAN , S., H ARRINGTON , P., R AJA , S., C HATTOPADHYAY , A., M ARDANI , M., KURTH , T., H ALL , D., L I, Z., A ZIZZADENESHELI , K., H ASSANZADEH , P., K ASHINATH , K. and A NAND -
+
+> KUMAR
+
+, A. (2022). FourCastNet: A Global Data-driven High-resolution Weather Model using Adaptive Fourier Neural Operators. arXiv preprint arXiv:2202.11214 .RAMSAY , J. O. (1982). When the data are functions. Psychometrika 47 379–396. RAO , M. M. (1966). Inference in stochastic processes. II. Zeitschrift für Wahrscheinlichkeitstheorie und Ver-wandte Gebiete 5 317–335. REINHARDT , N., W ANG , S. and Z ECH , J. (2024). Statistical learning theory for neural operators. arXiv preprint arXiv:2412.17582 .RIO , E. (2017). Inequalities and Limit Theorems for Weakly Dependent Sequences . Springer. SCHMIDT -H IEBER , J. (2020). Nonparametric regression using deep neural networks with ReLU activation func-tion. Annals of Statistics 48 1875–1897. SUBEDI , U. and T EWARI , A. (2025). Operator Learning: A Statistical Perspective. Annual Review of Statistics and Its Application 13 .TJØSTHEIM , D. and A UESTAD , B. H. (1994). Nonparametric Identification of Nonlinear Time Series: Projec-tions. Journal of the American Statistical Association 89 1398–1409.  
+
+> VAN DER
+
+VAART , A. W. and W ELLNER , J. A. (1996). Weak Convergence and Empirical Processes with Appli-cations to Statistics . Springer. ZAPPALA , E., F ONSECA , A. H. D. O., C ARO , J. O., M OBERLY , A. H., H IGLEY , M. J., C ARDIN , J. and DIJK , D. V. (2024). Learning integral operators via neural integral equations. Nature Machine Intelligence 6
+
+1046–1062. ZHU , T. and P OLITIS , D. (2017). Kernel estimates of nonparametric functional autoregression models and their bootstrap approximation. Electronic Journal of Statistics 11 2876–2906.

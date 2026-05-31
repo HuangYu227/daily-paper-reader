@@ -1,0 +1,69 @@
+{
+  "label": "2026-05-31",
+  "date": "2026-05-31",
+  "generated_at": "2026-05-31T20:33:51",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202605/31/2605.26423v1-fm-fmri-event-conditioned-flow-matching-for-rest-to-task-fmri-time-series-synthesis",
+      "section": "deep",
+      "title_en": "FM-fMRI: Event Conditioned Flow Matching for Rest-to-Task fMRI Time-Series Synthesis",
+      "authors": "Peiyu Duan, Jiyao Wang, Nicha C. Dvornek, Junlin Yang, Ziqi Gao, Lawrence H. Staib, James S. Duncan",
+      "date": "2026-05-26",
+      "pdf": "https://arxiv.org/pdf/2605.26423v1",
+      "score": "9.0",
+      "evidence": "事件条件流匹配用于时间序列生成（fMRI）",
+      "tldr": "任务态fMRI能直接刻画任务诱发神经活动，但获取成本高，难以大规模应用。本文提出FM-fMRI，一种基于事件条件流匹配的模型，利用受试者静息态fMRI和任务事件信息，通过连续时间条件向量场生成任务ROI时间序列。在HCP和BioPoint数据集上，FM-fMRI在频谱、连接一致性和分布匹配方面优于扩散模型、GAN和VAE，并能通过合成数据提升自闭症分类性能。该工作提供了一种高效、灵活的fMRI合成工具，有助于数据受限的临床研究。",
+      "tags": "query:tsc",
+      "abstract_en": "Task-based fMRI provides a direct readout of task-evoked neural dynamics, but it is expensive and difficult to acquire at scale, motivating rest-to-task synthesis from widely available resting-state fMRI (rsfMRI). We propose FM-fMRI, an event-conditioned flow-matching model that learns a continuous-time conditional vector field to generate task ROI time series from a subject's rsfMRI and the task event information. The formulation enables fast ODE-based sampling and flexible conditioning over heterogeneous event schedules. Rather than optimizing for pointwise reconstruction, we evaluated generated signals using complementary criteria that probe temporal and spectral structure, subject and group-level connectome consistency, and distributional alignment. On the public Human Connectome Project and internal BioPoint autism cohort, FM-fMRI achieves the strongest spectral and connectivity agreement and improved distribution-level matching over conditional diffusion, generative adversarial networks (GANs), and variational autoencoders (VAEs) baselines. Furthermore, we augment the BioPoint cohort by synthesizing task-fMRI ROI time series with our method, improving downstream autism classification and demonstrating practical utility in data-limited clinical settings. The code will be available on GitHub.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202605/31/2605.30346v1-yocausal-how-far-is-video-generation-from-world-model-a-causality-perspective",
+      "section": "deep",
+      "title_en": "YoCausal: How Far is Video Generation from World Model? A Causality Perspective",
+      "authors": "You-Zhe Xie, Yu-Hsuan Li, Jie-Ying Lee, Kaipeng Zhang, Yu-Lun Liu, Zhixiang Wang",
+      "date": "2026-05-28",
+      "pdf": "https://arxiv.org/pdf/2605.30346v1",
+      "score": "9.0",
+      "evidence": "评估视频生成模型中的因果理解，与因果学习需求直接相关",
+      "tldr": "视频扩散模型正迈向世界模型，但能否真正理解因果仍存疑。现有基准多依赖合成数据，泛化受限。YoCausal基于认知科学的预期违背范式，通过零成本反转真实视频作为反事实样本，构建两级评估协议。级别1用去噪损失量化时间箭头感知，级别2借助VLM分层数据集以剥离因果推理与时间偏差。评估13款模型发现，感知时间箭头并不等同因果理解，与人类认知差距显著。该基准为衡量视频生成模型的因果能力提供了可扩展方案。",
+      "tags": "query:tsc",
+      "abstract_en": "As video diffusion models (VDMs) advance toward world models, a key question arises: do they truly understand causality, or merely overfit to statistical temporal patterns? Existing benchmarks mostly rely on synthetic data, limiting real-world generalization due to the sim-to-real gap. We present YoCausal, a two-level benchmark inspired by the Violation of Expectation (VoE) paradigm from cognitive science. By temporally reversing real-world videos at zero cost as natural counterfactual samples, YoCausal establishes an arbitrarily extensible evaluation protocol. Level 1 introduces the Reverse Surprise Index (RSI), quantifying arrow-of-time perception via denoising loss. Level 2 introduces the Causality Cognition Index (CCI), which leverages a VLM to stratify datasets into causal and non-causal subsets, disentangling genuine causal reasoning from temporal bias. Evaluation of 13 state-of-the-art VDMs reveals that perceiving the arrow of time does not imply understanding causality, and a significant gap persists relative to human-level causal cognition.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202605/31/2605.25633v1-exponential-mixing-properties-of-nonlinear-functional-autoregressive-models",
+      "section": "quick",
+      "title_en": "Exponential mixing properties of nonlinear functional autoregressive models",
+      "authors": "Shuntarou Suzuki, Yoshikazu Terada",
+      "date": "2026-05-25",
+      "pdf": "https://arxiv.org/pdf/2605.25633v1",
+      "score": "6.0",
+      "evidence": "非线性函数自回归模型用于时间序列生成",
+      "tldr": "功能时间序列分析中非线性模型的理论理解有限。本文针对非线性函数自回归模型，推导了其指数混合的充分条件，并以Hammerstein算子为例验证条件成立。进一步，将指数混合性质应用于含Urysohn算子的算子学习，得到基于深度神经网络的适应性估计收敛速率。该工作为深度学习在功能时间序列中的理论分析提供了基础。",
+      "tags": "query:tsc",
+      "abstract_en": "The importance of functional data analysis has increased substantially in recent years. In machine learning, nonlinear function regression based on deep neural networks is referred to as operator learning, and many of its applications involve functional time series data. However, the theoretical understanding of nonlinear models in functional time series analysis remains limited, as most existing works focus on linear models. In this paper, we derive basic properties for analyzing adaptive learning in nonlinear functional autoregressive (NFAR) models. Specifically, we derive sufficient conditions for NFAR models to be exponentially mixing. We provide an example with a Hammerstein operator under which these conditions are satisfied. As an application of exponential mixing, we consider operator learning for NFAR models with Urysohn operators and derive convergence rates for adaptive estimators based on deep neural networks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202605/31/2605.28166v1-quite-query-based-irregular-time-series-embedding",
+      "section": "quick",
+      "title_en": "QuITE: Query-Based Irregular Time Series Embedding",
+      "authors": "JungHoon Lim",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.28166v1",
+      "score": "6.0",
+      "evidence": "提供了基于查询的不规则时间序列嵌入模块，可用于生成式时间序列模型",
+      "tldr": "针对不规则多变量时间序列建模，现有方法或设计专用架构限制模型复用，或通过插值引入人造值扭曲动态。本文提出QuITE嵌入模块，通过可学习查询token和单层自注意力聚合不规则观测，直接生成骨干网络兼容的潜在表示。在多个真实数据集上，QuITE一致提升各类MTS模型的预测和分类性能，平均相对提升分别达54.7%和15.8%。该方法即插即用，无需修改骨干架构或生成人造值，显著提升模型泛化性。",
+      "tags": "query:tsc",
+      "abstract_en": "Irregular Multivariate Time Series (IMTS) are common in practice, yet their irregular sampling complicates effective modeling. Existing approaches typically either (i) design specialized architectures that limit the reuse of proven Multivariate Time Series (MTS) models, or (ii) map IMTS onto regular temporal grids through interpolation, which may distort temporal dynamics by introducing artificial values. To address these limitations, we propose a new input-embedding-based approach. We identify that the key bottleneck lies not in the backbone architecture, but in conventional embedding layers that assume uniform sampling. In this work, we introduce QuITE (Query-Based Irregular Time Series Embedding), a simple yet effective plug-and-play embedding module for IMTS. QuITE employs learnable query tokens to aggregate irregular observations through a single self-attention layer, directly producing backbone-compatible latent representations without artificial value generation or architectural modification. Extensive experiments on real-world benchmarks show that QuITE consistently improves MTS models, yielding average relative gains of up to $54.7\\%$ in forecasting and $15.8\\%$ in classification across diverse datasets and backbone architectures. Code is available at: https://github.com/Meaningfull9502/QuITE.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
