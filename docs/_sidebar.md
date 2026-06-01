@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-01 <!--dpr-date:20260601-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/01/2605.31254v1-formalizing-and-falsifying-causal-pathways-of-rare-events" data-sidebar-item="{&quot;title&quot;: &quot;Formalizing and falsifying causal pathways of rare events&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2605.31254v1-formalizing-and-falsifying-causal-pathways-of-rare-events&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;tsc&quot;}], &quot;evidence&quot;: &quot;在结构方程模型中形式化定义和检验因果路径&quot;}">Formalizing and falsifying causal pathways of rare events</a>
   * 2026-05-31 <!--dpr-date:20260531-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202605/31/2605.26423v1-fm-fmri-event-conditioned-flow-matching-for-rest-to-task-fmri-time-series-synthesis" data-sidebar-item="{&quot;title&quot;: &quot;FM-fMRI: Event Conditioned Flow Matching for Rest-to-Task fMRI Time-Series Synthesis&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2605.26423v1-fm-fmri-event-conditioned-flow-matching-for-rest-to-task-fmri-time-series-synthesis&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;tsc&quot;}], &quot;evidence&quot;: &quot;事件条件流匹配用于时间序列生成（fMRI）&quot;}">FM-fMRI: Event Conditioned Flow Matching for Rest-to-Task fMRI Time-Series Synthesis</a>

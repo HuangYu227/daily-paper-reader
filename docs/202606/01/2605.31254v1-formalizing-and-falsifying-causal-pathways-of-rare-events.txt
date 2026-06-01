@@ -1,0 +1,1533 @@
+Title: Formalizing and falsifying causal pathways of rare events
+
+URL Source: https://arxiv.org/pdf/2605.31254v1
+
+Published Time: Mon, 01 Jun 2026 01:11:49 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Formalizing and Falsifying Causal Pathways of Rare Events 
+
+Anahita Haghighat 1 Dominik Janzing 2
+
+# Abstract 
+
+Building on recent formalizations of root cause analysis for rare events (“outliers”) in structural equation models, we propose a formal definition of a causal pathway and discuss its testable impli-cations. We identify conditions under which these implications depend only on a causal abstraction defined by the pathway of rare events, rather than on the full causal graph of the underlying sys-tem. Accordingly, we introduce an abstraction of causal structure to pathways of rare events that bridges simple verbal causal explanations and de-tailed causal modeling. 
+
+# 1. Introduction 
+
+Causal explanations (Halpern & Pearl, 2005) are of particu-lar interest when an observed event is unexpected under a given probabilistic model. Typical examples of rare events include natural disasters (Hannart et al., 2016), stock market crashes (Sanyal et al., 2025), failures in technical systems (Pham et al., 2024), and extreme gene expression patterns (Li et al., 2025). Current approaches to root cause analysis of rare events are typically centered on identifying a small set of causal origins, called root causes (Orchard et al., 2025; Nagalapatti et al., 2025; Lin et al., 2024; Li et al., 2022; Bud-hathoki et al., 2022a; Gnecco et al., 2021; Liu et al., 2021; Lin et al., 2018). While root cause analysis is informative, it does not capture the mechanisms through which these causes propagate to produce the observed outcome, which may include interacting mechanisms and modulated con-textual factors. As a result, causal explanations cannot, in general, be reduced to identifying a limited number of root causes. For purposes of interpretability and scientific in-sight, it is therefore desirable to provide causal explanations that identify not only root causes, but also the relevant sub-graph of the causal model that connects these causes to the observed event. Furthermore, the full causal model is often        
+
+> 1Independent 2Amazon Research, T ¨ubingen, Germany. Corre-spondence to: Dominik Janzing <janzind@amazon.com >.
+> Proceedings of the 43 rd International Conference on Machine Learning , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s).
+
+not known (Ikram et al., 2025), therefore causal discovery can also be viewed as the problem of identifying a minimal causal structure that strongly explains a particular observed event (Beckers, 2022). This perspective highlights the need for a formal notion of event-specific causal explanation that remains well-defined under partial model knowledge and uncertainty about the underlying detailed causal graph. 
+
+Our contributions. We introduce a formalization of 
+
+causal pathways of events connecting root causes to a tar-get. Based on this framework, we define several quantities that measure the quality of an explanation, motivated by the ideas of plausibility and falsifiability . Although most of our events refer to numeric variables, we emphasize that our concepts generalize to variables with arbitrary ranges, e.g., variables may describe tokens or sentences when a probability distribution is defined via semantic embedding. 
+
+Related work. Existing work on causal modeling under rare events has largely focused on extreme-value regimes 
+
+with asymptotic or tail-based limits, often subject to para-metric assumptions (Engelke et al., 2025; Kl ¨uppelberg & Krali, 2026). While this line of work provides insight into causal mechanisms in the tail of continuous variables, it does not address how causal structure behaves under rare but non-extreme events as rarity does not imply extreme-ness: events may be statistically rare while occurring at non-tail values (Ebtekar et al., 2025), such as values that are unexpectedly close to zero or values of highly unbalanced binaries. Consequently, approaches based on asymptotic extremes are not directly applicable in this setting. In con-trast, we study causal contributions for rare events without relying on asymptotic limits. Our framework does not as-sume continuous variables and applies to variables defined over arbitrary spaces, such as discrete domains. In addition, related work on mediation analysis has primarily addressed decomposing causal effects into path-specific components in order to quantify how effects propagate along different causal pathways (Robins et al., 2022; Kawakami & Tian, 2025; Singal & Michailidis, 2024). While this literature enables attribution of portions of a causal effect to specific paths, it does not address a complementary question: which parts of a causal model provide a good causal explanation for a particular observed event. Therefore, our goal is not mediation analysis, but rather event-level interpretability of 1
+
+> arXiv:2605.31254v1 [cs.AI] 29 May 2026 Formalizing and Falsifying Causal Pathways of Rare Events
+
+causal structure for rare events. Another related line of work is causal abstraction , which provides a formal framework for relating causal models that represent the same system at different levels of granularity (Rubenstein et al., 2017; Beckers & Halpern, 2019; Beckers et al., 2020). However, existing approaches to causal abstraction operate at the level of the entire causal model, whereas our paper formalizes an event-level notion of causal pathway abstraction for the portion of a causal graph that explains a target rare event. The paper is structured as follows. To quantify the extent to which a set of root-cause events explains a set of observed events, Section 2 discusses causal relations between binary variables. Section 3 defines causal pathways from root causes to a target event and quantifies to what extent the pathway explains the target. Section 4 describes how causal pathways of events, represented as binary variables, are obtained via abstraction of more detailed causal models. Section 5 demonstrates how our concepts can be applied to evaluate causal explanations. 
+
+# 2. Explaining Clusters of Events 
+
+Assume we are given k events, formalized by binary vari-ables B := {B1, . . . , B k}, where Bi = 1 denotes event i
+
+happening. Further assume that the variables B are con-nected by a causal DAG C with joint probability distribution 
+
+PB. For an arbitrary index set S ⊆ K := {1, . . . , k }, let 
+
+BS denote the vector of variables (Bi)i∈S , and let BS = 1
+
+denote the joint event (Bi = 1) i∈S . Then, assuming the Markov condition (Pearl, 2000), the probability of observing the event PB(B = 1) factorizes as 
+
+PB(B = 1) = 
+
+> k
+
+Y
+
+> i=1
+
+PB(Bi = 1 | BPa( i) = 1), (1) where Pa( i) denotes the indices of the parents of Bi in C.Now consider the scenario that an external event “corrupted” the data generating process in the sense that one or several of the causal mechanisms PB(Bi | BPa( i)) are replaced with different mechanisms ˜PB(Bi | BPa( i)). Let R ⊆ K
+
+denote the set of indices of the affected nodes. We define the variables BR as the root-cause variables of the event 
+
+B = 1, and call the tuple (C, B, BR, P B) a cluster of events 
+
+with root causes R. The “hard intervention” (Pearl, 2000) 
+
+do (BR = 1) is a special case of the more general class of “soft interventions” (Eberhardt & Scheines, 2007), which yields 
+
+PB(B = 1|do (BR = 1)) = Y
+
+> i̸∈ R
+
+PB(Bi = 1 |BPa( i) = 1).
+
+(2) For the case of soft interventions, the right-hand side of (2) is only an upper bound on the likelihood of the cluster event 
+
+B = 1, because the term Q 
+
+> i∈R
+
+˜PB(Bi = 1 | BPa( i) = 1)
+
+is missing. Whenever the right-hand side of (2) is close to 1,the intervention do (BR = 1) is a plausible explanation for the cluster event. To formalize this idea, we first introduce a concept from Oesterle et al. (2025) with slightly different notation: 
+
+Definition 2.1 (explanation score) . Let Y be a discrete variable and X a vector of variables influencing Y . For values x and y, the event X = x explains the event Y = y
+
+with explanation score 
+
+E(x → y) := 1 − log PB(Y = y | do (X = x)) log PB(Y = y) . (3) We call the quantity 1 − E (x → y) the explanation deficit .Following this terminology we define: 
+
+Definition 2.2 (cluster explanation score) . For any set R ⊆
+
+K of potential root causes, the event BR = 1 explains the cluster event B = 1 with explanation score 
+
+ER→K : = 1 − log PB(B = 1 | do (BR = 1)) log PB(B = 1)=
+
+P 
+
+> i∈R
+
+log PB(Bi = 1 | BPa( i) = 1)log PB(B = 1) .
+
+(4) Good candidates for root causes are therefore given by sets 
+
+R with high explanation score. Furthermore, while Oesterle et al. (2025) emphasize that explanation score is–for good reasons–not generally additive over disjoint unions of fea-tures, one can easily check that ER→K does have this prop-erty: 
+
+Lemma 2.3 (additivity of contributions) . Let R and R′ be disjoint subsets of K. Then 
+
+ER · 
+
+> ∪R′→K
+
+= ER→K + ER′→K . (5) 
+
+Denoting Ei→K instead of E{i}→ K , one can also verify that 
+
+X
+
+> i∈K
+
+Ei→K = 1 . (6) We call Ei→K the contribution of mechanism PB(Bi |
+
+BPa( i)) to the cluster event. By the additivity stated in Lemma 2.3, for every R ⊆ K \ { i}, we also have 
+
+Ei→K = ER∪{ i}→ K − E R→K . Hence, the contribution of each mechanism i to the cluster explanation does not depend on which other root causes are considered simultaneously. Consequently, there is no need to average over contexts of variables to condition on as in Shapley-value “fair attribu-tion” (Shapley, 1953), in contrast to causal and statistical attribution settings where marginal contributions may de-pend on the chosen context (Lundberg & Lee, 2017; Frye 2Formalizing and Falsifying Causal Pathways of Rare Events 
+
+et al., 2020; Wang et al., 2021; Janzing et al., 2020). In ad-dition, note that for any discrete distribution Q, − log Q(x)
+
+can be written as the KL-divergence DKL (δx∥Q), where 
+
+δx is the point mass on x, which enables rewriting ER→K
+
+in terms of KL-divergences 1. Using this observation, Ap-pendix A.1 shows that ER→K can be seen as a degenerate instance of distribution change attribution in the sense of Budhathoki et al. (2021). Although we use the term ”event” throughout the paper, which may suggest occurrences at specific time instants ,our framework more generally applies to explaining why a specific statistical unit behaves differently from a refer-ence population, for instance an individual patient with a monogenic disorder may be viewed as an outlier relative to healthy individuals (Li et al., 2025). 
+
+# 3. Causal Pathways 
+
+We now focus on explaining a certain target event Bt = 1 
+
+within a cluster, and therefore focus on the subset of nodes that are crucial to understand how the target event has been triggered by the root causes via a causal pathway :
+
+Definition 3.1 (pathway explanation of events) . A causal pathway is a tuple (C, P, B, B t, BR, P B) where (i) C is a DAG describing the causal relations between the binary variables B := {B1, . . . , B k}, and the probability distribution PB is therefore Markov relative to C,(iii) BR ⊆ B is the set of root causes, where BR can also be empty or only contain Bt,(iv) P is a subgraph of C, the pathway which coincides with 
+
+C except possibly for some edges into R,(ii) Bt ∈ B is the unique sink node of P formalizing the event to be explained. To understand the distinction between P and C, observe that knowledge of P alone suffices to compute PB(B|do (BR =
+
+bR)) for all bR, since the do-intervention removes all in-coming edges to R. Thus, P is sufficient for explaining why the identified root causes render the target likely. How-ever, computing the outcome when some root causes re-main unintervened upon—as distinct from setting them to zero—requires knowledge of the incoming edges to R. In this regard, C enables assessment of each individual root cause’s relevance and enhances the transparency of the ex-planation by allowing evaluation of whether the selected root causes are well-justified. In essence, C provides a meta-level component to the explanation by elucidating the causal pathway itself. Nevertheless, one can readily verify that the specific choice of C does not affect the scores EKR→t and 
+
+> 1Note that (Oesterle et al., 2025) already introduced the ex-planation score as a KL divergence, as well as generalizations in terms of other distances between distributions.
+
+ER→t, which are defined later in this section. Note, however, that P may also contain edges into nodes in 
+
+R. This allows us to describe, for instance, scenarios like 
+
+chains of root causes , in which each one “contributes” to the target because it does not propagate the perturbation as expected and adds an additional perturbation (or additional “unexpectedness”) instead, see Example 3.6. In the rest of this paper, we will refer to P as the causal pathway, when the other “ingredients” are clear from the context. To quantify to what extent the root causes explain the target event we again use the concept of explanation score: 
+
+Definition 3.2 (target explanation score) .
+
+ES→t := 1 − log PB(Bt = 1 | do (BS = 1)) log PB(Bt = 1) , (7) where S can be any subset of nodes. While Definition 3.2 can be used to measure relevance to the target for any set of nodes, we will mostly use ER→t to measure the relevance of the root causes. However, ER→t
+
+does not capture the extent to which the remaining events in 
+
+K \ (R ∪ { t}) are crucial for explaining the target event–in contrast with common intuitive notions of a causal pathway, which entail some relevance of all events mentioned in a verbal explanation. This motivates the following concept, which is a modification of the explanation score: 
+
+Definition 3.3 (pathway explanation score) . The pathway is said to explain the target with pathway explanation score 
+
+EKR→t := 1 − log PB(B = 1 | do (BR = 1)) log PB(Bt = 1) = 1 − log PB(BK\R = 1 | do (BR = 1)) log PB(Bt = 1) .
+
+(8) Definition 3.3 formalizes the idea that making the root cause events happen renders all the events “relatively likely”, where likelihood is assessed relative to the “unlikeliness” of the target. Note that EKR→t is negative if the likelihood of 
+
+B = 1, given the root causes BR = 1, is smaller than the a priori likelihood of Bt = 1 –in other words the explana-tion “explains” the target event with an even more unlikely cluster of events. The following result shows the difference between Definitions 3.3 and 3.2: 
+
+Lemma 3.4 (pathway score versus target score) . If S de-notes the complement of R ∪ { t}, we have 
+
+ER→t − E KR→t
+
+= log PB(BS = 1 | Bt = 1 , do (BR = 1)) log PB(Bt = 1) ≥ 0. (9) 3Formalizing and Falsifying Causal Pathways of Rare Events          
+
+> B1B2B3B4
+> Figure 1. Example showing that whether a node should be con-sidered a root cause does not depend on its position in the DAG: to show this, the text describes parameters for which B1and B3
+> should be considered root causes, while B4is only a root cause if we target a higher pathway explanation score.
+
+It is important to note that BS need not necessarily be medi-ators that propagate the information from BR to Bt. We will later also have cases where they describe “context” events that control the propagation of information from BR to Bt
+
+as in Example 4.8. (9) measures to what extent configura-tions other than BS = 1 are relevant when the intervention 
+
+do (BR = 1) changes the probability of Bt = 1 . For a “good” pathway, we expect (9) to be small, because all its events should occur with high probability when the root cause variables are set to 1 and the target event is observed to happen. Lemma 3.4 entails in particular that EKR→t > 0
+
+implies ER→t > 0, and thus guarantees that root causes with positive pathway explanation score are indeed relevant for the target , and not only for the other nodes in the pathway. Pathway explanation score and cluster explanation score are related as follows: 
+
+Lemma 3.5 (pathway score versus cluster score) .
+
+1 − E KR→t = (1 − E R→K ) · log PB(B = 1)log PB(Bt = 1) . (10) Lemma 3.5 shows an affine relation between the two types of scores, which implies the modified additivity 
+
+EKR→t − E K 
+
+> ∅→ t
+
+= X
+
+> i∈R
+
+(EK 
+
+> {i}→ t
+
+− E K
+
+> ∅→ t
+
+). (11) Lemma 3.5 also shows that the pathway explanation score defines a stricter assessment of an explanation compared to the cluster explanation score: an explanation is considered good only if PB(B = 1 | do (BR = 1)) is much closer to 1
+
+than the baseline probability PB(Bt = 1) , while the cluster explanation score is close to 1 if PB(B = 1 | do (BR =
+
+1)) is much closer to 1 than the typically smaller baseline probability PB(B = 1).Example A.2 further illustrates the distinction between path-way and cluster explanation scores. 
+
+Example 3.6 (chain of events) . Let P be the DAG in Fig-ure 1, where each of the variables B2, B 3, B 4 can attain value 1 only if its parent attains value 1. Here and later, for a binary variable Bj , we write baj as shorthand for the event Bj = a, where a ∈ { 0, 1}. For the probability mass function pB, we assume pB(b11) = 10 −3, pB(b12 | b11) = 1 ,
+
+pB(b13 | b12) = 10 −3, pB(b14 | b13) = 10 −2. Thus, the tar-get event b14 occurs only if all other events b11, b 12, b 13 occur, which happens with probability 1/10 8 only. In this case we would say that the nodes B1 and B3 behaved particularly unexpectedly, since they showed a behavior that they only show in 1 out of 1, 000 cases. The node B2 behaved as usual, since b12 occurs with probability 1 conditional on b11. The tar-get event b14 is rare marginally, but the mechanism producing it is only moderately surprising: conditional on b13, the event 
+
+b14 occurs with probability 10 −2, which is not that rare com-pared to how rare the target event is. Thus, we get pathway explanation score EKR→t = 1 − log 10 2/log 10 8 = 3 /4, if we take only B1, B 3 as root causes, but pathway explanation score EKR→t = 1 , if B4 is also added to the root causes. In Appendix A.3 we show that even when each event strongly explains the next one in a causal chain, this does not guarantee that the initial event has a high pathway ex-planation score. Therefore, strong local causal explanations do not necessarily imply a strong global causal explanation. The following result describes a necessary condition for the pathway explanation score to be close to 1:
+
+Lemma 3.7 (no large log-likelihood gaps) . For any node i
+
+we define the log-likelihood gap 
+
+∆i := [log PB(BPa( i) = 1) − log PB(Bi = 1)] +,
+
+where [a]+ := ( a + |a|)/2. Then we have 
+
+EKR→t ≤ 1 −
+
+P 
+
+> i̸∈ R
+
+∆i
+
+− log PB(Bt = 1) . (12) The proof follows easily from PB(Bi = 1 | BPa( i) =
+
+1) ≤ PB(Bi = 1) /P B(BPa( i) = 1), or as a special case of Lemma 3.3 in Orchard et al. (2025). Lemma 3.7 states that good explanations need to avoid events as mediators that are significantly less likely than their parent event. As a simple application of Lemma 3.7, we also get a low explanation score when a mediator event is less rare than the target since we get a significant gap for the target itself, as in Example A.3. 
+
+Relation to probability of necessity and sufficiency. At first glance, the notion of explaining pathway seems to miss the aspect of necessity : while it formalizes the condition that the target event and the mediators between root causes and target are likely to happen given the root causes happened, it does not explicitly state that the target event is unlikely to happen in the absence of the root causes. Likewise, one may be surprised that explanation score of Oesterle et al. (2025) in general fails to formalize necessity. However, there is a sense in which necessity is implicit because the target event is rare: the intervention do (BR = 1) is, with high probability necessary for Bt = 1 because without it the latter is unlikely by assumption. This is formally shown in Appendix B, based on the notion probability of necessity 
+
+4Formalizing and Falsifying Causal Pathways of Rare Events 
+
+(Tian & Pearl, 2000) (where we also argue why probability of sufficiency is of minor relevance in our context). This result, however, does not imply that it is necessary to set all 
+
+root causes to 1. The choice of a sufficiently small set of root causes will be driven by trading off simplicity of the explanation (in the sense of a small number of root causes) with pathway explanation score. In Appendix C we explain why our causal explanations refer to interventional probabilities only, rather than causal coun-terfactuals in the sense of rung 3 in the ladder of causation (Pearl & Mackenzie, 2018). 
+
+Measuring quality of explanations. We now state formal criteria that should be satisfied by a causal pathway to be a good explanation: 
+
+1. Causal relevance of all events for the target: Given some cluster (C, B, BR, P B), every event i ∈ K should satisfy 
+
+E{i}∪ S→t − E S→t > 0 for some S ⊂ K. Depending on one’s preferences regarding the trade-off between simplicity and detail, one may set a threshold for the desired increase in explanation score. Note that we do not consider pathway 
+
+explanation scores EKR→t for this purpose because we want to assess relevance for the target and not for other events in the pathway. 
+
+2. Sparsity of root causes: Following Occam’s Razor we a priori prefer explanations with a small number of root causes. Whenever the target event is the result of the respective data point being drawn from a different distribution this inductive bias is also aligned with the “sparse mechanism shift hypoth-esis” in (Sch ¨olkopf et al., 2021). However, rare events may also originate from selecting the statistical unit / time instant for which this rare event happened. Later we will have tar-get events that come from thresholding continuous variables and the statistical unit we discuss is selected because it is the most extreme value within a population. Rare events that result from this selection bias are not necessarily points that are “out of distribution”. In this case, we may also expect multiple root causes. For instance, if X1, . . . , X d
+
+are independent identically distributed Gaussians, extreme values of Pdi=1 Xi likely originate from extreme values of multiple Xi, while Xi with subexponential Xi render single root causes more likely, see Appendix E. 
+
+3. Selecting the right root causes: The pathway explanation score EKR→t should be reasonably close to 1, without unnec-essarily extending R. For any desired size |R|, (11) implies that the best R can be obtained by a greedy approach in a scenario where the set B is fixed: starting from R = ∅, add the event i to R that maximizes the score EK
+
+> {i}∪ R→t
+
+. After choosing R, we can reduce the graph C to the relevant part, the pathway P, by dropping arrows into R (although we may not drop all of them, as explained earlier). 
+
+# 4. Pathway Abstraction 
+
+We now introduce causal pathways that constitute approxi-mate abstractions of more fine-grained causal models. The abstraction proceeds by reducing the set of nodes and map-ping the remaining variables Xi into a binary representation. In addition, edges may be added or removed to provide the best possible approximation of the causal relationships among the resulting binary variables. 2
+
+4.1. Binary Representation of Variables 
+
+Let us first focus on generating binaries from variables with arbitrary ranges. Consider, for instance, a cause-effect pair 
+
+X, Y coupled by the linear structural equation Y = αX +
+
+N , where N is an independent noise term and all three variables are real-valued. If we induce a large perturbation 
+
+x and accordingly obtain an unusually large y, we would certainly accept the verbal explanation “ y is large because 
+
+x has been large”. To get formal criteria for whether this explanation is plausible we introduce the events B1 and 
+
+B2 corresponding to the events 3 X ≥ x and Y ≥ y, and consider only accepting the explanation if P (Y ≥ y|X ≥
+
+x) is “sufficiently large” in the sense specified below. In cases where Y depends on X in a non-monotonic way, for instance, when Y = sin( X) + N , we would not accept explanations like “ y is large because x is large” and instead suggest the “featurized” version “ y is large because sin( x) is large” to get a “feature-monotonic” causal relation, formally introduced here 4:
+
+Definition 4.1 (feature monotonicity) . Consider a causal DAG G with nodes X = {X1, . . . , X n} and probability distribution PX, such that each Xi attains values in Xi.For any I ⊆ N := {1, . . . , n }, define feature functions 
+
+τI (XI ) := ( τi(Xi)) i∈I , where τi : Xi → R for all i ∈ I.Further, write τI (x′ 
+
+> I
+
+) ≥ τI (xI ) iff τi(x′
+
+> i
+
+) ≥ τi(xi) for all 
+
+i ∈ I. Then the Markov kernel PX(Xj | XPa( j)) satisfies feature monotonicity (with respect to τj , τ Pa( j)) if 
+
+PX
+
+ τj (Xj ) ≥ t | x′
+
+> Pa( j)
+
+ ≥ PX
+
+ τj (Xj ) ≥ t | xPa( j)
+
+,
+
+(13) for all t ∈ R, whenever τPa( j)(x′
+
+> Pa( j)
+
+) ≥ τPa( j)(xPa( j)).Here, featurizing variables has two goals. First, it defines 
+
+outlier scores (Budhathoki et al., 2022b) via S(xj ) :=       
+
+> 2We require approximate equality of interventional probabili-ties, cf. related notions of approximate abstraction in the literature (Beckers et al., 2020). Here, however, “approximate” is defined by our logarithmic scaling, which is particularly tailored to rare events.
+> 3For notational convenience, we avoid superscripts like in
+> Bx
+> 1, B y
+> 2, but keep the dependence on xand yin mind.
+> 4cf. monotonicity condition in Lemma 3.5 in Orchard et al. (2025).
+
+5Formalizing and Falsifying Causal Pathways of Rare Events 
+
+− log PX(τj (Xj ) ≥ τj (xj )) , which measures the unex-pectedness of events for arbitrary data modalities. Second, it enables causal statements that are more robust than state-ments about the impact of setting a continuous variable to a specific value, cf. D´ ıaz et al. (2023). We then obtain: 
+
+Lemma 4.2 (bounding likelihood for each Markov kernel) .
+
+Let xPa( j) be arbitrary, xj drawn from PX(Xj | XPa( j) =
+
+xPa( j)) and assume that PX(Xj | XPa( j)) satisfies fea-ture monotonicity. Then, for any α ∈ [0 , 1] , the prob-ability for obtaining an xj with PX
+
+ τj (Xj ) ≥ τj (xj ) |
+
+τPa( j)(XPa( j)) ≥ τPa( j)(xPa( j)) ≤ α, is at most α.
+
+Note that the non-trivial part of the statement comes from conditioning on the event τPa( j)(XPa( j)) ≥ τPa( j)(xPa( j))
+
+instead of XPa( j) = xPa( j) used in the generating process for xj . However, feature monotonicity entails 
+
+PX
+
+ τj (Xj ) ≥ τj (xj ) | τPa( j)(XPa( j)) ≥ τPa( j)(xPa( j))
+
+≥ PX
+
+ τj (Xj ) ≥ τj (xj ) | XPa( j) = xPa( j)
+
+, (14) which then completes the proof. To get an intuition about the implications of Lemma 4.2, we consider a cause-effect pair X → Y with feature monotonic P (Y | X) with re-spect to τX , τ Y . For any x-value, a y-value drawn from 
+
+P (Y | X = x) satisfies − log P  τY (Y ) ≥ τY (y) |
+
+τX (X) ≥ τX (x) ≥ c with probability at most e−c. Ac-cordingly, defining the binary events τX (X) ≥ τX (x) and 
+
+τY (Y ) ≥ τY (y) typically results in explanation scores close to 1 when the generated value y is a “strong outlier”, that is, 
+
+P (τY (Y ) ≥ τY (y)) is small. The following result generalizes Lemma 4.2 to general DAGs: 
+
+Theorem 4.3 (bounding multivariate likelihoods) . For any 
+
+xR, let ¯R := N \R, and let x ¯R be generated from PX(X ¯R |
+
+do (xR)) . Assume that for all j ∈ N , the mechanisms 
+
+PX(Xj | XPa( j)) are feature monotonic w.r.t. the feature functions τ1, . . . , τ n and let Bj denote the event τj (Xj ) ≥
+
+τj (xj ). Then the probability of obtaining an x with 
+
+L := − X 
+
+> j̸∈R
+
+log PX(Bj = 1 | BPa( j) = 1) ≥ c, (15) 
+
+is at most 
+
+p =
+
+> n−| R|− 1
+
+X
+
+> i=0
+
+ci
+
+i! e−c. (16) The proof is provided in Appendix F. To understand the significance of Theorem 4.3, consider the joint distribution 5
+
+PB(B) := Q 
+
+> j∈N
+
+PX(Bj | BPa( j)). Note that PB(B) is, by construction, Markov relative to G, whereas the true distribution PX(B) need not be; even for X1 → X2 →       
+
+> 5For any S, we denote by PX(BS)the pushforward measure under our binarization map for fixed xS.
+
+X3, binarization can destroy the conditional independence 
+
+X1 ⊥⊥ X3 |X2. Let us, nevertheless, consider a scenario where PB(B) is a reasonable approximation for PX(B),because we can easily compute interventional probabili-ties for the former. We then observe that L is the negative log-likelihood of PB(B = 1 | do (BR = 1)) , and thus it follows from Theorem 4.3 that the pathway explanation score is close to 1 with high probability, whenever xR in-duces a value xt of the target node such that PB(Bt = 1) is small. Although feature monotonicity may not hold in gen-eral, we assume that good explanations should use features that do not deviate too much from monotonicity and use the p-value in (16) as guidance on which deviations from explanation score 1 we tolerate for the given number n of nodes, regardless of whether feature monotonicity holds exactly for a given case. 
+
+4.2. Causal Pathways as Approximate Abstractions 
+
+To enable simple causal explanations, we introduce path-ways (potentially with fewer links and variables than the original graph) with distributions that do not perfectly align with the true one, but do not deviate too much in terms of interventional and observational probabilities. This raises the issue that the interventions do (Bi = bi), with bi = 0 , 1,are only well-defined in the model PB, but are ill-defined in PX since there are generally many distinct interventions 
+
+do (Xj = xj ) that correspond to the same value of Bj . This aligns with the known ill-definedness of interventions on coarse-grained variables (Spirtes & Scheines, 2004). Con-sider, for instance, the event Xj ≥ xj for some unusu-ally large xj . Then do (Xj = xj − ϵ), which sets Bj to 
+
+0, will typically result in distributional changes that are close to do (Xj = xj ), which sets Bj to 1, and thus far from the effect of “normal” xj . We solve this problem by interpreting do (Bj = bj ) in the original model as a randomized intervention that draws Xj from the distribu-tion PX(Xj | Bj = bj ), following the idea of “natural micro-realization” given by Definition 8 in Zhu et al. (2024). For multi-node interventions we draw independently from the product distribution Q 
+
+> i∈S
+
+PX(Xi | Bi = bi) and thus define: 
+
+Definition 4.4 (natural micro-realization) . The natural micro-realization of do (BS = bS ) in G is given by 
+
+PX(X | do (BS = bS )) := ExS ∼Q 
+
+> i∈SPX(Xi|Bi=bi)
+
+[PX(X | do (XS = xS ))] .
+
+(17) For an unconfounded cause-effect pair X → Y , for instance, this definition ensures that P (Y | do (X ≥ x)) = P (Y |
+
+X ≥ x). We now introduce pathway abstraction formally: 
+
+Definition 4.5 (pathway abstraction) . A pathway abstrac-tion of a causal DAG G, with nodes X = {X1, . . . , X n}
+
+6Formalizing and Falsifying Causal Pathways of Rare Events 
+
+and probability distribution PX, is a pathway explana-tion (C, P, B = {B1, . . . , B k}, B t, BR, P B), where PB is Markov relative to C. For each j ∈ K, there exists a subset 
+
+Ij ⊆ N and feature functions τIj (XIj ) = ( τij (Xij )) ij ∈Ij
+
+with τij : Xij → R for all ij ∈ Ij , such that for an observed value xIj , the binary variable Bj is defined by 
+
+Bj := χ[τIj (xIj ),∞)(τIj (XIj )) . The explanation score of the pathway abstraction is defined as the explanation score of P, and the accuracy of the pathway abstraction is defined by 
+
+r := 1 − max  
+
+> S⊆K
+
+max 
+
+> bS
+
+n
+
+DKL [PX(B | do (BS = bS ) ∥ PB(B | do (BS = bS ))] 
+
+− log PX(Bt = 1) 
+
+o
+
+,
+
+(18) where S = ∅ is also included to capture observational prob-abilities too. Note that the pathway explanation score can also be rephrased in terms of KL-divergences as 
+
+EKR→t = 1 − DKL (δ1(B)∥PB(B | do (BR = 1)) 
+
+− log PB(Bt = 1) , (19) where δ1 denotes the point mass on B = 1 (see remark after Definition 2.2). Hence, the explanation score mea-sures the distance of δ1 from the interventional distribu-tion in PB with respect to P, where all root causes are set to 1, and accuracy measures the distance between the distribution of the abstraction and the true distribution projected to the binaries. In this sense, both quantities measure the quality of the explanation in terms of KL-divergences. Note that minimizing the KL-divergence (18) is equivalent to maximizing the expected log-likelihood 
+
+EPX(B|do (bS )) [log PB(B | do (bS ))] . Therefore trading off explanation score with accuracy amounts to trading off two likelihood terms, namely the one of the event B = 1 un-der the model PB(B | do (BR = 1)) and the likelihood of observations from PX(B | do (bS )) under the models 
+
+PB(B | do (bS )) .
+
+4.3. Examples of Pathway Abstractions 
+
+We first start with a simple example where the abstraction consists only in binarization of two continuous variables: 
+
+Example 4.6 (cause-effect pair) . Assume X → Y has the linear structural model Y = ρX + N , where X, Y are stan-dard Gaussian variables with joint probability distribution 
+
+p, and N is a Gaussian with variance σ2 
+
+> N
+
+:= 1 − ρ2. Let 
+
+(x, y ) be an arbitrary pair. Defining the feature functions 
+
+τX (x) := x and τY (y) := y, we obtain binary variables 
+
+B1 and B2 for the events X ≥ x and Y ≥ y, respec-tively. For the pathway abstraction we set PB(B) := P (B),where cluster C and pathway P are both defined by the DAG B1 → B2, with root cause B1 and target B2. Due to Theorem 3.1 in (Zhu et al., 2024), the natural micro-realization entails pB(b2 | do (b1)) = p(b2 | do (b1)) , hence, the pathway abstraction has accuracy 1. The explanation score reads 
+
+E{1,2} 
+
+> 1→2
+
+= 1 − log p(b12 | b11)log p(b12) = log P (X≥x,Y ≥y)   
+
+> P(X≥x)P(Y≥y)
+
+− log P (Y ≥ y) .
+
+Figure 2 shows isolines of the (pathway) explanation score for different pairs (x, y ) for ρ = 0 .5. One can see that for outliers x above 3, every y below ρ · x yields q > 0.8. We propose to verbalize this by ‘the event X ≥ x explains 
+
+Y ≥ y up to at least 80% ’. In the region with explanation score far below 50% we would reject the statement “ Y ≥ y
+
+has been caused by X ≥ x” and also the informal statement “y is large because x is large”. Example 4.6 shows that the pathway explanation score con-ceptualizes a certain kind of robust causal statements: It does not measure whether the specific value x increases the probability of the event Y ≥ y. Instead, it measures whether ‘typical values’ of X from the interval [x, ∞) have this effect, which is a more valuable insight since it is more general and falsifiable. The following example shows why 
+
+root nodes in a pathway abstraction are not necessarily root causes , but potentially non-rare events that are nevertheless crucial as context. 
+
+Example 4.7 (non-rare event as confounder) . Let 
+
+B1, B 2, B 3 be binary variables with the causal structure in figure 3, middle. Let B1 be an unbiased coin flip, and 
+
+P (B2 = 1 | B1 = 0) = 1 and P (B2 = 1 | B1 = 1) = δ
+
+for some small δ > 0. Moreover, B3 = B1 ∧ B2. The target event B3 = 1 is rare as it occurs with probability δ/ 2 only. Although B2 = 1 is not rare, the intervention do (B2 = 1) 
+
+has a strong effect on the target and makes it happen with probability 1/2. Here, the context B1 = 1 is crucial to understand the big impact of the intervention on the target because B2 = 1 occurring together with B1 = 1 causes the unexpected behavior B3 = 1 . Hence we choose the graph in Figure 3, right, as pathway P, and set PB(B) = P (B)
+
+but keep the full DAG in Figure 3, middle, as C, since PB is not Markov to P. Here the pathway abstraction map is triv-ial and we thus obtain accuracy 1 and pathway explanation score E{1,2,3} 
+
+> 2→3
+
+= 1 − log(1 /2) log( δ/ 2) , which is close to 1 for small 
+
+δ. In contrast, the simple pathway B2 → B3 would fail to explain why the frequent event B2 = 1 triggered the rare event B3 = 1 , due to the missing context B1 = 1 . If we set PB(B2, B 3) = P (B2, B 3) for the bivariate abstraction, then PB(B3 = 1 | do (B2 = 1)) = P (B3 | B2 = 1) =  
+
+> δ
+> 1+ δ
+
+, while P (B3 = 1 | do (B2 = 1)) = P (B1) = 12 . Thus 7Formalizing and Falsifying Causal Pathways of Rare Events 0 1 2 3 4 5
+
+> x
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> y
+> 0.08
+> 0.16
+> 0.24
+> 0.32
+> 0.40
+> 0.48
+> 0.56
+> 0.64
+> 0.72
+> 0.80
+> 0.88
+> 0.96
+
+Figure 2. (Pathway) explanation scores E1→2 = E{1,2} 
+
+> 1→2
+
+for the binary cause effect pair obtained from thresholding a linear causal relation of Gaussians. For y ≈ ρx (points near the red line) the explanation score reaches 80% whenever x is an outlier of strength 
+
+3 or more.    
+
+> X
+> YZ
+> B1
+> B2B3
+> B1
+> B2B3
+
+Figure 3. Left: DAG with three real-valued variables, where we perturb Y . Middle: the same DAG with binary variables 
+
+B1, B 2, B 3. To explain the impact of the intervention do (B2 = 1) 
+
+(root cause node shown in gray) on the target B3, we need a pathway P that also contains the confounder B1 as context (right). In Example 4.8 where B1, B 2, B 3 are binarizations of X, Y, Z 
+
+they stand for the events |X| ≤ | x|, Y ≥ y, Z ≥ z.
+
+the bivariate abstraction has accuracy 
+
+r = 1 −
+
+DKL 
+
+h
+
+Bern   12
+
+ Bern   δ
+
+> 1+ δ
+
+i
+
+− log P (B3 = 1) = 1 − log 1+ δ
+
+> 2√δ
+
+− log( δ/ 2) ,
+
+which converges to 1/2 as δ → 0.The following example shows a similar case obtained by binarization of continuous variables. We consider the causal DAG in Figure 3, left, where an extreme value y is induced at Y . For understanding the impact of this perturbation on Z, it is important to know that X attained normal val-ues to exclude strong influence of the confounder in the perturbed regime. Hence, X being normal is required as 
+
+context information. The example also shows that binariza-tion can result in accuracy smaller than 1 because the natural micro-realization of the intervention does not capture the dependencies of different parents entirely. However, for our purpose of causal explainability, we do not need accuracy 1 in order to get simple and verbalizable explanations. 
+
+Example 4.8 (confounder as context) . For the DAG in figure 3, left, assume linear equations 
+
+Y = αX + NY ,Z = βX + γY + NZ , (20) where NY , N Z are Gaussians, and X, Y, Z are standard Gaussians with joint probability distribution p. We set 
+
+α = −0.9, β = 0 .9, and γ = 0 .9. Thus, X negatively affects Y , while both X and Y positively affect Z, cre-ating negative confounding between Y and Z. Since we want to verbalize that large y induced large z, we define feature functions τ2(y) := y and τ3(z) := z to capture large tail events and τ1(x) := −| x| to describe that x is “normal”. The event |X| ≤ x formalizes the context in which the positive causal effect Y → Z is not offset by the confounding path through X. We will use the pathway 
+
+B2 → B3 ← B1, where B2 and B3 are the root cause and target, respectively, while C contains B1 → B2 in addition. Since every distribution is Markov to the complete DAG C,we can set PB(B) := P (B), with P shorthand for PX,Y,Z .The pathway explanation score reads: 
+
+E{1,2,3} 
+
+> 2→3
+
+=1 − log  P (Z ≥ z | | X| ≤ x, Y ≥ y)P (|X| ≤ x)
+
+log P (Z ≥ z) .
+
+We also consider the bivariate abstraction B2 → B3, which omits the context variable B1 and both the pathway and the cluster are given by the DAG B2 → B3, and we set 
+
+PB(B2, B 3) := P (B2, B 3). Figure 4 in Appendix G.1 compares the the explanation scores and abstraction accu-racies of the bivariate and trivariate abstractions for x = 1 
+
+and different values of y, z . Only in the regime where the explanation score is not too far from 1 would we accept the verbal explanation that “ z is as large because y is large, in the context that x is normal”. The figure shows that the trivariate abstraction has higher accuracy and explanation score in the outlier region because the “context variable” X
+
+(although being in a normal state) is necessary to understand the propagation of the perturbation of Y to Z. Therefore, the pathway B2 → B3 has lower accuracy because it does not include the context variable needed to approximate the relevant interventional distributions. In Appendix G.2 we consider additional pathway abstrac-tions for the three-variable binary causal DAG and give quantitative conditions under which the direct link or the 8Formalizing and Falsifying Causal Pathways of Rare Events 
+
+confounder can be removed while maintaining high abstrac-tion accuracy. 
+
+# 5. Evaluating Causal Explanations 
+
+The assumption that all mechanisms of non-root causes operated as expected for the statistical observation to be explained entails testable implications. Phrasing causal ex-planations in terms of pathways paves the way for several types of consistency checks. First, Lemma 4.2 and Theorem 4.3 show how to test consistency with data from the “normal regime” because this enables the estimation of the respec-tive probabilities P . Second, for any given agent generating causal explanations (human experts or GenAI tools like LLMs), we can check internal consistency, both in a qualita-tive and in a quantitative sense: For the qualitative test of a pathway P, we can ask the agent about substructures. If P
+
+contains the edge Bi → Bj , we can ask “is Bi a cause of Bj
+
+in the context of BPa( j)\{ i}?”. For a quantitative test, we can ask about the probability that Bi = 1 results in Bj = 1 ,given BPa( j)\{ i} = 1. In other words, we check whether the claimed pathway is consistent with believed probabil-ities, regardless of whether these are Bayesian beliefs or whether they are inferred from data. We asked LLMs to describe realistic hypothetical causal pathways that explain why an imaginary person in the USA became homeless. We describe more details in Appendix H. We obtained, among others, a pathway A → B → C →
+
+D → E, with the following events: A. 35-year-old male developed schizophrenia at age 19; lacks consistent access to psychiatric medication due to gaps in Medicaid coverage B. Fired from three consecutive jobs over 2 years due to paranoid behavior and absences during acute episodes C. With no income and $2,000 in savings depleted on food/medication, evicted from rental apartment D. No family support available—parents died; only sibling cut contact after threatening incident during psychotic break E. Living on streets for 18+ months; chronic homelessness now established We then asked the same LLM, in separate conversations, about the probability that each child node was caused by its parent nodes and obtained the following 6 results: 
+
+P (B | A) ≈ 0.55 , P (C | B) ≈ 0.8, P (D | C) ≈ 0.05 ,
+
+P (E | D) ≈ 0.2. Further, the a-priori probability of being homeless long-term was estimated at P (E) ≈ 0.0005 . Tak-ing A as root cause results in a pathway explanation score 
+
+> 6Evaluating the accuracy of these probabilities is beyond the scope of this paper; in future agentic applications, they could be inferred directly from data.
+
+of only 
+
+EKR→t = 1 − log(0 .55 · 0.8 · 0.05 · 0.2) log 0 .0005 ≈ 1− 5.43 7.60 ≈ 0.29 ,
+
+since the explanation is mainly weak at the link C → D.After all, C does not refer to any mental illness that would explain event D. The evaluation suggests to revise the pathway or events in a way that parent events contain the essential information needed to explain the child event, e.g., by drawing an additional direct link A → D or rephrasing 
+
+C. Looking at the LLM output in Appendix H.1, the reader may notice that it is inconsistent regarding the hypothesized pathway: the displayed chain suggests the pathway A →
+
+B → C → D → E, whereas at the end it specifies edges which contain no arrow C → D, but include an additional link D → E. We also checked that this alternate pathway yields a higher explanation score, aligning with the fact that it avoids the weak link C → D.As a disclaimer for this example, we would like to empha-size that high explanation scores are not sufficient to prove that a causal explanation is valid. The score does not verify that the underlying causal DAG is true, or that the hypothet-ical interventional probabilities computed from the DAG reflect the true ones. 
+
+# 6. Discussion 
+
+Verbal causal explanations of unexpected events are com-monly based on chains of events causing each one after another, although the actual causal relation can be a com-plex graph. We have introduced a formal definition of causal pathway that allows us to quantify the extent to which such simple explanations are consistent with data. The reason why our framework renders explanations falsifiable is that it requires an explicit commitment on which of the mecha-nisms in a causal network behaved as usual and which ones did not. We do not claim that our framework already enables automated testing of the plausibility of causal explanations. Instead, the goal is to introduce concepts that enable the discussion of plausibility in a quantitative and data-driven way. 
+
+# Impact Statement 
+
+There is broad consensus that producing reliable and trans-parent causal explanations would represent a significant advancement in generative AI. Moreover, a key research challenge is to develop methods to assess whether causal statements generated by AI systems are truthful (Bengio et al., 2025). The present work advances this objective by formalizing causal explanations. We present concepts that facilitate empirical falsification and transparency by repre-senting causal explanations as explicit pathways. Through 9Formalizing and Falsifying Causal Pathways of Rare Events 
+
+this approach, we aim to contribute toward improved au-tomated verification methods for causal explanations, with a specific focus on identifying flawed causal accounts of socially significant events. While the inherent ambiguity of verbal explanations makes formal plausibility assessments difficult, LLMs can be guided to generate explanations con-forming to the causal pathway format proposed here. Our example in Section 5 demonstrates as a proof of concept illustrating how probabilities derived from the same LLM can serve to evaluate the plausibility of its own explanations. 
+
+# Acknowledgments 
+
+We thank William Roy Orchard for carefully reading the paper and providing suggestions for improvement. 
+
+# References 
+
+Armend ´ariz, I. and Loulakis, M. Conditional distri-bution of heavy tailed random variables on large de-viations of their sum. Stochastic Processes and their Applications , 121(5):1138–1147, 2011. ISSN 0304-4149. doi: https://doi.org/10.1016/j.spa.2011.01. 011. URL https://www.sciencedirect.com/ science/article/pii/S0304414911000238 .Beckers, S. Causal sufficiency and actual causation. Journal of Philosophical Logic , 50(6):1341–1374, 2021. Beckers, S. Causal explanations and xai. In Conference on causal learning and reasoning , pp. 90–109. PMLR, 2022. Beckers, S. and Halpern, J. Y. Abstracting causal mod-els. In Proceedings of the aaai conference on artificial intelligence , volume 33, pp. 2678–2685, 2019. Beckers, S., Eberhardt, F., and Halpern, J. Y. Approximate causal abstractions. In Uncertainty in artificial intelli-gence , pp. 606–615. PMLR, 2020. Bengio, Y., Cohen, M., Fornasiere, D., Ghosn, J., Greiner, P., MacDermott, M., Oberman, A., Richardson, J., Richard-son, O., Rondeau, M.-A., et al. Superintelligent agents pose catastrophic risks: Can scientist ai offer a safer path? SuperIntelligence-Robotics-Safety & Alignment , 2 (5), 2025. Budhathoki, K., Janzing, D., Bloebaum, P., and Ng, H. Why did the distribution change? In International Conference on Artificial Intelligence and Statistics , pp. 1666–1674. PMLR, 2021. Budhathoki, K., Minorics, L., Bloebaum, P., and Janzing, D. Causal structure-based root cause analysis of outliers. In Chaudhuri, K., Jegelka, S., Song, L., Szepesvari, C., Niu, G., and Sabato, S. (eds.), Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pp. 2357–2369. PMLR, 17–23 Jul 2022a. Budhathoki, K., Minorics, L., Bloebaum, P., and Janzing, D. Causal structure-based root cause analysis of outliers. In Chaudhuri, K., Jegelka, S., Song, L., Szepesvari, C., Niu, G., and Sabato, S. (eds.), Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pp. 2357–2369. PMLR, 17–23 Jul 2022b. D´ıaz, I., Williams, N., Hoffman, K. L., and Schenck, E. J. Nonparametric causal effects based on longitudinal modi-fied treatment policies. Journal of the American Statisti-cal Association , 118(542):846–857, 2023. Eberhardt, F. and Scheines, R. Interventions and causal inference. Philosophy of Science , 74(5):981–995, 2007. Ebtekar, A., Wang, Y., and Janzing, D. Toward universal laws of outlier propagation. In Proceedings of the Forty-First Conference on Uncertainty in Artificial Intelligence ,UAI ’25. JMLR.org, 2025. Engelke, S., Gnecco, N., and R ¨ottger, F. Extremes of struc-tural causal models. arXiv preprint arXiv:2503.06536 ,2025. Frye, C., Rowat, C., and Feige, I. Asymmetric shapley val-ues: incorporating causal knowledge into model-agnostic explainability. In Larochelle, H., Ranzato, M., Hadsell, R., Balcan, M., and Lin, H. (eds.), Advances in Neural In-formation Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual , 2020. Gnecco, N., Meinshausen, N., Peters, J., and Engelke, S. Causal discovery in heavy-tailed models. The Annals of Statistics , 49(3):1755–1778, 2021. Halpern, J. Y. and Pearl, J. Causes and explanations: A structural-model approach. part ii: Explanations. The British journal for the philosophy of science , 2005. Hannart, A., Pearl, J., Otto, F., Naveau, P., and Ghil, M. Causal counterfactual theory for the attribution of weather and climate-related events. Bulletin of the American Meteorological Society , 97(1):99–110, 2016. Ibe, O. C. 1 - basic concepts in probability. In Markov Processes for Stochastic Modeling (Second Edition) ,pp. 1–27. Elsevier, Oxford, second edition edition, 2013. ISBN 978-0-12-407795-9. doi: https://doi.org/ 10.1016/B978-0-12-407795-9.00001-3. URL https: //www.sciencedirect.com/science/ article/pii/B9780124077959000013 .10 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+Ikram, A., Lee, K., Agarwal, S., Saini, S. K., Bagchi, S., and Kocaoglu, M. Root cause analysis of failures from partial causal structures. In The 41st Conference on Uncertainty in Artificial Intelligence , 2025. Janzing, D., Minorics, L., and Bloebaum, P. Feature rele-vance quantification in explainable ai: A causal problem. In Chiappa, S. and Calandra, R. (eds.), Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics , volume 108 of Proceedings of Machine Learning Research , pp. 2907–2916, Online, 26–28 Aug 2020. PMLR. Kawakami, Y. and Tian, J. Decomposition of probabilities of causation with two mediators. In The 41st Conference on Uncertainty in Artificial Intelligence , 2025. URL https: //openreview.net/forum?id=2y8svmcPmx .Kl ¨uppelberg, C. and Krali, M. Causal analysis of extreme risk in a network of industry portfolios. Canadian Journal of Statistics , 54(1):e70041, 2026. Li, J., Chu, B. B., Scheller, I. F., Gagneur, J., and Maathuis, M. H. Root cause discovery via permutations and cholesky decomposition. Journal of the Royal Statistical Society Series B: Statistical Methodology , pp. qkaf066, 2025. Li, M., Li, Z., Yin, K., Nie, X., Zhang, W., Sui, K., and Pei, D. Causal inference-based root cause analysis for online service systems with intervention recognition. In 
+
+Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 3230–3240, 2022. Lin, C.-M., Chang, C., Wang, W.-Y., Wang, K.-D., and Peng, W.-C. Root cause analysis in microservice using neural granger causal discovery. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, pp. 206–213, 2024. Lin, J., Chen, P., and Zheng, Z. Microscope: Pinpoint performance issues with causal graphs in micro-service environments. In International Conference on Service-Oriented Computing , pp. 3–20. Springer, 2018. Liu, D., He, C., Peng, X., Lin, F., Zhang, C., Gong, S., Li, Z., Ou, J., and Wu, Z. Microhecl: High-efficient root cause localization in large-scale microservice systems. In 2021 IEEE/ACM 43rd International Conference on Software Engineering: Software Engineering in Practice (ICSE-SEIP) , pp. 338–347. IEEE, 2021. Lundberg, S. and Lee, S. A unified approach to interpreting model predictions. In Guyon, I., Luxburg, U. V., Ben-gio, S., Wallach, H., Fergus, R., Vishwanathan, S., and Garnett, R. (eds.), Advances in Neural Information Pro-cessing Systems 30 , pp. 4765–4774. Curran Associates, Inc., 2017. Nagalapatti, L., Srivastava, A., Sarawagi, S., and Sharma, A. Robust root cause diagnosis using in-distribution interventions. In The Thirteenth International Confer-ence on Learning Representations , 2025. URL https: //openreview.net/forum?id=l11DZY5Nxu .Oesterle, M., Bl ¨obaum, P., Mastakouri, A., and Kirschbaum, E. Beyond single-feature importance with icecream. In 
+
+Proceedings of Conference on Causal Learning and Rea-soning (CLeaR) , 2025. Orchard, W. R., Okati, N., Mejia, S. H. G., Bl ¨obaum, P., and Janzing, D. Root cause analysis of outliers with missing structural knowledge. In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,2025. URL https://openreview.net/forum? id=7Nxq4RQApu .Pearl, J. Causality . Cambridge University Press, 2000. Pearl, J. Direct and indirect effects. In Proceedings of the Seventh Conference on Uncertainty in Artificial In-telligence (UAI) , pp. 411–420, San Francisco, CA, 2001. Morgan Kaufmann. Pearl, J. and Mackenzie, J. The book of why . Basic Books, USA, 2018. Peters, J., Janzing, D., and Sch ¨olkopf, B. Elements of Causal Inference – Foundations and Learning Algorithms . MIT Press, 2017. Pham, L., Ha, H., and Zhang, H. Root cause analysis for microservice system based on causal inference: How far are we? In Proceedings of the 39th IEEE/ACM Interna-tional Conference on Automated Software Engineering ,pp. 706–715, 2024. Robins, J. M., Richardson, T. S., and Shpitser, I. An inter-ventionist approach to mediation analysis. In Probabilis-tic and causal inference: the works of Judea Pearl , pp. 713–764. 2022. Rubenstein, P. K., Weichwald, S., Bongers, S., Mooij, J. M., Janzing, D., Grosse-Wentrup, M., and Sch ¨olkopf, B. Causal consistency of structural equation models. In Pro-ceedings of the Thirty-Third Conference on Uncertainty in Artificial Intelligence (UAI 2017) , 2017. Sanyal, D., Nagpal, A., Kumar, D., Mandal, M., and Desh-pande, S. time2time: Causal intervention in hidden states to simulate rare events in time series foundation models. In Recent Advances in Time Series Founda-tion Models Have We Reached the ’BERT Moment’? ,11 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+2025. URL https://openreview.net/forum? id=VElPLJUr2G .Sch ¨olkopf, B., Locatello, F., Bauer, S., Ke, N. R., Kalch-brenner, N., Goyal, A., and Bengio, Y. Towards causal representation learning. Proceedings of the IEEE , 109(5): 1–23, 2021. Shapley, L. S. A value for n-person games. In Kuhn, H. W. and Tucker, A. W. (eds.), Contributions to the Theory of Games II , pp. 307–317. Princeton University Press, Princeton, 1953. Singal, R. and Michailidis, G. Axiomatic effect propagation in structural causal models. Journal of Machine Learning Research , 25(52):1–71, 2024. Spirtes, P. and Scheines, R. Causal inference of ambiguous manipulations. Philosophy of Science , 71(5):833–845, 2004. doi: 10.1086/425058. Tian, J. and Pearl, J. Probabilities of causation: Bounds and identification. Annals of Mathematics and Artificial Intelligence , 28(1):287–313, 2000. Wang, J., Wiens, J., and Lundberg, S. Shapley flow: A graph-based approach to interpreting model predictions. In Banerjee, A. and Fukumizu, K. (eds.), The 24th Inter-national Conference on Artificial Intelligence and Statis-tics, AISTATS 2021, April 13-15, 2021, Virtual Event , vol-ume 130 of Proceedings of Machine Learning Research ,pp. 721–729. PMLR, 2021. Zhu, Y., Budhathoki, K., K ¨ubler, J. M., and Janzing, D. Meaningful causal aggregation and paradoxical con-founding. In Locatello, F. and Didelez, V. (eds.), Pro-ceedings of the Third Conference on Causal Learning and Reasoning , volume 236 of Proceedings of Machine Learning Research , pp. 1192–1217. PMLR, 01–03 Apr 2024. URL https://proceedings.mlr.press/ v236/zhu24a.html .12 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+# A. More Details on Explanation Scores 
+
+A.1. Cluster Explanation Score and Distribution Change Lemma A.1 (distribution change attribution) . Let δ1 denote the point mass on the event B = 1. Then, for any i ∈ K, the cluster explanation score Ei→k can be written as the quotient of a conditional and a total relative entropy divergence 
+
+Ei→K = DKL 
+
+δ1(Bi | BPa( i))∥PB(Bi | BPa( i))
+
+DKL [δ1(B)∥PB(B)] , (21) 
+
+and thus coincides with distribution change attribution (Budhathoki et al., 2021). In other words, each Ei→K measures the relative contribution of each mechanism to the distribution change from PB(B) to δ1(B).
+
+The proof is a straightforward calculation using 
+
+DKL 
+
+δ1(Bi | BPa( i))∥PB(Bi | BPa( i)) = X
+
+> bPa( i)
+
+DKL 
+
+δ1(Bi | bPa( i))∥PB(Bi | bPa( i)) δ1(bPa( i))= − log PB(Bi = 1 | BPa( i) = 1).
+
+A.2. Explaining Clusters versus Pathways Example A.2 (pathway versus cluster explanation score) . Pathway explanation score measures whether the root causes are sufficient to explain the target , while cluster explanation score measures whether they sufficiently explain the cluster . To see the difference, consider the pathway X1 → X2 → X3, where X1 is the unique root cause. Assume P (X1 = 1) = 10 −15 
+
+and X2 = X1. Further, P (X3 = 1 | X2 = 0) = 10 −3 and P (X3 = 1 | X2 = 1) = 10 −5, that is, the event X1 = 1 renders 
+
+X3 = 1 even less likely. The cluster explanation score reads 1− log(10 −5)log(10 −20 ) = 1 −5/20 = 3 /4, while the pathway explanation score is 1 − log(10 −5)log((1 −10 −15 )10 −3+10 −15 10 −5) ≈ 1 − 5/3 < 0. For the–very unlikely–joint event (X1 = 1 , X 2 = 1 , X 3 = 1) 
+
+X1 = 1 is a good explanation since it renders it significantly more likely. However, the target event X3 = 1 is not that unlikely. Therefore, X1 = 1 is a bad explanation, it renders the target even less likely. 
+
+A.3. High Pairwise Explanation Score are Not Sufficient Example A.3 (OR and AND gate with rare and less rare events) . Given the pathway B1 → B2 → B3 with 
+
+B1 = N1,B2 = B1 ∧ N2,B3 = B2 ∨ N3,
+
+where Ni for i = 1 , 2, 3 are unobserved binary variables with p(n11) = q1 and p(n12) = p(n13) = q2. Assume q1 ≪ q2 =
+
+q3 ≪ 1. Then B1 = 1 explains B2 = 1 with explanation score close to 1 because log q2/(log q1 + log q2) ≈ 0. Further, 
+
+B2 = 1 explains B3 = 1 with explanation score 1. Hence, both non-root cause nodes B2 and B3 have explanation score close to 1, but the pathway explanation score of the root cause B1 = 1 for the target B3 = 1 reads 
+
+EK 
+
+> 1→3
+
+= 1 − log P (B3 = 1 | B2 = 1) P (B2 = 1 | B1 = 1) log P (B3 = 1) < 0.
+
+# B. Relation to Probabilities of Necessity and Sufficiency 
+
+Definition B.1 (probability of sufficiency and probability of necessity) . Let X, Y be binary variables with states x0, x 1 and 
+
+y0, y 1, respectively, and let p be the joint probability distribution. The probability of sufficiency (PS) is defined as 
+
+P S := P (Yx1 = y1 | X = x0, Y = y0), (22) that is, the probability that Y = y1 would have happened had X been set to x1, conditional on observing X = x0, Y = y0.Likewise, the probability of necessity (PN) is defined as 
+
+P N := P (Yx0 = y0 | X = x1, Y = y1), (23) 13 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+that is, the probability that Y = y1 would not have happened had X been set to x0, conditional on observing X = x1, Y =
+
+y1.As shown by (Tian & Pearl, 2000), see Eq. (45), under monotonicity and unconfoundedness these quantities can be expressed as follows: 
+
+Lemma B.2 (PS and PN) . If the binary X is an unconfounded cause of the binary Y and the relation is monotonic (i.e. 
+
+p(y1 | x1) ≥ p(y1 | x0), then 
+
+P S = p(y1 | x1) − p(y1)
+
+p(x0, y 0) , (24) 
+
+P N = p(y1 | x1) − p(y1 | x0)
+
+p(y1 | x1) . (25) Despite the impression that explanation score is rather related to sufficiency than necessity, we observe that PS can be rather small even when the explanation score is close to 1. Assume, for instance, that p(y1) = 10 −12 and p(y1 | x1) = 10 −2.Since the denominator in (24) is close to 1, PS is roughly 1/100 , while explanation score is 5/6. In contrast, when the target is rare and the explanation score is positive enough, the following lemma provides a lower bound showing that PN is close to 1:
+
+Lemma B.3 (PN and explanation score) . Let the influence of X on Y be monotonic and unconfounded. Then the probability of necessity satisfies 
+
+P N ≥ 1 − p(y1)E(x1→y1). (26) 
+
+Proof. Using (45) in (Tian & Pearl, 2000) 
+
+P N = p(y1 | x1) − p(y1 | x0)
+
+p(y1 | x1) = 1 − p(y1 | x0)
+
+p(y1 | x1) ≥ 1 − p(y1)
+
+p(y1 | x1) = 1 − p(y1)E(x1→y1),
+
+where the last step follows from 
+
+E(x1 → y1) = 1 − log p(y1 | x1)log p(y1) ,
+
+which holds due to p(y1 | x1) = p(y1 | do (x1)) .To illustrate this result with numbers, assume that we observe an event with outlier score S(y1) := − log p(y1) = 5 ,which corresponds to an observation that is unique among e5 ≈ 148 observations. For E(x1 → y1) = 1 /5 we obtain 
+
+P N ≥ 1 − e−1 ≈ 0.63 , meaning that it is more likely for X = x1 to be necessary than not necessary. Let us now argue why PS is of minor relevance for our explanations. We are interested in explaining an observed event in which both x1, y 1 occurred, while PS concerns cases in which X = x0 and Y = y0 occurred, and asks whether setting X to 
+
+x1 would have produced Y = y1. Thus, PS addresses a different question from the event-specific explanations considered here. This aligns with an argument of Beckers (2021) on page 7, that ”... an explicit sufficiency condition is not required” when focusing on cases where both cause and effect happened. To understand why PN is so close to 1 even when explanation scores are only slightly above 0, note that Y = y1 is unlikely and thus every sufficient cause is unlikely. Thus, although other sufficient causes may exist, they are unlikely to have occurred in the particular occurrence of Y = y1 where X = x1
+
+is also observed. This implies that, in the rare-event setting, a reasonably strong explanatory cause provides evidence for necessity. It is therefore reasonable to search for causes with high explanation score, because such causes are likely to be necessary for the target event and therefore suitable intervention points for preventing the event, especially when the target is undesirable, such as a performance issue in a technical system. For a pathway with nodes B1, . . . , B k where Bt is the target, we can make this intervention interpretation precise by considering an augmented graph PI containing an intervention node I with states i0, i 1. The state I = i1 triggers the intervention do (BR = 1) for I = i1 with P (i1) =: ϵ. Let P ϵ(I, B) denote the joint distribution in the augmented DAG. Using Lemma B.3 with y1 being the event Bt = 1 and x1 the intervention i1, we conclude that the probability of necessity of I = i1 for Bt = 1 satisfies 
+
+P N ≥ 1 − P ϵ(Bt = 1) ER→t . (27) For ϵ → 0, P ϵ(B) converges to P (B) and P ϵ(Bt = 1) can be replaced with P (Bt = 1) .14 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+# C. Why We Use Interventional Probabilities Only 
+
+One may ask why our explanations use interventional probabilities only –rung 2 in the ladder of causation (Pearl & Mackenzie, 2018)– while reasoning about single events may suggest using counterfactuals (rung 3). To this end, we consider the toy scenario with two binary variables encoding rare events X, Y with Y = X ∧ N , where N is binary noise with 
+
+P (N = 1) ≪ P (X = 1) . While the counterfactual statement “ Y = 1 would not have occurred if X had been set to 0
+
+(for that particular statistical unit)” suggests X as crucial for explaining Y = 1 , it is of minor relevance according to the quantitative measures used here because the counterfactual relevance generalizes to only a tiny fraction of statistical units. However, for the vast majority of units, X has no effect on Y , since N = 0 is overwhelmingly more likely than N = 1 .While we do not in general deny the importance of counterfactuals for understanding singular events, our goal of stating explanations that are easily falsifiable and generalize to a significant fraction of statistical units lets us prefer referring to interventional probabilities only. 
+
+# D. Comparison to Other Methods for Explaining Rare Events 
+
+To provide a concrete illustration with mean-based attribution, consider the logical AND gate Y = X ∧N with P (X = 1) = 10 −9 and P (N = 1) = 10 −1, so that P (Y = 1) = 10 −10 . With our logarithmic scaling (following explanation scores), the contribution of X reads 1 − 110 = 90% , in other words its contribution is strong because it increases the probability of the output event by a large factor. By contrast, a mean-based contribution such as E[Y |do (X=1)] −E[Y ]1−E[Y ] is approximately 10 −1,which is much smaller. If we instead consider Shapley-based contributions, the contribution of X is 
+
+E[Y | X = 1] − E[Y ] + E[Y | X = 1 , N = 1] − E[Y | N = 1] 2(1 − E[Y ]) ≈ 0.55 
+
+This gives a stronger contribution than the plain mean-based score, but it still remains substantially below the logarithmic score of 0.9, since of the two marginal terms are still tied to the absolute change in the mean. Since we follow arguments in (Oesterle et al., 2025; Budhathoki et al., 2022a) stating that a substantially more rare factor should get significantly more attention, we prefer the logarithmic contribution analysis. Another issue with Shapley-based contributions is that they require knowing the structural causal model and are not invariant under redefining the noise: if we replace N by two variables N1, N 2, with Y = X ∧ N1 ∧ N2 and P (N1 = 1 , N 2 = 1) = P (N = 1) = 10 −1, then the Shapley contribution of X changes. 
+
+# E. When to Expect Multiple Root Causes 
+
+Let us consider a simple causal DAG where Y is an additive effect of multiple independent causes: Y := Pdi=1 Xi, with 
+
+Xi independently identically distributed with density pX . It is known from a large number of asymptotical results, see e.g. (Armend ´ariz & Loulakis, 2011), that the shape of pX determines whether extremes of Y tend to originate from extreme values of one of the Xi or multiples of them. It is easy to see why Gaussian Xi asymptotically result in all Xi being extreme: since the joint density is rotation invariant in Rd, we can choose Y as one axis, and all directions orthogonal to Y are independent. Accordingly, conditioning on Y being large does not affect the joint distribution of the subspace orthogonal to Y . Hence, there are most likely no extreme values in any normalized linear combination of Xi that is orthogonal to 
+
+Y . Therefore all Xi must attain large values. On the other hand, Armend ´ariz & Loulakis (2011) show that for pX with subexponential density, extreme values of Y originate from extrema of a single Xi in the limit of large y. All the above arguments are based on the assumption that the outlier is a result of post-selection, rather than distribution shift. If we, instead, assume that our event is a result of distribution shift, which is caused by shifts of conditional distributions at multiple nodes, we tend to ask for a common root cause behind distributional shifts happening simultaneously at actually “independent mechanisms”, cf Peters et al. (2017), Sections 2.1 and 2.2. 
+
+# F. Proof of Theorem 4.3 
+
+Let 1, . . . , n be w.l.o.g. causally ordered according to G. Define the random variable 
+
+(xj , xPa( j)) 7 → Lj (xj , xPa( j)) := − log PX
+
+ τj (Xj ) ≥ τj (xj ) | τPa( j)(XPa( j)) ≥ τPa( j)(xPa( j)).
+
+15 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+Lemma 4.2 entails for all j̸ ∈ R, given an arbitrary observation x{1,...,j −1}, the random variable Lj attains values above 
+
+α with probability at most e−α. Let (Tj )j∈N \R be independent exponentially distributed random variables with density 
+
+p(t) = e−t. Then for any x{1,...,j −1}, the conditional distribution of Lj given x{1,...,j −1}, is stochastically dominated by 
+
+Tj . Since (Li)i∈N \R,i ≤j−1 is a function of x{1,...,j −1}, we also conclude that Lj is stochastically dominated by Tj , given any values of (Li)i∈N \R,i ≤j−1. Hence, L = P  
+
+> j∈N\R
+
+Lj is stochastically dominated by P  
+
+> j∈N\R
+
+Tj .The sum of n′ independent identically distributed exponential distributions with parameter λ is the Erlang distribution 
+
+Erl( λ, n ′) (Ibe, 2013), with CDF 
+
+F (x) = 1 − e−λx n′−1X
+
+> i=0
+
+(λx )i
+
+i! .
+
+Since λ = 1 because we have density p(t) = e−t and n′ = n − | R|, we conclude that T attains values greater than or equal to some c > 0 with probability at most 
+
+p =
+
+> n−| R|− 1
+
+X
+
+> i=0
+
+ci
+
+i! e−c, (28) which applies to L too because it is stochastically dominated by T .
+
+# G. Additional Results on Pathway Abstractions 
+
+G.1. Further Analysis of Example 4.8 
+
+We first consider the simpler pathway abstraction B2 → B3, where both the pathway and the cluster are given by the DAG 
+
+B2 → B3, and we set PB(B2, B 3) := P (B2, B 3). The accuracy of the bivariate abstraction is 
+
+rbi = 1 − max {DKL (Bern( p0) ∥ Bern( q0)) , D KL (Bern(p 1) ∥ Bern(q 1)) }− log P (Z ≥ z) ,
+
+where q0 and q1 are computed by 
+
+q0 := PB(B3 = 1 | do (B2 = 0)) = PB(B3 = 1 | B2 = 0) = P (Z ≥ z | Y < y ), (29) 
+
+q1 := PB(B3 = 1 | do (B2 = 1)) = PB(B3 = 1 | B2 = 1) = P (Z ≥ z | Y ≥ y), (30) while p0 and p1 are obtained from the fine-grained interventional probability distributions under natural micro-realization given by 
+
+p0 := P (B3 = 1 | do (B2 = 0)) = 
+
+Z y
+
+> −∞
+
+P (Z ≥ z | do (Y = y′)) p(y′ | Y < y )dy ′, (31) 
+
+p1 := P (B3 = 1 | do (B2 = 1)) = 
+
+Z ∞
+
+> y
+
+P (Z ≥ z | do (Y = y′)) p(y′ | Y ≥ y)dy ′. (32) Since Y and Z are linear functions of the jointly Gaussian variables X, N Y , N Z , the pair (Y, Z ) is bivariate Gaussian with covariance 
+
+ΣY,Z =
+
+ 1 γ + αβ γ + αβ 1
+
+
+
+,
+
+16 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+and therefore the probabilities in (29) and (30) can be computed from the bivariate Gaussian CDF of (Y, Z ). To compute the interventional probability P (Z ≥ z | do (Y = y′)) , consider the structural equation model 
+
+Z∗ = βX + γY ∗ + NZ , (33) where X and Nz are as in the original structural model in (20), and Y ∗ ∼ N (0 , 1) with Y ∗ ⊥⊥ X, N z .Then, conditional on Y ∗ = y′, we have 
+
+Z∗ = βX + γy ′ + NZ .
+
+Hence, 
+
+P (Z ≥ z | do (Y = y′)) = P (Z∗ ≥ z | Y ∗ = y′).
+
+Therefore, 
+
+P (Z ≥ z | do (B2 = 1)) = 
+
+Z ∞
+
+> y
+
+P (Z∗ ≥ z | Y ∗ = y′)p(y′ | Y ∗ ≥ y′)dy = P (Z∗ ≥ z | Y ∗ ≥ y′). (34) Similarly we obtain 
+
+P (Z ≥ z | do (B2 = 0)) = P (Z∗ ≥ z | Y ∗ < y ′). (35) Note that (Y ∗, Z ∗) is a bivariate Gaussian variable with covariance 
+
+ΣY ∗,Z ∗ =
+
+1 γγ β2 + γ2 + σ2
+
+> Nz
+
+
+
+,
+
+since Cov( Y ∗, Z ∗) = γ and Var( Z∗) = β2 + γ2 + σ2 
+
+> z
+
+. Thus, the right-hand sides of (34) and (35) can be calculated using the bivariate Gaussian CDF of (Y ∗, Z ∗).The pathway explanation score of the bivariate pathway abstraction is given by 
+
+E{2,3} 
+
+> 2→3
+
+= 1 − log P (Z ≥ z | Y ≥ y)log P (Z ≥ z) .
+
+Now we consider the pathway abstraction B1 → B3 ← B2, with the full DAG as the cluster and PB(B) := P (B). For the trivariate abstraction, the accuracy is 
+
+rtri = 1 − max S⊆{ 1,2,3} max bS DKL (P (B | do (BS = bS )) ∥ PB(B | do (BS = bS ))) 
+
+− log P (Z ≥ z) .
+
+Since PB is Markov relative to the cluster, we have the factorization 
+
+pB(b1, b 2, b 3) = pB(b1)pB(b2 | b1)pB(b3 | b1, b 2).
+
+Thus, PB(B | do (Bs = bs)) is obtained by fixing the variables in S and multipying only the mechanisms of the non-intervened variables. 17 Formalizing and Falsifying Causal Pathways of Rare Events 0.0 
+
+0.5 
+
+1.0 
+
+1.5 
+
+2.0 
+
+2.5 
+
+3.0 
+
+> z
+> Explanation score
+
+B2 B3
+
+> 0.07
+> 0.16
+> 0.25
+
+B1 B3 B2
+
+> -0.03
+> 0.07
+> 0.16
+> 0.25
+> 0.34
+> 0.44
+> 0.53
+> 0.62
+
+0 1 2 3
+
+y
+
+0.0 
+
+0.5 
+
+1.0 
+
+1.5 
+
+2.0 
+
+2.5 
+
+3.0 
+
+> z
+> Accuracy
+> 0.46
+> 0.53
+> 0.60
+> 0.66
+> 0.73
+> 0.80
+> 0.86
+> 0.93
+
+0 1 2 3
+
+y
+
+> 0.53
+> 0.60
+> 0.66
+> 0.73
+> 0.80
+> 0.86
+> 0.86
+
+0.0269 
+
+0.0660 
+
+0.1588 
+
+0.2517 
+
+0.3445 
+
+0.4373 
+
+0.5302 
+
+0.6230 
+
+> Explanation score
+
+0.4644 
+
+0.5311 
+
+0.5978 
+
+0.6645 
+
+0.7312 
+
+0.7979 
+
+0.8646 
+
+0.9313 
+
+> Accuracy
+
+Figure 4. Explanation scores and abstraction accuracies for Example 4.8, comparing the bivariate abstraction B2 → B3 with the trivariate abstraction B1 → B3 ← B2. In all figures x = 1 , and parameters are α = −0.9, β = 0 .9, and γ = 0 .9. The trivariate abstraction achieves higher explanation scores and accuracies in the region y ≥ 2, z ≥ 2 because B1 captures contextual information that is lost in the bivariate abstraction. 
+
+We now describe the fine-grained interventional distributions P (B | do (Bs = bs)) . Interventions that do not involve B2
+
+can be simply computed using the observational Gaussian distribution of (X, Y, Z ). For example, under do (B2 = 1) , the fine-grained value of X is drawn from P (X | | X| ≤ x), and Y and Z are generated by the original structural equation model. Hence, 
+
+P (B1 = 1 , B 2 = 1 , B 3 = 1 | do (B1 = 1)) = P (Y ≥ y, Z ≥ z | | X| ≤ x).
+
+When B2 is intervened on, we again use structural equation model in (33). Then the covariance matrix of the multivariate Gaussian variable (X, Y ∗, Z ∗) is given by 
+
+ΣX,Y ∗,Z ∗ =
+
+
+
+1 0 β
+
+0 1 γβ γ β2 + γ2 + σ2
+
+> NZ
+
+ ,
+
+The fine-grained interventional probabilities can therefore be calculated using Gaussian probabilities of the multivariate Gaussian variable (X, Y ∗, Z ∗). For example, under do (B2 = 1) ,
+
+P (B1 = 1 , B 2 = 1 , B 3 = 1 | do (B2 = 1)) = P (|X| ≤ x, Y ∗ ≥ y, Z ∗ ≥ z)
+
+P (Y ∗ ≥ y) ,
+
+and under do (B1 = 1 , B 2 = 1) we have 18 Formalizing and Falsifying Causal Pathways of Rare Events                              
+
+> X
+> YZ
+> (a)
+> X
+> YZ
+> (b)
+> X
+> YZ
+> (c)
+> X
+> YZ
+> (d) Figure 5. (a) Causal DAG with binary variables X,Y, and Z, where Xinfluences the target Zdirectly and indirectly via the mediator Y.(b): Pathway abstraction with accuracy 1, which is always possible because the indirect and direct links can always be merged into one direct link. (c): Pathway abstraction whose accuracy rdepends on the relevance of the direct link X→Yfor the outlier event at Z(d): Pathway abstraction whose accuracy rdepends on the relevance of the confounder Xfor the outlier event at Z.
+
+P (B1 = 1 , B 2 = 1 , B 3 = 1 | do (B1 = 1 , B 2 = 1)) = P (|X| ≤ x, Y ∗ ≥ y, Z ∗ ≥ z)
+
+P (|X| ≤ x)P (Y ∗ ≥ y) .
+
+Figure 4 compares the accuracy and explanation score of the bivariate abstraction B2 → B3 with the trivariate abstraction 
+
+B1 → B3 ← B2 in Example 4.8 for x = 1 and different values of y, z . The parameter choice creates negative confounding: because α < 0, large Y tends to occur with smaller values of X, while because β > 0, smaller values of X tend to decrease 
+
+Z. The trivariate abstraction includes B1, which captures this context, and therefore achieves higher explanation scores and accuracies in the outlier region y ≥ 2, z ≥ 2.The code used for the numerical evaluation in Example 4.8 and for generating the plots in Figure 4 is available at 
+
+https://github.com/AH-20/CausalPathwayExplanation .
+
+G.2. Pathway Abstraction of DAGs With Binary Variables 
+
+Consider the causal DAG given by Figure 5a, where X, Y, Z are binary variables, and the events X = i, Y = j, Z = k are denoted by xi, y j , z k, respectively, for i, j, k ∈ { 0, 1}. Note that the DAG in Figure 5b is always a valid pathway abstraction with accuracy equal to 1 by merging the direct and indirect links into one arrow. In this section we show that the accuracy of the pathway abstraction in Figure 5c depends on the relevance of the direct link X → Z and we derive a quantitative condition for safely ignoring the confounder X to obtain the pathway abstraction in Figure 5d. First, in close analogy to Budhathoki et al. (2022a), we define a notion of “causal contribution” for a cause effect-pair 
+
+X → Y :
+
+Definition G.1 (causal contribution) . For i, j ∈ { 0, 1}, the causal contribution of xi to yj is 
+
+C  xi → yj  := log p(yj | xi)
+
+p(yj ) . (36) Note that it coincides with explanation score up to a normalization factor: 
+
+E  xi → yj  = − C  xi → yj 
+
+log p(yj ) .
+
+When there are mediator nodes between the cause-effect pair in addition to the direct link, the above definition does not correctly capture the “direct” contribution of the cause node to the effect node. Therefore, we introduce a notion of direct contribution that follows our principle of logarithmic contribution analysis, although it is motivated by the average controlled direct effect in Definition 3 in (Pearl, 2001). 
+
+Definition G.2 (controlled direct contribution) . For i, j, k ∈ { 0, 1}, the controlled direct contribution of xi to zk where Y
+
+is set to yj is 
+
+Cc
+
+> direct
+
+ xi → zk | yj  := log p(zk | do (xi, y j )) 
+
+p(zk | do (yj )) . (37) 19 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+We are now able to describe a condition for which we can safely ignore the confounder: 
+
+Lemma G.3 (ignoring confounders) . Let X, Y, Z be binary variables connected by the DAG G in Figure 5a, with joint probability distribution P . Consider the pathway abstraction in Figure 5d, with root cause Y and target Z. We choose the cluster DAG to coincide with this pathway DAG, and set B := {Y, Z }, pB(yj , z k) := p(yj , z k). Then this pathway abstraction has accuracy at least 
+
+r ≥ 1 − sconfounding 
+
+− log p(z1) , (38) 
+
+where sconfounding is a parameter measuring the strength of confounding by X, which is defined by 
+
+sconfounding := max  
+
+> j,k
+
+min 
+
+n
+
+max  
+
+> i
+
+C  xi → yj  , Cc
+
+> direct
+
+ x1 → zk | yj  − Cc
+
+> direct
+
+ x0 → zk | yj  o
+
+. (39) 
+
+Proof. Since Y and Z are already binary, it follows from definition 4.4 that the natural micro-realization coincides with ordinary binary interventions on the abstract variables. Moreover, since PB(Y, Z ) = P (Y, Z ), the observational distribution is matched by construction. Interventions on Z, or on both Y and Z, also agree in the original and abstract models because 
+
+Z is fixed by the intervention and the marginal distribution of Y is unchanged. Therefore, to find the accuracy of the pathway abstraction, we only need to compute the following: 
+
+r = 1 − max 
+
+> j
+
+n DKL 
+
+ P (Z | do (yj )) ∥ PB(Z | do (yj )) 
+
+− log p(z1)
+
+o
+
+= 1 − max 
+
+> j
+
+( P  
+
+> k
+
+p(zk | do (yj )) log p(zk |do (yj ))   
+
+> pB(zk|do (yj))
+
+− log p(z1)
+
+)
+
+. (40) We can write 
+
+log pB(zk | do (yj )) 
+
+p(zk | do (yj )) = log p(zk | yj )
+
+p(zk | do (yj )) = log 
+
+P 
+
+> i
+
+p(zk | xi, y j )p(xi | yj )
+
+P 
+
+> i
+
+p(zk | xi, y j )p(xi) . (41) Since the numerator and denominator of (41) are two different convex sums of p(zk | x1, y j ) and p(zk | x0, y j ), we have 
+
+log pB(zk | do (yj )) 
+
+p(zk | do (yj )) ≤ log p(zk | x1, y j )
+
+p(zk | x0, y j ) = log p(zk | x1, y j )
+
+p(zk | do (yj )) − log p(zk | x0, y j )
+
+p(zk | do (yj )) 
+
+= Cc
+
+> direct
+
+ x1 → zk | yj  − Cc
+
+> direct
+
+ x0 → zk | yj  . (42) Further, we have 
+
+log 
+
+P 
+
+> i
+
+p  zk | xi, y j  p(xi | yj )
+
+P 
+
+> i
+
+p(zk | xi, y j )p(xi) ∈
+
+
+
+min  
+
+> i
+
+log p(xi | yj )
+
+p(xi) , max  
+
+> i
+
+log p(xi | yj )
+
+p(xi)
+
+
+
+,
+
+because P 
+
+> m
+
+λmam
+
+P 
+
+> m
+
+λmbm
+
+∈
+
+
+
+min 
+
+> m
+
+am
+
+bm
+
+, max 
+
+> m
+
+am
+
+bm
+
+
+
+,
+
+for any positive sequences λm, a m, b m.With p(xi | yj )/p (xi) = p(yj | xi)/p (yj ) we have thus shown that the absolute value of (41) is bounded by 
+
+max 
+
+> i
+
+
+
+log p(yj | xi)
+
+p(yj )
+
+
+
+= max 
+
+> i
+
+ C  xi → yj  . (43) Since the KL-divergence in (40) is a convex sum of the log-ratios in (41), from (42) and (43) we have 
+
+DKL 
+
+ P (Z | do (yj )) ∥ PB(Z | do (yj )) 
+
+≤ max  
+
+> j,k
+
+min 
+
+n
+
+max  
+
+> i
+
+C  xi → yj  , Cc
+
+> direct
+
+ x1 → zk | yj  − Cc
+
+> direct
+
+(x0 → zk | yj )
+
+o
+
+, (44) 20 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+which completes the proof. Lemma G.3 shows that X can be ignored when the confounding strength is small. This happens, for example, if X has little contribution to Y , or if the controlled direct contribution of X to Z changes little across the values of X once Y is fixed. Finally, we are able to describe a condition for which we can safely ignore the direct link: 
+
+Lemma G.4 (ignoring direct link) . Let X, Y, Z be binary variables connected by the DAG G in Figure 5a with joint probability distribution P . Consider the pathway abstraction in Figure 5c, with root cause X and target Z. We choose the cluster DAG to coincide with this pathway DAG and set B := {X, Y, Z }, pB(xi, y j , z k) := p(xi, y j )p(zk | yj ). Let 
+
+M := max  
+
+> i,j,k
+
+Cc
+
+> direct
+
+ xi → zk | yj  , (45) 
+
+then, the pathway abstraction has accuracy at least 
+
+r ≥ 1 − 2M
+
+− log p(z1) . (46) 
+
+Proof. Since X, Y, Z are already binary, the natural micro-realization coincides with ordinary binary interventions. By definition of the pathway abstraction, pB(xi, y j , z k) = p(xi, y j )p(zk|yj ), so the mechanisms for X and Y coincide with those of the original model. Therefore, if Z is intervened on, the KL-divergence is zero, so we only need to consider intervention sets BS with Z / ∈ BS , which yields 
+
+DKL (P (B | do (BS = bS )) ∥ PB(B | do (BS = bs))) = X
+
+> b
+
+P (b | do (BS = bS )) log p(zk|xi, y j )
+
+p(zk|yj ) (47) where the sum is over configurations b = ( xi, y j , z k) consistent with the intervention. Therefore, we need to bound 
+
+log p(zk|xi, y j )
+
+p(zk|yj ) .
+
+Note that since p(zk|do (xi, y j )) = p(zk|xi, y j ), we have 
+
+log p(zk | xi, y j )
+
+p(zk | do (yj )) ≤ M, 
+
+therefore 
+
+e−M p(zk | do (yj )) ≤ p(zk | xi, y j ) ≤ eM p(zk | do (yj )) . (48) Since 
+
+p(zk | yj ) = X
+
+> i
+
+p(zk | xi, y j )p(xi | yj ),
+
+is a convex sum of the probabilities p(zk | xi, y j ), from (48) we have 21 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+e−M p(zk | do (yj )) ≤ p(zk | yj ) ≤ eM p(zk | do (yj )) , (49) then from (48) and (49) it follows that 
+
+e−2M ≤ p(zk | xi, y j )
+
+p(zk | yj ) ≤ e2M .
+
+Therefore 
+
+log p(zk | xi, y j )
+
+p(zk | yj ) ≤ 2M. 
+
+and thus 
+
+max 
+
+> S, bS
+
+DKL (P (B | do (BS = bS )) ∥ PB(B | do (BS = bS ))) ≤ 2M, 
+
+which completes the proof. Lemma G.4 shows that the direct edge X → Y can be ignored when the controlled direct contribution of X to Y is uniformly small across all values of X, Y, Z .
+
+# H. Example of a Causal Pathway Generated by LLM 
+
+Generated by Anthropic Claude Opus 4.5, with 32,000 output tokens, accessed via Amazon Bedrock. The boxes contain answers in a format that is close to the original output. 
+
+H.1. Generation of an Example with Pathway System prompt: describe causal pathway User input: Describe a causal pathway that explains how an imaginary inhabitant of the USA got long-term homeless. The pathway should be a causal DAG where each node is a condition describing an objective fact. Every condition (that is, node of the DAG) is supposed to be a likely consequence of its parents, that is, they are explained by the parent conditions. The description of the parent conditions need to be detailed enough such that the consequence is likely given the parent conditions, without referring to remote ancestors. Only the root causes are one or more nodes (not necessarily the root nodes of the DAG) describe conditions which need not be explained in terms of their parents. Please be explicit about the nodes and the arrows of the DAG and try to restrict the explanation to a DAG with not more than 5 nodes. 
+
+LLM output: (Readers may realize that the description of the pathway below is logically inconsistent with the list of arrows further below. We nevertheless considered this pathway in Section 5 because it provided an instructive example of an incomplete explanation. Since the scope of this paper is not the evaluation of LLMs, we believe it is justified to pick examples that are particularly suitable for our purpose.) # Causal Pathway to Long-Term Homelessness ## DAG Structure “‘ 
+
+22 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+[A] Severe Mental Illness (Schizophrenia) diagnosed at age 19 
+
+↓
+
+[B] Unable to maintain employment due to untreated psychotic episodes 
+
+↓
+
+[C] Exhausted savings and lost apartment after 8 months without income 
+
+↓
+
+[D] Family estrangement (parents deceased, sibling relationship severed during psychotic episode) 
+
+↓
+
+[E] Long-term homelessness ( >1 year on streets) “‘ ## Nodes 
+
+Node Condition A 35-year-old male developed schizophrenia at age 19; lacks consistent access to psychiatric medication due to gaps in Medicaid coverage. 
+
+B Fired from three consecutive jobs over 2 years due to paranoid behavior and absences during acute episodes. 
+
+C With no income and $2,000 in savings depleted on food and medication, evicted from rental apartment. 
+
+D No family support available—parents deceased; only sibling cut contact after a threatening incident during a psychotic break. 
+
+E Living on the streets for more than 18 months; chronic homelessness now established. ## Root Cause **Node A** (Severe Mental Illness) is the **root cause**—a condition that initiates the cascade but is not explained by other nodes in this pathway. ## Arrows - A → B- B → C- C → E- D → E (D combines with C to make E likely) 
+
+H.2. Inferring Probability P (B|A)
+
+System prompt: estimate a probability 
+
+User input: what’s the probability that condition A results in condition B for an inhabitant in the US? | A |
+
+35-year-old male developed schizophrenia at age 19; lacks consistent access to psychiatric medication due to gaps in Medicaid coverage | | B | Fired from three consecutive jobs over 2 years due to paranoid behavior and absences during acute episodes |
+
+LLM output: Model: # Probability Estimate: Condition A → Condition B ## My Estimate: **45-65%** (moderate-to-high probability) —## Key Factors Increasing Probability ### Schizophrenia + Medication Non-Adherence - **Relapse rates** without consistent medication: 60-80% within 1 year - Acute episodes typically involve positive symptoms (paranoia, disorganization) that are highly visible in workplace settings ### Employment Vulnerability - Schizophrenia baseline unemployment rate: ∼70-80% - Among those who *do* work, job tenure is often short 
+
+23 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+- Paranoid subtype symptoms are particularly problematic for workplace relationships ### Medicaid Gap Impact - Coverage disruptions strongly correlate with psychiatric hospitalization and crisis episodes - 16 years of illness duration suggests multiple cycles of decompensation —## Factors That Could Lower Probability 
+
+| Factor | Effect |
+
+Strong family support system May buffer crises Milder symptom severity Some maintain function even unmedicated Supportive employment programs If accessed, improve retention Not all jobs terminate for cause Some separations may be voluntary —## Why Not Higher ( > 65% )? - Not all people with poorly-controlled schizophrenia hold three jobs in 2 years (many hold zero) - The specific pattern of ”three firings” requires repeated re-hiring, which suggests *some* baseline functionality —**Point estimate: ∼ 55% ** 
+
+H.3. Inferring probability P (C|B)
+
+System prompt: estimate a probability 
+
+User input: What’s the probability that [B] Unable to maintain employment due to untreated psychotic episodes results in [C] Exhausted savings and lost apartment after 8 months without income for an inhabitant of the USA? 
+
+LLM output: Probability Estimate: B → CScenario Analysis Given: A person in the USA who is unable to maintain employment due to untreated psychotic episodes Question: Probability of exhausting savings and losing apartment after 8 months without income Key Factors Factors Increasing Probability: • Limited savings baseline: ˜56% of Americans cannot cover a $1,000 emergency; median savings for renters is very low • 8 months is substantial: Average U.S. rent is ˜$1,500-2,000/month = $12,000-16,000 needed just for housing • Untreated psychosis context: Suggests limited access to support systems, possible prior instability • Eviction timelines: Most states allow eviction proceedings after 1-3 months of non-payment Factors Decreasing Probability: • Disability benefits: SSI/SSDI applications (though these take 6+ months typically) • Family support: Some may have family assistance • Emergency rental assistance programs • Savings variation: Some individuals do have substantial savings Estimate Given: • Most Americans lack 8 months of expense coverage 
+
+24 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+• Untreated psychosis population likely has below-average financial reserves • Eviction processes typically complete within 8 months of non-payment Probability: 0.75 - 0.85 Point estimate: ∼ 0.80 
+
+H.4. Inferring Probability P (D|C)
+
+System prompt: estimate a probability 
+
+User input: What’s the probability that [C] Exhausted savings and lost apartment after 8 months without income results in [D] Family estrangement (parents deceased, sibling relationship severed during psychotic episode) for an inhabitant of the USA? 
+
+LLM output: I need to estimate the probability that exhausting savings and losing an apartment after 8 months without income leads to family estrangement (with parents deceased and sibling relationship severed during a psychotic episode). Key considerations: 1. Baseline context: Someone who has gone 8 months without income and lost housing is likely experiencing severe crisis - possibly involving mental health issues, substance abuse, or other destabilizing factors. 2. The psychotic episode element: This is specific - it implies a serious mental health condition. Psychotic episodes can involve behavior that severely damages relationships (paranoid accusations, erratic actions, inability to recognize loved ones’ intentions). 3. Conditional factors: • The housing loss suggests someone who didn’t have family support to fall back on - this may indicate pre-existing strain • 8 months without income suggests possible disability, mental health crisis, or other severe impairment • Sibling relationships severed “during” a psychotic episode suggests the break happens in crisis, not gradually 4. However: Most people who lose housing don’t have psychotic episodes, and most psychotic episodes don’t permanently sever all family ties. This is a specific tragic pathway. Estimation: • The scenario C already selects for vulnerable individuals • But complete family estrangement with this specific pattern remains relatively uncommon • Partial estrangement is more common than total severance Probability estimate: 3-7% Point estimate: ˜0.05 (5%) 
+
+25 Formalizing and Falsifying Causal Pathways of Rare Events 
+
+H.5. Inferring Probability P (E|D)
+
+System prompt: estimate a probability 
+
+User input: What’s the probability that [D] Family estrangement (parents deceased, sibling relationship severed during psychotic episode) results in [E] Long-term homelessness ( >1 year on streets) for an inhabitant of the USA? 
+
+LLM Output: Estimating P(Long-term Homelessness | Family Estrangement with Psychotic Episode) Key Factors to Consider Population context: - Person has experienced a psychotic episode (suggesting serious mental illness) - Complete loss of family safety net (parents deceased, sibling estrangement) - Located in USA Breaking Down the Estimate Baseline rates: - ∼30% of homeless individuals have serious mental illness - ∼50-60% of long-term homeless cite family conflict as contributing factor - Average duration of homelessness is longer for those with SMI Protective vs. Risk factors in this scenario: Risk Factors: Psychotic episode history; No family support; Relationship severed during episode Potential Mitigators: Access to mental health systems; Disability benefits (SSI/SSDI); Possible reconnection after stabilization; Other social supports possible Probability Estimate For someone with this specific profile (SMI + complete family estrangement): Point estimate: 15-25% Reasoning: - Much higher than general population ( ∼0.2% long-term homeless) - SMI alone increases risk ∼10-20 ×
+
+- Loss of family support roughly doubles risk again - But majority still avoid long-term homelessness through benefits, treatment, other relationships Central estimate: ∼20% This reflects serious but not deterministic risk. 
+
+26

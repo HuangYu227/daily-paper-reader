@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-01",
+  "date": "2026-06-01",
+  "generated_at": "2026-06-01T22:57:11",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/01/2605.31254v1-formalizing-and-falsifying-causal-pathways-of-rare-events",
+      "section": "deep",
+      "title_en": "Formalizing and falsifying causal pathways of rare events",
+      "authors": "Anahita Haghighat, Dominik Janzing",
+      "date": "2026-05-29",
+      "pdf": "https://arxiv.org/pdf/2605.31254v1",
+      "score": "8.0",
+      "evidence": "在结构方程模型中形式化定义和检验因果路径",
+      "tldr": "针对罕见事件（异常值）的因果路径分析，现有形式化方法依赖于完整结构方程模型。本文提出因果路径的严格定义，并证明其可检验含义仅取决于路径本身的因果抽象，而非全局因果图。通过引入路径级抽象，将简单口头因果解释与详细因果建模衔接起来。该方法为罕见事件的根因分析提供了可操作的验证框架。",
+      "tags": "query:tsc",
+      "abstract_en": "Building on recent formalizations of root cause analysis for rare events (``outliers'') in structural equation models, we propose a formal definition of a causal pathway and discuss its testable implications. We identify conditions under which these implications depend only on a causal abstraction defined by the pathway of rare events, rather than on the full causal graph of the underlying system. Accordingly, we introduce an abstraction of causal structure to pathways of rare events that bridges simple verbal causal explanations and detailed causal modeling.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

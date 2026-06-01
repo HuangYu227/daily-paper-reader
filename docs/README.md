@@ -6,32 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-31
-- 运行时间：2026-05-31 20:33:46 UTC
+- 最新运行日期：2026-06-01
+- 运行时间：2026-06-01 22:57:07 UTC
 - 运行状态：成功
-- 本次总论文数：4
-- 精读区：2
-- 速读区：2
+- 本次总论文数：1
+- 精读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-今日推荐4篇论文，精读2篇获9.0高分，涉及脑功能影像生成与视频生成因果视角。最值得关注FM-fMRI的静息-任务状态转换合成方法及YoCausal的视频生成世界模型因果分析。建议优先精读高分文献，速读内容用于拓宽思路。
-- 详情：[/202605/31/README](/202605/31/README)
+今日精读一篇高分论文，聚焦罕见事件因果路径的形式化与证伪方法。  
+核心结论：提出系统性检验罕见事件因果机制的分析框架，突破传统统计推断在小样本下的局限。  
+下一步可尝试将该框架应用于你自己的领域数据，验证罕见现象背后的因果链条。
+- 详情：[/202606/01/README](/202606/01/README)
 
 ### 精读区论文标签
-1. [FM-fMRI: Event Conditioned Flow Matching for Rest-to-Task fMRI Time-Series Synthesis](/202605/31/2605.26423v1-fm-fmri-event-conditioned-flow-matching-for-rest-to-task-fmri-time-series-synthesis)  
-   标签：评分：9.0/10、query:tsc
-   evidence：事件条件流匹配用于时间序列生成（fMRI）
-2. [YoCausal: How Far is Video Generation from World Model? A Causality Perspective](/202605/31/2605.30346v1-yocausal-how-far-is-video-generation-from-world-model-a-causality-perspective)  
-   标签：评分：9.0/10、query:tsc
-   evidence：评估视频生成模型中的因果理解，与因果学习需求直接相关
+1. [Formalizing and falsifying causal pathways of rare events](/202606/01/2605.31254v1-formalizing-and-falsifying-causal-pathways-of-rare-events)  
+   标签：评分：8.0/10、query:tsc
+   evidence：在结构方程模型中形式化定义和检验因果路径
 
 ### 速读区论文标签
-1. [Exponential mixing properties of nonlinear functional autoregressive models](/202605/31/2605.25633v1-exponential-mixing-properties-of-nonlinear-functional-autoregressive-models)  
-   标签：评分：6.0/10、query:tsc
-   evidence：非线性函数自回归模型用于时间序列生成
-2. [QuITE: Query-Based Irregular Time Series Embedding](/202605/31/2605.28166v1-quite-query-based-irregular-time-series-embedding)  
-   标签：评分：6.0/10、query:tsc
-   evidence：提供了基于查询的不规则时间序列嵌入模块，可用于生成式时间序列模型
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
