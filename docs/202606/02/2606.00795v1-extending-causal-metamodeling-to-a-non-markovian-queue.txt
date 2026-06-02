@@ -1,0 +1,704 @@
+Title: Extending Causal Metamodeling to a non-Markovian Queue
+
+URL Source: https://arxiv.org/pdf/2606.00795v1
+
+Published Time: Tue, 02 Jun 2026 01:09:06 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+In Submission to the 2026 Winter Simulation Conference 
+
+EXTENDING CAUSAL METAMODELING TO A NON-MARKOVIAN QUEUE 
+
+Pracheta Amaranath 1, Anant Bhide 1, David Jensen 1 and Peter J. Haas 11 Manning College of Information and Computer Sciences, University of Massachusetts Amherst, MA, USA 
+
+ABSTRACT 
+
+Metamodels for discrete-event simulations approximate the behavior of simulation models without running expensive simulations. Prior work introduced modular dynamic Bayesian networks (MDBNs)—a class of metamodels that can estimate a range of probabilistic and causal queries (PCQs) using a single, trained model—but the method was limited to Markovian systems. In this paper, we initiate an extension of MDBNs to non-Markovian queues by approximating non-exponential distributions using phase-type distributions. This approach raises novel challenges, including balancing metamodeling accuracy and tractability when choosing the number of phases, efficiently learning metamodel parameters, and choosing the sampling interval that is used to approximate a continuous-time simulation by a discrete-time MDBN. We provide preliminary solutions to these challenges, yielding the first causal metamodeling technique for non-Markovian systems. Experiments on a G/M/1 queue demonstrate that the MDBN can produce accurate answers to PCQs with orders-of-magnitude speedup of inference times relative to direct simulation. 
+
+1 INTRODUCTION 
+
+Simulation metamodeling, in which a complex simulation is approximated via a statistical model that captures the simulation’s input-output relationships, is widely used in applications where prediction and optimization must be done quickly, such as in “system” and “process” digital twin settings; see Amazon Web Services (2025). Modular dynamic Bayesian networks (MDBNs) were recently introduced as the first class of causal simulation metamodels capable of answering a rich set of probabilistic and causal queries (PCQs) from a single trained metamodel (Amaranath et al. 2023). A PCQ requests computation of a specified conditional probability distribution of the system state at one or more time points, given observations of, and interventions on , other state variables and input parameters. For example, in a queueing model, a PCQ might ask: "What would be the distribution of the queue length at 3pm if we were to double the service rate starting at noon?" Unlike traditional metamodels which approximate a single real-valued performance measure as a function of input parameters and require a separate model for each query of interest (Barton 2020), an MDBN represents the joint evolution of simulation state variables over time as a causal graphical model. Based on a set of discrete-time snapshots of the system state, machine learning algorithms can estimate the conditional probability distributions (CPDs) that govern transitions between successive snapshots. Using these CPDs, an MDBN can efficiently estimate answers to many such queries from a single model. Previously, we demonstrated these capabilities on an M/M/1 queue, showing that a single MDBN could accurately answer a variety of PCQs, including queries about interventions not present in the training data. However, the M/M/1 queue—and Markovian queueing systems more broadly—represent a very restricted class of simulation models. The Markovian property of the M/M/1 queue maps directly onto the two-time-slice structure of an MDBN: the conditional distribution of the state at the next time step is fully determined by the state at the current time step. Many realistic simulation models, on the other hand, employ general service or inter-arrival time distributions (e.g., Gamma, Weibull, or lognormal) that violate this property. Such distributions arise naturally in practice: call centers often exhibit lognormally distributed service times (Brown et al. 2005), healthcare systems involve procedure durations that follow Gamma or 
+
+> arXiv:2606.00795v1 [cs.LG] 30 May 2026
+
+Amaranath, Bhide, Jensen, and Haas 
+
+Weibull distributions (Sahu et al. 1997) and project management systems are typically modeled using Beta distributions (Keefer and Verdini 1993). In these settings, the system carries memory—for example, in a G/G/1 queue with Gamma-distributed service times, the time remaining until the next service completion depends not only on whether the server is busy, but on how long the current service has been in progress. This duration dependence means that the queue-length process at the next time step cannot be determined from the current queue length alone, breaking the structural assumption underlying the original MDBN. Extending MDBNs to such non-Markovian systems is essential for the approach to be applicable to the broad class of simulation models encountered in practice. In this paper, we initiate the extension of MDBNs to non-Markovian queueing simulations in the setting of a G/M/1 queue. Our approach first approximates the general (non-Markovian) inter-arrival distribution with a phase-type distribution—distributions constructed from sequences and mixtures of exponential stages that satisfy the Markov property by design. We then augment the structure of the MDBN with phase variables that track the state of the arrival process, recovering the two-time-slice dependency structure pertaining to the Markov assumption. This “method of phases” approach has long been used to allow numerical computation of probabilities for non-Markovian systems—see, e.g., (Neuts 1994)—but has not been apllied in the metamodeling setting. This augmentation, however, increases both the dimensionality of the state space and the number of conditional probability distribution (CPD) parameters to be estimated, which creates a scalability challenge. We address this challenge by: (i) adopting phase-distribution approximation methods that balance the accuracy of the approximation with computational efficiency; (ii) introducing a technique called “parameter extrapolation”—a novel specialization of the general “parameter tying” method from the graphical models literature (Koller and Friedman 2009, Section 17.5)—which exploits structural regularities in the queue-length CPDs to reduce the number of parameters estimated from data; and (iii) choosing the MDBN “sampling interval” to balance accuracy and computational efficiency. This latter issue arises because a discrete-event simulation generates continuous-time sample paths but an MDBN operates in discrete time, i.e., over a sequence of system-state snapshots. In the M/M/1 setting of Amaranath et al. (2023), the sampling interval was selected empirically by evaluating query accuracy across a small set of candidate values. This approach becomes impractical for the G/M/1 queue, where the expanded parameter space—now including the parameters of the phase variables in addition to the service rate—makes exhaustive tuning over all parameter combinations prohibitively expensive. We instead derive the optimal sampling interval analytically, using results from the theory of continuous-time Markov chain discretization (Doytchinov and Irby 2010), which provides a closed-form bound that applies uniformly across all parameter settings. We evaluate the MDBN on a workload of PCQs, comparing queue-length distributions conditioned on either prior observations or prior interventions to ground-truth conditional distributions from extensive Monte Carlo simulation of the (modified) G/M/1 queue. Similarly, we compare summary statistics of the conditional distributions—mean queue length and the interquartile range (IQR) of the queue-length distribution—to ground-truth values. This work makes several novel contributions 1. First, we describe structural modifications to the MDBN that accommodate the increased state-complexity of non-Markovian queues while keeping inference tractable. Second, we present methods to improve CPD learning efficiency, including effective approximation by phase-type distributions, parameter extrapolation, and a theoretically grounded approach to selecting the optimal sampling interval. Third, we provide empirical evidence that MDBN metamodels produce accurate answers to probabilistic and causal queries for non-Markovian queues, with inference times that are four orders of magnitude faster relative to direct simulation. To our knowledge, this is the first application of causal graphical model techniques to non-Markovian simulation metamodeling. 
+
+> 1Our code is publicly available at https://github.com/PrachetaBA/non-markovian-mdbn.git
+
+Amaranath, Bhide, Jensen, and Haas 
+
+2 BACKGROUND Probabilistic and Causal Queries (PCQs) We briefly review the PCQ framework introduced in Amaranath et al. (2023); the reader is referred to that paper for a complete treatment. Consider a discrete-event simulation model M with l state variables whose output is a continuous-time stochastic process {Xt }t≥0 with discrete state space X ⊆ Zl , and input parameter vector θ = ( θ1, . . . , θd ) ∈ Θ ⊆ Rd . A probabilistic and causal query (PCQ) is a desired conditional probability distribution of projections of the system state at one or more time points, conditioned on a set of actions applied at specified times or over time intervals. Actions can be observational —denoted Yt = y, conditioning on the state taking a particular value—or interventional —denoted Yt ← f (Yt ), externally setting the state via the do (·) operator (Pearl 2009). For example, in a queueing system with arrival rate λ , service rate μ, and queue length Lt , representative PCQs include: inferring the queue-length distribution under fixed rates ( P(Lτ | λ0: τ ← c1, μ0: τ ← c2)), reasoning about queue-length distributions after injecting additional customers ( P(Lτ1 , Lτ2 | Lτ1−h ← Lτ1−h + 5, . . . )), and identifying the arrival rate that maximizes the probability of a target queue-length range (arg max λ P(Lτ ∈ [5.. 10 ] | λ )). PCQs fall into several subclasses relevant to our experiments. Interventional queries involve at least one interventional action on system states or parameters, where the intervention action could force the system state to a fixed value or increment/decrement it based on its current value. Conditional queries involve observations on system states or parameters and inverse queries optimize over simulation input parameters to achieve a target system behavior. A single trained MDBN can answer all of these query types without requiring separate models or additional simulation runs. Note that interventional queries are usually hard to support via execution of a simulation model without altering the simulation code. 
+
+Modular Dynamic Bayesian Networks (MDBNs) An MDBN is a dynamic Bayesian network (DBN) whose edges represent direct causal relationships and whose conditional probability distributions (CPDs) satisfy the modularity property: interventions on any variable do not affect the CPDs of other variables. These properties allow the MDBN to answer interventional queries by translating them into equivalent probabilistic queries via standard techniques such as the backdoor criterion; see Amaranath et al. (2023) for a detailed treatment of the causal assumptions, inference procedures, and the algorithms used to implement interventions. <latexit sha1_base64="ZyT8ZNaVmKw3LbXrCWeCV2oHr4o=">AAAB7nicbVDLSsNAFL2pr1pfVZduBovgqiSKj5UW3LisYB/QhjKZ3LRDJ5MwMxFK6Ee4caGIW//DP3Dn3zh9LLR64MLhnHO5jyAVXBvX/XIKS8srq2vF9dLG5tb2Tnl3r6mTTDFssEQkqh1QjYJLbBhuBLZThTQOBLaC4c3Ebz2g0jyR92aUoh/TvuQRZ9RYqdUVNhrSXrniVt0pyF/izUnl+uN0inqv/NkNE5bFKA0TVOuO56bGz6kynAkcl7qZxpSyIe1jx1JJY9R+Pl13TI6sEpIoUbakIVP1Z0dOY61HcWCTMTUDvehNxP+8TmaiSz/nMs0MSjYbFGWCmIRMbichV8iMGFlCmeJ2V8IGVFFm7IdK9gne4sl/SfOk6p1Xz+68Su0KZijCARzCMXhwATW4hTo0gMEQHuEZXpzUeXJenbdZtODMe/bhF5z3bzaakbQ=</latexit> 
+
+ 
+
+<latexit sha1_base64="ZyT8ZNaVmKw3LbXrCWeCV2oHr4o=">AAAB7nicbVDLSsNAFL2pr1pfVZduBovgqiSKj5UW3LisYB/QhjKZ3LRDJ5MwMxFK6Ee4caGIW//DP3Dn3zh9LLR64MLhnHO5jyAVXBvX/XIKS8srq2vF9dLG5tb2Tnl3r6mTTDFssEQkqh1QjYJLbBhuBLZThTQOBLaC4c3Ebz2g0jyR92aUoh/TvuQRZ9RYqdUVNhrSXrniVt0pyF/izUnl+uN0inqv/NkNE5bFKA0TVOuO56bGz6kynAkcl7qZxpSyIe1jx1JJY9R+Pl13TI6sEpIoUbakIVP1Z0dOY61HcWCTMTUDvehNxP+8TmaiSz/nMs0MSjYbFGWCmIRMbichV8iMGFlCmeJ2V8IGVFFm7IdK9gne4sl/SfOk6p1Xz+68Su0KZijCARzCMXhwATW4hTo0gMEQHuEZXpzUeXJenbdZtODMe/bhF5z3bzaakbQ=</latexit> 
+
+  <latexit sha1_base64="y277LYqBcCj6grvytEIqivZ6Hq4=">AAAB6nicbZDLSgMxFIbP1Futl1ZduHATLIKrMiN4WYgU3LisaC/QDiWTZtrQJDMkGaEMfQQ3LhRx6xv4Ju58ALd9BtPLQlt/CHz8/znknBPEnGnjul9OZml5ZXUtu57b2Nzazhd2dms6ShShVRLxSDUCrClnklYNM5w2YkWxCDitB/3rcV5/oEqzSN6bQUx9gbuShYxgY627lkjahaJbcidCi+DNoFjeH43ylx/flXbhs9WJSCKoNIRjrZueGxs/xcowwukw10o0jTHp4y5tWpRYUO2nk1GH6Mg6HRRGyj5p0MT93ZFiofVABLZSYNPT89nY/C9rJia88FMm48RQSaYfhQlHJkLjvVGHKUoMH1jARDE7KyI9rDAx9jo5ewRvfuVFqJ2UvLPS6a1XLF/BVFk4gEM4Bg/OoQw3UIEqEOjCIzzDi8OdJ+fVeZuWZpxZzx78kfP+A9wTke8=</latexit> 
+
+μ<latexit sha1_base64="y277LYqBcCj6grvytEIqivZ6Hq4=">AAAB6nicbZDLSgMxFIbP1Futl1ZduHATLIKrMiN4WYgU3LisaC/QDiWTZtrQJDMkGaEMfQQ3LhRx6xv4Ju58ALd9BtPLQlt/CHz8/znknBPEnGnjul9OZml5ZXUtu57b2Nzazhd2dms6ShShVRLxSDUCrClnklYNM5w2YkWxCDitB/3rcV5/oEqzSN6bQUx9gbuShYxgY627lkjahaJbcidCi+DNoFjeH43ylx/flXbhs9WJSCKoNIRjrZueGxs/xcowwukw10o0jTHp4y5tWpRYUO2nk1GH6Mg6HRRGyj5p0MT93ZFiofVABLZSYNPT89nY/C9rJia88FMm48RQSaYfhQlHJkLjvVGHKUoMH1jARDE7KyI9rDAx9jo5ewRvfuVFqJ2UvLPS6a1XLF/BVFk4gEM4Bg/OoQw3UIEqEOjCIzzDi8OdJ+fVeZuWZpxZzx78kfP+A9wTke8=</latexit> 
+
+μ
+
+<latexit sha1_base64="nxroMmtOTfq0c7XieiiUB0Y++Og=">AAAB6nicbZDLSgMxFIbP1Fsdb1WXboKt4KrMCF4QxIIbFy4q2gu0Q8mkmTY0kxmSjFCGPoIbF4q4tA/iM7gR38b0stDWHwIf/38OOef4MWdKO863lVlYXFpeya7aa+sbm1u57Z2qihJJaIVEPJJ1HyvKmaAVzTSn9VhSHPqc1vze1SivPVCpWCTudT+mXog7ggWMYG2su8JNoZXLO0VnLDQP7hTylx/vX/ZFPCy3cp/NdkSSkApNOFaq4Tqx9lIsNSOcDuxmomiMSQ93aMOgwCFVXjoedYAOjNNGQSTNExqN3d8dKQ6V6oe+qQyx7qrZbGT+lzUSHZx5KRNxoqkgk4+ChCMdodHeqM0kJZr3DWAimZkVkS6WmGhzHdscwZ1deR6qR0X3pHh86+ZL5zBRFvZgHw7BhVMowTWUoQIEOvAIz/BicevJerXeJqUZa9qzC39kDX8AgnmQ/w==</latexit> 
+
+L
+
+<latexit sha1_base64="nxroMmtOTfq0c7XieiiUB0Y++Og=">AAAB6nicbZDLSgMxFIbP1Fsdb1WXboKt4KrMCF4QxIIbFy4q2gu0Q8mkmTY0kxmSjFCGPoIbF4q4tA/iM7gR38b0stDWHwIf/38OOef4MWdKO863lVlYXFpeya7aa+sbm1u57Z2qihJJaIVEPJJ1HyvKmaAVzTSn9VhSHPqc1vze1SivPVCpWCTudT+mXog7ggWMYG2su8JNoZXLO0VnLDQP7hTylx/vX/ZFPCy3cp/NdkSSkApNOFaq4Tqx9lIsNSOcDuxmomiMSQ93aMOgwCFVXjoedYAOjNNGQSTNExqN3d8dKQ6V6oe+qQyx7qrZbGT+lzUSHZx5KRNxoqkgk4+ChCMdodHeqM0kJZr3DWAimZkVkS6WmGhzHdscwZ1deR6qR0X3pHh86+ZL5zBRFvZgHw7BhVMowTWUoQIEOvAIz/BicevJerXeJqUZa9qzC39kDX8AgnmQ/w==</latexit> 
+
+L L
+
+(a) MDBN plate model 
+
+λ μ L( j) L( j+1) P(L( j+1) | λ , μ, L( j))
+
+0.1 0.4 0 [0.. 10 ] [0.9... 0.00 ]
+
+0.1 0.9 0 [0.. 10 ] [0.7... 0.01 ]
+
+... ... ... ... ...0.3 0.9 10 [0.. 10 ] [0.0... 0.3]
+
+(b) Example CPD <latexit sha1_base64="65vvF0qe1echIhGeDuocIVETh6w=">AAAB8HicbVDLSgMxFL1TX7W+qi7dBFvBVZlRfKy04MZlBfuQdiiZTKYNTTJDkhHK0K9w40IRt/6Gf+DOvzF9LLT1wIXDOedyH0HCmTau++3klpZXVtfy64WNza3tneLuXkPHqSK0TmIeq1aANeVM0rphhtNWoigWAafNYHAz9puPVGkWy3szTKgvcE+yiBFsrPRQ7nCbDXG5Wyy5FXcCtEi8GSldf55OUOsWvzphTFJBpSEca9323MT4GVaGEU5HhU6qaYLJAPdo21KJBdV+Nll4hI6sEqIoVrakQRP1d0eGhdZDEdikwKav572x+J/XTk106WdMJqmhkkwHRSlHJkbj61HIFCWGDy3BRDG7KyJ9rDAx9kcF+wRv/uRF0jipeOeVszuvVL2CKfJwAIdwDB5cQBVuoQZ1ICDgCV7g1VHOs/PmvE+jOWfWsw9/4Hz8APF5khA=</latexit> 
+
+ 
+
+<latexit sha1_base64="65vvF0qe1echIhGeDuocIVETh6w=">AAAB8HicbVDLSgMxFL1TX7W+qi7dBFvBVZlRfKy04MZlBfuQdiiZTKYNTTJDkhHK0K9w40IRt/6Gf+DOvzF9LLT1wIXDOedyH0HCmTau++3klpZXVtfy64WNza3tneLuXkPHqSK0TmIeq1aANeVM0rphhtNWoigWAafNYHAz9puPVGkWy3szTKgvcE+yiBFsrPRQ7nCbDXG5Wyy5FXcCtEi8GSldf55OUOsWvzphTFJBpSEca9323MT4GVaGEU5HhU6qaYLJAPdo21KJBdV+Nll4hI6sEqIoVrakQRP1d0eGhdZDEdikwKav572x+J/XTk106WdMJqmhkkwHRSlHJkbj61HIFCWGDy3BRDG7KyJ9rDAx9kcF+wRv/uRF0jipeOeVszuvVL2CKfJwAIdwDB5cQBVuoQZ1ICDgCV7g1VHOs/PmvE+jOWfWsw9/4Hz8APF5khA=</latexit> 
+
+  <latexit sha1_base64="SEvSgdwSWaJ4Zr0sFMFOdVAqMFU=">AAAB7HicbZDLSgMxFIbPeK310qoLF26CreCqzAheFiIFNy4rOG2hHUomzbShSWZIMkIpfQY3LhRx6wv4Ju58ALd9BtPLQlt/CHz8/znknBMmnGnjul/O0vLK6tp6ZiO7ubW9k8vv7lV1nCpCfRLzWNVDrClnkvqGGU7riaJYhJzWwt7NOK89UKVZLO9NP6GBwB3JIkawsZZfbIq02MoX3JI7EVoEbwaF8sFolLv6+K608p/NdkxSQaUhHGvd8NzEBAOsDCOcDrPNVNMEkx7u0IZFiQXVwWAy7BAdW6eNoljZJw2auL87Blho3RehrRTYdPV8Njb/yxqpiS6DAZNJaqgk04+ilCMTo/HmqM0UJYb3LWCimJ0VkS5WmBh7n6w9gje/8iJUT0veeensziuUr2GqDBzCEZyABxdQhluogA8EGDzCM7w40nlyXp23aemSM+vZhz9y3n8AlOKSSw==</latexit> 
+
+μ<latexit sha1_base64="SEvSgdwSWaJ4Zr0sFMFOdVAqMFU=">AAAB7HicbZDLSgMxFIbPeK310qoLF26CreCqzAheFiIFNy4rOG2hHUomzbShSWZIMkIpfQY3LhRx6wv4Ju58ALd9BtPLQlt/CHz8/znknBMmnGnjul/O0vLK6tp6ZiO7ubW9k8vv7lV1nCpCfRLzWNVDrClnkvqGGU7riaJYhJzWwt7NOK89UKVZLO9NP6GBwB3JIkawsZZfbIq02MoX3JI7EVoEbwaF8sFolLv6+K608p/NdkxSQaUhHGvd8NzEBAOsDCOcDrPNVNMEkx7u0IZFiQXVwWAy7BAdW6eNoljZJw2auL87Blho3RehrRTYdPV8Njb/yxqpiS6DAZNJaqgk04+ilCMTo/HmqM0UJYb3LWCimJ0VkS5WmBh7n6w9gje/8iJUT0veeensziuUr2GqDBzCEZyABxdQhluogA8EGDzCM7w40nlyXp23aemSM+vZhz9y3n8AlOKSSw==</latexit> 
+
+μ
+
+…
+
+<latexit sha1_base64="7t7NQBp9K3slgz3OsCgd2x/ZrYA=">AAAB8HicbZDLSgMxFIbPeK3jrerSzWAr1E2ZEbwgiAU3LlxUsBdpx5JJ0zY0yQxJRihDn8KNC0VEVz6Fz+BGfBvTy0Jbfwh8/P855JwTRIwq7brf1szs3PzCYmrJXl5ZXVtPb2yWVRhLTEo4ZKGsBkgRRgUpaaoZqUaSIB4wUgm654O8ckekoqG41r2I+By1BW1RjLSxbrKXt0nO3etnG+mMm3eHcqbBG0Pm7OP1yz6N3oqN9Ge9GeKYE6ExQ0rVPDfSfoKkppiRvl2PFYkQ7qI2qRkUiBPlJ8OB+86ucZpOK5TmCe0M3d8dCeJK9XhgKjnSHTWZDcz/slqsW8d+QkUUayLw6KNWzBwdOoPtnSaVBGvWM4CwpGZWB3eQRFibG9nmCN7kytNQ3s97h/mDKy9TOIGRUrANO5ADD46gABdQhBJg4HAPj/BkSevBerZeRqUz1rhnC/7Iev8BM1mTEg==</latexit> 
+
+L(0) 
+
+<latexit sha1_base64="7t7NQBp9K3slgz3OsCgd2x/ZrYA=">AAAB8HicbZDLSgMxFIbPeK3jrerSzWAr1E2ZEbwgiAU3LlxUsBdpx5JJ0zY0yQxJRihDn8KNC0VEVz6Fz+BGfBvTy0Jbfwh8/P855JwTRIwq7brf1szs3PzCYmrJXl5ZXVtPb2yWVRhLTEo4ZKGsBkgRRgUpaaoZqUaSIB4wUgm654O8ckekoqG41r2I+By1BW1RjLSxbrKXt0nO3etnG+mMm3eHcqbBG0Pm7OP1yz6N3oqN9Ge9GeKYE6ExQ0rVPDfSfoKkppiRvl2PFYkQ7qI2qRkUiBPlJ8OB+86ucZpOK5TmCe0M3d8dCeJK9XhgKjnSHTWZDcz/slqsW8d+QkUUayLw6KNWzBwdOoPtnSaVBGvWM4CwpGZWB3eQRFibG9nmCN7kytNQ3s97h/mDKy9TOIGRUrANO5ADD46gABdQhBJg4HAPj/BkSevBerZeRqUz1rhnC/7Iev8BM1mTEg==</latexit> 
+
+L(0) L(1) <latexit sha1_base64="NJXjubOYNptgR2c/KnTaD5MB12k=">AAAB73icbZDJSgNBEIZr4hbHLerRS2MixEuYEVwQxIAXDwoRzALJGHo6PUmTnsXuHiEMeQkvHhQR9OJb+AxexLexsxw08YeGj/+voqvKjTiTyrK+jdTM7Nz8QnrRXFpeWV3LrG9UZBgLQssk5KGouVhSzgJaVkxxWosExb7LadXtng3y6h0VkoXBtepF1PFxO2AeI1hpq5a7uEnyl7u5ZiZrFayh0DTYY8iefrx+mSfRW6mZ+Wy0QhL7NFCEYynrthUpJ8FCMcJp32zEkkaYdHGb1jUG2KfSSYbz9tGOdlrIC4V+gUJD93dHgn0pe76rK32sOnIyG5j/ZfVYeUdOwoIoVjQgo4+8mCMVosHyqMUEJYr3NGAimJ4VkQ4WmCh9IlMfwZ5ceRoqewX7oLB/ZWeLxzBSGrZgG/JgwyEU4RxKUAYCHO7hEZ6MW+PBeDZeRqUpY9yzCX9kvP8AesuSqA==</latexit> 
+
+L(M )
+
+<latexit sha1_base64="NJXjubOYNptgR2c/KnTaD5MB12k=">AAAB73icbZDJSgNBEIZr4hbHLerRS2MixEuYEVwQxIAXDwoRzALJGHo6PUmTnsXuHiEMeQkvHhQR9OJb+AxexLexsxw08YeGj/+voqvKjTiTyrK+jdTM7Nz8QnrRXFpeWV3LrG9UZBgLQssk5KGouVhSzgJaVkxxWosExb7LadXtng3y6h0VkoXBtepF1PFxO2AeI1hpq5a7uEnyl7u5ZiZrFayh0DTYY8iefrx+mSfRW6mZ+Wy0QhL7NFCEYynrthUpJ8FCMcJp32zEkkaYdHGb1jUG2KfSSYbz9tGOdlrIC4V+gUJD93dHgn0pe76rK32sOnIyG5j/ZfVYeUdOwoIoVjQgo4+8mCMVosHyqMUEJYr3NGAimJ4VkQ4WmCh9IlMfwZ5ceRoqewX7oLB/ZWeLxzBSGrZgG/JgwyEU4RxKUAYCHO7hEZ6MW+PBeDZeRqUpY9yzCX9kvP8AesuSqA==</latexit> 
+
+L(M ) (c) MDBN ground network G
+
+Figure 1: MDBN model for the M/M/1 queue For the M/M/1 queue studied in prior work, the MDBN consists of three variables: arrival rate λ , service rate μ, and queue length L. The structure of the MDBN is depicted in Figure 1a—the input parameters λ
+
+and μ are parents of L in every time slice, i.e., each discrete time step at which the system state is recorded. The queue length at each time slice ( j + 1) depends on the queue length at the previous time slice ( j) and the input parameters: P(L( j+1) | λ , μ, L( j)). The thick gray box around L indicates that this dependency is repeated across time slices; unrolling the plate model for M slices yields the ground network G shown in Figure 1c. This structure is a direct consequence of the Markov property of the M/M/1 queue-length process—the distribution of the future queue length is fully determined by the current queue length and the input parameters, with no dependence on the history. The CPD for P(L( j+1) | λ , μ, L( j)) (see Figure 1b) is learned from simulation data by sampling the queue length at each time point δ j and computing maximum Amaranath, Bhide, Jensen, and Haas 
+
+likelihood estimates, where δ j = j · δ and δ is the sampling interval controlling the temporal resolution at which the MDBN is constructed. Two design parameters influence the quality of the learned MDBN—the sampling interval δ and the number of simulation runs N used to learn the CPD parameters. Prior work showed empirically that when 
+
+δ is a small fraction of the time scale δQ of the query of interest, the discrete-time MDBN accurately captures the continuous-time dynamics; in this paper, we provide a theoretical basis for selecting the optimal 
+
+δ (Section 3.4). The number of simulation runs N determines the accuracy of the estimated CPDs, with diminishing returns beyond a sufficient threshold. Both parameters involve tradeoffs between accuracy and computational cost that carry over to the non-Markovian extension for MDBNs. 
+
+Phase-Type Distributions A phase-type distribution describes the time to absorption in a finite-state continuous-time Markov chain (CTMC) with a single absorbing state. Intuitively, a random variable with a phase-type distribution is generated by passing through a sequence of exponential stages (or phases ), where transitions between stages occur at exponential rates. Because the holding time in each phase is memoryless, the overall process is Markovian by construction—even though the resulting distribution of the total time to absorption can approximate a wide variety of non-exponential shapes. This property is what makes phase-type distributions useful for our purposes: by replacing a general (non-Markovian) distribution with a phase-type approximation, we recover the Markov structure required by the MDBN. The class of phase-type distributions is dense in the set of all nonnegative distributions (Neuts 1994), meaning that any such distribution can be approximated arbitrarily well given a sufficient number of phases. In practice, however, the number of phases directly impacts the complexity of the resulting MDBN, so we seek approximations that use as few phases as possible while maintaining adequate fidelity. The phase-type distribution that we employ is the generalized Erlang distribution (GED), also known as a hypoexponential distribution, which consists of k phases in series with distinct rates λ1, λ2, . . . , λk. The total time to absorption is the sum of k independent exponential random variables, each with its own rate. When all rates are identical, this reduces to an Erlang distribution. The specific methods used to obtain GED approximations for the Gamma, Beta, and Weibull distributions are described in Section 3.2. 
+
+3 MODULAR DYNAMIC BAYESIAN NETWORKS FOR NON-MARKOVIAN QUEUES 
+
+We describe how the MDBN framework can be extended to the G/M/1 queue. Specifically, we note the challenges posed by non-Markovian inter-arrival distributions, the phase-type approximations used to recover a Markovian representation, the resulting MDBN structure, an efficient approach to CPD estimation, and a theoretically grounded method for selecting the optimal sampling interval. 
+
+3.1 The G/M/1 Queue 
+
+We consider a G/M/1 queue in which the inter-arrival times follow a general distribution FA and the service times are exponentially distributed with rate μ. The generality of FA is what distinguishes this setting from the M/M/1 queue studied in prior work: FA may be any distribution on [0, ∞) that does not necessarily satisfy the Markov property, such as the Gamma, Beta, or Weibull. We select specific parameterizations of these distributions in our experiments to cover both light-tailed and heavy-tailed regimes. While we focus on the G/M/1 queue as a proof of concept, the techniques described in this section apply to G/G/1 queues more broadly. The key challenge in determining the MDBN structure is that, unlike the M/M/1 queue, the queue length at time t + δ depends not only on the queue length at time t and simulation input parameters, but also on the elapsed time since the last arrival. This dependence has two consequences for the MDBN: the queue-length process is no longer time-homogeneous in the original state space, and the two-time-slice structure of the original MDBN is insufficient to capture these dynamics, since it assumes that the conditional distribution 
+
+P(L( j+1) | L( j), λ , μ) is the same for every time slice. To address both issues, we augment the state space Amaranath, Bhide, Jensen, and Haas 
+
+with variables that track the phase of the inter-arrival process, effectively encoding the relevant dependency in a Markovian form. This augmentation is made possible by the phase-type approximation described next. 
+
+3.2 Phase-Type Approximation of General Distributions 
+
+To extend the MDBN framework to a non-Markovian queue, we approximate the general inter-arrival distribution by a phase-type distribution that can be incorporated into the MDBN. In this paper, we approximate the Gamma, Weibull, and Beta distributions using GEDs. 
+
+Gamma Distribution For the Gamma distribution, we use the closed-form GED construction of Cassidy et al. (2022). Given X ∼ Γ(α, β ), the approximation concatenates k independent exponential phases: k − 2 phases share a common rate, while the remaining two have distinct rates. The phase rates are determined using a closed-form, analytical solution that matches the first two moments of the target distribution. k is determined as ⌈α⌉ for α > 2. In our experiments with the Gamma distribution, we restrict 
+
+α < 5. An example fit is shown in Figure 2a. 
+
+Weibull and Beta Distributions For the Weibull and Beta distributions, closed-form GED approx-imations are not available. We use the moment-matching approach of Elmagrhraby et al. (2009), which equates the first n moments of the target distribution with those of a GED with n phases, yielding a system of n nonlinear equations in the phase rates λ1 . . . λn. When this system is infeasible—as often occurs for three or more phases—the method formulates a mathematical program that minimizes weighted deviations from the target moments. We sweep over candidate values of k ∈ [2.. 10 ] and select the best fit using the Jensen-Shannon divergence, with cross-entropy as a tie-breaker. Representative fits are shown in Figures 2b and 2c. As shown in Section 4, restricting the maximum candidate values of k ≤ 10 is sufficient to achieve low error for our MDBN metamodels. 0 2 4 6 8 10 12 14 
+
+> X
+> 0.000
+> 0.025
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> P(X)
+> Gamma
+> GED
+
+(a) Gamma: α = 4.3, β = 1.2; GED: k = 5, λ1.. 3 = 0.97 , λ4 =
+
+0.59 , λ5 = 2.68; JSD: 0 .0022 0 1 2 3 4 5 6
+
+> X
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> P(X)
+> Weibull
+> GED
+
+(b) Weibull: α = 1.2, β = 1.5GED: k = 2, λ1 = 0.87 , λ2 = 3.8; JSD: 0 .0040 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 
+
+> X
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> P(X)
+> Beta
+> GED
+
+(c) Beta: α = 2.5, β = 4.5GED: k = 3, λ1 = 8.39 , λ2 =
+
+8.39 , λ3 = 8.39; JSD: 0 .0043 
+
+Figure 2: Phase-type (GED) approximations of target distributions for the G/M/1 queue. Each plot shows the target distribution (blue) and the GED approximation (red). α and β denote the corresponding (shape/scale) parameters of the target distribution. The Jensen-Shannon distance (JSD) indicates the quality of the fit. 
+
+3.3 MDBN Structure 
+
+To represent the state of a G/M/1 queue with a phase-type inter-arrival distribution, we augment the MDBN with a random variable S denoting the current phase of the arrival process. The queue length at the time t + δ
+
+depends on the state of the arrival process within its sequence of exponential phases, since this determines the probability of an arrival occurring before the next time slice. The modified MDBN therefore contains two dynamic variables inside the plate: the queue length L
+
+and the phase variable S. The phase S( j+1) depends on the phase S( j) and the parameters of the general inter-arrival distribution, denoted ω = ( α, β ) for the Gamma, Beta, and Weibull distributions. The queue length L( j+1) depends on the queue length L( j), the phase S( j), as well as the service rate μ. The phase Amaranath, Bhide, Jensen, and Haas 
+
+variable S implicitly captures the dependence on the GED phase rates λ1, . . . , λk, which are deterministic functions of ω. Therefore, we do not explicitly model them as random variables in the MDBN and just take them into account when computing CPDs. The plate model and the corresponding (unrolled) ground network G for M time slices are shown in Figure 3. <latexit sha1_base64="a6CUFGgtWWtzIZgsgTjjYv3rWzI=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZuUCTEXSJYwO5lNhszOLjOzQlhSWtpYKGLrQ+QpLOx8Bl/CyaXQxB8GPv7/HOac40WcKW3bX1ZqbX1jcyu9ndnZ3ds/yB4eNVQYS0LrJOShbHlYUc4ErWumOW1FkuLA47TpDW+nefOeSsVCcadHEXUD3BfMZwRrY9XytXw3m7ML9kxoFZwF5G4+JtXvh9NJpZv97PRCEgdUaMKxUm3HjrSbYKkZ4XSc6cSKRpgMcZ+2DQocUOUms1HH6Nw4PeSH0jyh0cz93ZHgQKlR4JnKAOuBWs6m5n9ZO9b+tZswEcWaCjL/yI850iGa7o16TFKi+cgAJpKZWREZYImJNtfJmCM4yyuvQuOy4BQLxaqTK5VhrjScwBlcgANXUIIyVKAOBPrwCM/wYnHryXq13ualKWvRcwx/ZL3/AEhhkZ0=</latexit> 
+
+S
+
+<latexit sha1_base64="a6CUFGgtWWtzIZgsgTjjYv3rWzI=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZuUCTEXSJYwO5lNhszOLjOzQlhSWtpYKGLrQ+QpLOx8Bl/CyaXQxB8GPv7/HOac40WcKW3bX1ZqbX1jcyu9ndnZ3ds/yB4eNVQYS0LrJOShbHlYUc4ErWumOW1FkuLA47TpDW+nefOeSsVCcadHEXUD3BfMZwRrY9XytXw3m7ML9kxoFZwF5G4+JtXvh9NJpZv97PRCEgdUaMKxUm3HjrSbYKkZ4XSc6cSKRpgMcZ+2DQocUOUms1HH6Nw4PeSH0jyh0cz93ZHgQKlR4JnKAOuBWs6m5n9ZO9b+tZswEcWaCjL/yI850iGa7o16TFKi+cgAJpKZWREZYImJNtfJmCM4yyuvQuOy4BQLxaqTK5VhrjScwBlcgANXUIIyVKAOBPrwCM/wYnHryXq13ualKWvRcwx/ZL3/AEhhkZ0=</latexit> 
+
+S
+
+<latexit sha1_base64="zWxsF0shB5u9n4HovQiQvKNeSOg=">AAAB73icbZC7SgNBFIbPeo3xFrUUZDARrMKuRbQzYJMyAXOBJISzk9lkyOzFmVkhLCl9ARsLRWx9gzyFhZ3P4Es4uRSa+MPAx/+fw5xz3EhwpW37y1pZXVvf2Extpbd3dvf2MweHNRXGkrIqDUUoGy4qJnjAqpprwRqRZOi7gtXdwc0kr98zqXgY3OphxNo+9gLucYraWI1cC0XUx1wnk7Xz9lRkGZw5ZK8/xpXvh5NxuZP5bHVDGvss0FSgUk3HjnQ7Qak5FWyUbsWKRUgH2GNNgwH6TLWT6bwjcmacLvFCaV6gydT93ZGgr9TQd02lj7qvFrOJ+V/WjLV31U54EMWaBXT2kRcLokMyWZ50uWRUi6EBpJKbWQnto0SqzYnS5gjO4srLULvIO4V8oeJkiyWYKQXHcArn4MAlFKEEZagCBQGP8Awv1p31ZL1ab7PSFWvecwR/ZL3/ACiUk94=</latexit> 
+
+ω<latexit sha1_base64="zWxsF0shB5u9n4HovQiQvKNeSOg=">AAAB73icbZC7SgNBFIbPeo3xFrUUZDARrMKuRbQzYJMyAXOBJISzk9lkyOzFmVkhLCl9ARsLRWx9gzyFhZ3P4Es4uRSa+MPAx/+fw5xz3EhwpW37y1pZXVvf2Extpbd3dvf2MweHNRXGkrIqDUUoGy4qJnjAqpprwRqRZOi7gtXdwc0kr98zqXgY3OphxNo+9gLucYraWI1cC0XUx1wnk7Xz9lRkGZw5ZK8/xpXvh5NxuZP5bHVDGvss0FSgUk3HjnQ7Qak5FWyUbsWKRUgH2GNNgwH6TLWT6bwjcmacLvFCaV6gydT93ZGgr9TQd02lj7qvFrOJ+V/WjLV31U54EMWaBXT2kRcLokMyWZ50uWRUi6EBpJKbWQnto0SqzYnS5gjO4srLULvIO4V8oeJkiyWYKQXHcArn4MAlFKEEZagCBQGP8Awv1p31ZL1ab7PSFWvecwR/ZL3/ACiUk94=</latexit> 
+
+ω <latexit sha1_base64="JpPjb/sRg1J41lld2aPFngW0xwc=">AAAB7nicbZC7SwNBEMb34ivGV9TS5vASsAp3FtEyYJMygnlAEsLeZi5Zsrd37M4J4QiCrZWNhSKSzr/Hzv/GzaPQxA8WfnzfDDszfiy4Rtf9tjIbm1vbO9nd3N7+weFR/vikoaNEMaizSESq5VMNgkuoI0cBrVgBDX0BTX90M8ub96A0j+QdjmPohnQgecAZRWM1Cx0fkBZ6ecctuXPZ6+Atwak4xafHh+m01st/dfoRS0KQyATVuu25MXZTqpAzAZNcJ9EQUzaiA2gblDQE3U3n407sonH6dhAp8yTac/d3R0pDrcehbypDikO9ms3M/7J2gsF1N+UyThAkW3wUJMLGyJ7tbve5AoZibIAyxc2sNhtSRRmaC+XMEbzVldehcVnyyqXyredUqmShLDkj5+SCeOSKVEiV1EidMDIiz+SVvFmx9WK9Wx+L0oy17Dklf2R9/gD8hZJk</latexit> 
+
+ω
+
+<latexit sha1_base64="JpPjb/sRg1J41lld2aPFngW0xwc=">AAAB7nicbZC7SwNBEMb34ivGV9TS5vASsAp3FtEyYJMygnlAEsLeZi5Zsrd37M4J4QiCrZWNhSKSzr/Hzv/GzaPQxA8WfnzfDDszfiy4Rtf9tjIbm1vbO9nd3N7+weFR/vikoaNEMaizSESq5VMNgkuoI0cBrVgBDX0BTX90M8ub96A0j+QdjmPohnQgecAZRWM1Cx0fkBZ6ecctuXPZ6+Atwak4xafHh+m01st/dfoRS0KQyATVuu25MXZTqpAzAZNcJ9EQUzaiA2gblDQE3U3n407sonH6dhAp8yTac/d3R0pDrcehbypDikO9ms3M/7J2gsF1N+UyThAkW3wUJMLGyJ7tbve5AoZibIAyxc2sNhtSRRmaC+XMEbzVldehcVnyyqXyredUqmShLDkj5+SCeOSKVEiV1EidMDIiz+SVvFmx9WK9Wx+L0oy17Dklf2R9/gD8hZJk</latexit> 
+
+ω
+
+<latexit sha1_base64="a6CUFGgtWWtzIZgsgTjjYv3rWzI=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZuUCTEXSJYwO5lNhszOLjOzQlhSWtpYKGLrQ+QpLOx8Bl/CyaXQxB8GPv7/HOac40WcKW3bX1ZqbX1jcyu9ndnZ3ds/yB4eNVQYS0LrJOShbHlYUc4ErWumOW1FkuLA47TpDW+nefOeSsVCcadHEXUD3BfMZwRrY9XytXw3m7ML9kxoFZwF5G4+JtXvh9NJpZv97PRCEgdUaMKxUm3HjrSbYKkZ4XSc6cSKRpgMcZ+2DQocUOUms1HH6Nw4PeSH0jyh0cz93ZHgQKlR4JnKAOuBWs6m5n9ZO9b+tZswEcWaCjL/yI850iGa7o16TFKi+cgAJpKZWREZYImJNtfJmCM4yyuvQuOy4BQLxaqTK5VhrjScwBlcgANXUIIyVKAOBPrwCM/wYnHryXq13ualKWvRcwx/ZL3/AEhhkZ0=</latexit> 
+
+S
+
+<latexit sha1_base64="a6CUFGgtWWtzIZgsgTjjYv3rWzI=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZuUCTEXSJYwO5lNhszOLjOzQlhSWtpYKGLrQ+QpLOx8Bl/CyaXQxB8GPv7/HOac40WcKW3bX1ZqbX1jcyu9ndnZ3ds/yB4eNVQYS0LrJOShbHlYUc4ErWumOW1FkuLA47TpDW+nefOeSsVCcadHEXUD3BfMZwRrY9XytXw3m7ML9kxoFZwF5G4+JtXvh9NJpZv97PRCEgdUaMKxUm3HjrSbYKkZ4XSc6cSKRpgMcZ+2DQocUOUms1HH6Nw4PeSH0jyh0cz93ZHgQKlR4JnKAOuBWs6m5n9ZO9b+tZswEcWaCjL/yI850iGa7o16TFKi+cgAJpKZWREZYImJNtfJmCM4yyuvQuOy4BQLxaqTK5VhrjScwBlcgANXUIIyVKAOBPrwCM/wYnHryXq13ualKWvRcwx/ZL3/AEhhkZ0=</latexit> 
+
+S
+
+<latexit sha1_base64="QFReWLOpOr3/XerBXCPw/DZEUN4=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZsUFgmaCyRLmJ3MJkNmZ5eZWSEsKS1tLBSx9SHyFBZ2PoMv4eRSaOIPAx//fw5zzvEizpS27S8rtbK6tr6R3sxsbe/s7mX3D+oqjCWhNRLyUDY9rChngtY005w2I0lx4HHa8AbXk7xxT6ViobjTw4i6Ae4J5jOCtbFu8zf5TjZnF+yp0DI4c8hdfYyr3w/H40on+9nuhiQOqNCEY6Vajh1pN8FSM8LpKNOOFY0wGeAebRkUOKDKTaajjtCpcbrID6V5QqOp+7sjwYFSw8AzlQHWfbWYTcz/slas/Us3YSKKNRVk9pEfc6RDNNkbdZmkRPOhAUwkM7Mi0scSE22ukzFHcBZXXob6ecEpFopVJ1cqw0xpOIITOAMHLqAEZahADQj04BGe4cXi1pP1ar3NSlPWvOcQ/sh6/wE9vpGW</latexit> 
+
+L
+
+<latexit sha1_base64="QFReWLOpOr3/XerBXCPw/DZEUN4=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZsUFgmaCyRLmJ3MJkNmZ5eZWSEsKS1tLBSx9SHyFBZ2PoMv4eRSaOIPAx//fw5zzvEizpS27S8rtbK6tr6R3sxsbe/s7mX3D+oqjCWhNRLyUDY9rChngtY005w2I0lx4HHa8AbXk7xxT6ViobjTw4i6Ae4J5jOCtbFu8zf5TjZnF+yp0DI4c8hdfYyr3w/H40on+9nuhiQOqNCEY6Vajh1pN8FSM8LpKNOOFY0wGeAebRkUOKDKTaajjtCpcbrID6V5QqOp+7sjwYFSw8AzlQHWfbWYTcz/slas/Us3YSKKNRVk9pEfc6RDNNkbdZmkRPOhAUwkM7Mi0scSE22ukzFHcBZXXob6ecEpFopVJ1cqw0xpOIITOAMHLqAEZahADQj04BGe4cXi1pP1ar3NSlPWvOcQ/sh6/wE9vpGW</latexit> 
+
+L <latexit sha1_base64="QFReWLOpOr3/XerBXCPw/DZEUN4=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZsUFgmaCyRLmJ3MJkNmZ5eZWSEsKS1tLBSx9SHyFBZ2PoMv4eRSaOIPAx//fw5zzvEizpS27S8rtbK6tr6R3sxsbe/s7mX3D+oqjCWhNRLyUDY9rChngtY005w2I0lx4HHa8AbXk7xxT6ViobjTw4i6Ae4J5jOCtbFu8zf5TjZnF+yp0DI4c8hdfYyr3w/H40on+9nuhiQOqNCEY6Vajh1pN8FSM8LpKNOOFY0wGeAebRkUOKDKTaajjtCpcbrID6V5QqOp+7sjwYFSw8AzlQHWfbWYTcz/slas/Us3YSKKNRVk9pEfc6RDNNkbdZmkRPOhAUwkM7Mi0scSE22ukzFHcBZXXob6ecEpFopVJ1cqw0xpOIITOAMHLqAEZahADQj04BGe4cXi1pP1ar3NSlPWvOcQ/sh6/wE9vpGW</latexit> 
+
+L
+
+<latexit sha1_base64="QFReWLOpOr3/XerBXCPw/DZEUN4=">AAAB6nicbZC7SgNBFIbPxluMt6ilIIOJYBV2LaKdAZsUFgmaCyRLmJ3MJkNmZ5eZWSEsKS1tLBSx9SHyFBZ2PoMv4eRSaOIPAx//fw5zzvEizpS27S8rtbK6tr6R3sxsbe/s7mX3D+oqjCWhNRLyUDY9rChngtY005w2I0lx4HHa8AbXk7xxT6ViobjTw4i6Ae4J5jOCtbFu8zf5TjZnF+yp0DI4c8hdfYyr3w/H40on+9nuhiQOqNCEY6Vajh1pN8FSM8LpKNOOFY0wGeAebRkUOKDKTaajjtCpcbrID6V5QqOp+7sjwYFSw8AzlQHWfbWYTcz/slas/Us3YSKKNRVk9pEfc6RDNNkbdZmkRPOhAUwkM7Mi0scSE22ukzFHcBZXXob6ecEpFopVJ1cqw0xpOIITOAMHLqAEZahADQj04BGe4cXi1pP1ar3NSlPWvOcQ/sh6/wE9vpGW</latexit> 
+
+L <latexit sha1_base64="JNvWDTeFPs2c/QkPSLVy1oIZRuw=">AAAB7HicbZA7SwNBFIXvxleMr6ilzeImYBV2LaJlwCZlBDcJJEuYncwmQ2Zml5lZISxBsLWwsVDEIo0/yM5/4+RRaOKBgY9z7mXuvWHCqNKu+23lNja3tnfyu4W9/YPDo+LxSVPFqcTExzGLZTtEijAqiK+pZqSdSIJ4yEgrHN3M8tY9kYrG4k6PExJwNBA0ohhpY/mlLk9LvaLjVty57HXwluDUnPLT48N02ugVv7r9GKecCI0ZUqrjuYkOMiQ1xYxMCt1UkQThERqQjkGBOFFBNh92YpeN07ejWJontD13f3dkiCs15qGp5EgP1Wo2M//LOqmOroOMiiTVRODFR1HKbB3bs83tPpUEazY2gLCkZlYbD5FEWJv7FMwRvNWV16F5WfGqleqt59TqsFAezuAcLsCDK6hBHRrgAwYKz/AKb5awXqx362NRmrOWPafwR9bnD5UDkZY=</latexit> 
+
+μ<latexit sha1_base64="JNvWDTeFPs2c/QkPSLVy1oIZRuw=">AAAB7HicbZA7SwNBFIXvxleMr6ilzeImYBV2LaJlwCZlBDcJJEuYncwmQ2Zml5lZISxBsLWwsVDEIo0/yM5/4+RRaOKBgY9z7mXuvWHCqNKu+23lNja3tnfyu4W9/YPDo+LxSVPFqcTExzGLZTtEijAqiK+pZqSdSIJ4yEgrHN3M8tY9kYrG4k6PExJwNBA0ohhpY/mlLk9LvaLjVty57HXwluDUnPLT48N02ugVv7r9GKecCI0ZUqrjuYkOMiQ1xYxMCt1UkQThERqQjkGBOFFBNh92YpeN07ejWJontD13f3dkiCs15qGp5EgP1Wo2M//LOqmOroOMiiTVRODFR1HKbB3bs83tPpUEazY2gLCkZlYbD5FEWJv7FMwRvNWV16F5WfGqleqt59TqsFAezuAcLsCDK6hBHRrgAwYKz/AKb5awXqx362NRmrOWPafwR9bnD5UDkZY=</latexit> 
+
+μ
+
+(a) MDBN plate model <latexit sha1_base64="dwCgpdJL/apzfZPHieMi0bFgK4s=">AAAB8HicbZC7TgJBFIbPekW8oZYmZiKYYEN2LdBOEhtKiHIxsJLZYYAJM7ubmVkTsqH0CWwsNMbWJ+ApLOx8Bl/C4VIo+CeTfPn/czLnHC/kTGnb/rKWlldW19YTG8nNre2d3dTeflUFkSS0QgIeyLqHFeXMpxXNNKf1UFIsPE5rXv9qnNfuqVQs8G/0IKSuwF2fdRjB2li3meu7OGufDjOtVNrO2ROhRXBmkL78GJW/H45GpVbqs9kOSCSorwnHSjUcO9RujKVmhNNhshkpGmLSx13aMOhjQZUbTwYeohPjtFEnkOb5Gk3c3x0xFkoNhGcqBdY9NZ+Nzf+yRqQ7F27M/DDS1CfTjzoRRzpA4+1Rm0lKNB8YwEQyMysiPSwx0eZGSXMEZ37lRaie5Zx8Ll920oUiTJWAQziGLDhwDgUoQgkqQEDAIzzDiyWtJ+vVepuWLlmzngP4I+v9B/lck7A=</latexit> 
+
+S(0) 
+
+<latexit sha1_base64="dwCgpdJL/apzfZPHieMi0bFgK4s=">AAAB8HicbZC7TgJBFIbPekW8oZYmZiKYYEN2LdBOEhtKiHIxsJLZYYAJM7ubmVkTsqH0CWwsNMbWJ+ApLOx8Bl/C4VIo+CeTfPn/czLnHC/kTGnb/rKWlldW19YTG8nNre2d3dTeflUFkSS0QgIeyLqHFeXMpxXNNKf1UFIsPE5rXv9qnNfuqVQs8G/0IKSuwF2fdRjB2li3meu7OGufDjOtVNrO2ROhRXBmkL78GJW/H45GpVbqs9kOSCSorwnHSjUcO9RujKVmhNNhshkpGmLSx13aMOhjQZUbTwYeohPjtFEnkOb5Gk3c3x0xFkoNhGcqBdY9NZ+Nzf+yRqQ7F27M/DDS1CfTjzoRRzpA4+1Rm0lKNB8YwEQyMysiPSwx0eZGSXMEZ37lRaie5Zx8Ll920oUiTJWAQziGLDhwDgUoQgkqQEDAIzzDiyWtJ+vVepuWLlmzngP4I+v9B/lck7A=</latexit> 
+
+S(0) 
+
+<latexit sha1_base64="zWxsF0shB5u9n4HovQiQvKNeSOg=">AAAB73icbZC7SgNBFIbPeo3xFrUUZDARrMKuRbQzYJMyAXOBJISzk9lkyOzFmVkhLCl9ARsLRWx9gzyFhZ3P4Es4uRSa+MPAx/+fw5xz3EhwpW37y1pZXVvf2Extpbd3dvf2MweHNRXGkrIqDUUoGy4qJnjAqpprwRqRZOi7gtXdwc0kr98zqXgY3OphxNo+9gLucYraWI1cC0XUx1wnk7Xz9lRkGZw5ZK8/xpXvh5NxuZP5bHVDGvss0FSgUk3HjnQ7Qak5FWyUbsWKRUgH2GNNgwH6TLWT6bwjcmacLvFCaV6gydT93ZGgr9TQd02lj7qvFrOJ+V/WjLV31U54EMWaBXT2kRcLokMyWZ50uWRUi6EBpJKbWQnto0SqzYnS5gjO4srLULvIO4V8oeJkiyWYKQXHcArn4MAlFKEEZagCBQGP8Awv1p31ZL1ab7PSFWvecwR/ZL3/ACiUk94=</latexit> 
+
+ω<latexit sha1_base64="zWxsF0shB5u9n4HovQiQvKNeSOg=">AAAB73icbZC7SgNBFIbPeo3xFrUUZDARrMKuRbQzYJMyAXOBJISzk9lkyOzFmVkhLCl9ARsLRWx9gzyFhZ3P4Es4uRSa+MPAx/+fw5xz3EhwpW37y1pZXVvf2Extpbd3dvf2MweHNRXGkrIqDUUoGy4qJnjAqpprwRqRZOi7gtXdwc0kr98zqXgY3OphxNo+9gLucYraWI1cC0XUx1wnk7Xz9lRkGZw5ZK8/xpXvh5NxuZP5bHVDGvss0FSgUk3HjnQ7Qak5FWyUbsWKRUgH2GNNgwH6TLWT6bwjcmacLvFCaV6gydT93ZGgr9TQd02lj7qvFrOJ+V/WjLV31U54EMWaBXT2kRcLokMyWZ50uWRUi6EBpJKbWQnto0SqzYnS5gjO4srLULvIO4V8oeJkiyWYKQXHcArn4MAlFKEEZagCBQGP8Awv1p31ZL1ab7PSFWvecwR/ZL3/ACiUk94=</latexit> 
+
+ω <latexit sha1_base64="JpPjb/sRg1J41lld2aPFngW0xwc=">AAAB7nicbZC7SwNBEMb34ivGV9TS5vASsAp3FtEyYJMygnlAEsLeZi5Zsrd37M4J4QiCrZWNhSKSzr/Hzv/GzaPQxA8WfnzfDDszfiy4Rtf9tjIbm1vbO9nd3N7+weFR/vikoaNEMaizSESq5VMNgkuoI0cBrVgBDX0BTX90M8ub96A0j+QdjmPohnQgecAZRWM1Cx0fkBZ6ecctuXPZ6+Atwak4xafHh+m01st/dfoRS0KQyATVuu25MXZTqpAzAZNcJ9EQUzaiA2gblDQE3U3n407sonH6dhAp8yTac/d3R0pDrcehbypDikO9ms3M/7J2gsF1N+UyThAkW3wUJMLGyJ7tbve5AoZibIAyxc2sNhtSRRmaC+XMEbzVldehcVnyyqXyredUqmShLDkj5+SCeOSKVEiV1EidMDIiz+SVvFmx9WK9Wx+L0oy17Dklf2R9/gD8hZJk</latexit> 
+
+ω
+
+<latexit sha1_base64="JpPjb/sRg1J41lld2aPFngW0xwc=">AAAB7nicbZC7SwNBEMb34ivGV9TS5vASsAp3FtEyYJMygnlAEsLeZi5Zsrd37M4J4QiCrZWNhSKSzr/Hzv/GzaPQxA8WfnzfDDszfiy4Rtf9tjIbm1vbO9nd3N7+weFR/vikoaNEMaizSESq5VMNgkuoI0cBrVgBDX0BTX90M8ub96A0j+QdjmPohnQgecAZRWM1Cx0fkBZ6ecctuXPZ6+Atwak4xafHh+m01st/dfoRS0KQyATVuu25MXZTqpAzAZNcJ9EQUzaiA2gblDQE3U3n407sonH6dhAp8yTac/d3R0pDrcehbypDikO9ms3M/7J2gsF1N+UyThAkW3wUJMLGyJ7tbve5AoZibIAyxc2sNhtSRRmaC+XMEbzVldehcVnyyqXyredUqmShLDkj5+SCeOSKVEiV1EidMDIiz+SVvFmx9WK9Wx+L0oy17Dklf2R9/gD8hZJk</latexit> 
+
+ω
+
+<latexit sha1_base64="5d5+ZJrnQA2Jd3LUjhsdjhT34ag=">AAAB8HicbZC7TgJBFIbPekW8oZYmZiKYYEN2LdBOEhtKiHIxsJLZYYAJM7ubmVkTsqH0CWwsNMbWJ+ApLOx8Bl/C4VIo+CeTfPn/czLnHC/kTGnb/rKWlldW19YTG8nNre2d3dTeflUFkSS0QgIeyLqHFeXMpxXNNKf1UFIsPE5rXv9qnNfuqVQs8G/0IKSuwF2fdRjB2li3meu7OOucDjOtVNrO2ROhRXBmkL78GJW/H45GpVbqs9kOSCSorwnHSjUcO9RujKVmhNNhshkpGmLSx13aMOhjQZUbTwYeohPjtFEnkOb5Gk3c3x0xFkoNhGcqBdY9NZ+Nzf+yRqQ7F27M/DDS1CfTjzoRRzpA4+1Rm0lKNB8YwEQyMysiPSwx0eZGSXMEZ37lRaie5Zx8Ll920oUiTJWAQziGLDhwDgUoQgkqQEDAIzzDiyWtJ+vVepuWLlmzngP4I+v9B/rjk7E=</latexit> 
+
+S(1) 
+
+<latexit sha1_base64="5d5+ZJrnQA2Jd3LUjhsdjhT34ag=">AAAB8HicbZC7TgJBFIbPekW8oZYmZiKYYEN2LdBOEhtKiHIxsJLZYYAJM7ubmVkTsqH0CWwsNMbWJ+ApLOx8Bl/C4VIo+CeTfPn/czLnHC/kTGnb/rKWlldW19YTG8nNre2d3dTeflUFkSS0QgIeyLqHFeXMpxXNNKf1UFIsPE5rXv9qnNfuqVQs8G/0IKSuwF2fdRjB2li3meu7OOucDjOtVNrO2ROhRXBmkL78GJW/H45GpVbqs9kOSCSorwnHSjUcO9RujKVmhNNhshkpGmLSx13aMOhjQZUbTwYeohPjtFEnkOb5Gk3c3x0xFkoNhGcqBdY9NZ+Nzf+yRqQ7F27M/DDS1CfTjzoRRzpA4+1Rm0lKNB8YwEQyMysiPSwx0eZGSXMEZ37lRaie5Zx8Ll920oUiTJWAQziGLDhwDgUoQgkqQEDAIzzDiyWtJ+vVepuWLlmzngP4I+v9B/rjk7E=</latexit> 
+
+S(1) 
+
+<latexit sha1_base64="CLc/0Q2vhUMpPyYvKJyURpFTnlM=">AAAB8HicbZC7SgNBFIbPeo3xFrUUZDARYhN2LaKdAZsUFgmYiyRrmJ1MkiGzs8vMrBCWlD6BjYUitj5BnsLCzmfwJZxcCk38YeDj/89hzjleyJnStv1lLS2vrK6tJzaSm1vbO7upvf2qCiJJaIUEPJB1DyvKmaAVzTSn9VBS7Huc1rz+1Tiv3VOpWCBu9CCkro+7gnUYwdpYt5nruzhrnw4zrVTaztkToUVwZpC+/BiVvx+ORqVW6rPZDkjkU6EJx0o1HDvUboylZoTTYbIZKRpi0sdd2jAosE+VG08GHqIT47RRJ5DmCY0m7u+OGPtKDXzPVPpY99R8Njb/yxqR7ly4MRNhpKkg0486EUc6QOPtUZtJSjQfGMBEMjMrIj0sMdHmRklzBGd+5UWonuWcfC5fdtKFIkyVgEM4hiw4cA4FKEIJKkDAh0d4hhdLWk/Wq/U2LV2yZj0H8EfW+w/uj5Op</latexit> 
+
+L(0) 
+
+<latexit sha1_base64="CLc/0Q2vhUMpPyYvKJyURpFTnlM=">AAAB8HicbZC7SgNBFIbPeo3xFrUUZDARYhN2LaKdAZsUFgmYiyRrmJ1MkiGzs8vMrBCWlD6BjYUitj5BnsLCzmfwJZxcCk38YeDj/89hzjleyJnStv1lLS2vrK6tJzaSm1vbO7upvf2qCiJJaIUEPJB1DyvKmaAVzTSn9VBS7Huc1rz+1Tiv3VOpWCBu9CCkro+7gnUYwdpYt5nruzhrnw4zrVTaztkToUVwZpC+/BiVvx+ORqVW6rPZDkjkU6EJx0o1HDvUboylZoTTYbIZKRpi0sdd2jAosE+VG08GHqIT47RRJ5DmCY0m7u+OGPtKDXzPVPpY99R8Njb/yxqR7ly4MRNhpKkg0486EUc6QOPtUZtJSjQfGMBEMjMrIj0sMdHmRklzBGd+5UWonuWcfC5fdtKFIkyVgEM4hiw4cA4FKEIJKkDAh0d4hhdLWk/Wq/U2LV2yZj0H8EfW+w/uj5Op</latexit> 
+
+L(0) <latexit sha1_base64="AaS1HIMnqMwdNk42mMFQdhkWui4=">AAAB8HicbZC7SgNBFIbPeo3xFrUUZDARYhN2LaKdAZsUFgmYiyRrmJ1MkiGzs8vMrBCWlD6BjYUitj5BnsLCzmfwJZxcCk38YeDj/89hzjleyJnStv1lLS2vrK6tJzaSm1vbO7upvf2qCiJJaIUEPJB1DyvKmaAVzTSn9VBS7Huc1rz+1Tiv3VOpWCBu9CCkro+7gnUYwdpYt5nruzjrnA4zrVTaztkToUVwZpC+/BiVvx+ORqVW6rPZDkjkU6EJx0o1HDvUboylZoTTYbIZKRpi0sdd2jAosE+VG08GHqIT47RRJ5DmCY0m7u+OGPtKDXzPVPpY99R8Njb/yxqR7ly4MRNhpKkg0486EUc6QOPtUZtJSjQfGMBEMjMrIj0sMdHmRklzBGd+5UWonuWcfC5fdtKFIkyVgEM4hiw4cA4FKEIJKkDAh0d4hhdLWk/Wq/U2LV2yZj0H8EfW+w/wFpOq</latexit> 
+
+L(1) 
+
+<latexit sha1_base64="AaS1HIMnqMwdNk42mMFQdhkWui4=">AAAB8HicbZC7SgNBFIbPeo3xFrUUZDARYhN2LaKdAZsUFgmYiyRrmJ1MkiGzs8vMrBCWlD6BjYUitj5BnsLCzmfwJZxcCk38YeDj/89hzjleyJnStv1lLS2vrK6tJzaSm1vbO7upvf2qCiJJaIUEPJB1DyvKmaAVzTSn9VBS7Huc1rz+1Tiv3VOpWCBu9CCkro+7gnUYwdpYt5nruzjrnA4zrVTaztkToUVwZpC+/BiVvx+ORqVW6rPZDkjkU6EJx0o1HDvUboylZoTTYbIZKRpi0sdd2jAosE+VG08GHqIT47RRJ5DmCY0m7u+OGPtKDXzPVPpY99R8Njb/yxqR7ly4MRNhpKkg0486EUc6QOPtUZtJSjQfGMBEMjMrIj0sMdHmRklzBGd+5UWonuWcfC5fdtKFIkyVgEM4hiw4cA4FKEIJKkDAh0d4hhdLWk/Wq/U2LV2yZj0H8EfW+w/wFpOq</latexit> 
+
+L(1) 
+
+<latexit sha1_base64="JNvWDTeFPs2c/QkPSLVy1oIZRuw=">AAAB7HicbZA7SwNBFIXvxleMr6ilzeImYBV2LaJlwCZlBDcJJEuYncwmQ2Zml5lZISxBsLWwsVDEIo0/yM5/4+RRaOKBgY9z7mXuvWHCqNKu+23lNja3tnfyu4W9/YPDo+LxSVPFqcTExzGLZTtEijAqiK+pZqSdSIJ4yEgrHN3M8tY9kYrG4k6PExJwNBA0ohhpY/mlLk9LvaLjVty57HXwluDUnPLT48N02ugVv7r9GKecCI0ZUqrjuYkOMiQ1xYxMCt1UkQThERqQjkGBOFFBNh92YpeN07ejWJontD13f3dkiCs15qGp5EgP1Wo2M//LOqmOroOMiiTVRODFR1HKbB3bs83tPpUEazY2gLCkZlYbD5FEWJv7FMwRvNWV16F5WfGqleqt59TqsFAezuAcLsCDK6hBHRrgAwYKz/AKb5awXqx362NRmrOWPafwR9bnD5UDkZY=</latexit> 
+
+μ<latexit sha1_base64="JNvWDTeFPs2c/QkPSLVy1oIZRuw=">AAAB7HicbZA7SwNBFIXvxleMr6ilzeImYBV2LaJlwCZlBDcJJEuYncwmQ2Zml5lZISxBsLWwsVDEIo0/yM5/4+RRaOKBgY9z7mXuvWHCqNKu+23lNja3tnfyu4W9/YPDo+LxSVPFqcTExzGLZTtEijAqiK+pZqSdSIJ4yEgrHN3M8tY9kYrG4k6PExJwNBA0ohhpY/mlLk9LvaLjVty57HXwluDUnPLT48N02ugVv7r9GKecCI0ZUqrjuYkOMiQ1xYxMCt1UkQThERqQjkGBOFFBNh92YpeN07ejWJontD13f3dkiCs15qGp5EgP1Wo2M//LOqmOroOMiiTVRODFR1HKbB3bs83tPpUEazY2gLCkZlYbD5FEWJv7FMwRvNWV16F5WfGqleqt59TqsFAezuAcLsCDK6hBHRrgAwYKz/AKb5awXqx362NRmrOWPafwR9bnD5UDkZY=</latexit> 
+
+μ
+
+<latexit sha1_base64="+kvVAndEDGMxzTAN7XjvkPjLqsI=">AAAB8HicbZDLSgMxFIYz9VbrrepSkGAr1E2ZcVHdWXDTjdCivUg7lkyaaUOTzJBkhDJ06RO4caGIW5+gT+HCnc/gS5heFtr6Q+Dj/88h5xwvZFRp2/6yEkvLK6tryfXUxubW9k56d6+mgkhiUsUBC2TDQ4owKkhVU81II5QEcY+Rute/HOf1eyIVDcSNHoTE5agrqE8x0sa6zV7fxbmrk2G2nc7YeXsiuAjODDIXH6PK98PhqNxOf7Y6AY44ERozpFTTsUPtxkhqihkZplqRIiHCfdQlTYMCcaLceDLwEB4bpwP9QJonNJy4vztixJUacM9UcqR7aj4bm/9lzUj7525MRRhpIvD0Iz9iUAdwvD3sUEmwZgMDCEtqZoW4hyTC2twoZY7gzK+8CLXTvFPIFypOplgCUyXBATgCOeCAM1AEJVAGVYABB4/gGbxY0nqyXq23aWnCmvXsgz+y3n8AJbaTzQ==</latexit> 
+
+S(M )
+
+<latexit sha1_base64="+kvVAndEDGMxzTAN7XjvkPjLqsI=">AAAB8HicbZDLSgMxFIYz9VbrrepSkGAr1E2ZcVHdWXDTjdCivUg7lkyaaUOTzJBkhDJ06RO4caGIW5+gT+HCnc/gS5heFtr6Q+Dj/88h5xwvZFRp2/6yEkvLK6tryfXUxubW9k56d6+mgkhiUsUBC2TDQ4owKkhVU81II5QEcY+Rute/HOf1eyIVDcSNHoTE5agrqE8x0sa6zV7fxbmrk2G2nc7YeXsiuAjODDIXH6PK98PhqNxOf7Y6AY44ERozpFTTsUPtxkhqihkZplqRIiHCfdQlTYMCcaLceDLwEB4bpwP9QJonNJy4vztixJUacM9UcqR7aj4bm/9lzUj7525MRRhpIvD0Iz9iUAdwvD3sUEmwZgMDCEtqZoW4hyTC2twoZY7gzK+8CLXTvFPIFypOplgCUyXBATgCOeCAM1AEJVAGVYABB4/gGbxY0nqyXq23aWnCmvXsgz+y3n8AJbaTzQ==</latexit> 
+
+S(M )
+
+<latexit sha1_base64="VO2Vc6UMqShmZkhklxGX13Kx7bg=">AAAB8HicbZDLSgMxFIYz9VbrrepSkGAr1E2ZcVHdWXDThUIL9iLtWDJppg1NMkOSEcrQpU/gxoUibn2CPoULdz6DL2F6WWjrD4GP/z+HnHO8kFGlbfvLSiwtr6yuJddTG5tb2zvp3b2aCiKJSRUHLJANDynCqCBVTTUjjVASxD1G6l7/cpzX74lUNBA3ehASl6OuoD7FSBvrNnt1F+euT4bZdjpj5+2J4CI4M8hcfIwq3w+Ho3I7/dnqBDjiRGjMkFJNxw61GyOpKWZkmGpFioQI91GXNA0KxIly48nAQ3hsnA70A2me0HDi/u6IEVdqwD1TyZHuqflsbP6XNSPtn7sxFWGkicDTj/yIQR3A8fawQyXBmg0MICypmRXiHpIIa3OjlDmCM7/yItRO804hX6g4mWIJTJUEB+AI5IADzkARlEAZVAEGHDyCZ/BiSevJerXepqUJa9azD/7Iev8BGumTxg==</latexit> 
+
+L(M )
+
+<latexit sha1_base64="VO2Vc6UMqShmZkhklxGX13Kx7bg=">AAAB8HicbZDLSgMxFIYz9VbrrepSkGAr1E2ZcVHdWXDThUIL9iLtWDJppg1NMkOSEcrQpU/gxoUibn2CPoULdz6DL2F6WWjrD4GP/z+HnHO8kFGlbfvLSiwtr6yuJddTG5tb2zvp3b2aCiKJSRUHLJANDynCqCBVTTUjjVASxD1G6l7/cpzX74lUNBA3ehASl6OuoD7FSBvrNnt1F+euT4bZdjpj5+2J4CI4M8hcfIwq3w+Ho3I7/dnqBDjiRGjMkFJNxw61GyOpKWZkmGpFioQI91GXNA0KxIly48nAQ3hsnA70A2me0HDi/u6IEVdqwD1TyZHuqflsbP6XNSPtn7sxFWGkicDTj/yIQR3A8fawQyXBmg0MICypmRXiHpIIa3OjlDmCM7/yItRO804hX6g4mWIJTJUEB+AI5IADzkARlEAZVAEGHDyCZ/BiSevJerXepqUJa9azD/7Iev8BGumTxg==</latexit> 
+
+L(M )
+
+…
+
+…
+
+…
+
+(b) MDBN ground net-work G
+
+Figure 3: MDBN model for the G/M/1 queue 
+
+3.4 Optimal Sampling Interval 
+
+In prior work that modeled the M/M/1 queue with MDBNs, the sampling interval δ was selected empirically by evaluating PCQ accuracy across a range of input parameter values. This was feasible because the M/M/1 queue has only two input parameters (λ , μ), making the computation tractable. As we move toward G/M/1 (and potentially G/G/1) queues, the number of input parameters grows—each phase-type approximation introduces additional phase rates—and empirical tuning over all parameter combinations becomes impractical. We therefore provide a principled method for computing δ based on the theory of discretizing continuous-time Markov chains (CTMCs). Every queueing process has an underlying CTMC whose states correspond to the possible configurations of the queue. For non-Markovian queues, this requires augmenting the state space to include the phase of the arrival or service process, as described in Section 3.3. Observing this CTMC at equally spaced time points δ j = j · δ yields a discrete-time Markov chain (DTMC) with one-step transition matrix P(δ ). In the M/M/1 case, each entry represents the probability P(L( j+1) = ℓ′ | L( j) = ℓ) of transitioning from queue length ℓ at time δ j to queue length ℓ′ at time δ j+1 = δ j + δ . The key observation is that the CPDs of the MDBN encode these same transition probabilities, conditioned additionally on the input parameters θ . The two representations are therefore equivalent for any fixed θ , and any discretization guarantee that holds for the DTMC applies directly to the MDBN. Prior work on optimal discretization of CTMCs (Doytchinov and Irby 2010) shows that for a second-order approximation of the matrix exponential P(t) = eQt , the sampling interval satisfying 0 < δ ≤ 1max i |qii |
+
+ensures that P(δ ) is a valid transition matrix with bounded error. Here, qii are the diagonal elements of the infinitesimal generator matrix Q corresponding to the CTMC. Since the MDBN must produce accurate CPDs across all combinations of input parameters, the optimal δ is obtained by minimizing over the full parameter space: 
+
+δoptimal = min 
+
+θ ∈Θ
+
+ 1max i |qii (θ )|
+
+
+
+(1) where qii (θ ) are the diagonal elements of Q for parameter values θ and Θ is the set of all parameter combinations used in the MDBN. For the M/M/1 queue, θ = ( λ , μ) and max i |qii | = λ + μ, so that Amaranath, Bhide, Jensen, and Haas 
+
+δoptimal = 1max θ ∈Θ(λ +μ) . This generalizes to the G/M/1 queue, where the Q-matrix is constructed from the GED phase rates λ1, . . . , λk and the service rate μ. This also makes explicit a tradeoff in the phase-type approximation: a larger number of phases increases max i |qii |, which decreases δoptimal , leading to more time slices and longer inference times. This is why we seek GED approximations that use as few phases as possible while maintaining adequate fidelity to the target distribution. 
+
+3.5 Estimating the conditional probability distributions (CPDs) 
+
+Having specified the MDBN structure, we estimate two CPDs from simulation data: P(S( j+1) | S( j), ω)
+
+governing the phase transitions of the arrival process, and P(L( j+1) | L( j), S( j), μ) governing the queue-length transitions. P(S( j+1) | S( j), ω) is estimated directly via maximum likelihood estimation (MLE). Although 
+
+α, β and μ are fixed simulation input parameters set by the analyst, we treat them as Bayesian random variables during MDBN training. Their domains are restricted to be the values specified by the experimental design, and their corresponding CPDs P(α), P(β ), and P(μ) are set to a discrete uniform distribution over the design points; see Amaranath et al. (2023). In our experiments, we use a full-factorial design with N
+
+simulation runs per design point. The initial phase distribution P(S(0) = 1) = 1.0 is deterministic, reflecting that every arrival process begins in its first phase. The initial queue-length distribution P(L(0)) is learned from the training data; as in the M/M/1 queue, we vary L0 ∈ { 0.. 5} across runs to improve estimation of queue length probabilities P(L ≥ 10 ). The simulation time horizon is set to T = 20 .0 in our experiments. Training data is generated by running the simulation N = 1000 times for each design point, sampling the resulting trajectories at the optimal interval δoptimal (Section 3.4), and recording L( j) and S( j) at each time slice. Because the phase-type augmentation recovers the Markov property, the augmented process is time-homogeneous, allowing us to pool data across time slices. The number of CPD parameters grows exponentially with the cardinality of the parent variables: the domain of S is determined by the number of GED phases, and the domain of L by the maximum observed queue length across all simulation runs. In our experiments, |dom (α)| = |dom (β )| = |dom (μ)| = 2. 
+
+Parameter Extrapolation The CPD P(L( j+1) | L( j), S( j), μ) must be estimated for every combination of parent values. For the boundary cases L( j) = 0 and L( j) = 1, the CPD entries are estimated directly via MLE. However, for ℓ > 1, we observe that for fixed parent variable values, excluding L( j), the conditional distribution P(L( j+1) | L( j) = ℓ, S( j), μ) exhibits a characteristic pattern: the shape of the distribution remains the same across different values of ℓ, but is shifted to the right by an offset corresponding to ℓ. That is, the distribution for L( j) = ℓ is approximately a translation of the distribution for L( j) = ℓ − 1, shifted by one unit. This pattern is illustrated in Figure 4. 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16                                    
+
+> L(j+ 1)
+> 0.00
+> 0.20
+> 0.40
+> 0.60
+> 0.80
+> 1.00
+> P(L(j + 1)  S(j), L(j), )
+> 012345678910 11 12 13 14 15 16
+> L(j+ 1)
+> 0.00
+> 0.20
+> 0.40
+> 0.60
+> 0.80
+> 1.00
+> P(L(j + 1)  S(j), L(j), )
+> L(j)= 0
+> L(j)= 1
+> L(j)= 2
+> L(j)= 3
+> L(j)= 4
+> L(j)= 5
+> L(j)= 6
+> L(j)= 7
+> L(j)= 8
+> L(j)= 9
+> L(j)= 10
+> L(j)= 11
+> L(j)= 12
+> L(j)= 13
+> L(j)= 14 L(j)= 15
+
+Figure 4: (left) CPD parameters estimated using MLE—note the lack of training data for L > 13; (right) CPD parameters estimated using parameter extrapolation. For ℓ > 1, the conditional distribution P(L( j+1) |
+
+L( j) = ℓ, S( j), μ) is approximately a translation of the distribution for ℓ − 1. Amaranath, Bhide, Jensen, and Haas 
+
+We exploit this regularity through a technique we call parameter extrapolation . Rather than estimating a separate distribution for each value of ℓ > 1, we learn a single distribution from the pooled data across all ℓ > 1 and then populate the CPD parameters by applying the appropriate shift for each ℓ. This provides two advantages: it pools data across queue-length values, improving the accuracy of the estimates, and it reduces the number of parameters that need to be estimated independently. The procedure is formalized in Algorithm 1, where θ = ( s, m) are specified values of parents (S( j), μ) of L( j+1), Θ is the set of all θ ’s considered, and Dθ is the training data conditioned on θ and sampled at interval δoptimal ; here Dθ comprises 
+
+N replications, each with J time slices. Moreover, L(i) 
+
+> r,θ
+
+denotes the queue length observed at the ith time slice in the rth replication in Dθ and I(·) denotes the indicator function. 
+
+Algorithm 1 Parameter Extrapolation  
+
+> 1:
+
+Input: Θ, {Dθ : θ ∈ Θ}, ℓmax  
+
+> 2:
+
+Output: Extrapolated CPDs ˆ P(L( j+1) | L( j), θ ), θ ∈ Θ 
+
+> 3:
+
+for each parent assignment θ ∈ Θ do // Compute CPDs for ℓ ∈ { 0, 1}: 
+
+> 4:
+
+Q(ℓ, ℓ ′) ← (NJ )−1 ∑Nr=1 ∑J−2 
+
+> j=0
+
+I(L( j) 
+
+> r,θ
+
+= ℓ, L( j+1) 
+
+> r,θ
+
+= ℓ′), ℓ ∈ { 0, 1}, ℓ′ ∈ [0..ℓ max ] 
+
+> 5:
+
+Q(ℓ′ | ℓ) ← Q(ℓ, ℓ ′)/ ∑ℓmax  
+
+> ℓ′=0
+
+Q(ℓ, ℓ ′), ℓ ∈ { 0, 1}, ℓ′ ∈ [0..ℓ max ] 
+
+> 6:
+
+// Pool data over ℓ ∈ [2..ℓ max ] (here ∆ is the queue-length change):  
+
+> 7:
+
+R(∆) ←  NJ (ℓmax − 1)−1 ∑Nr=1 ∑J−2 
+
+> j=0
+
+∑ℓmax  
+
+> ℓ=2
+
+I(L( j) 
+
+> r,θ
+
+= ℓ, L( j+1) 
+
+> r,θ
+
+= ℓ + ∆), ∆ ∈ [−2.. (ℓmax − 2)]  
+
+> 8:
+
+// Compute CPDs:  
+
+> 9:
+
+for ℓ, ℓ ′ ∈ [0..ℓ max ] do  
+
+> 10:
+
+ˆP(L( j+1) = ℓ′ | L( j) = ℓ, θ ) = 
+
+
+
+Q(ℓ′ | ℓ) if ℓ ∈ { 0, 1} and ℓ′ ∈ [0..ℓ max ]
+
+R(ℓ′ − ℓ) if ℓ ∈ [2..ℓ max ] and ℓ′ − ℓ ∈ [−2..ℓ max − 2]
+
+0 otherwise  
+
+> 11:
+
+return ˆP
+
+3.6 Inference 
+
+Given the learned MDBN, we compute answers to PCQs as in the M/M/1 queue: interventional queries are first converted to equivalent probabilistic queries via the TRANSFORM algorithm described in Amaranath et al. (2023), and the resulting queries are answered using standard inference on the ground network. In our experiments, we use lazy propagation (Madsen and Jensen 1999), an exact inference algorithm for Bayesian networks, implemented in the pyAgrum library (Ducamp et al. 2020). Despite the increased size of the network due to phase variable S, inference times remain on the order of milliseconds per query. 
+
+4 EXPERIMENTAL RESULTS 
+
+We evaluate the MDBN metamodel of a G/M/1 queue with three general inter-arrival distributions: Gamma, Beta, and Weibull. For each distribution, we assess the accuracy of the MDBN’s answers to a variety of PCQs by comparing them to the estimated ground-truth probability distributions. We first describe the simulation input parameters that comprise the query workload, the evaluation metrics, and finally present the results for each distribution. 
+
+4.1 Query Workload 
+
+We construct a query workload W comprising four types of PCQs for the G/M/1 queue, totaling 500 queries. For each query, the intervention and query times τi and τ j ≤ T are set to multiples of δoptimal , and the values of the simulation input parameters and queue lengths are sampled from their respective domains. T
+
+denotes the time horizon for all queries in the workload W . We choose input parameters {ω, μ} such that Amaranath, Bhide, Jensen, and Haas 
+
+the queue is stable in t ∈ [0.. T ]. Although each query below involves a single conditional or interventional event, the MDBN framework can handle multiple simultaneous interventions. The four types of PCQs are outlined below. 
+
+Conditional queries These queries infer the queue-length distribution at time τ j given an observation of the queue length at an earlier time τi ≤ τ j, with the input parameters fixed throughout: 
+
+Qcond : P(Lτ j | α0: τ j ← c1, β0: τ j ← c2, μ0: τ j ← c3, L0 ← c4, Lτi = c5)
+
+Parameter intervention queries These queries change the value of an input parameter at time τi
+
+and query the queue-length distribution at a later time τ j. The parameter value after the intervention differs from its initial value at t = 0: 
+
+Qparam : P(Lτ j | α0: τi ← c1, ατi:τ j ← c′
+
+> 1
+
+, β0: τ j ← c2, μ0: τ j ← c3, L0 ← c4)
+
+where c′
+
+> 1
+
+̸ = c1. Analogous queries are constructed for interventions on β and μ.
+
+Queue-length intervention queries These queries set the queue length to a fixed constant at time 
+
+τi and query the queue-length distribution at time τ j (i < j): 
+
+Qqint : P(Lτ j | α0: τ j ← c1, β0: τ j ← c2, μ0: τ j ← c3, L0 ← c4, Lτi ← c5)
+
+Queue-length change intervention queries These queries modify the queue length at time τi by adding or subtracting a constant, and then query the queue-length distribution at time τ j (i < j): 
+
+Qqchg : P(Lτ j | α0: τ j ← c1, β0: τ j ← c2, μ0: τ j ← c3, L0 ← c4, Lτi ← Lτi ⊕ c5)
+
+where ⊕ ∈ { +, −} .
+
+4.2 Evaluation Metrics 
+
+Unlike the M/M/1 queue, closed-form expressions for the queue-length distributions under interventions are not available for the G/M/1 queue. We therefore obtain ground-truth distributions by implementing a version of the simulation model that allows the type of interventions listed in the query workload W .Next, we run 50,000 Monte Carlo replications of the simulation model per query. The resulting empirical distributions serve as the reference against which the MDBN’s inferred distributions are compared. Our primary metric is the Jensen-Shannon distance (JSD), the symmetrized and smoothed square root of the KL divergence, bounded between 0 and 1, with values close to 0 indicating nearly identical distributions. We additionally evaluate the MDBN’s accuracy on two summary statistics: the mean E[Lτ j ]
+
+and the inter-quartile range (IQR) of the queue length distribution at query time τ j, assessed using the mean absolute error (MAE) as the difference between the summary statistic of the MDBN when compared to the estimated ground-truth. This is also visualized via scatter plots of predicted versus ground-truth values. 
+
+4.3 Gamma/M/1 
+
+For the Gamma/M/1 distribution, we use the workload W : α ∈ { 2.7, 4.3}, β ∈ { 0.6, 1.2}, μ ∈ { 0.7, 0.9}.Figure 5a plots the JSD across the four query types, with the mean JSD = 0.225. The scatter plots in Figures 5b and 5c show that the predicted means and inter-quartile ranges closely track the ground truth. 
+
+4.4 Weibull/M/1 
+
+For the Weibull/M/1 distribution, we use the workload W : α ∈ { 0.9, 1.2}, β ∈ { 1.5, 2.0}, μ ∈ { 0.8, 1.0}.Figure 6a shows the JSD across query types (mean JSD = 0.166). The scatter plots in Figures 6b and 6c show well-calibrated mean (MAE = 0.488) and IQR predictions (MAE = 0.732). Amaranath, Bhide, Jensen, and Haas Qqchg Qcond Qqint Qparam 
+
+> Query Type
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Jensen-Shannon Distance (JSD)
+
+(a) JSD by query type 0 2 4 6 8 10 
+
+Ground truth: [L j]
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> MDBN:  [L j]
+
+MAE = 0.828 (b) MDBN vs. ground-truth E[Lτ j ]0 2 4 6
+
+Ground truth: IQR( L j)
+
+0
+
+2
+
+4
+
+6
+
+> MDBN: IQR( L j)
+
+MAE = 0.845 (c) MDBN vs. ground-truth IQR (Lτ j )
+
+Figure 5: Evaluation of the MDBN on the Gamma/M/1 queue. Qqchg Qcond Qqint Qparam 
+
+> Query Type
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Jensen-Shannon Distance (JSD)
+
+(a) JSD by query type 0 5 10 
+
+Ground truth: [L j]
+
+0
+
+5
+
+10 
+
+> MDBN:  [L j]
+
+MAE = 0.488 (b) MDBN vs. ground-truth E[Lτ j ]0 2 4 6
+
+Ground truth: IQR( L j)
+
+0
+
+2
+
+4
+
+6
+
+> MDBN: IQR( L j)
+
+MAE = 0.732 (c) MDBN vs. ground-truth IQR (Lτ j )
+
+Figure 6: Evaluation of the MDBN on the Weibull/M/1 queue. 
+
+4.5 Beta/M/1 
+
+For the Beta/M/1 distribution, we use the workload W : α ∈ { 2.5, 1.5}, β ∈ { 2.5, 4.5}, μ ∈ { 4.5, 5.5}.Figure 7a shows the JSD across query types (mean JSD = 0 .236). The Beta distribution presents a more challenging case than the Gamma or Weibull, with higher mean JSD values and greater variability, particularly for interventional queries. The scatter plots in Figure 7b and 7c show reasonable agreement for the mean (MAE = 1.208) and IQR (MAE = 1.261). Qqchg Qcond Qqint Qparam 
+
+> Query Type
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Jensen-Shannon Distance (JSD)
+
+(a) JSD by query type 0.0 2.5 5.0 7.5 10.0 12.5 
+
+Ground truth: [L j]
+
+0.0 
+
+2.5 
+
+5.0 
+
+7.5 
+
+10.0 
+
+12.5 
+
+> MDBN:  [L j]
+
+MAE = 1.208 (b) MDBN vs. ground-truth E[Lτ j ]0 2 4 6 8
+
+Ground truth: IQR( L j)
+
+0
+
+2
+
+4
+
+6
+
+8
+
+> MDBN: IQR( L j)
+
+MAE = 1.261 (c) MDBN vs. ground-truth IQR [Lτ j ]
+
+Figure 7: Evaluation of the MDBN on the Beta/M/1 queue. Amaranath, Bhide, Jensen, and Haas 
+
+4.6 Inference Efficiency 
+
+We compare the time to answer PCQs via the MDBN to the time required to obtain ground-truth estimates via Monte Carlo simulation of the (modified) G/M/1 queue, using 50,000 sequential replications per query. As shown in Table 1, MDBN inference is approximately four orders of magnitude faster than direct simulation across query types and inter-arrival distributions. Even if the 50,000 replications were distributed across 1,000 parallel processes, the MDBN would still be at least an order of magnitude faster than using the simulation model. Moreover, this comparison does not account for the additional effort required to modify the simulation code to support each intervention type—interventions that the MDBN handles natively. Table 1: Inference time (seconds) for MDBN and ground-truth Monte-Carlo simulations (50,000 replications per query), reported as mean ± standard deviation across 500 queries.                                                                             
+
+> Inter-Arrival Query Type Inference time (s) Distribution MDBN Ground-truth Gamma
+> Qcond 0.072 ±0.040 540 ±299
+> Qparam 0.046 ±0.031 572 ±300
+> Qqint 0.052 ±0.028 744 ±381
+> Qqchg 0.045 ±0.026 606 ±306 Weibull
+> Qcond 0.065 ±0.042 814 ±498
+> Qparam 0.048 ±0.035 910 ±448
+> Qqint 0.049 ±0.026 788 ±327
+> Qqchg 0.039 ±0.023 739 ±343 Beta
+> Qcond 0.048 ±0.034 1393 ±784
+> Qparam 0.032 ±0.026 1543 ±770
+> Qqint 0.033 ±0.017 1656 ±855
+> Qqchg 0.030 ±0.019 1462 ±840
+
+5 DISCUSSION 
+
+The experimental results demonstrate that MDBNs are capable of producing accurate answers for a range of probabilistic and causal queries on non-Markovian queues, with conditional and parameter intervention queries consistently achieving low JSD across a variety of inter-arrival distributions. The Weibull/M/1 queue yields the best overall performance, while the Beta/M/1 queue proves most challenging, likely due to the bounded support of the Beta distribution requiring a more complex phase-type approximation. The error observed in the MDBN’s inferred distributions arises from two sources: the phase-type approximation of the general inter-arrival distribution, and the MDBN’s approximation of the resulting GED-augmented system. Several factors influence the latter. First, the accuracy of the estimated CPD parameters depends on the number of simulation runs N per design point; increasing N may yield more accurate estimates, particularly for states visited infrequently. Second, the choice of sampling interval δ
+
+introduces a tradeoff: while a smaller δ provides a finer-grained discretization of the underlying CTMC, it also increases the number of time slices over which inference is performed, causing approximation errors to accumulate across successive slices (Doytchinov and Irby 2010; Boyen and Koller 2013). In this paper, we attempt to balance these competing effects by both choosing the optimal sampling interval for a query workload, and by minimizing the number of phases. 
+
+6 CONCLUSION 
+
+We have demonstrated that MDBNs can be extended to non-Markovian queues by adapting the method of phases. Our experiments on the G/M/1 queue with Gamma, Weibull, and Beta inter-arrival distributions Amaranath, Bhide, Jensen, and Haas 
+
+shows that the extended MDBN can produce accurate answers to both conditional and interventional queries, with inference times orders of magnitude faster than Monte Carlo simulation. The techniques introduced here are not specific to the G/M/1 queue and carry over directly to the G/G/1 setting, where the service-time distribution may also be non-Markovian. In future work, we plan to focus on scaling the MDBN framework in terms of both learning and inference. In this paper, exact inference via lazy propagation was sufficient, but as the MDBN grows to accommodate more complex systems such as networks of queues, we anticipate that approximate inference techniques will become necessary. We also plan to investigate whether use of the generalized semi-Markov processes framework (Shedler 1992) can lead to more compact MDBNs. 
+
+REFERENCES 
+
+Amaranath, P., P. J. Haas, D. Jensen, and S. Witty. 2023. “Causal Dynamic Bayesian Networks for Simulation Metamodeling”. In 2023 Winter Simulation Conference (WSC) , 746–757. IEEE. Amazon Web Services 2025. https://aws.amazon.com/what-is/digital-twin/. Accessed 6th January, 2025. Barton, R. R. 2020. “Tutorial: Metamodeling for Simulation”. In Proceedings of the 2020 Winter Simulation Conference , edited by K.-H. Bae, B. Feng, S. Kim, S. Lazarova-Molnar, Z. Zheng, T. Roeder, and R. Thiesing, 1102–1116. Piscataway, New Jersey: Institute of Electrical and Electronics Engineers, Inc. Boyen, X., and D. Koller. 2013. “Tractable inference for complex stochastic processes”. arXiv preprint arXiv:1301.7362 .Brown, L., N. Gans, A. Mandelbaum, A. Sakov, H. Shen, S. Zeltyn et al . 2005. “Statistical analysis of a telephone call center: A queueing-science perspective”. Journal of the American statistical association 100(469):36–50. Cassidy, T., P. Gillich, A. R. Humphries, and C. H. van Dorp. 2022. “Numerical methods and hypoexponential approximations for gamma distributed delay differential equations”. IMA Journal of Applied Mathematics 87(6):1043–1089. Doytchinov, B., and R. Irby. 2010. “Time discretization of Markov chains”. Pi Mu Epsilon Journal :69–82. Ducamp, G., C. Gonzales, and P.-H. Wuillemin. 2020. “aGrUM/pyAgrum : A Toolbox to Build Models and Algorithms for Probabilistic Graphical Models in Python”. In 10th International Conference on Probabilistic Graphical Models . September 23 th -25 th , Skørping, Denmark, 609-612. Elmagrhraby, S. E., R. Benmansour, A. Artiba, and H. Allaoui. 2009. “Approximation of continuous distribution via the generalized erlang distribution”. IFAC Proceedings Volumes 42(4):240–245. Keefer, D. L., and W. A. Verdini. 1993. “Better estimation of PERT activity time parameters”. Management Science 39(9):1086– 1091. Koller, D., and N. Friedman. 2009. Probabilistic Graphical Models: Principles and Techniques . Cambridge, Massachusetts: MIT Press. Madsen, A. L., and F. V. Jensen. 1999. “Lazy Propagation: A Junction Tree Inference Algorithm based on Lazy Evaluation”. 
+
+Artificial Intelligence 113(1-2):203–245. Neuts, M. F. 1994. Matrix-Geometric Solutions in Stochastic Models: An Algorithmic Approach . Courier Corp. Pearl, J. 2009. Causality . 2nd ed. Cambridge University Press. Sahu, S. K., D. K. Dey, H. Aslanidou, and D. Sinha. 1997. “A Weibull regression model with gamma frailties for multivariate survival data”. Lifetime data analysis 3(2):123–137. Shedler, G. S. 1992. Regenerative Stochastic Simulation . Elsevier. 
+
+AUTHOR BIOGRAPHIES 
+
+PRACHETA AMARANATH is a Ph.D. Candidate at the Manning College of Information and Computer Sciences, University of Massachusetts Amherst, USA. Her e-mail address is pboddavarama@umass.edu and her website is https://prachetaba.github.io. 
+
+ANANT BHIDE is a Masters student at the Manning College of Information and Computer Sciences, University of Massachusetts Amherst, USA. His e-mail address is abhide@umass.edu. 
+
+DAVID JENSEN is a Professor at the Manning College of Information and Computer Sciences, University of Massachusetts Amherst, USA. His email address is jensen@umass.edu, and his website is https://groups.cs.umass.edu/jensen/. 
+
+PETER J. HAAS is a Professor at the Manning College of Information and Computer Sciences, University of Massachusetts Amherst, USA. His e-mail address is phaas@umass.edu and his website is https://people.cs.umass.edu/~phaas/.

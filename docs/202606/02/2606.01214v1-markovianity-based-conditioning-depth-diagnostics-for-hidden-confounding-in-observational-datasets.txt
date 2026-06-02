@@ -1,0 +1,528 @@
+Title: Markovianity-Based Conditioning Depth Diagnostics for Hidden Confounding in Observational Datasets
+
+URL Source: https://arxiv.org/pdf/2606.01214v1
+
+Published Time: Tue, 02 Jun 2026 01:29:02 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# Markovianity-Based Conditioning Depth Diagnostics for Hidden Confounding in Observational Datasets 
+
+## Adedayo, S. A. iD ∗1
+
+> 1
+
+UniVie Doctoral School of Computer Science, University of Vienna, Austria 
+
+# Abstract 
+
+Reliable causal discovery in time series depends on whether the conditioning set adequately represents the system state. If relevant history or unobserved processes are omitted, residual dependence can appear as direct causal links. We study this failure mode on promnient constraint-based causal discovery methods through a simple premise: how much does the inferred graph change as conditioning depth increases? When the observed process is described approximately by a finite-order Markovian representation, inferred graphs should stabilize once sufficient past observations are observed. Hidden confounding and other hidden-memory mechanisms should remain sensitive to depth when the observed state is incomplete. We formalise this behavior with graph instability statistics computed over the conditioning-depth grid. The empirical study covers synthetic systems with known ground truth and calcium imaging recordings with unknown causal structure. In simulations, both Markovian and non-Markovian systems relatively upheld our premise. With known ground truth, we evaluate recovery using confusion matrix metrics; while in real data without ground truth, we use descriptive graph instability summaries. Across synthetic Markovian and hidden memory systems, c-GC variants give the clearest separation, while PCMCI variants show weaker compatible trends. In real data, inferred connectivity drops sharply with conditioning depths and then levels off. This method, however, does not recover latent graphs, nor does it clearly separate latent confounding from lag-order misspecification, non-stationarity, measurement error. Its contribution is more modest and practical: and explicit model-checking tool for deciding when causal claims are stable and when they should be treated caustiosly. 
+
+Keywords: Latent confounders; Markovianity; Constraint-based CSL; time series; graph instability 
+
+# 1 Introduction 
+
+A major challenge of causal structure learning (CSL) from observational data is that predictive dependence is not the same as causal dependence (Granger, 1969; Geweke, 1982; Pearl, 1995, 2009; Eichler, 2007; Barnett et al., 2009; Runge et al., 2019). Autocorrelation, lagged interactions, contemporaneous dependence, and unobserved common drivers can all generate strong associations among observed variables, even when the underlying directed structure is sparse (Eichler, 2007, 2012, 2013; Runge et al., 2019; Runge, 2020; Runge et al., 2023; Chen et al., 2024a). This problem becomes especially severe when latent confounders simultaneously affect several observed variables, because the resulting dependencies may be incorrectly attributed to direct edges by algorithms that condition on too little past information (Spirtes et al., 1995, 2000; Richardson and Spirtes, 2002; Zhang, 2008; Entner and Hoyer, 2010; Malinsky and Spirtes, 2018; Gerhardus and Runge, 2020). Constraint-based temporal CSL methods test whether candidate causes remain dependent on a target after conditioning on an assumed state description. In Granger methods, this state is built from lagged histories; in Peter–Clark momentary conditional independence (PCMCI) variants, it is refined through lag-aware parent selection and conditional independence testing (Granger, 1969; Geweke, 1982, 1984; Eichler, 2007; Barnett et al., 2009; Runge, 2018; Runge et al., 2019; Runge, 2020). If that state description is incomplete, either because the chosen lag order is shallow, because sampling hides intermediate dynamics, or because hidden processes transmit information across time, then the recovered graph can contain spurious edges (Eichler, 2013; Hyttinen et al., 2017; Runge, 2018; Malinsky and Spirtes, 2018; Runge, 2020; Runge et al., 2023). In 1
+
+> arXiv:2606.01214v1 [stat.AP] 31 May 2026
+
+practice, this problem is often discovered only after the inferred graph has already been interpreted causally (Runge et al., 2019; Gerhardus and Runge, 2020). In this study, we investigate whether that failure mode can be turned into a diagnostic for constraint-based temporal CSL. Rather than treating a learned graph as a single final output, we repeatedly run the learner across a grid of conditioning depths and ask whether the inferred graph stabilizes. The main experiments focus on four comparable constraint-based algorithms: causalised Granger causality (c-GC) and its extension, fully causalised Granger causality (c-GC*) (Adedayo, 2025), together with PCMCI+ (Runge, 2020) and joint PCMCI+ (JPCMCI+) (Günther et al., 2023). The key intuition is that if the observed process is adequately represented as a finite-order Markov system, then once the conditioning depth reaches the relevant memory length, adding deeper observed history should not systematically alter the inferred graph (Eichler, 2012; Runge, 2018; Runge et al., 2019). Persistent sensitivity to conditioning depth is therefore evidence that the current observed state representation is incomplete (Eichler, 2013; Runge, 2020; Gerhardus and Runge, 2020). That incompleteness does not uniquely identify latent confounders. It may also arise from lag-order misspecification, nonstationarity, measurement error, undersampling, finite sample conditional independence error, or other hidden memory mechanisms (Hyttinen et al., 2017; Runge, 2018, 2020; Gerhardus and Runge, 2020; Runge et al., 2023). Nevertheless, in the setting considered here it provides a practical and testable warning signal that the causal sufficiency and state representation assumptions behind shallow constraint-based CSL analysis are not supported by the data. This is valuable because graphical methods that account for latent confounders often return equivalence classes, while more direct approaches rely on additional conditional independence, algebraic, non-Gaussian, environmental, or parametric assumptions that are difficult to verify in high dimensional time series (Spirtes et al., 1995; Richardson and Spirtes, 2002; Tian and Pearl, 2002; Colombo et al., 2012; Ogarrio et al., 2016; Zhang, 2008; Shimizu et al., 2006; Hoyer et al., 2008; Karlsson and Krijthe, 2023; Miao et al., 2018; Tchetgen Tchetgen et al., 2020; Chen et al., 2024a). Our goal is therefore deliberately narrower than full latent variable identification. We ask whether variations in constraint-based CSL outputs across conditioning depths can serve as an empirical sensitivity analysis for latent confounding or hidden memory in the observed distribution. We study this question on synthetic data with known ground truth and on calcium imaging recordings where no causal ground truth is available but where hidden neuronal inputs and low-dimensional latent neural states are plausible. The contributions of the manuscript are fivefold. First, we formulate an interpretation of graph stability across conditioning depths based on Markovianity for constraint-based temporal CSL and make explicit the assumptions under which that interpretation is meaningful. Second, we define graph instability statistics and outline a bootstrap calibration protocol for turning qualitative sensitivity analysis into areproducible model-checking procedure (Künsch, 1989; Politis and Romano, 1994; Benjamini and Hochberg, 1995). The reported experiments use these statistics descriptively and do not yet implement surrogate null calibration. Third, we show in synthetic experiments that Markovian datasets remain comparatively stable as conditioning depth increases, whereas non-Markovian hidden memory datasets exhibit clear changes with conditioning depth in recovery metrics. Fourth, we compare four constraint-based algorithms and find that c-GC and c-GC* support the proposed diagnostic most strongly, while PCMCI+ and JPCMCI+ show qualitatively similar but weaker signs of viability. Fifth, we apply the same sensitivity analysis to four calcium imaging datasets and find a consistent decrease in inferred edge counts with deeper conditioning before partial saturation, which is evidence of model inadequacy under shallow conditioning and is compatible with latent confounding or other hidden memory mechanisms (Yu et al., 2009; Paninski et al., 2010; Ahrens et al., 2013). The remainder of the paper is organized as follows. Section 2 reviews background and related work on latent confounding, Markovianity, and time series causal discovery. Section 3 formalizes the Markovianity diagnostic and its integration with constraint-based structure learning. Section 4 presents synthetic and empirical results. Section 5 summarizes the main findings and limitations. 
+
+# 2 Previous Work 
+
+Latent confounding is one of the central obstacles to causal discovery and effect estimation from observational data (Pearl, 1995, 2009; Spirtes et al., 1995, 2000; Richardson and Spirtes, 2002; Miao et al., 2018). A latent confounder is an unobserved variable that causally influences two or more observed variables, thereby creating statistical dependence that may be mistaken for a direct causal relation. In time series, this problem is compounded by autocorrelation, lagged interactions, contemporaneous dependence, and measurement processes that can make a marginal observed process appear to have longer memory than the underlying system would have if all relevant state variables were observed (Eichler, 2007, 2010, 2012, 2013; Runge, 2018; Assaad et al., 2022; Runge et al., 2023). The key background fact for this manuscript is an impossibility result in spirit rather than a single theorem: latent confounding is not generically testable from one unrestricted observational distribution without additional assumptions. Marginalizing adirected acyclic graph (DAG) over hidden variables can produce mixed graphs whose observed conditional independencies are also compatible with other causal explanations (Verma and Pearl, 1990; Spirtes et al., 21995; Richardson and Spirtes, 2002; Ali et al., 2009; Zhang, 2008). Practical methods therefore gain testability from added structure: graphical Markov and faithfulness assumptions, algebraic constraints, non-Gaussianity, proxy variables, multiple environments, temporal order, or parametric restrictions (Tian and Pearl, 2002; Shimizu et al., 2006; Hoyer et al., 2008; Miao et al., 2018; Karlsson and Krijthe, 2023; Gerhardus and Runge, 2020; Glymour et al., 2019; Sadeghi and Soo, 2022). 
+
+## 2.1 Scope and Central Problem 
+
+Let X = {X1, . . . , X d} denote the observed variables and C = {C1, . . . , C q } the unobserved confounding variables. A latent confounder is any Ck with directed paths into at least two observed variables, for example 
+
+Xj ← Ck → Xi. In the time series setting studied later, Ct denotes the corresponding time-indexed latent process. In a structural causal model (SCM), each variable is generated by 
+
+Xi = fi(Pa( Xi), U i), (1) where Pa (Xi) are graphical parents and the exogenous noises Ui are jointly independent unless dependence is itself represented through additional common causes (Pearl, 1995, 2009; Spirtes et al., 2000; Peters et al., 2017). The analyst observes only the marginal distribution 
+
+PX (x) = 
+
+Z
+
+PX,C (x, c ) dc. (2) The detection problem is not simply whether PX
+
+contains statistical dependence. The problem is whether the observed distribution violates all causally sufficient explanations in a specified model class, or whether a latent common cause is required by the assumptions. This distinction matters because hidden confounding is not a generic observable property of PX . A graph with a latent common cause may be observationally equivalent to a graph with direct observed arrows, and marginalizing a DAG over hidden variables can induce mixed graphs with the same conditional independencies as other causal explanations (Richardson and Spirtes, 2002; Spirtes et al., 1995; Ali et al., 2009; Zhang, 2008). Every practical detector must therefore buy testability with extra structure: conditional independence patterns, algebraic constraints, non-Gaussian residuals, measurement models, repeated environments, negative controls, time order, proxy variables, or parametric restrictions (Tian and Pearl, 2002; Lipsitch et al., 2010; Kuroki and Pearl, 2014; Miao et al., 2018; Karlsson and Krijthe, 2023; Gerhardus and Runge, 2020). 
+
+## 2.2 Formal Graphical Framework 
+
+For a DAG G over X ∪ C, the latent projection onto X is an acyclic directed mixed graph (ADMG) with directed edges for directed causal paths through latent nodes and bidirected edges Xi ↔ Xj when two observed nodes share a latent common cause under the relevant projection rules (Richardson and Spirtes, 2002; Pearl, 2009; Shpitser and Pearl, 2006, 2008; Richardson et al., 2023). The bidirected edge is therefore not a measured variable but a graphical summary of unmeasured common causation. In mixed graphs, ordinary d-separation is replaced by m-separation. A path is m-connecting given S if every noncollider on the path is outside S and every collider has a descendant in S. A distribution PX is Markov with respect to an ADMG or maximal ancestral graph (MAG) if 
+
+A ⊥G B | S =⇒ XA ⊥P XB | XS . (3) The converse is a faithfulness assumption: conditional independencies in P are assumed to arise from graphical separation, not parameter cancellations. Partial ancestral graphs (PAGs) represent Markov equivalence classes of MAGs and are the natural output of algorithms such as FCI and Really Fast Causal Inference (RFCI) when latent and selection variables may exist (Spirtes et al., 1995, 2000; Colombo et al., 2012; Ali et al., 2009; Zhang, 2008). Here we separate three tasks that are often conflated: 1. Accommodation: the method allows latent confounders and returns a mixed graph equivalence class, but may not prove that a particular latent variable exists. 2. Detection: the method finds a statistical signature incompatible with a model class without hidden confounders under stated assumptions. 3. Adjustment or effect identification: the method estimates causal effects despite hidden confounding, often using proxies, negative controls, or factor structure, without necessarily discovering the latent graph. FCI family methods mostly accommodate hidden variables and sometimes orient latent confounding marks; algebraic methods, methods using multiple environments, and negative control methods provide more direct tests under narrower assumptions; proximal and deconfounder methods primarily target adjustment. 
+
+## 2.3 Existing methods categories 
+
+With this scope in place, studies on latent confounding can be grouped into three broad categories: (i) graphical methods with latent variables, which recover or represent graph structure when causal sufficiency is not assumed; (ii) methods based on specific detection and adjustment models, which test or correct for hidden confounding under additional structural assumptions; and (iii) time series causal discovery and Markovianity diagnostics, which use temporal order, lagged conditional independence, and the adequacy of the observed state as sources of leverage. Table 1 3makes this organization explicit by distinguishing representative studies according to these categories. Our work sits primarily in the third category, with connections to the second: it uses constraint-based causal structure learning (CSL) to build a practical diagnostic for incomplete observed state representation, not to reconstruct a unique latent graph. 
+
+2.3.1 Graphical Methods with Latent Variables 
+
+The Fast Causal Inference (FCI) family is the classical constraint-based approach when causal sufficiency is not assumed (Spirtes et al., 1995, 2000). FCI uses conditional independence tests to remove adjacencies and orient edge marks in a PAG, which represents a Markov equivalence class of MAGs over the observed variables. Bidirected or partially oriented marks indicate that latent confounding is compatible with the observed independencies, but they do not usually identify a unique hidden variable or a unique latent graph. RFCI reduces the number of conditional independence tests and is therefore more scalable in high-dimensional settings (Colombo et al., 2012). Greedy Fast Causal Inference (GFCI) combines search based on scores with FCI orientation rules to improve finite sample behavior (Ogarrio et al., 2016). The complete orientation rules for FCI in the presence of latent confounding and selection bias were clarified by Zhang (2008), while Markov equivalence for ancestral graphs explains why PAG outputs can remain broad even in the population setting (Ali et al., 2009). Related work on Peter–Clark (PC) search shows how sparsity, test reliability, variable ordering, and assumptions related to faithfulness shape the behavior of constraint-based algorithms (Kalisch and Bühlmann, 2007; Colombo and Maathuis, 2014; Sadeghi and Soo, 2022). These methods are theoretically central, but their finite sample reliability depends strongly on the power and calibration of conditional independence tests (Glymour et al., 2019). Mixed graph formalisms explain why this limitation is structural. A latent projection of a DAG onto the observed variables can contain directed edges for directed causal paths and bidirected edges for latent common causes (Richardson and Spirtes, 2002; Shpitser and Pearl, 2006, 2008). Nested Markov models further characterize constraints induced by latent variable DAGs that go beyond ordinary conditional independence (Richardson et al., 2023). Such graphs summarize the observable consequences of hidden variables, but the summary is not the same as recovering the hidden variables themselves. 
+
+2.3.2 Model Specific Detection and Adjustment 
+
+Several methods detect or adjust for hidden confounding under narrower assumptions. Algebraic approaches use constraints such as Verma constraints, tetrads, rank restrictions, cumulant restrictions, or trek separation relations that can be implied by latent variable models but are not reducible to ordinary conditional independence (Verma and Pearl, 1990; Tian and Pearl, 2002; Silva et al., 2006; Kummerfeld and Ramsey, 2016; Sullivant et al., 2010; Foygel et al., 2012; Chen et al., 2024b). These methods can be powerful when the measurement, non-Gaussian, or linear structural assumptions hold, but they are less suited to arbitrary hidden common causes in nonlinear time series. Linear non-Gaussian approaches, including Linear Non-Gaussian Acyclic Models (LiNGAM) and its latent variable extensions, use independence of non-Gaussian residual components as an identifying signal (Shimizu et al., 2006; Hoyer et al., 2008; Shimizu et al., 2011; Maeda and Shimizu, 2020; Tramontano et al., 2024). Proxy and negative control approaches instead rely on auxiliary variables whose relationships to the latent confounder satisfy exclusion, relevance, bridge, and completeness assumptions (Lipsitch et al., 2010; Kuroki and Pearl, 2014; Miao et al., 2018; Shi et al., 2020b; Tchetgen Tchetgen et al., 2024; Cui et al., 2024; Penning de Vries and Groenwold, 2023). Deep latent variable models similarly treat unmeasured confounding through latent representations based on proxies, but inherit the assumptions of the latent generative model (Louizos et al., 2017). Deconfounder methods with multiple causes use factor models to construct substitute confounders for multiple treatments, but they do not solve confounding by variables that affect only one cause and have known nonparametric limitations (Wang and Blei, 2019; D’Amour, 2019; Bica et al., 2020). Methods using multiple environments add another source of structure. If mechanisms vary independently across environments, hidden confounding can violate conditional independencies that should hold under independent causal mechanisms (Karlsson and Krijthe, 2023). More generally, invariant prediction uses stability of causal relationships across environments as a source of identifiability, including sequential data variants (Peters et al., 2016; Pfister et al., 2018). These tests are closer to direct detection than many adjustment methods, but they require multiple environments and assumptions about how mechanisms vary. 
+
+2.3.3 Time Series Causal Discovery and Markovianity 
+
+Temporal order provides additional leverage because causes precede their lagged effects. In Granger frameworks, a process Xj does not Granger cause Xi
+
+when the past of Xj adds no predictive information for Xit after conditioning on the relevant observed history (Granger, 1969; Geweke, 1982; Eichler, 2007; Barnett et al., 2009). Time series causal discovery methods generalize this idea to graph learning over lagged variables. Surveys emphasize that this literature spans Granger, constraint-based, score-based, noise-4Table 1: Representative approaches to latent confounder detection, accommodation, and adjustment, organized into the three categories. 
+
+Category Method family Representative sources Core mathematical signature Main limitation Graphical methods with latent variables Graphical causal models, do calculus, ADMGs Pearl (1995, 2009); Shpitser and Pearl (2006, 2008); Richardson et al. (2023) Identification and testability from DAGs/ADMGs via graphical criteria, nested Markov constraints, and c-component factorization A graph must be supplied or partially learned; the existence of latent confounders is not generally testable from PX alone FCI, RFCI, Greedy Fast Causal Inference (GFCI), MAGs, PAGs Spirtes et al. (1995, 2000); Kalisch and Bühlmann (2007); Colombo et al. (2012); Colombo and Maathuis (2014); Ogarrio et al. (2016); Ali et al. (2009); Zhang (2008); Sadeghi and Soo (2022) Conditional independence (CI) oracle over PX ; output PAG over a MAG equivalence class Requires Markovianity, faithfulness or related assumptions, reliable CI tests, and often returns a broad equivalence class Ancestral and mixed graph Markov models Richardson and Spirtes (2002); Ali et al. (2009); Zhang (2008); Richardson et al. (2023) m-separation in MAGs/ADMGs; bidirected edges summarize latent common causes Represents latent effects but does not by itself estimate or verify a unique latent variable Model specific detection and adjustment Algebraic, tetrad, rank, cumulant, and measurement model discovery Verma and Pearl (1990); Tian and Pearl (2002); Silva et al. (2006); Kummerfeld and Ramsey (2016); Sullivant et al. (2010); Foygel et al. (2012); Chen et al. (2024b) Vanishing constraints, tetrads, rank restrictions, higher-order cumulants, and trek separation relations Typically relies on linear, non-Gaussian, measurement model, or covariance structure assumptions Linear non-Gaussian models Shimizu et al. (2006); Hoyer et al. (2008); Shimizu et al. (2011); Maeda and Shimizu (2020); Tramontano et al. (2024) Identifiability in the style of independent component analysis (ICA), residual independence, and non-Gaussian source separation Requires linearity, acyclicity or special structure, non-Gaussianity, and enough signal for source separation Negative controls, proxies, proximal causal inference, and latent variable effect models Lipsitch et al. (2010); Kuroki and Pearl (2014); Miao et al. (2018); Shi et al. (2020b,a); Tchetgen Tchetgen et al. (2024); Cui et al. (2024); Penning de Vries and Groenwold (2023); Louizos et al. (2017) Auxiliary variables satisfy exclusion, relevance, bridge, completeness, or proxy and latent assumptions The validity of proxies and negative controls is substantive and rarely testable from the same data Methods with multiple causes, factor models, and sparse plus latent structure Wang and Blei (2019); D’Amour (2019); Bica et al. (2020); Chen et al. (2024a) Substitute confounders or low-rank latent components explain dependence among multiple causes or observed variables Cannot handle confounders that act on a single cause without additional assumptions; identification depends on factor, sparsity, or rank conditions Multiple environment detection Karlsson and Krijthe (2023); Peters et al. (2016); Pfister et al. (2018) Variation in mechanisms across environments implies invariances or conditional independencies that hidden confounding can violate Requires multiple environments, independent mechanism variation, and sufficient shift strength Time series causal discovery and Markovianity Granger and temporal graphical models Granger (1969); Geweke (1982); Eichler (2007, 2010, 2012, 2013); Assaad et al. (2022) Lagged conditional independence, graphical vector autoregressive (VAR) restrictions, and temporal ordering Sensitive to stationarity, sampling rate, lag choice, autocorrelation, and hidden temporal processes Neural and invariance-based Granger causality Tank et al. (2022); Zhou et al. (2024); Zhang et al. (2025) Nonlinear predictive maps, sparsity or Jacobian regularization, and cross-environment invariance of causal relations Often requires substantial data, causal sufficiency or environment assumptions, and does not directly provide a conditioning depth calibration PCMCI, PCMCI+, JPCMCI+, structural vector autoregressive FCI (SVAR-FCI), latent PCMCI (LPCMCI) Entner and Hoyer (2010); Malinsky and Spirtes (2018); Runge (2018); Runge et al. (2019); Runge (2020); Günther et al. (2023); Gerhardus and Runge (2020); Runge et al. (2023) Lag-aware parent selection, temporal CI testing, joint context discovery, and PAG representation of latent common causes Finite sample CI error, autocorrelation, contemporaneous links, context assumptions, and unmeasured memory can destabilize conclusions Time series confounder detection and conditioning depth diagnostics Liu et al. (2023); Adedayo (2025); Runge (2018, 2020); Gerhardus and Runge (2020); Runge et al. (2023) Strength of causation signals or graph instability across increasing conditioning depths indicate incomplete observed state representation Nonspecific: instability can reflect latent confounding, omitted lags, undersampling, nonstationarity, measurement error, or CI test power 
+
+5based, topology-based, and hybrid methods, with no single family dominating across all data generating regimes (Assaad et al., 2022; Runge et al., 2023). Causalised Granger causality (c-GC) and its extension (c-GC*) reinterpret Granger causality through causal Bayesian network (CBN) semantics and Reichenbach’s principles (Adedayo, 2025). They address a common criticism of GC: that it is often treated as apredictive tool rather than a causal one. This re-examination introduced c-GC, which combines unconditional bivariate GC (BVGC) and conditional multivariate GC (MVGC) testing, retaining an edge only when both tests support the same directed relation. The two variants differ mainly in their conditioning sets; both are designed to satisfy conditioning set completeness. These methods are relevant here because their conditioning depth is explicit, so graph stability can be assessed directly as the amount of observed history in the conditioning set increases. PCMCI and PCMCI+ improve conditional independence testing in autocorrelated time series through parent set selection and lag-aware conditioning (Runge, 2018; Runge et al., 2019; Runge, 2020). JPCMCI+ extends this line to multiple time series datasets with observed or latent contexts by learning a joint causal time series graph over system, context, and auxiliary variables (Günther et al., 2023). SVAR-FCI and related temporal FCI approaches adapt latent variable graphical discovery to stationary time series with contemporaneous and lagged links (Entner and Hoyer, 2010; Malinsky and Spirtes, 2018). LPCMCI further extends PCMCI reasoning to latent confounders by iteratively refining conditioning sets and representing hidden common causes through PAG edge marks (Gerhardus and Runge, 2020; Runge et al., 2023). Earlier graphical Gaussian work for multivariate time series with latent variables also shows how hidden processes can induce spurious Granger causal relations and motivate dynamic mixed graph representations (Eichler, 2010). Recent direct time series confounder detection work also uses strength of causation signals to estimate whether latent confounding is present in multivariate time series (Liu et al., 2023). The experiments below use c-GC, c-GC*, PCMCI+, and JPCMCI+ as four comparable constraint-based temporal learners with explicit lag depth controls. Neural Granger causality methods extend the predictive causality idea beyond linear VAR models by learning nonlinear transition functions and extracting graph structure from structured sparsity or sensitivity regularization (Tank et al., 2022; Zhou et al., 2024). These methods are relevant because nonlinear observed dynamics can make a linear or correlation-based diagnostic appear unstable even without latent confounding. Recent invariance-based Granger causality work adds another route by using heterogeneous environments to recover causal relations under latent confounding (Zhang et al., 2025). These approaches are complementary to the present diagnostic: they may improve graph recovery under richer dynamics or multiple environments, whereas the proposed conditioning depth sweep asks whether the chosen observed state representation is stable for a selected constraint-based learner. The present manuscript uses a different but complementary signal: stability of the inferred graph as the conditioning depth increases. If the observed process is adequately represented by a finite-order Markov state, then after the relevant order has been included, deeper observed history should not systematically change the graph recovered by a population-level constraint-based temporal CSL procedure. If graph estimates remain sensitive to deeper history, the observed state representation is incomplete. That incompleteness is consistent with latent confounding or hidden memory, but it can also arise from lag-order misspecification, undersampling, nonstationarity, measurement error, nonlinear dynamics, or finite sample conditional independence error (Hyttinen et al., 2017; Runge, 2018; Gerhardus and Runge, 2020; Runge et al., 2023). 
+
+## 2.4 Position of This Work 
+
+This paper should therefore be seen as a model-checking contribution rather than a latent graph identification method. The goal is not to recover hidden variables, estimate their causal effects, or prove that a particular latent confounder exists. The goal is to test whether constraint-based CSL conclusions are stable to the conditioning depth used to represent the observed state. Stable graph trajectories support the adequacy of the chosen Markov representation; persistent depth sensitivity warns that causal claims from shallow conditioning should be treated cautiously. 
+
+# 3 Method 
+
+## 3.1 Problem Setup and Notation 
+
+Let Xt = (X(1)  
+
+> t
+
+, . . . , X (d) 
+
+> t
+
+) denote a d-dimensional observed time series and let Ct denote an unobserved process that may influence multiple observed variables. Throughout the manuscript, C denotes latent confounding variables in static notation and Ct denotes their time-indexed analogue. When we refer more broadly to hidden memory, we mean unobserved components of this latent process that are not included in the observed state Xt.We assume that the data are generated by a dynamic causal system with finite temporal memory, but the true effective memory order is unknown. Let p
+
+denote the conditioning depth, i.e., the number of past observed states included in the conditioning set. The implementation and several figure axes use npasts for the same quantity; in this manuscript the two notations are interchangeable, with 
+
+p ≡ npasts .
+
+6(a) (b) 
+
+Figure 1: Schematic intuition for the Markovianity diagnostic. Fig. 1a depicts an observed process with an adequate Markov state representation. Fig. 1b illustrates how a latent process can propagate hidden dependence across time. The maximum effective memory order is denoted by 
+
+τmax , so the diagnostic grid should include depths satisfying p ≥ τmax when the goal is to assess stability beyond the nominal memory order. For a chosen conditioning depth p, a constraint-based temporal causal structure learning (CSL) algorithm is applied to the lagged states 
+
+X (p) 
+
+> t
+
+= {Xt−1, X t−2, . . . , X t−p},
+
+producing an inferred graph ˆG(p) or, in the synthetic experiments, recovery metrics computed by comparing 
+
+ˆG(p) with the ground truth graph. The empirical comparisons use c-GC, c-GC*, PCMCI+, and JPCMCI+ as representative constraint-based learners with comparable conditioning depth controls. The latent confounder question studied here is operational rather than fully identifiable: does the inferred structure stabilize once enough observed history is included in the conditioning set, or does it continue to change in a way that suggests missing hidden state? The latent process Ct is therefore used as a conceptual representation of latent confounding or hidden memory, not as an identifiable component of the model. We treat Markovianity as a statement about the adequacy of the observed state representation at the selected order. 
+
+## 3.2 Markovianity as a Detection Principle 
+
+For an observed process that is adequately represented by a finite-order Markov state, conditioning on a sufficiently rich observed history should block the remaining predictive information carried by deeper lags. In that case, increasing the conditioning depth beyond the relevant order should not materially change the inferred graph. By contrast, if a latent confounder process transmits information across time, then shallow conditioning leaves open dependence paths that can generate spurious links in a constraint-based learner. Deeper conditioning can partially absorb those effects, so the inferred graph changes before eventually stabilizing or saturating. Figure 1 gives the graphical intuition for this diagnostic. In Fig. 1a, the measured variables form an adequate first-order Markov state: conditioning on the complete intervening time slice at t−1 (red nodes) blocks directed paths from the deeper observed history at t − 2 to the current state at t. Under the causal Markov assumption, the past at t − 2 therefore carries no additional conditional dependence for the current observed state once the intervening observed state is known. In Fig. 1b, the latent process C creates a temporal route outside the conditioned observed state. The highlighted path illustrates how dependence may persist from earlier latent activity to later observed variables even after conditioning on the observed variables at time t. Thus, the observed history can appear sufficiently conditioned while still omitting state information carried by an unobserved driver. 
+
+Heuristic principle. Assume an observed process with a finite order τ such that, after conditioning on the relevant observed parents up to lag τ , deeper observed lags do not contain additional information needed by the population-level conditional tests used by the selected structure learner. Then, for p ≥ τ ,enlarging the conditioning depth from p to p + 1 should not induce systematic changes in the population graph recovered from the observed process. 
+
+Remark 1. The converse is not unique to latent confounding. Persistent changes in ˆG(p) as p increases indicate that the chosen observed state representation is inadequate. In this manuscript we interpret that inadequacy as evidence consistent with latent confounding or hidden memory, not as a proof that a latent confounder has been uniquely identified. 
+
+## 3.3 Assumptions 
+
+The interpretation above is meaningful only under explicit assumptions. 
+
+• causal Markov assumption: a variable is independent of all other variables that are not its effects given its direct causes. 
+
+• Maximum conditioning depth is at least as large as the dominant observed lag order of the system, i.e., p ≥ τmax .
+
+• Hidden causes act by transmitting additional predictive information that is not fully summarized by the shallow observed state. These assumptions are deliberately weaker than claiming a one-to-one equivalence between non-Markovianity and latent confounding. They support a practical diagnostic contrast: 
+
+H0 : the observed process is adequately represented as Markov at the chosen order. 
+
+H1 : the observed process exhibits hidden memory consistent with latent confounding or other unmodeled dependence. 73.4 Embedding the Test in Constraint-Based Structure Learning 
+
+Given a sequence of conditioning depths p ∈{pmin , . . . , p max }, we run a selected constraint-based learner repeatedly and record the resulting graph sequence 
+
+ˆG(pmin ), ˆG(pmin +1) , . . . , ˆG(pmax ).
+
+Two types of diagnostics are then available. In simulations with ground truth, we inspect edge recovery metrics such as accuracy, precision, recall, false positive rate, balanced accuracy (BA), and F1 score as functions of p. A Markovian dataset should show little change once p exceeds the effective order, whereas a non-Markovian or hidden memory dataset should show a systematic shift before saturation. In observational data without ground truth, we use stability summaries at the graph level. These graph instability metrics are introduced for the real data setting where no true graph is available. They are not the primary evaluation metrics in the simulations, where the true adjacency is known and confusion matrix quantities provide a more direct account of true positives, false positives, false negatives, precision, recall, and FPR. The simplest real data summary is the inferred edge count | ˆE(p)|. A more general summary is the graph difference score 
+
+∆p = ∥ ˆA(p) − ˆA(p−1) ∥0,
+
+where ˆA(p) is the connectivity matrix inferred at depth 
+
+p. Large early values of ∆p followed by stabilization indicate that shallow conditioning was insufficient. In the present manuscript, however, the available empirical summaries are aggregate recovery curves in simulation and descriptive summaries at the graph level in real data, so the reported evidence should be read as a sensitivity analysis rather than as a calibrated hypothesis test. 
+
+## 3.5 CSL Methods in the Experiments 
+
+The c-GC and c-GC* experiments use the same template with two dependence testing stages. For each ordered source–target pair and each conditioning depth 
+
+p, the time series is first converted into a stacked lagged state containing the current variables and the previous 
+
+p observed states. The algorithm then performs an unconditional screening test between the candidate source history and target, followed by a conditional test after linearly residualizing both variables against the selected conditioning set. Both stages use circular shift permutation tests for dependence based on correlation. An edge is retained only when the unconditional test and the conditional residual test are both significant, with thresholds α and β respectively. The distinction between c-GC and c-GC* is the conditioning set. In c-GC, the conditioning set excludes the candidate source row, the target row, and the candidate source history needed to avoid conditioning away the source signal at earlier tested lag blocks. In c-GC*, the conditional test uses the fully shifted observed history except for the candidate source and target rows. This makes c-GC* more conservative and more stable when true edges occur at heterogeneous lags, but it can also reduce power when the conditioning set becomes large. In the simulation metrics, inferred lag-specific edges are collapsed into a binary directed adjacency so that the evaluation asks whether an ordered pair is recovered, not whether a particular lag is assigned correctly. Peter–Clark momentary conditional independence plus (PCMCI+) is used as an external constraint-based temporal CSL comparison. For each maximum lag τmax = p, PCMCI+ runs its parent selection and conditional independence testing steps with a partial correlation test, then the resulting lagged and contemporaneous graph is collapsed into the same binary directed adjacency used for the c-GC variants. Joint PCMCI+ (JPCMCI+) is evaluated through Tigramite’s JPCMCIplus.run_jpcmciplus 
+
+routine with the same maximum lag grid. The notebooks classify all observed variables as system variables and use an analytic partial correlation test for multivariate samples, so the experiment should be read as a comparable JPCMCI+ graph recovery baseline rather than a full multiple context design. The resulting lagged and contemporaneous graph is again collapsed to a binary directed adjacency. This common evaluation at the adjacency level keeps the conditioning depth diagnostic comparable across all four algorithms, although it does not test each algorithm’s full lag orientation or context discovery output. 
+
+## 3.6 Graph Instability Statistics and Optional Calibration 
+
+The real data analysis uses a small set of graph instability summaries that are directly computable from the sequence of inferred adjacency matrices. These summaries are sufficient for our goal: to ask whether the graph inferred from the observed variables is stable as the conditioning depth increases. Additional calibrated or localized metrics could give finer insight, but they are best treated as extensions because they require fitting a surrogate null, repeated resampling, or multiplicity correction. Let 
+
+m = d(d − 1) 
+
+denote the number of directed off-diagonal edge positions in the connectivity matrix. For p > p min ,define the normalized graph instability statistic 
+
+Dp = 1
+
+m ˆA(p) − ˆA(p−1) 
+
+> 1
+
+,
+
+which measures the fraction of directed edges whose status changes when the conditioning depth is increased by one lag. It is also useful to decompose this instability 8into edge deletions and edge additions: 
+
+D− 
+
+> p
+
+= 1
+
+m
+
+X
+
+> i̸=j
+
+1{ ˆA(p−1)  
+
+> ij
+
+= 1 , ˆA(p) 
+
+> ij
+
+= 0 },D+ 
+
+> p
+
+= 1
+
+m
+
+X
+
+> i̸=j
+
+1{ ˆA(p−1)  
+
+> ij
+
+= 0 , ˆA(p) 
+
+> ij
+
+= 1 }.
+
+In regimes sensitive to confounding one often expects 
+
+D− 
+
+> p
+
+to dominate early, because spurious edges disappear as more history is conditioned on, but the method does not require this sign pattern a priori. The reported real data summaries are therefore the edge count trajectory | ˆE(p)|, selected adjacent-depth changes through Dp, the deletion and addition components D−
+
+> p
+
+and D+ 
+
+> p
+
+, the largest observed adjacent-depth change 
+
+Tobs = max 
+
+> p=pmin +1 ,...,p max
+
+Dp,
+
+and the cumulative instability 
+
+Sobs =
+
+> pmax
+
+X
+
+> p=pmin +1
+
+Dp.
+
+Together these quantities describe the size, direction, and concentration of graph changes across the depth sweep. In particular, Tobs identifies whether instability is concentrated in a single transition, while Sobs 
+
+summarizes the total turnover across the full grid. The pair (D− 
+
+> p
+
+, D + 
+
+> p
+
+) distinguishes pruning from edge replacement, which is important because a falling edge count alone cannot show whether deeper conditioning removes edges, adds different edges, or both. Further summaries could be considered in future analyses to make the descriptive evidence more detailed. One example is a directional maximum statistic, 
+
+T ± 
+
+> obs
+
+= max 
+
+> p=pmin +1 ,...,p max
+
+max {D− 
+
+> p
+
+, D + 
+
+> p
+
+}.
+
+This would emphasize the larger of deletion and addition instability over the depth grid. It is not needed for the present v2a-RSNs interpretation because the reported D− 
+
+> 2
+
+/D +2 values already show that the dominant empirical change is deletion at the first transition, but it could be useful when additions and deletions compete across later depths. Another extension is calibration against a surrogate null. Choose a baseline order p0 that represents the strongest Markovian null one is willing to defend from domain knowledge or model selection criteria, with 
+
+p0 ≥ pmin . The null is then 
+
+H(p0)0 : the observed process is adequately represented by a stationary order-p0 model. Under this null, additional conditioning depths should change the graph only by estimation noise. The calibrated analogue of the reported maximum statistic is 
+
+Tobs (p0) = max 
+
+> p=p0+1 ,...,p max
+
+Dp.
+
+Calibration proceeds by generating surrogate datasets under H(p0)0 . Concretely, one fits a null model cMp0
+
+that preserves the dependence structure implied by an order-p0 Markov representation, and then simulates or resamples B surrogate series X∗(1) , . . . , X ∗(B) from that null. Depending on the modeling family, cMp0 may be a fitted vector autoregressive (VAR) model or nonlinear autoregression of order p0, optionally combined with a residual or block bootstrap. For weakly dependent stationary data, moving-block or stationary bootstrap schemes provide asymptotically valid uncertainty quantification while preserving temporal dependence (Künsch, 1989; Politis and Romano, 1994). This calibration step is not an empirical component of the experiments reported below. The present results therefore report descriptive trajectories, standard deviations across repeated simulations, and graph instability summaries, but no surrogate null confidence bands or calibrated p-values for Tobs . This does not make the reported metrics inadequate for the current claim; it only means that the current claim is descriptive rather than a calibrated rejection of a Markovian null. The validity of any future calibration also depends on the null family. A VAR (p0) surrogate can be miscalibrated if the learner uses nonlinear dependence tests, if the true Markovian null has nonlinear dynamics, or if residual resampling fails to preserve the temporal dependence that drives the selected constraint-based pipeline. In those cases the surrogate distribution would reflect misspecification of cMp0 as much as the null behavior of the diagnostic. For each surrogate replicate b, rerun the selected constraint-based pipeline over the same grid of conditioning depths and compute 
+
+T ∗(b) = max 
+
+> p=p0+1 ,...,p max
+
+D∗(b) 
+
+> p
+
+.
+
+The global diagnostic p-value after bootstrap calibration is 
+
+ˆpglobal = 1 + PBb=1 1{T ∗(b) ≥ Tobs (p0)}
+
+B + 1 .
+
+Equivalently, one may report the (1 − α) bootstrap critical value 
+
+c1−α = Quantile 1−α
+
+
+
+T ∗(1) , . . . , T ∗(B)
+
+.
+
+and reject H(p0)0 whenever Tobs (p0) > c 1−α. Because the maximum is taken over all candidate depths, this calibration controls the familywise error rate over the depth grid. Pointwise uncertainty can be reported through bootstrap bands 
+
+cp, 1−α = Quantile 1−α
+
+
+
+D∗(1)  
+
+> p
+
+, . . . , D ∗(B)
+
+> p
+
+
+
+,
+
+and one may also summarize the onset of instability by the first depth 
+
+ˆpbreak = min {p > p 0 : Dp > c p, 1−α},
+
+provided such a depth exists. This yields an interpretable estimate of when the shallow Markov representation first becomes statistically inadequate. 9If localization is desired, define edgewise instability indicators 
+
+Z(p) 
+
+> ij
+
+= 1{ ˆA(p)
+
+> ij
+
+̸ = ˆA(p−1)  
+
+> ij
+
+},
+
+and compare them against their bootstrap null frequencies. Because this creates a multiple testing problem over (i, j, p ), false discovery rate control should be applied, for example via the Benjamini–Hochberg procedure (Benjamini and Hochberg, 1995). These edgewise quantities could help identify which links drive the graph-level instability, but they are deliberately not used as primary evidence here. The graph-level summaries are the appropriate first layer because they are simple, directly comparable across recordings, and aligned with the manuscript’s diagnostic question. 
+
+## 3.7 Interpretation Rule 
+
+The diagnostic used in this paper is therefore operational: 1. choose a minimum conditioning depth pmin that is at least as large as the nominal lag order used by the structure learning algorithm; 2. run the selected constraint-based learner for increasing values of p;3. track recovery metrics in simulations and stability summaries at the graph level in observational data; 4. declare the data approximately Markovian at the tested order if the outputs are stable once p reaches the expected lag range; 5. declare the data sensitive to depth and therefore consistent with latent confounding or hidden memory if the outputs continue to change substantially with increasing p before saturating. This rule is intentionally conservative. Stability supports the adequacy of the observed state representation used by the selected constraint-based learner. Instability warns that causal conclusions drawn from shallow conditioning should not be trusted without further analysis, but it does not by itself isolate latent confounding from lag mismatch, finite-sample power loss, or other sources of model inadequacy. When surrogate null calibration is available, the sensitivity curves can be complemented by bootstrap confidence bands for Dp, a global p-value for Tobs ,and, where relevant, multiplicity-corrected edgewise localization. In the experiments below, the primary reported evidence is the conditioning depth trajectory itself: recovery metrics for synthetic data and instability summaries at the graph level for real data. 
+
+# 4 Results 
+
+We evaluate the proposed Markovianity diagnostic in two stages. First, simulations with known ground truth test whether recovery metrics remain stable for genuinely Markovian data and vary for non-Markovian data with hidden memory perturbations. Second, calcium imaging recordings with no ground truth graph test whether inferred connectivity is stable to increasing conditioning depth. Experiment notebooks and the implementation are available at https://github.com/ adedayoas91/hidden-confounding-diagnostics .Two evaluation regimes are used. When ground truth is available, we report accuracy, precision, recall, false positive rate (FPR), balanced accuracy, and F1 score as functions of conditioning depth. Following Section 3, p denotes conditioning depth in the mathematical notation and npasts denotes the same quantity in the implementation and figure axes. These metrics are useful because spurious links are expected to be pruned as p ≡ npasts increases. The expected signature is therefore most visible in metrics that depend directly on false positives, such as precision, FPR, balanced accuracy, and F1 score. Recall can remain comparatively unchanged even in non-Markovian scenarios because it is defined as 
+
+TP /( TP + FN ) and does not include false positives in its denominator. If deeper conditioning mainly removes spurious links while preserving most true links, recall changes little while precision and FPR improve substantially. When no ground truth is available, we report graph summaries devised for that real data setting: edge counts, Dp, its deletion and addition components D− 
+
+> p
+
+and D+ 
+
+> p
+
+, and the global summary Tobs .We do not use these graph instability summaries as the primary simulation metrics because the simulations already permit direct confusion matrix evaluation against the known graph. 
+
+## 4.1 Synthetic Validation 
+
+We report experiments on simulated Markovian and non-Markovian systems. Synthetic data were generated from an autoregressive process with a known ground truth adjacency matrix Aτ , where τ ∈ { 1, 2} specifies both the presence of connections and their lag structure. The simulation setup follows the autoregressive data generating process in Adedayo (2025). In line with the scope of this study, we evaluate aggregate graph recovery through ˆA, rather than the lag assigned to each inferred edge. Each scenario uses 10 repeated simulations. In each repetition, the number of time series and the length are sampled randomly. Markovian data with single lag follow Xt+1 = AX t + ϵt with independent Gaussian innovations ϵt ∼ N (0 , σ 2I). The non-Markovian variant with single lag adds a smooth unobserved driver term generated independently of the observed series with random amplitudes, centers, and widths. Scenarios with multiple lags split A into lag-1 and lag-2 components using a random mask and simulate 
+
+Xt+1 = AX t + BX t−1 + ϵt, with the same additional smooth driver in the non-Markovian case. For c-GC and c-GC*, the hyperparameters used are: nperm = 1000 , α = 0.01 , and β = 0.001 .Figures for single lag sweep npasts = 1 , . . . , 7, while 10 figures with multiple lags sweep npasts = 2, . . . , 7.PCMCI+ and JPCMCI+ were run with partial correlation and ParCorrMult(significance=’analytic’) tests, respectively, with their default parameter 
+
+pc_alpha =0.05 over the same lag depth grids. No explicit FDR option is set, and all observed variables are classified as system variables. The figures plot means and error bars across 10 repetitions. 
+
+4.1.1 Single Lag Systems 
+
+The first experiment uses simulated datasets with a single lag ( τ = 1 ). These curves complement the graph instability statistic Dp: if recovery metrics are flat across conditioning depths, then graph changes across adjacent depths should also be limited. Figure 2 provides the Markovian baseline for the conditioning depth diagnostic. Because the data are generated from a Markov process with single lag, increasing npasts beyond the required history should not substantially change the inferred graph. This expected stability is most clearly observed for c-GC and c-GC*, whose recovery metrics remain nearly flat across the depth grid. PCMCI+ and JPCMCI+ are less precise overall, but they do not show the strong false positive correction that characterizes the non-Markovian setting. Figure 3 shows the diagnostic signature expected when the observed state is incomplete. At shallow conditioning depths, the hidden smooth perturbation induces additional dependencies that appear as false positive edges. As npasts increases, these spurious links are progressively pruned, producing higher precision and lower FPR. The contrast with Figure 2 is the main evidence that conditioning depth sensitivity can reveal hidden memory effects in the controlled single lag setting. 
+
+4.1.2 Multiple Lag Systems 
+
+The second experiment is more demanding because the ground truth system contains edges at multiple lags. In this regime, the diagnostic must distinguish hidden memory effects from legitimate lag heterogeneity. This is where the difference between c-GC and c-GC* becomes important, and where PCMCI+ and JPCMCI+ provide additional constraint-based comparisons outside the c-GC family. Figure 4 tests whether the diagnostic is confounded by legitimate lag heterogeneity. Unlike the single lag case, the true graph contains effects at multiple delays, so some variation across conditioning depths is expected even without hidden memory. Plain c-GC shows mild depth sensitivity in this setting, whereas c-GC* remains more stable because its broader conditioning set better accommodates heterogeneous lags. This figure therefore clarifies that not all depth sensitivity should be interpreted as evidence of latent confounding. Figure 5 shows that the hidden memory signature persists even when the observed system contains multiple true lags. Compared with the Markovian case with multiple lags, the non-Markovian curves show stronger systematic improvement as conditioning depth increases, especially through higher precision and lower FPR. This pattern is most pronounced for c-GC and c-GC*, while PCMCI+ and JPCMCI+ show weaker but directionally consistent changes. The detection sensitivity of c-GC and c-GC* differs mainly through their conditioning set mechanisms. For the system with multiple lags, the minimum history included in the conditioning set is pmin = 2 , which satisfies the first interpretation rule in Section 3.7. Across both the single lag and multiple lag experiments, the strongest evidence for the manuscript’s hypothesis comes from c-GC and c-GC*, but PCMCI+ and JPCMCI+ remain important because they show that depth sensitivity is also visible in another constraint-based temporal CSL family. 
+
+## 4.2 Calcium Imaging Data 
+
+We next apply the diagnostic to four calcium imaging recordings of v2a reticulospinal neurons (v2a-RSNs) in larval zebrafish ( D. rerio ) presented in Carbo-Tano et al. (2023) 1. This real data experiment is not intended as another benchmark across four methods. The synthetic experiments above show that the c-GC variants give the clearest separation between stable Markovian systems and hidden memory systems whose curves depend on depth, whereas the Tigramite variants are directionally consistent but weaker. We therefore use c-GC and c-GC* for the biological analysis without a ground truth graph, where the aim is to ask whether the diagnostic variants most sensitive to the proposed signature show instability in observed neural recordings. Without a known graph, we track inferred edge counts and graph instability statistics as functions of conditioning depth. The experimental procedure enucleated larvae at 3 days post fertilization (dpf) to prevent excitation light from triggering motor responses that could alter spontaneous behaviour. At 5 dpf, larvae were mounted in a 3% 
+
+agarose gel with the tail free to move, and at 6 dpf, calcium activity was recorded for 600 seconds using SCAPE microscopy with synchronous tail recording. Calcium fluorescence was captured at approximately 
+
+6 Hz, while the tail was captured at 300 Hz. The identified v2a-RSNs are organized into two groups: emitters and receivers. Emitters are hypothesized to transmit information to the receiver population. The four recordings contain 100, 92, 420, and 165 identified regions of interest (ROIs), respectively. For fish-3, we selected the 130 ROIs most strongly correlated with the recorded behaviour from the 420 identified ROIs to reduce computational cost; all graph summaries for this fish therefore refer to the selected 130-node subset. This restriction is important for the interpretation: the v2a-RSNs population in each fish is approximately 1000 neurons, so many ROIs are unobserved relative to the analyzed graph. Any unidentified ROI that drives, 
+
+> 1Thanks to the Wyart lab, Paris Brain Institute (Institut du Cerveau, ICM), for providing the data.
+
+11 Figure 2: Conditioning depth sensitivity metrics for the single lag Markovian simulation, τ = {0, 1}. Each panel shows the mean over 10 repeated simulations as npasts increases from 1 to 7, with error bars denoting one standard deviation. Stable curves indicate that the observed process is adequately represented by a shallow Markov state. 
+
+Figure 3: Conditioning depth sensitivity metrics for the single lag non-Markovian simulation with a smooth hidden memory perturbation, τ = {0, 1}. Means and error bars of one standard deviation are shown over 10 repeated simulations. Systematic precision gains and FPR reductions indicate false positive pruning that depends on depth, especially for c-GC and c-GC*. 12 Figure 4: Conditioning depth sensitivity metrics for the Markovian simulation with multiple lags, τ = {0, 1, 2}.Means and error bars of one standard deviation are shown over 10 repeated simulations. This setting tests whether the diagnostic mistakes legitimate lag heterogeneity for hidden memory sensitivity; c-GC shows mild depth dependence, whereas c-GC* remains more stable under heterogeneous lags. 
+
+Figure 5: Conditioning depth sensitivity metrics for the non-Markovian simulation with multiple lags and a smooth hidden memory perturbation, τ = {0, 1, 2}. Means and error bars of one standard deviation are shown over 10 repeated simulations. The pattern that depends on depth persists despite legitimate structure across multiple lags: precision increases and FPR decreases with deeper conditioning, most clearly for c-GC and c-GC*. 13 couples, or mediates activity among the identified emitters and receivers could therefore act as a latent confounder for the observed population. 
+
+Figure 6: Descriptive conditioning depth diagnostic for four v2a-RSNs calcium imaging recordings using c-GC and c-GC*. Each curve shows the number of inferred directed links as npasts increases from 1 to 7. Solid lines show c-GC; dashed lines with square markers show c-GC*. Both variants show their largest decrease between p = 1 and p = 2 , followed by a lower and more stable trajectory of edge counts. Figure 6 applies the c-GC family diagnostic to the identified v2a-RSNs subpopulation. Instead of recovery metrics, the analysis tracks stability at the graph level through inferred edge counts. Both variants show a sharp reduction from p = 1 to p = 2 , followed by a lower and more stable trajectory. c-GC* is slightly more conservative, returning fewer edges than c-GC at most depths, but the qualitative pattern of depth sensitivity is the same. This is the pattern expected if shallow conditioning leaves residual dependencies that are pruned once additional observed history is included. In this dataset, that interpretation is biologically plausible because the analyzed emitter and receiver ROIs are only a subset of a larger neural population. The result should nevertheless be read as descriptive evidence of observed state inadequacy, and not as concrete proof that a particular unidentified ROI is a latent confounder. Table 2 reports the corresponding summaries. For c-GC, the first transition removes 66 to 522 more edges than it adds, corresponding to reductions of 13.6% in fish-2 through 42.4% in fish-3. For c-GC*, the corresponding net losses are 58 to 509 edges, or 12.3% to 42.4% of the shallow graph. The reduction from p = 1 to the minimum observed edge count ranges from 22.2% to 48.8% for c-GC and from 21.3% to 48.3% for c-GC*. The close agreement between the two variants supports the main interpretation: the pattern is not an artifact of a single c-GC conditioning set choice. Figure 7 visualizes the decomposition into D− 
+
+> p
+
+and D+
+
+> p
+
+clarifies why this should be read as a depth sensitivity result rather than a simple plot of edge counts. For every recording and both methods, the largest graph change is the first transition from p = 1 to p = 2 ,and deletions dominate additions at that transition. Under c-GC, deletions account for 61.7% to 81.6% of 
+
+Figure 7: Overlay of observed graph instability components for c-GC and c-GC* in each v2a-RSNs recording. Colors indicate total instability Dp,normalized edge deletions D− 
+
+> p
+
+, and normalized edge additions D+ 
+
+> p
+
+; solid lines show c-GC and dashed lines show c-GC*. Both methods show a deletion dominated first transition followed by smaller graph changes at later conditioning depths. all changed edge positions at p = 2 ; under c-GC*, the range is 59.9% to 80.8%. Fish-3 is the strongest case: c-GC deletes 738 edges and adds 216 between 
+
+p = 1 and p = 2 , giving D2 = 0 .0569 , D− 
+
+> 2
+
+= 0 .0440 ,and D+2 = 0 .0129 ; c-GC* deletes 733 and adds 224, giving D2 = 0 .0571 , D− 
+
+> 2
+
+= 0 .0437 , and D+2 = 0 .0134 .After this first transition, the maximum remaining Dp
+
+is below 0.025 for every recording and method, and additions and deletions become more balanced. Thus the empirical signature is not a monotone collapse of all edges, but a sharp first pruning step followed by smaller graph turnover. The cumulative instability P 
+
+> p> 1
+
+Dp provides a second descriptive summary of the same effect. It ranges from 0.0849 to 0.1530 for c-GC and from 0.0884 to 0.1562 for c-GC*, with fish-3 again showing the largest overall graph turnover. For the empirical question posed here, these graph summaries are sufficient: they show that instability is concentrated at the first transition, that this transition is mostly edge deletion, and that the same pattern appears under both c-GC variants. The real data analysis cannot distinguish among all possible causes of this instability. Unidentified v2a-RSNs, omitted physiological state variables, nonstationary dynamics, lag-order mismatch, and finite-sample power loss from larger conditioning sets can all contribute. Nevertheless, the practical implication is clear: causal interpretations based on the shallowest conditioning sets are not well supported. The reduced change at larger p provides an operational cue for selecting a conditioning depth beyond which additional history yields diminishing returns, but it should not be read as a proof of an optimal lag order. No surrogate null calibration, stationarity test, or finite sample power analysis is applied to these recordings. 14 Table 2: Descriptive graph summaries for c-GC and c-GC* on the v2a-RSNs calcium imaging recordings. Analyzed d is the number of nodes in the available adjacency matrices used to calculate these summaries. | ˆE(1) |
+
+is the edge count at the shallowest conditioning depth. The minimum edge count reports both the count and the depth at which it occurs. The first drop is the net edge loss from p = 1 to p = 2 , with the percentage relative to 
+
+| ˆE(1) | in parentheses. D− 
+
+> 2
+
+/D +2 decomposes the first transition into normalized deletions and additions. Tobs is the largest normalized graph change across adjacent depths; for both methods and all recordings it occurs at 
+
+p = 2 . The final column sums the normalized graph changes over all adjacent depth transitions.                                                                                        
+
+> Method Recording Analyzed d|ˆE(1) |Min. |ˆE||ˆE(7) |First drop D−
+> 2/D +2Tobs
+> P
+> p> 1Dp
+> c-GC fish-1 100 477 253 ( p= 4 )268 162 (34.0%) 0.0211/0.0047 0.0259 0.0849 fish-2 92 487 373 ( p= 5 )398 66 (13.6%) 0.0208/0.0129 0.0337 0.1076 fish-3 130 1232 631 ( p= 3 )717 522 (42.4%) 0.0440/0.0129 0.0569 0.1530 fish-4 165 1034 804 ( p= 3 )948 208 (20.1%) 0.0180/0.0103 0.0284 0.0954 c-GC* fish-1 100 462 245 ( p= 4 )265 160 (34.6%) 0.0212/0.0051 0.0263 0.0884 fish-2 92 470 364 ( p= 5 )394 58 (12.3%) 0.0210/0.0141 0.0351 0.1135 fish-3 130 1200 621 ( p= 3 )710 509 (42.4%) 0.0437/0.0134 0.0571 0.1562 fish-4 165 1008 793 ( p= 3 )940 200 (19.8%) 0.0180/0.0106 0.0287 0.0980
+
+Consequently, the reported Dp, D− 
+
+> p
+
+, D+ 
+
+> p
+
+, Tobs , and cumulative instability values are descriptive model-checking summaries rather than calibrated evidence against a specific Markovian null. Future calibration with surrogate null bands, calibrated global statistics, or edgewise instability localization could sharpen the interpretation, but those extensions are not required for the present descriptive conclusion that shallow conditioning gives unstable inferred graphs in the analyzed v2a-RSNs subsets. 
+
+# 5 Conclusions 
+
+This study recasts conditioning depth sweeps as stability diagnostics for constraint-based temporal CSL. Across all experiments, the same empirical rule emerges: stable curves across increasing conditioning depth support the adequacy of the observed Markov representation used by the causal discovery pipelines, while persistent depth sensitivity warns that the representation is incomplete. The claim is deliberately modest. These sweeps do not uniquely identify latent confounders. They provide evidence about the behavior of inferred graphs across conditioning depths. When the observed process is adequately represented as Markovian at the relevant order, the graph becomes relatively stable; latent confounding and other hidden memory effects can instead produce systematic graph changes before stabilization. The empirical results support this premise in both synthetic and real settings. Synthetic data with known hidden memory perturbations exhibit the warning signal strongly, especially for c-GC and c-GC*. In the both simulations with cases, both variants separate stable Markovian data from non-Markovian data whose curves depend on depth. Tigramite variants: PCMCI+ and JPCMCI+ provide weaker but directionally consistent external checks: both improve precision and false positive behavior under non-Markovian perturbations, while remaining less separated than the c-GC variants. The calcium imaging analysis therefore focuses on c-GC variants for the identified emitter and receiver v2a-RSNs subsets. Both show the same broad instability pattern as the non-Markovian simulations: inferred connectivity drops sharply from p = 1 to p = 2 , the first transition is deletion dominated in every fish, and later depths fluctuate around a lower level with sparser graph turnover. Since many ROIs remain outside the analyzed population, this pattern is compatible with unobserved neural drivers. The main limitation of our method is specificity as non-Markovianity in the observed process is not unique to latent confounding. The same signature can arise from lag-order misspecification, measurement error, nonstationarity, undersampling, finite sample conditional independence error, or other forms of hidden memory. The present experiments do not include ablations that disentangle these mechanisms. For that reason, this method should be used as a warning signal and model-checking device, not as concrete proof of latent confounder presence. Secondly is the computational cost. The diagnostic inherits the sensitivity of constraint-based learners to sample size, growth in the conditioning set, and finite sample calibration. 
+
+# Funding 
+
+This study was funded by the Zebrafish Neuroscience Interdisciplinary Training Hub (ZENITH) program under Marie Curie Actions grant number #813457. 
+
+# AI Usage Disclaimer 
+
+In the preparation of this manuscript, OpenAI Codex was used for sentence restructuring, clarity improvement, stylistic refinement, and literature management (Google’s NotebookLM). All scientific content, data interpretation, conclusions, and intellectual arguments presented in this work are the sole responsibility of the author. Every statement of fact, hypothesis, and interpretation was verified and approved by the human authors. 15 The use of generative and assistive AI tools is disclosed in accordance with prevailing journal policies on transparency in AI-assisted scholarly writing. 
+
+# References 
+
+Adedayo, S. A. (2025). Re-examining granger causality with causal bayesian networks and reichenbach’s principles. arXiv preprint https://arxiv.org/pdf/2501.02672v2 .Ahrens, M. B., Orger, M. B., Robson, D. N., Li, J. M., and Keller, P. J. (2013). Whole-brain functional imaging at cellular resolution using light-sheet microscopy. Nature Methods , 10(5):413–420. Ali, R. A., Richardson, T. S., and Spirtes, P. (2009). Markov equivalence for ancestral graphs. Annals of Statistics , 37(5B):2808–2837. Assaad, C. K., Devijver, E., and Gaussier, E. (2022). Survey and evaluation of causal discovery methods for time series. Journal of Artificial Intelligence Research ,73:767–819. Barnett, L., Barrett, A. B., and Seth, A. K. (2009). Granger causality and transfer entropy are equivalent for gaussian variables. Physical Review Letters ,103(23):238701. Benjamini, Y. and Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. Journal of the Royal Statistical Society Series B , 57(1):289–300. Bica, I., Alaa, A., and Van Der Schaar, M. (2020). Time series deconfounder: Estimating treatment effects over time in the presence of hidden confounders. In 
+
+International Conference on Machine Learning , pages 884–895. PMLR. Carbo-Tano, M., Lapoix, M., Jia, X., Thouvenin, O., Pascucci, M., Auclair, F., Quan, F. B., Albadri, S., Aguda, V., Farouj, Y., et al. (2023). The mesencephalic locomotor region recruits v2a reticulospinal neurons to drive forward locomotion in larval zebrafish. Nature Neuroscience , 26(10):1775– 1790. Chen, L., Li, C., Shen, X., and Pan, W. (2024a). Discovery and inference of a causal network with hidden confounding. Journal of the American Statistical Association , 119(548):2572–2584. Chen, W., Huang, Z., Cai, R., Hao, Z., and Zhang, K. (2024b). Identification of causal structure with latent variables based on higher order cumulants. 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , 38(18):20353–20361. Colombo, D. and Maathuis, M. H. (2014). Order-independent constraint-based causal structure learning. Journal of Machine Learning Research ,15(116):3921–3962. Colombo, D., Maathuis, M. H., Kalisch, M., and Richardson, T. S. (2012). Learning high-dimensional directed acyclic graphs with latent and selection variables. Annals of Statistics , 40(1):294–321. Cui, Y., Pu, H., Shi, X., Miao, W., and Tchetgen Tchetgen, E. J. (2024). Semiparametric proximal causal inference. Journal of the American Statistical Association , 119(546):1348–1359. D’Amour, A. (2019). On multi-cause causal inference with unobserved confounding: Counterexamples, impossibility, and alternatives. arXiv preprint arXiv:1902.10286 .Eichler, M. (2007). Granger causality and path diagrams for multivariate time series. Journal of Econometrics , 137(2):334–353. Eichler, M. (2010). Graphical gaussian modelling of multivariate time series with latent variables. In Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics ,volume 9 of Proceedings of Machine Learning Research , pages 193–200. PMLR. Eichler, M. (2012). Graphical modelling of multivariate time series. Probability Theory and Related Fields ,153(1–2):233–268. Eichler, M. (2013). Causal inference with multiple time series: Principles and problems. 
+
+Philosophical Transactions of the Royal Society A ,371(1997):20110613. Entner, D. and Hoyer, P. O. (2010). On causal discovery from time series data using FCI. In Proceedings of the Fifth European Workshop on Probabilistic Graphical Models , pages 121–128. Foygel, R., Draisma, J., and Drton, M. (2012). Half-trek criterion for generic identifiability of linear structural equation models. Annals of Statistics , 40(3):1682– 1713. Gerhardus, A. and Runge, J. (2020). High-recall causal discovery for autocorrelated time series with latent confounders. In Advances in Neural Information Processing Systems , volume 33, pages 12615–12625. Geweke, J. (1982). Measurement of linear dependence and feedback between multiple time series. Journal of the American Statistical Association , 77(378):304– 313. Geweke, J. F. (1984). Measures of conditional linear dependence and feedback between time series. 
+
+Journal of the American Statistical Association ,79(388):907–915. Glymour, C., Zhang, K., and Spirtes, P. (2019). Review of causal discovery methods based on graphical models. Frontiers in Genetics , 10:524. 16 Granger, C. W. J. (1969). Investigating causal relations by econometric models and cross-spectral methods. 
+
+Econometrica , 37(3):424–438. Günther, W., Ninad, U., and Runge, J. (2023). Causal discovery for time series from multiple datasets with latent contexts. In Evans, R. J. and Shpitser, I., editors, Proceedings of the Thirty-Ninth Conference on Uncertainty in Artificial Intelligence , volume 216 of Proceedings of Machine Learning Research , pages 766–776. PMLR. Hoyer, P. O., Shimizu, S., Kerminen, A. J., and Palviainen, M. (2008). Estimation of causal effects using linear non-gaussian causal models with hidden variables. International Journal of Approximate Reasoning , 49(2):362–378. Hyttinen, A., Plis, S., Jarvisalo, M., Eberhardt, F., and Danks, D. (2017). A constraint optimization approach to causal discovery from subsampled time series data. International Journal of Approximate Reasoning , 90:208–225. Kalisch, M. and Bühlmann, P. (2007). Estimating high-dimensional directed acyclic graphs with the PC-algorithm. Journal of Machine Learning Research ,8(22):613–636. Karlsson, R. K. A. and Krijthe, J. H. (2023). Detecting hidden confounding in observational data using multiple environments. arXiv preprint arXiv:2205.13935 . Presented at NeurIPS 2023. Kummerfeld, E. and Ramsey, J. (2016). Causal clustering for 1-factor measurement models. 
+
+Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pages 1655–1664. Künsch, H. R. (1989). The jackknife and the bootstrap for general stationary observations. Annals of Statistics , 17(3):1217–1241. Kuroki, M. and Pearl, J. (2014). Measurement bias and effect restoration in causal inference. Biometrika ,101(2):423–437. Lipsitch, M., Tchetgen Tchetgen, E., and Cohen, T. (2010). Negative controls: A tool for detecting confounding and bias in observational studies. 
+
+Epidemiology , 21(3):383–388. Liu, Y., Cui, C., Waxman, D., Butler, K., and Djurić, P. M. (2023). Detecting confounders in multivariate time series using strength of causation. In 2023 31st European Signal Processing Conference (EUSIPCO) ,pages 1400–1404. IEEE. Louizos, C., Shalit, U., Mooij, J. M., Sontag, D., Zemel, R., and Welling, M. (2017). Causal effect inference with deep latent-variable models. Advances in neural information processing systems , 30. Maeda, T. N. and Shimizu, S. (2020). RCD: Repetitive causal discovery of linear non-gaussian acyclic models with latent confounders. In Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics , volume 108 of 
+
+Proceedings of Machine Learning Research , pages 735–745. PMLR. Malinsky, D. and Spirtes, P. (2018). Causal structure learning from multivariate time series in settings with unmeasured confounding. Proceedings of Machine Learning Research , 92:23–47. Miao, W., Geng, Z., and Tchetgen Tchetgen, E. J. (2018). Identifying causal effects with proxy variables of an unmeasured confounder. Biometrika ,105(4):987–993. Ogarrio, J. M., Spirtes, P., and Ramsey, J. (2016). A hybrid causal search algorithm for latent variable models. In Proceedings of the Eighth International Conference on Probabilistic Graphical Models , volume 52 of Proceedings of Machine Learning Research , pages 368–379. PMLR. Paninski, L., Ahmadian, Y., Ferreira, D. G., Koyama, S., Rahnama Rad, K., Vidne, M., Vogelstein, J., and Wu, W. (2010). A new look at state-space models for neural data. Journal of Computational Neuroscience ,29(1–2):107–126. Pearl, J. (1995). Causal diagrams for empirical research. 
+
+Biometrika , 82(4):669–688. Pearl, J. (2009). Causality: Models, Reasoning, and Inference . Cambridge University Press, Cambridge, 2 edition. Penning de Vries, B. B. and Groenwold, R. H. (2023). Negative controls: Concepts and caveats. Statistical Methods in Medical Research , 32(8):1576–1587. Peters, J., Bühlmann, P., and Meinshausen, N. (2016). Causal inference by using invariant prediction: Identification and confidence intervals. Journal of the Royal Statistical Society: Series B , 78(5):947–1012. Peters, J., Janzing, D., and Scholkopf, B. (2017). 
+
+Elements of Causal Inference: Foundations and Learning Algorithms . MIT Press, Cambridge, MA. Pfister, N., Bühlmann, P., and Peters, J. (2018). Invariant causal prediction for sequential data. 
+
+Journal of the American Statistical Association ,114(527):1264–1276. Politis, D. N. and Romano, J. P. (1994). The stationary bootstrap. Journal of the American Statistical Association , 89(428):1303–1313. Richardson, T. and Spirtes, P. (2002). Ancestral graph markov models. Annals of Statistics , 30(4):962–1030. 17 Richardson, T. S., Evans, R. J., Robins, J. M., and Shpitser, I. (2023). Nested markov properties for acyclic directed mixed graphs. Annals of Statistics ,51(1). Runge, J. (2018). Causal network reconstruction from time series: From theoretical assumptions to practical estimation. Chaos: An Interdisciplinary Journal of Nonlinear Science , 28(7):075310. Runge, J. (2020). Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. In Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence ,volume 124 of Proceedings of Machine Learning Research , pages 1388–1397. PMLR. Runge, J., Gerhardus, A., Varando, G., Eyring, V., and Camps-Valls, G. (2023). Causal inference for time series. Nature Reviews Earth & Environment ,4(7):487–505. Runge, J., Nowack, P., Kretschmer, M., Flaxman, S., and Sejdinovic, D. (2019). Detecting and quantifying causal associations in large nonlinear time series datasets. Science Advances , 5(11):eaau4996. Sadeghi, K. and Soo, T. (2022). Conditions and assumptions for constraint-based causal structure learning. Journal of Machine Learning Research ,23(109):1–34. Shi, X., Miao, W., Nelson, J. C., and Tchetgen Tchetgen, E. J. (2020a). Multiply robust causal inference with double-negative control adjustment for categorical unmeasured confounding. 
+
+Journal of the Royal Statistical Society: Series B ,82(2):521–540. Shi, X., Miao, W., and Tchetgen Tchetgen, E. J. (2020b). A selective review of negative control methods in epidemiology. Current Epidemiology Reports , 7(4):190–202. Shimizu, S., Hoyer, P. O., Hyvarinen, A., and Kerminen, A. (2006). A linear non-gaussian acyclic model for causal discovery. Journal of Machine Learning Research , 7(72):2003–2030. Shimizu, S., Inazumi, T., Sogawa, Y., Hyvarinen, A., Kawahara, Y., Washio, T., Hoyer, P. O., and Bollen, K. (2011). Directlingam: A direct method for learning a linear non-gaussian structural equation model. Journal of Machine Learning Research ,12(33):1225–1248. Shpitser, I. and Pearl, J. (2006). Identification of joint interventional distributions in recursive semi-markovian causal models. In Proceedings of the Twenty-First National Conference on Artificial Intelligence , pages 1219–1226. Shpitser, I. and Pearl, J. (2008). Complete identification methods for the causal hierarchy. Journal of Machine Learning Research , 9(64):1941–1979. Silva, R., Scheines, R., Glymour, C., and Spirtes, P. (2006). Learning the structure of linear latent variable models. Journal of Machine Learning Research ,7(8):191–246. Spirtes, P., Glymour, C. N., and Scheines, R. (2000). 
+
+Causation, prediction, and search . MIT press. Spirtes, P., Meek, C., and Richardson, T. S. (1995). Causal inference in the presence of latent variables and selection bias. In Proceedings of the Eleventh Conference on Uncertainty in Artificial Intelligence ,pages 499–506. Sullivant, S., Talaska, K., and Draisma, J. (2010). Trek separation for gaussian graphical models. Annals of Statistics , 38(3):1665–1685. Tank, A., Covert, I., Foti, N. J., Shojaie, A., and Fox, E. B. (2022). Neural Granger causality. 
+
+IEEE Transactions on Pattern Analysis and Machine Intelligence , 44(8):4267–4279. Tchetgen Tchetgen, E. J., Ying, A., Cui, Y., Shi, X., and Miao, W. (2020). An introduction to proximal causal learning. arXiv preprint arXiv:2009.10982 .Tchetgen Tchetgen, E. J., Ying, A., Cui, Y., Shi, X., and Miao, W. (2024). An introduction to proximal causal inference. Statistical Science , 39(3). Tian, J. and Pearl, J. (2002). On the testable implications of causal models with hidden variables. In Proceedings of the Eighteenth Conference on Uncertainty in Artificial Intelligence , pages 519–527. Tramontano, D., Kivva, Y., Salehkaleybar, S., Drton, M., and Kiyavash, N. (2024). Causal effect identification in LiNGAM models with latent confounders. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of 
+
+Proceedings of Machine Learning Research , pages 48468–48493. PMLR. Verma, T. S. and Pearl, J. (1990). Equivalence and synthesis of causal models. In Proceedings of the Sixth Conference on Uncertainty in Artificial Intelligence ,pages 255–270. Wang, Y. and Blei, D. M. (2019). The blessings of multiple causes. Journal of the American Statistical Association , 114(528):1574–1596. Yu, B. M., Cunningham, J. P., Santhanam, G., Ryu, S. I., Shenoy, K. V., and Sahani, M. (2009). Gaussian-process factor analysis for low-dimensional single-trial analysis of neural population activity. Journal of Neurophysiology , 102(1):614–635. Zhang, J. (2008). On the completeness of orientation rules for causal discovery in the presence of latent confounders and selection bias. Artificial Intelligence ,172(16–17):1873–1896. 18 Zhang, Z., Ren, S., Qian, X., and Duffield, N. (2025). InvarGC: Invariant Granger causality for heterogeneous interventional time series under latent confounding. Zhou, W., Bai, S., Yu, S., Zhao, Q., and Chen, B. (2024). Jacobian regularizer-based neural Granger causality. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pages 61763–61782. PMLR. 19

@@ -1,0 +1,632 @@
+Title: Structural Causal Discovery and Predictive Sufficiency in High-Dimensional Dynamical Systems
+
+URL Source: https://arxiv.org/pdf/2606.00710v1
+
+Published Time: Tue, 02 Jun 2026 00:48:41 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# Structural Causal Discovery and Predictive Sufficiency in High-Dimensional Dynamical Systems 
+
+## Abd AlRahman R. AlMomani 1, Curtis N. James 1, Christopher C. Hennon 2, and Ronny Schroeder 11Embry-Riddle Aeronautical University, Prescott, Arizona, 86301 
+
+> 2
+
+## Western Carolina University, Cullowhee, NC 28723 
+
+# Highlights 
+
+• Entropic regression identifies structurally stable variables in precipitation dynamics. 
+
+• Selection stability across spatial partitions reveals a compact atmospheric backbone. 
+
+• Stable causal structure supports short-horizon event discrimination but not predictive closure. 
+
+• Structural relevance and predictive sufficiency separate in high-dimensional Earth-system data. 
+
+# eTOC Blurb 
+
+AlMomani et al. show that entropic regression identifies a compact, physically interpretable back-bone of variables associated with next-hour precipitation. Although these variables support short-horizon event discrimination, they do not close the system for calibrated and intensity-resolving prediction, revealing a separation between structural relevance and predictive sufficiency in high-dimensional Earth-system data. 
+
+Abstract 
+
+High-dimensional environmental systems often contain variables that are strongly predic-tive, structurally informative, and physically coupled, but these roles are not equivalent. In precipitation dynamics, this distinction is particularly important because rainfall emerges from multiscale thermodynamic, kinematic, microphysical, and land–atmosphere interactions, while observations are sparse, spatially redundant, and strongly imbalanced. In this work, we study the relationship between structural causal discovery and predictive sufficiency in a high-dimensional precipitation system. Using HRRR atmospheric fields and MRMS precipitation observations over the Southwestern United States, we apply a projection-based formulation of entropic re-gression to identify candidate causal parents of next-hour precipitation. The method evaluates variables through their incremental conditional information contribution under a one-hour tem-poral delay, using spatially aggregated superpixel representations to assess structural consistency across the domain. Compared with transfer entropy and causation entropy, entropic regression produces a more concentrated and stable selection profile, revealing a compact set of six phys-ically interpretable variables associated with moisture availability, reflectivity, vertical motion, wind organization, and convective instability. Predictive experiments using only these struc-turally selected variables show strong short-horizon discrimination of precipitation occurrence, 
+
+1  
+
+> arXiv:2606.00710v1 [math.DS] 30 May 2026 but limited calibration, intensity prediction, and fixed-threshold event-detection skill. These results demonstrate that structural relevance does not imply predictive closure. The selected variables form a stable informational backbone of the precipitation process, but they do not constitute a complete predictive state. More broadly, the study shows that causal discovery in high-dimensional Earth-system data should be interpreted as identifying structurally informa-tive components of a system, rather than as reconstructing a sufficient dynamical representation for forecasting.
+
+# 1 Introduction 
+
+Understanding the drivers of precipitation remains a central challenge in atmospheric and Earth system sciences. Precipitation emerges from multiscale interactions involving thermodynamic, kine-matic, microphysical, and land–atmosphere processes, and exhibits strong spatial heterogeneity, intermittency, and nonlinearity. These characteristics make it difficult to identify which variables are structurally relevant, and to distinguish direct drivers from indirect or correlated effects. Traditionally, precipitation prediction has been approached through numerical weather predic-tion (NWP) models, which encode physical laws governing atmospheric dynamics [1]. While these models provide a principled framework, their predictive skill remains limited in convective regimes and at fine spatial and temporal scales. As a result, data-driven approaches have become increas-ingly prominent [2, 3, 4], including statistical regression methods and machine learning models such as convolutional and recurrent neural networks [5, 6, 7, 8]. These methods aim to approximate predictive mappings directly from data, often achieving improvements in short-term forecasting performance. However, predictive performance alone does not imply causal or structural understanding. In high-dimensional systems, models may achieve high accuracy by exploiting correlations that do not correspond to underlying mechanisms. This distinction is particularly important in environmental systems, where observational data are finite, biased, spatially correlated, and lack controlled inter-ventions. As emphasized in [9], causal inference in Earth system science requires methods that can disentangle direct influence from indirect pathways and common drivers. Information-theoretic approaches provide a natural framework for this problem. Measures such as transfer entropy (TE) [10] and causation entropy (CE) [11] quantify directed information flow and conditional dependence, and have been applied to identify causal structure in complex systems. In particular, causation entropy provides a principled formulation for identifying candidate causal parents through incremental conditioning. Despite their theoretical appeal, these methods face practical limitations in high-dimensional settings. Estimating conditional mutual information requires approximating high-dimensional prob-ability distributions, which becomes increasingly unreliable as the number of variables in the condi-tioning set grows. This challenge is compounded in spatiotemporal systems, where strong correla-tions, limited effective sample size, and nonlinear interactions further degrade estimation stability. As a result, information-theoretic methods may exhibit limited structural consistency when applied to high-dimensional environmental data, with identified driver sets varying across spatial partitions and data realizations. In this work, we address this limitation through entropic regression (ER), a method originally developed for data-driven nonlinear system identification and robust variable selection [12, 13, 14]. Instead of estimating conditional distributions directly, ER evaluates the contribution of candidate variables through their effect on low-dimensional projections of the target onto structured nonlinear feature spaces. This induces a geometric representation of the inference problem, in which variable selection corresponds to identifying directions that provide incremental explanatory power. 2This formulation preserves the information-theoretic objective of identifying variables with unique conditional contribution, while avoiding direct high-dimensional density estimation. It there-fore provides a more stable route for identifying structurally relevant variables in settings where clas-sical conditional information estimates are sensitive to dimension, redundancy, and limited effective sample size. We apply this framework to precipitation modeling over the Southwestern United States using high-resolution atmospheric data. The analysis is conducted in two stages. First, we perform structural causal discovery using entropic regression under a spatial aggregation framework. Second, we evaluate the predictive implications of the identified variables through probabilistic and sequence-based models. The results show that a small subset of variables is consistently identified as dominant across the spatial domain, indicating a stable structural backbone of the system. At the same time, predictive modeling using these variables reveals that structural identification does not directly translate into predictive sufficiency. This separation between structural consistency and predictive closure highlights a fundamen-tal aspect of data-driven modeling in complex systems: identifying variables that are consistently involved in the dynamics is distinct from constructing a complete predictive representation of the system. The remainder of the paper is organized as follows. Section 2 formulates the distinction between structural discovery and predictive sufficiency. Section 3 describes the data and spatial representa-tion. Section 4 introduces the entropic regression framework. Section 5 compares ER with transfer entropy and causation entropy. Section 6 presents the results, including structural discovery and predictive evaluation. Section 7 discusses the implications of these findings. 
+
+# 2 Problem Formulation 
+
+Let Y (s, t ) denote precipitation at spatial location s and time t, and let 
+
+X(s, t ) =  X1(s, t ), . . . , X p(s, t ) (1) The structural discovery problem is formulated with a one-hour temporal delay: atmospheric vari-ables at time t are used to explain precipitation at time t + 1 . Thus, the objective is not to identify contemporaneous associations, but to identify variables whose information at the current time contributes to the next-hour precipitation response. The objective is twofold: (i) identify a structurally meaningful subset of variables that act as candidate causal parents of 
+
+Y (s, t + 1) ;(ii) evaluate whether this subset is sufficient for predictive modeling of precipitation. The first objective is structural: it asks which variables provide stable and non-redundant in-formation about the precipitation process. The second objective is predictive: it asks whether the structurally identified variables contain enough information to support reliable forecasting. The distinction between these two objectives is central to the paper. A variable set may be structurally informative without forming a complete predictive representation of the system. 33 Data and Spatial Representation 
+
+## 3.1 Data sources 
+
+Let s ∈ Ω ⊂ R2 denote spatial location and t ∈ T denote time. The system is defined by a response variable 
+
+Y (s, t ), (2) representing precipitation, and a collection of predictor variables 
+
+X(s, t ) =  X1(s, t ), . . . , X p(s, t ), (3) with p = 122 candidate atmospheric variables. The predictor fields X are obtained from HRRR analysis data [15], while Y is obtained from MRMS observations [16]. The dataset spans the period 2018–2022. All stages of structural discovery and model construction are restricted to the development period 
+
+Tdev = {2018 , 2019 , 2020 , 2021 }, (4) while 
+
+Ttest = {2022 } (5) is reserved exclusively for deployment-level evaluation. The HRRR fields are defined on a grid of approximately 3 km spatial resolution with hourly temporal resolution, 
+
+∆t = 1 hour . (6) The MRMS data are available at higher native resolution and are aggregated to hourly precipitation accumulation to match the temporal resolution in Eq. (6). In the predictive modeling stage, MRMS precipitation is resampled onto the HRRR grid, producing a co-registered dataset (X, Y ) defined at approximately 3 km resolution. Two distinct representations of the data are used in this study, corresponding to two different objectives: 
+
+• Causal discovery representation: spatial aggregation over coherent regions, referred to as superpixels. 
+
+• Predictive modeling representation: grid-aligned fields in which MRMS precipitation is resampled to match the HRRR spatial grid. This distinction is essential. The superpixel representation is used exclusively to stabilize struc-tural discovery and is not used in the predictive modeling stage. Predictive models are evaluated on grid-aligned fields, so that their outputs can be compared directly with observed precipitation patterns. 
+
+## 3.2 High-dimensional structure 
+
+At each time t, the system is defined over a spatial grid {si}Ni=1 , with 
+
+X(t) ∈ RN ×p, Y (t) ∈ RN , (7) where X(t) and Y (t) correspond to the discretized versions of the fields defined in Eqs. (3) and (2), respectively. The resulting spatiotemporal dataset exhibits three structural properties: 4(i) Spatial redundancy. For neighboring locations si and sj , the fields X(si, t ) and X(sj , t ) are strongly correlated. This induces a low effective-rank structure in X(t) and reduces the number of independent degrees of freedom available for inference. 
+
+(ii) Variable coupling. Many of the predictor variables are not independent but arise from related physical processes. This leads to overlapping explanatory contributions and complicates the identification of a minimal set of drivers. 
+
+(iii) Precipitation sparsity. The response variable Y (s, t ) is sparse in both space and time. For most (s, t ),
+
+Y (s, t ) = 0 , (8) with nonzero values concentrated in localized and intermittent events. To formalize this imbalance, define the index sets 
+
+I0 = {(s, t ) : Y (s, t ) = 0 }, I1 = {(s, t ) : Y (s, t ) > 0}. (9) Then 
+
+|I 0| ≫ |I 1|, (10) which implies that informative observations of precipitation dynamics are concentrated on a small subset of the data. To quantify the spatial distribution of precipitation occurrence, we define the empirical proba-bility of precipitation at each location s as 
+
+P (s) = 1
+
+|T dev |
+
+X
+
+> t∈T dev
+
+1{Y (s,t )>0}, (11) where 1{·} denotes the indicator function. The quantity P (s) measures the frequency of precipitation occurrence and provides a spatial characterization of the event process. Figure 1 shows the distribution of P (s) across the domain. Additional results, extended analysis, and year-specific precipitation probability fields are provided in the Supplementary Material. The spatial variability of P (s) implies that the effective number of informative samples is not uniform across the domain. Define 
+
+Neff (s) = X
+
+> t∈T dev
+
+1{Y (s,t )>0}. (12) Then, for large portions of the domain, 
+
+Neff (s) ≪ |T dev |. (13) This imbalance implies that both structural discovery and predictive modeling are performed under spatially varying effective sample sizes, with large regions dominated by non-informative zero-precipitation observations. As a consequence, global fitting criteria can be strongly influenced by the zero-precipitation regime, which may bias model selection toward representations that prioritize background states over localized event dynamics. From a computational perspective, structural discovery over the full grid requires solving a high-dimensional selection problem at each spatial location. From a statistical perspective, the 5Figure 1: Spatial distribution of empirical precipitation probability P (s) over the development pe-riod. The field exhibits strong spatial heterogeneity, with large regions of low precipitation frequency and localized regions of elevated activity. combination of spatial redundancy in Eq. (7) and response sparsity in Eqs. (8)–(10) leads to unstable variable selection and increased sensitivity to noise. These limitations motivate the introduction of an alternative representation in which both pre-dictors and response are aggregated over spatially coherent regions. This representation reduces dimensionality, increases the effective sample size per unit, and enables the evaluation of structural consistency across the domain. The construction of this representation is described in the following section. 
+
+## 3.3 Superpixel representation 
+
+To construct a spatial representation suitable for structural discovery, we begin by forming a matrix representation of the precipitation field defined in Eq. (2). Let Y (s, t ) denote the precipitation field at spatial location s ∈ { si}Ni=1 and time t ∈ { tk}Tk=1 .For each time tk, the two-dimensional precipitation field is vectorized into a column vector 
+
+yk ∈ RN , (yk)i = Y (si, t k). (14) Stacking these observations sequentially in time, we construct the data matrix 
+
+Y = y1 y2 · · · yT
+
+ ∈ RN ×T , (15) where each column corresponds to a time step and each row corresponds to the temporal evolution at a fixed spatial location. 6Prior to decomposition, the data are centered by subtracting the temporal mean at each spatial location. Specifically, we define ˜Y = Y − ¯Y, (16) with 
+
+¯Yi,k = 1
+
+T
+
+> T
+
+X
+
+> k′=1
+
+Y (si, t k′ ). (17) This ensures that each row of ˜Y has zero mean. We then compute the singular value decomposition 
+
+˜Y = UΣV ⊤. (18) The columns of V define orthogonal temporal directions, while the columns of U define the corre-sponding spatial modes. The leading principal component is defined as PC 1 = σ1u1 ∈ RN , (19) which provides a spatial field capturing the dominant mode of variability in the precipitation data. In this work, the spatial structure used for partitioning is derived from PC 1 in Eq. (19). We define the scalar field 
+
+ϕ(si) = ( PC 1)i, (20) which assigns to each spatial location a value reflecting its contribution to the dominant precipitation mode. Superpixels are constructed by applying the Simple Linear Iterative Clustering (SLIC) algorithm to the field ϕ(s). The SLIC algorithm partitions the domain into spatially contiguous regions by jointly enforcing feature similarity and spatial proximity. In this setting, the feature space is one-dimensional, given by ϕ, while spatial regularization ensures that the resulting regions remain coherent and localized. This procedure yields a partition 
+
+Ω = 
+
+> M
+
+[
+
+> m=1
+
+Ωm, Ωm ∩ Ωm′ = ∅ (m̸ = m′), (21) with M = 1227 superpixels. For each superpixel Ωm, we define aggregated variables 
+
+¯Ym(t) = 1
+
+|Ωm|
+
+X
+
+> si∈Ωm
+
+Y (si, t ), (22) and 
+
+¯Xm,j (t) = 1
+
+|Ωm|
+
+X
+
+> si∈Ωm
+
+Xj (si, t ), j = 1 , . . . , p. (23) This aggregation produces a reduced representation in which each superpixel is associated with a multivariate time series ( ¯Xm(t), ¯Ym(t)) . This use of spatial aggregation is also consistent with information-theoretic approaches in which coarse-graining is used to obtain stable representations of continuous or high-dimensional state spaces [17, 18]. The construction assumes that the leading principal component in Eq. (19) captures sufficient spatial organization to guide the partitioning. While this emphasizes dominant variance structure, localized or transient patterns not aligned with this mode may not be fully represented. 7The superpixel representation is used exclusively for structural discovery. It reduces spatial redundancy, increases the effective signal-to-noise ratio, and enables the evaluation of structural consistency across the domain through repeated variable selection across {Ωm}Mm=1 . It is not used in the predictive modeling stage. 
+
+Figure 2: Superpixel representation for structural discovery. Precipitation fields are organized as a space–time sequence, from which a dominant spatial mode is extracted and used to guide SLIC-based superpixel partitioning. Each superpixel Ωm defines a coherent spatial region over which precipitation and atmospheric predictors are averaged to obtain the local time series ¯Ym(t) and 
+
+¯Xm,j (t). These aggregated time series form the input to entropic regression and allow structural consistency to be evaluated across spatially heterogeneous regions. 
+
+# 4 Entropic Regression for Structural Causal Discovery 
+
+## 4.1 Motivation 
+
+The objective is to identify a parsimonious subset of variables that contribute unique and non-redundant information to the precipitation dynamics defined in Eq. (2). In the setting described in Section 3.2, the predictor space is both high-dimensional and strongly structured: spatial redun-dancy in Eq. (7) reduces the effective degrees of freedom, while precipitation sparsity in Eqs. (8)–(10) limits the number of informative observations. Under these conditions, standard regression and feature selection approaches become ill-posed. Correlation-based methods tend to select variables that reflect shared structure rather than direct influence, while unconstrained nonlinear models can adapt to noise or redundant variability without isolating a minimal driver set. Entropic regression (ER) addresses this limitation by shifting the objective from prediction to 
+
+incremental information contribution . Rather than optimizing predictive accuracy alone, ER selects variables based on their ability to provide additional information about the response beyond what 8is already explained by the current model. This aligns the selection process with the identification of structurally relevant variables, rather than predictive surrogates. In its standard formulation, ER operates on a predefined library of candidate nonlinear functions and employs a statistical stopping criterion based on shuffle tests [12, 13, 14]. While effective in moderate dimensions, this formulation becomes unstable in the high-dimensional and data-limited regime described above, where both the size of the candidate library and the variance of statistical tests increase rapidly. In the present work, we adopt a modified formulation designed for this regime. The key modi-fications are: (i) variable-level selection without constructing a global expansion library, (ii) adaptive nonlinear modeling through second-order interactions over the selected set, (iii) projection-based information evaluation to control the dimensionality of the estimator. These modifications adapt ER from a library-based search procedure into a structured, model-based inference method that remains stable under high dimensionality and limited effective sample size. 
+
+## 4.2 Formulation 
+
+For each superpixel Ωm, we consider the aggregated response and predictors defined in Eqs. (22) and (23). Denote ¯Xm(t) =   ¯Xm, 1(t), . . . , ¯Xm,p (t), t = 1 , . . . , T. (24) Throughout the structural discovery stage, the temporal indexing is fixed at a one-hour delay: predictors are evaluated at time t, and the precipitation response is evaluated at time t + 1 . The goal is to identify a subset of variables S ⊂ { 1, . . . , p } such that the dynamics of ¯Ym(t + 1) can be represented through a low-dimensional nonlinear function of { ¯Xm,j (t)}j∈S :
+
+¯Ym(t + 1) = fm
+
+ { ¯Xm,j (t)}j∈S 
+
+ + ηm(t + 1) , (25) where fm is an unknown nonlinear mapping and ηm(t) represents residual variability. Thus, all structural discovery steps use a one-hour lag: candidate atmospheric variables are evaluated ac-cording to their incremental information contribution to next-hour precipitation. Rather than constructing a global library of nonlinear functions over all variables, we define the model implicitly through an adaptive selection procedure. At each stage, the function fm in Eq. (25) is approximated locally using a second-degree polynomial expansion over a candidate set of variables. Given a candidate variable set A ⊂ { 1, . . . , p }, we define the associated quadratic feature map 
+
+Φ( A)( t) =  ¯Xm,i (t), ¯Xm,i (t) ¯Xm,j (t) i, j ∈ A , i ≤ j , (26) which is a vector-valued mapping Φ( A)( t) ∈ Rd(A), where 
+
+d(A) = |A| + |A| (|A| + 1) 2 . (27) This construction includes all linear terms, all quadratic self-interactions, and all pairwise inter-actions among variables in A. The resulting approximation of Eq. (25) takes the form 
+
+¯Ym(t + 1) ≈ Φ( A)( t) am, (28) 9where am ∈ Rd(A) is a coefficient vector. The key distinction from standard ER is that the set A is not fixed in advance. Instead, it evolves during the selection process, and the nonlinear expansion in Eq. (26) is constructed only over the currently considered variables. This avoids the combinatorial growth of a global feature library and ensures that model complexity is controlled adaptively during inference. 
+
+## 4.3 Forward selection 
+
+The forward selection process begins with an empty set 
+
+S = ∅. (29) At each iteration, for each candidate variable j / ∈ S , we form an augmented set 
+
+Aj = S ∪ { j}. (30) We then construct the quadratic feature map over the full set Aj as defined in Eq. (26): 
+
+Φ( Aj )( t) =  ¯Xm,i (t), ¯Xm,i (t) ¯Xm,k (t) i, k ∈ A j , i ≤ k . (31) This construction ensures that interactions among already selected variables and interactions involving the candidate variable are jointly represented within a unified feature space. For each candidate j, we compute the least-squares projection of the target onto the correspond-ing feature space: 
+
+aj = arg min 
+
+> aT
+
+X
+
+> t=1
+
+  ¯Ym(t + 1) − Φ( Aj )( t) a2 , (32) and define ˆYAj (t) = Φ( Aj )( t) aj . (33) Similarly, for the current set S, we define 
+
+aS = arg min 
+
+> aT
+
+X
+
+> t=1
+
+  ¯Ym(t + 1) − Φ( S)( t) a2 , (34) and ˆYS (t) = Φ( S)( t) aS . (35) The contribution of the candidate variable Xj is then quantified by the conditional mutual information 
+
+∆Ij = I  ˆYAj ; ¯Ym | ˆYS
+
+. (36) This quantity measures the additional information about the target ¯Ym provided by the aug-mented model beyond what is already captured by the current model. By evaluating informa-tion gain at the level of projected models in Eqs. (35)–(33), rather than at the level of raw high-dimensional features, the method avoids direct high-dimensional density estimation over the original predictor space and operates in a low-dimensional representation determined by the model projec-tions. At each iteration, the top Kf = 10 variables with the largest values of ∆Ij in Eq. (36) are selected: 
+
+S ← S ∪ { j1, . . . , j Kf }. (37) This formulation assumes that the quadratic expansion over S ∪ { j} captures the dominant joint nonlinear effects relevant to the selection step. While this avoids the combinatorial growth of a global feature library, higher-order or non-polynomial dependencies are not explicitly represented. 10 4.4 Backward elimination 
+
+Following the forward selection step in Eq. (37), a backward elimination stage is applied to enforce parsimony and remove redundant variables. Given the current set S, each variable j ∈ S is evaluated based on its marginal contribution to the model representation. Specifically, for each j, we define a reduced set 
+
+S−j = S \ { j}, (38) and compute the corresponding least-squares projection 
+
+ˆYS−j (t) = Φ( S−j )( t) aS−j , (39) where aS−j is obtained analogously to Eq. (34). The contribution of variable j is then quantified through the conditional mutual information 
+
+∆I− 
+
+> j
+
+= I  ˆYS ; ¯Ym | ˆYS−j
+
+, (40) which measures the loss of explanatory information when j is removed from the model. Variables with minimal values of ∆I− 
+
+> j
+
+are considered redundant within the current representa-tion. In this implementation, the two weakest variables are eliminated at each iteration: 
+
+S ← S \ { jweak ,1, j weak ,2}. (41) The forward and backward steps are applied iteratively, allowing the model to refine the selected set while controlling redundancy. This alternating procedure stabilizes the selection process by bal-ancing inclusion based on incremental information gain in Eq. (36) with removal based on marginal redundancy in Eq. (40). 
+
+## 4.5 Cardinality constraint and termination 
+
+In the original ER framework, termination is determined through a shuffle-based statistical test. In the present setting, we replace this criterion with a fixed cardinality constraint. The selection process terminates when the number of selected variables reaches a predefined value K:
+
+|S| = K. (42) This replaces a stochastic stopping rule with a deterministic structural constraint. In the regime described in Section 3.2, where the effective sample size is limited and variability across superpixels is significant, shuffle-based criteria introduce instability due to repeated resampling and sensitivity to noise. The use of Eq. (42) enforces a consistent model complexity across the domain and allows the selection procedure to focus on relative information contributions in Eqs. (36)–(40), rather than statistical thresholds. This modification assumes that the appropriate model complexity can be determined indepen-dently of the shuffle-based significance criterion. While this reduces variability in the selection process, it may impose a fixed structure that does not fully adapt to local system variability. 11 4.5.1 SVD-based cardinality selection 
+
+The value of K is determined through an empirical analysis of the intrinsic dimensionality of the predictor space. For each superpixel Ωm, we construct the predictor matrix 
+
+Xm ∈ RT ×p, (Xm)t,j = ¯Xm,j (t), (43) where rows correspond to temporal observations and columns correspond to variables. We compute the singular value decomposition 
+
+Xm = UmΣmV⊤
+
+> m
+
+, (44) with singular values {σm, 1, . . . , σ m,r }.The cumulative energy captured by the first k components is defined as 
+
+Em(k) = 
+
+Pki=1 σ2
+
+> m,i
+
+Pri=1 σ2
+
+> m,i
+
+. (45) Averaging across all superpixels, 
+
+E(k) = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+Em(k), (46) we observe that 
+
+E(8) ≈ 0.992 . (47) This indicates that approximately eight orthogonal components capture more than 99 .2% of the variance on average across the domain. Based on this observation, we set 
+
+K = 8 . (48) This choice links the maximum cardinality in Eq. (42) to the effective rank of the predictor space. In particular, it ensures that the selected set S does not exceed the intrinsic dimensionality suggested by the dominant modes of variability in Xm.This criterion assumes that variance concentration provides a meaningful proxy for the effective dimensionality of the driver space. However, variables with low variance may still exert influence on precipitation dynamics and are not explicitly captured by this criterion. 
+
+## 4.6 Information estimation and implementation details 
+
+All information quantities are estimated from the superpixel-level time series defined in Eqs. (22)– (23). Since the structural discovery stage uses a one-hour temporal delay, the sample pairs are constructed as   ¯Xm(t), ¯Ym(t + 1)  T −1 
+
+> t=1
+
+. (49) Thus, candidate variables are evaluated according to their incremental information contribution to next-hour precipitation. Before projection, each predictor time series is standardized within each superpixel using the development period. This standardization removes differences in physical units and numerical scale, preventing variables with larger magnitudes from dominating the least-squares projections. The same preprocessing is applied consistently across all candidate evaluations within each superpixel. 12 For each candidate set A, the projected response ˆYA(t+1) is obtained by least-squares projection of ¯Ym(t+1) onto the quadratic feature map Φ( A)( t), as described in Eqs. (32)–(33). The conditional information gain in Eq. (36) is then estimated from the low-dimensional variables 
+
+ˆYAj (t + 1) , ¯Ym(t + 1) , ˆYS (t + 1) . (50) Conditional mutual information is estimated using a k-nearest-neighbor Kraskov–Stögbauer– Grassberger (KSG) estimator [19, 20]. The KSG estimator estimates information quantities from local neighbor distances in the joint and conditional spaces, avoiding explicit binning or parametric density estimation. In the present formulation, the estimator is applied to projected model outputs rather than to the original high-dimensional predictor variables. This is the key computational distinction of the proposed ER implementation. Nonlinear de-pendence is represented through the adaptive quadratic feature map, while information estima-tion is performed in a low-dimensional projected representation. As a result, the method avoids direct high-dimensional density estimation over the original predictor space while retaining the information-theoretic criterion of incremental conditional contribution. The same information-estimation procedure is used for all candidate evaluations within ER. For comparison with transfer entropy and causation entropy, the same preprocessing, one-hour temporal delay, and superpixel-level samples are used whenever applicable. This ensures that differences in selection-frequency profiles reflect differences in the inference criteria rather than differences in preprocessing, temporal indexing, or sample construction. 
+
+## 4.7 Domain-level aggregation 
+
+The ER procedure described in Sections 4.3–4.4 is applied independently to each superpixel Ωm,producing a selected set Sm ⊂ { 1, . . . , p }.To identify dominant candidate drivers at the domain level, we define the selection frequency for each variable: 
+
+πj = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+1{j∈S m}, (51) where 1{·} denotes the indicator function. The quantity πj can be interpreted as an empirical probability that variable Xj is selected as a driver under spatial perturbations of the system representation. In this sense, {S m}Mm=1 define an ensemble of local models, and Eq. (51) measures the stability of variable selection across this ensemble. Variables with high values of πj are therefore interpreted as structurally consistent candidate causal parents, in the sense that their selection is robust to changes in spatial aggregation and local variability. Conversely, variables with low πj are treated as context-dependent, reflecting either localized effects or sensitivity to noise. This aggregation step transforms local structural discovery into a domain-level structural char-acterization. Rather than relying on a single global model, the approach identifies drivers that persist across heterogeneous spatial conditions, thereby emphasizing structural consistency as the primary criterion for causal relevance. 
+
+# 5 Comparison with Transfer Entropy and Causation Entropy 
+
+The objective of this comparison is not predictive benchmarking, but the evaluation of structural consistency in candidate parent detection across the spatial domain. Specifically, we compare the 13 frequency with which variables are identified as candidate drivers across superpixels using entropic regression (ER), transfer entropy (TE), and causation entropy (CE). Causal inference in Earth system sciences is inherently constrained by the absence of controlled interventions and the reliance on observational time series. As emphasized in [9], inferring causal structure from such data requires careful handling of confounding effects, indirect dependencies, and high-dimensional interactions. A central challenge is that dependence does not imply causation. Statistical associations may arise from indirect pathways, common drivers, or shared responses to unobserved processes. This is particularly pronounced in spatiotemporal environmental systems, where variables are strongly coupled across scales and time lags. Information-theoretic measures such as transfer entropy and causation entropy have been pro-posed to address these limitations by quantifying directed information flow and conditional depen-dence. They therefore provide natural baselines for evaluating the structural information recovered by ER. 
+
+## 5.1 Transfer entropy 
+
+Transfer entropy is an information-theoretic measure of directed influence between two stochastic processes. For two time series X and Y , it is defined as 
+
+TX→Y = I X− 
+
+> t
+
+; Yt+1 | Y −
+
+> t
+
+ , (52) where X− 
+
+> t
+
+and Y − 
+
+> t
+
+denote the past histories of the respective processes. Under a first-order Markov assumption, Eq. (52) can be expressed as [11] 
+
+TX→Y = H(Yt+1 | Yt) − H(Yt+1 | Yt, X t) , (53) where H(· | · ) denotes conditional entropy. Transfer entropy quantifies the reduction in uncertainty of Yt+1 obtained by incorporating infor-mation from Xt beyond what is already explained by Yt. It is model-free and can capture nonlinear dependencies. However, transfer entropy is inherently pairwise . As discussed in [11], pairwise directed informa-tion does not distinguish, by itself, between direct and indirect influences in multivariate systems. In high-dimensional environmental systems, this limitation can lead to diffuse parent sets because indirect pathways and common drivers may be attributed to direct influence. 
+
+## 5.2 Causation entropy 
+
+Causation entropy generalizes transfer entropy to the multivariate setting by conditioning on a set of variables. For index sets I, J, and K, it is defined as [11] 
+
+CJ→I|K = H
+
+
+
+X(I) 
+
+> t+1
+
+| X(K)
+
+> t
+
+
+
+− H
+
+
+
+X(I) 
+
+> t+1
+
+| X(K) 
+
+> t
+
+, X (J)
+
+> t
+
+
+
+, (54) which is equivalently expressed as conditional mutual information: 
+
+CJ→I|K = I
+
+
+
+X(J) 
+
+> t
+
+; X(I) 
+
+> t+1
+
+| X(K)
+
+> t
+
+
+
+. (55) In contrast to the pairwise formulation of transfer entropy in Eq. (52), causation entropy evalu-ates the directed contribution of a candidate set J after accounting for an existing conditioning set 14 K. This allows, in principle, the distinction between direct and indirect influences in multivariate systems. The key theoretical result underlying CE is the optimal causation entropy principle , which states that the set of causal parents corresponds to the minimal subset of variables that maximizes causa-tion entropy [11]. Related formulations have also been developed for data-driven learning of Boolean networks and functions [21]. This provides a constructive basis for causal graph discovery through incremental variable selection. In practice, CE is implemented through iterative forward selection and backward elimination, where the conditioning set K grows as variables are added and refined. While this addresses indirect effects at the theoretical level, its practical implementation requires estimating conditional mutual information in increasingly high-dimensional spaces. Under finite data, this can lead to estimation instability and sensitivity to noise. Moreover, standard CE implementations operate directly on the original variables. Without a structured nonlinear representation, higher-order interactions are difficult to capture without further increasing the dimensionality of the conditioning set. 
+
+## 5.3 Relation to entropic regression 
+
+The formulation of entropic regression is conceptually aligned with the causation entropy framework introduced in Eqs. (54)–(55). In both approaches, candidate causal parents are defined as variables at time t that provide unique conditional information about the next state of the target at time 
+
+t + 1 , beyond what is already captured by the current conditioning set. The distinction lies in how this principle is implemented. Causation entropy is defined directly in terms of conditional mutual information, which requires estimating high-dimensional conditional distributions as the conditioning set grows. As discussed in Section 5.2, this estimation becomes unreliable under finite data, particularly in high-dimensional and nonlinear settings. Entropic regression (ER) addresses this limitation by shifting the objective from prediction to 
+
+incremental information contribution [12, 13]. Specifically, for a candidate set A, the contribution of variables is evaluated through the projection of the target onto the feature space defined by Φ( A)
+
+in Eq. (26), yielding the model representation 
+
+ˆYA(t) = Φ( A)( t) aA, (56) as introduced in Eqs. (35)–(33). Within this framework, the conditional contribution of a variable is evaluated through the incre-mental information gain between projected models in Eq. (36), rather than through direct estimation of conditional mutual information over the original predictor variables. This induces a geometric representation of the inference problem, in which each candidate set A
+
+defines a subspace in the feature space, and model selection corresponds to identifying projections that reduce the uncertainty of the target. In this sense, ER can be interpreted as a projection-based realization of the causation entropy principle: the information-theoretic objective is retained, while the estimation problem is reformulated in a lower-dimensional and more stable representation. 
+
+## 5.4 Comparison protocol 
+
+For a consistent comparison, all methods are evaluated under a common constraint on model com-plexity. Specifically, the number of selected variables is restricted to a fixed cardinality 
+
+|S m| = K = 8 , (57) 15 consistent with the SVD-based dimensionality analysis described in Section 4.5. At each superpixel Ωm, each method produces a selected set Sm. Aggregating over all superpix-els, we compute the empirical selection probability 
+
+πj = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+1{j∈S m}, (58) which is identical to the domain-level aggregation defined in Eq. (51). These probabilities provide a unified metric for comparing the structural stability of candidate variables across methods, independent of predictive performance. Thus, the comparison evaluates whether each method recovers a stable domain-level structure, rather than whether the selected variables maximize forecasting accuracy. 
+
+# 6 Results 
+
+## 6.1 Structural consistency across methods 
+
+The comparison across methods is carried out through the domain-level selection probabilities de-fined in Eq. (58). For each variable Xj , the quantity πj measures the fraction of superpixels in which that variable is selected as a candidate causal parent under the corresponding method. In this section, πj is therefore interpreted as a measure of structural consistency : variables with large 
+
+πj persist under spatial variation of the system representation, whereas variables with small πj are not stably recovered across the domain. This interpretation is important because the comparison is not based on a single global model. Each superpixel defines a local inference problem, and the collection of superpixels provides an ensemble of spatially perturbed representations of the same atmospheric system. A variable that is repeatedly selected across this ensemble is therefore not merely locally useful, but structurally persistent under changes in spatial aggregation and local variability. Figure 3 summarizes the resulting selection probabilities for transfer entropy, causation entropy, and entropic regression. The comparison reveals a clear qualitative separation among the three methods. Transfer entropy produces a highly dispersed pattern of detections across the candidate variables. The corresponding values of πj remain broadly distributed, and no compact subset emerges with consistently dominant probability. In this sense, the output of transfer entropy is spatially unstable: the variables identified as candidate parents vary substantially from one superpixel to another, and the method does not recover a persistent domain-level structure. This behavior is consistent with the pairwise nature of transfer entropy. Since TE evaluates directed dependence between individual variables and the target without conditioning on the full multivariate context, it can assign importance to variables that are indirectly associated with precip-itation or that share information with other atmospheric fields. In a strongly coupled environmental system, such pairwise associations may be informative locally but unstable across space. Causation entropy exhibits a more organized pattern. Relative to transfer entropy, a smaller subset of variables appears more frequently, and the resulting distribution of πj shows greater concentration. However, this concentration remains incomplete. The probability mass is still spread across a comparatively broad set of variables, and the separation between dominant and non-dominant candidates is not sharp. Thus, while causation entropy partially reduces the variability observed in transfer entropy, it does not produce a distinctly stable structural backbone across the domain. 16 This result reflects both the strength and limitation of causation entropy in the present setting. By conditioning on previously selected variables, CE is designed to reduce indirect and redundant associations. However, its practical implementation requires estimating conditional information in increasingly high-dimensional spaces. Under finite data, spatial redundancy, and precipitation sparsity, this estimation becomes sensitive to local sampling variation, which weakens the stability of the selected parent sets. In contrast, entropic regression yields a markedly concentrated distribution of selection prob-abilities. A small subset of variables appears repeatedly across superpixels, while the remaining variables occur with substantially lower frequency. The resulting pattern is not merely sparse, but spatially persistent: the same variables recur under repeated local inference, indicating that the detected structure is robust to the spatial partitioning of the domain. This distinction is central to the interpretation of the comparison. All three methods are eval-uated under the same cardinality constraint in Eq. (57). Therefore, the difference among methods is not explained by unequal model size. Rather, it reflects a difference in how the methods resolve candidate causal structure under the same data, the same spatial representation, and the same complexity constraint. Within this common protocol, entropic regression produces the clearest separation between recurrent and non-recurrent variables. From the perspective of domain-level inference, the principal result is therefore not simply that the methods select different variables. The stronger conclusion is that they differ in the stability of the structures they recover. Transfer entropy yields weak structural concentration, causation entropy improves this concentration but remains diffuse, and entropic regression identifies a compact subset that persists across the domain. This compact subset forms the basis for the variable summary reported in the following subsection. Figure 3 compares the domain-level selection probabilities πj across entropic regression (ER), transfer entropy (TE), and causation entropy (CE). The variables are sorted in descending order according to ER, and the corresponding TE and CE probabilities are displayed under the same ordering. This representation enables a direct, variable-wise comparison across methods under a common ranking. The top panel shows the ordered selection probability profiles, highlighting differences in how each method distributes detection probability across variables. The bottom panel summarizes the distribution of πj for each method, providing a complementary view of central tendency, dispersion, and concentration. Together, these representations characterize both the variable-wise structure and the statistical distribution of selected drivers across methods. 
+
+## 6.2 Structural discovery and dominant drivers 
+
+The domain-level selection probabilities πj defined in Eq. (51) provide a basis for identifying variables that are consistently selected across the spatial domain. To extract a stable subset of drivers, we introduce a threshold on selection probability: 
+
+πj ≥ τ, τ = 0 .25 . (59) This threshold corresponds to variables that are selected in at least 25% of the superpixels. Vari-ables satisfying Eq. (59) are therefore interpreted as recurring components of the inferred structure, rather than localized or incidental effects. The threshold is not intended to define a universal causal cutoff; rather, it provides an operational criterion for separating variables that persist across the domain from variables whose selection is confined to limited spatial contexts. Applying this criterion yields a set of six variables that consistently appear as dominant can-didate causal parents across the domain. These variables form a compact subset relative to the 17 20 40 60 80 100 120   
+
+> Entries (sorted by ER)
+> 00.2 0.4 0.6 0.8 1
+> Detection Probability
+> Detection Probability Profiles (Sorted by ER)
+> ER TE CE
+> ER TE CE 00.2 0.4 0.6 0.8 1
+> Detection Probability
+> Performance and Consistency
+
+Figure 3: Comparison of domain-level selection probabilities across entropic regression (ER), trans-fer entropy (TE), and causation entropy (CE). Top: Selection probability πj for each variable, sorted in descending order according to ER. The same ordering is applied to TE and CE to enable direct comparison across methods. Bottom: Distribution of selection probabilities πj for each method, summarized using boxplots. The figure provides complementary views of variable-wise structure and overall distribution, allowing assessment of consistency and concentration in candi-date causal parent detection. full set of p = 122 candidates, indicating a strong concentration of selection probability on a small number of atmospheric quantities. Table 1 reports the variables satisfying Eq. (59), together with their descriptions and selection probabilities. The selected variables are physically interpretable. Moisture availability represents the pres-ence of water vapor needed to support precipitation formation. Composite reflectivity is directly related to hydrometeor structure and provides information about organized precipitation-producing systems. Vertical velocity and maximum downward vertical motion reflect dynamical lifting and subsidence processes, which influence cloud development, convective organization, and precipitation intensity. Wind speed describes the advective and organizational component of the atmospheric flow, while CAPE represents the thermodynamic instability available for convective development. Thus, the ER-selected variables do not form an arbitrary statistical subset. They span comple-mentary aspects of the precipitation process: moisture supply, hydrometeor organization, vertical motion, wind-driven transport, and convective instability. Their repeated selection across superpix-els indicates that the method is not merely identifying variables with local correlation to rainfall, but variables that persist as structurally informative components across heterogeneous spatial con-18 Table 1: Dominant variables identified as candidate causal parents. Selection probability πj is computed as the frequency of occurrence across all superpixels. Variables shown satisfy the threshold 
+
+πj ≥ 0.25 .
+
+Element Description Unit Selection Probability 
+
+MSTAV Moisture availability % 0.95 REFC Maximum / composite radar reflectivity dB 0.82 DZDT Vertical velocity (geometric) m/s 0.62 WIND Wind speed m/s 0.41 CAPE Convective available potential energy J/kg 0.29 MAXUVV Hourly maximum downward vertical velocity in the lowest 400 hPa m/s 0.28 ditions. For comparison, applying the same aggregation procedure to transfer entropy and causation entropy does not yield a similarly concentrated subset under the threshold in Eq. (59). In those cases, the selection probabilities remain distributed across a larger number of variables, and no comparable set of dominant drivers emerges. This reinforces the conclusion from Figure 3: ER does not simply select fewer variables, since all methods are constrained to the same cardinality at the local level; rather, ER selects variables whose recurrence across the domain is more stable. The six-variable subset is therefore interpreted as a structurally consistent backbone of the precipitation system under the given data representation. This interpretation should be understood in the observational sense: the variables are candidate causal parents because they provide stable conditional information about precipitation across spatial partitions. They are not claimed to constitute a complete physical causal model of precipitation. 
+
+## 6.3 Predictive outcome 
+
+The identification of a small and structurally consistent set of variables raises a natural question: whether these variables are sufficient to support predictive modeling of precipitation. In contrast to standard approaches that rely on large numbers of predictors, the present analysis restricts the input space to the six variables identified through entropic regression. This provides a controlled setting to evaluate the predictive implications of structural discovery. This evaluation is not intended to produce an optimized forecasting system. Rather, it tests whether variables selected for structural consistency also provide a sufficient state representation for prediction. The question is therefore not whether a larger model using all available variables could improve forecasting performance, but whether the structurally identified variables alone contain enough information to support precipitation prediction across occurrence, intensity, calibration, and spatial organization. 
+
+6.3.1 Probability of precipitation 
+
+We first consider precipitation occurrence as a binary prediction problem. Define 
+
+Z(s, t ) = 1{Y (s,t )>0}, (60) and the predictive objective 
+
+ˆpτ (s) = P Z(s, t + τ ) = 1 | X(·), (61) 19 for forecast horizons τ ∈ { 1, 3, 8, 18 } hours. The model takes as input spatiotemporal sequences of the selected variables and produces pixel-wise probability estimates ˆpτ (s) ∈ [0 , 1] . The architecture combines convolutional layers, which extract localized spatial features, with temporal aggregation over a fixed history window. This design reflects the structure of the data, where precipitation depends on both spatial organization and short-term temporal evolution. 
+
+Discrimination performance. The ability of the model to distinguish between precipitation and non-precipitation events is evaluated using receiver operating characteristic (ROC) curves, shown in Figure 4. 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+
+> False Positive Rate
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> True Positive Rate ROC Curves on 2022 Deployment Data
+> 1h (AUC = 0.948) 3h (AUC = 0.830) 8h (AUC = 0.677) 18h (AUC = 0.694) Chance
+
+Figure 4: ROC curves for precipitation occurrence prediction on the 2022 deployment dataset for forecast horizons τ ∈ { 1, 3, 8, 18 } hours. The ROC curve plots the true positive rate against the false positive rate as the decision threshold varies. The area under the curve (AUC) provides a threshold-independent measure of discrimination, with values closer to 1 indicating stronger sepa-ration between precipitation and non-precipitation events. At short lead times, the model achieves strong discrimination capability. In particular, the AUC reaches 0.948 at τ = 1 hour and remains high at τ = 3 hours. This level of performance is notable because the model operates using only six input variables. It indicates that the structurally selected variables capture a substantial component of the short-term information needed to separate precipitation and non-precipitation regimes. The interpretation changes at longer lead times. As the forecast horizon increases, discrimina-tion becomes more difficult because the selected variables must support not only the recognition of 20 an active precipitation regime, but also its temporal evolution. Any decline in AUC with increas-ing τ therefore reflects the increasing difficulty of using a restricted structural state to propagate precipitation information forward in time. 
+
+Threshold-dependent behavior. Figure 5 shows the dependence of classification metrics on the decision threshold. Threshold Metrics on 2022 Deployment Data                     
+
+> 00.2 0.4 0.6 0.8 1
+> Threshold
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> Metric
+> 1h forecast
+> Accuracy Precision Recall F1 Balanced Acc.
+> 00.2 0.4 0.6 0.8 1
+> Threshold
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> Metric
+> 3h forecast
+> 00.2 0.4 0.6 0.8 1
+> Threshold
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> Metric
+> 8h forecast
+> 00.2 0.4 0.6 0.8 1
+> Threshold
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1
+> Metric
+> 18h forecast
+
+Figure 5: Classification metrics as a function of the decision threshold for each forecast horizon. The curves include accuracy, precision, recall, F1 score, and balanced accuracy. These metrics quantify different aspects of performance: precision measures the reliability of predicted events, recall measures the fraction of detected events, and the F1 score balances both. Balanced accuracy accounts for class imbalance between precipitation and non-precipitation cases. The threshold-dependent results show that the model provides meaningful probabilistic separa-tion of precipitation regimes, particularly at short horizons. The trade-off between precision and recall reflects the intrinsic sparsity of precipitation. Higher thresholds improve the reliability of predicted events but reduce detection, while lower thresholds increase detection at the cost of false 21 positives. This behavior is expected in a sparse event process. Since non-precipitation dominates the sample space, accuracy alone is not sufficient to characterize model performance. Metrics such as precision, recall, F1 score, and balanced accuracy are necessary to determine whether the model is learning event structure rather than simply reproducing the background state. The existence of a stable operating range at short horizons indicates that the selected variables contain useful event-discriminating information. 
+
+Calibration and reliability. Beyond discrimination, it is important to assess whether predicted probabilities are statistically consistent with observed frequencies. This is evaluated through cali-bration analysis. Let ˆp denote predicted probability and let f (ˆ p) denote the empirical frequency of precipitation conditioned on that prediction. A calibrated model satisfies 
+
+f (ˆ p) ≈ ˆp. (62) Deviation from this condition is quantified using the Expected Calibration Error (ECE) [22], defined as the average discrepancy between predicted probabilities and observed frequencies across probability bins. The calibration analysis indicates that predicted probabilities tend to overestimate precipitation likelihood, with increasing deviation at longer forecast horizons. This reflects a mismatch between probabilistic confidence and empirical event frequency, which becomes more pronounced as temporal uncertainty increases. This distinction between discrimination and calibration is central. A model may rank precipitation-prone and non-precipitation regions effectively, producing strong ROC-AUC values, while still as-signing probabilities that are not statistically reliable. Thus, the selected variables support short-term separation of regimes, but they do not by themselves guarantee calibrated probabilistic pre-diction. 
+
+Interpretation. Taken together, these results show that the selected variables support strong short-term prediction of precipitation occurrence, both in terms of discrimination and threshold-dependent behavior. The ability to achieve this performance with a minimal set of inputs indicates that the variables identified through entropic regression capture a meaningful and nontrivial com-ponent of the underlying dynamics. At the same time, the degradation of performance and calibration at longer horizons indicates that this set of variables does not constitute a complete predictive state of the system. The selected variables appear sufficient for short-horizon regime discrimination, but not sufficient for fully reliable probabilistic evolution. 
+
+6.3.2 Deployment-level evaluation 
+
+To complement the discrimination and threshold-based analysis, we evaluate the predictive mod-els under a fixed deployment setting using the 2022 dataset. This evaluation reflects operational performance in terms of event detection, regression accuracy, and spatial consistency. 
+
+Model formulation. To assess predictive sufficiency, we consider a spatiotemporal sequence model based on recurrent neural networks with long short-term memory (LSTM) units. Given an input sequence of atmospheric fields restricted to the selected variables, 
+
+{X(t − τ )}Th 
+
+> τ=0
+
+, (63) 22 the model constructs a mapping 
+
+ˆY (t + 1) = G {X(t − τ )}Th 
+
+> τ=0
+
+, (64) where G combines convolutional feature extraction with temporal aggregation through LSTM units. The convolutional layers extract localized spatial structures from the input fields, capturing co-herent patterns such as convective organization and spatial gradients. The LSTM units model tem-poral dependencies and memory effects, enabling the network to represent time-evolving dynamics. This hybrid CNN–LSTM architecture provides a flexible nonlinear approximation of spatiotemporal processes. Importantly, the model is trained using only the six variables identified through entropic re-gression. This isolates the predictive contribution of the structurally selected drivers and avoids confounding effects from additional predictors. 
+
+Event detection. At a fixed decision threshold, precipitation detection is evaluated using the probability of detection (POD), false alarm rate (FAR), and critical success index (CSI), CSI = TP TP + FP + FN . (65) For precipitation occurrence, the model yields: 
+
+• τ = 1 : POD = 0.1106, FAR = 0.0688, CSI = 0.1097, 
+
+• τ = 2 : POD = 0.0801, FAR = 0.0663, CSI = 0.0796, 
+
+• τ = 3 : POD = 0.0683, FAR = 0.0656, CSI = 0.0680. These results indicate a conservative detection regime. The low FAR values show that predicted precipitation events are relatively selective, but the low POD values indicate that many observed events are missed. The resulting CSI values are therefore low, reflecting limited fixed-threshold event-detection skill despite the stronger threshold-independent discrimination observed in the ROC analysis. For heavy rainfall detection, the model yields: 
+
+• τ = 1 : POD = 0.9845, FAR = 0.6252, CSI = 0.3726, 
+
+• τ = 2 : POD = 0.9843, FAR = 0.6174, CSI = 0.3803, 
+
+• τ = 3 : POD = 0.9842, FAR = 0.5333, CSI = 0.4632. These results indicate a high-sensitivity detection regime. Heavy rainfall events are rarely missed, as reflected by the high POD values, but this sensitivity is achieved at the cost of many false alarms. The moderate CSI values therefore reflect a trade-off between strong detection and limited precision. 
+
+Regression performance. For precipitation intensity prediction at τ = 1 hour, the model achieves: 
+
+• RMSE = 0.8528, 
+
+• MAE = 0.1014, 
+
+• Bias = -0.0308, 23 • Correlation = 0.2894, 
+
+• R2 = 0 .0574 .When restricted to rain-only samples, the error increases substantially: 
+
+• RMSE = 3.3098, 
+
+• MAE = 1.0743, 
+
+• Correlation = 0.2038. These results indicate that, despite the expressive capacity of the CNN–LSTM architecture, the model captures only a limited portion of the variability in precipitation intensity. The low R2
+
+and modest correlation show that the selected variables do not fully determine the quantitative magnitude of precipitation. The degradation under rain-only evaluation is particularly important, because it removes the dominance of zero-precipitation samples and directly tests the model on the active rainfall regime. This behavior suggests that the selected variables contain meaningful information about the occurrence and spatial organization of precipitation, but not enough information to resolve intensity variation once rainfall is present. In other words, the selected structural variables help identify when and where precipitation is likely, but they do not fully determine how much precipitation will occur. 
+
+Spatial consistency. The spatial agreement between predicted and observed precipitation fields is quantified through domain-level metrics: 
+
+• Spatial correlation = 0.7781, 
+
+• Spatial RMSE = 0.0558, 
+
+• Spatial MAE = 0.0373, 
+
+• Spatial bias = -0.0301. The relatively high spatial correlation indicates that the model captures the large-scale organi-zation of precipitation patterns. This suggests that the selected variables encode coherent spatial information about the atmospheric state. However, the remaining discrepancies in local intensity and fine-scale variability indicate that this spatial organization is incomplete. The combination of high spatial correlation and weak intensity regression is informative. It suggests that the model can reproduce broad precipitation structures while failing to resolve local amplitude accurately. Thus, the selected variables appear to contain information about the geometry or organization of precipitation, but not enough information to close the quantitative intensity dynamics. 
+
+Interpretation. Taken together, these results show that the selected variables encode a coherent component of the precipitation dynamics. They support strong short-term occurrence discrimina-tion and capture large-scale spatial organization. However, they do not form a closed dynamical representation capable of supporting stable predictive evolution, calibrated probabilities, and accu-rate intensity prediction, even when coupled with a flexible nonlinear architecture. This highlights the central distinction of the paper. Variables that are consistently involved in the system dynamics are not necessarily sufficient to determine future states. Structural identification reveals stable informational participation, whereas predictive sufficiency requires a more complete state representation, including information needed for temporal evolution, local intensity, unresolved subgrid processes, and uncertainty calibration. 24 7 Discussion 
+
+## 7.1 Structural consistency versus predictive sufficiency 
+
+The results presented in Section 6 reveal a clear separation between two objectives that are often treated as equivalent: the identification of structurally relevant variables and the construction of predictive models. Through the domain-level aggregation in Eq. (51), entropic regression identifies a compact subset of variables that persist across spatial partitions. This persistence indicates that these variables capture a stable component of the precipitation dynamics, in the sense that their selection is robust to variations in spatial representation and local data variability. However, when these variables are used as inputs for predictive models in Section 6.3, their performance is limited in terms of regression accuracy, calibration, and long-horizon stability, despite the use of expressive nonlinear architectures such as Eq. (64). This discrepancy is not incidental, but reflects a fundamental distinction between structural relevance and predictive completeness .Structural relevance, as measured by selection frequency πj , identifies variables that consistently contribute information about the system. Predictive completeness, in contrast, requires that the selected variables form a sufficient representation of the system state for forecasting future evolution. The results indicate that these two properties do not coincide in the present setting. This distinction is central to the interpretation of the study. A variable can be consistently involved in the dynamics without being sufficient to determine future states. Conversely, a predictive model can exploit correlations without identifying a stable structural backbone. Structural discovery and predictive modeling therefore answer different questions. The former asks which variables carry persistent information about the system; the latter asks whether that information is enough to close the system for forecasting. In this sense, the selected variables should be viewed as structurally informative, but not predic-tively complete. They identify a stable informational backbone of the precipitation process, but they do not constitute a closed state representation. The gap between these two properties is precisely what the predictive experiments expose. 
+
+## 7.2 Interpretation of the selected variables 
+
+The variables identified through Eq. (59) correspond to physically meaningful components of at-mospheric dynamics, including moisture availability, vertical motion, wind organization, convective instability, and reflectivity. Their consistent selection across superpixels suggests that they capture dominant mechanisms associated with precipitation formation. This physical coherence is important. The selected variables are not arbitrary statistical features. Moisture availability represents the presence of water vapor and land–atmosphere moisture condi-tions needed to support precipitation formation. Previous studies have shown that soil-moisture anomalies can influence precipitation through land-atmosphere coupling, with particularly strong regional dependence [23, ?]. CAPE reflects the thermodynamic potential for convective develop-ment. Vertical velocity and maximum downward vertical motion describe dynamical components of lifting, subsidence, and convective organization. Wind speed contributes information about flow or-ganization and transport. Composite reflectivity provides information about hydrometeor structure and the presence of organized precipitation-producing systems. Together, these variables span several necessary aspects of the precipitation process: moisture, instability, motion, organization, and hydrometeor response. Their recurrence across the domain suggests that entropic regression is identifying variables that participate in the formation and orga-25 nization of precipitation, rather than variables that are merely correlated with rainfall in isolated regions. At short time horizons, these variables support strong discrimination between precipitation and non-precipitation regimes, as shown in Figure 4. This indicates that they encode sufficient information to distinguish between active and inactive states of the system. In this limited but important sense, the structurally selected variables are predictive. However, the regression results and deployment-level evaluation show that these variables do not fully determine precipitation intensity or its temporal evolution. In particular, the limited correlation and low explained variance indicate that a substantial portion of the variability remains unresolved. The selected variables appear to identify conditions under which precipitation is likely, but not the full set of conditions needed to determine how precipitation evolves quantitatively. This suggests that the identified variables capture necessary but not sufficient conditions for precipitation. They provide a partial representation of the underlying dynamics rather than a closed predictive system. This is not a failure of the structural discovery step; rather, it clarifies the type of information that structural discovery provides. 
+
+## 7.3 Role of high-dimensional structure and sparsity 
+
+The limitations observed in predictive performance can be understood in the context of the struc-tural properties described in Section 3.2. The combination of spatial redundancy in Eq. (7) and precipitation sparsity in Eqs. (8)–(10) imposes intrinsic constraints on both inference and prediction. First, sparsity implies that informative samples are concentrated on a small subset of the data. As shown by Eq. (12), the effective number of precipitation events varies across the domain and can be much smaller than the total number of observations. As a result, even structurally relevant variables may not be sampled sufficiently to support stable estimation of their quantitative effects, particularly for precipitation intensity. Second, the effective low-rank structure of the predictor space implies that multiple variables share overlapping information. While entropic regression resolves part of this redundancy at the level of variable selection, it does not eliminate the possibility that unresolved components remain relevant for prediction. Some of these components may be weak in variance, localized in space, intermittent in time, or only active under particular meteorological regimes. Third, the zero-precipitation regime dominates the data distribution. This creates a mismatch between global fitting criteria and event-specific dynamics. A model can perform well on broad background states while still failing to resolve the rare but informative regimes where precipitation occurs. This is especially important for intensity prediction, where the relevant information is concentrated in the active rainfall subset rather than in the full sample space. In this sense, the predictive limitation is not primarily due to model capacity. The CNN– LSTM architecture is sufficiently flexible to approximate complex nonlinear mappings. The difficulty is more fundamental: the selected variables do not contain all information needed to close the predictive state. Data sparsity, intrinsic dimensionality, unresolved processes, and event imbalance all contribute to the gap between structural relevance and predictive sufficiency. This interpretation is consistent with the broader view that not all observations carry equal information, and that rare or atypical observations may be disproportionately informative for iden-tifying structure in nonlinear systems [12, 24, 18]. In sparse environmental systems, the informative content of the data is concentrated in rare, localized, and dynamically active regimes. Structural discovery can reveal variables that persist across these regimes, but prediction requires enough information to describe their quantitative evolution. 26 7.4 Comparison with information-theoretic methods 
+
+The comparison with transfer entropy (TE) and causation entropy (CE) highlights the importance of stability in causal discovery. As shown in Figure 3, ER produces a concentrated and persistent set of variables, whereas TE and CE yield more diffuse and variable selections. This difference can be traced to the formulation of the inference problem. Transfer entropy in Eq. (52) evaluates pairwise dependencies and therefore cannot, by itself, distinguish direct from indirect influences in a multivariate system. In high-dimensional environmental data, where vari-ables are strongly coupled, this can lead to diffuse selections because multiple variables may share information about the same precipitation process. Causation entropy in Eq. (55) addresses this limitation in principle by conditioning on addi-tional variables. However, its practical implementation requires estimation of conditional mutual information in increasingly high-dimensional spaces. Under finite data, spatial redundancy, and event sparsity, these estimates become sensitive to sampling variability and noise. Entropic regression circumvents part of this limitation by operating on projected representa-tions, as described in Eqs. (35)–(33). Rather than estimating conditional information directly over the original high-dimensional variables, ER evaluates information gain between low-dimensional projected models. This reformulates the inference problem into a geometrically constrained repre-sentation. The results suggest that the primary advantage of ER lies not simply in increased flexibility, but in the reformulation of the estimation problem. ER preserves the information-theoretic objective of identifying variables with unique conditional contribution, while reducing the instability associated with direct high-dimensional density estimation. This explains why ER yields a more concentrated selection-frequency profile across superpixels. At the same time, the comparison should not be interpreted as showing that ER recovers a complete causal graph. The output is a stable set of candidate causal parents under the given rep-resentation, data, and modeling assumptions. The contribution is therefore structural consistency, not definitive causal closure. 
+
+## 7.5 Implications for causal discovery in Earth systems 
+
+The findings of this study have broader implications for causal inference in Earth system sciences. As discussed in [9], the identification of causal structure from observational data is inherently limited by confounding, indirect dependencies, finite sampling, and the absence of controlled interventions. The present results reinforce this perspective by demonstrating that even when a stable struc-tural subset can be identified, this subset does not necessarily yield a predictive model of the system. In other words, the recovery of candidate causal parents, understood as variables with unique con-ditional information, does not imply that the system has been fully characterized in a predictive sense. This distinction is particularly important for data-driven Earth system modeling. In many applications, causal discovery is expected to provide interpretability, variable reduction, and im-proved prediction simultaneously. The present study suggests that these goals should be separated. Structural discovery can identify variables that are persistently involved in the dynamics. Pre-dictive modeling must then test whether those variables form a sufficient state representation for forecasting. The separation between these goals provides a more realistic interpretation of causal discovery in complex systems. Causal discovery should be understood as identifying structurally informative components of the system, not as reconstructing a complete dynamical model. This view is especially 27 important in systems such as precipitation, where relevant processes occur across unresolved scales and where the observable variables may only partially represent the true state of the atmosphere. Thus, the value of structural discovery lies in clarifying which variables organize the system, while the value of predictive testing lies in revealing whether this organization is sufficient for forecasting. The fact that these two outcomes differ is not a contradiction; it is a diagnostic feature of high-dimensional dynamical systems. 
+
+## 7.6 Limitations and future directions 
+
+Several limitations of the present study suggest directions for future work. First, the use of a second-degree polynomial expansion in Eq. (26) constrains the class of non-linear interactions considered. While this choice stabilizes the estimation procedure and avoids the combinatorial growth of a global feature library, it may exclude higher-order or non-polynomial dependencies that are relevant to precipitation dynamics. Second, the cardinality constraint in Eq. (42) imposes a fixed model size across all superpixels. This improves consistency and enables a common comparison across methods, but it may not fully capture spatial variability in system complexity. Some regions may require fewer variables, while others may require a larger or different set of drivers. Third, the analysis is restricted to variables available in the HRRR dataset. Additional sources of information, including subgrid-scale processes, terrain effects, boundary-layer structure, micro-physical processes, or larger-scale forcings, may be required to achieve predictive completeness. Fourth, the superpixel representation is designed to stabilize structural discovery, but it may suppress localized or transient phenomena that do not align with the dominant spatial mode used to guide the partition. This limitation is important because precipitation often involves localized convective structures whose dynamics may not be fully represented by spatial aggregation. Fifth, the predictive evaluation demonstrates that the selected variables do not provide com-plete predictive closure. Future work should therefore explore whether the gap between structural relevance and predictive sufficiency can be reduced through richer state representations, lag-explicit causal discovery, event-conditioned modeling, or probabilistic state-space formulations. Future work may consider: 
+
+• adaptive representations that allow variable model complexity across space, 
+
+• alternative nonlinear feature constructions beyond quadratic interactions, 
+
+• lag-explicit formulations of entropic regression, 
+
+• event-conditioned structural discovery focused on active precipitation regimes, 
+
+• integration of additional data sources to extend the effective state space, 
+
+• probabilistic models that explicitly separate occurrence, intensity, and calibration. Such extensions would aim not only to improve prediction, but also to clarify which missing components of the state are responsible for the observed gap between structural discovery and predictive sufficiency. 
+
+## 7.7 Summary 
+
+In summary, the results demonstrate that entropic regression identifies a structurally consistent set of variables that capture a stable component of precipitation dynamics. However, this set does not 28 constitute a sufficient representation for predictive modeling, even when combined with expressive nonlinear architectures. This separation between structure and prediction highlights a fundamental aspect of high-dimensional environmental systems: the variables that consistently participate in the dynamics are not necessarily sufficient to determine their evolution. The central implication is that causal discovery and predictive modeling should be treated as complementary but distinct tasks. Structural discovery identifies variables that carry persistent information about the system. Predictive modeling tests whether that information is sufficient to support reliable evolution in time. In the present case, the answer is only partial: the selected variables reveal a stable informational backbone, but not a closed predictive state. 
+
+# 8 Conclusion 
+
+This study examined the relationship between structural causal discovery and predictive sufficiency in a high-dimensional precipitation system. Using entropic regression, we identified a compact set of atmospheric variables that appears consistently across spatial partitions, indicating a stable structural component of the precipitation dynamics. The selected variables are physically inter-pretable and correspond to processes associated with moisture availability, vertical motion, wind organization, convective instability, and hydrometeor structure. The central finding is that structural consistency does not imply predictive closure. Although the variables identified by entropic regression support short-horizon discrimination between precip-itation and non-precipitation regimes, they do not provide a complete predictive representation of the system. Their use in probabilistic and sequence-based models reveals limitations in calibration, intensity prediction, and stable temporal evolution. Thus, the selected variables carry meaningful and persistent information about precipitation, but they are not sufficient to determine its future state. This distinction is important for data-driven modeling of complex systems. In high-dimensional environmental data, a variable may be structurally informative without being predictively complete. Conversely, a predictive model may achieve useful performance without revealing the underlying structure. Structural discovery and predictive modeling therefore address different aspects of the same system: the former identifies variables that participate persistently in the dynamics, while the latter tests whether those variables form an adequate state for forecasting. The results suggest that entropic regression is valuable not because it produces a complete causal or predictive model, but because it exposes a stable informational backbone within a high-dimensional system. This backbone provides an interpretable reduction of the variable space and clarifies which components of the atmospheric state are recurrently involved in precipitation dy-namics. At the same time, the predictive limitations reveal the presence of unresolved information, including possible subgrid processes, temporal memory, localized event dynamics, and variables outside the observed state space. In this sense, the gap between structural discovery and predictive sufficiency should not be viewed as a failure of the method, but as a diagnostic feature of the system. It shows where the observed variables explain stable structure and where they fall short of closing the dynamics. For precipitation, and more broadly for high-dimensional Earth system processes, this separation provides a useful framework for interpreting causal discovery: it reveals structurally informative components of the system, while leaving open the question of what additional information is required for predictive completeness. 29 Data and Code Availability 
+
+The HRRR atmospheric fields and MRMS precipitation observations used in this study are publicly available through their respective data providers. The processed data used in this manuscript were generated from these public sources following the preprocessing and spatial-alignment procedures described in the paper. Code and supporting materials associated with this study, including the full list of variables, will be made available through the project repository: 
+
+https://github.com/almomaa/EAGER_ER 
+
+Additional information related to the analyses may be made available by the lead contact upon reasonable request. 
+
+# References 
+
+[1] Eugenia Kalnay. Atmospheric Modeling, Data Assimilation and Predictability . Cambridge University Press, 2003. [2] Markus Reichstein, Gustau Camps-Valls, Bjorn Stevens, Martin Jung, Joachim Denzler, Nuno Carvalhais, and Prabhat. Deep learning and process understanding for data-driven earth system science. Nature , 566:195–204, 2019. [3] Stephan Rasp, Peter D. Dueben, Sebastian Scher, Jonathan A. Weyn, Soukayna Mouatadid, and Nils Thuerey. Weatherbench: A benchmark data set for data-driven weather forecasting. 
+
+Journal of Advances in Modeling Earth Systems , 12(11):e2020MS002203, 2020. [4] Stephan Rasp et al. Weatherbench 2: A benchmark for the next generation of data-driven global weather models. Journal of Advances in Modeling Earth Systems , 16(6):e2023MS004019, 2024. [5] Markus Reichstein, Gustau Camps-Valls, Bjorn Stevens, Martin Jung, Joachim Denzler, Nuno Carvalhais, and Prabhat. Deep learning and process understanding for data-driven earth system science. Nature , 566:195–204, 2019. [6] Martin G. Schultz et al. Can deep learning beat numerical weather prediction? Philosophical Transactions of the Royal Society A , 379, 2021. [7] Georgy Ayzel, Tobias Scheffer, and Maik Heistermann. Rainnet v1.0: A convolutional neural network for radar-based precipitation nowcasting. Geoscientific Model Development ,13(6):2631–2644, 2020. [8] Suman Ravuri, Karel Lenc, Matthew Willson, Dmitry Kangin, Remi Lam, Piotr Mirowski, Megan Fitzsimons, Maria Athanassiadou, Sheleem Kashem, Sam Madge, et al. Skilful precip-itation nowcasting using deep generative models of radar. Nature , 597:672–677, 2021. [9] Jakob Runge et al. Inferring causation from time series in earth system sciences. Nature Communications , 10:2553, 2019. [10] Thomas Schreiber. Measuring information transfer. Physical Review Letters , 85:461–464, 2000. [11] Jie Sun, Dane Taylor, and Erik Bollt. Optimal causation entropy for causal inference in complex systems. SIAM Journal on Applied Dynamical Systems , 14:73–106, 2015. 30 [12] Abd AlRahman R AlMomani, Jie Sun, and Erik Bollt. How entropic regression beats the outliers problem in nonlinear system identification. Chaos: An Interdisciplinary Journal of Nonlinear Science , 30(1), 2020. [13] Jeremie Fish, Alexander DeWitt, Abd AlRahman R AlMomani, Paul J Laurienti, and Erik Bollt. Entropic regression with neurologically motivated applications. Chaos: An Interdisci-plinary Journal of Nonlinear Science , 31(11), 2021. [14] Abd AlRahman AlMomani and Erik Bollt. Erfit: Entropic regression fit matlab pack-age, for data-driven system identification of underlying dynamic equations. arXiv preprint arXiv:2010.02411 , 2020. [15] David C. Dowell, Curtis R. Alexander, Eric P. James, Stephen S. Weygandt, Stan G. Benjamin, Geoff S. Manikin, Benjamin T. Blake, John M. Brown, Joseph B. Olson, Ming Hu, et al. The high-resolution rapid refresh (hrrr): An hourly updating convection-allowing forecast model. part i: Motivation and system description. Weather and Forecasting , 37(8):1371–1395, 2022. [16] Jian Zhang, Kenneth Howard, Carrie Langston, Brian Kaney, Youcun Qi, Lin Tang, Heather Grams, Yadong Wang, Stephen Cocks, Steven Martinaitis, et al. Multi-radar multi-sensor (mrms) quantitative precipitation estimation: Initial operating capabilities. Bulletin of the American Meteorological Society , 97(4):621–638, 2016. [17] Christopher Tyler Diggans and Abd AlRahman R AlMomani. Geometric partition entropy: Coarse-graining a continuous state space. Entropy , 24(10):1432, 2022. [18] C Tyler Diggans and Abd AlRahman R AlMomani. Generalizing geometric partition entropy for the estimation of mutual information in the presence of informative outliers. Chaos: An Interdisciplinary Journal of Nonlinear Science , 35(3), 2025. [19] Alexander Kraskov, Harald Stögbauer, and Peter Grassberger. Estimating mutual information. 
+
+Physical Review E , 69(6):066138, 2004. [20] Stefan Frenzel and Bernd Pompe. Partial mutual information for coupling analysis of multi-variate time series. Physical Review Letters , 99(20):204101, 2007. [21] Jie Sun, R AlMomani Abd AlRahman, and Erik Bollt. Data-driven learning of boolean networks and functions by optimal causation entropy principle. Patterns , 3(11), 2022. [22] Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Weinberger. On calibration of modern neural networks. In Proceedings of the 34th International Conference on Machine Learning , pages 1321–1330. PMLR, 2017. [23] Randal D. Koster, Paul A. Dirmeyer, Zhichang Guo, Gordon Bonan, Edmond Chan, Peter Cox, C. T. Gordon, Shinjiro Kanae, Eva Kowalczyk, David Lawrence, Ping Liu, Chao-Han Lu, Sergey Malyshev, Bryant McAvaney, Kenneth Mitchell, David Mocko, Taikan Oki, Keith Oleson, Andy Pitman, Y. C. Sud, Christopher M. Taylor, Diana Verseghy, Ratko Vasic, Yongkang Xue, and Tomohito Yamada. Regions of strong coupling between soil moisture and precipitation. Science ,305(5687):1138–1140, 2004. [24] C Tyler Diggans and Abd AlRahman R AlMomani. Boltzmann–shannon interaction entropy: A normalized measure for continuous variables with an application as a subsample quality metric. Chaos: An Interdisciplinary Journal of Nonlinear Science , 33(12), 2023. 31

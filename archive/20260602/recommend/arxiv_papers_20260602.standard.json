@@ -1,0 +1,362 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-02T22:08:58.698694+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2606.00710v1",
+      "source": "arxiv",
+      "title": "Structural Causal Discovery and Predictive Sufficiency in High-Dimensional Dynamical Systems",
+      "abstract": "High-dimensional environmental systems often contain variables that are strongly predictive, structurally informative, and physically coupled, but these roles are not equivalent. In precipitation dynamics, this distinction is particularly important because rainfall emerges from multiscale thermodynamic, kinematic, microphysical, and land--atmosphere interactions, while observations are sparse, spatially redundant, and strongly imbalanced. In this work, we study the relationship between structural causal discovery and predictive sufficiency in a high-dimensional precipitation system. Using HRRR atmospheric fields and MRMS precipitation observations over the Southwestern United States, we apply a projection-based formulation of entropic regression to identify candidate causal parents of next-hour precipitation. The method evaluates variables through their incremental conditional information contribution under a one-hour temporal delay, using spatially aggregated superpixel representations to assess structural consistency across the domain. Compared with transfer entropy and causation entropy, entropic regression produces a more concentrated and stable selection profile, revealing a compact set of six physically interpretable variables associated with moisture availability, reflectivity, vertical motion, wind organization, and convective instability. Predictive experiments using only these structurally selected variables show strong short-horizon discrimination of precipitation occurrence, but limited calibration, intensity prediction, and fixed-threshold event-detection skill. These results demonstrate that structural relevance does not imply predictive closure. The selected variables form a stable informational backbone of the precipitation process, but they do not constitute a complete predictive state.",
+      "authors": [
+        "Abd AlRahman R. AlMomani",
+        "Curtis N. James",
+        "Christopher C. Hennon",
+        "Ronny Schroeder"
+      ],
+      "primary_category": "math.DS",
+      "categories": [
+        "math.DS"
+      ],
+      "published": "2026-05-30T12:38:02+00:00",
+      "link": "https://arxiv.org/pdf/2606.00710v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "structural causal discovery in dynamical systems",
+      "llm_evidence_cn": "动力学系统中的结构因果发现",
+      "llm_evidence": "动力学系统中的结构因果发现",
+      "canonical_evidence": "动力学系统中的结构因果发现",
+      "llm_tldr_en": "Studies structural causal discovery and predictive sufficiency in high-dimensional precipitation dynamics.",
+      "llm_tldr_cn": "高维环境系统（如降水）中，变量预测性、结构性和耦合性角色不同。本文研究结构因果发现与预测充分性的关系，在西南美国地区应用投影熵公式进行因果发现。结果显示因果结构有助于理解预测机制。",
+      "llm_tldr": "高维环境系统（如降水）中，变量预测性、结构性和耦合性角色不同。本文研究结构因果发现与预测充分性的关系，在西南美国地区应用投影熵公式进行因果发现。结果显示因果结构有助于理解预测机制。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.01634v1",
+      "source": "arxiv",
+      "title": "E4GEN: Event-level Explainable Extreme-Enhanced Time-series Generation",
+      "abstract": "Generating realistic time series is essential for scientific research and real-world applications. However, existing methods often emphasize overall distributional fidelity while failing to faithfully capture extreme events. To advance existing research, we propose E4GEN, an explainable diffusion framework for extreme event-aware time-series generation. E4GEN provides systematic insights into when, what, and how to control extreme-event generation through three key components. First, E-Activator learns the dataset-adaptive extreme-control signal activation step during the denoising process without interfering with regular temporal components, including trend and seasonality. Second, E-Predictor determines what control signal to enforce through Self-Driven Semantic Prediction, where each sample derives its own control signal by inferring latent extreme-event information during generation. It also includes a novel Data-Conditioned Training, Noise-Initiated Sampling mechanism to address the issue of unavailable training labels. Third, E-Control specifies how to control extreme-event generation through a trainable Extreme Control Network, which transforms the semantic control signal into layer-wise signals and injects it into the denoising process. We evaluate E4GEN on six datasets with 17 metrics, and extensive experiments show that E4GEN outperforms state-of-the-art models across multiple dimensions, including overall fidelity, extreme-event fidelity, and downstream utility.",
+      "authors": [
+        "Lin Jiang",
+        "Dahai Yu",
+        "Ximiao Li",
+        "Guang Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-01T03:35:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.01634v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "extreme event-aware time-series generation",
+      "llm_evidence_cn": "极端事件感知时间序列生成",
+      "llm_evidence": "极端事件感知时间序列生成",
+      "canonical_evidence": "极端事件感知时间序列生成",
+      "llm_tldr_en": "E4GEN is an explainable diffusion framework for generating time series with controlled extreme events.",
+      "llm_tldr_cn": "现有时间序列生成方法通常只关注整体分布，难以有效生成极端事件。本文提出E4GEN框架，基于扩散模型，通过E-Activator自适应激活极端控制信号，并用E-Predictor决定信号强度，在不破坏趋势和季节性的前提下引导极端事件生成。实验表明，E4GEN能生成更真实且可解释的包含极端事件的时间序列。",
+      "llm_tldr": "现有时间序列生成方法通常只关注整体分布，难以有效生成极端事件。本文提出E4GEN框架，基于扩散模型，通过E-Activator自适应激活极端控制信号，并用E-Predictor决定信号强度，在不破坏趋势和季节性的前提下引导极端事件生成。实验表明，E4GEN能生成更真实且可解释的包含极端事件的时间序列。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.01214v1",
+      "source": "arxiv",
+      "title": "Markovianity-Based Conditioning Depth Diagnostics for Hidden Confounding in Observational Datasets",
+      "abstract": "Reliable causal discovery in time series depends on whether the conditioning set adequately represents the system state. If relevant history or unobserved processes are omitted, residual dependence can appear as direct causal links. We study this failure mode on promnient constraint-based causal discovery methods through a simple premise: how much does the inferred graph change as conditioning depth increases? When the observed process is described approximately by a finite-order Markovian representation, inferred graphs should stabilize once sufficient past observations are observed. Hidden confounding and other hidden-memory mechanisms should remain sensitive to depth when the observed state is incomplete. We formalise this behavior with graph instability statistics computed over the conditioning-depth grid. The empirical study covers synthetic systems with known ground truth and calcium imaging recordings with unknown causal structure. In simulations, both Markovian and non-Markovian systems relatively upheld our premise. With known ground truth, we evaluate recovery using confusion matrix metrics; while in real data without ground truth, we use descriptive graph instability summaries. Across synthetic Markovian and hidden memory systems, c-GC variants give the clearest separation, while PCMCI variants show weaker compatible trends. In real data, inferred connectivity drops sharply with conditioning depths and then levels off. This method, however, does not recover latent graphs, nor does it clearly separate latent confounding from lag-order misspecification, non-stationarity, measurement error. Its contribution is more modest and practical: and explicit model-checking tool for deciding when causal claims are stable and when they should be treated caustiosly.",
+      "authors": [
+        "S. A. Adedayo"
+      ],
+      "primary_category": "stat.AP",
+      "categories": [
+        "stat.AP"
+      ],
+      "published": "2026-05-31T13:03:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.01214v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diagnosing hidden confounding in time series causal discovery",
+      "llm_evidence_cn": "时间序列因果发现中隐藏混淆的检测",
+      "llm_evidence": "时间序列因果发现中隐藏混淆的检测",
+      "canonical_evidence": "时间序列因果发现中隐藏混淆的检测",
+      "llm_tldr_en": "Proposes a diagnostic based on Markovianity to detect hidden confounding in time series causal discovery, showing that inferred graphs change with conditioning depth under unobserved confounders.",
+      "llm_tldr_cn": "本文针对时间序列因果发现中因遗漏历史或未观测变量而导致的虚假因果关系问题，提出基于马尔可夫性的诊断方法。通过检查因果图随条件深度增加的变化，检测隐藏混淆的影响。在约束基因果发现方法上的实验表明，当模型阶数不足时，因果图对深度敏感，从而揭示混淆。该诊断有助于提升时间序列因果发现的可靠性。",
+      "llm_tldr": "本文针对时间序列因果发现中因遗漏历史或未观测变量而导致的虚假因果关系问题，提出基于马尔可夫性的诊断方法。通过检查因果图随条件深度增加的变化，检测隐藏混淆的影响。在约束基因果发现方法上的实验表明，当模型阶数不足时，因果图对深度敏感，从而揭示混淆。该诊断有助于提升时间序列因果发现的可靠性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.30943v1",
+      "source": "arxiv",
+      "title": "Inspectable Neural Markov Models for Non-Stationary Time Series",
+      "abstract": "Modeling non-stationary stochastic systems requires balancing the representational capacity of deep learning with the structural transparency of classical probabilistic models. Markov transition matrices provide such a framework, but traditional frequency-based estimation collapses at high resolutions due to data sparsity. We propose a hybrid approach that parameterizes the manifold of stochastic matrices through a neural network, enabling estimation of time-inhomogeneous Markov chains in sparse-data regimes, and use financial markets as a testbed to investigate the Markov state variable as a critical inductive bias. We show that conditioning on realized volatility produces a more internally consistent Markovian structure than return-based states, achieving a $5.6\\%$ reduction in Chapman-Kolmogorov discrepancy and superior held-out likelihood in 9 of 10 assets. Unlike black-box sequence models, our approach generates explicit matrices amenable to direct geometric analysis, surfacing structural findings such as the universal homogenization of transition probabilities under high-volatility regimes.",
+      "authors": [
+        "Jan Rovirosa",
+        "Jesse Schmolze"
+      ],
+      "primary_category": "q-fin.MF",
+      "categories": [
+        "q-fin.MF",
+        "stat.ML"
+      ],
+      "published": "2026-05-29T07:29:35+00:00",
+      "link": "https://arxiv.org/pdf/2605.30943v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Neural Markov model for time series generation",
+      "llm_evidence_cn": "用于时间序列生成的神经马尔可夫模型",
+      "llm_evidence": "用于时间序列生成的神经马尔可夫模型",
+      "canonical_evidence": "用于时间序列生成的神经马尔可夫模型",
+      "llm_tldr_en": "Proposes a neural network parameterized Markov transition matrix to model non-stationary time series, enabling generation and inspection of stochastic processes in sparse-data regimes, validated on financial data.",
+      "llm_tldr_cn": "该论文针对非平稳时间序列建模中频率估计在稀疏数据下失效的问题，提出了一种神经马尔可夫模型，用神经网络参数化转移矩阵，从而能够从稀疏数据中学习时间非齐次的马尔可夫链。在金融市场上以实际波动率为条件的实验表明，该方法能产生更一致的马尔可夫结构。该工作为可解释的时间序列生成提供了新途径。",
+      "llm_tldr": "该论文针对非平稳时间序列建模中频率估计在稀疏数据下失效的问题，提出了一种神经马尔可夫模型，用神经网络参数化转移矩阵，从而能够从稀疏数据中学习时间非齐次的马尔可夫链。在金融市场上以实际波动率为条件的实验表明，该方法能产生更一致的马尔可夫结构。该工作为可解释的时间序列生成提供了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.00795v1",
+      "source": "arxiv",
+      "title": "Extending Causal Metamodeling to a non-Markovian Queue",
+      "abstract": "Metamodels for discrete-event simulations approximate the behavior of simulation models without running expensive simulations. Prior work introduced modular dynamic Bayesian networks (MDBNs) -- a class of metamodels that can estimate a range of probabilistic and causal queries (PCQs) using a single, trained model -- but the method was limited to Markovian systems. In this paper, we initiate an extension of MDBNs to non-Markovian queues by approximating non-exponential distributions using phase-type distributions. This approach raises novel challenges, including balancing metamodeling accuracy and tractability when choosing the number of phases, efficiently learning metamodel parameters, and choosing the sampling interval that is used to approximate a continuous-time simulation by a discrete-time MDBN. We provide preliminary solutions to these challenges, yielding the first causal metamodeling technique for non-Markovian systems. Experiments on a G/M/1 queue demonstrate that the MDBN can produce accurate answers to PCQs with orders-of-magnitude speedup of inference times relative to direct simulation.",
+      "authors": [
+        "Pracheta Amaranath",
+        "Anant Bhide",
+        "David Jensen",
+        "Peter Haas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-05-30T16:21:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.00795v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "extends causal metamodeling using modular dynamic Bayesian networks for causal queries",
+      "llm_evidence_cn": "使用模块化动态贝叶斯网络扩展因果元建模，支持因果查询",
+      "llm_evidence": "使用模块化动态贝叶斯网络扩展因果元建模，支持因果查询",
+      "canonical_evidence": "使用模块化动态贝叶斯网络扩展因果元建模，支持因果查询",
+      "llm_tldr_en": "Extends modular dynamic Bayesian networks to non-Markovian queues for causal metamodeling, enabling probabilistic and causal queries with phase-type distributions.",
+      "llm_tldr_cn": "该工作将模块化动态贝叶斯网络（MDBN）扩展至非马尔可夫队列，通过相位型分布近似非指数分布，实现因果元建模。方法在保持可处理性的同时，支持概率和因果查询。这为复杂系统因果建模提供了新工具，但对时间序列生成无直接贡献。",
+      "llm_tldr": "该工作将模块化动态贝叶斯网络（MDBN）扩展至非马尔可夫队列，通过相位型分布近似非指数分布，实现因果元建模。方法在保持可处理性的同时，支持概率和因果查询。这为复杂系统因果建模提供了新工具，但对时间序列生成无直接贡献。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.31156v1",
+      "source": "arxiv",
+      "title": "TabCausal: Pretraining Across Causal Environments for Tabular Causal Discovery",
+      "abstract": "Causal discovery aims to recover directed causal relations from observational and interventional data, providing a basis for mechanistic understanding and reliable decision-making. Causal discovery foundation models (CDFMs) seek to amortize this problem by mapping a dataset directly to a causal graph in a single forward pass, avoiding per-dataset testing, search, or optimization. However, existing CDFMs remain limited, often failing to consistently match strong classical methods, and we find that a key bottleneck is how causal pretraining tasks are constructed. Based on this observation, we propose TabCausal, a data-driven CDFM trained with broad causal pretraining over diverse graph priors, structural mechanisms, noise models, dimensions, sample sizes, and intervention regimes. A dynamic task construction strategy composes these causal environments into varied discovery tasks, enabling more transferable structural learning from observational and mixed-interventional data. On large-scale synthetic benchmarks, TabCausal achieves better macro-averaged performance than a diverse set of causal discovery baselines. To further bridge abstract synthetic generators and realistic causal reasoning scenarios, we introduce a protocol-guided and LLM-audited semantic causal environment benchmark, where domain-grounded SCMs generate interpretable observational and interventional datasets for out-of-distribution analysis. Across both synthetic and semantic environments, TabCausal demonstrates robust structure recovery, especially under interventional evidence, highlighting broad causal pretraining as a key ingredient for transferable amortized causal discovery.",
+      "authors": [
+        "Zi-Rong Li",
+        "Si-Yang Liu",
+        "Tian-Zuo Wang",
+        "Han-Jia Ye"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-29T11:05:43+00:00",
+      "link": "https://arxiv.org/pdf/2605.31156v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "tabular causal discovery with pretraining across environments",
+      "llm_evidence_cn": "跨环境预训练的表格因果发现",
+      "llm_evidence": "跨环境预训练的表格因果发现",
+      "canonical_evidence": "跨环境预训练的表格因果发现",
+      "llm_tldr_en": "Proposes TabCausal, a causal discovery foundation model pretrained on diverse tabular data to infer causal graphs in one forward pass.",
+      "llm_tldr_cn": "针对现有因果发现基础模型效果欠佳的问题，本文提出TabCausal，通过多样化的图先验和结构机制进行预训练，实现从数据集直接输出因果图。该方法在多个数据集上匹配或超越经典算法，为通用因果发现提供了新途径。",
+      "llm_tldr": "针对现有因果发现基础模型效果欠佳的问题，本文提出TabCausal，通过多样化的图先验和结构机制进行预训练，实现从数据集直接输出因果图。该方法在多个数据集上匹配或超越经典算法，为通用因果发现提供了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.01602v1",
+      "source": "arxiv",
+      "title": "Estimating Mutual Information between Time Series and Temporal Event Sequences Across Diverse Analysis Tasks",
+      "abstract": "Pairwise dependence measures such as correlation and causality are fundamental to temporal data mining, yet there is still no principled and robust way to quantify dependence between heterogeneous data types, especially between continuous time series and discrete temporal event sequences. Existing approaches rely on ad hoc transformations or mutual-information estimators that are highly sensitive to quantization, repeated values, and event redundancy, leading to biased or unstable results in practice. We propose a nonparametric mutual information estimator that directly measures the dependence between time series and event sequences without data transformation, learning, or ad hoc discretization. Our method models the continuous-discrete duality of real-world time series to handle quantization and repeated-value artifacts and introduces a latent event clustering strategy to mitigate bias from event co-occurrence and redundancy. Together, these yield a robust and unified framework that bridges discrete and continuous mutual information. We evaluate the proposed estimator on four representative tasks: discrete-continuous time-delayed mutual information for causality analysis, global and local temporal repetition discovery, discrete covariate selection for time series forecasting, and continuous feature selection for classification. Experiments on synthetic and real-world datasets show consistent improvements over existing methods in accuracy, robustness, and interpretability, positioning our approach as a general-purpose dependence operator for heterogeneous temporal data, similar to Pearson correlation for homogeneous time series. Code available at: https://github.com/HaojiHu/Multimodal-Temporal-Data-Quantification",
+      "authors": [
+        "Haoji Hu",
+        "Huaqing Mao",
+        "Yijun Lin",
+        "Xiaowei Jia",
+        "Jinwei Zhou",
+        "Minoh Jeong",
+        "Yao-Yi Chiang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.IT"
+      ],
+      "published": "2026-06-01T02:56:50+00:00",
+      "link": "https://arxiv.org/pdf/2606.01602v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "mutual information estimation for causality between time series and events",
+      "llm_evidence_cn": "时间序列与事件之间的因果相关互信息估计",
+      "llm_evidence": "时间序列与事件之间的因果相关互信息估计",
+      "canonical_evidence": "时间序列与事件之间的因果相关互信息估计",
+      "llm_tldr_en": "Proposes a nonparametric mutual information estimator for dependence between time series and event sequences, useful for temporal causal discovery.",
+      "llm_tldr_cn": "时间序列与离散事件序列之间的因果关系量化缺乏稳健方法。本文提出一种无需数据转换和训练的非参数互信息估计器，直接衡量两者依赖关系。该估计器对离散化、重复值和事件冗余不敏感，能稳定捕捉因果关联。实验表明，该方法在多项时序分析任务中优于现有依赖指标。",
+      "llm_tldr": "时间序列与离散事件序列之间的因果关系量化缺乏稳健方法。本文提出一种无需数据转换和训练的非参数互信息估计器，直接衡量两者依赖关系。该估计器对离散化、重复值和事件冗余不敏感，能稳定捕捉因果关联。实验表明，该方法在多项时序分析任务中优于现有依赖指标。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.02117v1",
+      "source": "arxiv",
+      "title": "ProbRes: Volatility Learning for Probabilistic Time-Series Forecasting",
+      "abstract": "Probabilistic time series forecasting has attracted increasing attention in financial applications due to the need to quantify risk and uncertainty in future observations. We propose ProbRes, a post-hoc probabilistic calibration method that explicitly learns and incorporates volatility dynamics into probabilistic forecasting, enabling effective handling of heteroskedastic data. During training, ProbRes employs two architecture-agnostic modules to separately model the conditional mean and conditional volatility. At the inference stage, it generates predictive distributions by resampling normalized residuals. ProbRes is applicable to both univariate and multivariate time series and remains robust under a wide range of error distributions, including non-Gaussian innovations with conditional heteroskedasticity. Theoretical results demonstrate ProbRes's validity and experiments on both synthetic and real-world datasets show that ProbRes accurately captures predictive distributions and produces well-calibrated prediction intervals.",
+      "authors": [
+        "Tingting Wang",
+        "Yunyi Zhang",
+        "Benyou Wang"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-06-01T11:49:03+00:00",
+      "link": "https://arxiv.org/pdf/2606.02117v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Probabilistic calibration method that generates predictive distributions for time series",
+      "llm_evidence_cn": "生成时间序列预测分布的概率校准方法",
+      "llm_evidence": "生成时间序列预测分布的概率校准方法",
+      "canonical_evidence": "生成时间序列预测分布的概率校准方法",
+      "llm_tldr_en": "ProbRes is a post-hoc probabilistic calibration method that explicitly models volatility to generate predictive distributions for time series, applicable to both univariate and multivariate settings, and robust to non-Gaussian errors.",
+      "llm_tldr_cn": "该论文针对概率时间序列预测中需要处理异方差性的问题，提出了一种后验概率校准方法ProbRes。它通过两个模块分别建模条件均值和条件波动率，在推断阶段通过重采样标准化残差生成预测分布。实验表明该方法适用于单变量和多变量时间序列，在多种误差分布下保持鲁棒性。该工作为金融等领域的风险量化提供了实用工具。",
+      "llm_tldr": "该论文针对概率时间序列预测中需要处理异方差性的问题，提出了一种后验概率校准方法ProbRes。它通过两个模块分别建模条件均值和条件波动率，在推断阶段通过重采样标准化残差生成预测分布。实验表明该方法适用于单变量和多变量时间序列，在多种误差分布下保持鲁棒性。该工作为金融等领域的风险量化提供了实用工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.02231v1",
+      "source": "arxiv",
+      "title": "Identifiable Markov Switching Models with Instantaneous Effects and Exponential Families",
+      "abstract": "Temporal systems often exhibit non-stationary behaviour, such as seasonal climate variation or glucose fluctuations in patients with type-1 diabetes. One way to model non-stationarity is through discrete latent regimes, i.e., stationary segments of time. Such systems induce a Markov Switching Model (MSM), a class of Hidden Markov Models with autoregressive dependencies among latent regimes and observed variables. Identifying latent regimes is challenging in the presence of frequent regime switches and nonlinear and non-Gaussian dynamics, particularly when there are instantaneous effects between the variables, e.g., due to slow rates of measurements. In this work, we establish the identifiability of both latent regimes and regime-dependent causal structures under temporal regime dependencies, nonlinear lagged and instantaneous effects, and independent noise from the exponential family. Our identifiability theory subsumes non-temporal mixtures of causal models. Furthermore, we introduce FlowMSM, a regime detection framework that can be paired with any stationary causal discovery method to recover regime-dependent causal structures. Experiments on synthetic benchmarks and a financial economics dataset demonstrate the effectiveness of our approach to detect latent regimes and discover causal structures from non-stationary time series.",
+      "authors": [
+        "Roel Hulsman",
+        "Carles Balsells-Rodas",
+        "Sara Magliacane"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-06-01T13:25:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.02231v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "identifiable Markov switching models for non-stationary time series with causal structure",
+      "llm_evidence_cn": "非平稳时间序列的可识别马尔可夫切换模型及其因果结构",
+      "llm_evidence": "非平稳时间序列的可识别马尔可夫切换模型及其因果结构",
+      "canonical_evidence": "非平稳时间序列的可识别马尔可夫切换模型及其因果结构",
+      "llm_tldr_en": "Establishes identifiability of regimes and regime-dependent causal structure in Markov switching models with instantaneous effects and exponential families, addressing non-stationary time series.",
+      "llm_tldr_cn": "本文针对非平稳时间序列中频繁切换和非线性非高斯动态的挑战，建立了马尔可夫切换模型（MSM）的可识别性理论。模型允许变量间的瞬时效应，使用指数族分布。证明了在适当条件下，隐状态和状态依赖的因果结构可被唯一识别。该工作为从非平稳数据中学习因果模型提供了理论基础，适用于气候和医疗等应用。",
+      "llm_tldr": "本文针对非平稳时间序列中频繁切换和非线性非高斯动态的挑战，建立了马尔可夫切换模型（MSM）的可识别性理论。模型允许变量间的瞬时效应，使用指数族分布。证明了在适当条件下，隐状态和状态依赖的因果结构可被唯一识别。该工作为从非平稳数据中学习因果模型提供了理论基础，适用于气候和医疗等应用。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning methods for time series data",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
