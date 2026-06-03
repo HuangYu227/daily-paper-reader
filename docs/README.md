@@ -6,47 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-02
-- 运行时间：2026-06-02 22:16:40 UTC
+- 最新运行日期：2026-06-03
+- 运行时间：2026-06-03 22:53:23 UTC
 - 运行状态：成功
-- 本次总论文数：9
-- 精读区：3
-- 速读区：6
+- 本次总论文数：5
+- 精读区：1
+- 速读区：4
 
 ### 今日简报（AI）
-今日聚焦高维动态系统的结构因果发现与可解释极端时间序列生成，共精读2篇、速读3篇论文。最值得关注的是因果预测充分性与事件级可解释生成两大方向。建议优先阅读前两篇精读论文，深入理解因果发现理论在时间序列中的前沿应用。
-- 详情：[/202606/02/README](/202606/02/README)
+今日梳理5篇论文，精读高影响力研究《Parameter scaling of multivariate Granger causality》（8.0分），速读涵盖时序预测、金融基准和多模态嵌入等方向。  
+最值得关注的是格兰杰因果分析的参数缩放规律，以及《FlowTime》与《FinStressTS》在连续观看时间预测和金融时序合成基准上的创新。  
+普通读者可优先精读格兰杰因果论文理解多变量因果推断的扩展性，其余速读掌握时序预测与金融建模的前沿工具。
+- 详情：[/202606/03/README](/202606/03/README)
 
 ### 精读区论文标签
-1. [Structural Causal Discovery and Predictive Sufficiency in High-Dimensional Dynamical Systems](/202606/02/2606.00710v1-structural-causal-discovery-and-predictive-sufficiency-in-high-dimensional-dynamical-systems)  
-   标签：评分：9.0/10、query:tsc
-   evidence：动力学系统中的结构因果发现
-2. [E4GEN: Event-level Explainable Extreme-Enhanced Time-series Generation](/202606/02/2606.01634v1-e4gen-event-level-explainable-extreme-enhanced-time-series-generation)  
-   标签：评分：9.0/10、query:tsc
-   evidence：极端事件感知时间序列生成
-3. [Markovianity-Based Conditioning Depth Diagnostics for Hidden Confounding in Observational Datasets](/202606/02/2606.01214v1-markovianity-based-conditioning-depth-diagnostics-for-hidden-confounding-in-observational-datasets)  
+1. [Parameter scaling of multivariate Granger causality](/202606/03/biorxiv-10-1101-2025-10-01-679714-v2-parameter-scaling-of-multivariate-granger-causality)  
    标签：评分：8.0/10、query:tsc
-   evidence：时间序列因果发现中隐藏混淆的检测
+   evidence：稀疏多变量格兰杰因果分析用于时序因果推断
 
 ### 速读区论文标签
-1. [Inspectable Neural Markov Models for Non-Stationary Time Series](/202606/02/2605.30943v1-inspectable-neural-markov-models-for-non-stationary-time-series)  
+1. [FlowTime: Towards Continuous Generative Watch Time Prediction via Flow-based Personalized Priors](/202606/03/2606.01352v1-flowtime-towards-continuous-generative-watch-time-prediction-via-flow-based-personalized-priors)  
    标签：评分：7.0/10、query:tsc
-   evidence：用于时间序列生成的神经马尔可夫模型
-2. [TabCausal: Pretraining Across Causal Environments for Tabular Causal Discovery](/202606/02/2605.31156v1-tabcausal-pretraining-across-causal-environments-for-tabular-causal-discovery)  
+   evidence：基于流的生成长时间预测，从因果视角重审视
+2. [FinStressTS: A Parametric Synthetic Benchmark for Time-Series Forecasting in Finance](/202606/03/2606.03184v1-finstressts-a-parametric-synthetic-benchmark-for-time-series-forecasting-in-finance)  
    标签：评分：7.0/10、query:tsc
-   evidence：跨环境预训练的表格因果发现
-3. [Estimating Mutual Information between Time Series and Temporal Event Sequences Across Diverse Analysis Tasks](/202606/02/2606.01602v1-estimating-mutual-information-between-time-series-and-temporal-event-sequences-across-diverse-analysis-tasks)  
-   标签：评分：7.0/10、query:tsc
-   evidence：时间序列与事件之间的因果相关互信息估计
-4. [ProbRes: Volatility Learning for Probabilistic Time-Series Forecasting](/202606/02/2606.02117v1-probres-volatility-learning-for-probabilistic-time-series-forecasting)  
-   标签：评分：7.0/10、query:tsc
-   evidence：生成时间序列预测分布的概率校准方法
-5. [Identifiable Markov Switching Models with Instantaneous Effects and Exponential Families](/202606/02/2606.02231v1-identifiable-markov-switching-models-with-instantaneous-effects-and-exponential-families)  
-   标签：评分：7.0/10、query:tsc
-   evidence：非平稳时间序列的可识别马尔可夫切换模型及其因果结构
-6. [Extending Causal Metamodeling to a non-Markovian Queue](/202606/02/2606.00795v1-extending-causal-metamodeling-to-a-non-markovian-queue)  
+   evidence：带有控制机制的合成时间序列基准
+3. [Giving Sensors a Voice: Multimodal JEPA for Semantic Time-Series Embeddings](/202606/03/2605.31580v1-giving-sensors-a-voice-multimodal-jepa-for-semantic-time-series-embeddings)  
    标签：评分：6.0/10、query:tsc
-   evidence：使用模块化动态贝叶斯网络扩展因果元建模，支持因果查询
+   evidence：基于JEPA的时间序列生成式表示学习
+4. [LiveBand: Live Accompaniment Generation in the Audio Domain](/202606/03/2606.03803v1-liveband-live-accompaniment-generation-in-the-audio-domain)  
+   标签：评分：6.0/10、query:tsc
+   evidence：使用因果变换器生成器进行序列生成带有对抗性监督
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,215 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-03T22:49:30.474609+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "biorxiv-10-1101-2025-10-01-679714-v2",
+      "source": "biorxiv",
+      "title": "Parameter scaling of multivariate Granger causality",
+      "abstract": "Estimating causal interactions between signals provides unique insights into their dynamics, and causal inference has been widely applied to electrophysiological data to elucidate brain communication. Multivariate autoregressive models (MVAR) form the basis of most causal estimation methods. However, the high dimensionality of whole-brain data renders MVARs difficult to estimate reliably, and reducing the dimensions to a reasonable range affects causal inference. To address these scalability limitations, we develop sparse Multivariate Granger Causality (sMVGC), a novel method premised on the assumption that true causal connections between signals are sparse, thereby constraining the candidate search space and improving scalability. To motivate sMVGC empirically, we simulate electrophysiological data with known causalities and model how the number of samples, signals, and MVAR order affect the performance and computation time of current algorithms. All algorithms scale at least quadratically with these parameters, yet differ in their sensitivity to signal versus sample count, and the sample requirements for accurate inference scale with the number of signals. Guided by these findings, sMVGC improves parameter scalability while preserving estimation accuracy, and we provide practical parameter ranges and model selection guidance for real-world analyses.",
+      "authors": [
+        "Pirenne, T.",
+        "Florin, E."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-02T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.10.01.679714v2.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Sparse multivariate Granger causality for temporal causal inference",
+      "llm_evidence_cn": "稀疏多变量格兰杰因果分析用于时序因果推断",
+      "llm_evidence": "稀疏多变量格兰杰因果分析用于时序因果推断",
+      "canonical_evidence": "稀疏多变量格兰杰因果分析用于时序因果推断",
+      "llm_tldr_en": "Develops sMVGC, a sparse Granger causality method that improves scalability by assuming sparse causal connections, validated on simulations.",
+      "llm_tldr_cn": "多变量自回归模型在高维全脑数据上难以估计，导致因果推断受限。本文假设真实因果连接稀疏，提出稀疏多变量格兰杰因果（sMVGC），通过约束搜索空间提升可扩展性。模拟实验验证了其有效性。",
+      "llm_tldr": "多变量自回归模型在高维全脑数据上难以估计，导致因果推断受限。本文假设真实因果连接稀疏，提出稀疏多变量格兰杰因果（sMVGC），通过约束搜索空间提升可扩展性。模拟实验验证了其有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.01352v1",
+      "source": "arxiv",
+      "title": "FlowTime: Towards Continuous Generative Watch Time Prediction via Flow-based Personalized Priors",
+      "abstract": "Watch time has emerged as a pivotal metric for optimizing deep user engagement in short-video recommender systems. However, current methods of watch time prediction (WTP) suffer from inherent paradigm-specific limitations. Direct Regression faces mean-collapse due to unimodal Gaussian assumptions, while Ordinal Regression is hampered by quantization errors from rigid discretization. Similarly, Discrete Generative Regression struggles with high inference latency and heuristic vocabulary design. Beyond these specific flaws, a shared deficiency is the inability to capture the intrinsic multimodality and heterogeneity of User-Item Interaction Patterns. To address these challenges, we first revisit the WTP problem from a causal perspective and identify these user-specific patterns as structural confounders that modulate watch time outcomes, where identical interests manifest as distinct watch time outcomes conditioned on diverse user habits. Then, we formally propose a new (or the fourth) paradigm -- Continuous Generative Regression, and introduce FlowTime, a novel method utilizing a One-step Generative Variational Autoencoder. FlowTime effectively circumvents the latency of iterative denoising while maintaining the expressivity of continuous latent spaces. Furthermore, we design a Flow-based Personalized Prior that leverages NFs to warp a standard Gaussian prior into a complex, history-conditioned manifold, thereby enabling the adaptive modeling of multimodal interaction patterns. Finally, we build TimeRec, the first open-source WTP Library, alongside a novel personalization metric to establish a rigorous benchmarking standard. Extensive offline experiments and online A/B tests demonstrate FlowTime's significant superiority over SOTA methods.",
+      "authors": [
+        "Hongxu Ma",
+        "Han Zhou",
+        "Chenghou Jin",
+        "Jie Zhang",
+        "Xiaoyu Yang",
+        "Chunjie Chen",
+        "Jihong Guan",
+        "Shuigeng Zhou"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-31T17:13:06+00:00",
+      "link": "https://arxiv.org/pdf/2606.01352v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Flow-based generative watch time prediction from a causal perspective",
+      "llm_evidence_cn": "基于流的生成长时间预测，从因果视角重审视",
+      "llm_evidence": "基于流的生成长时间预测，从因果视角重审视",
+      "canonical_evidence": "基于流的生成长时间预测，从因果视角重审视",
+      "llm_tldr_en": "Revisits watch time prediction from a causal perspective and proposes FlowTime using flow-based generative priors to capture multimodality and heterogeneity.",
+      "llm_tldr_cn": "当前观看时间预测方法受限于单峰假设或离散化误差，且忽略用户-物品交互模式的多模态性。本文从因果视角重新审视该问题，提出FlowTime，利用基于流的生成先验来捕获内在多模态性。实验证明其优于现有方法。",
+      "llm_tldr": "当前观看时间预测方法受限于单峰假设或离散化误差，且忽略用户-物品交互模式的多模态性。本文从因果视角重新审视该问题，提出FlowTime，利用基于流的生成先验来捕获内在多模态性。实验证明其优于现有方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.31580v1",
+      "source": "arxiv",
+      "title": "Giving Sensors a Voice: Multimodal JEPA for Semantic Time-Series Embeddings",
+      "abstract": "Transformer-based architectures have advanced sequence modeling in language and vision, yet general-purpose representation learning for heterogeneous multivariate time series remains underexplored. We introduce CHARM (Channel-Aware Representation Model), which incorporates channel-level textual descriptions into a Transformer encoder equivariant to channel order. CHARM is trained with a Joint Embedding Predictive Architecture (JEPA) and a novel loss promoting informative, temporally stable embeddings; latent-space prediction encourages robustness to sensor noise while description-aware gating provides interpretability through learned inter-channel relationships. Across anomaly detection, classification, and short- and long-term forecasting, the learned embeddings achieve strong performance using only a linear probe. Performance is driven primarily by the JEPA objective and conditioning architecture, with text descriptions serving as channel identifiers for cross-dataset generalization.",
+      "authors": [
+        "Utsav Dutta",
+        "Gerardo Pastrana",
+        "Sina Khoshfetrat Pakazad",
+        "Henrik Ohlsson"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-29T17:48:30+00:00",
+      "link": "https://arxiv.org/pdf/2605.31580v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative representation learning for time series via JEPA",
+      "llm_evidence_cn": "基于JEPA的时间序列生成式表示学习",
+      "llm_evidence": "基于JEPA的时间序列生成式表示学习",
+      "canonical_evidence": "基于JEPA的时间序列生成式表示学习",
+      "llm_tldr_en": "Introduces CHARM, a channel-aware model trained with Joint Embedding Predictive Architecture for semantic time-series embeddings, enabling robust representation learning.",
+      "llm_tldr_cn": "论文提出了CHARM模型，利用联合嵌入预测架构（JEPA）和通道级文本描述，学习异构多元时间序列的语义表示。该方法在异常检测、分类和预测任务中表现优异，为时间序列生成式学习提供了新途径。",
+      "llm_tldr": "论文提出了CHARM模型，利用联合嵌入预测架构（JEPA）和通道级文本描述，学习异构多元时间序列的语义表示。该方法在异常检测、分类和预测任务中表现优异，为时间序列生成式学习提供了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.03184v1",
+      "source": "arxiv",
+      "title": "FinStressTS: A Parametric Synthetic Benchmark for Time-Series Forecasting in Finance",
+      "abstract": "Financial forecasting is difficult due to low signal-to-noise ratios, latent factors, heavy tails, regime shifts, and jumps. Real-world benchmarks offer limited failure attribution: researchers can observe underperformance, but often cannot isolate why because mechanisms are unobservable and entangled. Real financial data reveal only one realized path, making it difficult to assess tail-risk calibration or data efficiency. We introduce FinStressTS, a mechanism-aware synthetic benchmark that links model behavior to controlled structural causes. FinStressTS comprises 30 diagnostic environments around six mechanism families: volatility clustering, multi-scale persistence, heavy-tailed shocks, regime switching, self-exciting jumps, and zero-inflated processes. We evaluate two tasks: point forecasting, using NMAE across five settings, and probabilistic forecasting, using CRPS under known data-generating mechanisms. We benchmark 15 models, from classical methods (HAR, VAR) to Transformer forecasters (PatchTST, iTransformer) and deep probabilistic architectures (DeepAR, TSFlow), and use learning curves to measure sample efficiency. Our evaluation reveals three insights. First, performance is mechanism-dependent: autoregressive and linear models are highly competitive, and often outperform Transformer-based models, in several volatility-, tail-, and jump-driven environments. Second, distributional alignment matters: parametric probabilistic models such as DeepAR calibrate well in stationary settings, while flexible models can help when distributions become multimodal or sparse. Third, neural models often require more data to match simple baselines, with larger gains mainly when learning latent regimes or complex distributions. FinStressTS provides an open framework for diagnosing failure modes and advancing risk-aware forecasting.",
+      "authors": [
+        "Jiaze Sun",
+        "Kelvin J. L. Koa",
+        "Ruiyang Ni",
+        "Yize Liu",
+        "Haonan Chen",
+        "Ke-Wei Huang"
+      ],
+      "primary_category": "q-fin.CP",
+      "categories": [
+        "q-fin.CP",
+        "cs.LG",
+        "q-fin.ST"
+      ],
+      "published": "2026-06-02T05:41:50+00:00",
+      "link": "https://arxiv.org/pdf/2606.03184v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "synthetic time series benchmark with controlled mechanisms",
+      "llm_evidence_cn": "带有控制机制的合成时间序列基准",
+      "llm_evidence": "带有控制机制的合成时间序列基准",
+      "canonical_evidence": "带有控制机制的合成时间序列基准",
+      "llm_tldr_en": "FinStressTS is a parametric synthetic benchmark generating time series with controlled structural causes for diagnosing forecasting model failures.",
+      "llm_tldr_cn": "FinStressTS是一个参数化合成基准，通过控制结构原因生成时间序列，用于诊断预测模型失效。它包含30个诊断环境，覆盖六种机制族，如波动率聚类和多尺度持续性，帮助研究人员归因模型性能问题。",
+      "llm_tldr": "FinStressTS是一个参数化合成基准，通过控制结构原因生成时间序列，用于诊断预测模型失效。它包含30个诊断环境，覆盖六种机制族，如波动率聚类和多尺度持续性，帮助研究人员归因模型性能问题。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.03803v1",
+      "source": "arxiv",
+      "title": "LiveBand: Live Accompaniment Generation in the Audio Domain",
+      "abstract": "We present LiveBand, a real-time system that generates high-fidelity music accompaniments to live audio input, respecting strict causal constraints. Our method trains a causal transformer generator in the continuous latent space of a pre-trained causal audio autoencoder, using adversarial sequence-level supervision from a discriminator. At each timestep, the generator receives only the causally available mix context and Gaussian noise, and predicts accompaniment latents without access to future mix frames or ground-truth target latents. Training is performed in a single parallel forward pass under causal masking, while streaming inference proceeds autoregressively with a rolling attention state. The model's training and inference computations are matched by design, eliminating teacher forcing and the associated exposure bias. On a multi-instrument music accompaniment benchmark, LiveBand improves over prior work on objective measures of audio quality, beat alignment, and mix adherence, while enabling real-time streaming generation without lookahead into the future on consumer hardware.",
+      "authors": [
+        "Marco Pasini",
+        "Javier Nistal",
+        "Mathias Rose Bjare",
+        "Stefan Lattner",
+        "George Fazekas"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI",
+        "eess.AS"
+      ],
+      "published": "2026-06-02T15:50:13+00:00",
+      "link": "https://arxiv.org/pdf/2606.03803v1",
+      "tags": [
+        "keyword:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "causal transformer generator for sequence generation with adversarial supervision",
+      "llm_evidence_cn": "使用因果变换器生成器进行序列生成带有对抗性监督",
+      "llm_evidence": "使用因果变换器生成器进行序列生成带有对抗性监督",
+      "canonical_evidence": "使用因果变换器生成器进行序列生成带有对抗性监督",
+      "llm_tldr_en": "LiveBand generates real-time music accompaniments using a causal transformer with adversarial training respecting strict causal constraints for live audio streams.",
+      "llm_tldr_cn": "针对实时音频伴奏生成问题LiveBand提出了一种因果变换器生成器在预训练因果音频自编码器的潜在空间中运行并使用对抗性序列级监督在每一步仅接收因果可用的混合上下文和高斯噪声通过因果掩码进行单次前向训练和自回归推理实验表明该方法能生成高保真伴奏且严格遵循因果关系",
+      "llm_tldr": "针对实时音频伴奏生成问题LiveBand提出了一种因果变换器生成器在预训练因果音频自编码器的潜在空间中运行并使用对抗性序列级监督在每一步仅接收因果可用的混合上下文和高斯噪声通过因果掩码进行单次前向训练和自回归推理实验表明该方法能生成高保真伴奏且严格遵循因果关系",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal sequence generation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
