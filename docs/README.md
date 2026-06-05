@@ -6,34 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-04
-- 运行时间：2026-06-04 22:03:11 UTC
+- 最新运行日期：2026-06-05
+- 运行时间：2026-06-05 21:32:54 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：3
-- 速读区：0
+- 本次总论文数：5
+- 精读区：4
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读两篇高分论文，聚焦时间因果结构学习与因果认知价值编码。
-
-最值得看：《Learning Temporal Causal Structure via Smooth Differentiable Optimization》（10分），提出平滑可微方法优化因果结构学习。
-
-建议普通读者关注：如何将因果推断与时间序列分析结合，或探索认知科学中感知运动系统如何编码因果信息。
-- 详情：[/202606/04/README](/202606/04/README)
+今日精读两篇9.0分论文，聚焦时间序列基础模型与自适应序列生成；最值得关注TS-ICL的上下文学习机制及扩散模型在序列数据中的灵活生成能力；建议追踪时间序列基础模型在少样本场景的落地进展。
+- 详情：[/202606/05/README](/202606/05/README)
 
 ### 精读区论文标签
-1. [Learning Temporal Causal Structure via Smooth Differentiable Optimization](/202606/04/2606.03227v1-learning-temporal-causal-structure-via-smooth-differentiable-optimization)  
-   标签：评分：10.0/10、query:tsc
-   evidence：通过可微优化学习时间序列因果结构
-2. [Sensorimotor encoding of epistemic value during goal-directed causal learning](/202606/04/biorxiv-10-64898-2026-06-03-729806-v1-sensorimotor-encoding-of-epistemic-value-during-goal-directed-causal-learning)  
+1. [TS-ICL: A Flexible Time-Indexed Foundation Model for Time Series via In-Context Learning](/202606/05/2606.05878v1-ts-icl-a-flexible-time-indexed-foundation-model-for-time-series-via-in-context-learning)  
    标签：评分：9.0/10、query:tsc
-   evidence：目标导向因果学习与认知价值
-3. [Generating Financial Time Series by Matching Random Convolutional Features](/202606/04/2606.05138v1-generating-financial-time-series-by-matching-random-convolutional-features)  
+   evidence：为时间序列训练生成因果数据
+2. [Diffusion Models for Adaptive Sequential Data Generation](/202606/05/2606.06007v1-diffusion-models-for-adaptive-sequential-data-generation)  
+   标签：评分：9.0/10、query:tsc
+   evidence：扩散模型用于自适应时间序列生成
+3. [REGEN: Reference-Guided Synthetic Multivariate Time Series Generation for Forecasting](/202606/05/2606.05264v1-regen-reference-guided-synthetic-multivariate-time-series-generation-for-forecasting)  
    标签：评分：8.0/10、query:tsc
-   evidence：通过匹配随机卷积特征生成金融时间序列
+   evidence：用于预测的合成多元时间序列生成
+4. [Causal Atlases from Entropic Inference: Bayesian Networks beyond Optimal DAGs](/202606/05/2606.06440v1-causal-atlases-from-entropic-inference-bayesian-networks-beyond-optimal-dags)  
+   标签：评分：8.0/10、query:tsc
+   evidence：基于熵推断的贝叶斯网络与因果图谱
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Discrete Causal Representations from Heterogeneous Domains: A Bayesian Approach with Social Survey Applications](/202606/05/2606.06288v1-discrete-causal-representations-from-heterogeneous-domains-a-bayesian-approach-with-social-survey-applications)  
+   标签：评分：7.0/10、query:tsc
+   evidence：异构数据中的因果表示学习
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,3353 @@
+Title: Discrete Causal Representations from Heterogeneous Domains: A Bayesian Approach with Social Survey Applications
+
+URL Source: https://arxiv.org/pdf/2606.06288v1
+
+Published Time: Fri, 05 Jun 2026 01:36:54 GMT
+
+Number of Pages: 50
+
+Markdown Content:
+Bayesian Multi-Domain Causal Representation Learning 
+
+# Discrete Causal Representations from Heterogeneous Domains: A Bayesian Approach with Social Survey Applications 
+
+Ankur Garg garga@uchicago.edu 
+
+Department of Statistics, University of Chicago 
+
+Michael Stettler michael.stettler@cin.uni-tuebgingen.de 
+
+University of Tübingen 
+
+Aaron Schein schein@uchicago.edu 
+
+Department of Statistics & Data Science Institute, University of Chicago 
+
+Julius von Kügelgen julius.vonkuegelgen@stat.math.ethz.ch 
+
+Seminar for Statistics, ETH Zürich 
+
+Editor: 
+
+## Abstract 
+
+Causal representation learning aims to infer the high-level latent causal concepts that give rise to observed low-level measurements. This is particularly relevant for heterogeneous data from different environments or domains since distribution shifts often arise through sparse, localized changes in some of the underlying causal mechanisms, while other parts of the generative process remain unchanged. Whereas identifiability of causal representations has been studied extensively, practical uncertainty-aware methods and real-world use cases remain less explored. In this work, we propose a Bayesian approach to learning causal representations from multi-environment data, focusing on the case of discrete causal concepts and unknown multi-node soft interventions. To this end, we translate causal assumptions and interpretability desiderata into suitable priors and parametric choices within a hierarchical model. We then devise an inference scheme based on sequential Monte Carlo sampling to approximate the resulting multimodal posterior. We showcase our approach through case studies on social survey data, where latent causal concepts correspond to cultural values or political opinions, measurements to survey responses, and environments to different countries or states. Our model infers meaningful high-level concepts and plausible causal relations among them, demonstrating its utility for learning causal representations of complex real-world data. 
+
+Keywords: causal representation learning, multi-environment data, sparse mechanism shifts, hierarchical Bayesian modeling, sequential Monte Carlo samplers (SMCS) 
+
+## 1 Introduction 
+
+Questions in the natural and social sciences are often causal in nature: What will be the effects of knocking out certain genes or implementing a new policy? What are the main causes of a given disease? What drives political polarization? Causal inference provides a principled framework for answering such questions from data (Neyman, 1923; Robins, 1986; Rubin, 1974; Wright, 1934). Causal models can be viewed as a generalization of statistical models and as a coarsening of mechanistic, differential-equation-based models (Peters et al., 2017). They describe not only the unperturbed, observational state of a system but a whole family of related distributions that capture how the involved variables would respond to manipulations or interventions (Pearl, 2009). To go beyond associations and support reasoning about interventions, causal models rely on additional, typically graphical structure and express the data-generating process as a collection of independent modules, which determine how each variable depends on its direct causes. 
+
+1
+
+> arXiv:2606.06288v1 [stat.ML] 4 Jun 2026 Garg, Stettler, Schein, von Kügelgen
+
+Sometimes, the qualitative causal relations among variables—usually in the form of a directed, acyclic causal graph—are known or can be derived from the temporal ordering of events (since causes generally precede their effects). Causal reasoning then aims to quantify the strength of causal relations such as the effect of a medical treatment or policy intervention on an outcome of interest, often in the presence of unobserved confounding. Methods for causal reasoning, mostly from observational (i.e., passively collected) data, have been extensively studied and successfully applied in fields such as epidemiology, econometrics, or social science (Angrist and Pischke, 2009; Hernán and Robins, 2020; Imbens and Rubin, 2015; Morgan and Winship, 2014). When the qualitative causal relations are unknown, they need to be inferred from data. This causal discovery task is notoriously difficult if only observational data is available and generally only possible up to an equivalence class of graphs (Spirtes et al., 2001). To overcome this challenge, a common ap-proach is to leverage heterogeneous data from multiple experiments, environments, or domains (Barein-boim and Pearl, 2016; Brouillard et al., 2020; Hauser and Bühlmann, 2012, 2015; Jaber et al., 2020; Perry et al., 2022; Peters et al., 2016; Tian and Pearl, 2001; Wu et al., 2025; Yang et al., 2018). A central assumption for causal reasoning and causal discovery is that the causal variables of interest are directly observed. However, we often only observe high-dimensional proxy measurements of the underlying causal variables. Examples include computer vision, where we observe pixels but care about the underlying entities and their relations; single-cell biology, where gene expression or microscopy images are used to infer latent gene programs (Uhler and Zhang, 2025); and, as explored in this work, political and social science, where questionnaire responses provide indirect evidence about respondents’ beliefs on the involved topics. Due to the mismatch between what is observed and the variables of interest, directly applying standard techniques for classical causal inference is challenging if not impossible in such settings. 
+
+Causal representation learning (CRL) aims to bridge this gap by extending causal modeling to settings in which the causal variables of interest are latent and only indirectly observed (Moran and Aragam, 2026; Schölkopf et al., 2021; Varıcı et al., 2026). In CRL, the observed data is modeled as arising from a measurement process whose inputs are high-level latent variables that are causally related (Silva et al., 2006). This allows shifting causal assumptions and modeling from the level of the raw data to an embedding or representation space inferred by machine learning models, thereby broadening the scope of causal inference to more complex settings. Motivated by impossibility results in causal discovery (Eberhardt et al., 2005) and representation learning (Hyvärinen and Pajunen, 1999; Locatello et al., 2019), prior studies of CRL have mostly been theoretical in nature and focused on the question of identifiability: under what conditions and up to what ambiguities can the generative process be recovered at the population level (i.e., assuming access to infinite data). Following breakthroughs in nonlinear independent component analysis (Hyvärinen and Morioka, 2016, 2017; Hyvärinen et al., 2019; Khemakhem et al., 2020), there has been a flurry of identifiability results for learning causal representations from observational data (Adams et al., 2021; Cai et al., 2019; Xie et al., 2020, 2022; Xu et al., 2024), time series (Ahuja et al., 2021; Lippe et al., 2022a,b; Yao et al., 2021, 2022), or simultaneously observed views or modalities (Brehmer et al., 2022; Daunhawer et al., 2023; von Kügelgen et al., 2021; Yao et al., 2024). In the present work, we consider the multi-domain setting of learning from interventional datasets collected from different environments or experimental conditions, which has also been studied ex-tensively from an identifiability perspective (Ahuja et al., 2023; Buchholz et al., 2023; Squires et al., 2023; Varıcı et al., 2025; von Kügelgen et al., 2023; Wendong et al., 2023; Xi and Bloem-Reddy, 2023; Zhang et al., 2023). However, much less work has been dedicated to robust probabilistic inference of causal representations from finite real-world data. Most existing results assume idealized conditions such as perfect single-node interventions, infinite data, and synthetic benchmarks. In contrast, imper-fect multi-node interventions (Ahuja et al., 2024; Bing et al., 2024; Varıcı et al., 2024), partial identifi-ability (Lachapelle et al., 2024; Zhang et al., 2024), and limited sample size are the norm in practice. These challenges motivate probabilistic approaches that can quantify uncertainty in the inferred structures and parameters (Wu et al., 2026). Targeting a posterior rather than a point estimate, allows 
+
+> 2Bayesian Multi-Domain Causal Representation Learning
+
+for incorporating different types of uncertainty: epistemic uncertainty due to a lack of data (finite sam-ple issues as encountered in practice) and aleatoric uncertainty due to inherent ambiguities in the gen-erative process (partial identifiability due to a lack of sufficiently informative interventions or domains). The Bayesian modeling literature has developed an extensive toolkit for inference in these types of structured latent variable models (Airoldi et al., 2014; Blei, 2014; Gelman et al., 2013). Originally developed for a variety of classical latent variable modeling tasks, these methods provide a natural fit for CRL: structured priors offer a flexible and modular way to impose suitable assumptions on both the latent causal variables and the measurement model. 
+
+1.1 Structure and Overview 
+
+In this work, we develop a Bayesian approach for the unsupervised learning of discrete causal representations from heterogeneous environments and empirically validate it on social survey data. In Section 2, we begin by describing the general problem setting. We formulate the assumed data generating process as a causal latent variable model, in which the unknown measurement process that produces the observed data from the underlying latent variables remains invariant and differences across domains arise through unknown, soft, multi-node interventions in the latent causal model (Figure 1). To facilitate interpretability, we focus on the case of discrete latent causal variables, which gives the generative process an interpretation as a finite mixture model with domain-specific mixture weights (Figure 2). In Section 3, we then propose a hierarchical Bayesian model (Figure 3) that follows the structure of the assumed generative process. For the latent causal model, this involves specifying suitable priors over the causal mechanisms and unknown interventions that take into account fundamental assump-tions from the causal inference literature such as modularity and sparse shifts (Table 1). In particular, we refine the sparse mechanism hypothesis (Schölkopf et al., 2021) for finite-samples with our definition of ε-intervention detectability (Assumption 3.3). We then operationalize this assumption by parame-terizing interventions as additive shifts in logit space and enforcing detectability through a novel KL-thresholded shift prior. This prior uses an approximation to the KL divergence between the base and intervened mechanisms (Figure 4) to rule out shifts that induce only negligible distributional changes. For the measurement model, we adopt a Gaussian mixture model, in which each latent is treated as an ordinal factor whose level contributes additively to the mean. This parametrizes how strongly each latent causal concept influences each observed variable, thereby aiding with interpretability. In Section 4, we present our approach to approximate posterior inference over the various model components. Due to the highly multimodal structure of the posterior, we employ sequential Monte Carlo sampling (SMCS), which embeds likelihood-tempered Markov chain Monte Carlo (MCMC) updates within a particle-based framework. Most model components admit closed-form conditional updates, and for the non-conjugate parameters we leverage data augmentation to obtain efficient Gibbs steps throughout. In Section 5, we use synthetic experiments and ablations to interpret and evaluate our model. We analyze the posterior landscape, showing that permutations of the latent structure induce distinct asymmetric modes (Figure 5), and identifying the model components that create and distinguish these modes (Figure 6). We also evaluate our inference procedure by comparing against alternative inference schemes and model ablations (Table 2). In Sections 6 and 7, we then demonstrate our method through case studies on political survey data, where we further develop a procedure for ascribing semantic meaning to the inferred latent variables and thus interpreting the learned causal representations. For data from the World Values Survey between 2017 and 2022 (Haerpfer et al., 2022) in Section 6, where domains correspond to countries, we recover latent factors corresponding to economic hardship, demographics and cultural conservatism; these align with the widely accepted Inglehart–Welzel map (Inglehart et al., 2005) of cross-cultural variation. Our model suggests a causal link {economic hardship, demographics} 
+
+→ cultural conservatism, and we further investigate country-specific patterns of interventions and 
+
+> 3Garg, Stettler, Schein, von Kügelgen
+
+Table 1: Overview of the high-level assumptions and desiderata on the causal generative process and their implementation within our Bayesian hierarchical latent variable model.                       
+
+> Assumption/Desideratum Implementation Reference
+> discrete causal concepts Zeach pe(X)is a finite mixture model Assumption 3.1, § 2.3 invariant measurement process mixture components p(X|Z=z)
+> shared across domains Assumption 2.1, § 3.5 modularity/independent causal mechanisms parameters Θof unintervened mecha-nisms p(Zℓ|PA ℓ)shared across domains Assumption 2.2, § 3.2 sparse mechanism shifts sparsity-inducing Beta-Bernoulli prior for intervention target indicators Ie
+> § 3.3 post-intervention mechanisms are sufficiently distinct prior based on KL-divergence truncation for domain-specific shifts ∆e
+> Assumption 3.3, § 3.4 ease of interpretability of causal concepts measurement model as additive effects for simple latent-question pairing § 3.5
+
+causal effects. For data from the US in Section 7, where domains correspond to urbanicity and census regions, we find a largely one-dimensional latent structure reflecting well-known partisan divisions. We further consider a large language model (LLM)-generated “semi-synthetic” version of the same dataset, where we introduce controlled interventions and show that our approach is able to recover the structure of partisanship and four issue opinions (Trade, Regulation, Immigration, and Poverty). In Section 8, we discuss our approach and findings in the context of related work and highlight limitations and avenues for future research. Section 9 concludes with a brief summary and outlook. 
+
+1.2 Contributions 
+
+Our main contributions can be summarized as follows. 1. Conceptual: We formulate the causal generative process for interventional multi-domain data (Sec-tion 2) as a hierarchical Bayesian model (Figure 3 and Section 3). This involves translating assump-tions from the causality literature into suitable modeling choices and priors (Table 1), including a re-finement of sparse mechanism shifts to consider detectability from finite samples (Assumption 3.3). 2. Technical: We develop a novel prior based on KL-divergence truncation (§ 3.4.1), as well as a Sequential Monte Carlo sampling–based inference procedure (Section 4) which leverages conjugate updates and likelihood tempering to efficiently explore a highly multimodal posterior over latent causal structures (Table 2 and Figures 5 and 6). 3. Empirical: We showcase our approach through case studies on the World Values Survey (Sec-tion 6), as well as on real and LLM–generated US political survey data (Section 7), highlighting how to interpret and derive causal insights from the estimated posterior over different model components. The present work thus constitutes one of the first successful demonstrations of applying a complete unsupervised CRL pipeline—from model formulation through estimation to interpretation of the inferred latent variables and structures—to complex real-world data. 
+
+> 4Bayesian Multi-Domain Causal Representation Learning
+
+1.3 Notation 
+
+We use the terms domain and environment interchangeably. Scalar quantities are written in non-bold (e.g., c or L), column vectors in bold lower case (e.g., x) and matrices in bold uppercase (e.g., M
+
+with mi representing the ith column). We use uppercase for random variables (e.g., Z and Z1) and lowercase for their realizations (e.g., z and z1). For n ∈ N≥1, we use the shorthand [n] := {1, ..., n }.Superscripts index domains (e.g., Ie with environment index e) and data points (e.g., xe,j with sample index j), subscripts index dimensions (e.g., Zℓ with latent variable index ℓ), and parentheses index parent configurations (e.g., θℓ(pa ℓ)). We denote the vector of all ones by 1 = (1 , 1, ..., 1) 
+
+and the identity matrix by I. In a slight abuse of notation, we use p to refer to both probability distributions and their associated probability mass or density functions. 
+
+## 2 Problem Setting: CRL from Heterogeneous Domains 
+
+We begin by formalizing the problem of learning causal representations from high-dimensional mea-surements across multiple related domains. In this section, we focus on a general nonparametric de-scription of the setting. Specific modeling choices and priors are deferred to Section 3. Specifically, we formulate the data-generating process as a latent variable model, in which the latent variables are re-lated through an unknown causal model (§ 2.1). Differences among domains are then modeled through unknown soft, or imperfect, interventions in the shared latent causal model, subject to the same invari-ant measurement process (§ 2.2). We focus on the case of discrete latent variables; the data generating process then takes the form of a decomposable finite mixture model with fixed mixture distributions but variable mixture weights across domains, resulting from interventions on subsets of latents (§ 2.3). 
+
+2.1 Causal Latent Variable Model 
+
+We formalize the assumed data generating process for the observed random vector X as a latent variable model with latent variables Z. A latent variable model is a generative model that describes a hierarchical data-generating process. Rather than specifying the distribution p(X) directly, we specify a (marginal) distribution p(Z) over the latent variables and a conditional p(X | Z) over the observed variables given the latent variables, which we will refer to as a measurement model .Together, this defines the joint distribution p(Z, X) = p(Z)p(X | Z) which in turn induces the marginal data distribution p(X) via p(X) = R p(X | Z)p(Z)d Z .
+
+Rather than choosing a single fixed latent distribution p(Z), we assume that the latent variables 
+
+Z = ( Z1, ..., Z L) are related through a causal model. The causal relations among Z are encoded by a causal graph G, i.e., a directed acyclic graph (DAG) with vertices Z and directed edges Zj → Zℓ
+
+indicating that Zj is a direct cause or causal parent of Zℓ. The set of all such causal parents is denoted PA ℓ ⊆ Z \ { Zℓ}. The joint distribution p(Z) of a causal model with causal graph G is Markovian w.r.t. G, i.e., it obeys the following factorization, 
+
+p(Z) = p(Z1, . . . , Z L) = 
+
+> L
+
+Y
+
+> ℓ=1
+
+p  Zℓ | PA ℓ
+
+ . (2.1) where the conditionals p  Zℓ | PA ℓ
+
+ in Eq. (2.1) are called the causal mechanisms .What makes the model causal is that it also describes a family of interventional distributions, i.e., distributions that arise from replacing a subset of the causal mechanisms with new mechanisms 
+
+˜p(Zℓ | PA ℓ). The principle of independent causal mechanisms (ICM; Peters et al., 2017) states that causal mechanisms are modular in the sense that changing some of them does not affect the other mechanisms. Hence, the distribution for an intervention that changes the mechanisms of Zℓ for all ℓ
+
+in some subset I ⊆ [L] is given by 
+
+˜pI (Z) = Y
+
+> ℓ∈I
+
+˜p  Zℓ | PA ℓ
+
+ Y 
+
+> ℓ̸∈I
+
+p  Zℓ | PA ℓ
+
+ . (2.2) 
+
+> 5Garg, Stettler, Schein, von Kügelgen
+
+Z1 Z2
+
+Z3 Z4
+
+Z1 Z2
+
+Z3 Z4
+
+Z1 Z2
+
+Z3 Z4
+
+e = 1 :
+
+e = 2 :
+
+e = 3 :
+
+z ∼ p1(Z)
+
+z ∼ p2(Z)
+
+z ∼ p3(Z)
+
+p(X | Z)
+
+D1 ∼ p1(X)
+
+D2 ∼ p2(X)
+
+D3 ∼ p3(X)
+
+Figure 1: Multi-domain CRL with soft, multi-node interventions. Illustration of our multi-domain setup with L = 4 causal variables Z = ( Z1, Z 2, Z 3, Z 4) and |E| = 3 domains. The intervention targets Ie are given by I1 = {3}, I2 = {4}, and I3 = {1, 2}, and the corresponding environment-specific (changed) mechanisms by p1(Z3 | Z1), p2(Z4 | Z1, Z 2, Z 3), and {p3(Z1), p 3(Z2)}, respectively. 
+
+2.2 Interventional Multi-Domain Data 
+
+Causal representation learning from i.i.d. data is known to be impossible without strong additional assumptions and richer, heterogeneous data is therefore typically required. In the present work, we consider data from multiple environments or domains, which has been shown to provide useful causal learning signals when combined with suitable causal assumptions (Eastwood et al., 2022; Heinze-Deml et al., 2018; Krueger et al., 2021; Perry et al., 2022; Peters et al., 2016; Rojas-Carulla et al., 2018). In the multi-domain setting, we observe datasets D = {D e}e∈E where e ∈ E indexes different domains or environments. Each such dataset De is assumed to be an i.i.d. sample of observations of X of size me from a domain-specific distribution pe(X), i.e., 
+
+De = {xe, 1, ..., xe,m e } i.i.d.
+
+∼ pe(X) for e ∈ E (2.3) On its own, such multi-domain data is not necessarily useful, since the domain-specific distribu-tions pe need not be related in any meaningful way. However, we will assume that certain parts of the data generating process are shared across domains. Concretely, we assume that all domains share the same invariant measurement model p(X | Z) and arise from (unknown) interventions to some causal mechanisms in a shared causal model, as illustrated in Figure 1. 
+
+Assumption 2.1 (Invariant measurement model) The observation model p(X | Z) is invari-ant across domains. That is, observations xe in Eq. (2.3) are generated as 
+
+ze ∼ pe(Z), xe ∼ p(X | Z = ze). (2.4) 
+
+Assumption 2.2 (Shared mechanisms) Each domain e independently results from a shared latent causal model by intervening on an (unknown) subset Ie ⊆ [L] of mechanisms. That is, for all e ∈ E ,the interventional joint latent distribution pe(Z) can be written as 
+
+pe(Z) = pe(Z1, ..., Z L) = Y
+
+> ℓ∈I e
+
+pe  Zℓ | PA ℓ
+
+ Y
+
+> ℓ∈[L]\I e
+
+p  Zℓ | PA ℓ
+
+ , (2.5) 
+
+where p(Zℓ | PA ℓ) are the (base) causal mechanisms from Eq. (2.1) and pe(Zℓ | PA ℓ) are changed domain-specific mechanisms. 
+
+> 6Bayesian Multi-Domain Causal Representation Learning
+
+Figure 2: Multi-domain data for CRL with discrete causal latents. We illustrate an example data generating process with L = 3 binary causal latents Z = ( Z1, Z 2, Z 3), a Gaussian measurement model p(X | Z) giving rise to D = 2 continuous observations X = ( X1, X 2), and |E| = 4 domains (columns; different markers) corresponding to an observational reference setting and interventions on 
+
+Z1, Z2, and Z3 (from left to right). The distributions pe(X) over observed variables (top row; kernel density estimates based on Ne = 250 observations) are mixtures of Gaussians with fixed mixture components corresponding to the 23 = 8 distinct joint latent states z (different colours). The mixture weights are given by pe(Z = z) and change across domains (bottom row). The center row shows the underlying data annotated with the true but unobserved mixture indices; the cluster locations are shared, but the proportions of observations assigned to each cluster vary by domain. Assumption 2.2 is a common assumption for causal analyses of multi-domain data (Perry et al., 2022; Peters et al., 2016; Rojas-Carulla et al., 2018) that is also typical for multi-domain causal representation learning (Ahuja et al., 2023; Buchholz et al., 2023; Squires et al., 2023; Varıcı et al., 2025; von Kügelgen et al., 2023; Wendong et al., 2023; Zhang et al., 2023). However, the aforementioned identifiability-focused CRL studies mostly consider perfect or hard interventions, which remove any influence from the causal parents such that pe(Zℓ | PA ℓ) = pe(Zℓ). We instead consider more general imperfect or soft interventions, which modify the dependence on causal parents, pe(Zℓ | PA ℓ)̸ = p(Zℓ | PA ℓ).
+
+Remark 2.3 Assumption 2.2 alone imposes no restriction on the generating process if Ie = [ L].However, when combined with the sparse mechanism shift hypothesis (Perry et al., 2022; Schölkopf et al., 2021)—which we will formalize in § 3.3—this does impose a meaningful structural assumption. 
+
+2.3 Discrete Causal Representations and Finite Mixture Models 
+
+The case with continuous Z can be quite challenging and typically requires strong assumptions such as linear causal relations and perfect single-node interventions (see, e.g., Ahuja et al., 2023; Buchholz et al., 2023; Squires et al., 2023; Varıcı et al., 2025; von Kügelgen et al., 2023; Zhang et al., 2023). Here, we focus on the case in which the latent causal variables are discrete, i.e., each Zi takes values in a finite domain Zi. In this case, the marginal domain-specific distributions pe(X) are given by 
+
+pe(X) = X
+
+> z∈Z
+
+pe(Z = z)p(X | Z = z) (2.6) 
+
+> 7Garg, Stettler, Schein, von Kügelgen
+
+where Z = Z1 × ... × Z L. In other words, each pe(X) is a finite mixture model with |Z| components indexed by the latent joint states z. The mixture weights are domain-specific and given by pe(Z = z),whereas the mixture distributions are shared (i.e., domain-invariant) and given by p(X | Z = z). An example of this setting with two binary latents Z1, Z 2, bivariate Gaussians for p(X | Z), and |E| = 3 
+
+domains is illustrated in Figure 2. Finite mixture models have been studied extensively, and various situations are known in which the mixture model is identifiable, e.g., when p(X | Z = z) is from the exponential family (Yakowitz and Spragins, 1968). In this case, the number of mixture components, as well as the corresponding mixture weights and distributions, can be recovered from pe(X). However, the mixture model in Eq. (2.6) can also arise from a single categorical latent with Z states. Hence, mixture identifiability on its own is insufficient to reveal the underlying latent causal structure. 
+
+## 3 Hierarchical Bayesian Model for Multi-Domain Discrete CRL 
+
+In this section, we present our Bayesian approach to learning discrete causal representations from het-erogeneous environments by explicitly incorporating the causal structure and assumptions from Sec-tion 2 into a hierarchical Bayesian generative model. Given the observations of X across multiple domains in Eq. (2.3) , our goal is to infer the unobserved parts of the data-generating process: the latent causal variables and their relations, the unintervened mechanisms, the domain-specific inter-vention targets and intervened mechanisms, and the measurement model. To this end, we need to first parametrize the various model components and place suitable priors on all unknowns. A rep-resentation of the resulting graphical model is shown in Figure 3. 
+
+3.1 Causal Variables and Causal Graph 
+
+The causal graph G determines the factorization of p(Z) into causal mechanisms in Eq. (2.1) . In particular, it determines the set of parents PA ℓ of each Zℓ and thus also affects the number of pa-rameters Θℓ for the corresponding mechanism. As a result, models based on different graphs can have a different number of parameters, which poses implementation challenges for comparing models and inferring a posterior over graphs. Therefore, we focus on the case in which the cardinalities |Z ℓ|
+
+of all discrete latent variables are assumed to be the same. 1
+
+Assumption 3.1 (Same cardinality for all latents) |Z ℓ| = K for all ℓ ∈ [L], where K is known. 
+
+In this case, the latent variables are interchangeable—recall that the intervention targets Ie are also unknown—and we can fix an arbitrary partial causal ordering w.l.o.g. (Squires et al., 2023; von Kügelgen et al., 2023). We choose the natural ordering Z1 ⪯ Z2 ⪯ ... ⪯ ZL for convenience. Further, we assume that the graph is complete w.r.t. this ordering, i.e., PA ℓ = {Z1, ..., Z ℓ−1} for all ℓ ∈ [L].
+
+Assumption 3.2 (Fixed causal graph) The latent causal graph G is the complete directed acyclic graph consistent with the ordering Z1 ⪯ Z2 ⪯ ... ⪯ ZL.
+
+While p(Z) may not be faithful (Spirtes et al., 2001) to the complete graph (i.e., it may contain extra edges that are not in the true G), faithfulness is not strictly required (Wendong et al., 2023) since pe(Z) is still Markov w.r.t. the complete graph, i.e., the factorization Eq. (2.1) still holds. If the Θℓ are (approximately) correctly recovered, unnecessary edges can be pruned post-hoc based on the dependencies encoded in the learnt mechanisms.                                
+
+> 1. In principle, different joint latent states z̸=z′can share the same p(X|Z=z) = p(X|Z=z′), i.e., the mixture model in Eq. (2.6) can be degenerate. Thus, if the cardinalities were different to begin with, we can choose the largest one for each Zℓ. Any excess capacity should then result in redundancies in p(Z=z)(i.e., in the mechanism parameters Θand Θe) and p(X|Z=z). This assumption thus comes w.l.o.g.
+> 8
+
+Bayesian Multi-Domain Causal Representation Learning 
+
+cℓ Θℓ
+
+Ieℓ ∆eℓ
+
+ze,j 
+
+xe,j 
+
+M σ2  
+
+> e∈ E j=1 , ..., N e
+> ℓ=1 , ..., L
+
+Figure 3: Graphical model representation for Bayesian multi-domain CRL with categorical causal latents. Shaded and white circles denote observed and unobserved random variables, respec-tively. Plates indicate that the contained subgraph and incoming edges are repeated across the corre-sponding plate indices j, ℓ, e . For each domain e ∈ E , we have a sample of Ne observations xe,j which result from local latent causal variables ze,j via a measurement model p(X | Z) parametrized by M
+
+and σ2. The base mechanisms of each Zℓ are parametrized by Θℓ, the binary unknown intervention tar-gets Ieℓ are parametrized by cℓ, and the corresponding domain-specific shifts are parametrized by ∆eℓ .
+
+3.2 Base Causal Mechanisms 
+
+Since each Zℓ is discrete, all marginals and conditionals in the factorization of p(Z) in Eq. (2.1) (i.e., the causal mechanisms) are given by (conditional) Categorical distributions. For all ℓ ∈ [L] and all values pa ℓ ∈ PA ℓ := ×Zj ∈PA ℓ Zj of the causal parents, we parametrize these categoricals as follows: 
+
+p (Zℓ = k | PA ℓ = pa ℓ) = softmax  θℓ (pa ℓ) 
+
+> k
+
+(3.1) for parameter vectors {θℓ(pa ℓ) ∈ RK }pa ℓ∈PA ℓ where softmax (x) : RK → ∆K−1 ⊂ (0 , 1) K denotes the softmax function 
+
+softmax( x)k = exp( xk)
+
+PKj=1 exp( xj ) (3.2) and ∆K−1 = {(π1, ..., π K ) : πk ≥ 0, PKk=1 πk = 1 } denotes the (K − 1) -dimensional probability simplex. We collect the parameters θℓ(pa ℓ) for all values of pa ℓ in a matrix Θℓ ∈ RK×|PA ℓ|.
+
+3.2.1 Mechanism Priors 
+
+We place a multivariate Gaussian prior on the mechanism parameters, i.e., 
+
+ θℓ(pa ℓ)
+
+> ℓ∈[L],pa ℓ∈PA ℓ
+> i.i.d.
+
+∼ NK
+
+
+
+0, ΣΘ
+
+
+
+, (3.3) with covariance matrix given by 
+
+ΣΘ = diag 
+
+
+
+σ2Θ
+
+
+
+− 1
+
+K σΘσ⊤ 
+
+> Θ
+
+(3.4) for some hyperparameter vector σΘ ∈ RK 
+
+> +
+
+, which controls the variance of each logit dimension. Larger values of σi increase the prior uncertainty on the corresponding logit θi. Conversely, smaller σi values shrink the logits toward zero, concentrating the prior over nearly uniform categorical probabilities. 
+
+9Garg, Stettler, Schein, von Kügelgen 
+
+The specific covariance structure in Eq. (3.4) is chosen to project out the constant vector 
+
+1K := (1 , 1, ..., 1) . This is useful because the distribution induced by a vector of logits θ ∈ RK is invariant to shifting all entries by the same constant, i.e., softmax (θ) = softmax (θ + a1) for all a ∈ R.The choice from Eq. (3.4) removes the redundant degree of freedom due to the simplex constraint. 
+
+3.3 Intervention Targets 
+
+Whether the base causal mechanism p(Zℓ | PA ℓ) of Zℓ or an intervened version pe(Zℓ | PA ℓ) thereof is active in domain e is determined by the (unknown) intervention targets Ie. We model these as binary vectors Ie ∈ { 0, 1}L where Ieℓ = 1 indicates an intervention on Zℓ|PA ℓ in domain e, and 
+
+Ieℓ = 0 indicates no intervention. According to the ICM principle (Peters et al., 2017), the causal mechanisms “do not inform or influence each other”. Hence, Ie 
+
+> 1
+
+, ..., IeL should be independent within any domain e. Moreover, we assume that the intervention targets are chosen independently for each domain, i.e., that {I e}e∈E are jointly independent. However, we do allow the probability of an intervention to differ across ℓ ∈ [L], encoding the notion that some causal mechanisms may be more stable than others. The intervention targets can thus be viewed as the result of independent (but biased) coin flips, i.e., for all ℓ ∈ [L]:
+
+(Ieℓ )e∈E 
+
+> i.i.d.
+
+∼ Bernoulli( cℓ) , (3.5) where the mechanism change probabilities cℓ ∈ [0 , 1] have the interpretation of instability parameters ,with cℓ = 0 indicating perfect stability (i.e., the mechanism for Zℓ|PA ℓ never changes) and cℓ = 1 
+
+indicating complete instability (i.e., the mechanism changes in each new domain). 
+
+3.3.1 Instability Priors 
+
+Motivated by the sparse mechanism shift hypothesis (Perry et al., 2022; Schölkopf et al., 2021), which states that distribution changes tend to only affect a few factors in Eq. (2.1) , we choose an asymmetric prior for the instability parameters cℓ ∈ [0 , 1] , which puts more probability mass on small shift probabilities, thus inducing sparsity. Specifically, we choose 
+
+(cℓ)ℓ∈[L]
+
+> i.i.d.
+
+∼ Beta( αc, β c) (3.6) with fixed αc, β c such that the expected shift probability for each Zℓ|PA ℓ in any new domain, given by 
+
+E[cℓ] = αc 
+
+> αc+βc
+
+, is small. In all experiments, we set αc = 1 , β c = 9 , for a prior expected sparsity of 90% .
+
+3.4 Intervened Mechanisms 
+
+In domains where an intervention occurs on a mechanism Zℓ|PA ℓ (i.e., if Ieℓ = 1 ), we model the resulting intervened mechanism pe(Zℓ | PA ℓ) as an exponential tilting of the base mechanism. Specifically, for any domain e and parent configuration pa ℓ ∈ PA ℓ, we define 
+
+pe  Zℓ = k | PA ℓ = pa ℓ
+
+ = softmax 
+
+
+
+θℓ(pa ℓ) + Ieℓ δeℓ (pa ℓ)
+
+
+
+> k
+
+, (3.7) where δeℓ (pa ℓ) encodes the intervention-specific perturbation of the logits relative to the base mechanism θℓ(pa ℓ), which determines both the direction of the change in probability mass across categories and the magnitude of that shift. Similar to the base mechanisms Θℓ, we collect the parameters δeℓ (pa ℓ) for all values of pa ℓ in a matrix ∆eℓ ∈ RK×|PA ℓ|.Given the intervention targets and base/intervened causal mechanisms, we can now define the distributions for the different domain-specific realizations of the latent causal variables. According to Assumption 2.2 and Eq. (3.1), for each domain e ∈ E we have: 
+
+
+
+ze,i  
+
+> i∈[Ne]
+> i.i.d.
+
+∼ pe(Z) = 
+
+> L
+
+Y
+
+> ℓ=1
+
+pe  Zℓ | PA ℓ
+
+ = Y   
+
+> ℓ:Ieℓ=1
+
+pe  Zℓ | PA ℓ
+
+ Y   
+
+> ℓ:Ieℓ=0
+
+p  Zℓ | PA ℓ
+
+ (3.8) 
+
+> 10 Bayesian Multi-Domain Causal Representation Learning
+
+3.4.1 Shift Priors 
+
+With finite data, arbitrarily small interventions are not statistically distinguishable from no interven-tion. Thus, sparsity of interventions alone, as induced by the Beta-Bernoulli prior over intervention tar-gets from § 3.3.1, is not sufficient for finite-sample recovery. A shift may be technically nonzero while inducing only an arbitrarily small, undetectable change in the conditional mechanism pe(zℓ | pa ℓ).As formalized in Lemma A.1, interventions that induce a sufficiently small change in KL cannot be reliably distinguished from the null (i.e., unintervened) mechanism. This results in an unstable sparse recovery problem: small environment-specific fluctuations can be explained by many weak interven-tions, even when these fluctuations are due to finite-sample noise or mild model misspecification. This suggests a refinement or operationalization of the sparse mechanism hypothesis (Schölkopf et al., 2021) for finite-sample scenarios: “interventions with non-negligible effects are sparse”. We formalize this by imposing the following detectability condition requiring active interventions to induce a sufficiently large distributional change. 
+
+Assumption 3.3 ( ε-intervention detectability) For every candidate intervention (ℓ, e ), the in-tervention is either absent or induces a KL shift of at least ε for all parent configurations: 
+
+p(Zℓ | pa ℓ) = pe(Zℓ | pa ℓ) for all pa ℓ ∈ PA ℓ,
+
+or 
+
+KL  p(Zℓ | pa ℓ) pe(Zℓ | pa ℓ) ≥ ε for all pa ℓ ∈ PA ℓ.
+
+Thresholded detectability conditions of this kind appear frequently in the finite-sample causal discovery literature, where causal dependencies or intervention effects must be bounded away from zero to be distinguishable from statistical noise (Chevalley et al., 2025; Uhler et al., 2013; Zhang and Spirtes, 2002). The closest analogue to our condition is ε-interventional faithfulness (Chevalley et al., 2025) which imposes a very similar divergence-based lower bound on intervention-induced distributional changes. More generally, such minimum signal strength conditions are common in various settings such as sparse support recovery, where beta-min assumptions require nonzero coefficients to be sufficiently large (Wainwright, 2009), and conditional independence testing, where alternatives are typically required to be separated in total variation distance (Canonne et al., 2018; Neykov et al., 2021). To specify this shift prior, we begin with a similar structure to the mechanism parameters. The environment-specific shifts δeℓ in logit space are also drawn from a multivariate normal distribution 
+
+N (0, Σ∆) with covariance given by 
+
+Σ∆ = diag 
+
+
+
+σ2∆
+
+
+
+− 1
+
+K σ∆σ⊤ 
+
+> ∆
+
+(3.9) for some hyperparameter σ∆ ∈ RK 
+
+> +
+
+. Similar to ΣΘ from Eq. (3.4) , the specific form in Eq. (3.9) is chosen to project out logit shifts of the form a · 1 which have no effect, see § 3.2.1 for details. For tractability, we do not enforce the KL condition in Assumption 3.3 exactly. Instead, we approximate the KL-shift magnitude, 
+
+KL  softmax( θ) softmax( θ + δ) ,
+
+by evaluating it at θ = 0 and taking its second-order expansion with respect to δ. This gives the approximate constraint, 
+
+12 δ⊤Hδ ≥ ε, where H = 1
+
+K
+
+
+
+I − 1
+
+K 11 ⊤
+
+
+
+, (3.10) and yields a θ-independent truncation region, which keeps the shift prior computationally atractable while ruling out nearly trivial shifts. We find this approximation sufficient in the small-KL ( ε = 0 .1)regime used in our experiments; see Figure 4 for an illustration and Section A for details. 
+
+> 11
+
+Garg, Stettler, Schein, von Kügelgen 3               
+
+> 2
+> 1
+> 0
+> 1
+> 2
+> 1
+> 3210123
+> 2
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> 332
+> 1
+> 0
+> 1
+> 2
+> 1
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> 2
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> 33210123
+> PC 1
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> PC 2
+> 0.10
+> 0.25
+> 0.50
+> 1.00
+> DKL ()
+> 12H0
+
+Figure 4: Illustration of the quadratic KL constraint on δ. (Left, Middle) Samples of δ, colored by the quadratic approximation 12 δ⊤Hδ . The red arrow indicates the constant vector 1 which is orthogonal to the subspace of shift vectors. (Right) Contours of the exact KL divergence and its quadratic approximation, shown on a two-dimensional projection of δ onto its principal components. The (unnormalized) truncated shift prior is then given by 
+
+ δeℓ (pa ℓ)
+
+> e∈E ,ℓ ∈[L],pa ℓ∈PA ℓ
+> i.i.d.
+
+∼ p  δ | Σ∆, ε  ∝ N K (0, Σ∆) · 1
+
+ 12 δ⊤Hδ ≥ ε
+
+
+
+. (3.11) Empirically, we found that softer sparsity-inducing priors, such as the Beta-Binomial priors on intervention indicators alone, were insufficient to consistently recover sparse interventions. These priors penalize the number of interventions but do not rule out many weak shifts, and as such often hallucinated extra interventions when fit to data. Hard KL-thresholding was significantly more robust, as shown in § 5.2. This robustness is critical, since sparse intervention recovery is what enables recovery of the latent causal order though the sparse mechanism shift hypothesis. 
+
+3.5 Measurement Model and Observations 
+
+Each latent vector ze,j generates a corresponding observation xe,j through a domain-invariant measurement model p(x | z). Here, we adopt the following additive Gaussian measurement model, 
+
+xe,j ∼ N D
+
+
+
+μ
+
+
+
+ze,j 
+
+, diag 
+
+
+
+σ2
+
+. (3.12) The mean function μ : RL → RD is defined as 
+
+μ(z) = m0 + X
+
+> ℓ∈[L]
+
+mℓzℓ. (3.13) where each mℓ represents the additive contribution of latent coordinate Zℓ to the mean of x. We collect these mean parameters together with an offset m0 as columns in a measurement model matrix 
+
+M ∈ RD×(L+1) = m0 . . . mL
+
+.Here, each Zℓ is centered around 0 with unit spacing: 
+
+zℓ ∈ { 1, 2, · · · , K } − K + 1 2 , e.g., {− 2, −1, 0, 1, 2} or 
+
+
+
+− 32 , − 12 , 12 , 32
+
+
+
+.
+
+This parameterization is chosen with interpretability in mind. In particular, mℓ can be interpreted as an effect-size vector where large absolute entries indicate strong associations between latent variable zℓ
+
+and observed dimensions of x.
+
+12 Bayesian Multi-Domain Causal Representation Learning 
+
+3.5.1 Measurement Model Priors 
+
+We assume that the offset m0 and the additive influences mℓ ∈ RD of each Zℓ on the mean of X
+
+(i.e., the columns of M ) are i.i.d. draws from a standard isotropic Gaussian, i.e., 
+
+(mℓ)ℓ∈[L]∪{ 0}
+
+> i.i.d.
+
+∼ ND (0, I) . (3.14) Further, we assume that the component-wise variances are sampled i.i.d. from an inverse Gamma prior which puts higher weight on small variances, 
+
+(σ2
+
+> d
+
+)d∈[D]
+
+> i.i.d.
+
+∼ Inv −Γ( ασ = 3 , β σ = 1) . (3.15) 
+
+3.6 Permutation Symmetry of the Measurement Model 
+
+A central aspect of the measurement model is its invariance under relabeling of latent coordinates, which is crucial to recover the causal relationships among the inferred latent variables Z1, . . . , Z L.Formally, for any permutation π ∈ SL of the L latent coordinates, 
+
+p(x | z, M , σ) = p(x | zπ , Mπ , σ), (3.16) where 
+
+zπ = ( zπ(1) , . . . , z π(L)), Mπ = m0 mπ(1) . . . mπ(L)
+
+ .
+
+Because we fix the causal graph to the complete DAG with ordering Z1 ⪯ · · · ⪯ ZL, inference over causal relations does not proceed by modifying the graph, but rather by what information is encoded in latents that come earlier (e.g., Z1) versus later (e.g., ZL) in the fixed causal hierarchy. The measurement model determines this encoding by relating latent concepts to observed responses. In our additive Gaussian model specifically, this interpretation is encoded in the columns of the measurement matrix M : the column mℓ determines how Zℓ affects the mean of x. Therefore, permutation of the columns of M acts as a permutation of the causal order of latent concepts. As a result, the measurement model parametrization is not arbitrary: it must admit permutations of its parameters so that any reordering of the latent coordinates can be correspondingly represented. Importantly, while the measurement model is symmetric, the complete model is not. As we show in § 5.1, the priors over Z introduce asymmetries that allow distinguishing causal orders. 
+
+Remark 3.4 (More General Measurement Models) The property that permutations of latent coordinates can be paired with corresponding permutations of measurement model parameters to induce the same distribution is not specific to our choice of an additive Gaussian model. Any measurement model whose parameters can be symmetrically permuted to reflect a relabeling of the latent coordinates will exhibit the same permutation invariance, and could be used in place of the additive Gaussian model. 
+
+> 13 Garg, Stettler, Schein, von Kügelgen
+
+3.7 Complete Model 
+
+The full generative process described in the previous subsections is given by: 
+
+∀ℓ ∈ [L], pa ℓ ∈ PA ℓ : θℓ(pa ℓ) ∼ N K (0, ΣΘ)
+
+∀ℓ ∈ [L] : cℓ ∼ Beta( αc, β c)
+
+∀e ∈ E , ℓ ∈ [L] : Ieℓ ∼ Bernoulli( cℓ)
+
+∀e ∈ E , ℓ ∈ [L], pa ℓ ∈ PA ℓ : δeℓ (pa ℓ) ∼ p  δ | Σ∆, ε  ∝ N K (0, Σ∆) · 1
+
+n 12 δ⊤Hδ ≥ ε
+
+o
+
+∀e ∈ E , ℓ ∈ [L], j ∈ [Ne] : ze,j ℓ ∼ Categorical 
+
+
+
+softmax 
+
+
+
+θℓ
+
+ pa e,j ℓ
+
+ + Ieℓ δeℓ
+
+ pa e,j ℓ
+
+
+
+∀ℓ ∈ [L] ∪ { 0} : mℓ ∼ N D (0, I)
+
+∀d ∈ [D] : σ2 
+
+> d
+
+∼ Inv −Γ( ασ , β σ )
+
+∀e ∈ E , j ∈ [Ne] : xe,j ∼ N D
+
+
+
+m0 + P 
+
+> ℓ∈[L]
+
+mℓze,j ℓ , diag  σ2
+
+For notational convenience, we introduce the shorthands Θ = ( Θℓ)ℓ∈[L], c = ( c1, ..., c L),
+
+IE = ( Ieℓ )ℓ∈[L],e ∈E , ∆E = ( ∆eℓ )ℓ∈[L],e ∈E , ZE = ( ze,j )e∈E ,j ∈[N e], and XE = ( xe,j )e∈E ,j ∈[N e], and sepa-rately collect the parameters of the latent distributions and measurement model respectively into 
+
+Φ := 
+
+
+
+Θ, c, IE , ∆E 
+
+,
+
+Ψ := ( M , σ) .
+
+The joint distribution of all observed and unobserved variables then factorizes as follows: 
+
+p
+
+
+
+Φ, Ψ, ZE , XE 
+
+= p (Φ) p (Ψ) p
+
+
+
+ZE | Φ
+
+
+
+p
+
+
+
+XE | ZE , Ψ
+
+
+
+Unless otherwise specified, hyper-parameters are fixed across all experiments. In particular, we use 
+
+αc = 1 and βc = 9 as a sparsity-inducing Beta prior on the instability parameters cℓ, and ασ = 3 and 
+
+βσ = 1 for the inverse-gamma prior on the noise variances σ2
+
+> d
+
+. For the mechanism priors, we use ε = 0 .1
+
+as the lower threshold for the shift prior, and σΘ = σ∆ = 1 to construct the covariances ΣΘ and Σ∆.
+
+## 4 Posterior Inference with Sequential Monte Carlo Sampling 
+
+Given a set of observations XE collected across multiple environments, our inference target is the joint posterior distribution over the latent causal variables ZE , the parameters governing the latent distributions Φ, and the parameters of the measurement model Ψ conditioned on the observed XE .Formally, we seek to approximate 
+
+p
+
+
+
+Φ, Ψ, ZE | XE 
+
+.
+
+As with many latent-variable models, this posterior distribution is analytically intractable. We therefore rely on Monte Carlo methods for posterior approximation. 
+
+4.1 Conditional Conjugate Updates 
+
+The model is constructed such that most parameters admit efficient closed-form conjugate updates. In these cases, forming the complete conditional distribution (i.e., the conditional distribution given all other variables) amounts to incrementing the natural parameters of the prior. For example, for the intervention instability parameters ( c) and intervention target indicators ( I), these follow from 
+
+> 14 Bayesian Multi-Domain Causal Representation Learning
+
+Beta-Binomial conjugacy and Bernoulli updates, respectively, 
+
+(cℓ | − ) ∼ Beta 
+
+αc + X
+
+> e∈E
+
+Ieℓ , β c + |E| − X
+
+> e∈E
+
+Ieℓ
+
+ ,p(Ieℓ = I | − ) ∝ cI 
+
+> ℓ
+
+(1 − cℓ)1−I Y
+
+> j∈[Ne]
+
+softmax 
+
+
+
+θℓ
+
+ pa e,j ℓ
+
+ + Iδeℓ
+
+ pa e,j ℓ
+
+
+
+> ze,j ℓ
+
+.
+
+The notable exception to closed-form conjugacy are the logit parameters Θ and ∆, which do not admit standard conjugate updates. We address this using Pólya–Gamma augmentation, a data-augmentation technique originally developed for Bayesian logistic regression with Gaussian priors (Polson et al., 2013) and extended to multinomial models (Chen et al., 2013). This approach introduces Pólya-Gamma-distributed auxiliary variables that render the logistic likelihood into a conditionally Gaussian form, allowing Θ and ∆ to be updated via standard Gaussian updates. Full conditional derivations and implementation details are provided in § B.1. A standard way to exploit these conditional updates to sample from the posterior is through a Gibbs sampler that iteratively samples each variable from its complete conditional distribution p(· | − ).
+
+4.2 Sequential Monte Carlo Sampling (SMCS) 
+
+In our case, despite the availability of efficient conditional updates, straightforward Gibbs sampling performs poorly due to its inability to mix over a multimodal posterior. As discussed in § 3.6 and illustrated in § 5.1, permutations of the measurement model correspond to permutations of the latent causal ordering. Each such permutation defines a local posterior mode where the measurement likelihood remains the same across permutations, but the latent terms differ. Consequently, accurately recovering the causal structure requires exploring all of these modes. We employ Sequential Monte Carlo Sampling (SMCS), a class of population-based Monte Carlo methods that are particularly effective for exploring complex, multimodal posteriors (Dai et al., 2022; Del Moral et al., 2006). Unlike MCMC, which iteratively updates a single posterior state, SMCS uses importance sampling to evolve a population of candidate posterior states, referred to as particles, through a sequence of intermediate distributions that gradually approach the true posterior. 
+
+4.2.1 Tempered Posterior Targets 
+
+In our implementation, this sequence is constructed via complete-data-likelihood tempering. Let 
+
+∞ = T0 > T 1 > · · · > T K = 1 
+
+denote a decreasing temperature schedule. For each temperature Tk, define the tempered posterior 
+
+pTk (Φ, Ψ, ZE | XE ) ∝ p(Φ)p(Ψ)
+
+
+
+p
+
+
+
+ZE , XE | Ψ, Φ
+
+ 1
+
+> Tk
+
+. (4.1) When T0 = ∞, the contribution of terms that scale with the size of the data is removed, and the target distribution reduces to the prior over global parameters, (Φ, Ψ), together with a flat distribution over ZE . As the temperature is lowered, the complete-data-likelihood contribution is gradually introduced, until the final temperature, TK = 1 , where the target distribution is exactly the posterior distribution of interest. Tempering has two useful interpretations. First, at high temperatures the target distribution is flattened, reducing energy barriers between posterior modes and allowing particles to explore the parameter space more freely. Second, by initially weakening the 
+
+(ZE , XE ) terms that scale with the size of the data, tempering allows the structured global priors to meaningfully guide inference before the likelihood becomes dominant. These effects make SMCS particularly effective for exploring our multi-modal posterior, where preserving the influence of our model priors is critical for valid inference over latent causal structure. 
+
+> 15
+
+Garg, Stettler, Schein, von Kügelgen 
+
+Algorithm 1 Sequential Monte Carlo with Likelihood Tempering 
+
+Require: Temperatures {T0, . . . , T K }, number of particles S, unnormalized tempered posterior from Eq. 4.1 ( pTk (Φ, Ψ, Z | X)), and tempered pTk -invariant MCMC kernels ( GibbsUpdate ).  
+
+> 1:
+
+(Φ, Ψ, Z)(s)0
+
+> i.i.d.
+
+∼ pT0 (Φ, Ψ, Z) for all s ∈ [S] ▷ Initialize particles  
+
+> 2:
+
+w(s)0 ← 1/S for all s ∈ [S] ▷ Initialize weights  
+
+> 3:
+
+for k = 1 to K do  
+
+> 4:
+
+Set weights w(s) 
+
+> k
+
+∝ w(s)
+
+> k−1
+
+p(Z, X | Φ, M )1/T k −1/T k−1 for all s ∈ [S] ▷ Reweight  
+
+> 5:
+
+{(Φ, Ψ, Z)(s) 
+
+> k
+
+, w (s) 
+
+> k
+
+}Ss=1 ← Resample 
+
+n
+
+(Φ, Ψ, Z)(s) 
+
+> k
+
+, w (s)
+
+> k
+
+oSs=1 
+
+
+
+▷ Resample  
+
+> 6:
+
+(Φ, Ψ, Z)(s) 
+
+> k
+
+← GibbsUpdate 
+
+
+
+(Φ, Ψ, Z)(s) 
+
+> k
+
+, T k
+
+
+
+for all s ∈ [S] ▷ Mutate  
+
+> 7:
+
+end for  
+
+> 8:
+
+return 
+
+
+
+(Φ, Ψ, Z)(s) 
+
+> K
+
+, w (s)
+
+> K
+
+Ss=1 
+
+as approximate posterior samples 
+
+4.2.2 SMCS Steps 
+
+When transitioning from one intermediate distribution to the next, SMCS uses importance sampling to account for the change in the target distribution. Each particle carries an importance weight, and as the temperature decreases from Tk−1 to Tk, particles are re-weighted to adjust for this shift in the target density pTk . However, importance sampling alone can quickly lead to weight degeneracy :after several temperature updates, most of the total weight may be concentrated on only a small number of particles. To mitigate this, SMCS augments importance sampling with resampling , which discards particles with negligible weight and duplicates higher weight particles. This introduces its own issue of path degeneracy , where most of the particles are identical copies. This motivates the third component mutation , which applies Markov transition kernels to each particle. improving diversity while maintaining the current target density. This preserves the current target distribution, while increasing particle diversity and enabling local exploration of the current tempered distribution. The algorithm therefore proceeds by iterating through the temperature schedule and repeatedly applying these three operations: reweighting , resampling , and mutation .1. Reweighting: Given particles {(Φ, Ψ, Z)(s)
+
+> k−1
+
+}Ss=1 with normalized weights w(s)
+
+> k−1
+
+, we compute un-normalized importance weights induced by the change from Tk−1 to Tk:
+
+˜w(s) 
+
+> k
+
+= w(s)
+
+> k−1
+
+pTk (Φ(s), Ψ(s), Z(s) | X)
+
+pTk−1 (Φ(s), Ψ(s), Z(s) | X) = w(s)
+
+> k−1
+
+h
+
+p(Z(s) | Φ(s))p(X | Z(s), Ψ(s))
+
+i 1   
+
+> Tk−1
+> Tk−1
+
+.
+
+These weights are then normalized as 
+
+w(s) 
+
+> k
+
+= ˜w(s)
+
+> k
+
+PSr=1 ˜w(r)
+
+> k
+
+, so that 
+
+> S
+
+X
+
+> s=1
+
+w(s) 
+
+> k
+
+= 1 .
+
+2. Resampling: As tempering progresses, weight degeneracy is monitored using effective sample size, 
+
+ESS k = 1
+
+PSs=1 
+
+
+
+w(s)
+
+> k
+
+2 .
+
+When ESS k < τ S (with τ = 0 .5 in our implementation), we perform a resampling step by re-drawing S particles with replacement from the current set, where the expected number of times each particle is selected is proportional to its importance weight, specifically 
+
+E[Ns] = Sw (s) 
+
+> k
+
+,
+
+16 Bayesian Multi-Domain Causal Representation Learning 
+
+where Ns denotes the number of copies of particle s after resampling. See appendix § B.2 for exact details on the stratified resampling (Kitagawa, 1996) scheme used. 3. Mutation via Gibbs updates: After resampling, the particles are mutated using an MCMC step that leaves the tempered posterior pTk (Φ, Ψ, Z | X) invariant. In our implementation, this mutation is performed by Gibbs updates. For each particle, the sampler cycles through the latent variables and resamples each from its complete conditional distribution under temperature Tk.These three steps are repeated until the final temperature T = 1 is reached, yielding a weighted particle approximation to the posterior: 
+
+p(Φ, Ψ, ZE | XE ) ≈
+
+> S
+
+X
+
+> s=1
+
+w(s) 
+
+> K
+
+δ(Φ,Ψ,ZE )(s)
+
+> K
+
+A summary of the full algorithm is given in Algorithm 1. Code for our model and data for all experiments is available at: github.com/agarg7/discrete-bayesian-crl .
+
+## 5 Synthetic Experiments 
+
+We first evaluate our method on synthetic data to study the structure of the posterior and assess recovery of the latent causal structure in a controlled setting. We first examine the geometry of the posterior in § 5.1, demonstrating how the measurement model and latent mechanism priors interact to produce distinct, asymmetric posterior modes. We then compare our approach against alternative inference methods and model ablations in § 5.2, evaluating both predictive fit and recovery of the underlying latent structure. These comparisons demonstrate the efficacy of both our model structure and our inference method. 
+
+5.1 Posterior Multimodality 
+
+We begin by characterizing the posterior landscape induced by permutations of the latent ordering. To make this precise, we define the log Bayes factor of a permutation π relative to the true ordering π⋆ as 
+
+logBF( π) = log p(X, Ψπ ) − log p(X, Ψπ⋆ ) (5.1) where p(X, Ψπ ) is the marginal likelihood of the data under the measurement model corresponding to permutation π.Figure 5 illustrates these Bayes factors in a setting with L = 3 binary latent variables and |E| = 16 
+
+environments, each containing Ne = 500 observations of dimension D = 2 . The environments consist of 4 observational environments with no interventions and 12 single-intervention environments, evenly divided across the L = 3 latent variables. We denote the three latent factors by (A, B, C ) and their corresponding measurement vectors are (m1, m2, m3):
+
+m0 =
+
+00
+
+
+
+, m1 =
+
+15
+
+
+
+, m2 =
+
+ 3
+
+−1
+
+
+
+, m3 =
+
+−24
+
+
+
+.
+
+This is the same measurement model as in Figure 2; all remaining components are drawn from the priors specified in Section 3. These Bayes factors show the posterior landscape to contain multiple well separated, non-identical modes, with the mode corresponding to the true ordering ( A → B → C) attaining the global optimum. In many latent variable models, such multimodality arises from nuisance symmetries, where multiple posterior modes correspond to equivalent representations under relabelings (Jasra et al., 2005). Here, however, the multimodality is neither symmetric nor a nuisance: each mode corresponds to a distinct ordering of the latent concepts. This distinction is crucial and motivates 
+
+> 17
+
+Garg, Stettler, Schein, von Kügelgen C→B→A C →A→B A →C→B A →B→C B →A→C B →C→A C →B→A
+
+> log Bayes factor
+> −6.0×10 ⁴
+> −4.0×10 ⁴
+> −2.0×10 ⁴
+> 0
+
+# Total Log Bayes Factor       
+
+> C→B→AC→A→BA→C→BA→B→CB→A→CB→C→AC→B→A
+> −1000
+> −500 0500 1000
+
+Figure 5: Posterior multimodality across permutations of the measurement model. 
+
+Each red point corresponds to a permutation of the columns of M , with intermediate points obtained by linear interpolations between permutations. The vertical axis shows the log Bayes factor relative to the true ordering. The landscape exhibits multiple local modes, each associated with a distinct causal ordering, while the true ordering ( A → B → C) attains the global optimum. The measurement model is the same as in Figure 2, and marginal likelihoods are estimated using the method of Chib (1995). our use of SMCS (§ 4.2), as recovering the latent ordering requires exploring the full multimodal posterior rather than concentrating on a single mode. To further investigate the components of the model that create and distinguish these modes, we de-compose the Bayes factors into contributions from the latent mechanism and the measurement model: 
+
+logBF( π) = log p(Zπ , Φπ ) − log p(Zπ⋆ , Φπ⋆ )
+
+| {z }
+
+> latent mechanism contribution
+
++ log p(X, Ψπ | Zπ ) − log p(X, Ψπ⋆ | Zπ⋆ )
+
+| {z }
+
+> measurement contribution
+
+. (5.2) Figure 6 illustrates these two components and shows how the multimodal posterior structure arises from their interaction: the measurement model induces the modes, while the latent mechanism prior differentiates among them. The measurement contribution (left panel of Figure 6) is sharply and uniformly peaked at configurations corresponding to permutations of the true measurement model. It assigns high probability to these configurations and rapidly decays away from them, but does not distinguish between different permutations within this set. This symmetry is expected and necessary, as discussed in § 3.6, and consequently the measurement model induces a collection of symmetric modes without differentiation between them. In contrast, the latent mechanism contribution (right panel of Figure 6) does not induce such sharp peaks, but instead differentiates among them. Its contribution varies across permutations and assigns the highest probability to the true causal ordering ( A → B → C), thereby selecting among the modes created by the measurement model. This behavior reflects the role of this component in encoding our priors over latent causal structure, as described in §§ 3.2 to 3.4. In regions between the permutation modes, this prior takes relatively favorable values even when the measurement model fit is poor. In these regions, the latent variables and parameters are effectively free to adjust in ways that optimize the prior structure without being constrained by the observed data. 
+
+18 Bayesian Multi-Domain Causal Representation Learning CBA CAB ACB ABC BAC BCA CBA                       
+
+> log Bayes factor
+> −6.0×10 ⁴
+> −4.0×10 ⁴
+> −2.0×10 ⁴
+> 0
+> X,Ψcontribution to Log Bayes Factor
+> CBA CAB ACB ABC BAC BCA CBA
+> −1000
+> −500 0500 1000 CBA CAB ACB ABC BAC BCA CBA
+> log Bayes factor
+> −1000 01000 2000 3000
+> Z,Φcontribution to Log Bayes Factor
+> CBA CAB ACB ABC BAC BCA CBA
+> −1000
+> −500 0500 1000
+
+Figure 6: Decomposition of the log Bayes factors. Each panel shows the contribution of a model component to the evidence difference relative to the true ordering. The left panel shows the measure-ment model, log p(X, Ψπ | Zπ ), which produces multiple posterior modes across permutations. The right panel shows the latent mechanisms, log p(Zπ , Φπ )), which distinguishes among these modes, fa-voring the true ordering. The sum of these two terms yields the total log Bayes factor shown in Figure 5. Taken together, these effects create a posterior landscape characterized by sharp, well-separated peaks induced by the measurement model, with their relative evidence determined by the latent mechanism prior. This interplay explains both the multimodality of the posterior and the necessity of exploring all modes. 
+
+5.2 Empirical Comparison with Alternative Inference Approaches 
+
+We compare our method against alternative inference schemes and model ablations. For inference methods, we compare our Sequential Monte Carlo Sampling (SMCS) approach against several alternative inference strategies: a standard Gibbs sampler; Parallel Tempering (PT), which augments Gibbs sampling with multiple chains at different temperatures; and Variational Inference (VI), which approximates the posterior using a tractable family optimized via the evidence lower bound (ELBO). For model ablations, we investigate the contribution of two key components of our approach: the KL-based shift prior and the sparse intervention prior. Specifically, we consider a variant that re-moves the KL truncation (SMCS (no KL)) and a variant that fixes all intervention target indicators to 1 (SMCS ( I = 1 )) such that every environment is fitted using a separate joint distribution over Z.These ablations highlight how key modeling choices affect both predictive performance and recovery of the underlying causal structure. 
+
+5.2.1 Experimental Setup 
+
+We generate |E| = 12 environments with L = 3 binary (i.e., K = 2 ) latent variables, each with 
+
+N e = 500 observations. These environments comprise three observational environments with no interventions and nine interventional environments with a single intervention each, evenly divided among the L = 3 latent causal variables. The measurements x have dimension D = 9 . The measurement model is generated with a block structure designed to mimic the structure observed in our real data. Specifically, the observed variables are partitioned into three equal blocks, with each block primarily associated with one latent variable. All entries of M are drawn independently from centered Gaussians, the off-block measurements with σ = 5 and the targeted blocks with σ ≈ 30 .The remaining components of the dataset are from the priors as specified at the end of § 3.7. Each method is evaluated on the same set of ten independent draws of multi-domain data. 
+
+5.2.2 Evaluation Metrics 
+
+We assess recovery of the intervention structure using the average difference between the learned intervention indicators IE and the ground truth I∗,
+
+19 Garg, Stettler, Schein, von Kügelgen 
+
+Table 2: Comparison of inference methods. Results are averaged over ten draws from the gen-erative process. Lower values indicate better performance for Intervention (Int.) and Measurement (Meas.) Errors; higher values indicate better predictive fit for log posterior predictive density (LPPD). SMCS more reliably recovers the latent causal structure, achieving lower intervention and measure-ment error. The ablation variants SMCS (no KL) and SMCS ( I = 1 ) remove the KL-based truncation prior (§ 3.4.1) and the intervention sparsity (§ 3.3), respectively. These variants improve predictive fit but lead to substantially worse recovery of the latent structure. †50K total MCMC steps. ‡2K iterations.                                         
+
+> Method Int. Err. (↓)Meas. Err. (↓)Aligned Meas. Err. (↓)LPPD (↑)Runtime (↓)SMCS †0.260 8.45 4.95 -13.3 10–20min Gibbs †0.341 9.77 4.41 -19.1 20–30min PT †0.344 9.61 4.90 -19.5 15–45min VI ‡0.606 9.03 9.00 -1078.0 40–50sec
+> SMCS (no KL) †0.547 10.51 8.64 -12.0 10–20min SMCS ( I= 1 )†-10.89 7.19 -10.5 10–20min
+
+Intervention Error = 1
+
+L|E| 
+
+X
+
+> e,ℓ
+
+Ieℓ − (I∗)eℓ ,
+
+which represents the fraction of intervention indicators that are incorrectly inferred. To evaluate the measurement model, we report two complementary metrics: Measurement Error = 1(L + 1) D
+
+X
+
+> ℓ,d
+
+(M − M ∗)d,ℓ ,
+
+Aligned Measurement Error = 1(L + 1) D
+
+X
+
+> ℓ,d
+
+(Mπ∗ − M ∗)d,ℓ ,
+
+where π∗ is the optimal label alignment relative to ground truth, π∗ ∈ arg min π ∥Mπ − M ∗∥1,1 .
+
+The unaligned Measurement Error reflects both recovery of the measurement model and identifi-cation of the correct latent ordering. In contrast, the Aligned Measurement Error isolates recovery of the measurement model by minimizing over label permutations. In symmetric mixture models, it is common to align samples to a consistent permutation (Stephens, 2000). Although label permuta-tions in our model are not symmetric, the Aligned Measurement Error is useful as a diagnostic: it separates whether a method has learned the correct measurement structure from whether it has also recovered the correct latent ordering. 2
+
+In addition, we report the minimum and maximum runtime over the 10 tests and the log posterior predictive density (LPPD; Gelman et al., 2014) 
+
+LPPD = 1
+
+P 
+
+> e∈E
+
+N e
+
+X
+
+> e∈E
+
+X
+
+> j∈[Ne]
+
+log E(Φ,Ψ)∼ppost 
+
+
+
+p
+
+
+
+xe,j | Φ, Ψ
+
+
+
+.
+
+Together, these metrics separate latent structure recovery from predictive fit. Intervention Error and (unaligned) Measurement Error evaluate recovery of the latent causal structure, while Aligned Measurement Error and LPPD evaluate measurement recovery and predictive performance. For sampling-based methods, we use posterior means for all estimates, see Section C for exact details.  
+
+> 2. The model exhibits a sign-flip symmetry in the latent representation and measurement model parameters. This is truly a nuisance symmetry, and we align posterior samples to a consistent sign when computing all reported metrics in this paper (see Section C for details).
+
+20 Bayesian Multi-Domain Causal Representation Learning 
+
+5.2.3 Results 
+
+The results are summarized in Table 2. SMCS most reliably recovers the latent causal structure. It achieves the lowest intervention error and unaligned measurement error, indicating improved recovery of both the intervention structure and the latent ordering. The aligned measurement errors are rel-atively similar across Gibbs, PT, and SMCS. This suggests that these methods can often find a good mode of the measurement model. However, SMCS achieves substantially lower unaligned measure-ment error, indicating that it more consistently identifies the correct latent ordering. Consequently, we use SMCS for all subsequent experiments. The ablation results reveal a tradeoff between predictive fit and causal structure recovery. Remov-ing the KL truncation or intervention sparsity improves LPPD, but substantially worsens recovery of the latent structure, as reflected in the Intervention and Measurement Errors. This suggests that, without the KL and sparsity constraints, the model can explain the observed data by introducing additional interventions, but this comes at the cost of not learning the true latent causal structure. 
+
+## 6 Case Study I: World Values Survey 
+
+We apply our model to CRL tasks motivated by survey analysis. In this domain, many important factors such as partisanship, political beliefs, or cultural values are inherently latent and cannot be ob-served directly. Instead, they are measured indirectly through proxies, such as responses to survey ques-tions. A key question is how these latent views influence one another: for example, what are the major dimensions of cross cultural variation and what causal relationships exist between different cultural values? Because direct interventions on these latent values are not experimentally feasible, methods that leverage data across multiple environments may be an appealing way to study these relationships. We begin with the World Values Survey (WVS), a large-scale cross-national survey designed to measure people’s values, beliefs, and norms in a comparative cross-national perspective. The WVS covers topics such as democracy, religion, gender equality, and societal trust across nearly 100 countries. We focus on the most recent complete round conducted from 2017 to 2022 (Haerpfer et al., 2022). 
+
+6.1 Modeling 
+
+For this analysis, we select a subset of D = 37 questions that were answered by at least 99% of respondents, and treat each country as a separate environment. Respondents with missing answers to these questions were excluded from the analysis, yielding between 382 and 4, 018 responses per environment, for a total of P 
+
+> e∈E
+
+N e = 85 , 851 responses. We fit our model with L = 3 latent variables, each taking K = 3 discrete states. Posterior inference is performed using SMCS with 1, 000 particles and a temperature schedule consisting of 100 geometrically spaced temperatures ranging from 1 to the total number of responses ( P 
+
+> e∈E
+
+N e). The full model fitting procedure required approximately 9 hours on a multi-core compute cluster. Since we do not have ground truth for the real world data, in contrast to Section 5, we focus on qualitative analysis and interpretation of the results. To that end, we examine three aspects of the fitted model: 1) the learned measurement model to ascribe semantic meaning to the causal latent variables, 2) the causal influence among latents, to understand how these learned concepts causally relate to one another, and 3) the cross-country variation in latent concepts as well as the environment-specific interventions underlying these differences. 
+
+6.2 Interpretation of Inferred Causal Concepts 
+
+We organize our interpretation in two steps: first, we use the measurement model to assign semantic meaning to the inferred latent variables, and second, we examine how these latent concepts vary across countries to confirm that they are consistent with expected patterns. 
+
+> 21 Garg, Stettler, Schein, von Kügelgen
+
+Figure 7: Estimated measurement mapping from latent variables to WVS survey responses. 
+
+Heatmap of the normalized posterior mean absolute measurement matrix, |M T|. The learned block structure is interpretable: Z1 aligns with economic hardship , Z2 with demographics , specifically age and marital status, and Z3 with cultural conservatism .
+
+6.2.1 Interpreting the Measurement Model 
+
+In this case study, our model associates three latent variables (Z1, Z 2, Z 3) with each survey respondent. To interpret their possible correspondence to known domain-specfic concepts, we first examine the posterior mean of the measurement matrix M , which we visualize as a heatmap in Figure 7. Recall that the ℓth column mℓ ∈ RD of the measurement matrix specifies how the ℓth latent variable Zℓ
+
+affects the mean of a given respondent’s survey responses X ∈ RD .3
+
+Since the World Value Survey groups questions into distinct topics, we can check whether the inferred measurement matrix aligns with the block structure corresponding to the underlying topics (which is unknown to the model). As shown in Figure 7, a clear block structure, which is consistent with the known topic structure, emerges. The first latent variable Z1 loads strongly onto items in the hardship topic, while Z2 loads onto two items in the demographics topic, specifically Q262 Age 
+
+and Q263 Marital Status , and Z3 loads onto the work ethic and jobs topics, as well as onto one single item in the values topic, namely Q6 Religion . In grouping items relating to work ethic, the role of men in the workplace, and religion, Z3 appears to be capturing a broader concept of religious, social, and/or cultural conservatism . For clarity, we adopt the following descriptive labels below and from hereon refer to (Z1, Z 2, Z 3) as (Zhard , Z demo , Z cons ):
+
+Z1 7 → economic hardship , Z2 7 → demographics , Z3 7 → cultural conservatism Interestingly, the inferred concepts Zcons and Zhard align well with the two axes of the Inglehart–Welzel map (Inglehart et al., 2005): traditional versus secular values , measuring the importance of religion, family values, and nationalism; and survival versus self-expression values , measuring the relative desire for economic and physical well-being against the desire for diversity and pluralism. The Inglehart-Welzel map has been widely validated within political science for explaining cross-cultural variation in self-reported attitudes and values, so it is encouraging that the model infers causal concepts aligned with these axes. In additional fits with L = 2 , we found a similar structure, but with the demographic and conservatism dimensions merged into a single shared latent factor. We 
+
+> 3. Details on how we deal with the “label switching” problem (Jasra et al., 2005) can be found in Section C.
+> 22 Bayesian Multi-Domain Causal Representation Learning
+
+emphasize that the model inferred these concepts entirely unsupervised from the data without access to the survey’s pre-specified topics or any pre-imposed block structure. 
+
+6.2.2 Distribution of Latent Concepts across Environments 
+
+We further explore this interpretation by examining the distribution of (Zhard , Z demo , Z cons ) across countries. Specifically, for each country (i.e., environment) e ∈ E , we compute the marginal mean of each latent concept: 
+
+EZ∼pe(Z)[Zℓ] (6.1) Throughout this analysis, we refer to the environment with no interventions as the baseline environment. This baseline does not correspond to any observed country. However, it is still well defined in our model: the baseline distribution of Z is obtained by setting all interventional shifts to zero and depends only on the shared parameters Θ.In Figure 8, we visualize the raw country-level means and their differences from this baseline. The patterns align with prior expectations based both on global socioeconomic and cultural differences in general and on the Inglehart–Welzel map in particular. For example, Western countries tend to cluster in the low economic hardship, low conservatism corner, while Islamic-African countries exhibit higher levels of cultural conservatism. Latin American countries span a range of economic hardship values but generally remain near moderate conservatism levels. Notably, Venezuela appears at the extreme end of economic hardship in the 2021 survey wave, aligning with its economic crisis during this period. The results up to here are driven by the measurement model, and the same structure was found without imposing interventional sparsity (i.e., by setting all interventions to be active as in the ablation from § 5.2). While these priors do not affect the learned concepts, they do allow us to interpret the causal graph, which would otherwise be completely arbitrary. 
+
+6.3 Causal Graph Recovery 
+
+Having established an interpretable latent space, we can now analyze the causal structure among these latent concepts. The ordering of Z gives the causal ordering of latent concepts as economic hardship ⪯ demographics ⪯ cultural conservatism .As our model fits a fully connected DAG, we apply a post-hoc method to evaluate the strength of individual dependencies. In particular, we are interested in quantifying how much a parent variable 
+
+Zj impacts a child variable Zℓ beyond the effect of Zℓ’s other parents. For this purpose, we adopt the notion of causal influence proposed by Janzing et al. (2013), which measures the change in the joint distribution when the direct influence of Zj on Zℓ is removed: 
+
+CI j→ℓp := Dkl 
+
+ p(Z) pj→ℓ(Z), where pj→ℓ zℓ | pa ℓ \ zj
+
+ =
+
+Z
+
+p zℓ | pa ℓ
+
+p(zj )dz j (6.2) and pj→ℓ(Z) is the interventional distribution arising from replacing p zℓ | pa ℓ
+
+ by pj→ℓ zℓ | pa ℓ \zj
+
+.Figure 8 shows the estimated dependencies in the baseline environment, where no interventions are applied. We see that economic hardship ( Zhard ) and demographic structure ( Zdemo ) both exert substantial influence on cultural conservatism ( Zcons ), while the effect of economic hardship on demographic structure ( Zhard → Zdemo ) is negligible. This lack of influence on Zdemo is consistent and expected: demographic attributes are commonly modeled as root nodes in a causal graph , and are therefore not assumed to be influenced by downstream socioeconomic conditions. This baseline does not provide a complete picture, since environment-specific interventions may strengthen or weaken these dependencies. We therefore compute the same causal-influence measure separately within each country, as shown in Figure 9. Although the overall patterns remain similar to the baseline, the influence of economic hardship on cultural conservatism and the influence of 
+
+demographics on cultural conservatism vary substantially between environments. 
+
+> 23
+
+Garg, Stettler, Schein, von Kügelgen AUS CAN GBR NIR NZL USA AND CZE SVK DEU NLD ARM CYP GRC ROU RUS SRB UKR ARG BOL BRA CHL COL ECU GTM MEX NIC PER PHL PRI URY VEN IND MDV MMR MYS SGP THA VNM CHN HKG JPN KOR MAC MNG TWN BGD EGY ETH IDN IRN IRQ JOR KAZ KEN KGZ LBN LBY MAR NGA PAK TJK TUN TUR UZB ZWE AUS CAN GBR NIR NZL USA AND CZE SVK DEU NLD ARM CYP GRC ROU RUS SRB UKR ARG BOL BRA CHL COL ECU GTM MEX NIC PER PHL PRI URY VEN IND MDV MMR MYS SGP THA VNM CHN HKG JPN KOR MAC MNG TWN BGD EGY ETH IDN IRN IRQ JOR KAZ KEN KGZ LBN LBY MAR NGA PAK TJK TUN TUR UZB ZWE 
+
+Figure 8: Marginal distributions and baseline causal influence of latent concepts. Left: Country-specific deviations from baseline for each latent concept: EZ∼pe(Z)[Zℓ] − EZ∼p(Z)[Zℓ].
+
+Top Right: Scatterplot of Zhard versus Zcons colored by region. We adopt the regional divisions of the Inglehart–Welzel cultural map (Inglehart et al., 2005), but combine {English-speaking, Protes-tant Europe, Catholic Europe} into “Western”, and {Confucian, West & South Asia} into “Asia”. 
+
+Lower Right: Estimated causal influence among latent concepts. Edges are proportional to causal influence, showing strong influences of {Zhard , Z demo } → Zcons but negligible influence Zhard → Zdemo .
+
+24 Bayesian Multi-Domain Causal Representation Learning NIR NZL     
+
+> COL
+> IRQ JOR
+> USA
+> DEU VEN
+> TWN
+> MNG
+> KAZ MAR
+> NGA
+> TUR
+> GBR
+> DEU
+> NLD
+> KOR
+> USA VEN
+> TWN
+> CYP
+> GRC
+> PRI
+> SGP
+> TWN
+> NLD
+> MYS
+> BGD
+> IDN USA
+> DEU
+> VEN
+
+Figure 9: Estimated causal influence of latent concepts across environments (countries). 
+
+Each panel shows the environment-specific strength of a single dependency. The scale is shared across panels, revealing that influences of Zdemo → Zcons and Zhard → Zcons vary substantially across countries, while the influence of Zhard → Zdemo is relatively small across all environments. 
+
+Figure 10: Intervention indicators and magnitudes across environments. (Top) Posterior mean intervention matrix I, indicating the probability that each latent variable is intervened on in each environment. (Bottom) Expected magnitude of the intervention, as measured by the induced shift in pe(Zℓ), summarizing the sizes of each environment-specific perturbation. 
+
+6.4 Interventions 
+
+In addition to the causal structure among latent concepts, the model also allows us to examine the form of the interventions across environments. Figure 10 summarizes both the inferred presence and size of these interventions across countries. We report the posterior mean intervention matrix I,where each entry gives the posterior probability that a given latent variable is perturbed in a given environment. This reveals mild sparsity in the inferred intervention structure. Beyond this binary intervention structure, we also examine the expected magnitude of the corresponding perturbations. For latent variable Zℓ in environment e, we measure this magnitude as the KL divergence between the baseline and perturbed conditional mechanisms, averaged over parent configurations: 
+
+E ∥∆eℓ ∥KL 
+
+ := Epa ℓ∼pe(pa ℓ)
+
+
+
+DKL 
+
+
+
+p  Zℓ | pa ℓ
+
+ pe  Zℓ | pa ℓ
+
+
+
+. (6.3) This quantity summarizes how strongly an intervention perturbs its associated latent mechanism. We find that many interventions have relatively small effects, even when the corresponding entries of I are nonzero, suggesting that the effective sparsity is higher than what is implied by I alone.     
+
+> 25 Garg, Stettler, Schein, von Kügelgen CAN
+> USA
+> NLD
+> MMR
+> VNM
+> CHN
+> BGD
+> EGY
+> IDN
+> LBY
+> DEU VEN
+> TWN USA
+> BOL
+> PHL
+> JPN
+> MNG
+> BGD EGY
+> IDN
+> JOR LBY DEU
+> VEN
+> TWN
+> NIR
+> USA
+> BOL
+> BRA
+> GTM
+> EGY
+> IRQ
+> JOR
+> NGA
+> TUN
+> DEU VEN
+> TWN
+
+Figure 11: Intervention directions across parent configurations and environments. Posterior mean intervention vectors δe
+
+> cons
+
+(pa ) for each country, shown for Zdemo = 0 and all configurations of Zhard . Each stem represents an environment; its length indicates intervention magnitude and its orientation indicates direction. Vectors are expressed in an orthogonal basis for the two-dimensional intervention subspace; the first direction captures shifts in the mean of Zcons and the second captures changes in dispersion. See § C.2 for the full grid over parent configurations. We also examine the mechanisms underlying these interventions. Specifically, δe
+
+> cons
+
+(Zhard , Z demo ),which describes the direction of the perturbation: that is, how the conditional distribution of Zcons is shifted relative to the baseline mechanism. Since each parent configuration (Zhard , Z demo ) has its own intervention vector, this analysis allows us to assess whether an intervention acts consistently or varies with the parent state. Figure 11 presents these vectors projected onto a two-dimensional basis spanning the intervention space. We find that many Western countries, such as the United States, exhibit negative shifts across all levels of economic hardship and demographic structure. Formally, pe(Zcons | Zhard , Z demo ) places more probability mass on lower values of Zcons than p(Zcons | Zhard , Z demo ) for all (Zhard , Z demo ).This suggests that, in these countries, the intervention primarily acts as a consistent downward shift in the level of conservatism . In contrast, some countries such as Taiwan display more heterogeneous interventions, with both direction and magnitude varying substantially across parent configurations. 
+
+## 7 Case Study II: US Political Opinion 
+
+As a second empirical test case, we apply our model to American political opinion data, using both real and LLM-generated survey responses. In this setting, we examine how opinions on specific topics and policies interact with one another and with partisan identity. We first analyze real survey data, using geographic and urbanicity-based environments to study the structure naturally present in observed political attitudes. We then construct LLM-generated survey data based on the same survey design, but with controlled interventions, allowing us to investigate a richer causal structure. 
+
+7.1 Real Data 
+
+We begin with a survey dataset of American political opinion collected by the polling firm PredictWise during the period 2017–2022. This dataset contains 75.5k item-level responses from 7.8k U.S. respondents collected between 2017 and 2022. Each respondent answers a battery of questions focused on one of five political topic pairs (e.g., elites & racism or trade & regulation). The surveys   
+
+> 26 Bayesian Multi-Domain Causal Representation Learning
+> (a) Trade and Regulation .
+> (b) Elites and Racism .
+
+Figure 12: Posterior summaries for the US political opinion surveys. Each panel shows the learned measurement model ( M ), intervention probabilities ( I), and environment-specific deviations from baseline for each latent variable ( EZ∼pe(Z)[Zℓ]−EZ∼p(Z)[Zℓ]). The Trade and Regulation results (a) are largely one-dimensional, separating rural–urban environments along a left–right political gradient. The Elites and Racism results (b) show a similar rural–urban gradient, but with less consistent variation and more pronounced deviations in the rural South and urban Northeast. were designed with 7 questions per issue topic and an additional 3 general questions about party and vote choice preferences for a total of D = 17 questions per survey. 
+
+7.1.1 Modeling 
+
+For this analysis, we look at two of these surveys separately, one on Trade and Regulation and another on Elites and Racism. We partition the data into 12 environments based on the Cartesian product of the 4 Census Regions (West, Midwest, South, and Northeast) and 3 urbanicity levels (Rural, Suburban, and Urban) and fit our model with L = 2 with two latent variables, each with cardinality K = 5 .
+
+7.1.2 Results 
+
+Compared to the WVS analysis, the differences between environments are less nuanced here. The model effectively identifies a one-dimensional latent structure that explains most of the variation across environments. This is consistent with widely documented trends in U.S. politics, where both 
+
+> 27 Garg, Stettler, Schein, von Kügelgen
+
+congressional voting patterns (Poole and Rosenthal, 2000) and issue opinions among the public (Green et al., 2002; Mason and Wronski, 2018) tend to collapse along a single partisan axis. Although the structure learned from this dataset is rather limited, the patterns that are recov-ered align with well-documented political trends. For the Trade and Regulation survey (Figure 12a), responses exhibit a clear urbanicity gradient: respondents in rural environments are shifted toward more right-leaning latent positions, those in urban environments toward more left-leaning positions, and suburban respondents lie in between. For the Elites and Racism survey (Figure 12b), the struc-ture is more intricate. Although an urban–rural divide remains, the largest shifts are concentrated in particular regions: the rural South and the urban Northeast. Overall, these results reflect the largely one-dimensional nature of U.S. public opinion and provide a baseline for how the model behaves in low-signal regimes; it recovers simple but well-known trends with more heterogeneous data required to uncover non-trivial structure. 
+
+7.2 LLM-Generated “Interventional” Survey Data 
+
+To further test our methodology, we next consider a synthetic setting using LLM-generated survey responses. We generate data that mirrors the structure of the original questionnaire while replacing natural environments with explicit interventions designed to satisfy the sparse-mechanism-shift assumption. Unlike the preceding analyses, which study causal structure directly from real survey responses, this experiment studies the causal structure implicit in the LLM’s model of political opinions. As such, our goal is not to claim that these synthetic responses reveal the true causal structure of human political opinions. Rather, we use them as a controlled benchmark with more nuanced latent causal structure than is available in the real survey responses. This setting is useful for two reasons. First, because the data are generated through a controlled intervention pipeline, we have access to a form of ground truth about the causal structure against which we can compare our results. Second, the synthetic design produces well-structured cross-environment variation, allowing us to evaluate our method in a richer setting with five latent causal variables and a non-trivial causal graph. This is substantially more complex than the preceding experiments, which involved only two or three latent variables. 
+
+7.2.1 Data generation Process 
+
+To produce synthetic data with known interventions, we employ a four-stage LLM-driven pipeline. Since LLMs have been shown to generate representative survey responses (Argyle et al., 2023), they provide a natural way to simulate realistic responses under controlled interventions on latent polit-ical concepts. Our pipeline uses this capability to construct synthetic datasets with specified inter-ventions: starting from demographic samples, it extrapolates detailed respondent profiles, applies specific interventions, and finally generates survey responses consistent with the intervened profiles. (i) Sample demographic data from real survey respondents (PredictWise Data). Pro-vides a realistic distribution of demographic variables such as age, education, income, etc. (ii) Expand demographic data into detailed respondent profiles (LLM). Expands the raw demographic data into detailed profile including their beliefs, opinions and reasons behind them. This increases variability leading to more diverse responses representative of differences between individuals not captured by the demographic data from step (i) alone. (iii) Apply causal interventions to respondent profiles (LLM). Modifies the profile with a specified intervention and updates causally downstream beliefs and reasoning accordingly. (iv) Generate full survey responses based on intervened profiles (LLM). 
+
+We found that, compared to a one-step approach of directly prompting the LLM to “answer as [X],” this multi-stage approach reduced causal leakage and mode collapse, in which responses under a given intervention tended to concentrate on a small number of nearly identical answer patterns. An 
+
+> 28
+
+Bayesian Multi-Domain Causal Representation Learning 
+
+Demographic Data 
+
+> male, >54, married,...
+
+Detailed Profiles 
+
+> John Smith, Former Dental Technician ...
+
+Interventional Profiles 
+
+> John Smith, Pro-Immigration, ...
+
+Interventional Profiles 
+
+> John Smith, Republican, ...
+
+Interventional Profiles 
+
+> John Smith, Democrat, ...
+
+(i) 
+
+PredictWise Data 
+
+(ii) 
+
+LLM 
+
+(iii) LLM 
+
+Survey Responses   
+
+> X1:10, X2:85, X3:55, ...
+
+Survey Responses   
+
+> X1:10, X2:25, X3:60, ...
+
+Survey Responses   
+
+> X1:90, X2:85, X3:55, ...
+
+(iv) LLM 
+
+Figure 13: LLM sampling scheme for generating interventional survey data. We (i) sample demographic covariates from real survey respondents, (ii) use an LLM to expand them into detailed respondent profiles, (iii) apply specified interventions to create multiple intervened versions of each profile, and finally (iv) generate survey responses based on the intervened profiles. This pipeline preserves heterogeneity of the final survey responses while introducing controlled interventions. illustration of the full pipeline is shown in Figure 13; further details, including the exact prompts used and samples from each step, can be found in the repository with our code and datasets. With this approach, we generate |E| = 11 sets of synthetic survey results: one baseline with no interventions, and five interventional pairs in which partisanship and views on four issue topics are shifted in either direction (e.g., democrat and republican). For each synthetic respondent, we generate a total of D = 27 responses, divided among the five question topics, with exact question wording taken from the original PredictWise surveys: 
+
+• General : Three questions about political party affiliation, approval of Donald Trump, and intended vote choice for the House of Representatives. 
+
+• Regulation : Six questions about whether government regulations are necessary to protect the public interest, including regulations of pollution, workplace safety, banks, and product safety. 
+
+• Trade : Six questions about support for free trade and its associated trade-offs, such as cheaper goods, job displacement, quality control, stress on the borders, and increased competition. 
+
+• Immigration : Six questions about whether recent immigrants strengthen the country, labor market, cultural life, and national security, as well as whether the US–Mexico border is secure. 
+
+• Poverty : Six questions about whether poor people have sufficient government support to attain education, shelter, healthcare, job training, and food. The five intervention targets used to generate the interventional profiles are matched to the latent political topics underlying these questions: general partisanship, regulation, trade, immigration, and poverty. Thus, the observed variables {X1, . . . , X 27 } form blocks associated with {Z1, . . . , Z 5},suggesting a sparse Z → X relationship. This sparsity, however, is not imposed as a hard constraint on the generated responses; interventions on one latent topic may also affect questions in other blocks, either through downstream causal effects or through mixing of latent topics within the LLM. Because the LLM data were generated under known interventions, we can compute a “ground-truth” average treatment effect (ATE) for each latent topic. This quantity is computed directly from the raw synthetic data using the known intervention structure, which is not provided to our model, and therefore serves as a reference for the causal structure recovered by our model. Specifically, for each question d ∈ { 1 . . . 27 } and each intervention target ℓ ∈ { 1 . . . 5},ATE (d, ℓ ) = Edo (Zℓ→+0 .5) [Xd] − Edo (Zℓ→− 0.5) [Xd] , (7.1) 
+
+29 Garg, Stettler, Schein, von Kügelgen 
+
+Party 
+
+Trade 
+
+Regulation Poverty 
+
+Immigration 
+
+Figure 14: “Ground-truth” effects computed from LLM-generated interventional pairs. 
+
+Each cell shows the average treatment effect for a question–intervention pair, as defined in Eq. (7.1) .For example, the bottom–left cells show the mean difference in immigration responses between the Democrat and Republican interventional profiles. The graph is generated by weighting edges according to the average question–level effect within each topic block: 1 
+
+> |T|
+
+P 
+
+> d∈T
+
+ATE (d, ℓ ).where do (Zℓ = ±0.5) denotes a hard intervention setting latent topic ℓ to the left-leaning (+0 .5) or right-leaning (−0.5) position. 4 For example, do (ZParty = −0.5) denotes the environment in which all profiles have been intervened on to be Republican. These ATEs capture the total effect of each intervention on each observed question, including both direct effects and indirect effects mediated through other latent topics. The resulting ATE structure is shown in Figure 14. The heatmap is nearly block lower triangular, indicating that LLM sampling scheme largely respected a causal ordering rather than forming arbitrary bidirectional dependencies. Off-diagonal blocks indicate the total effect that an intervention on one latent topic has on questions associated with a different latent topic, capturing the combined direct and indirect causal effects among latent concepts. The resulting graph shows a strong Regulation →
+
+Poverty effect as well as Partisanship → { Regulation,Poverty,Immigration } effects, providing a reference for the causal effects we expect our model to recover. 
+
+7.2.2 Modeling 
+
+While the construction of Figure 14 relied on knowledge of the question groupings and intervention targets, our model is not given access to this information. Instead, it observes only 11 unlabeled environments, each containing N e = 1000 synthetic survey responses. Each environment consists of a stochastic intervention with an 85–15 split (e.g., the “pro-trade” environment consists of 85% pro-trade and 15% anti-trade interventions). That is, each environment intervenes on a single ℓ ∈ [L]
+
+with do (Zℓ = Nℓ) where Nℓ is a Categorical with either p(Nℓ = +0 .5) = 0 .85 or p(Nℓ = −0.5) = 0 .85 .We fit our model with L = 5 binary latents. 
+
+7.2.3 Interpretation of Inferred Causal Concepts 
+
+As with the WVS data, we begin by interpreting the learned latent variables through the measurement model. Figure 15 shows a clear block structure in the posterior mean of |M |. Since the LLM-generated survey was constructed from known issue groups, we can compare the inferred blocks to the underlying survey design. The resulting associations map each latent variable primarily onto one    
+
+> 4. The values ±0.5arise from the binary encoding of the intervention targets with unit spacing, as defined in § 3.5.
+> 30 Bayesian Multi-Domain Causal Representation Learning
+
+Figure 15: Estimated measurement mapping for LLM-generated survey responses. 
+
+Heatmap of the posterior mean absolute measurement matrix, |M |. The learned block structure is interpretable as Z1, Z 2, Z 3, Z 4, Z 5 as corresponding to Regulation , Party , Trade , Immigration ,and Poverty , respectively, with some Party information also contained in Z1 and Z4. Question top-ics in this figure and Figure 14 are ordered post hoc to facilitate comparison of the learned structure. issue dimension, with some leakage of party-related information into multiple variables:                    
+
+> Z17→Regulation(& Party) ,Z27→Party ,Z37→Trade ,Z47→Immigration(& Party) ,Z57→Poverty .
+
+7.2.4 Causal Graph Recovery 
+
+The learned causal order is consistent with the “ground-truth” DAG (Figure 14); however, because this “ground-truth” causal graph is relatively sparse, there are multiple such orders that would also be consistent. Thus, the individual dependencies provide a more nuanced and informative comparison. The estimated causal graph is shown in Figure 16, with latent variables labeled according to their semantic interpretations from Figure 15. Several dependencies emerge, the strongest being the directed relationship from Regulation to Poverty . In contrast, Trade appears largely independent of the other issue dimensions. The results suggest that Party is upstream of Poverty ; however, its relationships with Regulation and Immigration are harder to interpret because the learned representation does not isolate partisanship in a single latent variable. Instead, the model distributes partisanship information across multiple latent variables, with party-related signal also mixed into the Regulation and Immigration latents. Although this entanglement makes causal relationships involving Party , Regulation , and 
+
+Immigration difficult to interpret, the recovered graph broadly aligns with the “ground-truth” treat-ment effects from the LLM-generated interventions. In particular, both summaries show weak effects involving Trade , strong effects of Party and Regulation on Poverty , and additional causal relation-ships among Party , Regulation , and Immigration .Overall, these results confirm that our model can correctly recover both the latent representation and causal structure in a complex semi-synthetic setting with five latent variables and LLM-generated survey responses. This complements the simpler synthetic experiments in Section 5 and provides additional support for the prior empirical case studies in Sections Section 6 and 7.1, where ground-truth comparisons are unavailable. 
+
+> 31 Garg, Stettler, Schein, von Kügelgen
+> Regulation (& Party)
+> Party
+> Trade
+> Immigration (& Party)
+> Poverty
+
+Figure 16: Causal graph recovered from LLM responses. Estimated causal influence among la-tent concepts in the baseline environment, with latent variables labeled according to the block structure identified in Figure 15. The largest recovered dependency is from Regulation → Poverty , with weaker relationships among party, regulation, immigration, and poverty, and very weak effects involving trade. 
+
+## 8 Discussion 
+
+Our work connects to several strands of literature in causal representation learning, psychometrics, and Bayesian causal inference. 
+
+Causal Representation Learning. Our work is most closely related to various other approaches to causal representation learning (CRL). As detailed in Section 1, our work differs from existing approaches in that we focus on estimation and interpretation instead of identifiability, adopt a fully Bayesian framework, and perform joint inference over latent variables and their causal relationships. Kivva et al. (2021) and Zhang et al. (2026) also study learning discrete causal representations, albeit from a single observational environment. These works impose additional structural conditions on the measurement model p(X | Z) to obtain identifiability. In particular, Kivva et al. (2021) show that, in the setting of a single environment, restrictive conditions on p(X | Z) ensure identifiability and allow recovery of both the number L of latent variables and their cardinalities |Z ℓ|. More recently, Zhang et al. (2026) propose a discrete causal representation learning framework that models a directed acyclic graph among discrete latent variables, together with a sparse bipartite graph linking latent variables to observed measurements. Both of these works are applicable to similar structures of observed and latent variables. The primary difference to our approach is that they rely on restrictions of the measurement model to learn from a single domain, whereas we instead exploit assumptions on sparse latent interventions to learn from multi-domain data. Applications of CRL to survey settings have also been explored in recent work. In particular, Huang et al. (2022) and Dai et al. (2025) leverage rank constraints to learn latent causal structure from personality and social survey data. 
+
+Bayesian Item Response Models. A long line of research in psychometrics studies latent variable models for survey and test data (see Reise et al. (2010) for an introduction). Most notably, Item Response Theory (IRT) (Lord, 1980), views responses as being driven by unobserved latent traits (e.g., ability, attitudes, preferences). These latent characteristics are not directly observable, but are instead inferred from individuals’ patterns of responses to survey or test items. IRT provides a family 
+
+> 32 Bayesian Multi-Domain Causal Representation Learning
+
+of probabilistic models that formalize the relationship between individuals, survey items, and the latent traits of interest. Each item is associated with parameters that determine how responses vary with the latent trait, while each individual is represented by a position on an unobserved continuum corresponding to that trait. A substantial body of work develops Bayesian formulations of IRT (Albert and Chib, 1993; Jiang and Templin, 2019; Li et al., 2025). In our setting, we assume discrete instead of continuous latent traits and impose causal structure among them, but the underlying perspective and methods used are closely aligned. 
+
+Bayesian Causal Discovery and Experimental Design. Bayesian approaches for inferring the causal structure among a set of observed variables from purely observational data go back at least to the work of Heckerman et al. (1995, 2006) and Friedman and Koller (2003), typically for categorical variables with conjugate Dirichlet-multinomial models. More recent work has generalized this approach to continuous variables and nonlinear models with differentiable graph parametrization combined with variational inference (Lorch et al., 2021), as well as to multi-domain data with unknown interventions (Hägele et al., 2023). The posterior over structures and model parameters can, in turn, be used for active learning or Bayesian optimal experimental design, i.e., to select interventions for future data collection in categorical (Murphy, 2001; Tong and Koller, 2001), linear (Agrawal et al., 2019; Ness et al., 2018) and nonlinear (Toth et al., 2022) models. For the local causal discovery task of finding the parents of a target variable, Wu et al. (2025) propose a Bayesian approach for invariant causal prediction (Peters et al., 2016) from multi-domain data. 
+
+Limitations and Future Work. Our approach has several limitations that suggest natural directions for future work. Firstly, our approach assumes a complete graph over the latent variables. While flexible, this leads to an exponential blowup in the size of the parameter space as the number and cardinality of the latent variables grows. As a result, inference becomes computationally prohibitive quickly as the number of latent variables grows. Developing more parsimonious parameterization— such as by explicitly exploiting the ordinal structure of the latent variables, restricting the graph structure by limiting node degree or introducing parameter sharing across similar parent configurations– could help mitigate this issue, but doing so in a way that preserves flexibility remains an open challenge. Second, the measurement model linking latent variables to observed responses is relatively simple in our current framework. This choice provides flexibility and ease of interpretability, but incorpo-rating richer measurement models that are more closely tailored to the data format, such as ordinal responses or hierarchical item groupings, could be more principled and improve empirical perfor-mance. One possible direction for ordinal survey data is the use of unified skew-normal distributions, which Durante (2019) recently showed enable conjugate Bayesian inference for probit models. Third, in our case studies, we do not actually have access to experimental data. We model heterogeneity across domains as soft interventions that modify a subset of the underlying mechanisms. To verify causal claims, truly randomized studies remain the gold standard. 
+
+## 9 Conclusion 
+
+We have introduced a Bayesian framework for learning discrete causal concepts from multi-domain data. Our approach encodes common assumptions from the causal representation learning literature through model priors and constraints. We develop an efficient sequential Monte Carlo-based inference scheme and evaluate our model on political survey data, including both real-world datasets and data generated by large language models. In these settings, the model is able to recover interpretable latent structure that aligns with known political trends. A central contribution of this work is to move beyond idealized synthetic settings and develop a Bayesian causal latent variable model that can be effectively fit to real-world data. We view this work as a step toward bridging the gap between theoretical developments in causal representation learning and real-world settings with model misspecification and finite samples. 
+
+> 33 Garg, Stettler, Schein, von Kügelgen
+
+## Acknowledgements 
+
+The authors thank David M. Blei for several insightful discussions, Yuli Slavutsky for feedback on the manuscript, and Tobias Konitzer and David Rothschild for access to and helpful discussions about the PredictWise survey dataset. JvK is supported by The Branco Weiss Fellowship—Society in Science. 
+
+## Author Contributions 
+
+JvK conceived of the project, proposed the initial model, and brought the co-authors together. AG then led all major aspects of the project with advice and feedback from JvK and AS: (i) iterating on and refining the generative model, particularly the logit parametrization and novel KL-shift prior; (ii) developing the SMCS posterior inference procedure; (iii) implementing and maintaining the main codebase; and (iv) conducting empirical case studies. MS contributed early work on variational inference and conducted empirical comparisons to the SMCS procedure. AG and JvK wrote the manuscript with feedback from AS. 
+
+## Appendix A. KL Shift Prior 
+
+This appendix provides additional details on the motivation for and the implementation of the KL-truncation shift prior. The following Lemma shows that the truncation threshold ε in Eq. (3.11) can be interpreted as a finite-sample signal-strength condition. 
+
+Lemma A.1 (A finite-sample detectability lower bound) Let p0(· | pa ℓ) denote the shared mechanism for Zℓ, and let pδ (· | pa ℓ) denote the corresponding shifted mechanism under an inter-vention. Suppose that environment e ∈ E contains Ne independent samples from one of these two mechanisms. Let T be any test of 
+
+H0 : p = p0 versus H1 : p = pδ .
+
+Then, for any η ∈ [0 , 1] ,
+
+p0(T ) + pδ (1 − T ) ≤ η =⇒ KL  p0 ∥ pδ
+
+ ≥ 2(1 − η)2
+
+Ne
+
+.
+
+Proof 
+
+The error for any simple hypothesis test can be lower bounded as 
+
+p0(T ) + pδ (1 − T ) ≥ 1 − TV 
+
+
+
+pNe 
+
+> 0
+
+, p Ne
+
+> δ
+
+
+
+≥ 1 −
+
+r Ne
+
+2 KL  p0 ∥ pδ
+
+.
+
+The first inequality follows from standard testing lower bounds (e.g., Lehmann and Romano, 2022, The-orem 15.1.1) and the second from Pinsker’s inequality (e.g., Cover and Thomas, 2006, Lemma 11.6.1). Now suppose that p0(T ) + pδ (1 − T ) ≤ η. Combining this with the above lower bound gives 
+
+1 −
+
+r Ne
+
+2 KL  p0 ∥ pδ
+
+ ≤ η, 
+
+and rearranging yields 
+
+KL  p0 ∥ pδ
+
+ ≥ 2(1 − η)2
+
+Ne
+
+.
+
+Thus, without a lower bound on the KL divergence induced by an intervention, it can be impossible to accurately test for interventions with finite samples, making reliable recovery of intervention targets impossible. 
+
+> 34 Bayesian Multi-Domain Causal Representation Learning
+
+Second-order expansion of the KL divergence. The quadratic approximation in Eq. (3.10) follows from a local expansion of the KL divergence. Let p = softmax( θ) and consider 
+
+KL  softmax( θ) softmax( θ + δ) .
+
+A second-order Taylor expansion in δ around δ = 0 gives 
+
+KL  softmax( θ) softmax( θ + δ) ≈ 12 δ⊤Hθ δ,
+
+where 
+
+Hθ = diag( p) − pp ⊤
+
+is the Fisher information matrix of the categorical distribution parameterized by θ.
+
+Why approximate and why not evaluate at θ? In principle, the most accurate truncation uses 
+
+Hθ evaluated at the current θ, or even the exact KL. However, this is not computationally feasible. To see this, consider the simplified model 
+
+p(a) = N (0 , 1) , p(b | a) ∝ N (0 , 1) · 1|b| > |a| ,
+
+since the truncation region for b depends on a,
+
+p(a | b) ∝ p(a) p(b | a) = ϕ(a) ϕ(b) · 1|b| > |a|
+
+Z(a) ,
+
+where Z(a) is the normalization constant of the truncated Gaussian. Because Z(a) depends on a,the conditional p(a | b) is no longer a tractable conjugate update. The same issue occurs with ( θ, δ): if the truncation depends on θ through Hθ , then the normal-ization constant of the truncated prior over δ depends on θ. This breaks conjugacy and prevents efficient Gibbs updates for θ. To retain tractable conjugate updates, we instead fix the Hessian at 
+
+θ = 0, yielding the quadratic constraint used in the main text:  
+
+> 12
+
+δ⊤H0 δ ≥ ε. H0 = 1
+
+K
+
+
+
+I − 1
+
+K 11 ⊤
+
+
+
+.
+
+Alternative: joint truncation. One alternative is to jointly truncate (θ, δ) as 
+
+p(θ, δ) ∝ ϕ(θ) ϕ(δ) 1{f (θ, δ) ≥ ε}.
+
+However, this requires rejection sampling from across all environments, which quickly becomes computationally infeasible. 
+
+Approximation quality. The approximation is best at θ = 0 and degrades as θ becomes more extreme (i.e., when the categorical distribution is highly concentrated). Under our prior, however, 
+
+θ typically remains close to zero, so this regime is unlikely. Empirically, we found this approximation reliably excludes negligible shifts even when θ deviates moderately from zero (see Figure 17). 
+
+## Appendix B. Inference 
+
+This appendix provides full details of the inference procedures, including complete conditional distributions and algorithmic details. 
+
+> 35
+
+Garg, Stettler, Schein, von Kügelgen 2 0 2          
+
+> PC 1
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> PC 2
+> = (0, 0, 0)
+> 0.10
+> 0.25
+> 0.50
+> 1.00
+> 202
+> PC 1
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> PC 2
+> = (1.0, 0.5, 0.5)
+> 0.10
+> 0.25
+> 0.50
+> 1.00
+> 1.00
+> 202
+> PC 1
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> PC 2
+> = (0, 3, 0)
+> 0.10
+> 0.25
+> 0.50
+> 1.00
+> DKL ()12H012H
+
+Figure 17: Quadratic KL constraint on δ for various θ. We compare the exact KL divergence with second-order approximations based on H0 and Hθ . The H0 approximation deteriorates when θ
+
+is far from zero (i.e., highly concentrated distributions), but this regime is unlikely under our prior. 
+
+B.1 Conjugate Updates 
+
+B.1.1 immediate conjugacy 
+
+The following conditional distributions are immediate from standard conjugacy: 
+
+p(cℓ | − ) = Beta 
+
+αc + X
+
+e∈E 
+
+Ieℓ , β c + |E| − X
+
+e∈E 
+
+Ieℓ
+
+
+
+p(Ieℓ = I∗ | − ) ∝ cI∗
+
+ℓ (1 − cℓ)1−I ∗ Y
+
+j∈[Ne]
+
+p
+
+
+
+ze,j ℓ |θℓ
+
+ pa e,j ℓ
+
+, δeℓ
+
+ pa e,j ℓ
+
+, Ieℓ = I∗
+
+= cI∗
+
+ℓ (1 − cℓ)1−I ∗ Y
+
+j∈[Ne]
+
+exp 
+
+
+
+θℓ
+
+ pa e,j ℓ
+
+
+
+ze,j ℓ
+
++ I∗ · δeℓ
+
+ pa e,j ℓ
+
+
+
+ze,j ℓ
+
+P
+
+z′∈[K] exp 
+
+
+
+θℓ
+
+ pa e,j ℓ
+
+
+
+z′ + I∗ · δeℓ
+
+ pa e,j ℓ
+
+
+
+z′
+
+
+
+p(ze,j = z∗ | − ) ∝ p(xe,j | M , σ, ze,j = z∗) Y
+
+ℓ∈[L]
+
+p
+
+
+
+z∗
+
+ℓ | θℓ
+
+ z∗
+
+1: ℓ−1
+
+, δeℓ
+
+ z∗
+
+1: ℓ−1
+
+, Ieℓ
+
+
+
+∝ ϕD
+
+
+
+xe,j ; m0 + P
+
+ℓ∈[L] mℓz∗
+
+ℓ , diag  σ2 Y 
+
+ℓ∈[L]
+
+exp 
+
+
+
+θℓ
+
+ z∗
+
+1: ℓ−1
+
+
+
+z∗
+
+> ℓ
+
++ Ieℓ · δeℓ
+
+ z∗
+
+1: ℓ−1
+
+
+
+z∗
+
+> ℓ
+
+P
+
+z′∈[K] exp 
+
+
+
+θℓ
+
+ z∗
+
+1: ℓ−1
+
+
+
+z′ + Ieℓ · δeℓ
+
+ z∗
+
+1: ℓ−1
+
+
+
+z′
+
+
+
+B.1.2 measurement model 
+
+With the measurement model, for each dimension d ∈ [D], we pool observations across all (e, j ). Let 
+
+N = P
+
+e∈E Ne. Define the stacked response vector Xd ∈ RN and design matrix Z ∈ RN ×(L+1) with entries indexed by (e, j ):
+
+(Xd)(e,j ) = xe,j d , Z(e,j ),: =
+
+h
+
+1 ze,j 
+
+1 · · · ze,j L
+
+i
+
+, e ∈ E , j ∈ [Ne].
+
+36 Bayesian Multi-Domain Causal Representation Learning 
+
+The mean M admits Gaussian–Gaussian conjugate updates: 
+
+Xd | md, σ 2 
+
+> d
+
+∼ N N
+
+ Zm d, σ 2
+
+> d
+
+I =⇒ (ZTZ)−1ZTXd ∼ N L+1 
+
+
+
+md, σ 2
+
+> d
+
+(ZTZ)−1
+
+=⇒ md | − ∼ N L+1 (μd, Σd) ,
+
+Σd = I + ZTZ
+
+σ2
+
+> d
+
+!−1
+
+,
+
+μd = Σd
+
+ZTXd
+
+σ2
+
+> d
+
+!
+
+.
+
+The variance σ2 
+
+> d
+
+admits an inverse-gamma–Gaussian conjugate update: 
+
+σ2 
+
+> d
+
+| − ∼ Inv -Gamma 
+
+
+
+ασ + N
+
+2 , β σ + 12 ∥Xd − Zm d∥22
+
+
+
+.
+
+Note: Here we write md ∈ RL+1 for the d-th row of M : M =
+
+
+
+m⊤
+
+> 1
+
+...
+
+m⊤
+
+> D
+
+
+
+B.1.3 Pólya–Gamma Augmentation: 
+
+The updates for Θ, ∆ do not follow immediately from conjugacy and require data augmentation (Chen et al., 2013; Polson et al., 2013). Fix a node ℓ ∈ [L] and parent configuration pa ℓ ∈ PA ℓ. For the remainder of this section, we suppress this indexing: 
+
+θ := θℓ(pa ℓ), δe := δeℓ (pa ℓ).
+
+For each environment e ∈ E , define the following counts and associated logits: 
+
+Cek = X
+
+> j∈[Ne]
+
+1{ze,j ℓ = k ∧ pa e,j ℓ = pa ℓ},N e = X
+
+> k∈[K]
+
+Cek ,
+
+Γ = AB .
+
+Here A ∈ RE×(E+1) and B ∈ R(E+1) ×K are given by 
+
+A =
+
+
+
+1 I1 
+
+> ℓ
+
+0 · · · 01 0 I2 
+
+> ℓ
+
+· · · 01 0 0 . . . 0
+
+... ... ... . . . IEℓ
+
+
+
+, B =
+
+
+
+θ⊤
+
+(δ1)⊤
+
+...
+
+(δE )⊤
+
+
+
+Now, we fix a category index k ∈ [K] and define the conditional update for the kth column B:,k 
+
+given B:,¬k. The aggregated counts satisfy 
+
+Cek ∼ Binomial N e, exp(Γ e,k )
+
+P 
+
+> k′
+
+exp(Γ e,k ′ )
+
+!
+
+= Binomial 
+
+
+
+N e, exp( ρe)1 + exp( ρe)
+
+
+
+,
+
+37 Garg, Stettler, Schein, von Kügelgen 
+
+where 
+
+ρe = Γ e,k − ζe, ζe = log 
+
+ X 
+
+> k′̸=k
+
+exp(Γ e,k ′ )
+
+ .
+
+This is the form required for Pólya–Gamma augmentation. We introduce auxiliary variables 
+
+ωe ∼ PG (N e, ρ e), e ∈ E ,
+
+and define Ω = diag( ω1, . . . , ω E ) and κ ∈ RE with 
+
+κe = Cek − N e
+
+2 .
+
+Including Ω, the complete conditional (ignoring truncation of δ) is: 
+
+B:,k | − ∼ N E+1 (μPG , ΣPG ) ,
+
+ΣPG =
+
+
+
+ATΩA + Λ0
+
+−1
+
+,
+
+μPG = ΣPG 
+
+
+
+AT(κ + Ωζ) + Λ0μ0
+
+
+
+,
+
+where ζ =
+
+h
+
+ζ1 . . . ζE
+
+iT
+
+, and (μ0, Λ0) denote the prior mean and precision induced by ΣΘ, Σ∆
+
+and conditioning on B:,¬k:
+
+Λ0 = diag 
+
+
+
+(Σ−1Θ )kk , (Σ−1∆ )kk , . . . , (Σ−1∆ )kk 
+
+
+
+, μ0 =
+
+h
+
+μ0,Θ μ10,∆ . . . μE
+
+> 0,∆
+
+i⊤
+
+,
+
+where 
+
+μ0,Θ = − (Σ−1Θ )k, ¬k θ¬k
+
+(Σ−1Θ )kk 
+
+, μe 
+
+> 0,∆
+
+= − (Σ−1∆ )k, ¬k δe
+
+> ¬k
+
+(Σ−1∆ )kk 
+
+.
+
+The update for θk uses exactly the Gaussian conditional above. For δek, there is one additional truncation step. Since the coordinates {δe}e∈E are conditionally independent given θ and the auxiliary variables, each environment e can be updated separately after sampling θk. To do this, we partition μPG and ΣPG as 
+
+μPG =
+
+ μθ
+
+μ∆
+
+
+
+, ΣPG =
+
+ Σθθ Σθ∆
+
+Σ∆θ Σ∆∆ 
+
+
+
+,
+
+where μθ ∈ R, μ∆ ∈ RE , Σθθ ∈ R, Σθ∆ ∈ R1×E , Σ∆θ ∈ RE×1, and Σ∆∆ ∈ RE×E .We first sample 
+
+θk ∼ N (μθ , Σθθ ).
+
+Conditioning on this sampled value, the remaining coordinates satisfy 
+
+p(δek | θk, −) ∝ N  (μcond )e, (Σ cond )ee 
+
+ 1δek ∈ (−∞ , l ek] ∪ [uek, ∞) ,
+
+where 
+
+μcond = μ∆ + Σ∆θ Σ−1
+
+> θθ
+
+ θk − μθ
+
+,
+
+Σcond = Σ∆∆ − Σ∆θ Σ−1 
+
+> θθ
+
+Σθ∆.
+
+The truncation bounds (lek, u ek) are obtained as the roots of the quadratic constraint with respect to δek
+
+12 Hkk (δek)2 + δek Hk, ¬kδe 
+
+> ¬k
+
++ 12 (δe
+
+> ¬k
+
+)⊤H¬k, ¬kδe 
+
+> ¬k
+
+= ε, 
+
+where 
+
+δe =
+
+ δek
+
+δe
+
+> ¬k
+
+
+
+, H =
+
+ Hkk Hk, ¬k
+
+H¬k,k H¬k, ¬k
+
+
+
+.
+
+38 Bayesian Multi-Domain Causal Representation Learning 
+
+B.2 Stratified resampling 
+
+For the resampling step of SMCS, we use stratified resampling (Kitagawa, 1996). 5 Stratified resampling re-draws S particles with replacement from the current set, where the expected number of times each particle is selected is proportional to its importance weight. Specifically, let cumulative weights be 
+
+Cs =
+
+> S
+
+X
+
+> s=1
+
+w(s) 
+
+> k
+
+,
+
+and draw 
+
+us ∼ Uniform 
+
+ s − 1
+
+S , sS
+
+
+
+, s = 1 , . . . , S. 
+
+The ancestor indices are then defined as 
+
+as = min {j : Cj ≥ us}.
+
+Finally, particles are replaced by their selected ancestors, and all weights are reset: 
+
+(Φ, Ψ, Z)(s) 
+
+> k
+
+← (Φ, Ψ, Z)(as) 
+
+> k
+
+, w(s) 
+
+> k
+
+← 1
+
+S .
+
+B.3 Parallel Tempering 
+
+Several methods have been developed to improve Monte Carlo exploration of multimodal posteriors, including mode-jumping strategies (Pompe et al., 2020) and tempering-based approaches (Geyer, 1991; Marinari and Parisi, 1992; Neal, 1996). We initially considered parallel tempering (Geyer, 1991), an MCMC-based approach that leverages the same family of tempered posteriors introduced in Section 4.2, but found SMCS performed better in our implementation and model. Parallel tempering runs K Markov chains in parallel at different temperatures 1 = T1 < T 2 <
+
+· · · < T K , where each chain targets the tempered distribution pTk (Φ, Ψ, Z | X). As in SMCS, higher temperatures correspond to flattened posteriors that facilitate exploration across modes, while the lowest-temperature chain ( T1 = 1 ) targets the true posterior of interest. While SMCS maintains a population of particles and progresses sequentially through the temper-ature schedule, parallel tempering instead maintains chains at fixed temperatures and evolves them sequentially to generate samples. Information is exchanged across temperatures via metropolis swap moves between adjacent chains. Specifically, after every m Gibbs steps, swap proposals are made between adjacent temperature levels Tk and Tk+1 . A proposed swap of states (State k, State k+1 ) is accepted with probability 
+
+pswap = min 
+
+(
+
+1, pTk (State k+1 )pTk+1 (State k)
+
+pTk (State k)pTk+1 (State k+1 )
+
+)
+
+= min 
+
+n
+
+1, p(Zk+1 | Φk+1 ) p(X | Zk+1 , Ψk+1 )1/T k −1/T k+1 p(Zk | Φk) p(X | Zk, Ψk)1/T k+1 −1/T k
+
+o
+
+.
+
+(B.1) This mechanism allows high-temperature chains to escape local modes and transfer information back to lower temperatures, thereby improving overall posterior exploration. The intermediate temperatures serve as bridges between the cold and hot chains, and greatly improve acceptance rates.           
+
+> 5. The simplest resampling method is multinomial resampling , which independently re-draws Sparticles with replacement from the current set, where each particle is selected with probability equal to its importance weight. This can be done using i.i.d. draws us∼Uniform (0 ,1) with the same inverse-CDF construction underlying stratified resampling. This is a valid approach but typically results in higher variance.
+
+39 Garg, Stettler, Schein, von Kügelgen 
+
+Algorithm 2 Parallel Tempering 
+
+Require: Temperatures 1 = T1 < T 2 < · · · < T K , iterations S, swap interval m 
+
+> 1:
+
+Initialize states {(Φ, Ψ, Z)(0)  
+
+> k
+
+}k∈[K] 
+
+> 2:
+
+for s = 1 to S do  
+
+> 3:
+
+for k = 1 to K do  
+
+> 4:
+
+(Φ, Ψ, Z)(s) 
+
+> k
+
+← GibbsUpdate (( Φ, Ψ, Z)(s−1)  
+
+> k
+
+, T k) 
+
+> 5:
+
+end for  
+
+> 6:
+
+if s mod m = 0 then  
+
+> 7:
+
+for k = 1 to K − 1 do  
+
+> 8:
+
+Swap (( Φ, Ψ, Z)(s) 
+
+> k
+
+, (Φ, Ψ, Z)(s)
+
+> k+1
+
+) with probability pswap  
+
+> 9:
+
+end for  
+
+> 10:
+
+end if  
+
+> 11:
+
+end for  
+
+> 12:
+
+return Samples from cold chain {(Φ, Ψ, Z)(s)1 }Ss=1 
+
+B.4 Variational Inference 
+
+As an alternative inference method, we also considered an approach based on variational inference (Blei et al., 2017; Wainwright and Jordan, 2008). Rather than maintaining a population of particles or Markov chains, VI approximates the exact posterior by optimizing a tractable surrogate distribution over the continuous latent variables with respect to the evidence lower bound (ELBO). In our implementation, the discrete causal variables ZE are not approximated variationally; instead, they are marginalized exactly by enumerating all KL joint configurations, which avoids high-variance score-function gradient estimates for the discrete variables. 
+
+Variational family. The approximate posterior is defined over the continuous latent variables 
+
+W := ( M , Θ, c, IE , ∆E ) and factorizes according to a mean-field assumption as 
+
+qϕ(W ) = qϕ(M )
+
+> L
+
+Y
+
+> ℓ=1
+
+"
+
+qϕ(cℓ) Y
+
+> pa ℓ∈PA ℓ
+
+qϕ
+
+ θℓ(pa ℓ) EY
+
+> e=1
+
+qϕ(Ieℓ ) qϕ
+
+ δeℓ (pa ℓ) #
+
+. (B.2) The individual factors are specified as follows. 
+
+• Measurement matrix. The matrix M ∈ RD×(L+1) is treated as a point estimate rather than a full variational distribution, i.e., 
+
+qϕ(M ) = Dirac-Delta (Mloc ) , (B.3) where Mloc ∈ RD×(L+1) is a learnable parameter. This corresponds to maximum a posteriori (MAP) estimation of M within the variational framework. 
+
+• Base mechanism parameters. Each parameter vector θℓ(pa ℓ) is approximated by an independent multivariate Gaussian with learnable mean and covariance: 
+
+qϕ
+
+ θℓ(pa ℓ) = NK
+
+
+
+μθℓ (pa ℓ), Lθℓ (pa ℓ) Lθℓ (pa ℓ)⊤
+
+, (B.4) where μθℓ (pa ℓ) ∈ RK is the variational mean and Lθℓ (pa ℓ) is a learnable lower-triangular matrix with positive diagonal. 
+
+• Intervention probability. The scalar cℓ is approximated by a Beta distribution with learnable concentration parameters: 
+
+qϕ(cℓ) = Beta 
+
+
+
+softplus( αℓ), softplus( βℓ)
+
+
+
+, (B.5) where αℓ, β ℓ ∈ R are passed through the softplus function to ensure positivity. 
+
+> 40 Bayesian Multi-Domain Causal Representation Learning
+
+• Intervention indicators. Since Ieℓ ∈ { 0, 1} is discrete, we replace the Bernoulli factor with a Relaxed Bernoulli (Maddison et al., 2016) at a fixed temperature τ > 0:
+
+qϕ(Ieℓ ) = RelaxedBernoulli 
+
+
+
+τ, σ (ξeℓ )
+
+
+
+, (B.6) where ξeℓ ∈ R is a learnable logit and σ(·) denotes the sigmoid function. This continuous relaxation permits reparameterization gradients while approaching binary behaviour for small τ .To recover binary predictions at evaluation time, the straight-through estimator (Bengio et al., 2013) is applied: the forward pass uses the value of the relaxed sample rounded to {0, 1} by thresholding at 0.5, while gradients are passed through the continuous relaxation. 
+
+• Intervention shifts. Each shift vector δeℓ (pa ℓ) is approximated by a multivariate Gaussian: 
+
+qϕ
+
+ δeℓ (pa ℓ) = NK
+
+
+
+μδℓ (e, pa ℓ), Lδℓ (e, pa ℓ) Lδℓ (e, pa ℓ)⊤
+
+. (B.7) To enforce the orthogonality constraint from Eq. (3.9) (i.e., P 
+
+> k
+
+δk = 0 ), each raw sample δraw 
+
+is projected onto the sum-zero subspace after sampling: 
+
+δ = δraw − 1
+
+K
+
+
+
+1⊤ 
+
+> K
+
+δraw 
+
+
+
+1K . (B.8) Note that, unlike in the SMCS and Gibbs samplers, the KL-truncation of the shift prior (§ 3.4.1) is not applied in this VI implementation; a plain isotropic Gaussian NK (0, σ 2∆ I) is used as the prior on the raw shifts. The observation noise σ2 is treated as a fixed hyperparameter and is not estimated variationally. The variational parameters ϕ thus comprise 
+
+ϕ =
+
+
+
+Mloc ,  μθℓ (pa ℓ), Lθℓ (pa ℓ)
+
+> ℓ, pa ℓ
+
+, (αℓ, β ℓ)ℓ,  ξeℓ
+
+
+
+> ℓ,e
+
+,  μδℓ (e, pa ℓ), Lδℓ (e, pa ℓ)
+
+> ℓ,e, pa ℓ
+
+
+
+. (B.9) 
+
+ELBO and exact marginalization of the discrete variables. Collecting all continuous latents in W , the ELBO is 
+
+L(ϕ) := Eqϕ(W )
+
+log X
+
+> z∈Z L
+
+p
+
+
+
+W , Z = z, XE σ2
+
+− log qϕ(W )
+
+ ≤ log p
+
+
+
+XE | σ2
+
+. (B.10) Because no variational factor is placed on Z, the discrete latents are summed out exactly. For each assignment z ∈ Z L, the joint log-likelihood is computed analytically, and the sum over all KL
+
+configurations is folded into the ELBO via the log-sum-exp operation. This eliminates the need for a score-function estimator for the discrete variables entirely. In practice, this exact enumeration is carried out by Pyro’s TraceEnum_ELBO objective with parallel enumeration of latent states. 
+
+Optimization. All variational parameters ϕ are optimized jointly using the Adam optimizer (Kingma and Ba, 2015) with a parameter-specific learning rate schedule. The measurement matrix Mloc and the mechanism means μθℓ are updated with learning rate ηθ = 10 −3, while the intervention logits 
+
+ξeℓ and the shift means μδℓ use a higher learning rate ηδ = 10 −2 to encourage faster adaptation to environment-specific effects. The ELBO is normalized by the total number of observations before com-puting gradients. Training proceeds for 2,000 gradient steps with intervention temperature τ = 0 .4.The measurement matrix Mloc is initialized from N (0 , 1) ; all remaining means are initialized from small-variance Gaussians near zero. The intervention logits ξeℓ are initialized to −3, placing the prior probability of intervention at approximately 5% and encouraging sparsity at the start of training. 
+
+> 41 Garg, Stettler, Schein, von Kügelgen
+
+Soft KL penalty. To partially compensate for the absence of the hard KL truncation, we also evaluated a variant that adds a differentiable Lagrangian penalty to the ELBO, 
+
+log fλ(δeℓ (pa ℓ)) = −λ · ReLU 
+
+
+
+b − 12K δeℓ (pa ℓ) 2
+
+
+
+, (B.11) with threshold b = 0 .1 (matching the paper’s default) and penalty weight λ = 1 . This penalizes config-urations where the shift is below the KL threshold while remaining fully differentiable. However, the penalty term is negligible in scale relative to the ELBO (which is on the order of 10 6 per dataset), so the optimizer effectively ignores it. Empirically, intervention recovery accuracy and LPPD were indistin-guishable from the unpenalized VI baseline across all 10 datasets. This confirms that a soft Lagrangian relaxation alone is insufficient to replicate the effect of the hard KL truncation, and thus the adap-tations used to allow for gradient-based optimization create a performance gap between VI and sam-pling based approaches, beyond any differences that may arise from the inference methods themselves. 
+
+## Appendix C. Experiment Processing and Metrics 
+
+This appendix provides details on processing steps and exact metrics computed for each figure. 
+
+C.1 Label Switching 
+
+The model permits a nuisance symmetry of sign flips in Z, which we have to account for in our analysis. Specifically, for any s ∈ {− 1, 1}L, the transformation 
+
+z′ = s ⊙ z, M ′ = m0 s1m1 . . . sLmL
+
+ ,
+
+leaves the posterior over all other quantities unchanged and is fundamentally the same representation. Unlike permutations of the latent ordering, this is a true nuisance symmetry and leaves the full posterior invariant, not just the measurement model. To manage this, we align the signs of z
+
+individually for each sample using the coordinate of M with the largest signal, 
+
+sℓ = sign 
+
+
+
+Marg max d∈[D] |Md,ℓ |,ℓ 
+
+
+
+, z′ 
+
+> ℓ
+
+= sℓzℓ.
+
+When comparing to ground truth M ∗, we perform the additional alignment 
+
+sℓ = sign 
+
+
+
+M ∗ 
+
+> arg max d∈[D]|Md,ℓ |,ℓ
+
+
+
+· sign 
+
+
+
+Marg max d∈[D] |Md,ℓ |,ℓ 
+
+
+
+, z′ 
+
+> ℓ
+
+= sℓzℓ.
+
+This relabeling is standard practice (Stephens, 2000), and we use aligned z′ instead of raw z for all metrics and graphs. 
+
+C.2 Full Intervention Figure 
+
+Figure 18 contains the full parent grid referenced in Figure 11, as well as similar plots for δ1, δ 2
+
+C.3 Metrics 
+
+This reports the exact sample statics used in figures and tables throughout the experimental results sections. Throughout, {(Φ, Ψ, Z)(s)}Ss=1 is the set of posterior samples with weights. Weights are uniformly 1/S for Gibbs and PT. 
+
+C.3.1 Measurement Model 
+
+We report the posterior mean of the magnitude of the measurement matrix. For the WVS dataset, we additionally normalize each variable by its range of observed values. This normalization is necessary 
+
+> 42
+
+Bayesian Multi-Domain Causal Representation Learning DEU 
+
+NLD 
+
+NIC 
+
+VEN 
+
+VNM 
+
+KOR 
+
+TWN KEN 
+
+NGA 
+
+ZWE 
+
+USA VNM     
+
+> BGD EGY ETH
+> IDN
+> IRQ
+> LBY
+> NGA
+> PAK
+> TUR
+> USA DEU VEN TWN
+> NZL
+> SVK
+> NIC
+> MDV ETH
+> KEN
+> NGA
+> PAK
+> TUR UZB
+> USA DEU VEN TWN
+> NIR
+> GTM
+> NIC
+> MYS
+> TWN
+> BGD
+> ETH
+> KEN
+> NGA PAK
+> USA
+> DEU VEN
+
+USA 
+
+BRA 
+
+SGP 
+
+KOR 
+
+BGD 
+
+ETH 
+
+IDN 
+
+JOR 
+
+LBN 
+
+UZB 
+
+DEU 
+
+VEN 
+
+TWN 
+
+BRA 
+
+COL 
+
+MNG 
+
+BGD 
+
+EGY 
+
+IDN 
+
+IRQ 
+
+JOR 
+
+NGA 
+
+ZWE 
+
+USA 
+
+DEU VEN 
+
+TWN 
+
+CAN 
+
+COL 
+
+NIC 
+
+VEN 
+
+HKG 
+
+JPN 
+
+BGD 
+
+EGY 
+
+IDN 
+
+JOR 
+
+USA 
+
+DEU 
+
+TWN 
+
+CAN 
+
+USA 
+
+NLD 
+
+MMR 
+
+VNM 
+
+CHN 
+
+BGD 
+
+EGY 
+
+IDN 
+
+LBY 
+
+DEU VEN 
+
+TWN USA 
+
+BOL 
+
+PHL 
+
+JPN 
+
+MNG 
+
+BGD EGY 
+
+IDN 
+
+JOR LBY DEU 
+
+VEN 
+
+TWN 
+
+NIR 
+
+USA 
+
+BOL 
+
+BRA 
+
+GTM 
+
+EGY 
+
+IRQ 
+
+JOR 
+
+NGA 
+
+TUN 
+
+DEU VEN 
+
+TWN 
+
+AUS 
+
+CAN GBR 
+
+NZL 
+
+USA 
+
+DEU 
+
+NLD 
+
+CHN 
+
+JPN 
+
+TUN 
+
+VEN 
+
+TWN GBR 
+
+USA 
+
+ROU 
+
+ARG 
+
+PER 
+
+PHL 
+
+HKG 
+
+EGY 
+
+LBY 
+
+NGA 
+
+DEU VEN 
+
+TWN 
+
+AUS 
+
+CAN 
+
+CZE 
+
+ARM 
+
+BOL 
+
+PHL HKG 
+
+KEN 
+
+PAK 
+
+ZWE 
+
+USA 
+
+DEU 
+
+VEN TWN 
+
+Figure 18: Intervention directions across parent configurations and environments. Pos-terior mean intervention vectors δeℓ (pa ℓ) for each country, shown across all parent configurations. Vectors are expressed in an orthogonal basis for the two-dimensional intervention subspace, where the first basis direction captures shifts in the mean of Zℓ and the second captures changes in dispersion. 
+
+43 Garg, Stettler, Schein, von Kügelgen 
+
+because Q262 Age has a substantially larger range than other variables; it would otherwise dominate the scale, obscuring patterns in the remaining variables. normalized |M |d,ℓ := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · |M (s) 
+
+> d,l
+
+|
+
+max e,j xe,j d − min e,j xe,j d
+
+Figure 7 
+
+|M |d,l := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · | M (s) 
+
+> d,l
+
+| Figures 12a, 12b and 15 
+
+Md,l := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · M (s) 
+
+> d,l
+
+Table 2 
+
+Mπ∗ := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · M (s) 
+
+> π∗(s)
+
+Table 2 
+
+π∗(s) := arg min  
+
+> π
+
+∥M (s) 
+
+> π
+
+− M ∗∥1,1
+
+C.3.2 Causal Latent Variables 
+
+We report the marginal posterior mean of each causal latent variable. We also define several distributions over Z that are used by multiple metrics below. 
+
+Epe 
+
+> Z
+
+[Zℓ] := 
+
+> S
+
+X
+
+> s=1
+
+w(s) ·
+
+ X
+
+> zℓ∈Z ℓ
+
+zℓ · pe, (s)(zℓ)
+
+ Figures 8, 12a and 12b 
+
+pe, (s)(zℓ|pa ℓ) = softmax 
+
+
+
+θ(s)
+
+> ℓ
+
+
+
+pa (s)
+
+> ℓ
+
+
+
++ Ie, (s) 
+
+> ℓ
+
+δe, (s)
+
+> ℓ
+
+
+
+pa (s)
+
+> ℓ
+
+  
+
+> zℓ
+
+Conditional 
+
+pe, (s)(z) = 
+
+> L
+
+Y
+
+> ℓ=1
+
+pe, (s) 
+
+> Zℓ
+
+(zℓ|z1: ℓ−1) Joint 
+
+pe, (s)(z∗ 
+
+> ℓ
+
+) = X
+
+> z∈Z
+
+1(zℓ = z∗ 
+
+> ℓ
+
+) · pe, (s)(z) Marginal 
+
+Z =
+
+> L
+
+Y
+
+> ℓ=1
+
+Zℓ Zℓ =
+
+
+
+1 − K + 1 2 , 2 − K + 1 2 , . . . , K − K + 1 2
+
+
+
+.
+
+C.3.3 Causal Graph 
+
+We quantify causal dependence using the method suggested by Janzing et al. (2013). Causal Influence := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · Dkl 
+
+ pe, (s)(Z) pj→ℓ,e, (s)(Z) Figures 8, 9 and 16 
+
+pj→ℓ,e, (s)(z) = 
+
+X 
+
+> z∗
+> j∈Z j
+
+pe, (s)(z∗ 
+
+> j
+
+) · pe, (s)(zℓ|z1: j−1, z ∗ 
+
+> j
+
+, zj+1: ℓ−1)
+
+ · Y
+
+> ℓ′∈[L]\ℓ
+
+pe, (s)(zℓ′ |z1: ℓ′−1)
+
+C.3.4 Interventions 
+
+We report posterior summaries of intervention indicators and shifts. 
+
+I := 
+
+> S
+
+X
+
+> s=1
+
+w(s) · I (s) Table 2 Figures 10, 12a and 12b 
+
+44 Bayesian Multi-Domain Causal Representation Learning 
+
+E[∥∆∥KL ]eℓ := 
+
+> S
+
+X
+
+> s=1
+
+w(s) ·
+
+X
+
+> z∈Z
+
+Dkl 
+
+
+
+p0,(s)(Zℓ · | z1: ℓ−1)∥pe, (s)(Zℓ|z1: ℓ−1)
+
+
+
+· pe, (s)(z)
+
+ Figure 10 
+
+δeℓ (pa ℓ) := 
+
+> S
+
+X
+
+> s=1
+
+w(s)Ie, (s) 
+
+> ℓ
+
+δe, (s)
+
+> ℓ
+
+
+
+pa (s)
+
+> ℓ
+
+
+
+Figure 11 
+
+C.3.5 Miscellaneous 
+
+Ee [Xd] := 1
+
+N e
+
+X 
+
+> j∈[Ne]
+
+xe,j d Eq. (7.1) 
+
+LPPD := 1
+
+P 
+
+> e∈E
+
+N e
+
+X
+
+> e∈E
+
+X
+
+> j∈[Ne]
+
+log 
+
+
+
+> S
+
+X
+
+> s=1
+
+w(s) X
+
+> z∈Z
+
+pe, (s)(z)ϕD
+
+
+
+xe,j ; m(s)0 + P 
+
+> ℓ∈[L]
+
+m(s) 
+
+> ℓ
+
+zℓ, diag  σ2(s) Table 2 
+
+## References 
+
+J. Adams, N. Hansen, and K. Zhang. Identification of partially observed linear causal models: Graphical conditions for the non-gaussian and heterogeneous cases. In Advances in Neural Information Processing Systems , volume 34, pages 22822–22833, 2021. 2 R. Agrawal, C. Squires, K. Yang, K. Shanmugam, and C. Uhler. Abcd-strategy: Budgeted experimental design for targeted causal structure discovery. In International Conference on Artificial Intelligence and Statistics , volume 89, pages 3400–3409. PMLR, 2019. 33 K. Ahuja, J. Hartford, and Y. Bengio. Properties from mechanisms: an equivariance perspective on identifiable representation learning. In International Conference on Learning Representations , 2021. 2 K. Ahuja, D. Mahajan, Y. Wang, and Y. Bengio. Interventional causal representation learning. In International conference on machine learning , pages 372–407. PMLR, 2023. 2, 7 K. Ahuja, A. Mansouri, and Y. Wang. Multi-domain causal representation learning via weak distributional invariances. In International Conference on Artificial Intelligence and Statistics , pages 865–873. PMLR, 2024. 2 E. M. Airoldi, D. Blei, E. A. Erosheva, and S. E. Fienberg. Handbook of mixed membership models and their applications . Chapman & Hall/CRC, 1st edition, 2014. 3 J. H. Albert and S. Chib. Bayesian analysis of binary and polychotomous response data. Journal of the American Statistical Association , 88(422):669–679, 1993. 33 J. D. Angrist and J.-S. Pischke. Mostly harmless econometrics: An empiricist’s companion . Princeton University Press, 2009. 2 L. P. Argyle, E. C. Busby, N. Fulda, J. R. Gubler, C. Rytting, and D. Wingate. Out of one, many: Using language models to simulate human samples. Political Analysis , 31(3):337–351, 2023. 28 E. Bareinboim and J. Pearl. Causal inference and the data-fusion problem. Proceedings of the National Academy of Sciences , 113(27):7345–7352, 2016. 2 Y. Bengio, N. Léonard, and A. Courville. Estimating or propagating gradients through stochastic neurons for conditional computation. arXiv preprint arXiv:1308.3432 , 2013. 41 S. Bing, U. Ninad, J. Wahl, and J. Runge. Identifying linearly-mixed causal representations from multi-node interventions. In Conference on Causal Learning and Reasoning , pages 843–867. PMLR, 2024. 2 D. M. Blei. Build, compute, critique, repeat: Data analysis with latent variable models. Annual Review of Statistics and Its Application , 1(1):203–232, 2014. 3 D. M. Blei, A. Kucukelbir, and J. D. McAuliffe. Variational inference: A review for statisticians. Journal of the American Statistical Association , 112(518):859–877, 2017. 40 45 Garg, Stettler, Schein, von Kügelgen 
+
+J. Brehmer, P. De Haan, P. Lippe, and T. Cohen. Weakly supervised causal representation learning. In 
+
+Advances in Neural Information Processing Systems , 2022. 2 P. Brouillard, S. Lachapelle, A. Lacoste, S. Lacoste-Julien, and A. Drouin. Differentiable Causal Discovery from Interventional Data. In Advances in Neural Information Processing Systems , volume 33, pages 21865– 21877, 2020. 2 S. Buchholz, G. Rajendran, E. Rosenfeld, B. Aragam, B. Schölkopf, and P. Ravikumar. Learning linear causal representations from interventions under general nonlinear mixing. In Advances in Neural Information Processing Systems , 2023. 2, 7 R. Cai, F. Xie, C. Glymour, Z. Hao, and K. Zhang. Triad constraints for learning causal structure of latent variables. In Advances in Neural Information Processing Systems , volume 32, 2019. 2 C. L. Canonne, I. Diakonikolas, D. M. Kane, and A. Stewart. Testing conditional independence of discrete distributions. In Proceedings of the 50th Annual ACM SIGACT Symposium on Theory of Computing ,pages 735–748, 2018. 11 J. Chen, J. Zhu, Z. Wang, X. Zheng, and B. Zhang. Scalable inference for logistic-normal topic models. In C. Burges, L. Bottou, M. Welling, Z. Ghahramani, and K. Weinberger, editors, Advances in Neural Information Processing Systems , volume 26. Curran Associates, Inc., 2013. 15, 37 M. Chevalley, P. Schwab, and A. Mehrjou. Deriving causal order from single-variable interventions: Guarantees & algorithm. In International Conference on Learning Representations , volume 2025, pages 48992–49017, 2025. 11 S. Chib. Marginal likelihood from the gibbs output. Journal of the American Statistical Association , 90(432): 1313–1321, 1995. 18 T. M. Cover and J. A. Thomas. Elements of information theory . Wiley-Interscience, Hoboken, N.J, 2nd ed edition, 2006. ISBN 978-0-471-24195-9. 34 C. Dai, J. Heng, P. E. Jacob, and N. Whiteley. An invitation to sequential monte carlo samplers. Journal of the American Statistical Association , 117(539):1587–1600, 2022. 15 H. Dai, Y. Qiu, I. Ng, X. Dong, P. Spirtes, and K. Zhang. Latent variable causal discovery under selection bias. In International Conference on Machine Learning , pages 12161–12178. PMLR, 2025. 32 I. Daunhawer, A. Bizeul, E. Palumbo, A. Marx, and J. E. Vogt. Identifiability results for multimodal contrastive learning. In The Eleventh International Conference on Learning Representations , 2023. 2 P. Del Moral, A. Doucet, and A. Jasra. Sequential monte carlo samplers. Journal of the Royal Statistical Society Series B: Statistical Methodology , 68(3):411–436, 2006. 15 D. Durante. Conjugate bayes for probit regression via unified skew-normal distributions. Biometrika , 106(4): 765–779, 2019. 33 C. Eastwood, A. Robey, S. Singh, J. Von Kügelgen, H. Hassani, G. J. Pappas, and B. Schölkopf. Probable domain generalization via quantile risk minimization. In Advances in Neural Information Processing Systems , 2022. 6 F. Eberhardt, C. Glymour, and R. Scheines. On the number of experiments sufficient and in the worst case necessary to identify all causal relations among n variables. In Proceedings of the Twenty-First Conference on Uncertainty in Artificial Intelligence , pages 178–184, 2005. 2 N. Friedman and D. Koller. Being Bayesian about network structure. a Bayesian approach to structure discovery in Bayesian networks. Machine learning , 50(1):95–125, 2003. 33 A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. Bayesian Data Analysis .Chapman & Hall/CRC Texts in Statistical Science Series. CRC, third edition, 2013. ISBN 9781439840955 1439840954. 3 A. Gelman, J. Hwang, and A. Vehtari. Understanding predictive information criteria for bayesian models. 
+
+Statistics and computing , 24(6):997–1016, 2014. 20 C. J. Geyer. Markov chain monte carlo maximum likelihood. In Computing Science and Statistics: Proceedings of the 23rd Symposium on the Interface , pages 156–163. Interface Foundation of North America, 1991. 39 46 Bayesian Multi-Domain Causal Representation Learning 
+
+D. P. Green, B. Palmquist, and E. Schickler. Partisan hearts and minds: Political parties and the social identities of voters . Yale University Press, 2002. 28 C. Haerpfer, R. Inglehart, A. Moreno, C. Welzel, K. Kizilova, J. Diez-Medrano, M. Lagos, P. Norris, E. Ponarin, B. Puranen, et al. World values survey: Round seven-country-pooled datafile version 5.0, 2022. 3, 21 A. Hägele, J. Rothfuss, L. Lorch, V. R. Somnath, B. Schölkopf, and A. Krause. Bacadi: Bayesian causal discovery with unknown interventions. In International Conference on Artificial Intelligence and Statistics ,pages 1411–1436. PMLR, 2023. 33 A. Hauser and P. Bühlmann. Characterization and greedy learning of interventional markov equivalence classes of directed acyclic graphs. The Journal of Machine Learning Research , 13(1):2409–2464, 2012. 2 A. Hauser and P. Bühlmann. Jointly interventional and observational data: estimation of interventional Markov equivalence classes of directed acyclic graphs. Journal of the Royal Statistical Society: Series B (Statistical Methodology) , 77(1):291–318, 2015. 2 D. Heckerman, D. Geiger, and D. M. Chickering. Learning Bayesian networks: The combination of knowledge and statistical data. Machine learning , 20(3):197–243, 1995. 33 D. Heckerman, C. Meek, and G. Cooper. A Bayesian approach to causal discovery. In Innovations in Machine Learning: Theory and Applications , pages 1–28. Springer, 2006. 33 C. Heinze-Deml, J. Peters, and N. Meinshausen. Invariant causal prediction for nonlinear models. Journal of Causal Inference , 6(2), 2018. 6 M. A. Hernán and J. M. Robins. Causal inference: What if . Boca Raton: Chapman & Hall/CRC., 2020. 2 B. Huang, C. J. H. Low, F. Xie, C. Glymour, and K. Zhang. Latent hierarchical causal structure discovery with rank constraints. In Advances in Neural Information Processing Systems , volume 35, pages 5549–5561, 2022. 32 A. Hyvärinen and H. Morioka. Unsupervised feature extraction by time-contrastive learning and nonlinear ica. In Advances in Neural Information Processing Systems , pages 3765–3773, 2016. 2 A. Hyvärinen and H. Morioka. Nonlinear ICA of temporally dependent stationary sources. In International Conference on Artificial Intelligence and Statistics , pages 460–469. PMLR, 2017. 2 A. Hyvärinen and P. Pajunen. Nonlinear independent component analysis: Existence and uniqueness results. 
+
+Neural networks , 12(3):429–439, 1999. 2 A. Hyvärinen, H. Sasaki, and R. Turner. Nonlinear ICA using auxiliary variables and generalized contrastive learning. In International Conference on Artificial Intelligence and Statistics , pages 859–868, 2019. 2 G. W. Imbens and D. B. Rubin. Causal inference in statistics, social, and biomedical sciences . Cambridge University Press, 2015. 2 R. Inglehart, C. Haerpfer, A. Moreno, C. Welzel, K. Kizilova, J. Diez-Medrano, M. Lagos, P. Norris, E. Ponarin, B. Puranen, et al. World values survey, 2005. 3, 22, 24 A. Jaber, M. Kocaoglu, K. Shanmugam, and E. Bareinboim. Causal discovery from soft interventions with unknown targets: Characterization and learning. In Advances in Neural Information Processing Systems ,volume 33, pages 9551–9561, 2020. 2 D. Janzing, D. Balduzzi, M. Grosse-Wentrup, and B. Schölkopf. Quantifying causal influences. The Annals of Statistics , 41(5):2324–2358, 2013. 23, 44 A. Jasra, C. Holmes, and D. Stephens. Markov chain monte carlo methods and the label switching problem in Bayesian mixture modeling. Statistical Science , 20(1):50–67, 2005. 17, 22 Z. Jiang and J. Templin. Gibbs samplers for logistic item response models via the pólya–gamma distribution: A computationally efficient data-augmentation strategy. Psychometrika , 84(2):358–374, 2019. 33 I. Khemakhem, D. Kingma, R. Monti, and A. Hyvarinen. Variational autoencoders and nonlinear ica: A unifying framework. In International Conference on Artificial Intelligence and Statistics , pages 2207–2217, 2020. 2 D. P. Kingma and J. Ba. Adam: A method for stochastic optimization. In International Conference on Learning Representations (ICLR) , 2015. URL https://arxiv.org/abs/1412.6980 . 41 47 Garg, Stettler, Schein, von Kügelgen 
+
+G. Kitagawa. Monte carlo filter and smoother for non-gaussian nonlinear state space models. Journal of Computational and Graphical Statistics , 5(1):1–25, 1996. 17, 39 B. Kivva, G. Rajendran, P. Ravikumar, and B. Aragam. Learning latent causal graphs via mixture oracles. In Advances in Neural Information Processing Systems , volume 34, pages 18087–18101, 2021. 32 D. Krueger, E. Caballero, J.-H. Jacobsen, A. Zhang, J. Binas, D. Zhang, R. Le Priol, and A. Courville. Out-of-distribution generalization via risk extrapolation (rex). In International Conference on Machine Learning , pages 5815–5826. PMLR, 2021. 6 S. Lachapelle, P. R. López, Y. Sharma, K. Everett, R. L. Priol, A. Lacoste, and S. Lacoste-Julien. Nonpara-metric partial disentanglement via mechanism sparsity: Sparse actions, interventions and sparse temporal dependencies. arXiv preprint arXiv:2401.04890 , 2024. 2 E. Lehmann and J. P. Romano. Testing Statistical Hypotheses . Springer Texts in Statistics. Springer International Publishing, Cham, 2022. ISBN 978-3-030-70577-0. doi: 10.1007/978-3-030-70578-7. URL 
+
+https://link.springer.com/10.1007/978-3-030-70578-7 . 34 J. Li, R. Gibbons, and V. Ročková. Sparse Bayesian multidimensional item response theory. Journal of the American Statistical Association , 120(552):2592–2605, 2025. 33 P. Lippe, S. Magliacane, S. Löwe, Y. M. Asano, T. Cohen, and E. Gavves. Causal representation learning for instantaneous and temporal effects in interactive systems. In International Conference on Learning Representations , 2022a. 2 P. Lippe, S. Magliacane, S. Löwe, Y. M. Asano, T. Cohen, and S. Gavves. Citris: Causal identifiability from temporal intervened sequences. In International Conference on Machine Learning , pages 13557–13603. PMLR, 2022b. 2 F. Locatello, S. Bauer, M. Lucic, G. Raetsch, S. Gelly, B. Schölkopf, and O. Bachem. Challenging common assumptions in the unsupervised learning of disentangled representations. In International Conference on Machine Learning , pages 4114–4124. PMLR, 2019. 2 L. Lorch, J. Rothfuss, B. Schölkopf, and A. Krause. DiBS: Differentiable Bayesian structure learning. In 
+
+Advances in Neural Information Processing Systems , volume 34, pages 24111–24123, 2021. 33 F. M. Lord. Applications of item response theory to practical testing problems . Routledge, 1980. 32 C. J. Maddison, A. Mnih, and Y. W. Teh. The concrete distribution: A continuous relaxation of discrete random variables. arXiv preprint arXiv:1611.00712 , 2016. 41 E. Marinari and G. Parisi. Simulated tempering: a new monte carlo scheme. EPL (Europhysics Letters) , 19 (6):451–458, 1992. 39 L. Mason and J. Wronski. One tribe to bind them all: How our social group attachments strengthen partisanship. Political Psychology , 39:257–277, 2018. 28 G. Moran and B. Aragam. Towards interpretable deep generative models via causal representation learning. 
+
+Journal of the American Statistical Association , pages 1–32, 2026. 2 S. L. Morgan and C. Winship. Counterfactuals and Causal Inference: Methods and Principles for Social Research . Cambridge University Press, 2014. 2 K. P. Murphy. Active learning of causal Bayes net structure. Technical report, Department of Computer Science, U.C. Berkeley, 2001. 33 R. M. Neal. Sampling from multimodal distributions using tempered transitions. Statistics and computing , 6 (4):353–366, 1996. 39 R. O. Ness, K. Sachs, P. Mallick, and O. Vitek. A bayesian active learning experimental design for inferring signaling networks. Journal of Computational Biology , 25(7):709–725, 2018. 33 M. Neykov, S. Balakrishnan, and L. Wasserman. Minimax optimal conditional independence testing. The Annals of Statistics , 49(4):2151–2177, 2021. 11 J. Neyman. Sur les applications de la théorie des probabilités aux experiences agricoles: Essai des principes. 
+
+Roczniki Nauk Rolniczych , 10(1):1–51, 1923. 1 J. Pearl. Causality: Models, Reasoning, and Inference . Cambridge University Press, New York, NY, 2nd edition, 2009. 1 48 Bayesian Multi-Domain Causal Representation Learning 
+
+R. Perry, J. Von Kügelgen, and B. Schölkopf. Causal discovery in heterogeneous environments under the sparse mechanism shift hypothesis. In Advances in Neural Information Processing Systems , volume 35, pages 10904–10917, 2022. 2, 6, 7, 10 J. Peters, P. Bühlmann, and N. Meinshausen. Causal inference by using invariant prediction: identification and confidence intervals. Journal of the Royal Statistical Society: Series B (Statistical Methodology) , 78(5): 947–1012, 2016. 2, 6, 7, 33 J. Peters, D. Janzing, and B. Schölkopf. Elements of causal inference: foundations and learning algorithms .MIT Press, 2017. 1, 5, 10 N. G. Polson, J. G. Scott, and J. Windle. Bayesian inference for logistic models using pólya–gamma latent variables. Journal of the American Statistical Association , 108(504):1339–1349, 2013. 15, 37 E. Pompe, C. Holmes, and K. Łatuszyński. A framework for adaptive MCMC targeting multimodal distributions. The Annals of Statistics , 48(5):2930 – 2952, 2020. doi: 10.1214/19-AOS1916. URL 
+
+https://doi.org/10.1214/19-AOS1916 . 39 K. T. Poole and H. Rosenthal. Congress: A political-economic history of roll call voting . Oxford University Press, USA, 2000. 28 S. P. Reise, T. M. Moore, and M. G. Haviland. Bifactor models and rotations: Exploring the extent to which multidimensional data yield univocal scale scores. Journal of personality assessment , 92(6):544–559, 2010. 32 J. Robins. A new approach to causal inference in mortality studies with a sustained exposure pe-riod—application to control of the healthy worker survivor effect. Mathematical modelling , 7(9-12):1393– 1512, 1986. 1 M. Rojas-Carulla, B. Schölkopf, R. Turner, and J. Peters. Invariant models for causal transfer learning. The Journal of Machine Learning Research , 19(1):1309–1342, 2018. 6, 7 D. B. Rubin. Estimating causal effects of treatments in randomized and nonrandomized studies. Journal of educational Psychology , 66(5):688, 1974. 1 B. Schölkopf, F. Locatello, S. Bauer, N. R. Ke, N. Kalchbrenner, A. Goyal, and Y. Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5):612–634, 2021. 2, 3, 7, 10, 11 R. Silva, R. Scheines, C. Glymour, P. Spirtes, and D. M. Chickering. Learning the structure of linear latent variable models. Journal of Machine Learning Research , 7(2), 2006. 2 P. Spirtes, C. Glymour, and R. Scheines. Causation, prediction, and search . MIT press, 2001. 2, 8 C. Squires, A. Seigal, S. Bhate, and C. Uhler. Linear causal disentanglement via interventions. In International Conference on Machine Learning , 2023. 2, 7, 8 M. Stephens. Dealing with label switching in mixture models. Journal of the Royal Statistical Society: Series B (Statistical Methodology) , 62(4):795–809, 2000. 20, 42 J. Tian and J. Pearl. Causal discovery from changes. In Proceedings of the Seventeenth conference on Uncertainty in artificial intelligence , pages 512–521. Morgan Kaufmann Publishers Inc., 2001. 2 S. Tong and D. Koller. Active learning for structure in Bayesian networks. In International Joint Conference on Artificial Intelligence , volume 17, pages 863–869, 2001. 33 C. Toth, L. Lorch, C. Knoll, A. Krause, F. Pernkopf, R. Peharz, and J. von Kügelgen. Active bayesian causal inference. In Advances in Neural Information Processing Systems , volume 35, pages 16261–16275, 2022. 33 C. Uhler and J. Zhang. Causal structure and representation learning with biomedical applications. arXiv preprint arXiv:2511.04790 , 2025. 2 C. Uhler, G. Raskutti, P. Bühlmann, and B. Yu. Geometry of the faithfulness assumption in causal inference. 
+
+The Annals of Statistics , pages 436–463, 2013. 11 B. Varıcı, E. Acartürk, K. Shanmugam, and A. Tajer. Linear causal representation learning from unknown multi-node interventions. In Advances in Neural Information Processing Systems , volume 37, pages 111614– 111648, 2024. 2 B. Varıcı, E. Acartürk, K. Shanmugam, A. Kumar, and A. Tajer. Score-based causal representation learning: Linear and general transformations. Journal of Machine Learning Research , 26(112):1–90, 2025. 2, 7 49 Garg, Stettler, Schein, von Kügelgen 
+
+B. Varıcı, C. Squires, and P. Ravikumar. Causal representation learning. Neurosymbolic AI: Foundations and Applications , pages 307–346, 2026. 2 J. von Kügelgen, Y. Sharma, L. Gresele, W. Brendel, B. Schölkopf, M. Besserve, and F. Locatello. Self-supervised learning with data augmentations provably isolates content from style. In Advances in Neural Information Processing Systems , volume 34, pages 16451–16467, 2021. 2 J. von Kügelgen, M. Besserve, W. Liang, L. Gresele, A. Kekić, E. Bareinboim, D. Blei, and B. Schölkopf. Nonparametric identifiability of causal representations from unknown interventions. In Advances in Neural Information Processing Systems , volume 36, 2023. 2, 7, 8 M. J. Wainwright. Sharp thresholds for high-dimensional and noisy sparsity recovery using ℓ1 -constrained quadratic programming (lasso). IEEE Transactions on Information Theory , 55(5):2183–2202, 2009. doi: 10.1109/TIT.2009.2016018. 11 M. J. Wainwright and M. I. Jordan. Graphical models, exponential families, and variational inference. 
+
+Foundations and Trends ® in Machine Learning , 1(1–2):1–305, 2008. 40 L. Wendong, A. Kekić, J. von Kügelgen, S. Buchholz, M. Besserve, L. Gresele, and B. Schölkopf. Causal component analysis. In Advances in Neural Information Processing Systems , volume 36, 2023. 2, 7, 8 S. Wright. The method of path coefficients. The annals of mathematical statistics , 5(3):161–215, 1934. 1 B. Wu, J. von Kügelgen, and D. M. Blei. Multi-domain causal empirical bayes under linear mixing. arXiv preprint arXiv:2603.18404 , 2026. 2 L. Wu, M. Yin, Y. Wang, J. P. Cunningham, and D. M. Blei. Bayesian invariance modeling of multi-environment data. arXiv preprint arXiv:2506.22675 , 2025. 2, 33 Q. Xi and B. Bloem-Reddy. Indeterminacy in generative models: Characterization and strong identifiability. In International Conference on Artificial Intelligence and Statistics , volume 206. PMLR, 2023. 2 F. Xie, R. Cai, B. Huang, C. Glymour, Z. Hao, and K. Zhang. Generalized independent noise condition for estimating latent variable causal graphs. In Advances in Neural Information Processing Systems , volume 33, pages 14891–14902, 2020. 2 F. Xie, B. Huang, Z. Chen, Y. He, Z. Geng, and K. Zhang. Identification of linear non-gaussian latent hierarchical structure. In International Conference on Machine Learning , pages 24370–24387. PMLR, 2022. 2 D. Xu, D. Yao, S. Lachapelle, P. Taslakian, J. Von Kügelgen, F. Locatello, and S. Magliacane. A sparsity principle for partially observable causal representation learning. In International Conference on Machine Learning , pages 55389–55433. PMLR, 2024. 2 S. J. Yakowitz and J. D. Spragins. On the identifiability of finite mixtures. The Annals of Mathematical Statistics , 39(1):209–214, 1968. 8 K. Yang, A. Katcoff, and C. Uhler. Characterizing and learning equivalence classes of causal dags under interventions. In International Conference on Machine Learning , pages 5541–5550. PMLR, 2018. 2 D. Yao, D. Xu, S. Lachapelle, S. Magliacane, P. Taslakian, G. Martius, J. von Kügelgen, and F. Locatello. Multi-view causal representation learning with partial observability. In International Conference on Learning Representations , 2024. 2 W. Yao, Y. Sun, A. Ho, C. Sun, and K. Zhang. Learning temporally causal latent processes from general temporal data. In International Conference on Learning Representations , 2021. 2 W. Yao, G. Chen, and K. Zhang. Temporally disentangled representation learning. Advances in Neural Information Processing Systems , 35:26492–26503, 2022. 2 J. Zhang and P. Spirtes. Strong faithfulness and uniform consistency in causal inference. In Proceedings of the Nineteenth Conference on Uncertainty in Artificial Intelligence , UAI’03, page 632–639, San Francisco, CA, USA, 2002. Morgan Kaufmann Publishers Inc. ISBN 0127056645. 11 J. Zhang, K. Greenewald, C. Squires, A. Srivastava, K. Shanmugam, and C. Uhler. Identifiability guarantees for causal disentanglement from soft interventions. In Advances in Neural Information Processing Systems ,2023. 2, 7 K. Zhang, S. Xie, I. Ng, and Y. Zheng. Causal representation learning from multiple distributions: A general setting. In International Conference on Machine Learning , pages 60057–60075. PMLR, 2024. 2 W. Zhang, Y. Wang, and Y. Gu. Discrete causal representation learning. arXiv preprint arXiv:2603.25017 ,2026. 32 50

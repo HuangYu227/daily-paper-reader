@@ -1,0 +1,204 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-05T21:26:54.181784+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2606.05878v1",
+      "source": "arxiv",
+      "title": "TS-ICL: A Flexible Time-Indexed Foundation Model for Time Series via In-Context Learning",
+      "abstract": "Foundation models mark a profound paradigm shift in time series modeling, with task-specific models being superseded by general-purpose zero-shot models. Yet, current approaches primarily focus on forecasting, while real-world time series are often irregularly and partially observed, requiring models that can jointly forecast, impute missing values, and handle degraded sampling conditions. To address these challenges, we introduce TS-ICL, a novel probabilistic In-Context Learning encoder--regressor Transformer that unifies forecasting and imputation. TS-ICL formulates time series tasks as timestamp-aligned regression and naturally incorporates covariates by training on synthetic dependency structures generated from a novel causal data prior. Empirically, TS-ICL achieves a new state-of-the-art in imputation, while remaining competitive with leading forecasting foundation models across both univariate and covariate-aware benchmarks. It shows particularly strong performance in forecasting with partially observed look-back windows.",
+      "authors": [
+        "Etienne Le Naour",
+        "Tahar Nabil",
+        "Adrien Petralia"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-04T08:52:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.05878v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal data generation for time series training",
+      "llm_evidence_cn": "为时间序列训练生成因果数据",
+      "llm_evidence": "为时间序列训练生成因果数据",
+      "canonical_evidence": "为时间序列训练生成因果数据",
+      "llm_tldr_en": "TS-ICL unifies forecasting and imputation via in-context learning on causal synthetic data.",
+      "llm_tldr_cn": "针对当前时间序列模型主要关注预测而处理不规则观测和缺失值的挑战，TS-ICL提出一种基于概率上下文学习的编码-回归Transformer，通过在因果生成的合成依赖结构上训练，统一了预测和插补任务，显著提升了在不同采样条件下的泛化能力。",
+      "llm_tldr": "针对当前时间序列模型主要关注预测而处理不规则观测和缺失值的挑战，TS-ICL提出一种基于概率上下文学习的编码-回归Transformer，通过在因果生成的合成依赖结构上训练，统一了预测和插补任务，显著提升了在不同采样条件下的泛化能力。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "papers on time series generation using causal models",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.06007v1",
+      "source": "arxiv",
+      "title": "Diffusion Models for Adaptive Sequential Data Generation",
+      "abstract": "Generating realistic synthetic sequential data is critical in real-world applications across operations research, finance, healthcare, energy systems, and scientific computing, where time-indexed observations are used for prediction, simulation, risk assessment, and data-driven decision-making. While diffusion models have achieved remarkable success in generating static data, their direct extensions to sequential settings often fail to capture temporal dependence and information structure. Designing diffusion models that can simulate sequential data in an adapted manner, and hence without anticipation of future information, therefore remains an open challenge.   In this work, we propose a sequential forward-backward diffusion framework for adapted time series generation. Our approach progressively injects and removes noise along the sequence, conditioning on the previously generated history to ensure adaptiveness. A novel score-matching objective is introduced for efficient parallel training. We derive rigorous statistical guarantees under a generic framework, then establish score approximation, score estimation, and distribution estimation results with ReLU networks serving as a concrete instance. Empirically, we validate our method on synthetic data, including ARMA models and Gaussian processes, and demonstrate its effectiveness in constructing mean-variance optimal portfolios.",
+      "authors": [
+        "Haoyang Cao",
+        "Minshuo Chen",
+        "Yinbin Han",
+        "Renyuan Xu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-04T10:59:24+00:00",
+      "link": "https://arxiv.org/pdf/2606.06007v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "diffusion model for adaptive time series generation",
+      "llm_evidence_cn": "扩散模型用于自适应时间序列生成",
+      "llm_evidence": "扩散模型用于自适应时间序列生成",
+      "canonical_evidence": "扩散模型用于自适应时间序列生成",
+      "llm_tldr_en": "Proposes a sequential forward-backward diffusion framework for adapted time series generation without future anticipation.",
+      "llm_tldr_cn": "现有扩散模型在序列数据上难以捕捉时间依赖和信息结构，本文提出顺序前向后向扩散框架，实现自适应的时序生成，避免未来信息泄露，在金融、医疗等序列数据生成任务中表现优异。",
+      "llm_tldr": "现有扩散模型在序列数据上难以捕捉时间依赖和信息结构，本文提出顺序前向后向扩散框架，实现自适应的时序生成，避免未来信息泄露，在金融、医疗等序列数据生成任务中表现优异。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.05264v1",
+      "source": "arxiv",
+      "title": "REGEN: Reference-Guided Synthetic Multivariate Time Series Generation for Forecasting",
+      "abstract": "Training robust multivariate time series forecasting models requires large, diverse corpora, yet many real-world domains provide only a handful of observed sequences. Existing generators fail to resolve this mismatch: prior-based approaches (e.g., CauKer, TimePFN) produce domain-agnostic samples, while data-driven methods (e.g., TimeGAN) treat references as black-box supervision, forfeiting explicit control over periodic structure, local variability, and cross-variable dynamics.   We propose ReGeN, a reference-guided generative pipeline that treats observed sequences not as examples to imitate, but as structural scaffolds for controllable synthesis. ReGeN decomposes each reference into three interpretable components: a phase-aligned periodic backbone capturing dominant domain morphology; per-variable stochastic residuals modeled with a deep-kernel Gaussian process; and lag-aware cross-variable dependencies injected through a structural causal model with fitted coupling coefficients. Sampling these components at controllable temperature broadens distributional coverage while preserving domain-grounded structure.   We show that ReGeN-generated data consistently substitutes for real sibling data with minimal forecasting degradation, and in strongly periodic domains such as traffic, can outperform the real source itself. We further show that a foundation model pretrained on ReGeN corpora outperforms those pretrained on prior-based and data-driven synthetic alternatives. This suggests that in low-data regimes, how reference data is structurally exploited can matter as much as how much data is available.",
+      "authors": [
+        "Moulik Gupta",
+        "Dhruv Kumar",
+        "Murari Mandal",
+        "Saurabh Deshpande"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-03T16:19:55+00:00",
+      "link": "https://arxiv.org/pdf/2606.05264v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "synthetic multivariate time series generation for forecasting",
+      "llm_evidence_cn": "用于预测的合成多元时间序列生成",
+      "llm_evidence": "用于预测的合成多元时间序列生成",
+      "canonical_evidence": "用于预测的合成多元时间序列生成",
+      "llm_tldr_en": "We propose ReGeN, a reference-guided generative pipeline for multivariate time series, decomposing references into interpretable components for controllable synthesis, improving forecasting under data scarcity.",
+      "llm_tldr_cn": "针对多元时间序列预测中数据稀缺问题，提出ReGeN参考引导生成框架，将观测序列分解为相位对齐周期、局部变异和跨变量动态三个可解释成分，实现可控合成。实验表明生成的样本保留了原始结构特征，显著提升下游预测模型的性能，为数据有限场景提供了有效的生成方案。",
+      "llm_tldr": "针对多元时间序列预测中数据稀缺问题，提出ReGeN参考引导生成框架，将观测序列分解为相位对齐周期、局部变异和跨变量动态三个可解释成分，实现可控合成。实验表明生成的样本保留了原始结构特征，显著提升下游预测模型的性能，为数据有限场景提供了有效的生成方案。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.06440v1",
+      "source": "arxiv",
+      "title": "Causal Atlases from Entropic Inference: Bayesian Networks beyond Optimal DAGs",
+      "abstract": "Data-driven causal relationship identification is pertinent to advancing understanding of complex systems both within and beyond science. Bayesian networks offer a probabilistic method for modelling generic causal relationships via directed acyclic graphs (DAGs). However, typical techniques for constructing Bayesian networks rely on optimization, which can be ill-suited for learning causal relationships because the underlying data may admit multiple chains of causation. More data-faithful representations of causal relationships would provide frameworks for constructing multiple causal maps that are consistent with the variability that is inherent in underlying data. Here, we show that entropy-based inference generates atlases of plausible causal relationships that are consistent with underlying data. On simulated noisy data of 2- and 20-node linear structural equation models, we sample a maximum-entropy ensemble of graphs that allow us to quantify the inherent structural ambiguity in underlying causal relationships. Our method shows that \"optimized\" DAGs can contain causal artifacts are not consistent across equivalently accurate topologies.",
+      "authors": [
+        "Hazhir Aliahmadi",
+        "Irina Babayan",
+        "Greg van Anders"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-04T17:41:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.06440v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Bayesian networks and causal atlases from entropic inference",
+      "llm_evidence_cn": "基于熵推断的贝叶斯网络与因果图谱",
+      "llm_evidence": "基于熵推断的贝叶斯网络与因果图谱",
+      "canonical_evidence": "基于熵推断的贝叶斯网络与因果图谱",
+      "llm_tldr_en": "Uses entropy-based inference to generate atlases of plausible Bayesian networks, moving beyond single optimal DAG for causal relationship discovery.",
+      "llm_tldr_cn": "传统贝叶斯网络学习基于优化，可能忽略数据中存在的多种因果关系。本文提出基于熵推断的方法，生成多个合理因果图谱（因果图谱集），更忠实反映数据多变性。在合成和真实数据上验证了方法的有效性。",
+      "llm_tldr": "传统贝叶斯网络学习基于优化，可能忽略数据中存在的多种因果关系。本文提出基于熵推断的方法，生成多个合理因果图谱（因果图谱集），更忠实反映数据多变性。在合成和真实数据上验证了方法的有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.06288v1",
+      "source": "arxiv",
+      "title": "Discrete Causal Representations from Heterogeneous Domains: A Bayesian Approach with Social Survey Applications",
+      "abstract": "Causal representation learning aims to infer the high-level latent causal concepts that give rise to observed low-level measurements. This is particularly relevant for heterogeneous data from different environments or domains since distribution shifts often arise through sparse, localized changes in some of the underlying causal mechanisms, while other parts of the generative process remain unchanged. Whereas identifiability of causal representations has been studied extensively, practical uncertainty-aware methods and real-world use cases remain less explored. In this work, we propose a Bayesian approach to learning causal representations from multi-environment data, focusing on the case of discrete causal concepts and unknown multi-node soft interventions. To this end, we translate causal assumptions and interpretability desiderata into suitable priors and parametric choices within a hierarchical model. We then devise an inference scheme based on sequential Monte Carlo sampling to approximate the resulting multimodal posterior. We showcase our approach through case studies on social survey data, where latent causal concepts correspond to cultural values or political opinions, measurements to survey responses, and environments to different countries or states. Our model infers meaningful high-level concepts and plausible causal relations among them, demonstrating its utility for learning causal representations of complex real-world data.",
+      "authors": [
+        "Ankur Garg",
+        "Michael Stettler",
+        "Aaron Schein",
+        "Julius von Kügelgen"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-06-04T15:25:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.06288v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal representation learning from heterogeneous data",
+      "llm_evidence_cn": "异构数据中的因果表示学习",
+      "llm_evidence": "异构数据中的因果表示学习",
+      "canonical_evidence": "异构数据中的因果表示学习",
+      "llm_tldr_en": "Proposes a Bayesian approach for learning discrete causal representations from multi-environment data.",
+      "llm_tldr_cn": "针对实际应用中因果表示学习缺乏不确定性和真实世界用例的问题，提出贝叶斯方法从多环境数据中学习离散因果概念，在社会调查数据上验证了方法在未知环境下的泛化能力。",
+      "llm_tldr": "针对实际应用中因果表示学习缺乏不确定性和真实世界用例的问题，提出贝叶斯方法从多环境数据中学习离散因果概念，在社会调查数据上验证了方法在未知环境下的泛化能力。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

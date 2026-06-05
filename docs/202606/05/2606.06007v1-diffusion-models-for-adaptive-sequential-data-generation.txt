@@ -1,0 +1,5613 @@
+Title: Diffusion Models for Adaptive Sequential Data Generation
+
+URL Source: https://arxiv.org/pdf/2606.06007v1
+
+Published Time: Fri, 05 Jun 2026 01:01:38 GMT
+
+Number of Pages: 37
+
+Markdown Content:
+# Diffusion Models for Adaptive Sequential Data Generation 
+
+## Haoyang Cao ∗ Minshuo Chen † Yinbin Han ‡ Renyuan Xu §
+
+## June 5, 2026 
+
+Abstract 
+
+Generating realistic synthetic sequential data is critical in real-world applications across operations research, finance, healthcare, energy systems, and scientific computing, where time-indexed observations are used for prediction, simulation, risk assessment, and data-driven decision-making. While diffusion models have achieved remarkable success in generating static data, their direct extensions to sequential settings often fail to capture temporal dependence and information structure. Designing diffusion mod-els that can simulate sequential data in an adapted manner, and hence without anticipation of future information, therefore remains an open challenge. In this work, we propose a sequential forward–backward diffusion framework for adapted time series generation. Our approach progressively injects and removes noise along the sequence, conditioning on the previously generated history to ensure adaptiveness. A novel score-matching objective is introduced for efficient parallel training. We derive rigorous statistical guarantees under a generic framework, then establish score approximation, score estimation, and distribution estimation results with ReLU networks serving as a concrete instance. Empirically, we validate our method on synthetic data, including ARMA models and Gaussian processes, and demonstrate its effectiveness in constructing mean-variance optimal portfolios. Our code is available at https://github.com/yinbinhan/adapted_diffusion_model .
+
+# 1 Introduction 
+
+Generating realistic synthetic sequential data is important for many real-world applications across operations research, financial markets, healthcare, energy systems, and scientific computing, where time-indexed obser-vations are used for prediction, simulation, risk assessment, and data-driven decision-making. At the same time, this task remains challenging in complex sequential settings, where the data may exhibit temporal dependence, nonstationarity, nonlinear dynamics, and multiple sources of uncertainty. Beyond matching the high-dimensional joint law of the observed process, a sequential generator must also respect the information flow under which the data are observed: each generated value should depend only on the past and present information available at that stage, and not on future observations. This adapted (i.e., non-anticipative) structure is a basic modeling requirement in domains where the timing of information affects prediction or decision-making. For example, in stress testing, synthetic data generation requires not only capturing tem-poral dependence, but also preserving adaptiveness with respect to the prescribed information flow [1–3]; in portfolio optimization, trading decisions are updated dynamically based only on currently available signals [4, 5]; and in simulation-based policy learning, synthetic data are used to train or evaluate decision rules that themselves operate sequentially [6–9]. Under these circumstances, preserving the temporal direction of information is as essential as maintaining marginal and joint laws. Transformer-based autoregressive models [10] provide a natural framework for sequential data generation. However, their empirical success has been largely confined to discrete modalities , most notably next-token generation in natural language, and extending them to continuous settings remains challenging and fragile                 
+
+> ∗Department of Applied Mathematics and Statistics, Data Science and AI Institute, and Mathematical Institute for Data Science, Johns Hopkins University. Email: hycao@jhu.edu
+> †Department of Industrial Engineering and Management Sciences, Northwestern University. Email: min-shuo.chen@northwestern.edu
+> ‡Department Management Science and Engineering, Stanford University. Email: yinbinha@stanford.edu
+> §Department Management Science and Engineering, Stanford University. Email: renyuanxu@stanford.edu
+
+1
+
+> arXiv:2606.06007v1 [cs.LG] 4 Jun 2026
+
+[11, 12]. Existing approaches often rely on discretization or quantization, which can introduce non-negligible approximation error in continuous spaces [13–15]. In contrast, diffusion models have emerged as a flexible and powerful paradigm for modeling and sampling from continuous distributions in high-dimensional spaces [16– 18], with strong empirical performance and increasing theoretical support [19–23]. Despite these advances, most diffusion-based methods are designed for static data or settings where the entire sample is treated as a single object. A direct extension to sequential data—jointly noising and denoising the full trajectory—can match the joint distribution, but does not enforce the underlying information flow. In particular, it does not guarantee that each generated value depends only on past information, and thus may violate the causal ordering inherent in sequential systems. This gap motivates the central question of our paper: 
+
+How can we unlock diffusion models for sequential data generation, while preserving the adaptiveness and retaining theoretical guarantees? 
+
+We address this question by introducing a sequential forward–backward diffusion framework, Adaptive Dif-fusion for Sequential Data Generation ( AD-Seq ), that aligns the diffusion dynamics with the temporal information flow. The key idea is to generate the sample path through conditional reverse diffusion steps, such that each generated coordinate depends only on the previously generated history. This construction preserves the adapted structure of sequential data while retaining the flexibility of diffusion-based generation. Beyond full time series generation, this conditional perspective also suggests a broader use of AD-Seq 
+
+as a generator of admissible scenarios conditional on available information. Given a realized history, the model can generate multiple future continuations that respect the same information flow, which can then be used in downstream tasks such as statistical inference, predictive control, and risk evaluation. Although we focus on time series in this paper, the same principle can be applied to whenever generated data must respect certain causal structure, including panel data, network data, and causal inference. 
+
+Our work and contributions. Our contributions are three-fold. 
+
+(i) A new diffusion model framework for adapted sequential data generation. We introduce a novel Adaptive Diffusion for Sequential Data Generation ( AD-Seq ) framework for generating time series that are adapted to an information flow. Unlike classical diffusion models that operate on the full time series as a single object, our construction generates each coordinate sequentially, conditioning only on the previously generated history. This yields a generative model that preserves the conditional distributions of the data while enforcing adaptiveness by design. At a conceptual level, this provides a principled way to incorporate filtration constraints into diffusion models. On the algorithmic side, we develop a novel score-matching objective that decouples the learning problem across time steps, enabling parallel training of the score functions and ensuring scalability to high-dimensional sequences. Beyond synthetic data generation, this framework opens the door to a broad range of downstream applications, including multi-step prediction, predictive decision-making, and statistical inference under information-flow constraints. 
+
+(ii) Statistical learning theory for the AD-Seq framework. We develop a general statistical learning theory for our proposed AD-Seq framework, including score approximation, score estimation, and distribution estimation guarantees. Our analysis is network architecture-agnostic and can incorporate generic approximation and covering number assumptions. A key technical challenge is to mitigate the growing length of the history for long-horizon generation. We introduce a history truncation mechanism based on the temporal dependence decay in the sequence. This yields the following finite-sample total-variation bound for the conditional law generated by AD-Seq :˜O(n− β 
+
+> 4( dtrunc +β)
+
+).
+
+Here, n is the sample size and β is the distribution smoothness parameter denoted in Assumption 4.5. The rate depends on the effective history length dtrunc , rather than the full horizon length, showing that long-horizon generation can remain statistically tractable when temporal dependence decays; see for example the exponential and polynomial decays in Propositions 4.16–4.17. Moreover, despite the additional adaptiveness constraint, this rate matches the best-known rates for static diffusion models. 2(iii) Empirical validation for temporal structure learning and decision-making. We imple-ment the proposed framework using transformer architectures with causal masking and evaluate it on both synthetic and real data. The empirical results indicate that the method captures meaningful aspects of the sequential dependence structure, rather than merely reproducing static marginals. On ARMA models, it accurately recovers the autocorrelation structure, including in small-sample regimes, and produces syn-thetic samples whose estimated autocorrelation functions are more accurate than those obtained directly from the empirical training data. On Gaussian processes, it reconstructs the covariance matrix with the correct decay pattern, showing that the model captures the dependence structure of the underlying process. We further evaluate performance in a downstream decision problem, namely mean–variance portfolio opti-mization on the S&P 500. In this experiment, policies trained using diffusion-generated samples attain the highest Sharpe ratios among several benchmark methods. These findings suggest that respecting temporal dependence and information flow in sequential data generation can lead to measurable improvements in both statistical fidelity and downstream decision quality. 
+
+Related literature. Our work is related to several emerging research directions. First, a variety of generative modeling frameworks have been developed for time series synthesis. Prior to the emergence of diffusion models, most approaches were based on the GAN framework [3, 24–34] while others adopted the VAE paradigm [1, 35–41]. Diffusion models have gained recent attentions for time series generation [42–48]. In parallel, methods based on Schr¨ odinger Bridges have also been explored for generative modeling of time series [2, 49–51]. Our work is also closely related to the recent advances of diffusion models. A line of research focused on the convergence theory of diffusion models [52–74]. In parallel, several studies analyzed the statistical properties of score matching, establishing statistical error rates and sample complexity bounds [70, 74–81]. However, none of the prior work addressed the statistical estimation theory of diffusion models for sequential data, except [82], which investigated diffusion transformers restricted to (discrete) Gaussian process data. Compared with the existing literature, our work is the first to study diffusion models for generic sequen-tial data with rigorous statistical guarantees. More fundamentally, the proposed framework is designed to preserve not only marginal or joint path distributions, but also the temporal dependence and information structure inherent in the underlying data-generating process. In particular, the adaptiveness guarantee es-tablished in this work makes diffusion models applicable to settings where respecting the information flow is essential, and thereby extends their scope beyond data generation to tasks such as multi-step prediction, predictive decision-making, and statistical inference under information flow constraints. 
+
+Notations. Let (Ω , F, P, (Fh)Hh=1 ) be a filtered probability space. Denote ( W ht )Hh=1 and ( ¯W ht )Hh=1 be 2H independent one-dimensional Brownian motions. For a vector X = ( X1, . . . , X H ) ∈ RH , we denote 
+
+X[ℓ:h] := ( Xℓ, . . . , X h) and X[ℓ:h) := ( Xℓ, . . . , X h−1). Given two random variables X and Y , we denote EX [·]as the expectation over X and denote EX|Y [·] as the conditional expectation of X given Y . Let N (μ, σ 2)be one-dimensional Gaussian distribution with mean μ and variance σ2. We refer the notation X ∼ p as random variable X with probability density p. Let σ(X) be the σ-algebra generated by the random vector 
+
+X. For two σ-algebra A and B, A ∨ B denotes the smallest σ-algebra containing A ∪ B . Finally, ∥·∥ is the Euclidean norm. We use the notation X d
+
+= Y to mean two random variables X and Y have the same distribution. Define the set [ p] = {1, . . . , p } for p ∈ Z+.
+
+# 2 Problem Setup 
+
+Our objective is to design a diffusion model that generates adapted time series whose law matches the under-lying data distribution, with respect to a specified (and meaningful) filtration. For notational convenience, we present the development in the one-dimensional case: let X0 = ( Xh 
+
+> 0
+
+)Hh=1 ∈ RH denote a length-H time series in discrete-time and adapted to the filtration ( Fh)Hh=1 , i.e., Xh 
+
+> 0
+
+∈ F h. The methodology extends straightforwardly to higher dimensions. In addition, denote μ[1: H]0 ∈ P (RH ) as the distribution of X0.3Preliminaries on diffusion models. In the classical setting [16–18], diffusion models include a forward process that gradually add noise to data and a time-reverse process that gradually remove noise to generate new data. Mathematically, the forward process is often chosen to be an H-dimensional Ornstein-Uhlenbeck (OU) process defined on RH :dX′ 
+
+> t
+
+= − 12 g(t)X′
+
+> t
+
+dt + pg(t)d W′
+
+> t
+
+, X′ 
+
+> 0
+
+∼ μ[1: H]0 , (1) where {W′
+
+> t
+
+}0≤t≤T is a H-dimensional Brownian motion and g : R → R+ is a positive-valued function. The time-reversed SDE of (1) is given by dX′ 
+
+> t
+
+= 12 g(T − t)
+
+h ¯X′ 
+
+> t
+
++ ∇x log pT −t(X′
+
+> t
+
+)
+
+i
+
+dt + pg(T − t)d W′
+
+> t
+
+, (2) where {W′
+
+> t
+
+}0≤t≤T is another independent H-dimensional Brownian motion and pt : RH → R represents the marginal density of X′ 
+
+> t
+
+at time t in the forward process (1). Such a framework is appropriate for generating static data or fully predictable sequences (e.g., videos), where no filtration-based adaptiveness constraint is imposed. Even when the forward OU process is driven by independent Gaussian noise across coordinates, the corresponding backward dynamics generally fail to preserve the information flow of the data, since the score term ∇ log pT −t(·) depends on the joint density and thus introduces cross-coordinate dependence. As a result, the value at a given time step may implicitly depend on future components of the sequence. Consequently, adaptiveness with respect to a prescribed filtration is not enforced, and the generated data may violate the intended information flow or temporal structure. This limitation motivates us to develop the AD-Seq framework, which adds and removes noise progressively along the time index, conditioning only on previously generated history, and thereby preserves the prescribed information flow by construction. 
+
+Adaptive Sequential Diffusion Model. For each coordinate/timestamp h (1 ≤ h ≤ H), we define a pair of forward and time-reversed one-dimensional SDEs, driven by OU processes. In the construction below, we specialize to the constant noise schedule g(·) ≡ 1. For h = 1, we consider the following one-dimensional forward process on R:dX1 
+
+> t
+
+= − 12 X1 
+
+> t
+
+dt + d W 1 
+
+> t
+
+, X10 ∼ ϕ1(0 , ·), (3) where ϕ1(0 , ·) : R → R is the probability density of X10 . To generate new samples, we consider another stochastic process on R for sampling defined as (3): d ¯X1 
+
+> t
+
+=
+
+h 12 ¯X1 
+
+> t
+
++ ∂x log ϕ1(T − t, ¯X1 
+
+> t
+
+)
+
+i
+
+dt + d ¯W 1 
+
+> t
+
+, ¯X10 ∼ ϕ1(T, ·), (4) where ϕ1(t, ·) : R → R is the probability density of X1 
+
+> t
+
+and ∂x log ϕ1(t, ·) : R → R denotes its score function. Under regularity conditions, the forward process (3) admits a strong solution and thus the score function is well-defined. For each h > 1, we construct a forward process on R iteratively by conditioning on the history: dXht = − 12 Xht dt + d W ht , Xh 
+
+> 0
+
+∼ ϕh
+
+> ¯X[1: h)
+> T
+
+(0 , ·), (5) where for any z ∈ Rh−1 and t ∈ [0 , T ], ϕh 
+
+> z
+
+(t, ·) : R → R denotes the conditional density function of 
+
+Xht |X[1: h)0 = z. Compared to (3), the forward process (5) is initialized from a conditional probability distribution, incorporating the temporal dependence inherent in the time series. Similar to the sampling process (4), we define another stochastic process on R for sampling: d ¯Xht =
+
+h 12 ¯Xht + ∂x log ϕh
+
+> ¯X[1: h)
+> T
+
+(T − t, ¯Xht )
+
+i
+
+dt + d ¯W ht , ¯Xh 
+
+> 0
+
+∼ ϕh
+
+> ¯X[1: h)
+> T
+
+(T, ·), (6) with ∂x log ϕh
+
+> ¯X[1: h)
+> T
+
+(T −t, ¯Xht ) = ∂x log ϕh 
+
+> z
+
+(T − t, x ) z= ¯X[1: h) 
+
+> T, x = ¯Xht
+
+. Here the sampling process (6) incorporates previously generated trajectories ¯X[1: h) 
+
+> T
+
+, ensuring that the synthesized series ¯XT = ( ¯XhT )Hh=1 is generated sequentially. The following proposition verifies the key distributional consistency property of this construc-tion: with the exact conditional score and the corresponding terminal marginal initialization, the sampling processes (4) and (6) recover the desired marginal and conditional laws. 4Proposition 2.1 (Property of the sampling processes) . Let ( ¯XhT )Hh=1 follow (3) -(6) . Then the following distributional property holds: 
+
+¯X1
+
+> Td
+
+= X10 , and ( ¯XhT | ¯X[1: h) 
+
+> T
+
+= x) d
+
+= ( Xh 
+
+> 0
+
+|X[1: h)0 = x), ∀h > 1, x ∈ Rh−1.
+
+Consequently, we have ( ¯XhT )Hh=1 
+
+> d
+
+= ( Xh 
+
+> 0
+
+)Hh=1 .
+
+This law-matching property justifies referring to the sampling processes (4) and (6) as the time-reversed SDEs associated with the conditional forward diffusions. 
+
+Proof. We only prove the property when h > 1 as the case where h = 1 follows directly from [83, 84]. From the forward process (5), we know that ϕh 
+
+> z
+
+(t, ·) satisfies the Fokker-Planck equation (in the weak sense): 
+
+∂∂t ϕh 
+
+> z
+
+(t, x ) = 12 ∂xx ϕh 
+
+> z
+
+(t, x ) + 12 ∂x
+
+
+
+ϕh 
+
+> z
+
+(t, x )x
+
+
+
+, (7) where we recall that ϕh 
+
+> z
+
+(0 , ·) is the probability density of Xh 
+
+> 0
+
+given the history X[1: h)0 = z.Denote ψh 
+
+> z
+
+(t, x ) := ϕh 
+
+> z
+
+(T − t, x ) by the time reversed probability density. Differentiate ψh 
+
+> z
+
+(t, x ) w.r.t. t to have 
+
+∂∂t ψh 
+
+> z
+
+(t, x ) = − ∂∂s ϕh 
+
+> z
+
+(s, x )|s=T −t
+
+= − 12 ∂xx ϕh 
+
+> z
+
+(T − t, x ) − 12 ∂x
+
+
+
+ϕh 
+
+> z
+
+(T − t, x )x
+
+
+
+= − 12 ∂xx ψh 
+
+> z
+
+(t, x ) − 12 ∂x
+
+
+
+ψh 
+
+> z
+
+(t, x )x
+
+
+
+. (8) Define the function ¯bh : [0 , T ] × R × Rh−1 → R as ¯bh(t, x, z) := ∂xψh 
+
+> z
+
+(t, x )
+
+ψh 
+
+> z
+
+(t, x ) + 12 x = ∂x log ψh 
+
+> z
+
+(t, x ) + 12 x. 
+
+Note that 
+
+∂xx ψh 
+
+> z
+
+(t, x ) + 12 ∂x
+
+
+
+ψh 
+
+> z
+
+(t, x )x
+
+
+
+= ∂x
+
+
+
+∂xψh 
+
+> z
+
+(t, x ) + 12 ψh 
+
+> z
+
+(t, x )x
+
+
+
+= ∂x
+
+
+
+ψh 
+
+> z
+
+(t, x )
+
+
+
+∂x log ψh 
+
+> z
+
+(t, x ) + 12 x
+
+
+
+= ∂x
+
+
+
+ψh 
+
+> z
+
+(t, x )¯bh(t, x, z)
+
+
+
+As a consequence, it follows from (8) that 
+
+∂∂t ψh 
+
+> z
+
+(t, x ) = 12 ∂xx ψh 
+
+> z
+
+(t, x ) − ∂x
+
+
+
+ψh 
+
+> z
+
+(t, x )¯bh(t, x, z)
+
+
+
+. (9) This is exactly the Fokker-Planck equation of the SDE (6). 
+
+# 3 Algorithm design and adaptiveness property 
+
+In practice, the time-reversed SDEs (4) and (6) cannot be directly used to generate samples, as both the score functions ∂x log ϕh
+
+> ¯X[1: h)
+> T
+
+(t, ·) and the initial distributions ϕh
+
+> ¯X[1: h)
+> T
+
+(T, ·) are unknown. To address this issue, we follow common practice to replace the initial distribution by the standard Gaussian distribution and replace the ground-truth score ∂x log ϕh 
+
+> z
+
+(t, x ) by a score estimator ˆ sh(t, x, z) : [0 , T ] × R × Rh−1 → R. By convention, we set z = ∅ when h = 1 and thus ˆ s1(t, x, ∅) = ˆ s1(t, x ). With these modifications, we obtain an approximation of the time-reversed process, which is practically implementable: 5Algorithm 1 Sampling algorithm for sequential data  
+
+> 1:
+
+Input: Length of time series H, early-stop time t0 terminal time T , score networks ˆsh(·) Hh=1 . 
+
+> 2:
+
+Run the backward process up to T − t0
+
+d ˜X1 
+
+> t
+
+=
+
+h ˜X1 
+
+> t
+
+/2 + ˆ s1(T − t, ˜X1 
+
+> t
+
+)
+
+i
+
+dt + d ¯W 1 
+
+> t
+
+, with ˜X10 ∼ N (0 , 1) ,
+
+and obtain a realization ˜X1  
+
+> T−t0
+
+= x1. 
+
+> 3:
+
+for h = 2 , . . . , H do  
+
+> 4:
+
+Run the backward process up to T − t0
+
+d ˜Xht =
+
+h ˜Xht /2 + ˆ sh(T − t, ˜Xht , x[1: h))
+
+i
+
+dt + d ¯W ht , with ˜Xh 
+
+> 0
+
+∼ N (0 , 1) ,
+
+and obtain a realization ˜XhT −t0 = xh. 
+
+> 5:
+
+Set x[1: h] = (( x[1: h))⊤, x h)⊤ as a realization of ˜X[1: h]  
+
+> T−t0
+
+. 
+
+> 6:
+
+end for  
+
+> 7:
+
+return x[1: H] as a sample path of ˜X[1: H]  
+
+> T−t0
+
+.d ˜Xht =
+
+h ˜Xht /2 + ˆ sh(T − t, ˜Xht , ˜X[1: h) 
+
+> T
+
+)
+
+i
+
+dt + d ¯W ht , ˜Xh 
+
+> 0
+
+∼ N (0 , 1) . (10) Using (10), we propose Algorithm 1 for sequential data sampling. 1 For ease of exposition, Algorithm 1 is written in continuous time for simplicity while implemented with a time discretization. 
+
+Score matching. To estimate the score function, a natural choice is to minimize the weighted quadratic loss for all coordinates: min 
+
+> sh∈S h
+
+Z Tt0
+
+1
+
+T − t0
+
+E ¯X[1: h)
+
+> T
+
+EXht | ¯X[1: h)
+
+> T
+
+ sh(t, X ht , ¯X[1: h) 
+
+> T
+
+) − ∂x log ϕh
+
+> ¯X[1: h)
+> T
+
+(t, X ht ) 2dt, (11) where Sh is a function class (often neural networks) for coordinate h. Here, t0 is an early-stopping time to prevent the blow-up of score functions, which is commonly adopted in practice [17, 80, 85]. As ¯X[1: h) 
+
+> T
+
+has the same distribution as X[1: h)0 for each coordinate h, one can equivalently minimize the alternative: min 
+
+> sh∈S h
+
+Z Tt0
+
+1
+
+T − t0
+
+EX[1: h)0
+
+EXht |X[1: h)0
+
+ sh(t, X ht , X[1: h)0 ) − ∂x log ϕh
+
+> X[1: h)0
+
+(t, X ht ) 2dt. (12) As shown by Vincent [86], rather than minimizing the integral above, we can minimize an equivalent denoising score matching objective which shares the same minimizer as (12): min 
+
+> sh∈S h
+
+Z Tt0
+
+1
+
+T − t0
+
+EX[1: h)0
+
+EXh 
+
+> 0|X[1: h)0
+
+EXht |Xh
+
+> 0
+
+ sh(t, X ht , X[1: h)0 ) − σ−2 
+
+> t
+
+(αtXh 
+
+> 0
+
+− Xht ) 2dt, (13) with αt = e−t/ 2 and σ2 
+
+> t
+
+= 1 − e−t. Furthermore, we denote s = ( s1, . . . , s H ), where the score sh takes current state Xht and the history X[1: h)0 as input. Using this vector notation, we rewrite (13) as min 
+
+> s∈S
+
+Z Tt0
+
+1
+
+T − t0
+
+EX0 EXt|X0
+
+h
+
+s(t, Xt, X0) − σ−2 
+
+> t
+
+(αtX0 − Xt) 2i
+
+dt. (14) Here, the function class S is an aggregation of all function classes at each coordinate h, i.e., S = S1 ×S2 × · · · × S H . We remark that the objective (14) allows for training score functions in parallel in contrast    
+
+> 1The displayed score input uses the full generated history for notational simplicity. The same design permits replacing x[1: h)
+> by a truncated recent-history window x[k:h)in ˆ sh, as in the empirical loss below, without changing the sequential sampling nature.
+
+6to the sequential sampling in Algorithm 1. In fact, (14) can be implemented in a parallel fashion for each timestamp h ∈ [H], without knowledge of information at prior timestamps. In practice, we approximate (14) by its empirical version using available data points. This full-history objective becomes statistically less efficient for later coordinates: as h increases, the input dimension of 
+
+sh grows with the conditioning history. In many financial applications, however, dependence on remote coordinates decays with lag [87, 88]. We therefore condition the score on a recent-history window. Specifically, given n i.i.d. sample trajectories D := {xi}ni=1 with xi ∈ RH , we sample Xht given Xh 
+
+> 0
+
+= xhi from N (αtxhi , σ 2 
+
+> t
+
+). We focus on the truncation window from coordinate k to h and denote the associated loss function by 
+
+ℓ[k:h](x[k:h] 
+
+> i
+
+; s) = 
+
+Z Tt0
+
+1
+
+T − t0
+
+EXht ∼N (αtxhi ,σ 2 
+
+> t)
+
+ s(t, X ht , x[k:h) 
+
+> i
+
+) − σ−2 
+
+> t
+
+(αtxhi − Xht ) 2dt. (15) Here the truncation window can be properly chosen to balance the estimation efficiency and the loss of historical information; see Section 4.4. Let ˆ sh be a minimizer to the empirical score matching risk bL[k:h](s) := 
+
+> 1
+> n
+
+Pni=1 ℓ[k:h](x[k:h] 
+
+> i
+
+; s). 
+
+Adaptiveness property. We now establish the adaptiveness property of the time series generated by Algorithm 1. This property is not automatic for vanilla diffusion models. Specifically, when a vanilla diffusion model is applied to the full time series jointly, the reverse-time score ∇ log pt(x1, . . . , x H ) generally depends on all time indices, so the update of an earlier coordinate may use information from later coordinates. Such dependence breaks the intended information structure of a sequential system. By contrast, Algorithm 1 generates coordinates sequentially and uses only the previously generated history when sampling the next coordinate. 
+
+Assumption 3.1. For each coordinate h, the score estimator ˆsh is trained such that ˆsh ∈ F h ∨ σ( ˜U h), in which ˜U h is an independent random variable defined on the same probability space. 
+
+Here, ˜U h can be viewed as exogenous randomness occurred in training ( e.g., adopting a stochastic optimization algorithm). Assume the probability space (Ω , F, P) is rich enough to define Brownian motions ¯W ht , random variables ˜U h, and standard Gaussian random variables ˜Xh 
+
+> 0
+
+∼ N (0 , 1), h ∈ { 1, . . . , H }. The next proposition constructs a filtration such that the generated sequential data is adapted. 
+
+Proposition 3.2 (Adaptiveness) . Suppose Assumption 3.1 holds. In addition, assume ¯W ht , ˜U h, and ˜Xh 
+
+> 0
+
+∼N (0 , 1) , h ∈ { 1, . . . , H } are independent. 2 Then the output ( ˜XhT )Hh=1 from Algorithm 1 is adapted to the enlarged filtration ˜H := ( ˜Hh)Hh=1 defined as, for 1 ≤ h ≤ H
+
+˜H1 = σ( ˜X10 ) ∨ σ({ ¯W 1 
+
+> t
+
+}Tt=0 ) ∨ σ( ˜U 1) ∨ F 1,
+
+˜Hh = ˜Hh−1 ∨ σ( ˜Xh 
+
+> 0
+
+) ∨ σ({ ¯W ht }Tt=0 ) ∨ σ( ˜U h) ∨ F h.
+
+To interpret Proposition 3.2, recall that the enlarged filtration is obtained by adjoining to the data filtration the auxiliary randomness used in training and sampling. Concretely, it is the filtration generated by (i) the data filtration ( Fh)h≥0, (ii) the training randomization σ( ˜U h), (iii) the (random) initialization 
+
+σ( ˜Xh 
+
+> 0
+
+), and (iv) the driving Brownian motion σ( ¯W ht : 0 ≤ t ≤ T ). Equivalently, ˜H is the smallest σ-field (and the associated smallest filtration, upon taking the natural time-indexed version) with respect to which all random objects appearing in the training procedure and in the sampling dynamics are measurable. 
+
+# 4 Distribution Estimation Theory 
+
+In this section, we present our main distribution estimation results for AD-Seq . To ease the presentation, we consider utilizing the continuous-time backward processes (4) and (6) for distribution estimation. In practice, a proper discretization is applied to generate samples, whose deviation from the continuous-time backward process can be controlled by the step size of the discretization; see Chen et al. [52, Theorem 2], which requires a Lipschitz score, and Benton et al. [57], which removes this assumption via stochastic localization. 
+
+> 2This independence assumption simplifies the statement; our construction accommodates dependence across coordinates.
+
+7The key step is decomposing the joint distribution learning to a series of conditional distribution learning given the sequential conditional nature of our framework. For learning one-step conditional distributions, we leverage recent advances in conditional diffusion models [70, 81, 89]. Recall the ground-truth joint distribution is μ[1: H]0 and we denote the learned joint distribution of ˜X[1: H]  
+
+> T−t0
+
+in Algorithm 1 by ˆ μ[1: H] 
+
+> t0
+
+. In addition, let μh 
+
+> 0
+
+[z] be the ground-truth distribution of Xh 
+
+> 0
+
+|X[1: h)0 = z and ˆ μht0 [z] be the learned distribution of ˜XhT −t0 | ˜X[1: h)  
+
+> T−t0
+
+= z. The chain rule of TV distance implies that TV( μ[1: H]0 , ˆμ[1: H] 
+
+> t0
+
+) ≤
+
+> H
+
+X
+
+> h=1
+
+EX[1: h)0 ∼μ[1: h)0
+
+h
+
+TV 
+
+
+
+μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ]
+
+i 
+
+. (16) Inspired by (16), it suffices to bound the one-step conditional distribution for each h ∈ [H] in TV distance. The truncated nature of loss function ℓ[k:h](·) implies ˆ μht0 [z[1: h)] = ˆ μht0 [z[k:h)] for any z[1: h) ∈ Rh−1. Moreover, triangle inequality implies 
+
+EX[1: h)0
+
+h
+
+TV( μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ]) 
+
+i
+
+≤ EX[k:h)0
+
+h
+
+TV( μh 
+
+> 0
+
+[X[k:h)0 ], ˆμht0 [X[k:h)0 ]) 
+
+i| {z }
+
+> learning error
+
++ EX[1: h)0
+
+h
+
+TV( μh 
+
+> 0
+
+[X[1: h)0 ], μ h 
+
+> 0
+
+[X[k:h)0 ]) 
+
+i| {z }
+
+> truncation error
+
+. (17) Here, we overload the notation μh 
+
+> 0
+
+[z[k:h)] as the distribution of Xh 
+
+> 0
+
+|X[k:h)0 = z[k:h) for any z ∈ Rh−k. We make the following assumption on the truncation error. 
+
+Assumption 4.1. Denote dtrunc = h − k + 1 as the truncated sequence length. Fix h ∈ [H] and considering 
+
+k < h , it holds that 
+
+EX[1: h)0
+
+h
+
+TV( μh 
+
+> 0
+
+[X[1: h)0 ], μ h 
+
+> 0
+
+[X[k:h)0 ]) 
+
+i
+
+≤ u(dtrunc ),
+
+where u(·) only depends on dtrunc and is monotonically decreasing. 
+
+This assumption imposes a quantitative decay-of-dependence property in expectation: the expected total variation distance between the conditional law given the full history and that given only the most recent 
+
+dtrunc observations is bounded by u(dtrunc ). As u decreases in dtrunc , the dependence on the remote past vanishes progressively. Such an assumption is justified in many financial applications [87, 88]. In particular, our numerical experiments in Section 5.2 show that log returns of the S&P 500 index are close to Markovian [88, 90] Thus, conditioning on a short history is nearly as informative as conditioning on the full past. The decay rate of u(·) plays an important role in our theoretical analysis. We will explicitly discuss how different decay regimes influence the choice of k in Section 4.4. It remains to bound the learning-error term in (17). To proceed, we decompose it informally into three sources: the bias from early stopping, the mismatch in the initial distribution, and the error from score estimation. The first source comes from stopping the time-reverse SDE at time T − t0 rather than evolving it all the way to time T . The second arises because the sampling process is initialized from the standard normal distribution instead of the exact forward marginal at time T . The third is due to replacing the true conditional score along the sampling trajectory by its learned approximation ˆ sh. This decomposition is discussed in more detail in Section 4.3. We then reduce the score-estimation contribution to a statistical learning problem, consisting of an approximation component and a finite-sample statistical error component. Section 4.1 controls the former by showing that the neural network class contains a candidate whose discrepancy from the target conditional score is bounded at a prescribed rate. Section 4.2 controls the latter by proving that the empirical score-matching minimizer attains small population score-matching risk. Combining these two estimates yields a bound on the score-estimation contribution, and hence on the learning error and the overall distribution estimation error. 84.1 Score Approximation 
+
+We devote this subsection to conditional score approximation theory. For ease of exposition, we overload 
+
+ϕh 
+
+> z
+
+(0 , ·) as the conditional density of Xh 
+
+> 0
+
+given X[k:h)0 = z when the conditional information is clear from the context. We make the following assumption on each conditional distribution Xh 
+
+> 0
+
+|X[k:h)0 .
+
+Assumption 4.2 (Conditional sub-Gaussianity) . There are constants C11 , C 12 > 0 such that the marginal density ϕ1(0 , ·) satisfies 
+
+ϕ1(0 , x ) ≤ C11 exp 
+
+
+
+−C12 |x|2 /2
+
+
+
+for all x ∈ R. For each h ∈ [H] and k ∈ [h − 1] , there exist two positive constants Ch 
+
+> 1
+
+, C h 
+
+> 2
+
+> 0 and a vector 
+
+vh ∈ Rh−k such that 
+
+ϕh 
+
+> z
+
+(0 , x ) ≤ Ch 
+
+> 1
+
+exp 
+
+
+
+−Ch 
+
+> 2
+
+x − (vh)⊤z 2 /2
+
+
+
+for all x ∈ R and z ∈ Rh−k.
+
+Throughout the analysis, we omit the dependence of C1, C 2, and v on the indices k and h for ease of exposition. Assumption 4.2 imposes sub-Gaussian condition on the marginal probability density ϕ1(0 , ·)and all conditional probability densities. Proposition A.1 in Appendix A verifies that every nondegenerate multivariate Gaussian distribution satisfies Assumption 4.2. Notably, Assumption 4.2 does not impose boundedness on the conditioning variable z, making it well suited for financial settings in which auxiliary time series or unbounded factors often serve as conditioning inputs [88, 91, 92]. This unboundedness of the conditioning variable places our setting beyond the framework of [81]. We address this new challenge by leveraging an additional truncation step; see Theorem 4.9. As a consequence of Assumption 4.2, the following lemma shows that all joint distributions of interest are also sub-Gaussian. 
+
+Lemma 4.3. Under Assumption 4.2, the probability density p[1: h](·) of X[1: h]0 is sub-Gaussian for each 
+
+h ∈ [H], i.e., there are positive constants C3, C 4 > 0 such that 
+
+p[1: h](x) ≤ C3 exp 
+
+
+
+−C4 ∥x∥2 /2
+
+
+
+.
+
+Similar to constants C1 and C2, the constants C3 and C4 are also h-dependent and we omit the dependence when it is clear from the context. 
+
+Proof. We prove the lemma by induction on h. When h = 1, the claim is satisfied with C3 = C1 and 
+
+C4 = C2. Assume the inductive hypothesis holds for p[1: h−1] (·). Set C′ 
+
+> 4
+
+= min {C4, C 2}. For every x ∈ Rh,it holds that 
+
+p[1: h](x) = p[1: h−1] (x[1: h))ϕh 
+
+> x[1: h)
+
+(0 , x h)
+
+≤ C3C1 exp 
+
+
+
+− C4
+
+2 x[1: h) 2
+
+exp 
+
+
+
+− C2
+
+2 xh − v⊤x[1: h) 2
+
+≤ C3C1 exp 
+
+
+
+− C′
+
+> 4
+
+2
+
+
+
+x[1: h) 2
+
++ xh − v⊤x[1: h) 2 
+
+. (18) Define M ∈ Rh×h as 
+
+M =
+
+vv ⊤ + Ih−1 −v
+
+−v⊤ 1
+
+
+
+.
+
+We further bound (18) with 
+
+p[1: h](x) ≤ C3C1 exp 
+
+
+
+− C′
+
+> 4
+
+2 x⊤Mx 
+
+
+
+.
+
+9Here, the matrix M is positive definite as long as the Schur complement of the top-left block S := vv ⊤ +Ih−1
+
+is positive definite. To see this, the Woodbury identity implies that 
+
+M/S := 1 − v⊤  vv ⊤ + Ih−1
+
+−1 v = 1 − v⊤ Ih−1 − vv ⊤
+
+1 + ∥v∥2
+
+!
+
+v = 11 + ∥v∥2 > 0.
+
+Combining (18) with x⊤Mx ≥ λmin (M) ∥x∥2 yields 
+
+p[1: h](x) ≤ C3C1 exp 
+
+
+
+− C′
+
+> 4
+
+λmin (M)2 ∥x∥2
+
+
+
+,
+
+which completes the proof. By applying the marginalization technique, the sub-Gaussian property naturally holds for all joint dis-tributions over any interval [ k, h ]. 
+
+Corollary 4.4. Under Assumption 4.2, the probability density p[k:h](·) of X[k:h]0 is sub-Gaussian, i.e., there are constants C5, C 6 > 0 such that 
+
+p[k:h](x) ≤ C5 exp 
+
+
+
+−C6 ∥x∥2 /2
+
+
+
+.
+
+In particular, probability density ph(·) of Xh 
+
+> 0
+
+is sub-Gaussian. 
+
+In additional to the light-tail property of each conditional distribution, we need the following assumption on the smoothness. Denote Hβ (Ω , B ) by the set of all β-H¨ older smooth functions over the domain Ω with H¨ older norm bounded by B; see [81, Definition 2.1]. 
+
+Assumption 4.5 (H¨ older smoothness) . The marginal density at h = 1 and all conditional densities are H¨ older smooth in the sense that ϕ1(0 , ·) ∈ H β (R, B ) and ϕh 
+
+> z
+
+(0 , ·) ∈ H β (Rh−k+1 , B ) for all 1 ≤ k < h ≤ H
+
+and z ∈ Rh−k.
+
+We are ready to establish score approximation theory. To this end, we rewrite the score function as 
+
+∂x log ϕh 
+
+> z
+
+(t, x ) = ∂xϕh   
+
+> z(t,x )
+> ϕh
+> z(t,x )
+
+. Following the ideas in [81], we first approximate ∂xϕh 
+
+> z
+
+(t, x ) and ϕh 
+
+> z
+
+(t, x ) with diffused local polynomials. The next result provides polynomial approximations for both the denominator 
+
+ϕh 
+
+> z
+
+(t, x ) and the numerator σt∂xϕh 
+
+> z
+
+(t, x ). Later, we combine these approximations to form a clipped ratio f3
+
+in (25), which is then approximated by a neural network. 
+
+Lemma 4.6 (Diffused local polynomial approximation) . Suppose Assumptions 4.2 and 4.5 hold. For a sufficiently large integer N > 0, there exist two polynomials f1(x, z, t ) and f2(x, z, t ), and a positive constant 
+
+R1 ≍ √log N such that 
+
+f1(x, z, t ) − ϕh 
+
+> z
+
+(t, x ) ≲ BN −β log β+1 2 N, (19) 
+
+f2(x, z, t ) − σt∂xϕh 
+
+> z
+
+(t, x ) ≲ BN −β log β+2 2 N, (20) 
+
+for any x ∈ R, z ∈ [−R1, R 1]h−k and t > 0.
+
+The proof adapts the strategy of [81, Appendix A.4], with an additional truncation step to handle the unbounded conditioning variable. This truncation argument is established in Lemma A.3 in Appendix A. The remaining calculations follow [81, Appendix A.4]. 
+
+Proof. We first approximate the density ϕh 
+
+> z
+
+(t, x ) by an integral evaluated over a bonded domain. Denote the integral by ˜f1(x, z, t ) = 1
+
+σt(2 π)1/2
+
+Z
+
+> ¯B
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy, (21) 10 where we define ¯B := 
+
+ x − σtR2
+
+αt
+
+, x + σtR2
+
+αt
+
+ \  v⊤z − R3, v⊤z + R3
+
+ ,
+
+with v as defined in Assumption 4.2. Later, we will choose R2, R 3 ≍ √β log N for some large enough positive integer N . Consequently, Lemma A.3 in Section A implies that 
+
+˜f1(x, z, t ) − ϕh 
+
+> z
+
+(t, x ) ≤ N −β , ∀x ∈ R, z ∈ Rh−k. (22) Compared to the steps in proving [81, Lemma A.4], we only need to modify the function f in (A.24) of [81]. To proceed, we take 
+
+f (y, z, t ) = ϕh
+
+> 2R1(z−1/2)
+
+(0 , 2R1(y − 1/2) + v⊤z), y ∈ [0 , 1] , z ∈ [0 , 1] h−k, t > 0, (23) where 1 ∈ Rh−k is the all one vector and R1 ≍ √β log N . We calculate the H¨ older norm of f as follows. Let 
+
+g(·) be an arbitrary β-H¨ older smooth function. If ∥g∥Hβ (Rd) ≤ B, then for any A ∈ Rd×d and b ∈ Rd, it is straightforward to check by definition that 
+
+∥g(Ax + b)∥Hβ (Rd) ≤ ∥ A∥β ∥g∥Hβ (Rd) ≤ B ∥A∥β , ∀ x ∈ Rd.
+
+Consider the linear transformation 
+
+y
+
+z
+
+
+
+7→
+
+2R1 v⊤
+
+0 2R1Ih−k
+
+| {z }
+
+> A
+
+y
+
+z
+
+
+
+−R1
+
+1
+
+1
+
+| {z }
+
+> b
+
+.
+
+Since the operator norm of A is bounded with 
+
+∥A∥ ≤ ∥ A∥F =
+
+q
+
+(h − k)(2 R1)2 + ∥v∥2 ≲ R1,
+
+Assumption 4.5 implies that ∥f ∥Hβ ≲ BR β 
+
+> 1
+
+. By applying the construction of function q(·) in (A.26) of [81] with substitution x = y and y = z, we have 
+
+|f (y, z, t ) − q(y, z, t )| ≲ B Rβ 
+
+> 1
+
+ds
+
+> trunc
+
+s!N β . (24) Finally, we construct a diffused local polynomial as in (A.37) of [81] and follow the same calculation in [81, Appendix A.4] to deduce 
+
+f1(x, z, t ) − ϕh 
+
+> z
+
+(t, x ) ≲ BN −β log β+1 2 N, ∀x ∈ R, z ∈ [−R1, R 1]h−k, t > 0.
+
+Let ϵlow > 0 be a threshold that will be chosen later and fix a large enough positive constant C7 > 0. With the two polynomials defined as in Lemma 4.6, we construct a score approximator as 
+
+f3 = min 
+
+ f2
+
+σtf1,clip 
+
+, C7
+
+σ2
+
+> t
+
+(R4 + 1) 
+
+
+
+, (25) where f1,clip := max( f1, ϵ low ) and R4 ≍ √log N . This construction guarantees that the denominator is bounded away from zero while the range of f3 is also bounded. The next result establish score approximation with f3. The proof follows the same calculations as in [81, Appendix A.3.2]. 
+
+Lemma 4.7. Suppose Assumptions 4.2 and 4.5 hold. Let f3 be defined as in (25) . For sufficiently large integer N > 0, it holds that 
+
+f3(x, z, t ) − ∂x log ϕh 
+
+> z
+
+(t, x ) ≲ Bσ2 
+
+> t
+
+ϕh 
+
+> z
+
+(t, x ) N −β log β+2 2 N. 
+
+for any x ∈ R, z ∈ [−R1, R 1]h−k and t > 0.
+
+11 With Lemma 4.7, we will complete the proof of score approximation as long as f3 can be approximated by a neural network. We make the following assumption on the neural network class Sh.
+
+Assumption 4.8. Let N > 0 be a given integer. There exists a neural network f net (·) ∈ S h such that 
+
+∥f net ∥∞ ≲ √log Nσ2
+
+> t
+
+and moreover 
+
+f net (x, z, t ) − f3(x, z, t ) ≲ N −β , ∀x ∈ [−R1, R 1], z ∈ [−R1, R 1]h−k, t ∈ [t0, T ].
+
+Since f3 is Lipschtiz continuous over the compact domain, many universal approximation results [93, 94] guarantee the existence of neural networks as required in Assumption 4.10. In Section 4.4, we will justify this assumption using ReLU networks as a concrete example. We are ready to state the main result in this subsection. 
+
+Theorem 4.9 (Score approximation) . Suppose Assumptions 4.2, 4.5, 4.8 hold. Let N > 0 be a sufficiently large integer and we set early-stop time t0 = N −Cσ and terminal time T = Cα log N for some positive constants Cσ and Cα. There is a neural network s⋆ ∈ S h such that 
+
+E
+
+
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕX[k:h)0
+
+(t, X ht ) 2
+
+≲ Bσ4
+
+> t
+
+N −β (log N )2+ β/ 2, ∀t ∈ [t0, T ]. (26) Theorem 4.9 establishes a score approximation result over the time interval [ t0, T ]. It will serve as a building block for the subsequent score estimation theory. Compared with prior work [81], the main technical difference is the introduction of an additional truncation step. This is necessary because the conditional information X[k:h)0 is not assumed to be bounded. 
+
+Proof. Let s⋆(t, x, z) = f net (x, z, t ) given in Assumption 4.8. It follows from Lemma 4.6 that 
+
+|s⋆(x, z, t ) − ∂x log ϕz(t, x )| ≲ Bσ2 
+
+> t
+
+ϕz(t, x ) N −β log β+2 2 N. (27) when x, z, t are bounded as in Assumption 4.8. Consider the following decomposition 
+
+E
+
+
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+≤ E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2| {z }
+
+> (E1)
+
+++ E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 > R 5
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2| {z }
+
+> (E2)
+
++ E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞ ≤ R1, Xht − αtv⊤X[k:h)0 ≤ R5
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2| {z }
+
+> (E3)
+
+,
+
+where R1 and R5 will be chosen later. We begin with the error term ( E1). Note that (E1) ≤ 2E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) 2
+
++ 2 E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+.
+
+As |s⋆(x, z, t )| ≲ √log Nσ2
+
+> t
+
+by Assumption 4.10, we have 
+
+E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞ > R 1
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) 2
+
+≲ log Nσ4
+
+> t
+
+Z
+
+> ∥z∥∞>R 1
+
+p[k:h)(z)d z
+
+12 ≲ log Nσ4
+
+> t
+
+Z
+
+> ∥z∥∞>R 1
+
+exp 
+
+
+
+−C5 ∥z∥2 /2
+
+
+
+dz
+
+≲ log Nσ4
+
+> t
+
+(R1)−1 exp  −C5R21/2 , (28) where C5 is given in Corollary 4.4. Combining (28) and Lemma A.5, and choosing R1 ≥
+
+q 4β 
+
+> min( C5,C 6)
+
+log N , we bound the term ( E1) with (E1) ≲ log Nσ4
+
+> t
+
+(R1)−1 exp  −C5R21/2 + 1
+
+σ4
+
+> t
+
+exp( −C6R21/2) ≲
+
+√log Nσ4
+
+> t
+
+N −2β . (29) Next, we bound ( E2) with (E2) ≤ 2E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 > R 5
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) 2
+
++ 2 E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 > R 5
+
+o
+
+∂x log ϕX[k:h)0
+
+(t, X ht ) 2
+
+(30) Lemma A.6 implies 
+
+E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 > R 5
+
+o
+
+s⋆(t, X ht , X[k:h)0 ) 2
+
+≲ log Nσ4
+
+> t
+
+Z
+
+> ∥z∥∞≤R1
+
+Z
+
+> |x−αtv⊤z|>R 5
+
+ϕh 
+
+> z
+
+(t, x )d xp [k:h)(z)d z
+
+≲ log Nσ4
+
+> t
+
+(R5)−1 exp  −C′
+
+> 2
+
+R25/2 , (31) and moreover 
+
+E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 > R 5
+
+o
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+=
+
+Z
+
+> ∥z∥∞≤R1
+
+Z
+
+> |x−αtv⊤z|>R 5
+
+ϕh 
+
+> z
+
+(t, x ) ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dxp [k:h)(z)d z
+
+≲ 1
+
+σ4
+
+> t
+
+R5 exp  −C′
+
+> 2
+
+R25/2 . (32) With (30), (31) and (32), we choose R5 ≥
+
+q 4βC′
+
+> 2
+
+log N to obtain an upper bound for ( E2): (E2) ≲ σ−4 
+
+> t
+
+(R5)−1 exp  −C′
+
+> 2
+
+R25/2 + 1
+
+σ4
+
+> t
+
+R5 exp  −C′
+
+> 2
+
+R25/2
+
+≲ log Nσ4
+
+> t
+
+· N −2β
+
+√log N +
+
+√log Nσ4
+
+> t
+
+N −2β ≲
+
+√log Nσ4
+
+> t
+
+N −2β . (33) We further bound ( E3) ≤ (E4) + ( E5) with (E4) := E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 ≤ R5, ϕX[k:h)0
+
+(t, X ht ) < ϵ low 
+
+o
+
+· s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕX[k:h)0
+
+(t, X ht ) 2 
+
+(E5) := E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 ≤ R5, ϕX[k:h)0
+
+(t, X ht ) ≥ ϵlow 
+
+o
+
+· s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕX[k:h)0
+
+(t, X ht ) 2 
+
+13 We bound ( E4) with (E4) ≤ 2E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 ≤ R5, ϕX[k:h)0
+
+(t, X ht ) < ϵ low 
+
+o
+
+× s⋆(t, X ht , X[k:h)0 ) 2 
+
++ 2 E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+≤ R1, Xht − αtv⊤X[k:h)0 ≤ R5, ϕX[k:h)0
+
+(t, X ht ) < ϵ low 
+
+o
+
+× ∂x log ϕX[k:h)0
+
+(t, X ht ) 2 
+
+,
+
+where ϵlow > 0 will be chosen later. Lemma A.7 implies the following upper bound for ( E4): (E4) ≲
+
+Z
+
+> ∥z∥∞≤R1
+
+ log Nσ4
+
+> t
+
+R5ϵlow + ϵlow 
+
+σ4
+
+> t
+
+R35
+
+
+
+p[k:h)(z)d z ≲ ϵlow 
+
+σ4
+
+> t
+
+· (log N )3/2. (34) By the approximation guarantee (27), for any fixed z ∈ [−R1, R 1]h−k we deduce that 
+
+Z
+
+> |x−αtv⊤z|≤ R5
+
+1  ϕh 
+
+> z
+
+(t, x ) ≥ ϵlow s⋆(x, z, t ) − ∂x log ϕh 
+
+> z
+
+(t, x ) 2 ϕh 
+
+> z
+
+(t, x )d x
+
+≲
+
+Z
+
+> |x−αtv⊤z|≤ R5
+
+1  ϕh 
+
+> z
+
+(t, x ) ≥ ϵlow 
+
+B2
+
+σ4 
+
+> t
+
+ϕh 
+
+> z
+
+(t, x ) N −2β log β+2 N dx
+
+≲ B2 log β+2 Nσ4 
+
+> t
+
+ϵlow 
+
+N −2β R5.
+
+Consequently, we obtain an upper bound for ( E5): (E5) ≲ B2 log β+2 Nσ4 
+
+> t
+
+ϵlow 
+
+N −2β R5
+
+Z
+
+> ∥z∥∞≤R1
+
+p[k:h)(z)d z ≤ B2 log 5/2+ β Nσ4 
+
+> t
+
+ϵlow 
+
+N −2β . (35) Combining (29), (33), (34) and (35), we have 
+
+E
+
+
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+≲
+
+√log Nσ4
+
+> t
+
+N −2β + ϵlow (log N )3/2
+
+σ4
+
+> t
+
++ B2 log 5/2+ β Nσ4 
+
+> t
+
+ϵlow 
+
+N −2β .
+
+(36) Substitution ϵlow = BN −β log 1+ β 
+
+> 2
+
+N back into (36), we conclude 
+
+E
+
+
+
+s⋆(t, X ht , X[k:h)0 ) − ∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+≲ Bσ4
+
+> t
+
+N −β (log N )2+ β/ 2, ∀t ∈ [t0, T ]. (37) 
+
+## 4.2 Score Estimation 
+
+In this section, we present the score estimation result for one-step conditional diffusion models. Define the risk function as 
+
+R[k:h](s) = 
+
+Z Tt0
+
+1
+
+T − t0
+
+EX[k:h)0
+
+EXh 
+
+> 0|X[k:h)0
+
+EXht |Xh
+
+> 0
+
+
+
+s(t, X ht , X[k:h)0 ) − ∂x log ϕX[k:h)0
+
+(t, X ht ) 2
+
+dt. (38) Our goal is to bound expected risk ED [R[k:h](ˆ s)], where we recall that ˆ sh is a minimizer to the empirical score matching risk bL[k:h](s) = 1
+
+> n
+
+Pni=1 ℓ[k:h](x[k:h] 
+
+> i
+
+; s) with ℓ[k:h](·; s) defined in (15). In the subsequent analysis, we suppress the superscript [ k : h] when the context is clear. Recall the dataset D = {xi}ni=1 .14 One key step towards the score estimation theory is bounding the logarithmic covering number of a function class over a compact domain. To this end, it is convenient to recenter the empirical by defining 
+
+ℓ0(x, z; s) = ℓ(x, z; s) − ℓ(x, z; ¯ s), with ¯ s(t, x, z) = ∂x log ϕh 
+
+> z
+
+(t, x ). (39) Moreover, we define a truncated loss associated with ℓ(·; s) as 
+
+ℓtrunc (x, z; s) = ℓ(x, z; s)1  x − v⊤z ≤ R3, ∥z∥∞ ≤ R1 . (40) The truncated centered loss ℓtrunc 0 (·; s) is defined in a similar way. Let G = ℓtrunc 0 (·; s) : s ∈ S h be a loss function class induced by the neural network class Sh. We make the following definition on the network complexity. 
+
+Definition 4.10 (Network Complexity) . We denote the the logarithmic covering number log( N (δ)) as 
+
+Network-Complexity .
+
+We are ready to state the main result of this subsection. 
+
+Theorem 4.11 (Score estimation) . Suppose Assumptions 4.2 and 4.5 hold and let Sh be a neural network class satisfying Assumptions 4.8. Then it holds that 
+
+ED [R(ˆ s)] ≲
+
+√log Nt0
+
+N −β + 1
+
+t0
+
+N −β (log N )2+ β/ 2 + log Nnt 0
+
+· Network-Complexity + δ. 
+
+Theorem 4.11 bounds the score estimation error by four error sources: the first term is the truncation error from restricting the unbounded conditioning variable to a bounded domain; the second term is the score approximation error inherited from Theorem 4.9; the third term is the statistical error over a prescribed network class; and the fourth term δ is the covering resolution of G. We emphasize that the analysis is agnostic 
+
+to the choice of network class: any class satisfying Assumption 4.8 can be substituted into Theorem 4.11. Section 4.4 instantiates the ReLU networks to obtain a concrete rate. 
+
+Proof. We follow the proof strategy as in [74, Appendix C.1] and only mention the differences here. With 
+
+ℓ0(·; s) in (39) and the dataset D, we define centered empirical risk as 
+
+bL0(s) := 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ℓ0(xhi , x[k:h) 
+
+> i
+
+; s)Note that bL0(s) and bL(s) share the same minimizer ˆ s. One key observation is that population centered risk is exactly the risk we would like to minimize, i.e., 
+
+L0(s) := EX[k:h]0
+
+h
+
+ℓ0(Xh 
+
+> 0
+
+, X[k:h)0 , s )
+
+i
+
+= R(s). (41) We define truncated versions Ltrunc 0 and bLtrunc 0 using ℓtrunc 0 (·; s) accordingly. Consider the following decomposition 
+
+ED [R(ˆ s)] = ED [R(s⋆)] 
+
+| {z }
+
+> (I)
+
++ ED [R(ˆ s) − R (s⋆)] 
+
+| {z }
+
+> (II)
+
+.
+
+Here, s⋆ is the constructed score approximator given in Theorem 4.9 with approximation error: (I) ≲ 1
+
+T − t0
+
+Z Tt0
+
+Bσ4
+
+> t
+
+N −β (log N )2+ β/ 2dt ≲ 1
+
+t0
+
+N −β (log N )2+ β/ 2, (42) where we apply Lemma D.1 in [81] to bound the integral 1 
+
+> T−t0
+
+R Tt0 σ−4 
+
+> t
+
+dt = O(1 /t 0). We proceed with the calculation as in [74]. By applying the fact that ˆ s is the minimizer of bL0, we further bound (II) with (II) ≤ ED [L0(ˆ s) − bL0(ˆ s)] 
+
+| {z }
+
+> (II −A)
+
+.
+
+15 Bounding term (II-A). This part is an extension from a bounded domain to an unbounded domain with truncation argument. The key difference compared to [74] is the truncation error and the covering number. Specifically, we first have (II-A) ≤ ED, ¯D
+
+"
+
+sup 
+
+> s∈S
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+[ℓ0(¯ xhi , ¯x[k:h) 
+
+> i
+
+, s ), ℓ 0(xhi , x[k:h) 
+
+> i
+
+, s )] − aR(s)
+
+#| {z }
+
+> (♠)
+
++aED [R(ˆ s)] , (43) where a > 0 is a parameter to control bias-variance trade-off commonly used in the literature. Here, ¯D := 
+
+n
+
+¯x[k:h]
+
+> i
+
+oni=1 
+
+is an independent copy of samples following the same distribution as D. We use the covering number to bound ( ♠). We construct a covering of G in L∞-norm as follows. Let δ > 0 be given. We select a collection of score networks sj , j = 1 , . . . , N (δ) such that for any s ∈ S there is an index j with 
+
+ℓtrunc 0 (·; s) − ℓtrunc 0 (·; sj ) ∞ = ℓtrunc (·; s) − ℓtrunc (·; sj ) ∞ ≤ δ. 
+
+Recall that B2 = v⊤z − R3, v⊤z + R3
+
+. Note that for each s ∈ S (s can depend on X[k:h]0 ) we have (T − t0)EX[k:h]0
+
+h
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 ; s) − ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 ; s)
+
+i
+
+=
+
+Z Tt0
+
+Z
+
+> ∥z∥∞>R 1
+
+Z
+
+> R
+
+EXht |Xh 
+
+> 0=y
+
+"
+
+s(t, X ht , z) − αty − Xht
+
+σ2
+
+> t
+> 2
+
+#
+
+ϕh 
+
+> z
+
+(0 , y )p[k:h)(z)d ydzdt
+
++
+
+Z Tt0
+
+Z
+
+> ∥z∥∞≤R1
+
+Z
+
+> R\B2
+
+EXht |Xh 
+
+> 0=y
+
+"
+
+s(t, X ht , z) − αty − Xht
+
+σ2
+
+> t
+> 2
+
+#
+
+ϕh 
+
+> z
+
+(0 , y )p[k:h)(z)d ydzdt
+
+≤ 2
+
+Z Tt0
+
+Z
+
+> ∥z∥∞>R 1
+
+Z
+
+> R
+
+EXht |Xh 
+
+> 0=y
+
+"
+
+s(t, X ht , z) 2 + αty − Xht
+
+σ2
+
+> t
+> 2
+
+#
+
+ϕh 
+
+> z
+
+(0 , y )p[k:h)(z)d ydzdt
+
++ 2 
+
+Z Tt0
+
+Z
+
+> ∥z∥∞≤R1
+
+Z
+
+> R\B2
+
+EXht |Xh 
+
+> 0=y
+
+"
+
+s(t, X ht , z) 2 + αty − Xht
+
+σ2
+
+> t
+> 2
+
+#
+
+ϕh 
+
+> z
+
+(0 , y )p[k:h)(z)d ydzdt. 
+
+Since ϕh 
+
+> z
+
+(0 , ·) and p[k:h)(·) are both sub-Gaussian (Assumption 4.2 and Corrolary 4.4), we deduce that (T − t0)EX[k:h]0
+
+h
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 ; s) − ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 ; s)
+
+i
+
+≤ 2
+
+Z Tt0
+
+Z
+
+> ∥z∥∞>R 1
+
+ log Nσ4
+
+> t
+
++ 1
+
+σ2
+
+> t
+
+
+
+exp( −C6 ∥z∥2 /2)d zdt
+
++ 2 
+
+Z Tt0
+
+Z Z
+
+> |y−v⊤z|>R 3
+
+ log Nσ4
+
+> t
+
++ 1
+
+σ2
+
+> t
+
+
+
+exp( −C2 y − v⊤z 2 /2)d ydzdt
+
+≤ 2(1 + log N )  exp( −C6R21/2)( R1)−1 + exp( −C2R23/2)( R3)−1 Z Tt0
+
+1
+
+σ4
+
+> t
+
+dt
+
+We take R1 ≥
+
+q 2βC6 log N and R3 ≥
+
+q 2βC2 log N to deduce 
+
+EX[k:h]0
+
+h
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 ; s) − ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 ; s)
+
+i
+
+≲
+
+√log Nt0
+
+N −β . (44) For any s ∈ S h and its close representation sj in terms of ℓtrunc 0 , it follow from (44) that 
+
+EX[k:h]0
+
+h
+
+ℓ0(Xh 
+
+> 0
+
+, X[k:h)0 , s ) − ℓ0(Xh 
+
+> 0
+
+, X[k:h)0 , s j )
+
+i
+
+= EX[k:h]0
+
+h
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 , s ) − ℓ(Xh 
+
+> 0
+
+, X[k:h)0 , s j )
+
+i
+
+≤ EX[k:h]0
+
+h
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 , s ) − ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 , s )
+
+i
+
++ EX[k:h]0
+
+h
+
+ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 , s ) − ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 , s j )
+
+i
+
+16 + EX[k:h]0
+
+h
+
+ℓtrunc (Xh 
+
+> 0
+
+, X[k:h)0 , s j ) − ℓ(Xh 
+
+> 0
+
+, X[k:h)0 , s j )
+
+i
+
+≲ 2√log Nt0
+
+N −β + δ. 
+
+Furthermore, Eq. (41) implies 
+
+|R (s) − R (sj )| = |L 0(s) − L 0(sj )| = EX[k:h]0
+
+h
+
+ℓ0(Xh 
+
+> 0
+
+, X[k:h)0 , s ) − ℓ0(Xh 
+
+> 0
+
+, X[k:h)0 , s j )
+
+i
+
+≤ 2√log Nt0
+
+N −β + δ. 
+
+Consequently, Eq. (43) becomes (♠) ≤ ED, ¯D
+
+"
+
+max 
+
+> j
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+[ℓ0( ¯Xh
+
+> 0,i
+
+, ¯X[k:h)0,i , s j ) − ℓ0(Xh
+
+> 0,i
+
+, X [k:h)0,i , s j )] − aR(sj )
+
+#
+
++ ( a + 2) 
+
+ 2√log Nt0
+
+N −β + δ
+
+
+
+.
+
+To proceed, we prove a modified version of Lemma C.1 in [74] over an unbounded domain. Note that for any fixed s ∈ S h, it holds that 
+
+ℓ(y, z; s) ≤ 2
+
+T − t0
+
+Z Tt0
+
+EXht |Xh 
+
+> 0=y
+
+"
+
+s(t, X ht , z) 2 + αty − Xht
+
+σ2
+
+> t
+> 2
+
+#
+
+dt
+
+≤ 2
+
+T − t0
+
+Z Tt0
+
+EXht |Xh 
+
+> 0=y
+
+ log Nσ4
+
+> t
+
++ 1
+
+σ2
+
+> t
+
+
+
+dt
+
+≤ 2(1 + log N )
+
+T − t0
+
+Z Tt0
+
+1
+
+σ4
+
+> t
+
+dt ≤ 4(1 + log N )
+
+t0
+
+,
+
+Similarly, we have 
+
+|ℓ(y, z; s) − ℓ(y, z; s⋆)|2 ≤ 16(1 + log N )
+
+t0(T − t0)
+
+Z Tt0
+
+EXht |Xh 
+
+> 0=y
+
+h
+
+|(s(t, x, z) − s⋆(t, x, z)) |2i
+
+. (45) Taking expectation over (45) to obtain 
+
+EX[k:h]0
+
+
+
+ℓ(Xh 
+
+> 0
+
+, X[k:h)0 ; s) − ℓ(Xh 
+
+> 0
+
+, X[k:h)0 ; s⋆) 2
+
+≤ 16(1 + log N )
+
+t0(T − t0)
+
+Z Tt0
+
+E
+
+h
+
+|(s(t, x, z) − s⋆(t, x, z)) |2i
+
+dt = 16(1 + log N )
+
+t0
+
+R(s).
+
+Denote hi(s) = ℓ0(¯ xhi , ¯x[k:h) 
+
+> i
+
+, s j ) − ℓ0(xhi , x[k:h) 
+
+> i
+
+, s j ) for each fixed s ∈ S h. Let Cℓ := 16(1 + log N )/t 0. We have Var[ hi(s)] ≤ CℓR(s), and |hi(s)| ≤ Cℓ.
+
+The analysis in [74] implies (♠) ≤ 1
+
+λ log N (δ) + ( a + 2) 
+
+ 2√log Nt0
+
+N −β + δ
+
+
+
+.
+
+with λ = 6an  
+
+> (2 a+3) Cℓ
+
+. Hence, we apply Definition 4.10 to deduce (♠) ≲ (2 a + 3) Cℓ
+
+6an · log N (δ) + ( a + 2) 
+
+ 2√log Nt0
+
+N −β + δ
+
+
+
+. (46) 17 Combining (42), (43) and (46), we have 
+
+ED [R(ˆ s)] − aED [R(ˆ s)] ≲ 1
+
+t0
+
+N −β (log N )2+ β/ 2 + (2 a + 3) Cℓ
+
+6an · log N (δ)+ ( a + 2) 
+
+ 2√log Nt0
+
+N −β + δ
+
+
+
+.
+
+We pick a = 1 /2 and deduce that 
+
+ED [R(ˆ s)] ≲
+
+√log Nt0
+
+N −β + 1
+
+t0
+
+N −β (log N )2+ β/ 2 + log Nnt 0
+
+· log N (δ) + δ. 
+
+Therefore, we complete the proof. 
+
+## 4.3 Distribution Estimation 
+
+In this subsection, we apply the score estimation theory from the previous subsection to obtain one-step and joint distribution estimation theory. Recall dtrunc = h − k + 1. 
+
+Theorem 4.12 (Distribution estimation) . Let h ∈ [H] and k ∈ [h − 1] , and assume that 
+
+EX[k:h)0
+
+KL( μh 
+
+> 0
+
+[X[k:h)0 ] ∥ N (0 , 1))  < ∞.
+
+Under Assumptions 4.1, 4.2, 4.5, and 4.8, it holds that 
+
+ED [EX[1: h)0
+
+[TV( μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ])]] ≲ √t0(log(1 /t 0)) dtrunc 2 + exp( −T ) + pT ED [R(ˆ s)] + u(dtrunc ).
+
+Theorem 4.12 translates the score estimation result in Theorem 4.11 into a distribution estimation guar-antee. The first term is the early-stopping error from terminating the sampling process at T − t0 ∈ (0 , T ), and the second is the initialization error from starting the sampling process at the standard Gaussian rather than the true forward marginal at time T . The third term propagates the score estimation error through the sampling process, with ED [R(ˆ s)] controlled by Theorem 4.11. The last term, u(dtrunc ), is the truncation error, controlled by Assumption 4.1. 
+
+Proof. The proof largely follows from [81, Appendix D.3]. We first check that condition (D.20) in [81, Lemma D.4] holds. Note that for any s ∈ S h and z ∈ Rh−k, Assumption 4.10, Lemmas A.2 and A.4 imply that 
+
+Z
+
+ϕh 
+
+> z
+
+(t, x ) s(t, x, z) − ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dx
+
+≲
+
+Z
+
+ϕh 
+
+> z
+
+(t, x ) x − αtv⊤z 2 + log Nσ4
+
+> t
+
+dx
+
+≲
+
+Z
+
+exp 
+
+
+
+− C′
+
+> 2
+
+2 (x − αtv⊤z)2
+
+ x − αtv⊤z 2 + log Nσ4
+
+> t
+
+dx
+
+=
+
+Z
+
+exp 
+
+
+
+− C′
+
+> 2
+
+2 u2
+
+ u2 + log Nσ4
+
+> t
+
+du ≲ 1
+
+σ4
+
+> t
+
+.
+
+We also prove an analog to [81, Lemma D.5] to bound the early stopping error. Let z ∈ Rh−k be given. Recall in Lemma A.3 we define B2 = v⊤z − R3, v⊤z + R3
+
+ and furthermore we denote B3 := αtv⊤z − R6, α tv⊤z + R6
+
+. Then we first decompose the TV distance as TV( μh 
+
+> 0
+
+[z], μ ht0 [z]) = 12
+
+Z
+
+> (B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) dx
+
++ 12
+
+Z
+
+> R\(B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) dx. (47) 18 For the second term in (47), Assumption 4.2 and Lemma A.6 imply 
+
+Z
+
+> R\(B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) dx ≤
+
+Z
+
+> R\B2
+
+ϕh 
+
+> z
+
+(0 , x )d x +
+
+Z
+
+> R\B3
+
+ϕh 
+
+> z
+
+(t, x )d x
+
+≲ (R3)−1 exp( −C2R23/2) + ( R6)−1 exp( −C′
+
+> 2
+
+R26/2) ≲ ϵ. (48) as long as we take R3, R 6 ≍ plog(1 /ϵ ). Take expectation of X[k:h)0 to have 
+
+EX[k:h)0
+
+[TV( μh 
+
+> 0
+
+[X[k:h)0 ], μ ht0 [X[k:h)0 ])] ≲
+
+Z Z
+
+> (B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) p[k:h)(z)d xdz + ϵ. 
+
+We consider a region B4 := {z : ∥z∥∞ ≤ R1}. Then we have 
+
+Z
+
+> R\B4
+
+Z
+
+> (B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) p[k:h)(z)d xdz ≲ ϵplog(1 /ϵ ), (49) as long as we choose R1 ≍ plog(1 /ϵ ). To bound the first term in (47), we let Kt(x, y ) = 1 
+
+> σt(2 π)1/2
+
+exp   − (2 σ2 
+
+> t
+
+)−1 |x − αty|2  be an auxiliary kernel. Recall B1 =
+
+h x−σtR2 
+
+> αt
+
+, x+σtR2
+
+> αt
+
+i
+
+. Since R 
+
+> R
+
+Kt(x, y )d y = ( αt)−1, we have 
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) = αt
+
+Z
+
+> R
+
+ϕh 
+
+> z
+
+(0 , x )Kt(x, y )d y −
+
+Z
+
+> R
+
+ϕh 
+
+> z
+
+(0 , y )Kt(x, y )d y
+
+=
+
+Z
+
+> R
+
+(ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(0 , y )) αtKt(x, y )d y + ( αt − 1) ϕh 
+
+> z
+
+(t, x )=
+
+Z
+
+> B1
+
+(ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(0 , y )) αtKt(x, y )d y + ( αt − 1) ϕh 
+
+> z
+
+(t, x )+
+
+Z
+
+> R\B1
+
+(ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(0 , y )) αtKt(x, y )d y. (50) Since ϕh 
+
+> z
+
+(0 , x ) ≤ C1 for any x by Assumption 4.2, we deduce that 
+
+Z
+
+> R\B1
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(0 , y ) αtKt(x, y )d y ≲
+
+Z
+
+> |u|>R 2
+
+exp( −u2/2)d u ≲ (R2)−1 exp( −R22/2) .
+
+We choose R2 ≍ plog(1 /ϵ ) to make the integral less than ϵ. To handle the integral over B1, we apply Assumption 4.5 to obtain 
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(0 , y ) ≤ B |x − y| ≤ Bαt
+
+|αty − x| + B(1 − αt)
+
+αt
+
+|x| ≤ Bσ t
+
+αt
+
+R2 + B(1 − αt)
+
+αt
+
+|x| .
+
+Thus, Eq. (50) becomes 
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) ≲ σt
+
+αt
+
+R2 + 1 − αt
+
+αt
+
+|x| + ( αt − 1) ϕh 
+
+> z
+
+(t, x ) + ϵ. 
+
+Then, integration x over B2 ∪ B3 gives us 
+
+Z
+
+> (B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) dx ≲ σt
+
+αt
+
+R1 + 1 − αt
+
+αt
+
+Z
+
+> B2∪B3
+
+|x| dx +
+
+Z
+
+> B2∪B3
+
+(αt − 1) ϕh 
+
+> z
+
+(t, x ) + ϵdx
+
+≲ σt
+
+αt
+
+R1 + 1 − αt
+
+αt
+
+Z
+
+> B2∪B3
+
+|x| dx + ( αt − 1) + ϵplog(1 /ϵ ). (51) Consequently, the integration over B1 with respect to the density p[k:h)(·) leads to 
+
+Z
+
+> B4
+
+Z
+
+> (B2∪B3)
+
+ϕh 
+
+> z
+
+(0 , x ) − ϕh 
+
+> z
+
+(t, x ) p[k:h)(z)d xdz
+
+19 ≲
+
+ σt
+
+αt
+
+R1 + 1 − αt
+
+αt
+
+log(1 /ϵ ) + ( αt − 1) + ϵplog(1 /ϵ )
+
+
+
+(plog(1 /ϵ )) h−k, (52) where we use the fact that |x| ≲ plog(1 /ϵ ) over B4 × (B2 ∪ B3) and |B2 ∪ B3| ≲ plog(1 /ϵ ). Combining (48), (49), and (52), to obtain 
+
+EX[k:h)0
+
+[TV( μh 
+
+> 0
+
+[X[k:h)0 ], μ ht0 [X[k:h)0 ])] 
+
+≲
+
+ σt
+
+αt
+
+plog(1 /ϵ ) + 1 − αt
+
+αt
+
+log(1 /ϵ ) + ( αt − 1) + ϵplog(1 /ϵ )
+
+
+
+(plog(1 /ϵ )) h−k + ϵplog(1 /ϵ ) + ϵ. 
+
+Note that σt 
+
+> αt
+
+= O(√t), 1−αt 
+
+> αt
+
+= O(t), αt − 1 = O(t) as t → 0. We take ϵ = t0 to conclude 
+
+EX[k:h)0
+
+[TV( μh 
+
+> 0
+
+[X[k:h)0 ], μ ht0 [X[k:h)0 ])] = O
+
+√t0(log(1 /t 0)) dtrunc 2
+
+
+
+.
+
+Finally, we apply the same analysis as in [81] but replacing [81, Theorem 4.1] with Theorem 4.11. Thus, we obtain 
+
+ED [EX[k:h)0
+
+[TV( μh 
+
+> 0
+
+[X[k:h)0 ], ˆμht0 [X[k:h)0 ])]] ≲ √t0(log(1 /t 0)) h−k+1 2 + exp( −T ) + pT ED [R(ˆ s)] ,
+
+where we use the assumption that EX[k:h)0
+
+[KL( μh 
+
+> 0
+
+[X[k:h)0 ]∥N (0 , 1))] < ∞. Therefore, we complete the proof by applying (17). 
+
+## 4.4 Example: ReLU Network 
+
+In this subsection, we specialize the function class to ReLU neural networks by leveraging existing results in the literature. This leads to explicit score estimation and distribution estimation guarantees. Specifically, let Sh be the ReLU network class defined as in [81, Eq. (2.7)]. Consequently, Eq. (A.15) in [81] guarantees the existence of a ReLU network satisfying Assumption 4.8 and moreover, the logarithmic 
+
+δ-covering number is bounded with log N (δ) ≲ N dtrunc log 9 N (log 8 N + log 2 N log log N + log( δ−1)) . (53) With (53), we obtain a concrete score estimation and distribution estimation results under the ReLU pa-rameterization. 
+
+Corollary 4.13 (Score estimation with ReLU networks) . Suppose Assumptions 4.2 and 4.5 hold. By taking the network size parameter N = n 1 
+
+> dtrunc +β
+
+, early stopping threshold t0 = N −Cσ < 1 and terminal horizon 
+
+T = Cα log n, then it holds that 
+
+ED [R(ˆ s)] = O
+
+ 1
+
+t0
+
+n− βdtrunc +β (log n)max {2+ β/ 2,18 }
+
+.
+
+Proof. We substitute (53) into Theorem 4.11 and choose N , t0 and T as stated to obtain the result. 
+
+Corollary 4.14 (Distribution estimation with ReLU networks) . Let h ∈ [H] and k ∈ [h − 1] be given indices. Assume that EX[k:h)0
+
+[KL( μh 
+
+> 0
+
+[X[k:h)0 ]∥N (0 , 1))] < ∞. Under Assumptions 4.1 and 4.2, by taking the early-stopping time t0 = n− β 
+
+> 2( dtrunc +β)
+
+and terminal time T = β 
+
+> 4( dtrunc +β)
+
+log n, it holds that, 
+
+ED [EX[1: h)0
+
+[TV( μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ])]] = O
+
+
+
+n− β 
+
+> 4( dtrunc +β)
+
+(log n)max {dtrunc ,3+ β/ 2,19 }/2 + u(dtrunc )
+
+
+
+.
+
+Proof. We combine Theorem 4.12 and Corollary 4.4 to have 
+
+ED [EX[1: h)0
+
+[TV( μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ])]] 20 ≲ √t0(log(1 /t 0)) dtrunc 2 + exp( −T ) + 
+
+r Tt0
+
+n− βdtrunc +β (log n)max {2+ β/ 2,18 } + u(dtrunc ).
+
+We take T = β 
+
+> 4( dtrunc +β)
+
+log n, t0 = n− β 
+
+> 2( dtrunc +β)
+
+to deduce that 
+
+ED [EX[1: h)0
+
+[TV( μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ])]] 
+
+≲ n− β 
+
+> 4( dtrunc +β)
+
+(log n) dtrunc 2 + n− β 
+
+> 4( dtrunc +β)
+
++ plog n
+
+ 1
+
+t0
+
+n− βdtrunc +β (log n)max {2+ β/ 2,18 }1/2
+
++ u(dtrunc )= O
+
+
+
+n− β 
+
+> 4( dtrunc +β)
+
+(log n)max {dtrunc ,3+ β/ 2,19 }/2 + u(dtrunc )
+
+
+
+.
+
+Therefore, we complete the proof. As an intermediate consequence, we establish a joint distribution estimation result following from Corol-lary 4.4 and the chain rule (16). 
+
+Corollary 4.15. Suppose the assumptions in Corollary 4.4 hold for all h ∈ [H], it holds that 
+
+ED [TV( μ[1: H]0 , ˆμ[1: H] 
+
+> t0
+
+)] = O
+
+> H
+
+X
+
+> h=1
+
+n− β 
+
+> 4( dtrunc +β)
+
+(log n)max {dtrunc ,3+ β/ 2,19 }/2 + u(dtrunc )
+
+!
+
+,
+
+where dtrunc = h − k(h) + 1 and k(h) is the optimal index chosen for each h.
+
+Selection of dtrunc . We now discuss how to choose the truncation length dtrunc to balance the two com-peting terms in Corollary 4.14: the statistical learning error, which grows with dtrunc , and the truncation error u(dtrunc ), which decreases with dtrunc . We state the resulting rates for two canonical decay regimes. 
+
+Proposition 4.16 (Exponential decay) . Suppose there are constants Cu, κ > 0 such that u(d) ≤ Cu(e−κd −
+
+e−κh ) for all 1 ≤ d ≤ h. If we take 
+
+dtrunc = min {h, ⌈∆n⌉} , with ∆n := −β + pβ2 + ( β/κ ) log n
+
+2 , (54) 
+
+then under the assumptions of Corollary 4.14, it holds that 
+
+ED
+
+h
+
+EX[1: h)0
+
+h
+
+TV 
+
+
+
+μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ]
+
+ii 
+
+=
+
+(O  (log n)max {dtrunc ,3+ β/ 2,19 }/2e−κd trunc 
+
+ , h > ∆n
+
+O
+
+
+
+n− β 
+
+> 4( h+β)
+
+(log n)max {h, 3+ β/ 2,19 }/2
+
+
+
+, h ≤ ∆n.
+
+For a fixed horizon h, Proposition 4.16 provides a truncation rule when u(·) follows an exponential decay. For timestamps such that h > ∆n, the rule selects a truncated history length of order Θ( √log n). Since the information from a small dataset is limited, truncating to the most recent timestamps reduces the input dimension and thus improving the statistical learning error. As n grows, the rule increases dtrunc until 
+
+dtrunc = h, at which point the bound reduces to the statistical learning error with dimension h.
+
+Proof. By definition, ∆ n satisfies the quadratic equation 
+
+β log n
+
+4(∆ n + β) = κ∆n. (55) Taking exponentials on both sides gives us 
+
+n− β 
+
+> 4(∆ n+β)
+
+= e−κ∆n .
+
+When dtrunc < h , we have dtrunc = ⌈∆n⌉ and thus ∆ n ≤ dtrunc ≤ ∆n + 1. Consequently, the following bounds hold 
+
+e−κd trunc ≤ e−κ∆n = n− β 
+
+> 4(∆ n+β)
+
+≤ n− β 
+
+> 4( dtrunc +β)
+
+, (56) 21 and (55) implies 
+
+n− β 
+
+> 4( dtrunc +β)
+
+≤ n− β 
+
+> 4(∆ n+1+ β)
+
+= exp 
+
+
+
+− β log n
+
+4(∆ n + 1 + β)
+
+
+
+= e−κd trunc exp 
+
+
+
+κd trunc − κ∆n
+
+∆n + β
+
+∆n + 1 + β
+
+
+
+≤ e−κd trunc exp 
+
+
+
+κ(∆ n + 1) − κ∆n
+
+∆n + β
+
+∆n + 1 + β
+
+
+
+= e−κd trunc exp 
+
+
+
+κ
+
+
+
+1 + ∆n
+
+∆n + 1 + β
+
+ 
+
+≤ e2κe−κd trunc . (57) Moreover, it holds that 
+
+e−κd trunc ≥ e−κd trunc − e−κh = e−κd runc (1 − e−κ(h−dtrunc )) ≥ (1 − e−κ)e−κd trunc . (58) Therefore, we combine (56), (57) and (58) to conclude that 
+
+e−κd trunc − e−κh ≤ n− β 
+
+> 4( dtrunc +β)
+
+≤ e2κ
+
+1 − e−κ (e−κd trunc − e−κh ).
+
+This completes the proof together with dtrunc = h case. Invoke the Lambert W function W : (0 , ∞) → (0 , ∞) as the inverse of the mapping x 7 → xe x, i.e., 
+
+W (z)eW (z) = z for all z > 0. We have the following result for the polynomial decay case. 
+
+Proposition 4.17 (Polynomial decay) . Suppose there are constants Cu, κ > 0 such that u(d) ≤ Cu(d−κ −
+
+h−κ) for all 1 ≤ d ≤ h. If we take 
+
+dtrunc = min {h, ⌈∆′
+
+> n
+
+⌉} , with ∆′ 
+
+> n
+
+:= β log n/ 4κW (β log n/ 4κ) , (59) 
+
+then under the assumptions of Corollary 4.14, it holds that 
+
+ED
+
+h
+
+EX[1: h)0
+
+h
+
+TV 
+
+
+
+μh 
+
+> 0
+
+[X[1: h)0 ], ˆμht0 [X[1: h)0 ]
+
+ii 
+
+=
+
+
+
+O
+
+
+
+(log n)max {dtrunc ,3+ β/ 2,19 }/2 (dtrunc )−κ
+
+, h > ∆′
+
+> n
+
+O
+
+
+
+n− β 
+
+> 4( h+β)
+
+(log n)max {h, 3+ β/ 2,19 }/2
+
+
+
+, h ≤ ∆′
+
+> n
+
+.
+
+For polynomial decay, it holds that W (β log /4κ) = Θ(log log n) in (59). Consequently, the truncation rule selects a history length of order Θ(log n/ log log n) before it reaches the horizon h. Compared with the exponential-decay case, polynomial decay requires a larger truncation window, since the impact from the remote history decays more slowly. 
+
+Proof. Denote An := β log n/ 4κ. Then we have ∆ ′ 
+
+> n
+
+= An/W (An). The definition of the function W gives ∆′ 
+
+> n
+
+= W (An)eW (An)
+
+W (An) = eW (An), and ∆ ′ 
+
+> n
+
+log ∆ ′ 
+
+> n
+
+= eW (An)W (An) = An. (60) Consider the case when dtrunc < h . Then we have dtrunc = ⌈∆′
+
+> n
+
+⌉ ≤ ∆′ 
+
+> n
+
++ 1. It follows from (60) that 
+
+n− β 
+
+> 4( dtrunc +β)
+
+= exp 
+
+
+
+−κ An
+
+dtrunc + β
+
+
+
+≤ exp 
+
+
+
+−κ An
+
+∆′ 
+
+> n
+
++ 1 + β
+
+
+
+= exp 
+
+
+
+−κ ∆′ 
+
+> n
+
+log ∆ ′
+
+> n
+
+∆′ 
+
+> n
+
++ 1 + β
+
+
+
+= (∆ ′
+
+> n
+
+)−κ exp 
+
+
+
+κ (1 + β) log ∆ ′
+
+> n
+
+∆′ 
+
+> n
+
++ 1 + β
+
+
+
+≤ exp 
+
+ κ(1 + β)
+
+e
+
+
+
+(∆ ′
+
+> n
+
+)−κ, (61) where we use the fact that log xx+1+ β ≤ log xx ≤ 1/e for all x ≥ 1. Moreover, since dtrunc = ⌈∆′
+
+> n
+
+⌉ ≥ ∆′
+
+> n
+
+, we have 
+
+d−κ 
+
+> trunc
+
+− h−κ ≤ d−κ 
+
+> trunc
+
+≤ (∆ ′
+
+> n
+
+)−κ. (62) This completes the proof together with dtrunc = h case. 22 5 Empirical Analysis 
+
+In this section, we numerically evaluate the performance of our AD-Seq framework proposed in Section 2 through extensive experiments. We first test the model on synthetic data generated by ARMA models and Gaussian processes. Specifically, we evaluate numerically its effectiveness in terms of recovering both the ground-truth distribution and the underlying temporal structures. Next, we apply our AD-Seq framework to real-world data and evaluate its performance in constructing mean-variance optimal portfolios. In implementation, we use a single transformer to parameterize the score functions across all timestamps. The causal mask ensures that the score at each timestamp depends only on the past history, while the objective (14) allows us to train the coordinatewise scores in parallel .
+
+## 5.1 Synthetic Data 
+
+In this subsection, we evaluate the AD-Seq framework for learning ARMA models and Gaussian processes, two benchmark synthetic data generators. 
+
+ARMA models. We first train a AD-Seq model on data generated by an ARMA(2, 2) with autoregressive coefficients ( φ1, φ 2) = (0 .9, −0.01) and moving average coefficients ( θ1, θ 2) = (0 .1, 0.1). The diffusion models are trained with a fixed sequence length H = 500 and a variety of sample size n ∈ 28, 29, 210 , 211 . For each trained model, we generate 1024 samples for evaluation. We assess the accuracy of the learned temporal dependence through the lens of autocorrelation function (ACF). Let λi denote the ground-truth ACF of the ARMA model, and λDiff  
+
+> i
+> Ki=1
+
+and 
+
+n
+
+λEmp 
+
+> i
+
+oKi=1 
+
+denote the top-K lags of ACF calculated using diffusion-generated samples and empirical training samples, respectively. We introduce and then compare the following ℓ1 relative errors in ACF between the diffusion model generated and the empirical training samples, Diff RE 1 := 
+
+PKi=1 λDiff  
+
+> i
+
+− λi
+
+PKi=1 |λi| , Emp RE 1 := 
+
+PKi=1 λEmp  
+
+> i
+
+− λi
+
+PKi=1 |λi| .
+
+Table 1 reports the errors in estimating top-40 lags of an ARMA model, with each experiment repeated five times to ensure robustness. Figure 1 highlights the advantage of diffusion generated samples in estimating ACFs across different sample sizes. Notably, as shown in Figure 1 (b), the diffusion samples (green) accurately recover ground-truth ACFs (blue) for lags beyond 30 while empirical training samples are unable to recover ACFs. This capacity is particularly important for financial applications as high-quality historical data is often scarce, making precise ACF estimation a significant challenge.                        
+
+> ARMA Models with Varying Train Dataset Size ( H= 500 )
+> nDiff RE 1Emp RE 1
+> 28= 256 0.1171 ( ±0.0266) 0.1431 ( ±0.0309) 29= 512 0.1308 ( ±0.0484) 0.1528 ( ±0.0123) 210 = 1024 0.1074 ( ±0.0373) 0.1503 ( ±0.0067) 211 = 2048 0.1172 ( ±0.1446) 0.1487 ( ±0.0045)
+
+Table 1: Relative error of the estimated top-40 ACFs of ARMA models for varying training dataset size (standard deviations in parentheses). 
+
+Gaussian processes. Next, we evaluate the performance of AD-Seq model in modeling synthetic Gaus-sian process (GP) sequence of length H = 32. Specifically, following the experimental setups in [82], we define the target distribution as X0 = ( X10 , . . . , X H 
+
+> 0
+
+)⊤ ∼ N (μ, Σ). The mean vector is set to zero, 
+
+μ = [ μ1, . . . , μ H ]⊤ = 0 and the covariance matrix is defined as Σ = σ2Γ where σ2 > 0 and Γ ∈ RH×H .The structure of the covariance is determined by the kernel function γ(·) such that the ( i, j )-th entry of Γ is 23 (a) n = 256 (b) n = 512      
+
+> (c) n= 1024 (d) n= 2048
+
+Figure 1: Relative error with varying training dataset size. Γij = γ(i, j ). Similar to [82], an exponential kernel function is chosen, i.e., γ(i, j ) = exp( − | i − j|ν /ℓ ), with hyperparameters ℓ = 4 and ν = 0 .8. To evaluate the model, we use n = 2048 samples from the ground-truth GP for training. After training, we generate another batch of 2048 samples to estimate the empirical covariance. As illustrated in Figure 2, the covariance structure of the diffusion-generated samples successfully recovers the characteristic decay pattern of the ground truth. This alignment demonstrates that our sequential diffusion models are capable of accurately capturing the joint distribution and the underlying temporal correlations of the sequential data. 
+
+## 5.2 Mean-Variance Portfolio Optimization 
+
+In this subsection, we study a mean-variance portfolio optimization problem which was studied by Gao et al. [7] and Wang and Zhou [95]. Specifically, an agent invests in the S&P 500 index and a risk-free asset with interest rate r = 2% for half a year with H = 128 trading days. The problem is to find a self-financing strategy θ = θh Hh=1 where θh ∈ [0 , 1] denotes the proportion of wealth invested in the risky asset at time 
+
+h that minimizes the terminal wealth XH,θ for a given target wealth level z, i.e., min  
+
+> θ
+
+Var( XH,θ ) s .t. E[XH,θ ] = z. (63) Following [7], we focus on two approaches: 1. Plug-in policy: A classical method that estimates coefficients of a GBM model and plug in the estimators into the expression of the optimal deterministic policy of (63). 2. RL policy: A model-free reinforcement learning (RL) approach proposed in [6] which requires a market data simulator. Furthermore, we consider four data sources for obtaining each policy: 24 Figure 2: Left: ground-truth covariance matrix used for training data generation; Middle: covariance of training dataset; Right: covariance of samples generated by our diffusion models. Sequential diffusion model learns spatial-temporal dependence.                                                                                               
+
+> Target Level Policy SDE Paths Mean Variance Sharpe Ratio ↑
+> z= 1 .10 Plug-in Split 1.1759 ( ±0.0025) 0.1045 ( ±0.0024) 0.5442 ( ±0.0081) Split + Synthetic 1.1138 ( ±0.0037) 0.0399 ( ±0.0025) 0.5702 ( ±0.0083) Split + Ours 1.1685 ( ±0.0024) 0.0952 ( ±0.0022) 0.5462 ( ±0.0081) RL Split 1.0932 ( ±0.0016) 0.0113 ( ±0.0011) 0.8779 ( ±0.0394) Bootstrap 1.0934 ( ±0.0010) 0.0105 ( ±0.0010) 0.9121 ( ±0.0450) Split + Synthetic 1.0853 ( ±0.0014) 0.0074 ( ±0.0010) 0.9930 ( ±0.0586) Split + Ours 1.0732 ( ±0.0008) 0.0054 ( ±0.0006) 0.9968 (±0.0589)
+> z= 1 .20 Plug-in Split 1.3517 ( ±0.0050) 0.4179 ( ±0.0094) 0.5442 ( ±0.0081) Split + Synthetic 1.2262 ( ±0.0066) 0.1572 ( ±0.0097) 0.5708 ( ±0.0087) Split + Ours 1.3370 ( ±0.0048) 0.3807 ( ±0.0087) 0.5462 ( ±0.0081) RL Split 1.1861 ( ±0.0032) 0.0460 ( ±0.0045) 0.8695 ( ±0.0376) Bootstrap 1.1865 ( ±0.0016) 0.0425 ( ±0.0043) 0.9068 ( ±0.0435) Split + Synthetic 1.1706 ( ±0.0028) 0.0302 ( ±0.0040) 0.9866 ( ±0.0574) Split + Ours 1.1464 ( ±0.0016) 0.0218 ( ±0.0025) 0.9965 (±0.0591)
+
+Table 2: Performance of different portfolio strategies with and without synthetic paths (standard deviations in parentheses). 1. Split: We split daily return of S&P 500 data from 1990-2009 into 40 half-year trajectories (called split paths). These paths are used to train our sequential diffusion models. 2. Split + Synthetic: In addition to 40 split paths, we augment 40 synthetic paths generated by approach in [7] and develop investment policies. 3. Split + Ours: Compared to Split + Synthetic , we replace the synthetic paths with 40 trajectories generated by our sequential diffusion model. 4. Bootstrap: For RL policies, we also construct investment polices using 40 bootstrap paths as in [6]. 
+
+Main results. We test the all the above policies on S&P 500 daily return data from 2010 to 2019 with bootstrap. As shown in Table 2, including diffusion generated samples do not improve plug-in policies. This is aligned with the observations in [7] as the data paths do not necessarily satisfy the GBM assumption. On the other hand, similar to Split + Synthetic , our diffusion generated samples also significantly improve the performance of RL policies. Notably, our approach achieves the highest Sharpe ratio and outperforms the method in [7]. This observation consolidates the belief that our diffusion models learn the underlying 25 temporal structure of financial data in an adapted sequential manner. We also remark that the S&P 500 daily return has strongly Markovian behaviors with only short-range dependence on the past. This explains why our method performs comparably to [7] in this setting. However, for financial time series exhibiting longer historical dependence and more complex temporal structure, we expect our adapted sequential diffusion approach will demonstrate clearer advantages. 
+
+# References 
+
+[1] Beatrice Acciaio, Stephan Eckstein, and Songyan Hou. Time-causal VAE: Robust financial time series generator. SIAM Journal on Financial Mathematics , 17(1):245–279, 2026. [2] Alexandre Alouadi, Baptiste Barreau, Laurent Carlier, and Huyˆ en Pham. Robust time series generation via Schr¨ odinger Bridge: a comprehensive evaluation. In Proceedings of the 6th ACM International Conference on AI in Finance, ICAIF 2025, Singapore, November 15–18, 2025 , pages 906–914. ACM, 2025. [3] Rama Cont, Mihai Cucuringu, Renyuan Xu, and Chao Zhang. Tail-GAN: Learning to simulate tail risk scenarios. Management Science , 72(4):2917–2936, 2025. [4] Xun Yu Zhou and Duan Li. Continuous-time mean-variance portfolio selection: A stochastic LQ frame-work. Applied Mathematics & Optimization , 42(1):19–33, 2000. [5] Gerry Tsoukalas, Jiang Wang, and Kay Giesecke. Dynamic portfolio execution. Management Science ,65(5):2015–2040, 2019. [6] Yanwei Jia and Xun Yu Zhou. q-learning in continuous time. Journal of Machine Learning Research ,24(161):1–61, 2023. [7] Xuefeng Gao, Jiale Zha, and Xun Yu Zhou. Data-driven generative simulation of SDEs using diffusion models. In NeurIPS 2025 Workshop MLxOR: Mathematical Foundations and Operational Integration of Machine Learning for Uncertainty-Aware Decision-Making , 2025. [8] Andrea Coletta, Matteo Prata, Michele Conti, Emanuele Mercanti, Novella Bartolini, Aymeric Moulin, Svitlana Vyetrenko, and Tucker Balch. Towards realistic market simulations: a generative adversarial networks approach. In Proceedings of the Second ACM International Conference on AI in Finance ,pages 1–9, 2021. [9] Yilie Huang, Yanwei Jia, and Xun Yu Zhou. Mean–variance portfolio selection by continuous-time rein-forcement learning: Algorithms, regret analysis, and empirical study. arXiv preprint arXiv:2412.16175 ,2024. [10] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. [11] Patrick Esser, Robin Rombach, and Bjorn Ommer. Taming transformers for high-resolution image synthesis. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pages 12873–12883, 2021. [12] Michael Janner, Qiyang Li, and Sergey Levine. Offline reinforcement learning as one big sequence modeling problem. Advances in neural information processing systems , 34:1273–1286, 2021. [13] Qiyang Li, Aravind Jain, and Pieter Abbeel. AdaCat: Adaptive Categorical Discretization for Autore-gressive Models. In James Cussens and Kun Zhang, editors, Proceedings of the Thirty-Eighth Conference on Uncertainty in Artificial Intelligence , volume 180 of Proceedings of Machine Learning Research , pages 1210–1219. PMLR, 2022. 26 [14] Doyup Lee, Chiheon Kim, Saehoon Kim, Minsu Cho, and Wook-Shin Han. Autoregressive image generation using residual quantization. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 11523–11532, 2022. [15] Tianhong Li, Yonglong Tian, He Li, Mingyang Deng, and Kaiming He. Autoregressive image generation without vector quantization. In Advances in Neural Information Processing Systems , volume 37, pages 56424–56445, 2024. [16] Yang Song and Stefano Ermon. Generative modeling by estimating gradients of the data distribution. 
+
+Advances in neural information processing systems , 32, 2019. [17] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. In International Conference on Learning Representations , 2021. [18] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in Neural Information Processing Systems , 33:6840–6851, 2020. [19] Prafulla Dhariwal and Alexander Nichol. Diffusion models beat GANs on image synthesis. Advances in neural information processing systems , 34:8780–8794, 2021. [20] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj¨ orn Ommer. High-resolution image synthesis with latent diffusion models. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 10684–10695, 2022. [21] James Betker, Gabriel Goh, Li Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, et al. Improving image generation with better captions. OpenAI technical report , 2023. [22] Joseph L Watson, David Juergens, Nathaniel R Bennett, Brian L Trippe, Jason Yim, Helen E Eisenach, Woody Ahern, Andrew J Borst, Robert J Ragotte, Lukas F Milles, et al. De novo design of protein structure and function with rfdiffusion. Nature , 620(7976):1089–1100, 2023. [23] Emiel Hoogeboom, Vıctor Garcia Satorras, Cl´ ement Vignac, and Max Welling. Equivariant diffusion for molecule generation in 3D. In International conference on machine learning , pages 8867–8887. PMLR, 2022. [24] Mehdi Mirza and Simon Osindero. Conditional generative adversarial nets. arXiv:1411.1784 , 2014. [25] Crist´ obal Esteban, Stephanie L Hyland, and Gunnar R¨ atsch. Real-valued (medical) time series gener-ation with recurrent conditional GANs. arXiv preprint arXiv:1706.02633 , 2017. [26] Rao Fu, Jie Chen, Shutian Zeng, Yiping Zhuang, and Agus Sudjianto. Time series simulation by condi-tional generative adversarial net. International Journal of Neural Networks and Advanced Applications ,7:25–38, 2020. [27] Jinsung Yoon, Daniel Jarrett, and Mihaela van der Schaar. Time-series generative adversarial networks. 
+
+Advances in Neural Information Processing Systems , 32:5508–5518, 2019. [28] Adriano Koshiyama, Nick Firoozye, and Philip Treleaven. Generative adversarial networks for financial trading strategies fine-tuning and combination. Quantitative Finance , 21(5):797–813, 2021. [29] Shujian Liao, Hao Ni, Marc Sabate-Vidales, Lukasz Szpruch, Magnus Wiese, and Baoren Xiao. Sig-Wasserstein GANs for conditional time series generation. Mathematical Finance , 34(2):622–670, 2024. [30] Junyi Li, Xintong Wang, Yaoyang Lin, Arunesh Sinha, and Michael Wellman. Generating realistic stock market order streams. AAAI Conference on Artificial Intelligence , 34(01):727–734, 2020. [31] Milena Vuleti´ c, Felix Prenzel, and Mihai Cucuringu. Fin-GAN: Forecasting and classifying financial time series via generative adversarial networks. Quantitative Finance , 24(2):175–199, 2024. 27 [32] Milena Vuleti´ c and Rama Cont. VolGAN: A generative model for arbitrage-free implied volatility surfaces. Applied Mathematical Finance , 31(4):203–238, 2025. [33] Magnus Wiese, Robert Knobloch, Ralf Korn, and Peter Kretschmer. Quant GANs: Deep generation of financial time series. Quantitative Finance , 20(9):1419–1440, 2020. [34] Hang Lou, Siran Li, and Hao Ni. PCF-GAN: generating sequential data via the characteristic function of measures on the path space. In A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine, editors, Advances in Neural Information Processing Systems , volume 36, pages 39755–39781. Curran Associates, Inc., 2023. [35] Hans Buehler, Blanka Horvath, Terry Lyons, Imanol Perez Arribas, and Ben Wood. Generating financial markets with signatures. Available at SSRN 3657366 , 2020. [36] Hans B¨ uhler, Blanka Horvath, Terry Lyons, Imanol Perez Arribas, and Ben Wood. A data-driven market simulator for small data environments. In Dan Crisan, Ilya Chevyrev, Thomas Cass, James Foster, Christian Litterer, and Cristopher Salvi, editors, Stochastic Analysis and Applications 2025: In Honour of Terry Lyons , pages 273–310. Springer Nature Switzerland, 2026. [37] Abhyuday Desai, Cynthia Freeman, Zuhui Wang, and Ian Beaver. TimeVAE: A variational auto-encoder for multivariate time series generation. arXiv preprint arXiv:2111.08095 , 2021. [38] Magnus Wiese, Ben Wood, Alexandre Pachoud, Ralf Korn, Hans Buehler, Phillip Murray, and Lianjun Bai. Multi-asset spot and option market simulation. arXiv preprint arXiv:2112.06823 , 2021. [39] Borui Cai, Shuiqiao Yang, Longxiang Gao, and Yong Xiang. Hybrid variational autoencoder for time series forecasting. Knowledge-Based Systems , 281:111079, 2023. [40] Yuansan Liu, Sudanthi Wijewickrema, Ang Li, Christofer Bester, Stephen O’Leary, and James Bailey. Time-transformer: Integrating local and global features for better time series generation. In Proceedings of the 2024 SIAM International Conference on Data Mining (SDM) , pages 325–333. SIAM, 2024. [41] Hongbin Huang, Minghua Chen, and Xiao Qiao. Generative learning for financial time series with irreg-ular and scale-invariant patterns. In The Twelfth International Conference on Learning Representations ,2024. [42] Kashif Rasul, Calvin Seward, Ingmar Schuster, and Roland Vollgraf. Autoregressive denoising diffusion models for multivariate probabilistic time series forecasting. In International Conference on Machine Learning (ICML) , 2021. [43] Haksoo Lim, Minjung Kim, Sewon Park, and Noseong Park. Regular time-series generation using SGM. 
+
+arXiv preprint arXiv:2301.08518 , 2023. [44] Haksoo Lim, Jaehoon Lee, Sewon Park, Minjung Kim, and Noseong Park. TSGM: Regular and irregular time-series generation using score-based generative models. arXiv preprint arXiv:2511.21335 , 2025. [45] Xinyu Yuan and Yan Qiao. Diffusion-TS: Interpretable diffusion for general time series generation. In 
+
+The Twelfth International Conference on Learning Representations , 2024. [46] Ilan Naiman, Nimrod Berman, Itai Pemper, Idan Arbiv, Gal Fadlon, and Omri Azencot. Utilizing image transforms and diffusion models for generative modeling of short and long time series. In A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, editors, Advances in Neural Information Processing Systems , volume 37, pages 121699–121730. Curran Associates, Inc., 2024. [47] Yiyuan Yang, Ming Jin, Haomin Wen, Chaoli Zhang, Yuxuan Liang, Lintao Ma, Yi Wang, Chenghao Liu, Bin Yang, Zenglin Xu, Shirui Pan, and Qingsong Wen. A survey on diffusion models for time series and spatio-temporal data. ACM Computing Surveys , 58(8):1–39, 2026. [48] Ahmad Aghapour, Erhan Bayraktar, and Fengyi Yuan. Solving dynamic portfolio selection problems via score-based diffusion models. arXiv preprint arXiv:2507.09916 , 2025. 28 [49] Gefei Wang, Yuling Jiao, Qian Xu, Yang Wang, and Can Yang. Deep generative learning via Schr¨ odinger bridge. In International Conference on Machine Learning (ICML) , 2021. [50] Valentin De Bortoli, James Thornton, Jeremy Heng, and Arnaud Doucet. Diffusion Schr¨ odinger bridge with applications to score-based generative modeling. In Advances in Neural Information Processing Systems , 2021. [51] Mohamed Hamdouche, Pierre Henry-Labordere, and Huyˆ en Pham. Generative modeling for time series via Schr¨ odinger bridge. arXiv preprint arXiv:2304.05093 , 2023. [52] Sitan Chen, Sinho Chewi, Jerry Li, Yuanzhi Li, Adil Salim, and Anru R Zhang. Sampling is as easy as learning the score: theory for diffusion models with minimal data assumptions. In The Eleventh International Conference on Learning Representations , 2023. [53] Holden Lee, Jianfeng Lu, and Yixin Tan. Convergence for score-based generative modeling with poly-nomial complexity. Advances in Neural Information Processing Systems , 35:22870–22882, 2022. [54] Xingchao Liu, Lemeng Wu, Mao Ye, and qiang liu. Let us build bridges: Understanding and extending diffusion generative models. In NeurIPS 2022 Workshop on Score-Based Methods , 2022. [55] Holden Lee, Jianfeng Lu, and Yixin Tan. Convergence of score-based generative modeling for general data distributions. In International Conference on Algorithmic Learning Theory , pages 946–985. PMLR, 2023. [56] Hongrui Chen, Holden Lee, and Jianfeng Lu. Improved analysis of score-based generative modeling: User-friendly bounds under minimal smoothness assumptions. In International Conference on Machine Learning , pages 4735–4763. PMLR, 2023. [57] Joe Benton, Valentin De Bortoli, Arnaud Doucet, and George Deligiannidis. Nearly d-linear convergence bounds for diffusion models via stochastic localization. In The Twelfth International Conference on Learning Representations , 2024. [58] Sitan Chen, Giannis Daras, and Alexandros G Dimakis. Restoration-degradation beyond linear diffu-sions: A non-asymptotic analysis for DDIM-type samplers. In International Conference on Machine Learning , pages 4462–4484. PMLR, 2023. [59] Gen Li, Yuting Wei, Yuxin Chen, and Yuejie Chi. Towards non-asymptotic convergence for diffusion-based generative models. In The Twelfth International Conference on Learning Representations , 2024. [60] Francesco Pedrotti, Jan Maas, and Marco Mondelli. Improved convergence of score-based diffusion models via prediction-correction. Transactions on Machine Learning Research , 2024. ISSN 2835-8856. [61] Xiuyuan Cheng, Jianfeng Lu, Yixin Tan, and Yao Xie. Convergence of flow-based generative models via proximal gradient descent in Wasserstein space. IEEE Transactions on Information Theory , 70(11): 8087–8106, 2024. [62] Daniel Zhengyu Huang, Jiaoyang Huang, and Zhengjiang Lin. Convergence analysis of probability flow ODE for score-based generative models. IEEE Transactions on Information Theory , 71(6):4581–4601, 2025. [63] Yuchen Liang, Peizhong Ju, Yingbin Liang, and Ness Shroff. Broadening target distributions for accel-erated diffusion models via a novel analysis approach. In The Thirteenth International Conference on Learning Representations , 2025. [64] Gen Li and Yuling Yan. O(d/T ) convergence theory for diffusion probabilistic models under minimal assumptions. Journal of Machine Learning Research , 26(292):1–55, 2025. [65] Wenpin Tang and Hanyang Zhao. Contractive diffusion probabilistic models. arXiv preprint arXiv:2401.13115 , 2024. 29 [66] Runjia Li, Qiwei Di, and Quanquan Gu. Unified convergence analysis for score-based diffusion models with deterministic samplers. In The Thirteenth International Conference on Learning Representations ,2025. [67] Yinuo Ren, Haoxuan Chen, Grant M. Rotskoff, and Lexing Ying. How discrete and continuous diffusion meet: Comprehensive analysis of discrete diffusion models via a stochastic integral framework. In The Thirteenth International Conference on Learning Representations , 2025. [68] Xuefeng Gao and Lingjiong Zhu. Convergence analysis for general probability flow ODEs of diffusion models in Wasserstein distances. In Proceedings of The 28th International Conference on Artificial Intelligence and Statistics , volume 258 of Proceedings of Machine Learning Research , pages 1009–1017. PMLR, 2025. [69] Marta Gentiloni-Silveri and Antonio Ocello. Beyond log-concavity and score regularity: Improved convergence bounds for score-based generative models in W2-distance. In Proceedings of the 42nd In-ternational Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research ,pages 55631–55656. PMLR, 2025. [70] Jerry Yao-Chieh Hu, Weimin Wu, Yi-Chen Lee, Yu-Chao Huang, Minshuo Chen, and Han Liu. On sta-tistical rates of conditional diffusion transformers: Approximation, estimation and minimax optimality. In The Thirteenth International Conference on Learning Representations , 2025. [71] Jiadong Liang, Zhihan Huang, and Yuxin Chen. Low-dimensional adaptation of diffusion models: Convergence in total variation. In Proceedings of Thirty Eighth Conference on Learning Theory , volume 291 of Proceedings of Machine Learning Research , pages 3723–3729. PMLR, 2025. [72] Georg A Gottwald, Shuigen Liu, Youssef Marzouk, Sebastian Reich, and Xin T Tong. Localized diffusion models. arXiv preprint arXiv:2505.04417 , 2025. [73] Song Mei and Yuchen Wu. Deep networks as denoising algorithms: Sample-efficient learning of diffusion models in high-dimensional graphical models. IEEE Transactions on Information Theory , 71(4):2930– 2954, 2025. [74] Zixuan Zhang, Kaixuan Huang, Tuo Zhao, Mengdi Wang, and Minshuo Chen. Diffusion model for mani-fold data: Score decomposition, curvature, and statistical complexity. arXiv preprint arXiv:2603.20645 ,2026. [75] Kazusato Oko, Shunta Akiyama, and Taiji Suzuki. Diffusion models are minimax optimal distribution estimators. In Proceedings of the 40th International Conference on Machine Learning , volume 202 of 
+
+Proceedings of Machine Learning Research , pages 26517–26582. PMLR, 2023. [76] Andre Wibisono, Yihong Wu, and Kaylee Yingxi Yang. Optimal score estimation via empirical Bayes smoothing. In Proceedings of Thirty Seventh Conference on Learning Theory , volume 247 of Proceedings of Machine Learning Research , pages 4958–4991. PMLR, 2024. [77] Kaihong Zhang, Heqi Yin, Feng Liang, and Jingbo Liu. Minimax optimality of score-based diffusion models: Beyond the density lower bound assumptions. In Proceedings of the 41st International Confer-ence on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pages 60134–60178. PMLR, 2024. [78] Yinbin Han, Meisam Razaviyayn, and Renyuan Xu. Neural network-based score estimation in diffu-sion models: Optimization and generalization. In The Twelfth International Conference on Learning Representations , 2024. [79] Zehao Dou, Subhodh Kotekal, Zhehao Xu, and Harrison H Zhou. From optimal score matching to optimal sampling. arXiv preprint arXiv:2409.07032 , 2024. [80] Minshuo Chen, Kaixuan Huang, Tuo Zhao, and Mengdi Wang. Score approximation, estimation and distribution recovery of diffusion models on low-dimensional data. In International Conference on Machine Learning , pages 4672–4712. PMLR, 2023. 30 [81] Hengyu Fu, Zhuoran Yang, Mengdi Wang, and Minshuo Chen. Unveil conditional diffusion models with classifier-free guidance: A sharp statistical theory. arXiv preprint arXiv:2403.11968 , 2024. [82] Hengyu Fu, Zehao Dou, Jiawei Guo, Mengdi Wang, and Minshuo Chen. Diffusion transformer captures spatial-temporal dependencies: A theory for gaussian process data. In The Thirteenth International Conference on Learning Representations , 2025. [83] Brian DO Anderson. Reverse-time diffusion equation models. Stochastic Processes and their Applica-tions , 12(3):313–326, 1982. [84] Ulrich G Haussmann and Etienne Pardoux. Time reversal of diffusions. The Annals of Probability ,pages 1188–1205, 1986. [85] Alexander Quinn Nichol and Prafulla Dhariwal. Improved denoising diffusion probabilistic models. In 
+
+International Conference on Machine Learning , pages 8162–8171, 2021. [86] Pascal Vincent. A connection between score matching and denoising autoencoders. Neural computation ,23(7):1661–1674, 2011. [87] Andrew W Lo. Long-term memory in stock market prices. Econometrica: Journal of the Econometric Society , pages 1279–1313, 1991. [88] Rama Cont. Empirical properties of asset returns: stylized facts and statistical issues. Quantitative finance , 1(2):223, 2001. [89] Rong Tang, Lizhen Lin, and Yun Yang. Conditional diffusion models are minimax-optimal and manifold-adaptive for conditional distribution estimation. In The Thirteenth International Conference on Learn-ing Representations , 2025. [90] Ian Martin. On the autocorrelation of the stock market. Journal of Financial Econometrics , 19(1): 39–52, 2021. [91] Benoit Mandelbrot et al. The variation of certain speculative prices. Journal of business , 36(4):394, 1963. [92] Parameswaran Gopikrishnan, Vasiliki Plerou, Xavier Gabaix, and H Eugene Stanley. Statistical prop-erties of share volume traded in financial markets. Physical review e , 62(4):R4493, 2000. [93] Francis Bach. Breaking the curse of dimensionality with convex neural networks. The Journal of Machine Learning Research , 18(1):629–681, 2017. [94] Tokio Kajitsuka and Issei Sato. Are transformers with one layer self-attention using low-rank weight ma-trices universal approximators? In The Twelfth International Conference on Learning Representations ,2024. [95] Haoran Wang and Xun Yu Zhou. Continuous-time mean–variance portfolio selection: A reinforcement learning framework. Mathematical Finance , 30(4):1273–1308, 2020. 31 A Omitted Proofs in Section 4 
+
+We devote this section to a few omitted proofs in Section 4. 
+
+Proposition A.1 (Multivariate Gaussian) . If X0 ∼ N (μ, Σ) with positive definite covariance matrix Σ,then Assumption 4.2 holds. Proof. The marginal density of X10 is Gaussian and thus we focus on h > 1 cases. Let h ∈ { 2, . . . , H } and 
+
+k ∈ { 1, . . . , h − 1} be fixed. Let μ[k:h] ∈ Rh−k+1 be the mean of X[k:h]0 and Σ[k:h] ∈ R(h−k+1) ×(h−k+1) be the covariance matrix of X[k:h]0 . We further write 
+
+Σ[k:h] =
+
+Σ11 Σ12 
+
+Σ21 Σ22 
+
+
+
+(64) where Σ11 ∈ R(h−k)×(h−k) is the covariance matrix of X[k:h−1] 0 , Σ22 ∈ R is the variance of Xh 
+
+> 0
+
+, Σ12 ∈ Rh−k is the covariance between X[k:h−1] 0 and Xh 
+
+> 0
+
+and Σ22 = Σ⊤
+
+> 12
+
+. Since Σ is positive definite, the principal submatrix 
+
+Σ[k:h] is positive definite. It follows that 
+
+Xh 
+
+> 0
+
+| X[k:h−1] 0 = z ∼ N 
+
+
+
+μh + Σ21 Σ−111 (z − μ[k:h−1] ), Σ22 − Σ21 Σ−111 Σ12 
+
+
+
+.
+
+Consequently, the conditional probability density satisfies 
+
+ϕh 
+
+> z
+
+(0 , x ) = 1(2 π(Σ22 − Σ21 Σ−111 Σ12 )) 1/2 exp − x − μh − Σ21 Σ−111 (z − μ[k:h−1] ) 2
+
+2Σ22 − Σ21 Σ−111 Σ12 
+
+!
+
+≤
+
+exp 
+
+
+
+μh − Σ21 Σ−111 μ[k:h−1] 2 /(2( Σ22 − Σ21 Σ−111 Σ12 )) 
+
+
+
+(2 π(Σ22 − Σ21 Σ−111 Σ12 )) 1/2 exp − x − Σ21 Σ−111 z 2
+
+4( Σ22 − Σ21 Σ−111 Σ12 )
+
+!
+
+.
+
+This completes the proof. 
+
+Lemma A.2. Under Assumption 4.2, the following inequalities hold: 
+
+ϕh 
+
+> z
+
+(t, x ) ≤ C1
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2 exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) (x − αtv⊤z)2
+
+
+
+, (65) 
+
+and 
+
+ϕh 
+
+> z
+
+(t, x ) ≥ 1(2 πσ 2 
+
+> t
+
+)1/2 exp − x − αtv⊤z 2 + 1 
+
+σ2
+
+> t
+
+!
+
+. (66) 
+
+Proof. Assumption 4.2 implies 
+
+ϕh 
+
+> z
+
+(t, x ) = 1(2 πσ 2 
+
+> t
+
+)1/2
+
+Z
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≤ C1
+
+(2 πσ 2 
+
+> t
+
+)1/2
+
+Z
+
+exp 
+
+
+
+−C2 y − v⊤z 2 /2
+
+
+
+exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy. 
+
+Completing the square to have 
+
+− C2 y − v⊤z 2
+
+2 − |x − αty|2
+
+2σ2
+
+> t
+
+= y2
+
+
+
+− C2
+
+2 − α2
+
+> t
+
+2σ2
+
+> t
+
+
+
++ y
+
+
+
+C2v⊤z + αtxσ2
+
+> t
+
+
+
+− C2
+
+2 z⊤vv⊤z − (x)2
+
+2σ2
+
+> t
+
+32 = − C2σ2 
+
+> t
+
++ α2
+
+> t
+
+2σ2
+
+> t
+
+
+
+y − σ2
+
+> t
+
+C2σ2 
+
+> t
+
++ α2
+
+> t
+
+
+
+C2v⊤z + αtxσ2
+
+> t
+
+ 2
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) (x − αtv⊤z)2.
+
+Consequently, we have 
+
+ϕh 
+
+> z
+
+(t, x ) ≤ C1
+
+(2 πσ 2 
+
+> t
+
+)1/2 exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) (x − αtv⊤z)2
+
+
+
+×
+
+Z
+
+exp − C2σ2 
+
+> t
+
++ α2
+
+> t
+
+2σ2
+
+> t
+
+
+
+y − σ2
+
+> t
+
+C2σ2 
+
+> t
+
++ α2
+
+> t
+
+
+
+C2v⊤z + αtxσ2
+
+> t
+
+ 2!
+
+dy
+
+= C1
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2 exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) (x − αtv⊤z)2
+
+
+
+,
+
+which completes the upper bound. For the lower bound, we have 
+
+ϕh 
+
+> z
+
+(t, x ) = 1(2 πσ 2 
+
+> t
+
+)1/2
+
+Z
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≥ 1(2 πσ 2 
+
+> t
+
+)1/2
+
+Z
+
+> |y−v⊤z|≤ R
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≥ 1(2 πσ 2 
+
+> t
+
+)1/2
+
+Z
+
+> |y−v⊤z|≤ R
+
+ϕh 
+
+> z
+
+(0 , y ) exp − x − αt(y − v⊤z) − αtv⊤z 2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≥ 1(2 πσ 2 
+
+> t
+
+)1/2 exp − x − αtv⊤z 2
+
+σ2
+
+> t
+
+! Z
+
+> |y−v⊤z|≤ R
+
+ϕh 
+
+> z
+
+(0 , y ) exp − α2 
+
+> t
+
+y − v⊤z 2
+
+σ2
+
+> t
+
+!
+
+dy
+
+≥ 1(2 πσ 2 
+
+> t
+
+)1/2 exp − x − αtv⊤z 2
+
+σ2
+
+> t
+
+!
+
+exp 
+
+
+
+− α2 
+
+> t
+
+R2
+
+σ2
+
+> t
+
+ Z 
+
+> |y−v⊤z|≤ R
+
+ϕh 
+
+> z
+
+(0 , y )d y. 
+
+Moreover, Assumption 4.2 implies 
+
+Z
+
+> |y−v⊤z|≤ R
+
+ϕh 
+
+> z
+
+(0 , y )d y = 1 −
+
+Z
+
+> |y−v⊤z|>R
+
+ϕh 
+
+> z
+
+(0 , y )d y
+
+≥ 1 − C1
+
+Z
+
+> |z|>R
+
+exp( −C2z2/2)d z
+
+≥ 1 − C′
+
+> 2
+
+R−1 exp( −C2R2/2) ,
+
+where C′ 
+
+> 2
+
+= 2π1/2 
+
+> C2Γ(3 /2)
+
+[Lemma 16][80]. Finally, we choose R = 1 to conclude that 
+
+ϕh 
+
+> z
+
+(t, x ) ≥ 1(2 πσ 2 
+
+> t
+
+)1/2 exp − x − αtv⊤z 2 + 1 
+
+σ2
+
+> t
+
+!
+
+.
+
+Lemma A.3. Under Assumption 4.2, for any ν ∈ Z+ and ϵ > 0, there exist constants R2 and R3 satisfying 
+
+R2 ≳ max( plog(1 /ϵ ), √ν) and R3 ≳ plog(1 /ϵ ), such that for any x ∈ R and z ∈ Rh−ℓ the following holds: 
+
+1
+
+σt(2 π)1/2
+
+Z 
+
+> R\¯B
+
+αty − xσt
+
+> ν
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy ≤ ϵ, 
+
+where 
+
+¯B =
+
+ x − σtR2
+
+αt
+
+, x + σtR2
+
+αt
+
+ \  v⊤z − R3, v⊤z + R3
+
+ , (67) 33 Proof. We consider two truncation regions: 
+
+B1 := 
+
+
+
+y ∈ R : αty − xσt
+
+≤ R2
+
+
+
+=
+
+ x − σtR2
+
+αt
+
+, x + σtR2
+
+αt
+
+
+
+,B2 := y ∈ R : y − v⊤z ≤ R3 = v⊤z − R3, v⊤z + R3
+
+ .
+
+It follows ¯B = B1 ∩ B2. We bound the integral with 1
+
+σt(2 π)1/2
+
+Z 
+
+> R\¯B
+
+ αty − xσt
+
+ν
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≤ 1
+
+σt(2 π)1/2
+
+Z
+
+> R\B1
+
+ αty − xσt
+
+ν
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+| {z }
+
+> (A1)
+
++ 1
+
+σt(2 π)1/2
+
+Z
+
+> R\B2
+
+ αty − xσt
+
+ν
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+| {z }
+
+> (A2)
+
+. (68) Over each region, we bound the integral in two ways. Note that for all R2 > √ν, monotonicity implies 
+
+ αty − xσt
+
+ν
+
+exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+≤ Rν 
+
+> 2
+
+exp( −R22/2) .
+
+Thus, we bound the term ( A1) with (A1) ≤ Rν 
+
+> 2
+
+exp( −R22/2) 
+
+σt(2 π)1/2
+
+Z
+
+> R\B1
+
+ϕh 
+
+> z
+
+(0 , y )d y ≲ Rν 
+
+> 2
+
+exp( −R22/2) 
+
+σt
+
+. (69) On the other hand, change of variable w = αty − x/σ t leads to (A1) ≤ C1
+
+αt(2 π)1/2
+
+Z
+
+> |w|>R 2
+
+wν exp( −w2/2)d w ≲ Rν−12 exp( −R22/2) 
+
+αt
+
+. (70) Combining (69) and (70), we deduce that (A1) ≲ Rν 
+
+> 2
+
+exp( −R22/2) . (71) Similarly, we have the following two bounds for ( A2): (A2) ≤ C1
+
+σt(2 π)1/2 exp( −C2R23/2) 
+
+Z
+
+> R\B2
+
+ αty − xσt
+
+ν
+
+exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy
+
+≤ C1
+
+αt(2 π)1/2 exp( −C2R23/2) 
+
+Z
+
+> R
+
+wν exp( −w2/2)d w ≲ 1
+
+αt
+
+exp( −C2R23/2) , (72) and (A2) ≤ C1
+
+σt(2 π)1/2
+
+ ve
+
+v/ 2 Z
+
+> R\B2
+
+exp( −C2 y − v⊤z 2 /2)d y ≲ 1
+
+σt
+
+exp( −C2R23/2) . (73) Combining (72) and (73) leads to (A2) ≲ exp( −C2R23/2) . (74) Consequently, adding up (71) and (74) gives us (A1) + ( A2) ≲ (R2)ν exp( −R22/2) + exp( −C2R23/2) ≲ ϵ, 
+
+as long as R2, R 3 ≳ plog(1 /ϵ ). 34 Lemma A.4. Under Assumption 4.2, the following inequality holds: 
+
+∂x log ϕh 
+
+> z
+
+(t, x ) ≲ 1
+
+σ2
+
+> t
+
+  x − αtv⊤z + 1  .
+
+Proof. We write the score function as 
+
+∂x log ϕh 
+
+> z
+
+(t, x ) = 
+
+R αty−xσ2
+
+> t
+
+ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy
+
+R ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy. (75) By taking ν ∈ { 0, 1} in Lemma A.3, for any ϵ > 0 to be chosen later, there are sufficiently large constants 
+
+R1 and R4 such that 
+
+Z
+
+> R\B
+
+αty − xσ2
+
+> t
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy ≤ ϵ, (76) 
+
+Z
+
+> R\B
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy ≤ ϵ. (77) where B is defined as in (67). Lemma A.2 implies ϕh 
+
+> z
+
+(t, x ) ≥ 2ϵ with ϵ ≍ 1 
+
+> σt
+
+exp 
+
+
+
+− |x−αtv⊤z|2+1 
+
+> σ2
+> t
+
+
+
+. It follows from (77) that 
+
+Z
+
+> B
+
+ϕh 
+
+> z
+
+(0 , y ) exp − |x − αty|2
+
+2σ2
+
+> t
+
+!
+
+dy ≥ ϵ. (78) Combining (75)–(78), we obtain 
+
+∂x log ϕh 
+
+> z
+
+(t, x ) ≤
+
+R
+
+> R
+> αty−xσ2
+> t
+
+ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy
+
+R 
+
+> B
+
+ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy
+
+≤
+
+R
+
+> B
+> αty−xσ2
+> t
+
+ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy
+
+R 
+
+> B
+
+ϕh 
+
+> z
+
+(0 , y ) exp 
+
+
+
+− |x−αty|2
+
+> 2σ2
+> t
+
+
+
+dy
+
++ ϵϵ ≤ R2
+
+σt
+
++ 1 .
+
+Let R2 ≍ plog(1 /ϵ ). We conclude that 
+
+∂x log ϕh 
+
+> z
+
+(t, x ) ≲ 1
+
+σ2
+
+> t
+
+  x − αtv⊤z + 1  .
+
+Lemma A.5. Suppose Assumption 4.2 holds. There is a constant C3 > 0, such that for any R1 > 0 and 
+
+t > 0 we have 
+
+E
+
+h
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+∂x log ϕh 
+
+> z
+
+(t, X ht ) 2i
+
+≲ 1
+
+σ4
+
+> t
+
+exp( −C6R21/2) . (79) 
+
+Proof. Given z, Lemma A.4 leads to 
+
+E
+
+
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+X[k:h)0
+
+
+
+≲ 1
+
+σ4
+
+> t
+
+
+
+1 + E
+
+
+
+Xht − αtv⊤X[k:h)0
+
+> 2
+
+X[k:h)0
+
+ 
+
+. (80) With (65) and change of variable z = x − αtv⊤z, we bound the conditional expectation with 
+
+E
+
+
+
+Xht − αtv⊤X[k:h)0
+
+> 2
+
+X[k:h)0
+
+
+
+≤ C1
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+Z
+
+z2 exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) z2
+
+
+
+dz
+
+35 ≤ 2C1
+
+C2
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2 ≲ 1.
+
+Consequently, Eq. (80) becomes 
+
+E
+
+
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+X[k:h)0
+
+
+
+≲ 1
+
+σ4
+
+> t
+
+.
+
+Taking expectation over X[k:h)0 , we conclude that 
+
+E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+= E
+
+
+
+1
+
+n
+
+X[k:h)0 ∞
+
+> R 1
+
+o
+
+E
+
+
+
+∂x log ϕh
+
+> X[k:h)0
+
+(t, X ht ) 2
+
+X[k:h)0
+
+ 
+
+≲ 1
+
+σ4
+
+> t
+
+exp( −C6R21/2) ,
+
+for some constant C6 > 0 as in Corollary 4.4. 
+
+Lemma A.6. Suppose Assumption 4.2 holds. For any R2 > 0, z ∈ Rh−ℓ, t > 0, we have 
+
+Z
+
+> |x−αtv⊤z|>R 2
+
+ϕh 
+
+> z
+
+(t, x )d x ≲ (R2)−1 exp  −C′
+
+> 2
+
+R22/2 ,
+
+Z
+
+> |x−αtv⊤z|>R 2
+
+ϕh 
+
+> z
+
+(t, x ) ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dx ≲ 1
+
+σ4
+
+> t
+
+R2 exp  −C′
+
+> 2
+
+R22/2 ,
+
+where C′ 
+
+> 2
+
+= min t> 0 C2 
+
+> C2σ2
+> t+α2
+> t
+
+= C2 
+
+> max( C2,1)
+
+.Proof. Lemma A.2 implies 
+
+Z
+
+> |x−αtv⊤z|>R 2
+
+ϕh 
+
+> z
+
+(t, x )d x
+
+≤ C1
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+Z
+
+> |x−αtv⊤z|>R 2
+
+exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) (x − αtv⊤z)2
+
+
+
+dx
+
+= C1
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+Z
+
+> |u|>R 2
+
+exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) u2
+
+
+
+du
+
+≤ 2√πC 1(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+C2Γ(3 /2) R2
+
+exp 
+
+
+
+− C2R22
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)
+
+
+
+≲ (R2)−1 exp  −C′
+
+> 2
+
+R22/2 ,
+
+where we invoke [80, Lemma 16] in the second inequality with d = 1 and we set C′ 
+
+> 2
+
+= min t> 0 C2 
+
+> C2σ2
+> t+α2
+> t
+
+.Similarly, Lemma A.4 implies 
+
+Z
+
+> |x−αtv⊤z|>R 2
+
+ϕh 
+
+> z
+
+(t, x ) ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dx
+
+≲ C1
+
+σ4 
+
+> t
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+Z
+
+> |z|>R 2
+
+(1 + z2) exp 
+
+
+
+− C2
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+) z2
+
+
+
+dz
+
+≤ C1
+
+σ4 
+
+> t
+
+(C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)1/2
+
+C2σ2 
+
+> t
+
++ α2
+
+> t
+
+C2
+
+(R−12 + R2) exp 
+
+
+
+− C2R22
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)
+
+
+
+≲ 1
+
+σ4
+
+> t
+
+R2 exp 
+
+
+
+− C2R22
+
+2( C2σ2 
+
+> t
+
++ α2 
+
+> t
+
+)
+
+
+
+≲ 1
+
+σ4
+
+> t
+
+R2 exp  −C′
+
+> 2
+
+R22/2 .
+
+36 Lemma A.7. Suppose Assumption 4.2 holds. For any R6, ϵ low > 0, z ∈ Rh−k and t > 0, we have 
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+1  ϕh 
+
+> z
+
+(t, x ) < ϵ low ϕh 
+
+> z
+
+(t, x )d x ≲ R6ϵlow ,
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+1  ϕh 
+
+> z
+
+(t, x ) < ϵ low ϕh 
+
+> z
+
+(t, x ) ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dx ≲ ϵlow 
+
+σ4
+
+> t
+
+R36.
+
+Proof. Direct calculation implies 
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+1  ϕh 
+
+> z
+
+(t, x ) < ϵ low ϕh 
+
+> z
+
+(t, x )d x
+
+≤
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+ϵlow dx = 2 R6ϵlow .
+
+Similarly, Lemma A.4 implies 
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+1  ϕh 
+
+> z
+
+(t, x ) < ϵ low ϕh 
+
+> z
+
+(t, x ) ∂x log ϕh 
+
+> z
+
+(t, x ) 2 dx
+
+≲ ϵlow 
+
+σ4
+
+> t
+
+Z
+
+> |x−αtv⊤z|≤ R6
+
+  x − αtv⊤z + 1 2 dx ≲ ϵlow 
+
+σ4
+
+> t
+
+R36.
+
+37
