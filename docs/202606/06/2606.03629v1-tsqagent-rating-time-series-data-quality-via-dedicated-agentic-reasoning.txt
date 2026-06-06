@@ -1,0 +1,529 @@
+Title: TSQAgent: Rating Time Series Data Quality via Dedicated Agentic Reasoning
+
+URL Source: https://arxiv.org/pdf/2606.03629v1
+
+Published Time: Wed, 03 Jun 2026 01:28:52 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# TSQAgent: Rating Time Series Data Quality via Dedicated Agentic Reasoning 
+
+Shunyu Wu 1, Dan Li 1∗
+
+, Haozheng Ye 1, Weibin Feng 1, Jian Lou 1,Bo Zhang 2, Wenjie Feng 3, Chenjuan Guo 4, See-Kiong Ng 51Sun Yat-sen University 
+
+> 2
+
+China University of Mining Technology 3University of Science and Technology of China 
+
+> 4
+
+East China Normal University 5National University of Singapore 
+
+wushy88@mail2.sysu.edu.cn , lidan263@mail.sysu.edu.cn 
+
+# Abstract 
+
+Assessing the quality of time series (TS) data is fundamental yet inherently chal-lenging due to the multifaceted nature of quality dimensions. Recently, large language models (LLMs) have emerged as a promising paradigm for TS qual-ity assessment via pairwise comparison and per-dimension evaluation. However, existing approaches rely on manually predefined quality dimensions and purely text-based reasoning, leaving it unknown whether LLMs can identify truly relevant quality dimensions or perform grounded and quantitative quality comparisons. To investigate this, we construct TSQBench, a dedicated benchmark for evaluating LLMs’ capabilities in TS quality assessment, which measures two progressive capabilities: (i) understanding and identifying relevant quality dimensions, and (ii) performing quality comparison under specific dimensions. Our analysis reveals that both open-source and proprietary LLMs consistently struggle with identifying critical quality dimensions and conducting precise, evidence-grounded reasoning over quality characteristics. To address these limitations, we propose TSQA-
+
+> GENT
+
+, a novel agentic reasoning framework for dedicated TS data quality rating, comprising three collaborative roles: Perceiver for focused dimension selection, 
+
+Inspector for dimension-wise quantitative analysis, and Adjudicator that aggregates and refines the final judgment. In particular, we introduce an agentic reasoning strategy that instills the ability to identify and prioritize the most relevant qual-ity dimensions, and further propose an agent workflow equipped with external analytical tools to enable precise quantitative comparisons over selected dimen-sions. Experiments on both the proposed benchmark and eleven real-world datasets demonstrate that our framework not only substantially improves LLMs’ capabil-ities in quality understanding and quantitative comparison but also effectively translates these improvements into better quality-aware data selection, leading to enhanced downstream performance and data efficiency. Our code repository: 
+
+https://github.com/clsr1008/TSQualityAgent .
+
+# 1 Introduction 
+
+The quality of time-series (TS) data plays a critical role in building performant TS models, as low-quality data can substantially degrade model capability. In real-world scenarios, TS data is notoriously affected by various quality issues, including missing values, outliers, noise contamination, distribution shifts, and structural distortions (e.g., trend or frequency inconsistencies) (Fang et al., 2024; Zhang et al., 2024; Liu et al., 2024a). These issues render quality assessment of TS data 
+
+> ∗Dan Li is the Corresponding Author. Preprint.
+> arXiv:2606.03629v1 [cs.AI] 2 Jun 2026
+
+inherently difficult, as it requires synthesizing multiple interacting quality dimensions and accurately assessing each dimension according to its specific evaluation criteria. Existing approaches primarily rely on statistical feature analysis (Jadidi et al., 2023) and heuristic rules (Rahm et al., 2000) to identify low-quality samples, or extend general data attribution (Influence Functions (Hampel, 1974) or Shapley (Shapley, 1953)) to TS quality (Zhang et al., 2025b; Bento et al., 2021). Recently, propelled by the success of large language models (LLMs) in a range of TS tasks from forecasting (Liu et al., 2024b; Gruver et al., 2023) to TS question answering (TSQA) (Kong et al., 2025; Guan et al., 2025; Langer et al., 2025), there has been growing interest in leveraging their intrinsic TS knowledge to enable comprehensive, multi-dimensional TS quality assessment. Along this direction, recent works have explored the use of LLMs for time series understanding and quality-related analysis. For example, TimeSeriesExam (Cai et al., 2024) constructs a benchmark for evaluating LLMs’ understanding of temporal patterns (e.g., trends and periodicity) and quality-related signals, while AXIS (Lan et al., 2025) leverages LLMs to interpret anomalous patterns as potential indicators of data quality issues. These studies suggest that LLMs possess a certain level of temporal understanding and pave a promising foundation for time series quality assessment. Building upon this, TSRating (Wu et al., 2026a) explores LLM-based TS quality assessment by evaluating data along four predefined dimensions (namely trend, frequency, amplitude, and pattern). 
+
+Gap and Research Question. While such approaches establish a structured and automated assess-ment pipeline, they still rely on manually specified quality criteria and predominantly text-based reasoning, leaving the underlying capabilities of LLMs for TS quality assessment largely unexplored. This motivates us to investigate the following research question: Can LLMs understand and adap-tively identify relevant quality dimensions, and perform evidence-grounded quality comparisons under specific quality dimensions? 
+
+Our Work. To answer the research question, we first construct a dedicated benchmark to gauge the capability of LLMs in identified quality dimensions and perform evidence-grounded quality comparisons, which reveal nontrivial challenges for LLMs in TS quality rating based solely on intrinsic capabilities. We then propose a novel agentic reasoning framework to address these hurdles. To systematically study this question, we construct TSQBench, a dedicated benchmark to evaluate the two progressive capabilities introduced above. Specifically, we design a comprehensive set of quality dimensions, and leverage controlled quality degradation guided by semantic factors to generate paired time series with diverse and fine-grained quality differences (Xie et al., 2025). This enables a systematic evaluation of LLMs’ ability in both dimension identification and dimension-wise quality comparison. The benchmark results reveal two gaps in LLM-based TS quality assessment: (i) a lack of awareness of which quality dimensions are truly informative for selecting high-quality TS data (Zhang et al., 2026b), and (ii) an inherent weakness in reliable numerical reasoning over time series signals (Wu et al., 2026b), which often leads to unstable or hallucinated quality judgments. To address these challenges, we propose TSQA GENT , a novel agentic reasoning framework for dedicated TS quality assessment and pairwise comparison. The agent system decomposes the task into three collaborative roles: (1) Perceiver builds a high-level understanding of the input pair and selects relevant quality dimensions for evaluation; (2) Inspector performs dimension-wise analysis through iterative reasoning with action-based evidence acquisition in a ReAct-style manner (Yao et al., 2023); and (3) Adjudicator aggregates all evidence into the final judgment while performing reflection to ensure consistency and completeness (Abbas et al., 2025; Li et al., 2025). In particular, we introduce an agentic reasoning strategy (Shao et al., 2024) that leverages TSQBench to train the Perceiver with TS quality tailored-GRPO for adaptive and focused quality dimension selection, moving beyond fixed predefined criteria toward structured reasoning over heterogeneous quality factors. Next, we design a tool-augmented agent workflow that equips the Inspector with external analytical tools for grounded quantitative comparison over selected dimensions, where tool outputs are explicitly injected into the reasoning process as evidence (Wei et al., 2026; Zhang et al., 2026a). Our tool suite consists of 16 specific TS analytical functions covering statistical, spectral, and structural measurements. We conduct experiments on both TSQBench and eleven real-world datasets, covering a full pipeline from pairwise quality judgments to training a dedicated quality scoring model and downstream quality-aware data selection. The results demonstrate that our framework not only substantially improves LLMs’ capabilities in quality understanding and quantitative comparison but also effectively translates these improvements into better data selection performance, leading to enhanced downstream accuracy and data efficiency. Notably, we fine-tune Timer-S1 (Liu et al., 2026), the nowadays largest 2publicly available TS foundation model with 8.3B parameters, and show that using only 75% of the data selected by our method achieves performance comparable to training on the full data pool. 
+
+Summary of Contributions. Our main contributions are summarized as follows: • We identify and formalize the problem of TS quality assessment for LLMs, and construct a dedicated benchmark to evaluate two key capabilities of LLMs: TS quality dimension identification and evidence-grounded quality comparison. • We propose TSQA GENT , an agentic reasoning framework that integrates reasoning-driven dimen-sion selection and tool-augmented quantitative analysis to address the core challenges of TS quality assessment. • We conduct extensive experiments demonstrating that our approach substantially improves both LLM capabilities and downstream data selection performance across diverse datasets and models. 
+
+# 2 Measuring LLM Capabilities in Time-Series Quality Rating 
+
+To systematically evaluate LLMs in time series quality understanding, we construct a synthetic benchmark, named TSQBench, based on pairwise comparison. TSQBench is designed to assess two core capabilities: (i) quality dimension identification , i.e., whether an LLM can correctly identify which quality dimensions (e.g., noise level or frequency patterns) two TS segments differ on; and (ii) 
+
+quality comparison , i.e., whether an LLM can correctly decide which series exhibits higher quality under a given dimension. 
+
+Benchmark Design. TSQBench is built on a controlled synthetic generation pipeline (details in Appendix B), where paired time series are derived from a shared template and then injected with dimension-specific degradations. We define a unified quality dimension set D = {d1, . . . , d 7},including missing value, noise level, rare pattern, trend, frequency, amplitude, and pattern consistency. These dimensions describe data integrity, signal irregularities, and structural properties of temporal dynamics, providing a comprehensive basis for quality comparison (Cleveland et al., 1990; Hyndman & Athanasopoulos, 2018; Kazemi et al., 2019). Each benchmark instance activates a subset of dimen-sions, where asymmetric perturbations are applied to one side, enabling controlled and interpretable quality differences. More details about the definitions of the quality dimensions are summarized in Table 4 of Appendix B. 
+
+Evaluation and Findings. We evaluate different LLMs on TSQBench using 1,000 synthetic sam-ples, where Precision/Recall are used for dimension identification and accuracy is used for quality comparison. The results in Table 1 reveal two consistent limitations of existing LLMs in TS qual-ity reasoning. For dimension identification, models exhibit low precision (33.4%–43.0%) despite relatively high recall (63.9%–83.0%), indicating unstable dimension selection behavior and a ten-dency to over-select irrelevant quality dimensions. For quality comparison, all models achieve only marginal improvements over random guessing (50%), with accuracies ranging from 54.7% to 61.0%, suggesting limited intrinsic capability in performing reliable fine-grained quality comparison. These observations motivate the two core designs in TSQAgent proposed below: (i) a reasoning-oriented dimension selection mechanism trained via TS quality-tailored GRPO, and (ii) a tool-augmented agentic reasoning for quantitative quality comparison. Table 1: Performance of LLM-based TS quality assessment on TSQBench. We evaluate two core capabilities: dimension identification and quality comparison.                         
+
+> Model Qwen3-4B Gemma4-E4B Phi4-mini Qwen3-8B GPT-4o mini Claude Haiku 4.5 Dimension Identification Precision 33.5% 38.0% 33.4% 37.4% 34.7% 43.0% Recall 80.9% 75.7% 69.7% 78.0% 83.0% 63.9% Quality Comparison Accuracy 54.7% 58.6% 54.9% 58.4% 60.0% 61.0%
+
+3Figure 1: Overview of the proposed TSQAgent framework for time series quality rating. 
+
+# 3 TSQAgent: Agentic Reasoning Framework Tailored for TS Quality 
+
+3.1 Overview of TSQAgent 
+
+TSQAgent is a multi-agent framework for pairwise time series quality assessment, designed to determine which of two time series exhibits higher overall quality through structured reasoning and tool-grounded analysis. The pairwise formulation simplifies evaluation via relative comparison, avoiding absolute scoring and improving robustness across diverse scenarios (Peng et al., 2025). The system decomposes the task into three specialized agents that operate collaboratively: (1) Perceiver :constructs a high-level understanding of the input pair and selects relevant quality dimensions for evaluation; (2) Inspector : performs dimension-wise analysis via iterative reasoning and tool-based evidence acquisition; and (3) Adjudicator : aggregates dimension-level evidence into a final judgment while performing reflection to ensure consistency and completeness. The overall architecture of TSQAgent is shown in Figure 1. Formally, given two time series segments (series A, series B ) and dataset context c, the framework produces a final comparative result R = ( w, s, C ), where w denotes the higher-quality series, s
+
+the confidence level, and C a structured explanation grounded in multi-dimensional evidence. By combining targeted perception, fine-grained analysis, and reflective aggregation, TSQAgent enables reliable and interpretable quality assessment for diverse time series data. To complement the data rating and selection process, we convert pairwise preferences into scalar quality scores. Specifically, TSQAgent first produces preference judgments between time series pairs. We then train a lightweight rating model on these comparisons to assign a scalar quality score to each sample via Bradley–Terry optimization, thereby enabling global ranking and quality-aware data selection. More details are provided in Appendix E.1. 
+
+3.2 Perceiver: Perception and Planning 
+
+The Perceiver serves as the entry point of TSQAgent, responsible for constructing a high-level understanding of the input pair (series A, series B ) and selecting relevant quality dimensions for subsequent analysis. Formally, the Perceiver can be viewed as a mapping 
+
+(Z, Dplan ) = Ap(c, series A, series B ), (1) where c denotes the dataset description, and the output consists of a perception summary Z, and a subset of selected quality dimensions Dplan for subsequent inspection. Given the raw time series inputs and associated statistical summaries (e.g., mean, standard deviation, quantiles), the Perceiver constructs a perception summary Z that captures the salient differences between the two series. This reasoning process is guided by a predefined set of quality dimensions 
+
+D = {d1, . . . , d 7} (see Table 4), which characterizes key quality aspects such as data completeness, noise characteristics, and temporal structure. Based on this, the Perceiver selects a subset of relevant dimensions Dplan ⊆ D , emphasizing the most informative aspects for subsequent analysis. 
+
+Agentic Reasoning for TS Quality Dimension Selection. Importantly, we formulate time series quality dimension selection as an agentic reasoning process within the Perceiver, where the agent 4is required to infer and prioritize the most decision-relevant quality aspects for each input pair. To instill this capability, we introduce a TS quality-tailored GRPO (Group Relative Policy Optimization) training strategy (Shao et al., 2024), which serves as the underlying optimization framework. Our training dataset consists of 3,320 samples derived from TSQBench pipeline (see Section 2), and the optimization is guided by a structured reward that enforces both output validity and alignment between predicted and ground-truth dimension sets. This induces more discriminative reasoning over time series quality dimensions, improving fine-grained differentiation across diverse series pairs. More implementation details including training configurations are provided in Appendix C. 
+
+3.3 Inspector: Dimension-wise Analysis 
+
+The Inspector is responsible for fine-grained evaluation of each selected quality dimension and serves as the core reasoning module in TSQAgent. Given the planned dimensions Dplan and perception summary Z, it performs pairwise comparison between both series, producing structured judgments for each dimension. The Inspector executes evaluation in a dimension-by-dimension manner over Dplan , performing pairwise assessment between series A and series B under a bounded ReAct-style interaction (Yao et al., 2023). Formally, for each dimension d, the process proceeds through an iterative reasoning-action loop: 
+
+qd → (Reason t → Action t → Observation t)∗K → Rd. (2) Here, qd denotes the evaluation query derived from the input pair (series A, series B ) and the spec-ification of dimension d. Each iteration consists of three components: Reason t performs internal reasoning over observed signals and evidence; Action t optionally invokes external analytical tools to obtain quantitative evidence; and Observation t captures the corresponding tool outputs or retrieved signals. Rd = ( wd, s d, E d, C d) represents the final assessment, including the predicted winner 
+
+wd ∈ { A, B, TIE }, confidence score sd ∈ [0 , 1] , supporting evidence Ed, and textual conclusion Cd.
+
+K denotes the maximum number of reasoning-action iterations per dimension, ensuring that each dimension is evaluated within a limited computational budget, after which the Inspector finalizes the outputs based on accumulated evidence. 
+
+Tool-Augmented Quantitative Quality Comparison. Within each ReAct loop, the Inspector performs dimension-specific reasoning over raw time series, leveraging internal knowledge and accumulated evidence to identify salient patterns relevant to the target dimension, such as trend shifts, periodic structures, or rare behaviors. When internal reasoning is insufficient to resolve subtle differences, the Inspector invokes external analytical tools to obtain quantitative evidence (Qian et al., 2025; Schick et al., 2023). In contrast to purely qualitative reasoning, tool-based signals provide measurable and fine-grained evidence that is often difficult to infer directly from raw sequences, thereby improving decision robustness (Wu et al., 2026b). To support this process, we design a set of specialized analytical tools covering statistical characterization, frequency-domain analysis, and rare pattern detection (see Appendix D). Tool outputs are treated as structured observations within the reasoning trajectory, and are cached for reuse across dimensions to reduce redundant computation. 
+
+3.4 Adjudicator: Reflection and Aggregation 
+
+The Adjudicator is responsible for producing a final comparative judgment between the two time series by aggregating dimension-level assessment results from the Inspector, while also ensuring the completeness and consistency of the evidence through a reflection mechanism. Formally, given the dimension-level results R = {Rd | d ∈ D plan } with Rd = ( wd, s d, E d, C d)
+
+produced by the Inspector, the Adjudicator first performs a reflection step over R to evaluate whether the available evidence is sufficient and mutually consistent. This process yields a reflection directive 
+
+ρ ∈ { recheck (Drecheck ), replan , ∅}, where ∅ indicates that no further refinement is required. The reflection directive distinguishes two types of refinement. A recheck (Drecheck ) signal is gen-erated when the evidence for certain dimensions is insufficient or internally conflicting, where 
+
+Drecheck ⊆ D plan specifies the subset of dimensions to be re-evaluated by the Inspector. Alterna-tively, a replan signal is issued when the current dimension set Dplan is incomplete with respect to important aspects of data quality, requiring the Perceiver to introduce additional dimensions for further assessment. These reflection signals enable iterative refinement of the evaluation process 5(a) Effect of GRPO on Dimension Identification (b) Effect of Tool Augmentation on Quality Comparison 
+
+Figure 2: Capability Evaluation on TSQBench. Subplot (a) reports dimension identification perfor-mance under different models and training configurations, highlighting the effect of reasoning-driven dimension selection. Subplot (b) reports quantitative comparison performance with and without tool usage, showing the impact of external analytical support on fine-grained quality assessment. across agents (Shinn et al., 2023). To ensure stable execution, reflection steps are explicitly bounded. When the budget is exhausted, the reflection process terminates and is treated as ρ = ∅, after which the Adjudicator proceeds to aggregate all dimension-level results, thereby preventing indefinite refinement loops. When the evidence is considered sufficient and consistent ( ρ = ∅), the Adjudicator performs aggregation over all dimension-level results. The aggregation process synthesizes evidence across dimensions, taking into account both the predicted winners and their associated confidence scores, as well as the supporting evidence and textual conclusions. The final global judgment is then given by 
+
+R = ( w, s, C ), where w ∈ { A, B, TIE } denotes the overall winner, s ∈ [0 , 1] denotes the confidence level, and C provides a comprehensive explanation grounded in dimension-level findings. 
+
+# 4 Experiments 
+
+We evaluate TSQAgent from two complementary perspectives: (1) controlled evaluation on TSQBench to verify how reasoning-driven dimension selection and tool augmentation improve the LLMs capabilities of TS quality evaluation; (2) real-world data selection experiments to evaluate the effectiveness of TSQAgent across diverse datasets and downstream models. Additional qualitative case studies are provided in Appendix G to illustrate the reasoning behaviors of the proposed agents. 
+
+4.1 Capability Evaluation on TSQBench 
+
+We conduct capability evaluation on TSQBench to separately assess the two core capabilities of LLMs: dimension identification and dimension-wise quality comparison. We evaluate a diverse set of both open-source and proprietary models, including Qwen3 (Yang et al., 2025a), Gemma4 (Team, 2025), Phi4 (Abdin et al., 2024), GPT-4o mini (Achiam et al., 2023), and Claude Haiku 4.5. The results are summarized in Figure 2. 
+
+Dimension Identification Precision. As shown in Figure 2a, we evaluate the effect of our TS quality-tailored GRPO training strategy on dimension selection performance. The strategy consistently improves dimension identification precision across all evaluated open-source models, increasing precision from around 33%–38% to nearly 60%. These results indicate that vanilla LLMs tend to over-select irrelevant quality dimensions, while our reasoning-based training strategy effectively encourages more focused and discriminative dimension selection behavior. 
+
+Quantitative Comparison Accuracy. Figure 2b reports the performance of models with and without tool access for quality comparison. Tool augmentation consistently improves comparison accuracy across all evaluated models, raising performance from approximately 55%–61% to over 78%–84%. The improvements are observed for both open-source and proprietary models, suggesting that external analytical tools provide critical quantitative evidence that is difficult to obtain through purely text-based reasoning alone. 64.2 Real-World Data Selection Experiments 
+
+The goal of this section is to evaluate whether TSQAgent can reliably assess data quality in real-world settings, and whether such assessments translate into improved downstream performance and data efficiency. By selecting high-quality subsets based on the TSQAgent’s judgments, we test whether comparable or superior performance can be achieved with reduced training data, thereby complementing the results on the synthetic TSQBench. 
+
+Datasets and Baselines. We conduct experiments on 11 widely-used real-world datasets across three task categories. For long-term forecasting, we use Electricity (Trindade, 2015), ExchangeR-ate (Lai et al., 2018), Traffic (tra), and Weather (wea). For short-term forecasting, we adopt the M4 dataset (Makridakis et al., 2018), including its Yearly , Monthly , and Daily subsets. For classification, we use four datasets from the UCR/UEA archive (Ismail Fawaz et al., 2019; ucr): MedicalImages ,
+
+CBF , BME , and Handwriting . We compare our method with several representative data valuation and selection baselines, including DataShapley (Ghorbani & Zou, 2019), DataOob (Kwon et al., 2024), TimeInf (Zhang et al., 2025b), and TSRating (Wu et al., 2026a). All baselines produce sample-level scores. Details of the datasets and baselines are provided in the Appendix F.1 and F.2. 
+
+Setups and Evaluation. For all tasks, we construct training, validation, and test splits with a ratio of 7:2:1 and then segment time series into fixed-length samples according to the requirements of each dataset (e.g., historical context length determined by the forecasting configuration). Each resulting sample is assigned a quality score by different methods, and we select the top 50% of samples to train downstream models (e.g., CNN, PatchTST (Nie et al., 2023)). The trained models are then evaluated on the held-out test set under standard metrics. We adopt task-specific metrics: Root Mean Squared Error (RMSE) for long-term forecasting, Mean Absolute Percentage Error (MAPE) for short-term forecasting, and Accuracy for classification. Better data selection is reflected by improved downstream performance. All results are averaged over 10 runs with different random seeds. 
+
+Main Results. Table 2 presents the performance of different data selection methods across three downstream time series tasks with three representative downstream model architectures: Linear, CNN-based, and Transformer-based (PatchTST). Overall, our method consistently achieves the best or near-best performance across most settings, demonstrating strong effectiveness in identifying high-quality data. In long-term forecasting, it attains the lowest RMSE in the majority of cases, particularly showing clear advantages under Linear and CNN models. For short-term forecasting, our method obtains the best MAPE in 7 out of 9 cases, indicating robust performance across different temporal granularities. Likewise, in classification tasks, it ranks first in 9 out of 12 cases, suggesting that the selected subsets effectively preserve discriminative information. Compared with TSRating and TimeInf, our method shows more consistent gains across settings, indicating more accurate and effective quality assessment for guiding data selection. 
+
+4.2.1 Component Analysis Effect of Reasoning-driven Dimension Selection. We evaluate the impact of TS quality-tailored GRPO on Perceiver, with results summarized in Figure 3. The left plot reports downstream long-term forecasting performance (RMSE) across four datasets using PatchTST, while the right plot shows the averaged efficiency metrics, including selected dimensions, token usage, and inference time. Overall, our training strategy consistently improves data selection quality, leading to lower RMSE across all datasets. Meanwhile, it significantly reduces the number of selected dimensions as well as computational overhead in terms of token usage and inference latency. This suggests that the training strategy helps Perceiver focus on more informative dimensions while suppressing spurious or redundant reasoning paths, resulting in both more accurate and more efficient quality assessment. 
+
+Effect of Tool-Augmented Quantitative Comparison. We further study the impact of tool augmenta-tion in the Inspector module, which enables explicit quantitative comparison, versus pure LLM-based reasoning without tool access. As shown in Figure 4, we evaluate three different LLM backbones, i.e., Qwen3-4B (Yang et al., 2025a), Gemma-3-4B (Team, 2025), and GPT-4o-mini (Achiam et al., 2023), as the backbone of the TSQAgent across four datasets. The Inpector agent is required to perform data quality assessment under both settings, while downstream performance is measured by RMSE using PatchTST. The results indicate that enabling tool-based quantitative comparison generally improves performance across the majority of LLMs and datasets, suggesting that explicit 7Table 2: Comparison of data selection methods under a 50% high-quality data budget across forecast-ing and classification tasks on multiple datasets and models. Best results are bolded .                                                                                                                                                                                                                    
+
+> Model Method Long-term (RMSE) Short-term (MAPE) Classification (Accuracy)
+> Elec. ExRate Traffic Wea. M4Y M4M M4D MImg CBF BME HW Linear Random 1.601 0.356 0.979 0.665 1.705 1.208 1.672 0.390 0.294 0.427 0.053 DataOob 1.539 0.318 0.761 0.638 1.949 1.133 1.779 0.457 0.318 0.260 0.028 DataShapley 1.580 0.323 0.956 0.638 1.488 1.207 1.370 0.432 0.337 0.433 0.038 TimeInf 1.391 0.272 0.609 0.616 1.966 1.178 1.463 0.428 0.320 0.500 0.042 TSRating 1.390 0.275 0.683 0.611 1.577 1.112 1.409 0.459 0.361 0.507 0.049
+> Ours 1.273 0.270 0.611 0.593 1.494 1.072 1.352 0.488 0.379 0.520 0.056
+> CNN Random 1.592 1.474 0.504 0.769 2.332 1.124 1.193 0.554 0.595 0.495 0.151 DataOob 1.609 1.527 0.552 0.737 2.957 1.208 1.346 0.514 0.663 0.521 0.155 DataShapley 1.529 1.598 0.475 0.767 2.553 1.117 1.159 0.550 0.593 0.564 0.159 TimeInf 1.530 1.515 0.505 0.758 2.289 1.117 1.103 0.567 0.563 0.535 0.155 TSRating 1.511 1.429 0.428 0.734 1.782 1.075 1.108 0.561 0.679 0.575 0.159
+> Ours 1.419 1.371 0.412 0.723 1.744 1.108 1.096 0.574 0.668 0.580 0.162
+> PatchTST Random 0.406 0.222 0.361 0.474 4.146 2.044 1.985 0.561 0.470 0.475 0.124 DataOob 0.416 0.226 0.362 0.558 3.982 2.060 1.958 0.571 0.489 0.489 0.141 DataShapley 0.396 0.212 0.361 0.457 4.273 2.017 2.028 0.571 0.472 0.529 0.126 TimeInf 0.415 0.220 0.351 0.510 4.029 2.019 2.023 0.522 0.467 0.504 0.131 TSRating 0.397 0.213 0.351 0.467 3.901 1.957 1.863 0.572 0.511 0.536 0.156
+> Ours 0.405 0.214 0.348 0.450 3.820 1.856 1.855 0.573 0.516 0.533 0.166
+
+Figure 3: Effect of reasoning-driven Perceiver training. The left figure shows downstream data selection performance (RMSE) across four datasets using PatchTST as the downstream model, while the right figure reports efficiency metrics averaged over four datasets, including selected dimensions, token usage, and inference time. quantitative signals enhance the reliability of data quality judgments and are broadly effective across different LLM backbones. 
+
+Effect of Quality Dimension Design. We further study the impact of quality dimension design as summarized in Table 4. Specifically, we group the seven dimensions into three categories: Data Quality (Missing Value, Noise Level), Rare Pattern (Rare Pattern), and Pattern Structure (Trend, Frequency, Amplitude, Pattern Consistency). We construct three ablated variants by removing each group in turn and compare them with the full configuration. As shown in Figure 5, removing any group consistently leads to performance degradation in most cases. In particular, excluding Pattern Structure or Rare Pattern results in the largest drops, indicating the importance of capturing temporal structures and informative irregularities. Removing Data Quality has a relatively smaller impact since such datasets exhibit limited variation in basic defects such as missing values and noise, making such signals less discriminative. Nevertheless, the full configuration achieves the best average performance, indicating that these dimension groups contribute complementary signals for reliable TS data quality assessment. 
+
+4.2.2 Cross-Dataset Selection for TSFM Fine-tuning 
+
+We further evaluate our method in a more challenging setting where data from multiple datasets are mixed for time series foundation model (TSFM) fine-tuning. The goal is to examine whether quality-aware selection remains effective under heterogeneous data distributions, and whether it can 8Figure 4: Effect of tool-augmented quantitative comparison across different LLMs, where each subplot corresponds to a specific LLM backbone. The figures report downstream data selection performance (RMSE) under two settings: with tool usage (Inspector performs explicit quantitative comparison) and without tool usage (pure text-based reasoning). Results are evaluated on four datasets using PatchTST as the downstream model. 
+
+Figure 5: Effect of quality dimension design. Each subplot shows results on a specific dataset, comparing downstream data selection performance (RMSE) under different dimension configurations, including the full set of seven dimensions and three ablated variants with one dimension group removed (Data Quality, Rare Pattern, or Pattern Structure). Results are evaluated on four datasets using PatchTST as the downstream model. improve fine-tuning efficiency with limited data. Specifically, we construct a unified pool by merging samples from four long-term forecasting training sets. To ensure cross-dataset comparability, we train the rating model via meta-learning to produce globally consistent quality scores, with further details provided in Appendix E.2. Based on these scores, we select the top 50% of samples in the pool for fine-tuning Timer-S1 (Liu et al., 2026), the largest publicly available TS foundation model to date, with 8.3B total parameters. The model is then evaluated on the test set of each dataset separately using RMSE. We compare against random selection with the same budget and full-data training. Table 3 shows that our method consistently outperforms random selection across all datasets under both 50% and 75% data budgets, achieving lower RMSE with the same amount of training data. More importantly, when increasing the data budget to 75%, the performance of our method becomes very close to full-data training (0.341 vs. 0.338 on average). This indicates that our approach can effectively identify high-quality training samples, enabling near-full-data performance with reduced data usage, thereby improving the efficiency of TSFM fine-tuning. Table 3: Cross-dataset data selection for TSFM (Timer-S1) fine-tuning. We compare random selection and quality-based selection under fixed data budgets, along with full-data training. Results are reported in RMSE (lower is better).                                    
+
+> Config Electricity ExchangeRate Traffic Weather Avg
+> Untrained 0.477 0.228 0.293 0.510 0.377 Random (50% data) 0.448 0.225 0.290 0.492 0.364 Ours (50% data) 0.425 0.221 0.283 0.484 0.353 Random (75% data) 0.421 0.222 0.285 0.470 0.350 Ours (75% data) 0.400 0.218 0.278 0.468 0.341 Full (100% data) 0.395 0.218 0.274 0.465 0.338
+
+95 Conclusion 
+
+In this paper, we have investigated the capability of LLMs for time series quality assessment by constructing a dedicated benchmark and identifying two key limitations: unreliable quality dimension identification and weak quantitative comparison ability. Based on these findings, we have proposed TSQAgent, an agentic reasoning framework that devises reasoning-oriented dimension selection with tool-augmented quantitative analysis for reliable TS quality assessment. Extensive experiments on both the proposed benchmark and eleven real-world datasets demonstrate that TSQAgent consistently improves TS quality reasoning and enables more effective quality-aware data selection. 
+
+# References 
+
+Traffic dataset. https://pems.dot.ca.gov/ . Accessed: 2025-05-14. Ucr/uea time series classification archive. https://www.timeseriesclassification.com/ . Accessed: 2025-05-14. Weather dataset. https://www.ncei.noaa.gov/data/local-climatological-data/ . Accessed: 2025-05-14. Adnan Abbas, Caleb Wohn, Donghan Hu, Eugenia H Rho, and Sang Won Lee. Pitch: designing agentic conversational support for planning and self-reflection. In Proceedings of the 7th ACM Conference on Conversational User Interfaces , pp. 1–22, 2025. Marah Abdin, Jyoti Aneja, Harkirat Behl, Sébastien Bubeck, Ronen Eldan, Suriya Gunasekar, Michael Har-rison, Russell J Hewett, Mojan Javaheripi, Piero Kauffmann, et al. Phi-4 technical report. arXiv preprint arXiv:2412.08905 , 2024. Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023. João Bento, Pedro Saleiro, André F Cruz, Mário AT Figueiredo, and Pedro Bizarro. Timeshap: Explaining recurrent models through sequence perturbations. In Proceedings of the 27th ACM SIGKDD conference on knowledge discovery & data mining , pp. 2565–2573, 2021. Yifu Cai, Arjun Choudhry, Mononito Goswami, and Artur Dubrawski. Timeseriesexam: A time series under-standing exam. arXiv preprint arXiv:2410.14752 , 2024. Mingyue Cheng, Xiaoyu Tao, Qi Liu, Ze Guo, and Enhong Chen. Position: Beyond model-centric prediction– agentic time series forecasting. arXiv preprint arXiv:2602.01776 , 2026. Qisen Cheng, Jinming Xing, Chang Xue, and Xiaoran Yang. Unifying prediction and explanation in time-series transformers via shapley-based pretraining. In 2025 21st IEEE International Colloquium on Signal Processing & Its Applications (CSPA) , pp. 325–330. IEEE, 2025. James Clark, Zhen Liu, and Nathalie Japkowicz. Adaptive threshold for outlier detection on data streams. In 
+
+2018 IEEE 5th International Conference on Data Science and Advanced Analytics (DSAA) , pp. 41–49. IEEE, 2018. Robert B Cleveland, William S Cleveland, Jean E McRae, Irma Terpenning, et al. Stl: A seasonal-trend decomposition. J. off. Stat , 6(1):3–73, 1990. Shikai Fang, Qingsong Wen, Yingtao Luo, Shandian Zhe, and Liang Sun. Bayotide: Bayesian online multivariate time series imputation with functional decomposition. In Proceedings of the 41st International Conference on Machine Learning , pp. 12993–13009, 2024. Azul Garza and Renée Rosillo. Timecopilot. arXiv preprint arXiv:2509.00616 , 2025. Amirata Ghorbani and James Zou. Data shapley: Equitable valuation of data for machine learning. In 
+
+International conference on machine learning , pp. 2242–2251. PMLR, 2019. Mononito Goswami, Konrad Szafer, Arjun Choudhry, Yifu Cai, Shuo Li, and Artur Dubrawski. Moment: a family of open time-series foundation models. In Proceedings of the 41st International Conference on Machine Learning , pp. 16115–16152, 2024. 
+
+10 Nate Gruver, Marc Finzi, Shikai Qiu, and Andrew G Wilson. Large language models are zero-shot time series forecasters. Advances in Neural Information Processing Systems , 36:19622–19635, 2023. Tong Guan, Zijie Meng, Dianqi Li, Shiyu Wang, Chao-Han Huck Yang, Qingsong Wen, Zuozhu Liu, Sabato Marco Siniscalchi, Ming Jin, and Shirui Pan. Timeomni-1: Incentivizing complex reasoning with time series in large language models. arXiv preprint arXiv:2509.24803 , 2025. Frank R Hampel. The influence curve and its role in robust estimation. Journal of the american statistical association , 69(346):383–393, 1974. Rob J Hyndman and George Athanasopoulos. Forecasting: principles and practice . OTexts, 2018. Hassan Ismail Fawaz, Germain Forestier, Jonathan Weber, Lhassane Idoumghar, and Pierre-Alain Muller. Deep learning for time series classification: a review. Data mining and knowledge discovery , 33(4):917–963, 2019. Zahra Jadidi, Shantanu Pal, Mukhtar Hussain, and Kien Nguyen Thanh. Correlation-based anomaly detection in industrial control systems. Sensors , 23(3):1561, 2023. Yushan Jiang, Wenchao Yu, Geon Lee, Dongjin Song, Kijung Shin, Wei Cheng, Yanchi Liu, and Haifeng Chen. Timexl: Explainable multi-modal time series prediction with llm-in-the-loop. arXiv preprint arXiv:2503.01013 , 2025. Seyed Mehran Kazemi, Rishab Goel, Sepehr Eghbali, Janahan Ramanan, Jaspreet Sahota, Sanjay Thakur, Stella Wu, Cathal Smyth, Pascal Poupart, and Marcus Brubaker. Time2vec: Learning a vector representation of time. arXiv preprint arXiv:1907.05321 , 2019. Yaxuan Kong, Yiyuan Yang, Yoontae Hwang, Wenjie Du, Stefan Zohren, Zhangyang Wang, Ming Jin, and Qingsong Wen. Time-mqa: Time series multi-task question answering with context enhancement. In 
+
+Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 29736–29753, 2025. Yongchan Kwon, Eric Wu, Kevin Wu, and James Zou. Datainf: Efficiently estimating data influence in lora-tuned llms and diffusion models. In The Twelfth International Conference on Learning Representations , 2024. Guokun Lai, Wei-Cheng Chang, Yiming Yang, and Hanxiao Liu. Modeling long-and short-term temporal patterns with deep neural networks. In The 41st international ACM SIGIR conference on research & development in information retrieval , pp. 95–104, 2018. Tian Lan, Hao Duong Le, Jinbo Li, Wenjun He, Meng Wang, Chenghao Liu, and Chen Zhang. Axis: Explainable time series anomaly detection with large language models. arXiv preprint arXiv:2509.24378 , 2025. Patrick Langer, Thomas Kaar, Max Rosenblattl, Maxwell A Xu, Winnie Chow, Martin Maritsch, Robert Jakob, Ning Wang, Juncheng Liu, Aradhana Verma, et al. Opentslm: Time-series language models for reasoning over multivariate medical text-and time-series data. arXiv preprint arXiv:2510.02410 , 2025. Zhuofeng Li, Haoxiang Zhang, Seungju Han, Sheng Liu, Jianwen Xie, Yu Zhang, Yejin Choi, James Zou, and Pan Lu. In-the-flow agentic system optimization for effective planning and tool use. In The 5th Workshop on Mathematical Reasoning and AI at NeurIPS 2025 , 2025. Haoxin Liu, Harshavardhan Kamarthi, Lingkai Kong, Zhiyuan Zhao, Chao Zhang, and B Aditya Prakash. Time-series forecasting for out-of-distribution generalization using invariant learning. In Proceedings of the 41st International Conference on Machine Learning , pp. 31312–31325, 2024a. Haoxin Liu, Zhiyuan Zhao, Jindong Wang, Harshavardhan Kamarthi, and B Aditya Prakash. Lstprompt: Large language models as zero-shot time series forecasters by long-short-term prompting. In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 7832–7840, 2024b. Penghang Liu, Elizabeth Fons, Svitlana Vyetrenko, Daniel Borrajo, Vamsi Potluru, and Manuela Veloso. Ts-agent: A time series reasoning agent with iterative statistical insight gathering. arXiv preprint arXiv:2510.07432 , 2025. Yong Liu, Xingjian Su, Shiyu Wang, Haoran Zhang, Haixuan Liu, Yuxuan Wang, Zhou Ye, Yang Xiang, Jianmin Wang, and Mingsheng Long. Timer-s1: A billion-scale time series foundation model with serial scaling. 
+
+arXiv preprint arXiv:2603.04791 , 2026. Spyros Makridakis, Evangelos Spiliotis, and Vassilios Assimakopoulos. The m4 competition: Results, findings, conclusion and way forward. International Journal of forecasting , 34(4):802–808, 2018. 
+
+11 Amin Nayebi, Sindhu Tipirneni, Chandan K Reddy, Brandon Foreman, and Vignesh Subbian. Windowshap: An efficient framework for explaining time-series classifiers based on shapley values. Journal of biomedical informatics , 144:104438, 2023. Yuqi Nie, Nam H Nguyen, Phanwadee Sinthong, and Jayant Kalagnanam. A time series is worth 64 words: Long-term forecasting with transformers. In The Eleventh International Conference on Learning Representations ,2023. Hao Peng, Yunjia Qi, Xiaozhi Wang, Zijun Yao, Bin Xu, Lei Hou, and Juanzi Li. Agentic reward modeling: Integrating human preferences with verifiable correctness signals for reliable reward systems. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 15934–15949, 2025. Cheng Qian, Emre Can Acikgoz, Hongru Wang, Xiusi Chen, Avirup Sil, Dilek Hakkani-Tur, Gokhan Tur, and Heng Ji. Smart: Self-aware agent for tool overuse mitigation. In Findings of the Association for Computational Linguistics: ACL 2025 , pp. 4604–4621, 2025. Erhard Rahm, Hong Hai Do, et al. Data cleaning: Problems and current approaches. IEEE Data Eng. Bull. , 23 (4):3–13, 2000. Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria Lomeli, Eric Hambro, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. Toolformer: Language models can teach themselves to use tools. 
+
+Advances in neural information processing systems , 36:68539–68551, 2023. Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. Lloyd S Shapley. A value for n-person games. Contribution to the Theory of Games , 2, 1953. Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. Advances in neural information processing systems , 36:8634–8652, 2023. Katsuto Tanaka. Time series analysis: Nonstationary and noninvertible distribution theory . John Wiley & Sons, 2017. Xiaoyu Tao, Mingyue Cheng, Chuang Jiang, Tian Gao, Huanjian Zhang, and Yaguo Liu. Cast-r1: Learning tool-augmented sequential decision policies for time series forecasting. arXiv preprint arXiv:2602.13802 ,2026. Gemma Team. Gemma 3 technical report. ArXiv , abs/2503.19786, 2025. URL https://api. semanticscholar.org/CorpusID:277313563 .Artur Trindade. Electricityloaddiagrams20112014. UCI Machine Learning Repository , 10:C58C86, 2015. Muyao Wang, Zeke Xie, and Bo Chen. Channel-wise influence: Estimating data influence for multivariate time series. arXiv preprint arXiv:2408.14763 , 2024. Xi Wang and Chen Wang. Time series data cleaning: A survey. Ieee Access , 8:1866–1881, 2019. Tianxin Wei, Ting-Wei Li, Zhining Liu, Xuying Ning, Ze Yang, Jiaru Zou, Zhichen Zeng, Ruizhong Qiu, Xiao Lin, Dongqi Fu, et al. Agentic reasoning for large language models. arXiv preprint arXiv:2601.12538 , 2026. Shunyu Wu, Dan Li, Wenjie Feng, Haozheng Ye, Jian Lou, and See-Kiong Ng. Rating quality of diverse time series data by meta-learning from llm judgment. In The Fourteenth International Conference on Learning Representations , 2026a. Xingjian Wu, Junkai Lu, Zhengyu Li, Xiangfei Qiu, Jilin Hu, Chenjuan Guo, Christian S Jensen, and Bin Yang. Timeart: Towards agentic time series reasoning via tool-augmentation. arXiv preprint arXiv:2601.13653 ,2026b. Zhe Xie, Zeyan Li, Xiao He, Longlong Xu, Xidao Wen, Tieying Zhang, Jianjun Chen, Rui Shi, and Dan Pei. Chatts: Aligning time series with llms via synthetic data for enhanced understanding and reasoning. 
+
+Proceedings of the VLDB Endowment , 18(8):2385–2398, 2025. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025a. 
+
+12 Tiankai Yang, Junjun Liu, Michael Siu, Jiahang Wang, Zhuangzhuang Qian, Chanjuan Song, Cheng Cheng, Xiyang Hu, and Yue Zhao. Ad-agent: A multi-agent framework for end-to-end anomaly detection. In Pro-ceedings of the 14th International Joint Conference on Natural Language Processing and the 4th Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics , pp. 191–205, 2025b. Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. In 11th International Conference on Learning Representations, ICLR 2023 , 2023. Haobo Zhang, Yutao Zhu, Kelong Mao, Tianhao Li, and Zhicheng Dou. Recthinker: An agentic framework for tool-augmented reasoning in recommendation. arXiv preprint arXiv:2603.09843 , 2026a. Jingyu Zhang, Tianjian Li, William Jurayj, Hongyuan Zhan, Benjamin Van Durme, and Daniel Khashabi. Many-tier instruction hierarchy in llm agents. arXiv preprint arXiv:2604.09443 , 2026b. Weijia Zhang, Chenlong Yin, Hao Liu, Xiaofang Zhou, and Hui Xiong. Irregular multivariate time series forecasting: A transformable patching graph neural networks approach. In Forty-first International Conference on Machine Learning , 2024. Xiaohan Zhang, Tian Gao, Mingyue Cheng, Bokai Pan, Ze Guo, Yaguo Liu, and Xiaoyu Tao. Alphacast: A human wisdom-llm intelligence co-reasoning framework for interactive time series forecasting. arXiv preprint arXiv:2511.08947 , 2025a. Yizi Zhang, Jingyan Shen, Xiaoxue Xiong, and Yongchan Kwon. Timeinf: Time series data contribution via influence functions. In The Thirteenth International Conference on Learning Representations , 2025b. Haokun Zhao, Xiang Zhang, Jiaqi Wei, Yiwei Xu, Yuting He, Siqi Sun, and Chenyu You. Timeseriesscientist: A general-purpose ai agent for time series analysis. arXiv preprint arXiv:2510.01538 , 2025. 
+
+13 Appendix A Related Works 
+
+A.1 Time Series Data Quality Assessment 
+
+Time series data quality assessment has been widely studied in the literature. Early approaches mainly rely on statistical feature analysis and heuristic rules to detect low-quality samples, such as threshold-based anomaly detection (Clark et al., 2018), distributional checks (Tanaka, 2017), and manually designed quality indicators (Wang & Wang, 2019). While these methods are simple and interpretable, they often fail to capture complex temporal dependencies and structural distortions in real-world time series. Another line of research adapts data attribution techniques to time series for quality estimation, and can be broadly categorized into Influence Function-based (Hampel, 1974) and Shapley value-based (Shapley, 1953) approaches. For influence-based methods, TimeInf (Zhang et al., 2025b) proposes a time-aware influence function to capture temporal dependencies, while ChInf (Wang et al., 2024) extends this idea to multivariate settings via channel-level gradient approxi-mations. For Shapley-based methods, WindowSHAP (Nayebi et al., 2023) introduces window-based decomposition to enable tractable attribution over long sequences. Additionally, ShapTST (Cheng et al., 2025) integrates Shapley computation into Transformer training to jointly support forecasting and explanation. Despite their theoretical soundness, these methods are computationally expensive, as the former requires intensive Hessian and gradient computations, while the latter suffers from exponential combinatorial complexity. More recently, motivated by the strong reasoning capabilities of large language models (LLMs), several works begin to explore LLM-based time series quality assessment (Lan et al., 2025; Cai et al., 2024). Among them, TSRating (Wu et al., 2026a) repre-sents a representative effort, which defines multiple human-designed quality dimensions (e.g., trend, frequency, amplitude, and pattern consistency) and formulates pairwise comparison tasks to train a learned quality scoring model via Bradley–Terry optimization. This line of work demonstrates the potential of LLMs for semantic-level understanding of time series quality, but still heavily depends on manually specified dimensions and text-based reasoning, limiting its ability to perform fine-grained and quantitative quality assessment. 
+
+A.2 Agent-based Methods for Time Series Analysis 
+
+Recent advances have explored agentic frameworks for time series analysis, aiming to decompose complex workflows into modular reasoning and decision-making processes (Cheng et al., 2026). A line of work focuses on automating end-to-end forecasting pipelines via multi-agent collaboration. For example, TimeSeriesScientist (Zhao et al., 2025) introduces a four-agent system that covers data curation, model planning, forecasting, and reporting, while TimeCopilot (Garza & Rosillo, 2025) integrates multiple time series foundation models (TSFMs) with LLMs to automate feature analysis, model selection, and prediction. Similarly, AD-AGENT (Yang et al., 2025b) extends this paradigm to anomaly detection by coordinating agents for data preparation, model selection, and code generation. Another line of research emphasizes reasoning-centric agents that iteratively refine predictions or analysis through structured reasoning and interaction. AlphaCast (Zhang et al., 2025a) formulates forecasting as an interactive co-reasoning process between human knowledge and LLMs, incorporating multi-source context and reflective optimization. TimeXL (Jiang et al., 2025) and TimeART (Wu et al., 2026b) further adopt multi-agent or multi-stage reasoning loops to improve prediction accuracy and interpretability, while TS-Agent (Liu et al., 2025) focuses on iterative evidence gathering and reasoning over raw time series signals. In addition, several works explore tool-augmented and reinforcement learning-based agent designs for time series modeling. For instance, Cast-R1 (Tao et al., 2026) reformulates forecasting as a sequential decision-making process, where an agent interacts with external tools and is optimized via reinforcement learning to iteratively refine predictions. Despite these advances, existing time series agents are primarily designed for forecasting, anomaly detection, or question answering, and focus on improving predictive performance or interpretability. In contrast, the problem of time series quality assessment , particularly identifying decision-relevant quality dimensions and performing grounded, quantitative comparison, remains largely underexplored in agentic settings. 14 B Details of TSQBench Construction 
+
+B.1 Template Generation 
+
+Each benchmark instance is constructed from a shared template time series, which serves as the common basis for pairwise time series. The template is designed to capture diverse yet realistic temporal structures, including trend, periodicity, and stochastic variations. Two correlated series 
+
+(series A, series B ) are generated by duplicating the template, ensuring structural comparability and facilitating controlled dimension-specific degradations in subsequent steps. Specifically, each template is constructed by composing three fundamental components: a trend term, a seasonal (periodic) term, and a stochastic noise term. To enhance diversity, multiple composition strategies are adopted, including additive combinations, multiplicative interactions between trend and seasonality, and sequential compositions that concate-nate multiple segments with distinct local patterns. The trend component covers a range of forms such as linear, piecewise, exponential, and logarithmic variations, while the seasonal component includes different periodic patterns (e.g., sinusoidal, square, and mixed harmonics). The noise com-ponent introduces low-level stochastic variations with different temporal structures (e.g., independent, autocorrelated, or time-varying). All components are sampled from continuous parameter ranges and combined with randomized scaling and shifting, resulting in a broad distribution of temporal dynamics. Importantly, the baseline noise level is intentionally kept low, as dimension-specific degradations are introduced separately in later stages. This design ensures that the template captures clean underlying structures while allowing controlled manipulation of quality factors during benchmark construction. Table 4: Quality dimension schema used in our work.         
+
+> Dimension Description Missing Value Fraction of missing or unobserved values; higher ratios indicate lower quality.
+> Noise Level Degree of noise or stochastic perturbations in the signal; higher levels indicate lower quality.
+> Rare Pattern Anomalous observations caused by data defects (e.g., sensor glitches, corrup-tion); more frequent or severe outliers indicate lower quality.
+> Trend Clear and sustained directional movement over time; absence of stable direction (e.g., flat segments, erratic reversals) indicates low quality.
+> Frequency Regular and stable oscillatory patterns over time; irregular or inconsistent cycles, such as varying periods or missing repetitions, indicate low quality.
+> Amplitude Consistency and stable oscillation magnitude across cycles; varying or drifting swing strength over time indicates low quality.
+> Pattern Consistency Global structural coherence over time; fragmented or unstable behavior, such as abrupt shifts or discontinuous transitions indicates low quality.
+
+B.2 Quality Dimension Sampling 
+
+For each benchmark instance, a subset of dimensions is sampled to be active, where quality differences in the corresponding dimensions are introduced by degrading only one side (i.e., either series A or 
+
+series B ). We adopt a skewed distribution over the number of active dimensions in each benchmark instance to reflect real-world scenarios where quality differences are typically driven by a small number of dominant factors. The detailed distribution is shown in Table 5. 
+
+B.3 Defect Injection 
+
+For each selected dimension, one of the two series is randomly assigned as the degraded side, while the other remains unchanged. We then introduce controlled, dimension-specific perturbations to the selected series to create asymmetric quality differences, while preserving the underlying shared temporal structure. The type of degradation is determined by the semantic meaning of each quality dimension, and is sampled from a predefined set of transformation operators (Xie et al., 2025). This design ensures that each dimension corresponds to a distinct and interpretable failure mode, enabling fine-grained benchmark evaluation. 15 Table 5: Distribution of active dimensions per benchmark instance.             
+
+> Number of Active Dimensions Probability Description
+> 135% Most common: single-dimension comparison 235% Common: two-dimension comparison 320% Moderate frequency 48% Less frequent 52% Rare cases
+
+For each quality dimension, we define a set of defect variants, each corresponding to a specific transformation operator (e.g., missingness injection, noise amplification, trend distortion). A variant is randomly selected during injection, and its parameters are sampled from predefined ranges. This design introduces both structural diversity and controlled controllability within each dimension. Table 6 summarizes the implemented operators for all seven dimensions. The table reports the transformation family and the parameter regimes used by the current generator. 
+
+B.4 Evaluation Protocol 
+
+Building on the above design, which explicitly decomposes time series quality understanding into dimension identification and dimension-specific quality comparison reasoning, we evaluate models along two corresponding capabilities on a set of 1,000 synthetic samples. For dimension identification, given a pair (series A, series B ), the model is required to select a subset of relevant dimensions 
+
+Dpred from the full dimension set D, where the ground-truth set Dgt denotes the sampled active dimensions exhibiting quality differences between the two series. For quality comparison, the model is provided with the ground-truth active dimension and asked to determine which series exhibits higher quality under the specified dimension, where the ground-truth preference corresponds to the unperturbed series during defect injection. Performance is measured via Precision, Recall for dimension identification, and comparison accuracy for the quality comparison. 
+
+# C TS Quality Tailored GRPO Training Details 
+
+Training Target and Policy Parameterization. We fine-tune Qwen3-4B as the Perceiver policy using the TRL implementation of GRPO. The trained policy is parameterized with LoRA rather than full-model updates. In the default configuration, LoRA adapters are inserted into the attention projection layers q_proj , k_proj , and v_proj , with rank r = 16 , scaling factor α = 32 , dropout 
+
+0.05 , no bias terms, and causal-language-model task type. This keeps the trainable parameter budget small while adapting the attention subspace most directly involved in Perceiver planning. The Perceiver is trained to output a JSON object containing a short perception summary and a list-valued planned_dimensions field. Only the planned_dimensions field is used by the GRPO reward. Thus, the implemented RL objective optimizes dimension selection and output validity, not the Inspector’s later tool-use decision. This distinction is important because the final TSQAgent pipeline still delegates detailed measurement and tool invocation to the Inspector, while the tailored GRPO is used to improve the Perceiver’s planning precision. 
+
+Training Data. We use the synthetic time-series quality benchmark as the supervision source for GRPO. Each training instance provides a pair of time-series segments and a ground-truth target dimension set Dgt , which indicates the quality dimensions that should be selected by the Perceiver. The data construction process, defect taxonomy, label semantics, and split details are described in Section 2. 
+
+Reward Function. The proposed TS quality-tailored GRPO reward combines a small format-compliance term with a dominant dimension-selection term. The format term encourages the model to return parseable JSON following the Perceiver schema, while the dimension term measures the precision of the predicted planned_dimensions against the target dimension set Dgt . The effective reward used by the trainer is 
+
+R = 0 .10 Rformat + 0 .90 Rdim , (3) 16 Table 6: Dimension-specific defect operators used in the synthetic benchmark. 
+
+Dimension Operators Semantics and parameterization Missing Value random_scatter ,
+
+burst , periodic 
+
+Missing observations are inserted as isolated positions, contiguous dropout blocks, or approximately periodic gaps. The missing ratio is sampled from [0 .02 , 0.08] for scattered and periodic masks; burst masks use 1–3 blocks with total burst ratio in [0 .02 , 0.05] . This dimension is calibrated as heavy because the missing ratio is directly observable from the input statistics. 
+
+Noise Level gaussian ,
+
+heteroscedastic ,
+
+impulsive 
+
+Global Gaussian noise increases the whole-series residual variance. Heteroscedastic noise affects one contiguous segment, with affected length ratio [0 .10 , 0.20] for light cases and [0 .30 , 0.70] for heavy cases. Impulsive noise corrupts short bursts. Noise multipliers are smaller for light cases ( 1.2–2.0 for Gaussian/heteroscedastic; 1.5–2.0 for impulsive) and larger for heavy cases ( 2.5–4.0 or 3.0–5.0). 
+
+Rare Pattern point_outlier ,
+
+contextual ,
+
+level_shift 
+
+Point outliers add one to three isolated spikes with magnitude 2.5–3.5 empirical standard deviations and are calibrated as heavy. Contextual anomalies create short V-shaped excursions of duration 2–4 and magnitude 
+
+4.0–5.0 standard deviations; these are treated as light because they are localized and shape-dependent. Temporary level shifts last 5–10 steps with magnitude 
+
+1.5–2.5 standard deviations and are calibrated as heavy. 
+
+Trend flatten , drift ,
+
+reversal 
+
+Trend defects modify a local structural component rather than the whole signal. Flattening replaces a segment of length ratio [0 .15 , 0.40] by its local mean plus amplified residual noise. Drift adds a gradual slope change across a long segment spanning from the early part of the series to the later part. Reversal reverses a segment of length ratio 
+
+[0 .15 , 0.40] and level-aligns the boundary. These operators are calibrated as light because the degraded trend often preserves plausible local values. 
+
+Frequency competing , jitter ,
+
+period_shift 
+
+Frequency defects operate on the oscillatory component using the known base period when available. Competing-frequency defects add one weak non-harmonic sinusoid in light cases, or two to three stronger components in heavy cases. Jitter applies smooth cumulative phase noise with coefficient of variation 
+
+[0 .08 , 0.22] . Period shifts modify the effective period in the last 20 –50% of the series by a factor in [0 .50 , 0.80] .
+
+Amplitude random_scale , decay ,
+
+clip 
+
+Amplitude defects separate the baseline from the oscillatory component before perturbation. Random scaling samples per-cycle log-normal scale factors with coefficient of variation [0 .20 , 0.60] for light cases and 
+
+[0 .80 , 1.10] for heavy cases. Decay applies a monotone envelope that either grows or shrinks the oscillatory magnitude toward a factor in [0 .20 , 0.70] . Clipping caps oscillatory peaks and troughs at 40 –80% of their original maximum magnitude. 
+
+Pattern Consistency 
+
+variance_switching ,
+
+structural_break ,
+
+flat_spots ,
+
+mean_drift 
+
+Consistency defects disturb global structural coherence. Variance switching alternates calm and volatile windows and is calibrated as heavy. Structural breaks introduce one or more persistent level shifts in the middle portion of the series. Flat spots replace random spans, typically 5–15% 
+
+of the sequence length, with a constant value. Mean drift adds a smoothed random-walk displacement to the signal level, with step scale proportional to the series standard deviation. 
+
+17 where Rformat ensures valid structured output, and Rdim measures the alignment between predicted and ground-truth dimensions: 
+
+Rdim = |D pred ∩ D gt ||D pred | . (4) The 0.1/0.9 weighting reflects the role of GRPO in this project: valid structured output is necessary, but the main objective is to make the Perceiver select relevant dimensions without over-selecting. This precision-oriented design discourages forwarding redundant dimensions to the Inspector, thereby reducing downstream tool calls and irrelevant evidence. 
+
+Tailored GRPO Optimization Configuration. For each prompt, GRPO samples K = 8 completions from the current policy using temperature 1.0. These completions form the comparison group for relative policy optimization. With the default gradient accumulation of four steps, each optimizer update aggregates four unique prompts and 32 sampled completions per GPU. Under DDP with N
+
+GPUs, the effective update aggregates 4N prompts and 32 N completions. The training run uses one epoch, learning rate 10 −5, cosine learning-rate decay, and warmup ratio 
+
+0.10 . The KL regularization coefficient is β = 0 .04 , which constrains the fine-tuned policy against the reference behavior used internally by TRL’s GRPO trainer. This is important because the reward is sparse and format-sensitive: without KL pressure, the policy could overfit to short, reward-hacking completions or collapse into degenerate JSON templates. The maximum generated completion length is 300 tokens, which is sufficient for the required Perceiver JSON while limiting long reasoning traces. 
+
+Runtime and Checkpointing. The model is loaded in bf16 by default, uses the PyTorch SDPA attention implementation, and enables gradient checkpointing to reduce memory usage during GRPO sampling. The default full-training uses one prompt per GPU, eight generations per prompt, and four gradient-accumulation steps. The trainer saves LoRA checkpoints at the end of each epoch and limits the number of saved checkpoints to the number of epochs. In the full TSQAgent pipeline, the LoRA-served model can be assigned only to the Perceiver, while the Inspector and Adjudicator continue to use the base model endpoint; this isolates the effect of GRPO to the planning stage. Our training is conducted on a single NVIDIA A100 GPU. 
+
+# D Time Series Analytical Tool Library 
+
+This section provides the implementation details of the analytical tool library used in our TSqualityA-gent system. The library is designed to extract interpretable quantitative signals from raw time series, covering three major categories consistent with the implementation: signal quality, rare pattern detec-tion, and pattern-structure analysis. In the implementation, all tools are exposed through a unified registry and can be invoked by the Inspector during ReAct-style reasoning. Each tool is applied to one candidate series, specified by series_name ∈ { A, B}, and returns a structured dictionary that is injected back into the reasoning context as quantitative evidence. All tools operate on a univariate time series x = {xt}Tt=1 . Tools based on summary statistics ignore missing entries when computing valid statistics, while tools requiring continuous temporal structure, such as autocorrelation and trend analysis, fill missing values via linear interpolation before computation. 
+
+D.1 Signal Quality Analysis Tools (1) Missing Ratio. The missing_ratio tool quantifies data completeness by counting the fraction of missing entries: 
+
+missing_ratio (x) = |{ xt | xt = NaN }| 
+
+T . (5) It returns missing_ratio , where larger values indicate more severe data loss. This tool is the primary evidence source for the Missing Value dimension. 
+
+(2) Noise Profile. The noise_profile tool estimates the high-frequency component of a series by subtracting a rolling mean from the valid observations: 
+
+noise_ratio (x) = σ(x − ˆx(w)roll )
+
+σ(x) , (6) 18 where ˆx(w)roll is a moving average with window size w. If w is not specified, the implementation adapts it to the sequence length. The tool returns noise_std , signal_std , noise_ratio , noise_type ,and window_used . The noise type is determined by the lag-1 autocorrelation of the valid series, where strongly autocorrelated residual behavior is labeled as red noise and weakly autocorrelated behavior as white noise. 
+
+(3) Volatility. The volatility tool measures local instability using the rolling standard deviation of first-order differences: 
+
+volatility (x) = 1
+
+Nw
+
+X
+
+> i
+
+Std (∆ xi:i+w) , ∆xt = xt − xt−1. (7) It returns mean_volatility , max_volatility , and window_used . While noise_profile mea-sures residual variation after smoothing, volatility captures abrupt step-to-step changes, making it a complementary tool for the Noise Level dimension. 
+
+(4) Range Statistics. The range_stats tool computes local statistics over an interval [i, j ):
+
+range_stats (x, i, j, s ) = s(xi:j ), s ∈ { mean , std , max , min , sum }. (8) It returns the selected statistic value together with the clipped interval and segment length. This tool is used as local supporting evidence, for example after a change point has been identified or when the Inspector needs to compare a specific region rather than the entire series. 
+
+D.2 Rare Pattern Detection Tools (5) Z-score Outliers. The zscore_outlier tool detects global point anomalies using standard deviation thresholding: 
+
+zt = |xt − μ|
+
+σ , Ioutlier (t) = I[zt > λ ]. (9) It returns anomaly_count , anomaly_ratio , anomaly_indices , anomaly_values , and 
+
+threshold_used . This tool provides a simple first-pass detector for isolated spikes, especially when the series is approximately stationary. 
+
+(6) Outlier Density. The outlier_density tool estimates anomaly density using interquartile-range fences: 
+
+IQR = Q3 − Q1, ℓ = Q1 − 1.5 IQR , u = Q3 + 1 .5 IQR . (10) Points outside [ℓ, u ] are counted as outliers. The tool returns outlier_count , outlier_ratio ,
+
+iqr , lower_fence , and upper_fence . Compared with Z-score thresholding, this detector is more robust to heavy-tailed distributions because it relies on quantiles rather than mean and variance. 
+
+(7) MAD-based Residual Outliers. The mad_residual_outlier tool first removes local trend using a rolling mean and then applies median absolute deviation (MAD) scoring to the residuals: 
+
+rt = xt − ˆx(w)roll ,t , mt = 0.6745 |rt − median( r)|
+
+MAD( r) . (11) Points with mt > λ are flagged as anomalies. The tool returns anomaly_count , anomaly_ratio ,
+
+anomaly_indices , anomaly_values , mad , threshold_used , and window_used . This robust detector is preferred when a series has trend or seasonal drift, where global Z-scores may produce false positives. 
+
+(8) Contextual Rare Pattern. The contextual_rare_pattern tool identifies points that deviate from their local context. For each time index, it fits a linear model over the preceding context window and scores the prediction error: 
+
+ˆxt = att + bt, et = |xt − ˆxt|. (12) The errors are normalized using MAD, and points with unusually large local prediction er-rors are flagged. The tool returns anomaly_count , anomaly_ratio , anomaly_indices ,
+
+anomaly_values , threshold_used , and context_window_used . This tool is useful for con-textual events such as sudden drops, V-shaped deviations, or local structural breaks that may not be extreme under global statistics. 19 D.3 Structural Pattern Analysis Tools 
+
+This category corresponds to tools for assessing structural richness and temporal organization, covering the Trend , Frequency , Amplitude , and Pattern Consistency dimensions. 
+
+(9) Trend Classifier. The trend_classifier tool estimates global trend direction and strength via linear regression: 
+
+xt = β0 + β1t + ϵt, trend_strength = R2. (13) It returns direction , slope , trend_strength , segment_clarity , and segment_count . In addition to the global fit, the implementation uses change points to segment the series and computes per-segment trend clarity, which captures whether each natural segment exhibits a coherent direction even when the overall series is not globally linear. 
+
+(10) Change Point Detection. The change_point_detector tool detects structural breakpoints where the mean level or temporal behavior changes: 
+
+change_point_detector (x) = {τ1, τ 2, . . . , τ K }. (14) The implementation uses the PELT algorithm with an ℓ2 cost when the ruptures package is available, and falls back to a CUSUM-style detector otherwise. It returns change_point_count ,
+
+change_point_indices , and method . This tool supports trend, amplitude, and pattern-consistency analysis by localizing regions where the series changes character. 
+
+(11) Seasonality Detection. The seasonality_detector tool searches for dominant periodicity using the autocorrelation function: 
+
+ρ(τ ) = E[( xt − ¯x)( xt+τ − ¯x)] Var( x) , τ ⋆ = arg max  
+
+> τ
+
+ρ(τ ). (15) The implementation detects significant ACF peaks with prominence filtering and suppresses har-monics so that near-integer multiples of a stronger base period are not double-counted. It returns 
+
+dominant_period , seasonal_strength , top_periods , dominance_ratio , and peak_count .This is the primary tool for the Frequency dimension. 
+
+(12) Autocorrelation. The autocorr tool computes dependency at a specified lag: 
+
+autocorr (x, τ ) = corr( x1: T −τ , x 1+ τ :T ). (16) It returns lag and autocorrelation . Unlike seasonality_detector , which searches across many lags, this tool verifies a specific lag hypothesis and is therefore used as supporting evidence for frequency and smoothness-related judgments. 
+
+(13) Pattern Consistency Indicators. The pattern_consistency_indicators tool computes a collection of structural coherence measures: 
+
+lumpiness = Var ( {Var( xWk )}k) , (17) 
+
+roughness = 1
+
+T − 1 
+
+> T−1
+
+X
+
+> t=1
+
+|xt+1 − xt|. (18) It also returns flat_ratio , longest_flat_ratio , crossing_points , and crossing_rate .These indicators capture bursty variance, stagnant intervals, frequent mean crossings, and jaggedness. They are the primary evidence source for the Pattern Consistency dimension. 
+
+(14) Stationarity Test. The stationarity_test tool provides statistical tests for stationarity. It supports the Augmented Dickey–Fuller (ADF) test and the KPSS test: 
+
+stationarity_test (x) = (statistic , p, is _stationary) . (19) For ADF, the null hypothesis is that the series has a unit root, so p < 0.05 indicates stationarity. For KPSS, the null hypothesis is stationarity, so p > 0.05 indicates stationarity. The tool returns 
+
+test , statistic , p_value , and is_stationary . It is used as supporting evidence for trend and pattern-consistency analysis. 
+
+(15) Rolling Amplitude. The rolling_amplitude tool computes local amplitude as the range within a sliding window: 
+
+local_range i = max( xi:i+w) − min( xi:i+w). (20) 20 It returns mean_local_range , cv_local_range , max_local_range , min_local_range , and 
+
+window . This tool is a general-purpose amplitude measure and is especially useful when a series is not clearly oscillatory. 
+
+(16) Cycle Amplitude. The cycle_amplitude tool measures cycle-level amplitude consistency for oscillatory series. It first performs a gate check requiring at least two significant peaks and two significant troughs, where significance is determined by peak prominence relative to the series standard deviation. It then pairs adjacent extrema and computes peak-to-trough magnitudes: 
+
+ak = |xpk − xqk |, amplitude_cv = σ({ak})
+
+μ({ak}) . (21) The tool returns oscillatory , cycle_count , mean_amplitude , amplitude_cv ,
+
+amplitude_trend , peak_count , and trough_count . It is the primary amplitude tool when the series has clear oscillations; otherwise, the Inspector falls back to rolling_amplitude .
+
+D.4 Summary 
+
+The full tool library provides a unified interface for extracting interpretable quantitative signals across all seven quality dimensions. By exposing complementary measurements for completeness, noise, rare events, trend, frequency, amplitude, and pattern consistency, these tools serve as the quantitative foundation of TSqualityAgent. They allow the Inspector to replace purely subjective textual judgments with explicit evidence, improving both interpretability and robustness in fine-grained time-series quality comparison. 
+
+# E Details of the Rating Model 
+
+E.1 Model Architecture 
+
+The rating model is designed to assign a scalar quality score to each time series segment. Given an input time series x, the model outputs a scalar score reflecting its quality under predefined criteria. The architecture follows a two-stage design: representation extraction and quality mapping. 
+
+Representation Learning. We adopt a pretrained time series foundation model, MO-MENT (Goswami et al., 2024), to encode input series into latent representations. MOMENT contains approximately 109M parameters and is pretrained to capture diverse temporal patterns, providing a strong feature extractor. To ensure stable and efficient training, the encoder is kept frozen during optimization. 
+
+Quality Mapping. The extracted representation is fed into a lightweight multi-layer perceptron (MLP) to produce a scalar quality score. The MLP consists of three fully connected layers with hidden dimension 256. Each layer is followed by LayerNorm and ReLU activation, and residual connections are incorporated to improve optimization stability. The model is trained using pairwise preference data derived from agent judgments. Specifically, given a pair of time series (xi, xj ) with preference label pi≻j indicating whether xi is preferred over xj ,the loss is defined as: 
+
+Lθ = E(xi,xj ,p i≻j )∈J 
+
+h
+
+− pi≻j log σ sθ (xi) − sθ (xj ) − (1 − pi≻j ) log σ sθ (xj ) − sθ (xi)i
+
+, (22) where J denotes the set of pairwise comparisons produced by the agent, and sθ (x) is the predicted quality score parameterized by θ. This formulation corresponds to a standard pairwise ranking objective and is consistent with the maximum likelihood estimation. 
+
+E.2 Meta-learning for Cross-Dataset Calibration 
+
+To enable consistent quality scoring across heterogeneous datasets, we further train the rating model using a meta-learning strategy. Unlike single-dataset training, where scores are only comparable within each dataset, meta-learning allows the model to learn a shared scoring function that generalizes across different data distributions. In our setting, each dataset is treated as a separate task. We consider four datasets used in the main experiments (Electricity, ExchangeRate, Traffic, and Weather), and construct meta-training episodes 21 by sampling tasks from this set. For each task, the available pairwise preference data is split into a support set and a query set. The model is first adapted to the support set with a small number of gradient updates, and then evaluated on the query set. The meta-objective optimizes the model parameters such that the adapted model performs well on the query set across all tasks:      
+
+> min
+> θ
+> X
+> Ti
+> Lquery
+> Ti
+> 
+> θ−α∇θLsupport
+> Ti(θ)
+> 
+> ,(23)
+
+where θ denotes the model parameters and α is the inner-loop learning rate. This procedure encourages the model to capture dataset-invariant notions of data quality, making the resulting scores comparable across datasets. In practice, we adopt a first-order approximation for efficiency and perform a small number of inner-loop updates. The resulting meta-trained rating model is then used to assign quality scores over the merged data pool for cross-dataset selection. 
+
+# F Additional Details of Experiment Settings 
+
+F.1 Details of Eleven Benchmark Datasets 
+
+This section provides detailed descriptions of the eleven benchmark datasets used in our experiments in Section 4.2. The datasets cover diverse temporal characteristics and application scenarios, including forecasting and classification tasks. • Electricity (Trindade, 2015): This dataset contains hourly electricity consumption records (kWh) from 321 customers collected between 2012 and 2014. In our experiments, we use the series labeled MT_320 as the target variable in the univariate setting. • ExchangeRate (Lai et al., 2018): This dataset records daily exchange rates of eight currencies spanning from 1990 to 2016. We follow prior work and select the Singapore dollar series as the prediction target. • Traffic (tra): This dataset consists of hourly occupancy rates collected from freeway sensors in the San Francisco Bay Area between 2015 and 2016. We use sensor 861 as the target series. • Weather (wea): This dataset contains high-frequency meteorological measurements from approximately 1,600 locations in the United States, including temperature, humidity, and wind speed. We focus on the wet_bulb variable. • M4 (Makridakis et al., 2018): The M4 dataset is a large-scale benchmark consisting of 100,000 time series used in the Makridakis forecasting competition. It includes series with different frequencies, such as yearly, monthly, daily, weekly, and hourly data. We use its 
+
+Yearly , Monthly , and Daily subsets in our experiments. • MedicalImages : This dataset contains over 1,000 univariate time series, each representing pixel intensity variations over 99 time steps. The dataset includes 10 classes corresponding to different medical imaging categories. • CBF : A synthetic dataset containing 930 univariate time series of length 128, generated from piecewise geometric patterns. It is designed for evaluating classification performance across 3 classes. • BME : A synthetic dataset consisting of 180 univariate time series, each with 128 time steps, grouped into 3 classes with controlled temporal variations. • Handwriting : A multivariate dataset containing 1,000 samples of handwriting trajectories. Each sample has 3 channels and 152 time steps, corresponding to 26 character classes. 
+
+F.2 Details of Baselines 
+
+We compare our method with representative data valuation and selection baselines, including classical Shapley-based approaches, influence-based methods, and random selection. All methods output sample-level importance scores used for ranking and subset selection. 22 DataShapley (Ghorbani & Zou, 2019): This method quantifies the contribution of each training sample based on Shapley value estimation, measuring its marginal effect on model performance. 
+
+DataOob (Kwon et al., 2024): This approach estimates data utility using out-of-bag (OOB) perfor-mance, assessing how each sample influences model generalization. 
+
+TimeInf (Zhang et al., 2025b): This method applies influence functions to time series data, attributing model predictions to individual samples while preserving temporal dependencies. 
+
+TSRating (Wu et al., 2026a): This method learns a data rating function via pairwise comparisons and maps time series samples into scalar quality scores using a representation model and a learned ranking function. 
+
+Random : A simple baseline that randomly selects training samples, serving as a lower bound for data selection performance. 
+
+# G Qualitative Case Studies 
+
+We further present two qualitative case studies to provide an intuitive understanding of how GRPO-based training and tool usage improve the efficiency and reliability of TSQAgent. The first study focuses on the effect of GRPO on dimension selection behavior, while the second examines the impact of tool-augmented quantitative comparison. 
+
+G.1 Case Study I: Effect of GRPO-based Dimension Selection. 
+
+As shown in Figure 6a, without GRPO Perceiver, the Agent tends to over-select multiple quality dimensions and produces redundant or less informative analyses. This leads to inefficient reasoning and less precise judgments. In contrast, with GRPO Perceiver, the Agent focuses on a smaller set of truly relevant quality dimensions and provides more targeted and accurate assessments. This case demonstrates that GRPO Perceiver improves both the precision and efficiency of quality reasoning by reducing unnecessary dimensions and emphasizing the most discriminative factors. 
+
+G.2 Case Study II: With vs. Without Tool Augmentation. 
+
+As shown in Figure 6b, when tool usage is disabled, the Inspector mainly relies on subjective reasoning, leading to inconsistent evaluations across quality aspects. It overemphasizes trend and pattern consistency, resulting in an incorrect overall judgment favoring Series B. When tool support is enabled, the Inspector incorporates quantitative measurements from external tools, leading to more grounded and consistent assessments. As a result, it correctly identifies Series A as having higher overall quality. This case shows that tool-based evidence improves the reliability and precision of the Inspector by reducing subjective bias. 
+
+G.3 Extended Case Studies 
+
+We provide extended qualitative case studies, as shown in Figure 7. These cases further demonstrate the effectiveness of our framework in identifying relevant quality dimensions and producing consistent judgments under diverse time series degradation scenarios. 
+
+# H Limitations 
+
+Despite the effectiveness of TSQAgent, several limitations remain. First, our benchmark is constructed through controlled synthetic defect injection, which may not fully capture all types of real-world noise patterns and complex failure modes in time series data. As a result, the learned dimension selection policy may be partially influenced by the constructed distribution of quality perturbations. Second, while GRPO improves dimension selection stability, its performance is still dependent on the quality of the reward design and the coverage of predefined quality dimensions. Extending to more open-ended or domain-specific quality definitions may require additional adaptation. Third, the tool-augmented Inspector introduces additional computational overhead during inference due to iterative reasoning and external tool invocation. Although caching and bounded reasoning 23 (a) Case I (b) Case II 
+
+Figure 6: Case studies on tool augmentation and GRPO-based dimension selection. Each subplot shows results on a representative time-series quality comparison case, including the query, human expert judgment, and agent reasoning under different configurations. Subplot (a) compares the Agent with and without the GRPO Perceiver, demonstrating that GRPO-based dimension selection reduces redundant quality dimensions and improves the focus of quality reasoning. Subplot (b) compares the Inspector with and without tool support, demonstrating that tool-augmented quantitative measurements provide more grounded evidence and improve the reliability of the final quality judgment. 24 (a) Case involving pattern consistency and noise level (b) Case involving missing value and rare pattern 
+
+(c) Case involving frequency and missing value (d) Case involving missing value, pattern consistency and noise level 
+
+25 (e) Case involving pattern consistency and frequency (f) Case involving trend and rare pattern 
+
+Figure 7: Extended qualitative case studies under six representative quality comparison scenarios. Each subfigure illustrates the reasoning process and final judgment produced by TSQAgent. steps are used to mitigate this cost, there remains a trade-off between accuracy and efficiency in practical deployment. Finally, our evaluation focuses primarily on pairwise quality comparison settings. Extending the framework to absolute quality scoring or large-scale ranking scenarios is an interesting direction for future work. 
+
+# I Broader Social Impacts 
+
+This work focuses on time series quality assessment and data selection using large language models and agent-based reasoning. The proposed framework may have positive societal impacts by improving the efficiency and reliability of time series modeling pipelines, which are widely used in real-world applications such as energy systems, finance, healthcare, and environmental monitoring. By enabling more effective identification of high-quality data, the method can contribute to more accurate forecasting and decision-making in these domains. At the same time, potential negative impacts should also be considered. Since the proposed method involves automated evaluation and selection of training data, improper use may amplify biases present in the data or lead to suboptimal model behavior if deployed without proper validation. In high-stakes applications, reliance on automated quality assessment without human oversight may introduce risks, especially when data distributions are shifted or noisy. Therefore, we recommend that the system be used with human-in-the-loop verification in sensitive scenarios. 26

@@ -1,0 +1,319 @@
+Title: MINA: linear probes reveal coding-sequence family signal in frozen DNA encoders
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.05.25.727711v2.full.pdf
+
+Number of Pages: 8
+
+Markdown Content:
+# MINA: linear probes reveal coding-sequence family signal in frozen DNA encoders 
+
+# Austin Wijaya 1,∗, Hayden Leung 1 and Hyoungjoon Yoo 1
+
+> 1
+
+Department of Computer Science, Columbia University, New York, NY 10027, USA. 
+
+> ∗
+
+To whom correspondence should be addressed. 
+
+## Abstract 
+
+Motivation: Frozen DNA encoders are often used as genomic feature extractors, but downstream fine-tuning does not show what information is already linearly accessible in their unchanged embeddings. We introduce MINA (Model Interrogation of Nucleotide Architectures), a lightweight probing benchmark for testing whether frozen DNA embeddings can recover (i) a 5-way protein-family label for each gene and (ii) the 1,536-dimensional GenePT embedding of each gene’s natural-language summary. We compare recoverability between canonical coding sequence and TSS-centred genomic contexts. 
+
+Results: In 3,244 human protein-coding genes from five families, frozen encoders recovered the family-annotation target most clearly from coding sequence. NT-v2 with meanD pooling reached macro-F1 0.828 / κ 0.821, compared with 0.672 / κ 0.702 for a CDS 4-mer baseline. Alignment to GenePT natural-language descriptions was weaker. Replacing CDS with 196,608 bp TSS-centred windows substantially reduced performance across all four encoders, indicating that the recoverable signal is primarily coding-sequence family signal rather than generic gene-function signal from arbitrary genomic context. 
+
+Availability and implementation: Source code: https://github.com/Austin-Senna/dna_to_text; Python ≥3.11. 
+
+Keywords: DNA language models; nucleotide transformers; linear probing; coding sequence; GenePT; protein-family classification; genomic representation learning. 
+
+Contact: asw2215@columbia.edu 
+
+Supplementary information: Supplementary tables, figures, and reproducibility details are included at the end of this preprint. 
+
+## 1 Introduction 
+
+Pretrained DNA encoders such as DNABERT-2 (Zhou et al. , 2024), Nucleotide Transformer (Dalla-Torre et al. , 2025), GENA-LM (Fishman 
+
+et al. , 2025), and HyenaDNA (Nguyen et al. , 2023) are increasingly used as genomic feature extractors. They differ in tokenisation, architecture, context length, and pretraining corpus, yet their embeddings are often treated as interchangeable summaries of biological sequence. Strong downstream performance after fine-tuning, however, does not show what information is already present in the frozen representation. Linear probing (Alain and Bengio, 2016) addresses that narrower question by asking what a simple readout can recover without changing the encoder. The central question is whether frozen DNA representations carry gene-level functional signal beyond local nucleotide composition, and whether that signal depends on the sequence context supplied to the encoder. A canonical coding sequence contains protein-domain and family information, whereas a long window around a transcription start site samples mostly noncoding sequence around the gene’s promoter. A useful representation for one substrate need not expose the same signal from the other. This framing is distinct from recent DNA-language modelling work. Omni-DNA uses autoregressive genomic pretraining followed by multi-task fine-tuning for tasks including DNA-to-function text generation, while shared-tokenizer and other DNA-language fusion methods train alignment or integration modules over DNA-text pairs (Li et al. , 2025, 2026). These systems show that sequence-text modelling is feasible, but they add substantial multimodal training. GenePT instead represents each gene by embedding a natural-language summary, providing a text-derived gene vector that can be used as a cross-modal target (Chen and Zou, 2023). We use that target to test lightweight linear recoverability from frozen DNA embeddings rather than to train a new DNA-text alignment model. Here, we introduce MINA (Model Interrogation of Nucleotide Architectures), a lightweight probing benchmark for frozen nucleotide encoders, with composition, pooling, and sequence-context controls. MINA tests four frozen self-supervised DNA encoders on two readouts: 5-way protein-family classification, and Ridge regression into the 1,536-d GenePT natural-language target. The corpus contains 3,244 human protein-coding genes from transcription-factor, GPCR, kinase, ion-channel, and immune-receptor families. CDS experiments include a 4-mer compositional baseline, shuffled-label anti-baselines, and a pooling sweep across encoder summaries. We then compare coding sequence with 196,608 bp windows centred on transcription start sites (TSS), using matched TSS 4-mers, all four encoders evaluated on the same TSS windows, and Enformer (Avsec et al. , 2021) as a supervised sequence-to-function comparator. The evidence we report is therefore for two specific things: the protein-family annotation recovered from CDS, and the GenePT natural-language target partially recovered from CDS; we do not claim recovery of arbitrary gene function from noncoding regulatory context. 
+
+> 1
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint 2 Wijaya et al.  
+
+> Fig. 1. Study design. Human protein-coding genes are represented by canonical CDS, encoded with frozen DNA language models, reduced to fixed gene embeddings by chunking and pooling, and evaluated with linear probes for family classification and Ridge-to-GenePT alignment. CDS 4-mer and shuffled-label controls test compositional and pipeline-leak baselines.
+
+## 2 Methods 
+
+Dataset. We curated 3,244 human protein-coding genes from five functional families: transcription factors (1,743), G-protein-coupled receptors (591), protein kinases (558), ion channels (198), and immune receptors (154). Genes were selected by regex match against the HGNC 
+
+gene_group field (Seal et al. , 2023), intersected with the GenePT v2 gene-symbol set (Chen and Zou, 2023), and deduped first-family-wins in the assignment order kinase → transcription factor → ion channel →
+
+GPCR → immune receptor (so a gene matching multiple HGNC groups is counted under the earliest-priority family; e.g., a HIPK kinase that also has a TF role is counted as a kinase). The Family column in Table 1 is therefore size-ranked but not assignment-ranked. Canonical coding sequences (CDS) were retrieved from Ensembl (Harrison et al. , 2024). The corpus was split 70/15/15 stratified by family with seed 42 and reused for all downstream runs (Table 1). Of the 18,836 HGNC protein-coding genes covered by GenePT v2, 3,247 match one of the five family regexes and 3,244 of those have a retrievable Ensembl CDS, so the corpus sits at 99.9% of the within-five-families ceiling. We do not extend to the remaining ∼15 ,600 GenePT-covered protein-coding genes because weaker-domain families would likely shrink the encoder-versus-k-mer gap (§5.2). That scope is a separate study. 
+
+Table 1. Dataset composition and split. 
+
+Family Total Train Val Test Transcription factor 1,743 1,220 262 261 GPCR 591 414 88 89 Kinase 558 390 84 84 Ion channel 198 138 30 30 Immune receptor 154 108 23 23 
+
+Encoders. We compared four frozen self-supervised DNA encoders on canonical CDS. DNABERT-2 (Zhou et al. , 2024) is a 117 M-parameter BERT-style model ( zhihan1996/DNABERT-2-117M ) with byte-pair encoding, 768-d hidden states, a 512-token context window, and [CLS] / [SEP] boundary tokens. Nucleotide Transformer v2 multi-species 100M (Dalla-Torre et al. , 2025) ( InstaDeepAI/ nucleotide-transformer-v2-100m-multi-species , hereafter NT-v2) is an ESM-style masked-language model with fixed non-overlapping 6-mer tokens, 512-d hidden states, a 2,048-token context window, and a <cls> marker. GENA-LM base (Fishman et al. ,2025) ( AIRI-Institute/gena-lm-bert-base-t2t ) is a 110 M-parameter BERT-12L masked-language model with 768-d hidden states, 12 attention heads, a 32,000-token BPE vocabulary, and a 512-token context window corresponding to roughly 4.5 kb after BPE compression; the t2t checkpoint was trained on the human T2T assembly with 1000 Genomes SNP augmentation. HyenaDNA large (Nguyen et al. ,2023) (LongSafari/hyenadna-large-1m-seqlen-hf ) is an attention-free causal next-nucleotide model based on Hyena sequence operators, with single-nucleotide tokens, 8 layers, 256-d hidden states, approximately 6.6 M trainable parameters, and a context window up to 1M nucleotides; HyenaDNA was pretrained on the human reference genome. All encoder weights were frozen. 
+
+Encoding and pooling. Canonical CDS were chunked to fit each encoder’s context window, wrapped with model-standard boundary tokens where applicable ( [CLS] /[SEP] for DNABERT-2 and GENA-LM, 
+
+<cls> for NT-v2; HyenaDNA has no learned summary token), and encoded. Because each gene must then be represented by a fixed-size vector, we evaluated simple parameter-free pooling rules rather than training an additional sequence aggregator. Mean, max, and CLS pooling are standard reductions for contextual encoder embeddings (Devlin et al. ,2019; Reimers and Gurevych, 2019); specialmean retains model boundary/special-token positions; and meanD and meanG add coarse first/last/global summaries so long genes are not represented only by an unordered average. 
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint MINA 3        
+
+> Variant Gene-level reduction
+> meanmean average token embeddings, then average chunks
+> specialmean average all tokens including special tokens, then average chunks
+> maxmean max-pool token embeddings, then average chunks
+> clsmean use CLS-position embedding, then average chunks
+> meanD concatenate first chunk, last chunk, and chunk mean
+> meanG meanD plus a max-over-chunks summary
+
+TSS context and Enformer comparator. Non-coding regulatory sequence can carry gene-function signal that protein-domain motifs do not: genes in the same co-regulated module share promoter and enhancer motifs (e.g., NF-κB binding sites near immune-response genes, ISRE elements near interferon-stimulated genes), and that shared regulatory structure is plausibly mirrored in natural-language descriptions of pathway co-membership. The TSS arm therefore tests two related but distinct hypotheses: whether regulatory context recovers the same discrete protein-family label as CDS, and whether it recovers the continuous GenePT natural-language target that is more directly aligned with co-regulated-function vocabulary. To test whether the same family signal is recoverable from TSS-window sequence context, we constructed 196,608 bp genomic windows centred on each gene’s strand-specific transcription start site. These windows are much larger and mostly noncoding rather than protein-domain-rich, so we expected weaker family-label recovery than from CDS while gaining a direct CDS-versus-TSS comparison. We ran all four self-supervised DNA encoders (NT-v2, DNABERT-2, GENA-LM, HyenaDNA) over the same 196,608 bp TSS windows with the CDS pooling rules and probe protocol, plus a matched TSS-window 4-mer baseline; for each encoder we report the best-pool result against the TSS 4-mer baseline. We also included Enformer (Avsec et al. , 2021) as a supervised TSS-to-function comparator rather than a CDS encoder. Enformer takes 196,608 bp DNA input and predicts functional genomic tracks over 896 central 128-bp bins, with 5,313 human and 1,643 mouse output tracks, making it a natural baseline for long TSS-window sequence features. From each Enformer run we computed three summaries for the same probe recipe: trunk_global (mean across all 896 bins), 
+
+trunk_center (mean across the central 16 bins around the TSS, 2,048 bp total), and tracks_center (mean predicted track values over the same central bins). 
+
+Probes. For classification we trained multinomial logistic regression. For the 1,536-d GenePT text-embedding target we trained multi-output ridge regression; ridge was chosen over reduced-rank or partial-least-squares variants for its closed-form efficiency on the high-dimensional target and its alignment with the standard linear-probing protocol. Regularisation ( α
+
+for ridge, C for logistic) was swept on the validation split over a decade grid, the probe was refit on the train+val concatenation at the selected hyperparameter, and metrics were evaluated once on the held-out test split. Linear probing follows the protocol of Alain and Bengio (2016). 
+
+Baselines and controls. The k-mer composition baseline projects each CDS, or each TSS window for the context ablation, to a 256-d L1-normalised 4-mer histogram and runs the same probe recipe; it is encoder-independent and serves as the compositional floor. The shuffled-label anti-baseline permutes family labels in train+val only (test labels remain real) and tests pipeline honesty: chance-corrected agreement should collapse to zero. For the regression probes, an analogous shuffled-Y anti-baseline 
+
+permutes the 1,536-d GenePT vectors in train+val only and re-runs the full 
+
+α sweep on the shuffled validation split (rather than reusing the α selected from the real run), so any non-trivial test R2 would imply leakage in either the data split or the hyperparameter selection. 
+
+Evaluation metrics. For 5-way family classification we report macro-F1 and Cohen’s κ (Cohen, 1960) jointly: macro-F1 weights each family equally and is appropriate for the imbalanced family distribution, while 
+
+κ is the chance-corrected agreement metric. The two carry different information: κ rewards majority-class agreement under imbalance, whereas macro-F1 rewards minority-class recovery, so we report both for every classification cell. Accuracy and confusion matrices are reported as supporting diagnostics; classification deltas are reported relative to the CDS or TSS 4-mer baseline as appropriate. For Ridge-to-GenePT regression we report macro-averaged held-out R2 across the 1,536 GenePT dimensions and mean cosine similarity between predicted and target GenePT vectors, with R2 deltas relative to the CDS 4-mer baseline. For headline cells we report 95% confidence intervals from a 1,000-iteration bootstrap of the held-out test split (stratified by family for classification, i.i.d. by gene for regression); these intervals quantify test-composition sampling uncertainty, not hyperparameter or split-seed variability. 
+
+## 3 Results 
+
+3.1 CDS encoders separate gene families 
+
+On canonical CDS, NT-v2 is the strongest encoder for 5-way family classification: meanD pooling reaches macro-F1 0.828 (95% bootstrap CI [0.77, 0.87]) / Cohen’s κ 0.821 ([0.77, 0.86]), a ∆κ of +0.119 over the CDS 4-mer baseline (macro-F1 0.672 [0.60, 0.72] / κ 0.702 [0.64, 0.75]; Table 2). The gain is not just majority-family recovery: per-class F1 improves most for the minority immune and ion-channel classes ( +0.33 and +0.29 over 4-mers). The shuffled-label anti-baseline collapses to macro-F1 0.208 / κ 0.048, so the family signal is not split leakage or probe bookkeeping. HyenaDNA is competitive with DNABERT-2, while GENA-LM base falls below CDS 4-mer composition; thus, “DNA language model” is not a sufficient explanation for success. 
+
+Table 2. Best 5-way family classification cell. Best non-control value is bolded. 
+
+Source Pool F1 κ ∆κ Acc. Shuffled labels — 0.208 0.048 -0.654 0.435 CDS 4-mer — 0.672 0.702 0.000 0.817 DNABERT-2 meanD 0.738 0.723 +0.020 0.823 NT-v2 meanD 0.828 0.821 +0.119 0.887 
+
+GENA-LM base clsmean 0.498 0.478 -0.225 0.686 HyenaDNA large meanG 0.715 0.694 -0.008 0.809 
+
+> Test split metrics; full pooling sweep in the appendix.
+
+Figure 2 shows where the family5 errors concentrate for the headline NT-v2 meanD cell. Figure 5 (§3.5) visualises the same embedding under UMAP, where the five families form visually-separable regions.          
+
+> Fig. 2. Row-normalised confusion matrix for the headline 5-way family classification cell, NT-v2 meanD . Diagonal mass concentrates in TF and GPCR; the largest off-diagonal errors are kinase-as-TF and ion-as-TF, consistent with the minority-class noise in Table 2.
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint 4 Wijaya et al. 
+
+3.2 Cross-modal alignment is weaker than family classification 
+
+Linear projection into the 1,536-d GenePT text-embedding space recovers a smaller signal than family classification (Table 3). DNABERT-2 meanG 
+
+is the best Ridge probe ( R2 0.210, 95% bootstrap CI [0.19, 0.23]), only +0.036 above the CDS 4-mer baseline ( R2 0.174 [0.15, 0.19]). NT-v2 reaches R2 0.193, HyenaDNA 0.182, and GENA-LM 0.117, so the strongest CDS family separator is not necessarily the representation most aligned with text-summary geometry. Cosine similarity is much less discriminative: the shuffled-Y anti-baseline still reaches 0.913, and all real feature sets fall in a narrow 0.925–0.934 band. This compression is consistent with anisotropy in the GenePT embedding space, where many predicted vectors share a common direction. Thus, cosine is useful as a sanity check, but R2 carries the meaningful separation among GenePT probes. 
+
+Table 3. Best Ridge-to-GenePT cell. Best non-control value is bolded. 
+
+Source Pool R2 ∆ Cos. Shuffled labels — -0.000 -0.175 0.913 CDS 4-mer — 0.174 0.000 0.931 DNABERT-2 meanG 0.210 +0.036 0.934 
+
+NT-v2 meanmean 0.193 +0.019 0.932 GENA-LM base meanmean 0.117 -0.057 0.925 HyenaDNA large specialmean 0.182 +0.008 0.931   
+
+> ∆is relative to the CDS 4-mer baseline; base/ meanmean ties are shown as
+> meanmean .
+
+The modest R2 values constrain the biological claim: GenePT summaries are heterogeneous and not limited to protein-family membership. They are also broadly rather than narrowly carried: for DNABERT-2 meanG CDS, 1,527 of the 1,536 GenePT dimensions have positive test R2, the median per-dim R2 is 0.190 (within 0.02 of the 0.210 macro mean), and recovering 50% of the summed R2 requires the top 429 dimensions (28% of the embedding space); the other three encoders show the same broad shape one band lower (Supplementary Figure A1). The headline cross-modal signal is therefore distributed across most of the GenePT space rather than concentrated in a handful of well-predicted summary axes. The joint view in Figure 3 makes the encoder tradeoff explicit: NT-v2 is the strongest family classifier, whereas DNABERT-2 is most Ridge-aligned.  
+
+> Fig. 3. 5-way family classification versus Ridge-to-GenePT alignment. NT-v2 is strongest for classification; DNABERT-2 is strongest for Ridge.
+
+3.3 Pooling controls representation geometry 
+
+Pooling choice changes apparent representation quality (Figure 4). The heatmap uses macro-F1 because the sweep compares 5-way classification under class imbalance, and macro-F1 weights each family equally. NT-v2 spans macro-F1 0.586 ( maxmean ) to 0.828 ( meanD ); HyenaDNA’s 
+
+clsmean collapses to macro-F1 0.140 / κ 0 because the causal model has no BERT-style trained summary token, while its concat-style 
+
+meanG reaches 0.715. Concat-style summaries ( meanD and meanG )help both NT-v2 and DNABERT-2, whereas specialmean is nearly indistinguishable from meanmean on CDS. The full encoder × pooling matrix is in Supplementary Table A1; Tables 2 and 3 report best-cell-per-encoder selections from this 24-cell sweep. The model-specific pattern is consistent with each encoder’s training interface: masked-language models expose boundary or summary positions, whereas HyenaDNA is causal and has no trained CLS token. Pooling is therefore part of the representation interface, not a neutral implementation detail.         
+
+> Fig. 4. 5-way family classification macro-F1 across encoder-pooling cells. Concat-style summaries help NT-v2 and DNABERT-2; special-token-inclusive mean pooling is largely neutral; CLS-style pooling is architecture-dependent.
+
+3.4 Genomic context controls recoverable family signal 
+
+Holding the gene set fixed and replacing the CDS substrate with 196,608 bp TSS-centred windows collapses both readouts across every self-supervised encoder we tested (Table 4). Each encoder’s classification κ
+
+drops by roughly half between CDS and TSS, and each encoder’s R2
+
+drops to roughly half its CDS value; the substrate effect is encoder-general rather than an NT-v2 artefact. Every encoder still beats the matched TSS 4-mer baseline on both metrics, so the TSS windows are not uninformative; they expose family-correlated promoter or cis-regulatory motifs rather than independent recovery of protein-family information. Supervised Enformer trunk features improve further on TSS ( κ 0.439; R2 0.142) consistent with its supervised long-window training objective, but remain below the CDS encoders on family labels. The benchmark therefore supports a narrower claim: frozen DNA encoders recover coding-sequence family information, with recoverability controlled by genomic substrate uniformly across architectures. 
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint MINA 5
+
+Table 4. Substrate ablation: per-encoder classification ( κ) and Ridge-to-GenePT ( R2), grouped by sequence context. NT-v2 rows bolded. 
+
+Source κ ∆κ R2 ∆R2
+
+Coding sequence (CDS) 
+
+4-mer 0.702 0.000 0.174 0.000 
+
+NT-v2 0.821 +0.119 0.193 +0.019 
+
+DNABERT-2 0.723 +0.020 0.210 +0.036 HyenaDNA 0.694 -0.008 0.182 +0.008 GENA-LM 0.478 -0.225 0.117 -0.057 
+
+TSS-centred window (196,608 bp) 
+
+4-mer 0.205 0.000 0.041 0.000 
+
+NT-v2 0.375 +0.170 0.117 +0.076 
+
+DNABERT-2 0.342 +0.137 0.122 +0.080 HyenaDNA 0.328 +0.123 0.085 +0.044 GENA-LM 0.275 +0.070 0.059 +0.017 Enformer trunk 0.439 +0.234 0.142 +0.101     
+
+> Each encoder uses its best classification pool for κ(Tables 2, A1) and best regression pool for R2(Table 3); deltas are within-context.
+
+3.5 Family clusters in the embedding space 
+
+Figure 5 shows the NT-v2 meanD embeddings reduced to two dimensions by UMAP (McInnes et al. , 2018), coloured by protein family. The five families form visually-separable regions: TFs and GPCRs occupy the cleanest clusters, while kinase, ion-channel, and immune-receptor genes show more cross-family overlap, consistent with the per-class minority noise visible in the confusion matrix (Figure 2).     
+
+> Fig. 5. UMAP (McInnes et al. , 2018) projection of the NT-v2 meanD embedding, coloured by protein family. TFs and GPCRs form the tightest clusters; kinase, ion-channel, and immune-receptor regions overlap, mirroring the off-diagonal pattern in Figure 2.
+
+## 4 Discussion 
+
+Supported claim. MINA shows that frozen DNA encoders can expose coding-sequence family signal to a lightweight linear probe. The result is not a trivial success against chance: the CDS 4-mer baseline is already strong, and the shuffled-label anti-baseline collapses as expected. That strong 4-mer floor is itself biologically meaningful, because coding sequences already carry family information through nucleotide composition, codon and amino-acid biases, and short motif structure. NT-v2 nevertheless improves over CDS 4-mers by ∆κ +0.119 on 5-way family classification, indicating family-discriminative structure beyond unordered short-motif composition. The supported claim is therefore narrow: linearly recoverable family signal in canonical CDS, not general gene-function prediction. 
+
+Genomic context. The CDS-versus-TSS ablation is the main guardrail on interpretation because it holds the gene set fixed while changing the input substrate. Across all four self-supervised encoders run on the same 196,608 bp TSS windows the pattern is consistent: every encoder drops by 0.27–0.38 macro-F1 versus its CDS result, and all four cluster in macro-F1 0.39–0.46 on TSS with mutually-overlapping 95% bootstrap CIs. That collapse is biologically coherent: the labels are mostly protein-family labels, whereas TSS windows contain promoter, untranslated, intronic, and broader genomic sequence around each gene. Every encoder still beats the TSS 4-mer baseline (0.247) with non-overlapping CIs, so these windows are not uninformative; they carry indirect family correlates but do not match CDS encoders on protein-family labels. The substrate, not the encoder, is the dominant variable across all four self-supervised DNA encoders, ruling out an NT-v2-specific artefact. Enformer trunk features remain the strongest TSS comparator at macro-F1 0.545, consistent with its supervised long-window training objective. 
+
+Model and pooling specificity. The encoder comparison argues against treating DNA language models as interchangeable feature extractors. NT-v2 is the clearest classification winner, DNABERT-2 is strongest for Ridge-to-GenePT regression, HyenaDNA is competitive on family classification, and GENA-LM base falls below CDS 4-mer composition on both probes. Thus, pretraining alone does not guarantee a linearly useful gene representation on this benchmark. Pooling is also part of the representation interface: concat-style summaries help NT-v2 and DNABERT-2, CLS-style pooling collapses for HyenaDNA, and 
+
+maxmean hurts every encoder tested. A plausible interpretation is that pooling works best when it matches what training made available: BERT-style models expose boundary or summary positions, concat summaries preserve coarse first/last/global information across long CDS chunks, and HyenaDNA has no trained CLS token. These patterns show why frozen-encoder comparisons need explicit pooling controls rather than a single default summary vector. 
+
+Cross-modal signal. Ridge regression into GenePT space gives acomplementary but weaker view of the same representations. The best cross-modal gain is modest ( ∆R2 about +0.04 over CDS 4-mers), and the model ranking differs from classification: DNABERT-2 aligns best with GenePT summary geometry while NT-v2 best separates families. GenePT vectors are an inherently noisy target for a linear sequence probe because they inherit the geometry of English gene summaries, including shared linguistic style, broad biomedical semantics, and many features not directly determined by coding sequence. That shared structure can make vectors point in similar directions, producing high cosine even for shuffled targets, while the sequence-relevant axes remain harder to recover linearly. The compressed cosine values therefore suggest that GenePT-space alignment should be interpreted through R2 rather than raw directional similarity. They also suggest that stronger DNA-to-text alignment may require subspace alignment or a transformed GenePT target that behaves more like a gene-vector space: preserving function-relevant axes while discarding language-embedding variation that is noisy for sequence probing. 
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint 6 Wijaya et al. 
+
+## 5 Conclusion and Study Limitations 
+
+5.1 Conclusion 
+
+Frozen DNA encoders can recover coding-sequence family signal beyond simple composition, but the strength and meaning of that signal depend on genomic context, model recipe, pooling, and the target used to define “function.” MINA therefore supports a precise conclusion: frozen DNA representations can be useful linearly readable CDS feature extractors, but these results should not be read as generic recovery of gene function from arbitrary genomic sequence. 
+
+5.2 Study Limitations and Next Steps 
+
+Several limitations follow directly from the design. The corpus is human-only, spans ∼3,200 genes, and uses five broad protein-family categories with strong domain structure; families with weaker sequence signatures may yield smaller encoder-versus-k-mer gaps. The current 3,244 genes already cover 99.9% of the within-five-families GenePT ∩HGNC ceiling (Methods, §Dataset), so the natural next step would be to extend the corpus to all ∼18,836 GenePT-covered protein-coding genes; we treat that scope as a separate study because it replaces the five-family framing with a new ontology and tests a distinct question. Family membership was deduplicated first-family-wins across overlapping HGNC groups, and the split was random-stratified at the gene level rather than clustered by sequence similarity, so paralogous genes can appear on both sides of the split. The TSS context arm covers all four self-supervised encoders plus the supervised Enformer comparator, but is restricted to a single 196,608 bp window centred on the strand-specific TSS, and Enformer’s pretraining tracks include many of the gene loci it is evaluated on, so the substrate-dominance claim is constrained to this window choice and to Enformer-overlapping loci. HyenaDNA is also substantially smaller than the BERT-style encoders (256-d hidden, ∼6.6 M parameters), so its competitive but lower headline result mixes architecture, capacity, and pretraining objective. On the analysis side, the headline 1,000-iteration bootstrap confidence intervals quantify held-out test-composition sampling only; they do not cover split-seed variance, hyperparameter uncertainty, or multiplicity from best-cell-per-encoder reporting across the 24-cell pooling grid. Minority-class test sets are also small (immune n=23 , ion n=30 ), making per-class components noisy. Stronger follow-up studies would use paralog-aware splits (e.g., MMseqs2 or CD-HIT clustering at a stated identity threshold), additional organisms and label sets, broader noncoding targets, per-layer probes, paired permutation tests, and matched context sweeps across architectures and TSS window sizes. 
+
+## Acknowledgements 
+
+We thank Professor Cassandra Burdziak for helpful feedback and guidance during the development of this project. 
+
+## Funding 
+
+This work received no external funding. 
+
+## Competing interests 
+
+The authors declare no competing interests. 
+
+## References 
+
+Alain, G. and Bengio, Y. (2016). Understanding intermediate layers using linear classifier probes. arXiv preprint arXiv:1610.01644 [stat.ML]. Preprint. Accessed 2026-05-25. Avsec, Ž. et al. (2021). Effective gene expression prediction from sequence by integrating long-range interactions. Nature Methods ,
+
+18 (10), 1196–1203. DOI: 10.1038/s41592-021-01252-x. Chen, Y. and Zou, J. (2023). GenePT: A simple but effective foundation model for genes and cells built from ChatGPT. bioRxiv . Preprint, bioRxiv. DOI: 10.1101/2023.10.16.562533. Accessed 2026-05-25. Cohen, J. (1960). A coefficient of agreement for nominal scales. 
+
+Educational and Psychological Measurement , 20 (1), 37–46. DOI: 10.1177/001316446002000104. Dalla-Torre, H. et al. (2025). Nucleotide Transformer: building and evaluating robust foundation models for human genomics. Nature Methods , 22 (2), 287–297. DOI: 10.1038/s41592-024-02523-z. Devlin, J. et al. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , pages 4171–4186. Fishman, V. et al. (2025). GENA-LM: a family of open-source foundational DNA language models for long sequences. Nucleic Acids Research , 53 (2), gkae1310. DOI: 10.1093/nar/gkae1310. Harrison, P. W. et al. (2024). Ensembl 2024. Nucleic Acids Research ,
+
+52 (D1), D891–D899. DOI: 10.1093/nar/gkad1049. Li, Y. et al. (2026). Mind the gap no more: Achieving zero-gap multimodal integration via one tokenizer. arXiv preprint arXiv:2602.12286 [q-bio.GN]. Preprint; not peer-reviewed. Accessed 2026-05-25. Li, Z. et al. (2025). Omni-DNA: A unified genomic foundation model for cross-modal and multi-task learning. arXiv preprint arXiv:2502.03499 [q-bio.GN]. Preprint. Accessed 2026-05-25. McInnes, L. et al. (2018). UMAP: Uniform manifold approximation and projection for dimension reduction. arXiv preprint arXiv:1802.03426 [stat.ML]. Preprint. Accessed 2026-05-25. Nguyen, E. et al. (2023). HyenaDNA: Long-range genomic sequence modeling at single nucleotide resolution. In Advances in Neural Information Processing Systems , volume 36, pages 43177–43201. Reimers, N. and Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using siamese BERT-networks. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) , pages 3982–3992. Seal, R. L. et al. (2023). Genenames.org: the HGNC resources in 2023. Nucleic Acids Research , 51 (D1), D1003–D1009. DOI: 10.1093/nar/gkac888. Zhou, Z. et al. (2024). DNABERT-2: Efficient foundation model and benchmark for multi-species genome. arXiv preprint arXiv:2306.15006 [q-bio.GN]. Preprint. Accessed 2026-05-25. 
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint MINA 7
+
+## A Supplementary Tables and Figures 
+
+The appendix reports the full pooling sweep, the full Ridge cell grid, and the per-dimension R2 diagnostic that support the main-text best-cell-per-encoder summary. All tables use the frozen 70/15/15 split and the same validation-tuned probe protocol as the main text. 
+
+A.1 Pooling and Regression Full Matrices 
+
+Table A1. All encoder-pooling cells for 5-way family classification, CDS and TSS contexts. 
+
+Encoder Pooling Macro-F1 κ ∆κ Accuracy 
+
+Coding sequence (CDS) 
+
+Shuffled labels — 0.2078 0.0482 -0.6542 0.4353 CDS 4-mer baseline 0.6722 0.7024 0.0000 0.8172 DNABERT-2 base 0.6490 0.6356 -0.0668 0.7721 DNABERT-2 meanmean 0.7220 0.7091 +0.0067 0.8172 DNABERT-2 specialmean 0.7205 0.7051 +0.0027 0.8152 DNABERT-2 meanD 0.7380 0.7226 +0.0202 0.8234 DNABERT-2 meanG 0.7275 0.7066 +0.0042 0.8131 DNABERT-2 maxmean 0.6144 0.5817 -0.1207 0.7331 DNABERT-2 clsmean 0.6547 0.6616 -0.0408 0.7906 NT-v2 base 0.8031 0.7984 +0.0960 0.8727 NT-v2 meanmean 0.7997 0.7982 +0.0958 0.8727 NT-v2 specialmean 0.7977 0.7985 +0.0961 0.8727 NT-v2 meanD 0.8275 0.8214 +0.1190 0.8871 NT-v2 meanG 0.8257 0.8179 +0.1155 0.8850 NT-v2 maxmean 0.5865 0.6099 -0.0925 0.7639 NT-v2 clsmean 0.5927 0.5689 -0.1335 0.7269 GENA-LM base 0.4940 0.4568 -0.2456 0.6550 GENA-LM meanmean 0.4940 0.4568 -0.2456 0.6550 GENA-LM specialmean 0.4829 0.4589 -0.2435 0.6674 GENA-LM meanD 0.4843 0.4668 -0.2356 0.6653 GENA-LM meanG 0.4853 0.4899 -0.2125 0.6961 GENA-LM maxmean 0.3502 0.2325 -0.4699 0.5175 GENA-LM clsmean 0.4982 0.4776 -0.2248 0.6858 HyenaDNA base 0.7103 0.6883 -0.0141 0.8049 HyenaDNA meanmean 0.7103 0.6883 -0.0141 0.8049 HyenaDNA specialmean 0.7095 0.6925 -0.0099 0.8070 HyenaDNA meanD 0.6988 0.6830 -0.0194 0.8029 HyenaDNA meanG 0.7149 0.6944 -0.0080 0.8090 HyenaDNA maxmean 0.5614 0.5315 -0.1709 0.7105 HyenaDNA clsmean 0.1396 0.0000 -0.7024 0.5359 
+
+TSS-centred window (196,608 bp) 
+
+TSS 4-mer baseline 0.2452 0.2050 0.0000 0.5873 NT-v2 meanmean 0.4468 0.3754 +0.1704 0.6407 NT-v2 meanD 0.3481 0.2629 +0.0579 0.5339 NT-v2 meanG 0.4127 0.2848 +0.0798 0.5524 DNABERT-2 meanmean 0.4424 0.3375 +0.1325 0.6119 DNABERT-2 meanD 0.3640 0.2418 +0.0367 0.5277 DNABERT-2 meanG 0.4121 0.2887 +0.0837 0.5647 DNABERT-2 maxmean 0.4553 0.3197 +0.1147 0.5996 DNABERT-2 clsmean 0.4039 0.3417 +0.1367 0.6119 GENA-LM meanmean 0.3857 0.2687 +0.0637 0.5770 GENA-LM meanD 0.2524 0.0782 -0.1268 0.4004 GENA-LM meanG 0.2628 0.0983 -0.1067 0.4374 GENA-LM maxmean 0.2744 0.1175 -0.0875 0.4415 GENA-LM clsmean 0.3891 0.2746 +0.0695 0.5729 HyenaDNA meanmean 0.4194 0.3281 +0.1231 0.6140 HyenaDNA meanD 0.3158 0.2517 +0.0467 0.5791 HyenaDNA meanG 0.3758 0.2714 +0.0664 0.5421 HyenaDNA maxmean 0.3809 0.2845 +0.0794 0.5914 HyenaDNA clsmean 0.1396 0.0000 -0.2050 0.5359 Enformer trunk (global) — 0.5450 0.4392 +0.2342 0.6448 Enformer trunk (centre) — 0.5127 0.4541 +0.2490 0.6530 Enformer tracks (centre) — 0.4862 0.4264 +0.2214 0.6386 
+
+Source: analysis/tables/pooling_sweep_family5.csv (CDS) and 
+
+data/metrics.json (TSS). ∆κ is within-context: each row is relative to the same-context 4-mer baseline. NT-v2 on TSS was swept over three pools; Enformer is a supervised comparator (no token pooling). 
+
+Table A2. All Ridge-to-GenePT cells, CDS and TSS contexts. 
+
+Feature source Pooling R2 macro ∆ Mean cosine α
+
+Coding sequence (CDS) 
+
+Shuffled labels — -0.0004 -0.1746 0.9130 1000 CDS 4-mer baseline 0.1743 0.0000 0.9306 0.01 DNABERT-2 base 0.1812 +0.0070 0.9313 10 DNABERT-2 meanmean 0.2029 +0.0286 0.9333 10 DNABERT-2 specialmean 0.2029 +0.0287 0.9333 10 DNABERT-2 meanD 0.2100 +0.0357 0.9340 10 DNABERT-2 meanG 0.2104 +0.0361 0.9340 10 DNABERT-2 maxmean 0.1606 -0.0136 0.9293 100 DNABERT-2 clsmean 0.1911 +0.0168 0.9322 100 NT-v2 base 0.1926 +0.0183 0.9324 10 NT-v2 meanmean 0.1932 +0.0189 0.9324 10 NT-v2 specialmean 0.1931 +0.0188 0.9324 10 NT-v2 meanD 0.1882 +0.0139 0.9319 100 NT-v2 meanG 0.1902 +0.0159 0.9321 100 NT-v2 maxmean 0.1355 -0.0387 0.9271 100 NT-v2 clsmean 0.1172 -0.0571 0.9251 100 GENA-LM base 0.1173 -0.0569 0.9251 100 GENA-LM meanmean 0.1173 -0.0569 0.9251 100 GENA-LM specialmean 0.1124 -0.0619 0.9246 100 GENA-LM meanD 0.1084 -0.0658 0.9244 100 GENA-LM meanG 0.1118 -0.0624 0.9245 1000 GENA-LM maxmean 0.0400 -0.1342 0.9178 1000 GENA-LM clsmean 0.1093 -0.0650 0.9242 100 HyenaDNA base 0.1822 +0.0079 0.9313 1HyenaDNA meanmean 0.1822 +0.0079 0.9313 1HyenaDNA specialmean 0.1822 +0.0080 0.9313 1HyenaDNA meanD 0.1818 +0.0075 0.9314 1HyenaDNA meanG 0.1792 +0.0049 0.9310 10 HyenaDNA maxmean 0.1329 -0.0414 0.9266 100 HyenaDNA clsmean -0.0015 -0.1758 0.9129 0.01 
+
+TSS-centred window (196,608 bp) 
+
+TSS 4-mer baseline 0.0413 0.0000 0.9173 0.01 NT-v2 meanmean 0.1174 +0.0760 0.9252 0.1 NT-v2 meanD 0.0545 +0.0132 0.9190 10 NT-v2 meanG 0.0605 +0.0191 0.9197 10 DNABERT-2 meanmean 0.1217 +0.0804 0.9254 0.1 DNABERT-2 meanD 0.0446 +0.0033 0.9178 10 DNABERT-2 meanG 0.0759 +0.0346 0.9209 10 DNABERT-2 maxmean 0.0921 +0.0507 0.9224 1DNABERT-2 clsmean 0.0993 +0.0580 0.9234 1GENA-LM meanmean 0.0587 +0.0174 0.9192 1GENA-LM meanD -0.0009 -0.0422 0.9132 100 GENA-LM meanG 0.0055 -0.0358 0.9139 100 GENA-LM maxmean 0.0178 -0.0235 0.9150 100 GENA-LM clsmean 0.0512 +0.0098 0.9187 0.1 HyenaDNA meanmean 0.0853 +0.0440 0.9218 0.1 HyenaDNA meanD 0.0398 -0.0016 0.9176 1HyenaDNA meanG 0.0493 +0.0079 0.9183 10 HyenaDNA maxmean 0.0739 +0.0325 0.9206 10 HyenaDNA clsmean -0.0015 -0.0428 0.9129 0.01 Enformer trunk (global) — 0.1389 +0.0976 0.9271 100 Enformer trunk (centre) — 0.1425 +0.1011 0.9275 1000 Enformer tracks (centre) — 0.0135 -0.0278 0.9171 1000 
+
+Source: analysis/tables/regression_full.csv . ∆ is within-context: each row is relative to the same-context 4-mer baseline. Enformer is a supervised comparator (no token pooling). 
+
+A.2 Supporting Visual Diagnostics 
+
+Fig. A1. Per-dimension test R2 across the 1,536 GenePT output dimensions, for the four best CDS Ridge cells plus DNABERT-2 on TSS. Left: histogram of per-dim R2. Right: rank-ordered per-dim R2 (best dim on the left, worst on the right). For DNABERT-2 meanG CDS (macro-R2 0.210), 1,527/1,536 dims have positive test R2, the median per-dim R2 is 0.190, and recovering 50% of the summed 
+
+R2 requires the top 429 dimensions (28% of the embedding space); NT-v2 
+
+meanmean CDS (macro-R2 0.193) is essentially the same shape one band lower. The headline cross-modal R2 is therefore distributed rather than concentrated in a handful of well-predicted summary axes. Source: scripts/per_dim_r2.py →
+
+data/per_dim_r2.json .
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint 8 Wijaya et al. 
+
+## B Code Reproducibility 
+
+The project repository is available at github.com/Austin-Senna/ dna_to_text . The repository README.md is the canonical entry point for reproducing the analysis. It separates the workflow into six stages: (1) gene curation and canonical CDS retrieval; (2) frozen CDS encoder extraction and pooling-dataset construction; (3) frozen split creation plus family-classification and Ridge-to-GenePT probes; (4) TSS-window construction, NT-v2 TSS extraction, and Enformer comparator features; (5) bootstrap confidence intervals; and (6) report table and figure generation. Large intermediate caches, including raw sequence caches, per-gene encoder reductions, Enformer windows, and source GenePT artifacts, are generated locally and ignored by git; report-facing metrics, tables, figures, split metadata, and selected feature/probe caches are tracked. 
+
+B.1 Reviewer-facing reproduction path 
+
+The fastest report-supporting reproduction path starts from the tracked caches and does not rerun the expensive encoder extraction. From the repository root, the README gives:  
+
+> •
+
+Stage 5: run scripts/bootstrap_test_uncertainty.py 
+
+to regenerate the 1,000-iteration bootstrap confidence intervals in 
+
+data/bootstrap_metrics.json ; 
+
+> •
+
+Stage 6: run scripts/build_analysis_artifacts.py 
+
+with --overwrite to regenerate report-facing tables, figures, and the artifact manifest from tracked metrics and cached outputs;  
+
+> •
+
+Smoke check: run the same artifact builder with --skip-umap ,
+
+--overwrite , and an output directory such as /tmp/dna_ analysis_smoke .The full public-source rebuild uses the same README stage order: Stage 1 builds the curated gene table and fetches CDS; Stage 2 runs the four frozen DNA encoders and materializes pooling datasets; Stage 3 trains probes and baselines; Stage 4 derives TSS-centred windows and runs NT-v2/Enformer comparisons; Stages 5–6 regenerate uncertainty estimates and report artifacts. The optional Enformer branch requires installing the repository’s .[enformer] extra. 
+
+B.2 Deterministic settings and hyperparameters 
+
+The split and probe settings are fixed in code rather than chosen ad hoc during report writing. scripts/make_splits.py calls 
+
+src/splits/make_splits.py with seed 42, stratifying on the 
+
+family column. The resulting data/splits.json contains 2,270 train genes, 487 validation genes, and 487 held-out test genes from 
+
+data/dataset.parquet . All downstream probe scripts read this same split file. Classification probes use multinomial logistic regression with the scikit-learn lbfgs solver, max_iter=2000 , and an L2 regularisation sweep over {10 −2, 10 −1, 1, 10 , 100 , 1000 } for C. The selected C
+
+maximises validation macro-F1. Ridge-to-GenePT probes sweep α ∈{10 −2, 10 −1, 1, 10 , 100 , 1000 }, selecting by validation mean cosine. After selection, both probe families are refit on train+validation and evaluated once on the held-out test split. Shuffled-label and shuffled-GenePT anti-baselines permute train+validation targets only, using seed 42, while test labels or targets remain real. Bootstrap confidence intervals are regenerated by scripts/ bootstrap_test_uncertainty.py with default --n-iters 
+
+1000 and --seed 42. Classification resampling is stratified by family; regression resampling is i.i.d. by gene. These intervals therefore quantify held-out test-composition sampling uncertainty only, not split-seed, hyperparameter, or encoder-extraction variability. Encoder extraction is deterministic up to backend numerical differences and is run with frozen model weights in evaluation/inference mode. The default --device auto selects CUDA, then Apple Silicon MPS, then CPU. The registered CDS chunk settings are: DNABERT-2, 510 content tokens with stride 64; NT-v2, 998 content tokens with stride 64; GENA-LM, 510 content tokens with stride 64; and HyenaDNA, 8,192 content tokens with stride 512. Pooling datasets are generated from cached per-chunk reductions for meanmean , specialmean ,
+
+maxmean , clsmean , meanD , and meanG where supported by the encoder. TSS windows are 196,608 bp, centred on the strand-aware Ensembl transcription start site. For Enformer summaries, the default central-window setting averages the central 16 128-bp bins, i.e. 2,048 bp around the TSS. UMAP diagnostics use random_state=42 , n_ neighbors=15 , and min_dist=0.1 .
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted May 30, 2026. ;https://doi.org/10.64898/2026.05.25.727711 doi: bioRxiv preprint

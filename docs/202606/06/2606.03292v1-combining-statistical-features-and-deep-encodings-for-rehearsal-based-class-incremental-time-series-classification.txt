@@ -1,0 +1,296 @@
+Title: Combining Statistical Features and Deep Encodings for Rehearsal-Based Class-Incremental Time Series Classification
+
+URL Source: https://arxiv.org/pdf/2606.03292v1
+
+Published Time: Wed, 03 Jun 2026 00:57:00 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Combining Statistical Features and Deep Encodings for Rehearsal-Based Class-Incremental Time Series Classification 
+
+Pablo García-Santaclara ∗1,2 , Bruno Fernández-Castro 2, and Rebeca P. Díaz-Redondo 11atlanTTic – ICLAB, Universidade de Vigo, Vigo 36310, Spain 
+
+> 2
+
+Centro Tecnolóxico de Telecomunicacións de Galicia (GRADIANT), Vigo 36214, Spain June 3, 2026 
+
+Abstract 
+
+Many systems used in real-world environments require adding new categories and incor-porating new information without forgetting what was previously learnt by the classification model. This is known as class-incremental continual learning, and in the case of multivariate time-series, is further complicated by the temporal structure of the data. In this paper, we present a novel approach for performing class incremental continual learning for the classification of multivariate time series data based upon the construction of a dual-stream feature extraction pipeline (using both deep temporal embedding features generated via a pre-trained frozen foundation model and application of statistical features). Evaluated on five benchmark datasets, the proposed system achieves competitive average accuracy across all datasets while maintaining low forgetting rates across all experimental configurations. 
+
+Keywords: continual learning; lifelong learning; incremental learning; time series; foundation models; prototype-based rehearsal 
+
+# 1 Introduction 
+
+Implementing a machine learning model in an online environment is challenging. It must be done in such a way that it can be adapted incrementally to new information, but without overwriting the past knowledge that the model already possesses. This phenomenon, known as catastrophic forgetting Kirkpatrick et al. (2017), is the central problem in continual learning: when a model is updated on new data, optimization tends to overwrite the weights that contained previous knowledge. Despite the existence of significant research in the field of continual learning, most of it is focused on classification problems with image datasets De Lange et al. (2021). In time series contexts, observations have temporal dependencies, and the relevant information is distributed throughout the entire sequence. Studies of continual learning in the context of time series are limited. In addition to the complexities inherent in any continual learning problem, time series add the difficulty of temporal dependencies and high intra-class variance, for example there are cases of samples belonging to the same class, can differ substantially across subjects, recording conditions, or sensor placement. The approaches commonly used for tabular data are not directly applicable to time series data. Several strategies have been proposed to mitigate catastrophic forgetting. Regularisation-based methods impose constraints on the loss function to preserve prior knowledge, whilst architecture-based methods assign independent parameters to each task. In contrast, rehearsal  
+
+> ∗Corresponding author: pgarcia@alumnos.uvigo.es
+
+1
+
+> arXiv:2606.03292v1 [stat.ML] 2 Jun 2026
+
+methods store a subset of previous data, or generate synthetic approximations of it, and reuse this during training for new tasks. The last ones have usually shown the best results against catastrophic forgetting. A memory-efficient variant is using prototypes, which are compact representative vectors that summarize the distribution of each past class. Applying prototype-based rehearsal to time series data, however, introduces challenges that have not been previously addressed. Raw time series samples are multi-channel tensors with a temporal structure that cannot be directly represented as flat prototype vectors. Further-more, time series datasets typically exhibit high intra-class variance, which destabilises proto-type neighbourhoods. This motivates the need for a fixed feature representation that collapses the temporal dimension while preserving discriminative information. To balance effective rep-resentations with the goal of stability, we propose combining two complementary approaches: deep temporal embeddings derived from a frozen base model, which capture the overall temporal structure, and statistical features computed for each sample. To the best of our knowledge, this combination has not been explored in the context of continual class incremental learning for time series. In this paper, we present a novel approach for class incremental learning for the classification of multivariate time-series data. Our system extends TRIL3 García-Santaclara et al. (2025), a framework originally designed for tabular data. Concretely, the contributions of this paper are: 
+
+• A dual-stream feature representation for class-incremental learning on multivariate time series, combining frozen foundation model embeddings with statistical and inter-channel correlation features. 
+
+• An extension of TRIL3 to multivariate time series, enabling class-incremental learning without hyperparameter tuning phases. The resulting feature vector is cross-task stable, compatible with the prototype model, and sufficiently rich to enable accurate incremental classification. The rest of the article is structured as follows: Section 2 reviews the literature on continuous learning for time series. Section 3 describes the challenges and the proposed methodology in detail. Section 4 presents the experimental setup, the results and the ablation analysis. Section 5 concludes the article. 
+
+# 2 Related Work 
+
+There are several studies that focus on continual learning for time series. Some of the early work focused on specific application domains. Set in a clinical context, Kiyasseh et al. Kiyasseh et al. (2021) demonstrated that a model continuously updated using cardiac signals from various diseases, institutions, and modalities is capable of maintaining accuracy against gradual and sud-den changes in distribution. Meanwhile, Doshi and Yilmaz Doshi and Yilmaz (2022) approached video anomaly detection as a time series problem, combining pre-trained spatio-temporal feature extractors with a kNN-based memory module and an RNN to capture temporal dependencies in anomaly detection. Schillaci et al. Schillaci et al. (2021) addressed distribution shifts in green-house monitoring through a prediction error-driven memory consolidation mechanism, retaining samples based on their expected importance for learning progress. More recent contributions have extended this to other operational domains: Xiao et al. Xiao et al. (2022) combined online updating with reinforcement learning for real-time traffic flow modelling, triggering updates only when sustained prediction error exceeds a dynamic threshold, while Aslam et al. Aslam et al. (2025) and Wang et al. Wang et al. (2025) addressed conceptual drift in disease forecasting and urban drainage modelling respectively, through domain adaptation and experience replay. These contributions illustrate different scenarios where continual learning for time series is useful, as also surveyed by Ao and Fayek Ao and Fayek (2023), who provide a systematic review of deep learning applications for sensor time series data in the context of continual learning. 2The lack of benchmarks in this field was highlighted by Qiao et al. Qiao et al. (2024), who proposed a standardised benchmark for class-incremental time series learning that enables systematic comparison across methods and datasets, and used it to evaluate various continuous learning approaches in this context. Their work establishes the evaluation framework adopted in this paper. Furthermore, although relevant to our approach, the field of time series representation has recently been expanded with the emergence of large pre-trained foundation models. In recent years, some foundation models dedicated to time series data have emerged, trained on large amounts of data. Models such as TimesFM Das et al. (2024), MOMENT Goswami et al. (2024), and Chronos Ansari et al. (2024) demonstrate that transformers pre-trained on large and diverse time series corpora can produce representations that transfer across domains and tasks without fine-tuning. TimesFM is Google Research’s pretrained time-series foundation model, designed as a decoder-only model, it is used exclusively to forecast future values based on past sequences. Chronos is a pretrained time-series foundation model that reframes forecasting as a language modeling problem instead of direct numeric regression, as TimesFM it can only be used for forecasting tasks. MOMENT, by contrast, is pre-trained under a multi-task objective that in-cludes reconstruction and embedding, making it applicable to classification and representation tasks beyond forecasting. More recently, models such as TiCT Yeh et al. (2025) have explored in-context learning for time series classification. The most directly comparable prior work is PTMs-TSCIL Wu et al. (2025), which also uses MOMENT as a backbone for class-incremental time series learning. Unlike our approach, PTMs-TSCIL keeps the backbone frozen while in-crementally tuning a shared adapter per task, using knowledge distillation to regularize adapter updates and prevent over-adaptation. To address the feature drift introduced by adapter tuning, it introduces a Drift Compensation Network. While PTMs-TSCIL demonstrates good results, its pipeline introduces significant architectural complexity: adapter tuning, knowledge distillation, and a two-stage DCN training procedure are used. The studies analysed above indicate that there exists growing interest in the time series continual learning field. Most contributions, such as those by Kiyasseh et al. Kiyasseh et al. (2021), Schillaci et al. Schillaci et al. (2021) and Wang et al. Wang et al. (2025), focus on spe-cific application domains and do not address the general class-incremental setting. TSCIL Qiao et al. (2024) formalises this as a general benchmark, evaluating methods that are adaptations of existing continual learning approaches, and it reserves a subset of classes exclusively for hyper-parameter tuning, meaning the deployed model never learns the full class set. PTMs-TSCIL Wu et al. (2025) is the most directly related work, introducing pre-trained models into the TSCIL setting through adapter tuning and a drift compensation network. Our work proposes a fully frozen encoder whose representations are complemented by statistical and inter-channel correla-tion features, producing a more complete representation than deep embeddings alone. Combined with prototype-based rehearsal, this approach requires no adapter tuning, no knowledge distil-lation, and no drift compensation mechanism, while remaining online and being able of covering the full class set without any tuning phase. 
+
+# 3 Methodology 
+
+In this section, we first discuss the different challenges involved in applying continual learning to a time series problem in Section 3.1. We then overview the prototype classification framework, which serves as a basis for this work. Finally, we explore the design choices for the statistical representation and foundational model embedding of the samples in Section 3.3. 33.1 Challenges 
+
+The first challenge that arises is that raw time-series samples cannot be used with a prototype model. Prototypes are feature vectors, with no mechanism for handling cross-channel relation-ships or capturing temporal dependencies. In contrast, time-series samples are three-dimensional tensors composed of N sequences (or samples) of C channels (or features) and T time steps. Therefore, a vector representation is needed that can be used to generate the prototypes, and the same representation must also be used for the classification model. The second challenge is that time series problems can involve high intra-class variance. In typical time series datasets, data within the same class, such as the execution of a specific gesture, can vary greatly depending on the person doing it. This variability complicates the performance of any classification model, but it also makes prototype neighbourhoods less stable. To address these challenges, we introduce the following adaptations to TRIL3: 1. Foundational model embeddings : We incorporate a pre-trained time series foundation model to extract deep temporal representations, producing a fixed-length embedding per sample that captures global temporal structure. As the encoder is pre-trained on a large corpus of time series, it generalizes across domains without requiring any retraining when applied to new data. 2. Statistical features : We complement the embeddings with a set of interpretable time and frequency domain features computed per channel, together with inter-channel Pearson correlation coefficients that capture coordinated multi-channel activity. 3. Combined feature representation : The two streams are concatenated into a unified feature vector, which is then used as input to both the prototype model and the classifier model. Raw input samples are first processed through the dual-stream feature extraction pipeline, which produces a unified feature vector consumed by both the prototype model and the clas-sifier. The prototype model generates synthetic rehearsal samples from past classes, which are combined with real data from the current task to train the classifier incrementally. 
+
+3.2 TRIL3 Overview 
+
+This approach is based partly on the TRIL3 García-Santaclara et al. (2025) framework, which tackles the problem of catastrophic forgetting for tabular data using a generative rehearsal approach. The main contribution of TRIL3 is the use of an online prototype model to retain past knowledge. Although it is agnostic with regard to both the prototype model and the classifier model, in the original paper the prototype model used is XuILVQ González-Soto et al. (2024) and the classifier model is a Deep Neural Decision Forest Kontschieder et al. (2015). TRIL3 works by updating the prototype model in real time with real data, storing representative centroids which are then used to generate synthetic data; this, together with the real samples, is used to train the classification model. 4Figure 1: Simplified diagram of the TRIL3 framework. Figure 1 shows a simplified diagram of how the framework works. Initially, the prototype model is initialised with an empty set and the classifier model is initialised with random weights. The input data is normalised using a scaler that is also trained online. Next, labelled samples are used to update the prototype set, thereby creating new prototypes or updating existing ones. Synthetic samples are extracted pseudo-randomly from the prototype set and mixed with real data to form a balanced training batch. The classification model is trained on the batch of real and synthetic data, although training only occurs when the prototype set has grown, thereby avoiding unnecessary updates and reducing the risk of overfitting. If the input data is unlabelled, the set of real samples is used for inference with the classifier model. However, TRIL3 was originally designed for the classification of tabular data, and its application to time-series data requires several modifications to its architecture so that it can handle the temporal structure of the input data. 
+
+3.3 Feature Representation 
+
+The proposed feature extraction process processes each raw time series sample independently through two parallel pipelines: a pre-trained foundational model stream for time series that requires no fine-tuning, and a statistical features stream that calculates time, frequency, and correlation descriptors. The outputs from both pipelines are concatenated into a unified feature vector. 
+
+3.3.1 Foundational Model Stream 
+
+The first stream consists of a pre-trained model that generates embeddings from the input data. The weights of this model remain frozen, as it is never retrained or fine-tuned. This prevents catastrophic forgetting at the feature extraction level; if the encoder were retrained, the representations of past classes would shift, invalidating the stored prototypes. The goal of using a foundational model is to map samples spanning multiple channels and time steps to a single point, thereby collapsing the temporal dimension and eliminating the sequential dependencies inherent in time series data. The resulting embedding e ∈ R1024 serves as a compact representation that can be directly consumed by both the prototype model and the classifier. The encoder chosen for the implementation is MOMENT Goswami et al. (2024), a founda-tional transformer-based model specialized in time series data. MOMENT serves as a general purpose model because it is pretrained on a large and diverse corpus of time series datasets spanning multiple domains, which means it does not require fine-tuning to perform well. Unlike models such as Chronos Ansari et al. (2024) and TimesFM Das et al. (2024), which are designed exclusively for forecasting, MOMENT is pretrained under a multi-task objective that includes 5embedding, making it directly suited for our purpose. There are three MOMENT models: large, small and base. The size of the output vector depends on the model used, for our implemen-tation the large model was chosen. Given an input sample of shape (N, C, T ), where N is the number of samples, C is the number of channels, and T is the number of time steps, MOMENT produces a fixed-length embedding of dimension 1024 per sample via mean pooling over the temporal dimension. 
+
+3.3.2 Statistical Features Stream 
+
+The second stream extracts a set of statistical features computed independently for each time series sample, with no operation that crosses sample boundaries. The selected features were inspired by established time series feature extraction frameworks Barandas et al. (2020); Christ et al. (2018), which organize descriptors across time and frequency domains. However, rather than extracting the full set of available features, we selected a compact subset of 14 features per channel trying to balance representational richness with efficiency. The features extracted per channel are: mean, standard deviation, minimum, maximum, range, mean absolute devia-tion (MAD), root mean square (RMS), skewness, kurtosis, and zero-crossing rate in the time domain; and spectral energy, dominant frequency, spectral centroid, and spectral spread in the frequency domain. The definition of the features can be found at Appendix A. Time-domain features capture amplitude and energy (mean, std, min, max, range, MAD, RMS), distribu-tional shape (skewness, kurtosis), and signal dynamics (zero-crossing rate). Frequency-domain features characterise the spectral content and energy distribution (spectral energy, dominant frequency, spectral centroid, spectral spread). Together, these features describe each channel’s signal from complementary perspectives without requiring any learned parameters, making them inherently stable across incremental tasks. The result is a feature vector of dimension C × 14 
+
+per sample. The features are calculated from the original, unnormalized signal, since any nor-malization would destroy the signal’s absolute scale, making features such as mean, RMS, and spectral energy meaningless. The complete feature vector of a sample x ∈ RC×T is obtained by applying a channel-wise feature extraction function, which computes the 14 features described above independently for each channel and concatenates the results, yielding h ∈ RC×14 .In addition to the statistics mentioned above, to maximize the information provided by the signal, we also calculate the correlation coefficients between the channels. We use the Pearson correlation matrix for each sample. For a time-series x ∈ RC×T , the Pearson correlation matrix 
+
+M ∈ RC×C is computed, where each entry Mij is the linear co-variation between channels i
+
+and j. Since M is symmetric with unit diagonal, only the upper triangular entries are retained, yielding a vector r ∈ RC(C−1) /2 of unique correlation coefficients per sample. The inter-channel correlation is very useful in datasets where class identity is defined by coordinated multi-channel activity. Like the foundation model stream, the statistical features are computed by a fixed deter-ministic function with no learnable parameters, giving them the same stability guarantee by construction. 
+
+3.3.3 Combined Representation 
+
+The outputs of both streams are concatenated to form the final vector: 
+
+f = [ e∥h∥r] (1) where e ∈ R1024 is the MOMENT embedding, h ∈ RC×14 is the per-channel statistical feature vector, and r ∈ RC(C−1) /2 is the cross-channel correlation vector, yielding a combined represen-tation of dimension 1024 + C × 14 + C(C − 1) /2.6Figure 2 shows the dual-stream pipeline in detail. The foundational model stream and the statistical features stream process the raw input independently, producing e, h, and r
+
+respectively, which are then concatenated into the final feature vector f . Because both streams are individually stable, their concatenation inherits this stability. 
+
+Figure 2: Diagram of the dual-stream pipeline. Embeddings and statistical features are extracted in parallel and concatenated into a unified feature vector for the prototype model and classifier. 
+
+# 4 Experiments / Validation and Results 
+
+The experiments conducted to evaluate the proposed framework are similar to those carried out by the TSCIL benchmark Qiao et al. (2024), a study by Qiao et al. that evaluated several continual learning techniques in an incremental learning class setting on time series data. TSCIL acts as a standardized framework, also providing a set of pre-processed datasets with defined training and test sets, which facilitates reproducibility. Therefore, for our experiments, we directly use its datasets, pre-processing steps, and task configurations. In addition to TSCIL, we include PTMs-TSCIL Wu et al. (2025) as a second point of reference which evaluates on four of the same five datasets, GRABMyo is not included in their evaluation. Some methodological differences limit direct numerical comparison: PTMs-TSCIL applies PCA to reduce DSA from 45 to 15 channels before feature extraction, uses a hyperparameter validation stream following the TSCIL tuning protocol, and averages results over 3 runs rather than 5. In our evaluation, we analyse whether the proposed dual-stream feature representation, com-7bined with the TRIL3 process, performs competitively against the methods described in the TSCIL benchmark. Secondly, through an ablation study, we quantify the individual contribu-tion of each stream to the final result. Beyond classification performance, the proposed system offers two additional properties relevant to real-world deployment. First, since no raw training samples are stored at any point, only synthetic prototypes generated from learned centroids, the system does not retain identifiable data from past tasks. Second, the entire pipeline operates in an online way: both the prototype model and the classification model are updated incrementally as each sample arrives, with no requirement for batch access to task data or offline retraining phases. 
+
+4.1 Experimental Setup 
+
+To enable a direct comparison with the TSCIL benchmark, we adopt the same five datasets used in that work: DSA Ismi et al. (2016), GRABMyo Pradhan et al. (2022), WISDM Weiss (2019), UCIHAR Altun and Barshan (2010), and UWave Liu et al. (2009). They belong to two application domains: human activity recognition and gesture recognition. DSA captures motion sensor data across 19 daily sports activities performed by 8 volunteers. GRABMyo is a large-scale surface electromyography database for hand gesture recognition, comprising 16 gestures performed by 43 participants across 28 channels. WISDM is a sensor-based human activity recognition dataset covering 18 activities from 51 subjects, using the phone accelerometer modality with a window size of 200 timesteps at 20 Hz. UCI-HAR contains inertial sensor sequences from smartphones recorded at 50 Hz while 30 volunteers performed 6 daily activities. UWave comprises accelerometer recordings from 8 subjects performing 8 gesture patterns. The train/test splits are produced using the original preprocessing scripts provided by the authors of TSCIL. Table 1 summarizes the key characteristics of each dataset. Table 1: Overview of the benchmark datasets and task configurations. 
+
+Dataset Shape (C × T ) Classes Exp. classes Tasks 
+
+UCI-HAR 9 × 128 6 6 3UWave 3 × 315 8 8 4DSA 45 × 125 18 12 6GRABMyo 28 × 128 16 12 5WISDM 3 × 200 18 12 6Following the evaluation protocol of TSCIL, three of the five datasets (DSA, GRABMyo, and WISDM) are evaluated in a subset configuration in which only 12 out of their full set of classes are used. In the original paper, this reduction is intended to reserve classes for preliminary tasks in which the model is hyperparameterised. In our proposal, there are no tasks requiring fine-tuning; a single fixed set of hyperparameters is applied to all datasets and all experimental conditions. The same subsets are retained to ensure that class distributions remain comparable. UCIHAR and UWave are evaluated using their full set of classes on both systems. 
+
+4.2 Evaluation Protocol 
+
+The evaluation is carried out using an incremental class learning protocol; classes are introduced sequentially into independent tasks, and the model has no access to data from previous tasks, either during training or during inference. As with TSCIL, each task consists of two new classes, which are randomly selected for each task in each run. 84.2.1 Hyperparameter Tuning 
+
+Our approach is methodologically different in the way it handles hyperparameter tuning. For datasets with a large number of tasks, TSCIL partitions the full class set into two separate streams: a validation stream of 3 tasks used exclusively for hyperparameter search, and an 
+
+experiment stream used for training and evaluation. As a consequence, the classes assigned to the validation stream are never learned by the final model; they are consumed entirely by the tuning process. This means that in practice, the deployed model has knowledge of only a subset of the available classes in the domain, which is a significant limitation in any real-world application where complete class coverage is required. For UCI-HAR and UWave, which have fewer tasks, TSCIL instead uses a per-task train/validation split for tuning. Our system imposes no such constraint. A single fixed set of hyperparameters is used across all datasets with no validation stream and no tuning phase. This scenario is closer to reality: the model is trained on all available classes without reserving any for tuning, and the same configuration generalizes across datasets of varying complexity, channel count, and sequence length. 
+
+4.2.2 Metrics 
+
+Performance is measured using two standard continual learning metrics, following the same definitions as TSCIL. Let ai,j denote the accuracy evaluated on the test set of task j after the model has been trained on task i, where j ≤ i.
+
+• Average accuracy (Ai): defined as Ai = 1 
+
+> i
+> ∑ij=1
+
+ai,j , the mean per-task accuracy af-ter learning task i. AT denotes the final value after all T tasks, used as the primary performance metric. 
+
+• Average forgetting (FT ): defined as FT = 1   
+
+> T−1
+> ∑T−1
+> j=1
+
+fT,j , where fT,j = max k∈{ 1,...,T −1}(ak,j )−
+
+aT,j is the drop from the peak accuracy ever achieved on task j to its accuracy at the end of training. Lower values indicate less forgetting. 
+
+4.3 Implementation Details 
+
+Table 2 summarizes the hyperparameters used for each component. A single fixed configuration is used across all datasets and experimental conditions. Prototypes generated by XuILVQ are used as synthetic samples. Two memory configurations are evaluated: 10% and 20% of real training samples per batch. All experiments are run with 5 different random seeds. 9Table 2: Hyperparameter configuration for each component of the proposed system. 
+
+Component Parameter Value 
+
+Number of trees 50 Tree depth 12 
+
+DNDF Feature rate 1.0 Learning rate 0.01 Batch size 64 Model variant MOMENT-1-large Task Embedding 
+
+MOMENT Output dimension 1024 Temporal reduction Mean pooling Batch size 128 
+
+αwinner 0.9 
+
+αrunner-up 0.1 
+
+XuILVQ Age threshold 600 
+
+γ 800 Target prototypes per class 5Initial prototypes per class 50 
+
+4.4 Ablation Study: Encoding Configurations 
+
+To assess the contribution of each component of the dual-stream feature extraction pipeline, we evaluate three encoding configurations: 
+
+• Foundational Model Embeddings : only the foundational model embedding e is used as input. 
+
+• Statistical Features : only the statistical feature vector [h∥r] is used as input. 
+
+• Full Representation : the complete feature vector f = [ e∥h∥r] is used as input. This ablation isolates the relative contribution of the embeddings and the statistical features, and quantifies the benefit of using both. 
+
+4.5 Results 
+
+Table 3 reports the comparison between our system, the TSCIL baseline and the PTMs-TSCIL approach across all five datasets. TSCIL results are reported for the best-performing regular-ization and replay method respectively, under both BatchNorm and LayerNorm normalization configurations. Figure 3 allows us to analyze the evolution of the average accuracy of our proposal for each dataset across the tasks. Table 3 shows that our proposal outperforms the best TSCIL configurations on four of the five datasets in terms of average accuracy, while also improving results on catastrophic forgetting across all datasets. Also, despite the advantages in the methodology comparison described in the experimental setup, our system achieves superior results on every shared dataset. On UCI-HAR, the full representation with 10% memory achieves 92.5% of AT , surpassing both TSCIL’s best result (90.9%) and PTMs-TSCIL (88.4%). It should be emphasized that these results are remarkable since, in our case, there is no prior hyperparameterization phase. On GRABMyo, the full representation achieves 72.3% of AT , significantly surpassing TSCIL’s best result (64.5%). In UWave, the 10% full representation almost matches but slighly improves TSCIL and PTMs-TSCIL best reproduction results (85.3%). On DSA, the statistical features 10 Table 3: Average accuracy AT and average forgetting FT comparison across the five datasets.                                                                                                                                     
+
+> TSCIL PTMs-TSCIL Ours
+> Best Reg. Best Replay FM Embeddings Statistical Features Full Representation
+> Dataset Metric BN LN BN LN 10% 20% 10% 20% 10% 20% UCI-HAR AT51 .5±14 .177 .9±15 89 .1±6.190 .9±1.788 .4±10 .384 .5±2.073 .3±7.486 .1±9.489 .9±2.292.5 ±1.690 .0±0.9
+> FT62 .0±16 .39.3±6.613 .2±11 .48.5±5.710 .5±25 .39.3±7.720 .0±18 .915 .6±14 .42.5 ±6.33.9±5.87.4±6.1
+> UWave AT62 .7±11 .658 .1±18 .383 .2±3.585 .2±2.285 .1±9.775 .2±4.640 .0±9.012 .5±0.212 .5±0.285.3 ±4.065 .9±7.9
+> FT32 .9±12 .035 .4±25 .620 .3±4.516 .6±2.411 .1±15 .72.5 ±11 .827 .7±13 .113 .6±14 .013 .3±13 .89.6±6.324 .8±16 .2
+> DSA AT31 .3±6.435 .9±5.696 .9±2.298 ±196 .8±6.581 .5±7.615 .2±8.998.4 ±1.397 .6±0.998 .2±1.798 .0±0.9
+> FT60 .0±11 .553 .0±9.13.7±2.72.2±1.22.8±1.7-2.0 ±8.224 .2±19 .4−1.3±1.22.0±0.71.4±2.21.7±0.6
+> GRABMyo AT20 .7±5.220 .8±7.155 .9±5.164 .5±3.5–58 .7±2.257 .5±1.464 .7±3.162 .9±1.872.3 ±4.872 .1±3.8
+> FT49 .8±25 .321 .9±10 .431 .1±4.936 .6±3.4–20 .8±5.020 .0±5.221 .3±4.919.7 ±1.123 .4±5.422 .5±5.8
+> WISDM AT16 .4±6.621 .4±6.651 .6±13 .768.0 ±7.636 .1±8.634 .1±4.832 .2±5.041 .2±3.134 .4±4.243 .8±3.339 .3±4.0
+> FT63 .8±44 .041 .2±21 .527 .9±12 .431 .9±7.930 .7±5.99.7 ±5.610 .2±5.926 .0±8.428 .5±13 .313 .7±6.915 .2±6.5
+
+stream achieves 98.4% AT , This near-perfect performance is consistent with the low intra-class variance of DSA. On WISDM, TSCIL’s best result is significantly better (68.0%). The WISDM dataset presents a particular challenge for frozen-encoder approaches, as both our system and PTMs-TSCIL struggle relative to TSCIL’s best replay configuration, a challenge that deserves further investigation. In terms of forgetting, our approach proves to be much more robust than the methods used by TSCIL and PTMs-TSCIL; the prototype system is more stable. In some cases, such as DSA, forgetting is negative, which likely means that during each task there were not enough samples for the classifier model to converge, so it continued to learn and improve thanks to the prototypes. As with TSCIL, the datasets that exhibited the highest rates of forgetting were GRABMyo and WISDM, since they are by far the largest datasets and also contain a large number of tasks. In contrast, for UCI-HAR and DSA, there is almost no forgetting across tasks. 
+
+Figure 3: Evolution of average accuracy Ai using (a) 10% Real Data and (b) 20% Real Data ratios. Anomaly arises in the foundation model embeddings stream at 20% memory, which collapses to 15.2% AT with 24.2% FT , compared to strong performance at 10%. Just as we explained earlier, negative forgetting in this dataset was due to the fact that there were many tasks and few samples per task; this same factor likely causes it to break down when the number of prototypes per sample is lower, in a dataset where embeddings provide less information than statistical features The ablation study allows us to understand the contributions of the streams in each dataset. In some cases, such as DSA, it is the statistical features that provide the most important information for the full representation, this is substantially explained because, since this dataset has by far the most channels, the statistical data provides a great deal of information. In other datasets like UWave, the factors that improve the final results come from the embeddings, 11 which is a dataset with only three channels, and therefore provides less information about the statistical features. However, in almost all cases, combining both results in a more comprehensive representation, which yields the best classification performance. Increasing the memory ratio from 10% to 20% does not consistently improve performance using the full representation. On UCI-HAR, DSA, GRABMyo and WISDM, the differences between 10% and 20% are small and within the standard deviation of the results. With UWave, there is indeed a significant difference between the two ratios, mainly due to the high level of forgetting associated with the 20% 
+
+# 5 Conclusions 
+
+This paper presents a novel approach for class-incremental continual learning on multivariate time series data, extending a prototype-based rehearsal framework with a dual-stream feature extraction pipeline that combines deep temporal embeddings from a frozen foundation model with statistical features. The resulting representation is stable across tasks, requires no hyper-parameter tuning phase, and enables the model to be trained on the full class set under a single fixed configuration across all datasets. The proposed system outperforms the best TSCIL configurations on four of the five datasets and PTMs-TSCIL on all comparable datasets in terms of average accuracy, while achieving substantially lower forgetting across all datasets. The ablation study reveals that the two streams play complementary roles that depend on the characteristics of each dataset. On high-channel datasets, the statistical representation is sufficient on its own. On low-channel datasets, the foundation model embeddings are the primary source of discriminative information. Beyond its performance in the classification task, the proposed system offers practical ad-vantages for real-world systems. Since no raw training samples are ever retained, the system does not store data from previous tasks, which is important in many fields. Furthermore, its fully online operation eliminates any need for a prior training phase. Several directions remain open for future work. Extending the evaluation to additional datasets beyond the TSCIL benchmark, focused on other areas, such as data from industrial processes. Another point to investigate is the performance difference observed in WISDM, where the proposed system exhibits a lower forgetting rate than TSCIL but falls short in terms of average accuracy; understanding the characteristics of this dataset and what makes it challenging for the proposed system, while developing specific strategies to improve performance without sacrificing stability, remains an unresolved issue. Evaluating the framework in truly online scenarios where class boundaries are not explicitly signalled, and where the model must detect and adapt to distribution shifts autonomously, would bring the system closer to real-world deployment conditions. 
+
+# CRediT authorship contribution statement 
+
+Pablo García-Santaclara: Conceptualization, Methodology, Software, Investigation, Writing – original draft, Visualization. Bruno Fernández-Castro: Conceptualization, Methodology, Investigation, Writing – review & editing, Visualization, Supervision, Funding acquisition. Re-beca P. Díaz-Redondo: Conceptualization, Methodology, Investigation, Writing – review & editing, Visualization, Supervision, Funding acquisition. 
+
+# Declaration of competing interests 
+
+The authors declare that they have no known competing financial interests or personal relation-ships that could have appeared to influence the work reported in this paper. 12 Data availability 
+
+The datasets used in this work are publicly available. Pre-processed versions were obtained from the TSCIL benchmark repository. 
+
+# Acknowledgments 
+
+This work was partially funded by the grant PID2023-148716OB-C31 funded by MCIU/AEI/10.13039/501100011 (DISCOVERY project) and by the Galician Regional Government under project ED431B 2024/41 (GPC). 
+
+# References 
+
+Kerem Altun and Billur Barshan. Human activity recognition using inertial/magnetic sen-sor units. volume 6219, pages 38–51, 08 2010. ISBN 978-3-642-14714-2. doi: 10.1007/ 978-3-642-14715-9_5. Abdul Fatir Ansari, Lorenzo Stella, Caner Turkmen, Xiyuan Zhang, Pedro Mercado, Huibin Shen, Oleksandr Shchur, Syama Sundar Rangapuram, Sebastian Pineda Arango, Shubham Kapoor, Jasper Zschiegner, Danielle C. Maddix, Hao Wang, Michael W. Mahoney, Kari Torkkola, Andrew Gordon Wilson, Michael Bohlke-Schneider, and Yuyang Wang. Chronos: Learning the language of time series, 2024. URL https://arxiv.org/abs/2403.07815 .Sio-Iong Ao and Haytham Fayek. Continual deep learning for time series modeling. Sensors , 23 (16):7167, 2023. S. Aslam, A. Rasool, X. Li, et al. Cel: A continual learning model for disease outbreak prediction by leveraging domain adaptation via elastic weight consolidation. Interdisciplinary Sciences: Computational Life Sciences , 17:390–408, 2025. doi: 10.1007/s12539-024-00675-2. Marília Barandas, Duarte Folgado, Letícia Fernandes, Sara Santos, Mariana Abreu, Patrí-cia Bota, Hui Liu, Tanja Schultz, and Hugo Gamboa. Tsfel: Time series feature ex-traction library. SoftwareX , 11:100456, 2020. ISSN 2352-7110. doi: https://doi.org/10. 1016/j.softx.2020.100456. URL https://www.sciencedirect.com/science/article/pii/ S2352711020300017 .Maximilian Christ, Nils Braun, Julius Neuffer, and Andreas W. Kempa-Liehr. Time series fea-ture extraction on basis of scalable hypothesis tests (tsfresh – a python package). Neurocom-puting , 307:72–77, 2018. ISSN 0925-2312. doi: https://doi.org/10.1016/j.neucom.2018.03.067. URL https://www.sciencedirect.com/science/article/pii/S0925231218304843 .Abhimanyu Das, Weihao Kong, Rajat Sen, and Yichen Zhou. A decoder-only foundation model for time-series forecasting, 2024. URL https://arxiv.org/abs/2310.10688 .Matthias De Lange, Rahaf Aljundi, Marc Masana, Sarah Parisot, Xu Jia, Aleš Leonardis, Gre-gory Slabaugh, and Tinne Tuytelaars. A continual learning survey: Defying forgetting in classification tasks. IEEE transactions on pattern analysis and machine intelligence , 44(7): 3366–3385, 2021. Keval Doshi and Yasin Yilmaz. Rethinking video anomaly detection—a continual learning approach. In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV) , pages 3036–3045, Waikoloa, HI, USA, January 2022. IEEE. 13 Pablo García-Santaclara, Bruno Fernández-Castro, and Rebeca P Díaz-Redondo. Overcom-ing catastrophic forgetting in tabular data classification: A pseudorehearsal-based approach. 
+
+Engineering Applications of Artificial Intelligence , 156:110908, 2025. Martín González-Soto, Rebeca P Díaz-Redondo, Manuel Fernández-Veiga, Bruno Fernández-Castro, and Ana Fernández-Vilas. Decentralized and collaborative machine learning frame-work for iot. Computer Networks , 239:110137, 2024. Mononito Goswami, Konrad Szafer, Arjun Choudhry, Yifu Cai, Shuo Li, and Artur Dubrawski. Moment: A family of open time-series foundation models. arXiv preprint arXiv:2402.03885 ,2024. Dewi Ismi, Shireen Panchoo, and Murinto Murinto. K-means clustering based filter feature selec-tion on high dimensional data. International Journal of Advances in Intelligent Informatics ,2:38, 03 2016. doi: 10.26555/ijain.v2i1.54. James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume Desjardins, An-drei A Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka Grabska-Barwinska, et al. Overcoming catastrophic forgetting in neural networks. Proceedings of the national academy of sciences , 114(13):3521–3526, 2017. Dani Kiyasseh, Tingting Zhu, and David A. Clifton. A clinical deep learning framework for continually learning from cardiac signals across diseases, time, modalities, and institutions. 
+
+Nature Communications , 12(1):4221, 2021. doi: 10.1038/s41467-021-24483-0. URL https: //doi.org/10.1038/s41467-021-24483-0 .Peter Kontschieder, Madalina Fiterau, Antonio Criminisi, and Samuel Rota Bulo. Deep neural decision forests, 2015. Jiayang Liu, Zhen Wang, Lin Zhong, Jehan Wickramasuriya, and Venu Vasudevan. uwave: Accelerometer-based personalized gesture recognition and its applications. pages 1–9, 03 2009. doi: 10.1109/PERCOM.2009.4912759. Ashirbad Pradhan, Jiayuan He, and Ning Jiang. Multi-day dataset of forearm and wrist elec-tromyogram for hand gesture recognition and biometrics. Scientific Data , 9:733, 11 2022. doi: 10.1038/s41597-022-01836-y. Zhongzheng Qiao, Quang Pham, Zhen Cao, Hoang H Le, Ponnuthurai N Suganthan, Xudong Jiang, and Savitha Ramasamy. Class-incremental learning for time series: Benchmark and evaluation. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pages 5613–5624, 2024. Guido Schillaci, Uwe Schmidt, and Luis Miranda. Prediction error-driven memory consolida-tion for continual learning: On the case of adaptive greenhouse models. Künstliche Intelli-genz , 35(1):71–80, 2021. doi: 10.1007/s13218-020-00700-8. URL https://doi.org/10.1007/ s13218-020-00700-8 .Siyi Wang, Jiaying Wang, Kunlun Xin, Hexiang Yan, Shuping Li, and Tao Tao. Enhanc-ing real-time urban drainage network modeling through crossformer algorithm and online continual learning. Water Research , 268:122614, 2025. ISSN 0043-1354. doi: https: //doi.org/10.1016/j.watres.2024.122614. URL https://www.sciencedirect.com/science/ article/pii/S0043135424015136 .Gary Weiss. WISDM Smartphone and Smartwatch Activity and Biometrics Dataset . UCI Machine Learning Repository, 2019. DOI: https://doi.org/10.24432/C5HK59. 14 Yuanlong Wu, Mingxing Nie, Tao Zhu, Liming Chen, Huansheng Ning, and Yaping Wan. Ptms-tscil pre-trained models based class-incremental learning, 2025. URL https://arxiv.org/ abs/2503.07153 .Yanan Xiao, Minyu Liu, Zichen Zhang, Lu Jiang, Minghao Yin, and Jianan Wang. Streaming traffic flow prediction based on continuous reinforcement learning, 2022. URL https:// arxiv.org/abs/2212.12767 .Chin-Chia Michael Yeh, Uday Singh Saini, Junpeng Wang, Xin Dai, Xiran Fan, Jiarui Sun, Yujie Fan, and Yan Zheng. Tict: A synthetically pre-trained foundation model for time series classification, 2025. URL https://arxiv.org/abs/2511.19694 .15 A Statistical Feature Definitions 
+
+Let x = [ x1, x 2, . . . , x T ] denote a single channel of a time series sample of length T , and let 
+
+X = [ X1, X 2, . . . , X ⌊T / 2⌋+1 ] denote its discrete Fourier transform (DFT) coefficients with corre-sponding frequencies fk, computed at sampling frequency fs.Table 4: Formal definitions of the statistical features extracted per channel. 
+
+Domain Feature Definition 
+
+Time Mean μ = 1
+
+> T
+
+∑Tt=1 xt
+
+Std. deviation σ =
+
+√ 1
+
+> T
+
+∑Tt=1 (xt − μ)2
+
+Minimum min( x)
+
+Maximum max( x)
+
+Range max( x) − min( x)
+
+MAD 1
+
+> T
+
+∑Tt=1 |xt − μ|
+
+RMS 
+
+√ 1
+
+> T
+
+∑Tt=1 x2
+
+> t
+
+Skewness 1
+
+> T σ 3
+
+∑Tt=1 (xt − μ)3
+
+Kurtosis 1
+
+> T σ 4
+
+∑Tt=1 (xt − μ)4 − 3
+
+Zero-crossing rate 1
+
+> T
+
+∑T −1 
+
+> t=1
+
+1[˜ xt · ˜xt+1 < 0] 
+
+Frequency Spectral energy ∑ 
+
+> k
+
+|Xk|2
+
+Dominant frequency f ∗ 
+
+> k
+
+= arg max k |Xk|2
+
+Spectral centroid fc =
+
+∑   
+
+> kfk|Xk|2
+
+∑  
+
+> k|Xk|2
+
+Spectral spread 
+
+√ ∑     
+
+> k(fk−fc)2|Xk|2
+
+∑  
+
+> k|Xk|2
+
+where ˜xt = xt if xt̸ = 0 , else ˜xt = 1 (zero values are treated as positive to avoid ambiguity in sign changes). 16
