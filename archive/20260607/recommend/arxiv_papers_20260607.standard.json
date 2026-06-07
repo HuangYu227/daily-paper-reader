@@ -1,0 +1,143 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-07T21:09:53.160127+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "biorxiv-10-64898-2026-06-04-730241-v1",
+      "source": "biorxiv",
+      "title": "scMTG reconstructs single-cell temporal dynamics with Markov transition generators",
+      "abstract": "Single-cell time-series data offer a unique opportunity to study how cell states emerge, evolve, and diversify over time. However, cells are destructively measured across time points and individual cells cannot be directly tracked, making it challenging to reconstruct cell-state transitions and uncover the dynamic regulatory programs. Existing methods are predominantly based on optimal transport and typically require predefined low-dimensional representations, which can limit scalability, flexibility, and mechanistic interpretability. Here we present scMTG, a single-cell Markov transition generative framework that jointly learns cell representations and temporal cell-state transitions from unpaired single-cell time-series data. In a series of experiments, scMTG demonstrates superior performance in interpolating held-out missing-time-point data and inferring cross-time-point transition matrices, compared with state-of-the-art methods. More importantly, the learned Markov transition generator provides an interpretable framework for identifying the molecular programs that drive cell-state changes, enabling characterization of cell fate decisions and construction of time-resolved regulatory networks. Together, scMTG provides a unified generative framework for reconstructing cellular dynamics and uncovering regulatory programs that shape development, differentiation, and disease progression. scMTG is available as open-source software at https://github.com/liuq-lab/scMTG.",
+      "authors": [
+        "Cui, X.",
+        "Wang, H.",
+        "Gao, Z.",
+        "Jiang, R.",
+        "Wong, W. H.",
+        "Liu, Q."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-06T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.04.730241v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Markov transition generative framework for single-cell time series",
+      "llm_evidence_cn": "用于单细胞时间序列的马尔可夫转移生成框架",
+      "llm_evidence": "用于单细胞时间序列的马尔可夫转移生成框架",
+      "canonical_evidence": "用于单细胞时间序列的马尔可夫转移生成框架",
+      "llm_tldr_en": "scMTG proposes a generative framework to jointly learn cell representations and temporal transitions from unpaired single-cell time-series data, overcoming limitations of optimal transport methods.",
+      "llm_tldr_cn": "单细胞时间序列数据虽然能揭示细胞状态动态，但现有基于最优传输的方法需要预定义低维表示，限制了可扩展性和可解释性。本文提出scMTG，一个马尔可夫转移生成框架，能够从未配对的单细胞时间序列数据中联合学习细胞表示和时序状态转移。在多个数据集上的实验表明，scMTG有效地重建了细胞状态轨迹，并具有更好的可解释性。该工作为单细胞动态建模提供了一种新颖的生成式解决方案。",
+      "llm_tldr": "单细胞时间序列数据虽然能揭示细胞状态动态，但现有基于最优传输的方法需要预定义低维表示，限制了可扩展性和可解释性。本文提出scMTG，一个马尔可夫转移生成框架，能够从未配对的单细胞时间序列数据中联合学习细胞表示和时序状态转移。在多个数据集上的实验表明，scMTG有效地重建了细胞状态轨迹，并具有更好的可解释性。该工作为单细胞动态建模提供了一种新颖的生成式解决方案。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "biorxiv-10-1101-2025-05-17-654658-v5",
+      "source": "biorxiv",
+      "title": "The cost of data aggregation: spatiotemporal compression obscures causal attribution in biodiversity monitoring",
+      "abstract": "Conservation decision-making requires accurate identification of causes of population changes. Ecologists often rely on analytical protocols that aggregate high-dimensional monitoring data. We hypothesise that compressing data - either spatially, as in conventional time series (TS) analysis, or temporally, as in static species distribution models (SDMs) - destroys covariance structures and obscures the identification of causal drivers. To quantify this \"aggregation cost\", we conducted a rigorous simulation experiment using virtual species to establish a known \"ground truth\" of population drivers. We then employed a virtual ecologist approach to mimic a 20-year large-scale bird monitoring scheme, and generate realistic spatiotemporal datasets to evaluate the analytical pipelines. We benchmarked the causal attribution accuracy of aggregated TS and SDM protocols against a full-resolution spatiotemporal (FRST) framework, which retains native data dimensions and integrates mechanistic spatiotemporal covariance structures. Our simulations revealed that spatial compression severely compromises causal inference: unpenalised TS models failed to detect any true underlying drivers (accuracy = 0.50, sensitivity = 0.00). Temporal compression (SDMs) performer moderately better (accuracy = 0.68), while the FRST model achieved superior accuracy (0.88), sensitivity (0.84), and specificity (0.93). Furthermore, we identified a variable selection paradox: double penalty shrinkage marginally improved underpowered TS models, although it degraded the specificity of SDM and FRST frameworks by forcing spurious, correlated variables to absorb residual variance. Our findings demonstrate that protocols that involve data aggregation reduce the informational value of large-scale monitoring datasets. Full-resolution, mechanistically informed frameworks are essential for reliable causal attribution and robust biodiversity monitoring.",
+      "authors": [
+        "Malinowska, K.",
+        "Wawrzynowicz, M.",
+        "Markowska, K.",
+        "Chodkiewicz, T.",
+        "Butler, S.",
+        "Kuczynski, L."
+      ],
+      "primary_category": "ecology",
+      "categories": [
+        "ecology"
+      ],
+      "published": "2026-06-04T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.05.17.654658v5.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal attribution in biodiversity monitoring with time series aggregation",
+      "llm_evidence_cn": "时间序列聚合对因果归因的影响",
+      "llm_evidence": "时间序列聚合对因果归因的影响",
+      "canonical_evidence": "时间序列聚合对因果归因的影响",
+      "llm_tldr_en": "Simulation shows that spatiotemporal aggregation of monitoring data obscures causal drivers, highlighting the need for careful causal analysis in ecology.",
+      "llm_tldr_cn": "该论文研究生态监测中数据聚合对因果归因的影响。作者假设时空压缩会破坏协方差结构从而掩盖因果驱动因素。通过模拟实验和虚拟生态学家方法，量化了聚合成本，揭示了传统时间序列分析在因果推断中的局限性。该工作强调在生物多样性监测中应采用更精细的因果分析方法。",
+      "llm_tldr": "该论文研究生态监测中数据聚合对因果归因的影响。作者假设时空压缩会破坏协方差结构从而掩盖因果驱动因素。通过模拟实验和虚拟生态学家方法，量化了聚合成本，揭示了传统时间序列分析在因果推断中的局限性。该工作强调在生物多样性监测中应采用更精细的因果分析方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.03121v1",
+      "source": "arxiv",
+      "title": "TiWeaver: Unified Temporal Dynamics Modeling via Contextual Patching",
+      "abstract": "Multivariate time series forecasting plays a critical role in real-world applications, including weather prediction, stock analysis, and health monitoring. Due to the diversity of data sources, time series exhibit diverse temporal dynamics, often accompanied by various irregularities such as missing values and non-uniform sampling frequencies. Such irregularities lead to complex and asynchronous temporal dependencies across channels. Thus, a single model with a fixed patching scheme often fails to adapt well to diverse multivariate time series, hindering accurate forecasting. In this paper, we propose TiWeaver, a unified framework designed to handle temporal dynamics and fine-grained inter-channel dependencies adaptively. Specifically, we introduce a Graph-Guided Adaptive Tokenizer (G$^2$AT) that divides time series into high contextually coherent patches by jointly considering temporal density and representation consistency. In addition, we propose a Fine-grained Asynchronous Dependency Extractor (FADE), which is designed to model fine-grained asynchronous inter-channel dependencies while incorporating long-term historical dependencies. We evaluate TiWeaver on 12 real-world time series datasets, where it achieves state-of-the-art performance, outperforming existing methods up to 25%. These results demonstrate its robustness and effectiveness across diverse domains and data characteristics.",
+      "authors": [
+        "Zhe Li",
+        "Jindong Tian",
+        "Hao Miao",
+        "Zhi Lei",
+        "Chenjuan Guo",
+        "Bin Yang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-02T04:06:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.03121v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "unified temporal dynamics modeling for multivariate time series feature extraction",
+      "llm_evidence_cn": "统一处理多元时间序列时间动态和跨通道依赖的特征提取框架",
+      "llm_evidence": "统一处理多元时间序列时间动态和跨通道依赖的特征提取框架",
+      "canonical_evidence": "统一处理多元时间序列时间动态和跨通道依赖的特征提取框架",
+      "llm_tldr_en": "TiWeaver proposes a unified framework that adaptively handles temporal dynamics and inter-channel dependencies in multivariate time series, using contextual patching for improved forecasting.",
+      "llm_tldr_cn": "多元时间序列预测面临多样化的时间动态和不规则性（如缺失值、非均匀采样），固定分块方案难以适应。本文提出TiWeaver，一个统一框架，通过上下文分块自适应处理时间动态和细粒度跨通道依赖。引入图机制建模通道关系，在多个真实数据集上显著提升了预测精度。该工作为时间序列特征提取与预测提供了灵活有效的解决方案。",
+      "llm_tldr": "多元时间序列预测面临多样化的时间动态和不规则性（如缺失值、非均匀采样），固定分块方案难以适应。本文提出TiWeaver，一个统一框架，通过上下文分块自适应处理时间动态和细粒度跨通道依赖。引入图机制建模通道关系，在多个真实数据集上显著提升了预测精度。该工作为时间序列特征提取与预测提供了灵活有效的解决方案。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

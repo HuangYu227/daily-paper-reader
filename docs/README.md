@@ -6,58 +6,33 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-06
-- 运行时间：2026-06-06 21:11:13 UTC
+- 最新运行日期：2026-06-07
+- 运行时间：2026-06-07 21:11:20 UTC
 - 运行状态：成功
-- 本次总论文数：12
-- 精读区：4
-- 速读区：8
+- 本次总论文数：3
+- 精读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日聚焦时间序列分类与异常检测两项高分精读，并速读视频检索、长上下文及数据质量等方向。  
-最值得看：10分论文《Combining Statistical Features and Deep Encodings for Rehearsal-Based Class-Incremental Time Series Classification》及9分论文《ChronosAD: Leveraging Time Series Foundation Models for Accurate Anomaly Detection》。  
-建议优先深入时间序列基础模型在异常检测中的潜力，并关注增量学习框架如何提升分类鲁棒性。
-- 详情：[/202606/06/README](/202606/06/README)
+今日精读1篇《scMTG》高分8.0，速读2篇分涉数据聚合与时序建模。
+
+重点推荐《scMTG》基于马尔可夫转移生成器的单细胞时序重构，以及《TiWeaver》的统一时间动态建模方法。
+
+建议普通读者优先精读《scMTG》以掌握前沿单细胞分析思路，速读另两篇了解数据聚合代价与时序建模技巧。
+- 详情：[/202606/07/README](/202606/07/README)
 
 ### 精读区论文标签
-1. [Combining Statistical Features and Deep Encodings for Rehearsal-Based Class-Incremental Time Series Classification](/202606/06/2606.03292v1-combining-statistical-features-and-deep-encodings-for-rehearsal-based-class-incremental-time-series-classification)  
-   标签：评分：10.0/10、query:fe
-   evidence：使用预训练的冻结基础模型生成深度时序嵌入
-2. [ChronosAD: Leveraging Time Series Foundation Models for Accurate Anomaly Detection](/202606/06/2606.01300v1-chronosad-leveraging-time-series-foundation-models-for-accurate-anomaly-detection)  
-   标签：评分：9.0/10、query:fe
-   evidence：使用时间序列基础模型作为冻结特征提取器
-3. [HyFAD: Hybrid Time-Frequency Diffusion with Frequency-Aware Embedding for Time Series Imputation](/202606/06/2606.05239v1-hyfad-hybrid-time-frequency-diffusion-with-frequency-aware-embedding-for-time-series-imputation)  
-   标签：评分：9.0/10、query:tsc
-   evidence：用于时间序列插补的扩散模型，属于生成模型
-4. [Learning Hyperspherical Time-Frequency Representations for Time-Series Out-of-Distribution Detection](/202606/06/2605.31155v1-learning-hyperspherical-time-frequency-representations-for-time-series-out-of-distribution-detection)  
-   标签：评分：8.0/10、query:fe
-   evidence：通过超球面时频表示进行时间序列特征提取
+1. [scMTG reconstructs single-cell temporal dynamics with Markov transition generators](/202606/07/biorxiv-10-64898-2026-06-04-730241-v1-scmtg-reconstructs-single-cell-temporal-dynamics-with-markov-transition-generators)  
+   标签：评分：8.0/10、query:tsc
+   evidence：用于单细胞时间序列的马尔可夫转移生成框架
 
 ### 速读区论文标签
-1. [Reason, Retrieve, Re-rank: A Zero-Shot Reasoning-Aware Framework for Composed Video Retrieval](/202606/06/2606.00910v1-reason-retrieve-re-rank-a-zero-shot-reasoning-aware-framework-for-composed-video-retrieval)  
-   标签：评分：7.0/10、query:fe
-   evidence：使用冻结多模态大语言模型和冻结对比编码器的免训练流水线
-2. [Why Do Time Series Models Need Long Context Windows?](/202606/06/2606.01999v1-why-do-time-series-models-need-long-context-windows)  
+1. [The cost of data aggregation: spatiotemporal compression obscures causal attribution in biodiversity monitoring](/202606/07/biorxiv-10-1101-2025-05-17-654658-v5-the-cost-of-data-aggregation-spatiotemporal-compression-obscures-causal-attribution-in-biodiversity-monitoring)  
    标签：评分：7.0/10、query:tsc
-   evidence：时间序列预测中生成过程识别的理论分析
-3. [TSQAgent: Rating Time Series Data Quality via Dedicated Agentic Reasoning](/202606/06/2606.03629v1-tsqagent-rating-time-series-data-quality-via-dedicated-agentic-reasoning)  
-   标签：评分：7.0/10、query:fe
-   evidence：使用LLM智能体进行时间序列属性挖掘
-4. [MINA: linear probes reveal coding-sequence family signal in frozen DNA encoders](/202606/06/biorxiv-10-64898-2026-05-25-727711-v2-mina-linear-probes-reveal-coding-sequence-family-signal-in-frozen-dna-encoders)  
-   标签：评分：7.0/10、query:fe
-   evidence：冷冻编码器探测用于DNA序列
-5. [STEP: Learning STructured Embeddings for Progressive Time Series](/202606/06/2605.31061v1-step-learning-structured-embeddings-for-progressive-time-series)  
+   evidence：时间序列聚合对因果归因的影响
+2. [TiWeaver: Unified Temporal Dynamics Modeling via Contextual Patching](/202606/07/2606.03121v1-tiweaver-unified-temporal-dynamics-modeling-via-contextual-patching)  
    标签：评分：6.0/10、query:fe
-   evidence：学习渐进时间序列的结构化嵌入用于特征提取
-6. [FAiT: Frequency-Aware Inverted Transformer for Multivariate Time Series Forecasting](/202606/06/2606.01306v1-fait-frequency-aware-inverted-transformer-for-multivariate-time-series-forecasting)  
-   标签：评分：6.0/10、query:tsc
-   evidence：频率感知Transformer用于多变量时间序列预测
-7. [Adaptive Oscillatory-State Alignment for Time Series Forecasting](/202606/06/2606.06010v1-adaptive-oscillatory-state-alignment-for-time-series-forecasting)  
-   标签：评分：6.0/10、query:tsc
-   evidence：通过振荡对齐进行因果时间序列预测
-8. [TRACE: A Temporal Conditional Estimation for Multimodal Time Series Foundation Models](/202606/06/2606.06285v1-trace-a-temporal-conditional-estimation-for-multimodal-time-series-foundation-models)  
-   标签：评分：6.0/10、query:fe
-   evidence：处理缺失的多模态时间序列基础模型用于特征提取
+   evidence：统一处理多元时间序列时间动态和跨通道依赖的特征提取框架
 
 
 <div class="dpr-home-promo-card">
