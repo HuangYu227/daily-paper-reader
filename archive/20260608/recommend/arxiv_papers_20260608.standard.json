@@ -1,0 +1,274 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-08T22:05:20.097149+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 4,
+    "quick_skim_target": 12,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2606.07291v1",
+      "source": "arxiv",
+      "title": "Trio: Learning Time-Series Forecasting with Temporal-Spatial-Sample Attention and Structural Causal Priors",
+      "abstract": "Multivariate time-series forecasting requires models to reason over temporal dynamics, cross-variable dependencies, and historical input-output correspondences. Recent Prior-Data Fitted Networks (PFNs) suggest that synthetic tasks can be useful for learning transferable inference behavior. However, directly transferring this paradigm to time-series forecasting remains difficult, since temporal order, dynamic lags, and recurring historical patterns are not naturally captured by ordinary tabular priors. Motivated by this observation, we propose Trio, a sample-aware time-series forecasting architecture based on Temporal-Spatial-Sample attention. Temporal attention captures within-window dynamics, spatial attention models inter-variable dependencies, and sample attention retrieves relevant historical lookback-future pairs to guide the current prediction. Rather than claiming a fully general PFN-style forecaster, our goal is to study how historical input-output examples can be explicitly organized and reused within a forecasting model. We further introduce a Time-Series Structural Causal Model (TS-SCM) generator to create structured synthetic forecasting tasks with dynamic lags, cross-variable interactions, noise, feedback, and distributional drift. Experiments on synthetic, industrial, and public benchmarks show that the proposed architecture improves forecasting performance. Exploratory zero-shot experiments further suggest that TS-SCM-generated tasks may provide useful structural priors, while fully general PFN-style time-series forecasting remains an open problem.",
+      "authors": [
+        "Tao Chen",
+        "Yexu Zhou",
+        "Zhi Gong",
+        "Hengwei He",
+        "Hongda Li",
+        "Zhewei Chen",
+        "Dongjing Wang",
+        "Xin Zhang",
+        "Decheng Liu",
+        "Chunlei Peng",
+        "Zheng Chen",
+        "Wenyue Ding"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-05T14:01:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.07291v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "time-series forecasting with structural causal priors",
+      "llm_evidence_cn": "带结构因果先验的时间序列预测",
+      "llm_evidence": "带结构因果先验的时间序列预测",
+      "canonical_evidence": "带结构因果先验的时间序列预测",
+      "llm_tldr_en": "Trio proposes a sample-aware time-series forecasting architecture with temporal-spatial-sample attention and structural causal priors to improve forecasting accuracy.",
+      "llm_tldr_cn": "针对多变量时间序列预测中难以捕捉时序动态、跨变量依赖和历史输入输出对应关系的问题，本文提出Trio架构，利用时间-空间-样本注意力机制和结构因果先验来增强预测能力。实验表明，该方法在多个基准数据集上优于现有方法，为因果先验在时间序列预测中的应用提供了新思路。",
+      "llm_tldr": "针对多变量时间序列预测中难以捕捉时序动态、跨变量依赖和历史输入输出对应关系的问题，本文提出Trio架构，利用时间-空间-样本注意力机制和结构因果先验来增强预测能力。实验表明，该方法在多个基准数据集上优于现有方法，为因果先验在时间序列预测中的应用提供了新思路。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.01289v1",
+      "source": "arxiv",
+      "title": "Feature to Dynamics: Feature-space to Autoregression strategy for Zero-shot Time Series Forecasting",
+      "abstract": "Zero-shot time series forecasting aims to predict future values for previously unseen series, requiring models to generalize temporal dynamics beyond the training distribution. While recent foundation models achieve strong in-domain performance through large-scale pretraining, their effectiveness often relies on broad data coverage and implicit pattern memorization, which can limit generalization when data are scarce or source and target domains are disjoint. In this work, we propose FSA, a feature-to-strategy framework for controlled zero-shot univariate forecasting. Instead of directly modeling raw sequences in the observation space, FSA learns a structured mapping from an interpretable feature space to an autoregressive strategy space. This design introduces explicit inductive biases that disentangle global trends, periodic components, and local temporal dynamics, enabling the model to capture transferable time-series structure with fewer data assumptions. Empirical results show that, under identical pretraining data, training protocol, and comparable parameter budgets, FSA outperforms Transformer-based architectures in our controlled zero-shot setting.",
+      "authors": [
+        "Yifan Wu",
+        "Junjie Wu",
+        "Kai Wu",
+        "Xiaoyu Zhang",
+        "Jian Lou"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-05-31T15:20:14+00:00",
+      "link": "https://arxiv.org/pdf/2606.01289v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "zero-shot time series forecasting using feature-space mapping",
+      "llm_evidence_cn": "利用特征空间映射进行零样本时间序列预测",
+      "llm_evidence": "利用特征空间映射进行零样本时间序列预测",
+      "canonical_evidence": "利用特征空间映射进行零样本时间序列预测",
+      "llm_tldr_en": "Proposes FSA, a feature-to-autoregression framework for zero-shot univariate time series forecasting that learns a structured mapping from interpretable feature space to autoregressive dynamics, improving generalization.",
+      "llm_tldr_cn": "现有零样本时间序列预测依赖大量预训练数据，泛化性有限。本文提出FSA框架，通过学习从可解释特征空间到自回归动力学的结构化映射，实现受控的零样本预测。在多个基准上，FSA在少样本和跨域场景下显著提升预测准确性，为时间序列预测提供了一种无需数据覆盖的新范式。",
+      "llm_tldr": "现有零样本时间序列预测依赖大量预训练数据，泛化性有限。本文提出FSA框架，通过学习从可解释特征空间到自回归动力学的结构化映射，实现受控的零样本预测。在多个基准上，FSA在少样本和跨域场景下显著提升预测准确性，为时间序列预测提供了一种无需数据覆盖的新范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.04135v1",
+      "source": "arxiv",
+      "title": "Stationarity-Aware Retrieval-Augmented Time Series Forecasting",
+      "abstract": "Time series forecasting relies on historical patterns, but real-world series often exhibit non-stationarity and regime shifts that challenge fully parametric forecasters. Inspired by Retrieval-Augmented Generation (RAG), recent work augments forecasters by retrieving relevant historical segments and using them as external evidence at inference time. However, due to the intrinsic non-stationarity of real-world time series, a highly similar past segment does not necessarily imply a similar future, rendering similarity-only retrieval brittle and prone to redundancy. We propose Stationarity-Aware Retrieval-Augmented Time Series Forecasting (SARAF), a framework that adaptively balances relevance and diversity in retrieval. SARAF first forms a candidate pool via temporal similarity with time-aligned enhancement, then applies a diversity-aware selection strategy to cover heterogeneous historical regimes, with the diversification strength automatically modulated by dataset-level stationarity. Moreover, SARAF uses stationarity-aware aggregation to fuse the retrieved futures. Extensive experiments on eight real-world datasets show that SARAF achieves competitive forecasting performance and improves average accuracy and robustness over strong baselines, with particularly clear benefits under challenging non-stationary settings. Code: https://github.com/ShiqiaoZhou/SARAF.",
+      "authors": [
+        "Shiqiao Zhou",
+        "Holger Schöner",
+        "Zipeng Wu",
+        "Edouard Fouché",
+        "IAG Wilson",
+        "Shuo Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-02T18:47:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.04135v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time series forecasting with retrieval-augmented generation",
+      "llm_evidence_cn": "使用检索增强生成进行时间序列预测",
+      "llm_evidence": "使用检索增强生成进行时间序列预测",
+      "canonical_evidence": "使用检索增强生成进行时间序列预测",
+      "llm_tldr_en": "SARAF proposes a stationarity-aware retrieval-augmented framework for time series forecasting that balances relevance and diversity when retrieving historical segments, improving forecast accuracy on non-stationary data.",
+      "llm_tldr_cn": "针对真实世界时间序列的非平稳性和机制转换导致相似度检索失效的问题，本文提出SARAF框架，在检索增强的时间序列预测中自适应平衡相关性和多样性。通过双阶段检索策略（候选池筛选+多样性重排序），减轻了冗余和误匹配。在多个非平稳数据集上，SARAF显著优于仅依赖相似度的检索方法和纯参数预测器。",
+      "llm_tldr": "针对真实世界时间序列的非平稳性和机制转换导致相似度检索失效的问题，本文提出SARAF框架，在检索增强的时间序列预测中自适应平衡相关性和多样性。通过双阶段检索策略（候选池筛选+多样性重排序），减轻了冗余和误匹配。在多个非平稳数据集上，SARAF显著优于仅依赖相似度的检索方法和纯参数预测器。",
+      "llm_tags": [
+        "query:tsc:composite"
+      ],
+      "matched_query_tag": "query:tsc:composite",
+      "matched_query_text": "Papers central to 请帮我查找有关时间序列生成、因果学习的论文。, especially work that connects or combines: time series generation; causal learning; generative models for time series; causal time series forecasting; temporal causal discovery; causal sequence generation; papers on time series generation using causal models; causal learning methods for time series data; generative adversarial networks for time series with causal constraints; temporal causal structure learning from time series.",
+      "matched_requirement_id": "req-composite-tsc",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.05332v1",
+      "source": "arxiv",
+      "title": "GITCO: Gated Inference-Time Context Optimization in TSFMs",
+      "abstract": "Patch-based Time Series Foundation Models (TSFMs) suffer from context poisoning: structurally anomalous patches capture disproportionate attention and silently degrade zero-shot forecast quality. We propose improving TSFM accuracy at inference time by optimizing the input context rather than modifying model weights. We present GITCO (Gated Inference-Time Context Optimization), a lightweight three-component framework: Gate, Router, and Critic that selectively identifies and suppresses harmful patches without any parameter updates. Evaluated on TimesFM 2.5 across 53 GIFT-Eval datasets under K-fold cross-validation, GITCO achieves an average +1.95% MASE reduction on TimesFM 2.5 while capturing 89.9% of the improvement upper bound. We introduce context sensitivity profiles as a new characterizable property of TSFMs: the mapping from time series meta-features to expected accuracy improvement under inference-time context intervention, shaped jointly by model architecture and the statistical structure of the data.",
+      "authors": [
+        "Manya Pandey",
+        "Dhruv Kumar",
+        "Murari Mandal",
+        "Saurabh Deshpande"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-03T18:17:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.05332v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series feature extraction via context optimization",
+      "llm_evidence_cn": "通过上下文优化进行时间序列特征提取",
+      "llm_evidence": "通过上下文优化进行时间序列特征提取",
+      "canonical_evidence": "通过上下文优化进行时间序列特征提取",
+      "llm_tldr_en": "GITCO improves TSFM zero-shot forecast by identifying and suppressing harmful patches via a gate-router-critic framework without retraining, reducing MASE by 1.95%.",
+      "llm_tldr_cn": "针对基于补丁的时间序列基础模型（TSFM）因上下文中毒导致零样本预测质量下降的问题，本文提出GITCO框架，通过门控、路由和批评器三个轻量级组件在推理时识别并抑制有害补丁，无需更新模型参数。在TimesFM 2.5上跨53个数据集的实验表明，平均MASE降低1.95%，达到改进上限的89.9%。该方法为提升预训练时间序列模型的实际部署性能提供了高效解决方案。",
+      "llm_tldr": "针对基于补丁的时间序列基础模型（TSFM）因上下文中毒导致零样本预测质量下降的问题，本文提出GITCO框架，通过门控、路由和批评器三个轻量级组件在推理时识别并抑制有害补丁，无需更新模型参数。在TimesFM 2.5上跨53个数据集的实验表明，平均MASE降低1.95%，达到改进上限的89.9%。该方法为提升预训练时间序列模型的实际部署性能提供了高效解决方案。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.07031v1",
+      "source": "arxiv",
+      "title": "CF-JEPA: Mask-free forward prediction with asymmetric encoder utilization for time-series representation learning",
+      "abstract": "Self-supervised learning (SSL) for time-series representation learning is dominated by two paradigms: contrastive methods, which face challenges in constructing positive or negative pairs, and masking-based methods, which disrupt the temporal continuity of time-series signals. Joint-Embedding Predictive Architecture (JEPA) offers a promising alternative by predicting in representation space rather than reconstructing raw inputs. However, existing time-series JEPA variants still rely on masking and therefore inherit its continuity problem. Crop-based Forward JEPA (CF-JEPA) is proposed as an innovative mask-free framework that replaces masking with multi-horizon forward prediction: random crops serve as context views, and short-, mid-, and long-horizon future representations are predicted in the forward temporal direction, directly leveraging the inherent temporal ordering of time-series data as a learning signal. A strong asymmetry is also identified between the online encoder and the exponential moving average (EMA) target encoder, both produced from a single training run: the online encoder develops higher-rank discriminative features, while the EMA target encoder develops smoother, lower-rank temporal features. Exploiting this asymmetry, classification is routed to the online encoder and forecasting or anomaly detection to the EMA target encoder, achieving a 27% reduction in multivariate forecasting mean squared error (MSE) at no additional training cost. Across 126 University of California, Riverside (UCR) and 26 University of East Anglia (UEA) classification datasets, eight electricity transformer temperature forecasting benchmarks, and Key Performance Indicator /Yahoo anomaly detection, CF-JEPA achieves the highest average accuracy and rank on UCR and UEA among self-supervised baselines and ranks second on univariate forecasting and k-nearest neighbors-scored anomaly detection.",
+      "authors": [
+        "Jaehoon Lee",
+        "Sunghyun Sim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-05T08:21:20+00:00",
+      "link": "https://arxiv.org/pdf/2606.07031v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time series representation learning for feature extraction",
+      "llm_evidence_cn": "时间序列表示学习用于特征提取",
+      "llm_evidence": "时间序列表示学习用于特征提取",
+      "canonical_evidence": "时间序列表示学习用于特征提取",
+      "llm_tldr_en": "CF-JEPA proposes a mask-free forward prediction framework for time-series representation learning, using asymmetric encoder utilization to capture temporal features without disrupting continuity.",
+      "llm_tldr_cn": "现有自监督时间序列表示学习方法依赖掩码或对比学习，存在连续性破坏问题。CF-JEPA提出无掩码前向预测框架，通过随机裁剪作为上下文进行多步预测，并利用不对称编码器提取高效特征。实验表明其在多种下游任务中性能优异，为时间序列特征提取提供了新范式。",
+      "llm_tldr": "现有自监督时间序列表示学习方法依赖掩码或对比学习，存在连续性破坏问题。CF-JEPA提出无掩码前向预测框架，通过随机裁剪作为上下文进行多步预测，并利用不对称编码器提取高效特征。实验表明其在多种下游任务中性能优异，为时间序列特征提取提供了新范式。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.05404v1",
+      "source": "arxiv",
+      "title": "Harnessing Generalist Agents for Contextualized Time Series",
+      "abstract": "Time series are often embedded in rich contexts that are essential for holistic modeling. Moreover, real-world practitioners often require end-to-end workflows for analyzing temporal dynamics, where widely studied tasks such as forecasting are only one step in a broader solution loop. While generalist AI agents offer a promising interface for such workflows under complex contexts, they still operate primarily in textual spaces that are not fully aligned with structured temporal signals. In this work, we introduce TimeClaw, an agentic harness framework for time series that equips generalist LLM agents with the time series-native runtime support needed for contextualized temporal reasoning. TimeClaw integrates executable temporal tools for grounded and auditable analysis, experience-driven capability evolution for creating reusable analytical routines, and episodic multimodal memory for retrieving relevant reasoning traces. Together, these components unlock harnessed open-ended temporal reasoning with contextual information. Extensive evaluation on multiple benchmarks covering diverse tasks across energy, finance, weather, traffic, and other real-world domains demonstrates improved performance of TimeClaw. Code is available at https://github.com/iDEA-iSAIL-Lab-UIUC/TimeClaw.",
+      "authors": [
+        "Zihao Li",
+        "Kaifeng Jin",
+        "Yuanchen Bei",
+        "Jiaru Zou",
+        "Avaneesh Kumar",
+        "Xuying Ning",
+        "Yanjun Zhao",
+        "Mengting Ai",
+        "Baoyu Jing",
+        "Hanghang Tong",
+        "Jingrui He"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-06-03T20:20:34+00:00",
+      "link": "https://arxiv.org/pdf/2606.05404v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "LLM-based agent framework for time series with tool integration",
+      "llm_evidence_cn": "基于LLM的时间序列智能体框架，集成工具",
+      "llm_evidence": "基于LLM的时间序列智能体框架，集成工具",
+      "canonical_evidence": "基于LLM的时间序列智能体框架，集成工具",
+      "llm_tldr_en": "TimeClaw is an agentic framework that equips generalist LLMs with time-series-native runtime support for contextualized temporal reasoning and end-to-end workflows.",
+      "llm_tldr_cn": "时间序列分析常嵌入丰富上下文，但LLM主要处理文本，难以直接操作时序信号。TimeClaw框架为通用LLM代理提供时序运行时支持，集成可执行工具实现接地分析。通过上下文推理和工具调用，TimeClaw在多个预测和异常检测任务上提升性能，展示了利用LLM进行时间序列特征挖掘的潜力。",
+      "llm_tldr": "时间序列分析常嵌入丰富上下文，但LLM主要处理文本，难以直接操作时序信号。TimeClaw框架为通用LLM代理提供时序运行时支持，集成可执行工具实现接地分析。通过上下文推理和工具调用，TimeClaw在多个预测和异常检测任务上提升性能，展示了利用LLM进行时间序列特征挖掘的潜力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder for time series",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
