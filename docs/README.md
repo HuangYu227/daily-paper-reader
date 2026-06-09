@@ -6,38 +6,40 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-08
-- 运行时间：2026-06-08 22:10:09 UTC
+- 最新运行日期：2026-06-09
+- 运行时间：2026-06-09 22:17:19 UTC
 - 运行状态：成功
 - 本次总论文数：6
-- 精读区：2
-- 速读区：4
+- 精读区：3
+- 速读区：3
 
 ### 今日简报（AI）
-今日阅读6篇时间序列论文，精读2篇，重点聚焦因果先验建模与零样本预测。最值得关注方向：Trio通过时空样本注意力与结构因果先验提升预测性能，以及Feature to Dynamics的特征-自回归零样本策略。建议优先精读这两篇高分论文，深入理解其方法论创新。
-- 详情：[/202606/08/README](/202606/08/README)
+1) 今日聚焦时间序列因果建模与因果发现，精读两篇高分论文，速读动态图、地理定位与视频生成三篇。
+2) 最值得看《Causal Semantic Alignment for LLM-based Time Series Forecasting》（9.0分）与《Beyond Additivity: Causal Discovery in Location-Scale Noise Models with Hidden Variables》（8.0分），前者用因果对齐提升LLM时序预测，后者拓展了非线性因果发现。
+3) 建议普通读者优先精读因果语义对齐论文，可尝试将因果对齐思路融入自己的时间序列项目，并留意因果发现中隐藏变量的处理技巧。
+- 详情：[/202606/09/README](/202606/09/README)
 
 ### 精读区论文标签
-1. [Trio: Learning Time-Series Forecasting with Temporal-Spatial-Sample Attention and Structural Causal Priors](/202606/08/2606.07291v1-trio-learning-time-series-forecasting-with-temporal-spatial-sample-attention-and-structural-causal-priors)  
+1. [Causal Semantic Alignment for LLM-based Time Series Forecasting](/202606/09/2606.08262v1-causal-semantic-alignment-for-llm-based-time-series-forecasting)  
    标签：评分：9.0/10、query:tsc
-   evidence：带结构因果先验的时间序列预测
-2. [Feature to Dynamics: Feature-space to Autoregression strategy for Zero-shot Time Series Forecasting](/202606/08/2606.01289v1-feature-to-dynamics-feature-space-to-autoregression-strategy-for-zero-shot-time-series-forecasting)  
+   evidence：因果干预用于基于LLM的时间序列预测
+2. [Beyond Additivity: Causal Discovery in Location-Scale Noise Models with Hidden Variables](/202606/09/2606.08196v1-beyond-additivity-causal-discovery-in-location-scale-noise-models-with-hidden-variables)  
    标签：评分：8.0/10、query:tsc
-   evidence：利用特征空间映射进行零样本时间序列预测
+   evidence：含隐藏变量的位置-尺度噪声模型因果发现
+3. [SSAFE: Simple and Strong AI-Generated Image Detection via Frozen Vision Encoders](/202606/09/2606.08634v1-ssafe-simple-and-strong-ai-generated-image-detection-via-frozen-vision-encoders)  
+   标签：评分：8.0/10、query:fe
+   evidence：使用冻结视觉编码器进行AI生成图像检测
 
 ### 速读区论文标签
-1. [Stationarity-Aware Retrieval-Augmented Time Series Forecasting](/202606/08/2606.04135v1-stationarity-aware-retrieval-augmented-time-series-forecasting)  
-   标签：评分：7.0/10、query:tsc
-   evidence：使用检索增强生成进行时间序列预测
-2. [CF-JEPA: Mask-free forward prediction with asymmetric encoder utilization for time-series representation learning](/202606/08/2606.07031v1-cf-jepa-mask-free-forward-prediction-with-asymmetric-encoder-utilization-for-time-series-representation-learning)  
-   标签：评分：7.0/10、query:fe
-   evidence：时间序列表示学习用于特征提取
-3. [GITCO: Gated Inference-Time Context Optimization in TSFMs](/202606/08/2606.05332v1-gitco-gated-inference-time-context-optimization-in-tsfms)  
+1. [Learning Long Range Spatio-Temporal Representations over Continuous Time Dynamic Graphs with State Space Models](/202606/09/2606.04672v1-learning-long-range-spatio-temporal-representations-over-continuous-time-dynamic-graphs-with-state-space-models)  
    标签：评分：6.0/10、query:fe
-   evidence：通过上下文优化进行时间序列特征提取
-4. [Harnessing Generalist Agents for Contextualized Time Series](/202606/08/2606.05404v1-harnessing-generalist-agents-for-contextualized-time-series)  
+   evidence：通过状态空间模型在动态图上进行时间序列特征提取
+2. [GeoGNN: Time Series Geo-Localization using Two-Tower Graph Neural Networks](/202606/09/2606.08303v1-geognn-time-series-geo-localization-using-two-tower-graph-neural-networks)  
    标签：评分：6.0/10、query:fe
-   evidence：基于LLM的时间序列智能体框架，集成工具
+   evidence：用于地理定位的时间序列特征提取
+3. [BioVid: Autoregressive Video Generation with Biological Behavior Semantic Comprehension](/202606/09/2606.08674v1-biovid-autoregressive-video-generation-with-biological-behavior-semantic-comprehension)  
+   标签：评分：6.0/10、query:tsc
+   evidence：视频帧序列生成作为时间序列
 
 
 <div class="dpr-home-promo-card">

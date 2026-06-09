@@ -1,0 +1,260 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-09T22:09:28.953244+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 3,
+    "quick_skim_target": 12,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2606.08262v1",
+      "source": "arxiv",
+      "title": "Causal Semantic Alignment for LLM-based Time Series Forecasting",
+      "abstract": "Recent advances in Large Language Models (LLMs) have opened new possibilities for time series forecasting by enabling alignment between temporal patterns and pretrained word embeddings. However, most LLM-based methods overlook the heterogeneous nature of time series, where dynamic fluctuations and invariant semantics are entangled. This entanglement introduces spurious correlations during the alignment, as dynamic components act as confounders by simultaneously influencing invariant components and the resulting aligned embeddings. To address this issue, a variable-level alignment framework CVAformer is proposed. CVAformer explicitly disentangles each variable into invariant and dynamic components just before alignment, and applies causal intervention to mitigate the confounding effect of the dynamics. To better support variable-level alignment, CVAformer replaces the standard causal attention in LLMs with a non-causal attention mechanism that captures interactions among variables at each time step. Extensive experiments across long-term, short-term, few-shot, and zero-shot forecasting settings indicate that CVAformer matches or exceeds state-of-the-art performance on most datasets, and in some cases achieves notably better accuracy. Experimental results validate the effectiveness of variable-level alignment and dynamic disentanglement in CVAformer, offering a new perspective for LLM-based time series tasks.",
+      "authors": [
+        "Kexuan Zhang",
+        "Xiaobei Zou",
+        "Cesare Alippi",
+        "Gary G. Yen",
+        "Yang Tang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-06T17:17:34+00:00",
+      "link": "https://arxiv.org/pdf/2606.08262v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal intervention for time series forecasting with LLM",
+      "llm_evidence_cn": "因果干预用于基于LLM的时间序列预测",
+      "llm_evidence": "因果干预用于基于LLM的时间序列预测",
+      "canonical_evidence": "因果干预用于基于LLM的时间序列预测",
+      "llm_tldr_en": "Proposes CVAformer that disentangles invariant and dynamic components and applies causal intervention to mitigate spurious correlations in LLM-based time series forecasting.",
+      "llm_tldr_cn": "针对现有基于大语言模型的时间序列预测方法中动态成分与不变成分纠缠导致的伪相关对齐问题，本文提出了CVAformer框架。该框架在变量级别显式地将每个变量分解为不变和动态成分，并在对齐前应用因果干预，从而有效去除伪相关。实验表明该方法显著提升了预测性能，为时间序列预测中因果学习的应用提供了新范式。",
+      "llm_tldr": "针对现有基于大语言模型的时间序列预测方法中动态成分与不变成分纠缠导致的伪相关对齐问题，本文提出了CVAformer框架。该框架在变量级别显式地将每个变量分解为不变和动态成分，并在对齐前应用因果干预，从而有效去除伪相关。实验表明该方法显著提升了预测性能，为时间序列预测中因果学习的应用提供了新范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.08634v1",
+      "source": "arxiv",
+      "title": "SSAFE: Simple and Strong AI-Generated Image Detection via Frozen Vision Encoders",
+      "abstract": "The rapid advancement of generative models has blurred the boundary between synthetic and real imagery, creating an urgent need for reliable deepfake detection. Yet most existing approaches rely on massive real--fake datasets, which are increasingly difficult to maintain as new generators continue to emerge. In this work, we investigate how much information about image authenticity is already encoded in modern multimodal vision representations. We find that frozen multimodal encoders naturally separate real and synthetic images in their embedding space, enabling a simple linear classifier to achieve strong performance without task-specific fine-tuning. Motivated by this observation, we develop a representation-aware data curation strategy that selects a compact set of representative generators for training. The resulting training set contains only 10K images, compared to 288K in AIGIBench and 4M in OpenFake, while improving robustness to unseen generators and distribution shifts. We additionally introduce RealWorldBench, a benchmark consisting of modern camera photographs, contemporary stock images, and outputs from recent commercial generators. Experiments across multiple benchmarks show that combining frozen multimodal representations with carefully curated training data provides a simple and effective approach to AI-generated image detection.",
+      "authors": [
+        "Seunghyun Lee",
+        "Byoungkwon Kim",
+        "Jaehyun Nam",
+        "Kyungmin Lee",
+        "Jinwoo Shin"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-07T13:56:17+00:00",
+      "link": "https://arxiv.org/pdf/2606.08634v1",
+      "tags": [
+        "keyword:fe",
+        "query:fe"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "frozen vision encoder for AI-generated image detection",
+      "llm_evidence_cn": "使用冻结视觉编码器进行AI生成图像检测",
+      "llm_evidence": "使用冻结视觉编码器进行AI生成图像检测",
+      "canonical_evidence": "使用冻结视觉编码器进行AI生成图像检测",
+      "llm_tldr_en": "Shows frozen multimodal encoders naturally separate real and synthetic images, enabling strong deepfake detection with a linear classifier.",
+      "llm_tldr_cn": "该论文发现冻结的多模态视觉编码器在其嵌入空间中天然分离真实与合成图像，仅需线性分类器即可实现强大的深度伪造检测。基于此提出SSAFE方法，无需任务特定微调，显著降低对大规模真实-伪造数据集的需求。",
+      "llm_tldr": "该论文发现冻结的多模态视觉编码器在其嵌入空间中天然分离真实与合成图像，仅需线性分类器即可实现强大的深度伪造检测。基于此提出SSAFE方法，无需任务特定微调，显著降低对大规模真实-伪造数据集的需求。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.08196v1",
+      "source": "arxiv",
+      "title": "Beyond Additivity: Causal Discovery in Location-Scale Noise Models with Hidden Variables",
+      "abstract": "We study causal discovery from observational data when some variables are hidden and the data-generating process follows a location-scale noise model (LSNM). Existing methods that handle hidden confounders typically assume additive noise, but in practice, causes often modulate not just the mean but also the variance of their effects. We prove that acyclic directed mixed graphs (ADMGs) satisfying a bow-free condition are identifiable under LSNM with hidden variables, establishing the first identifiability result for causally insufficient models beyond noise additivity. We further provide sufficient conditions for identifying causal direction even when the bow-free assumption is violated. Our two-stage algorithm, LSNM-UV, is sound and complete, and experiments demonstrate improved performance over additive baselines on heteroscedastic data.",
+      "authors": [
+        "Mariyam Khan",
+        "Shohei Shimizu",
+        "Thong Pham"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.AI",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-06-06T14:25:03+00:00",
+      "link": "https://arxiv.org/pdf/2606.08196v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal discovery with hidden variables in location-scale noise models",
+      "llm_evidence_cn": "含隐藏变量的位置-尺度噪声模型因果发现",
+      "llm_evidence": "含隐藏变量的位置-尺度噪声模型因果发现",
+      "canonical_evidence": "含隐藏变量的位置-尺度噪声模型因果发现",
+      "llm_tldr_en": "Proves identifiability of causal graphs under location-scale noise models with hidden variables, and proposes LSNM-UV algorithm.",
+      "llm_tldr_cn": "现有因果发现方法在存在隐藏变量时通常假设加性噪声，但实际中原因常同时影响结果的均值和方差。本文针对位置-尺度噪声模型（LSNM）证明了在存在隐藏变量时，满足无弓条件的无环有向混合图（ADMG）是可识别的，这是首个超越加性噪声的因果不足模型可识别性结果。提出的两阶段算法LSNM-UV能够从观测数据中学习因果结构，实验验证了其有效性。该工作为处理非加性噪声和隐藏混淆的因果发现提供了理论基础和实用方法。",
+      "llm_tldr": "现有因果发现方法在存在隐藏变量时通常假设加性噪声，但实际中原因常同时影响结果的均值和方差。本文针对位置-尺度噪声模型（LSNM）证明了在存在隐藏变量时，满足无弓条件的无环有向混合图（ADMG）是可识别的，这是首个超越加性噪声的因果不足模型可识别性结果。提出的两阶段算法LSNM-UV能够从观测数据中学习因果结构，实验验证了其有效性。该工作为处理非加性噪声和隐藏混淆的因果发现提供了理论基础和实用方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.04672v1",
+      "source": "arxiv",
+      "title": "Learning Long Range Spatio-Temporal Representations over Continuous Time Dynamic Graphs with State Space Models",
+      "abstract": "Continuous-time dynamic graphs (CTDGs) provide a richer framework to capture fine-grained temporal patterns in evolving relational data. Long-range information propagation is a key challenge while learning representations, wherein it is important to retain and update information over long temporal horizons. Existing approaches restrict models to capture one-hop or local temporal neighborhoods and fail to capture multi-hop or global structural patterns. To mitigate this, we derive a parameter-efficient state-space modeling framework for continuous-time dynamic graphs (CTDG-SSM) from first principles. We first introduce continuous-time Topology-Aware higher order polynomial projection operator (CTT-HiPPO), a novel memory-based reformulation of HiPPO to jointly encode temporal dynamics and graph structure. The solution from CTT-HiPPO is obtained by projecting the classical HiPPO solution through a polynomial of the Laplacian matrix, yielding topology-aware memory updates that admit an equivalent state-space formulation for CTDGs (CTDG-SSM). Then a computationally efficient discrete formulation is obtained using the zero-order hold approach for model implementation.   Across benchmarks on dynamic link prediction, dynamic node classification, and sequence classification, CTDG-SSM achieves state-of-the-art performance. Notably, it achieves large performance gains on datasets that require long range temporal (LRT) and spatial reasoning.",
+      "authors": [
+        "Ayushman Raghuvanshi",
+        "Thummaluru Siddartha Readdy",
+        "Sundeep Prabhakar Chepuri",
+        "Mahesh Chandran"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-03T09:54:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.04672v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series feature extraction via state space models on dynamic graphs",
+      "llm_evidence_cn": "通过状态空间模型在动态图上进行时间序列特征提取",
+      "llm_evidence": "通过状态空间模型在动态图上进行时间序列特征提取",
+      "canonical_evidence": "通过状态空间模型在动态图上进行时间序列特征提取",
+      "llm_tldr_en": "Proposes CTDG-SSM, a state-space model for long-range spatio-temporal representation learning on continuous-time dynamic graphs.",
+      "llm_tldr_cn": "该论文针对连续时间动态图中长距离时空表示学习难题，提出了基于状态空间模型的CTDG-SSM框架，通过连续时间拓扑感知高阶多项式投影算子实现高效表示学习。在多个基准上取得了最先进性能，为时间序列特征提取提供了新思路。",
+      "llm_tldr": "该论文针对连续时间动态图中长距离时空表示学习难题，提出了基于状态空间模型的CTDG-SSM框架，通过连续时间拓扑感知高阶多项式投影算子实现高效表示学习。在多个基准上取得了最先进性能，为时间序列特征提取提供了新思路。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.08303v1",
+      "source": "arxiv",
+      "title": "GeoGNN: Time Series Geo-Localization using Two-Tower Graph Neural Networks",
+      "abstract": "This paper investigates a novel concept of time series geolocalization, where the goal is to infer the geographic origin of each raw time series. Successful geolocalization can provide spatial context to time series, enabling downstream location-aware applications. We formalize the problem, adapt core ideas from image geolocalization to establish strong baselines, and propose GeoGNN, a two-tower architecture. During training, GeoGNN's spatial tower learns embeddings of geographic cell candidates by leveraging the geographic adjacency graph, while the temporal tower extracts informative representations from time series. During inference, each temporal representation is matched against candidate geographic embeddings using dot-product similarity, combined with an auxiliary classification head, to predict the time series' associated geographic origin. Experiments on large-scale, countrywide electricity-consumption datasets demonstrate that GeoGNN achieves the best performance across datasets and enhances both fine- and coarse-grained geolocalization accuracy by ~27% on average.",
+      "authors": [
+        "Toan Tran",
+        "Waqwoya Abebe",
+        "Abhishek Potnis",
+        "Supriya Chinthavali",
+        "Cyrus Shahabi",
+        "Li Xiong",
+        "Dalton Lunga"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-06T19:10:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.08303v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series feature extraction for geo-localization",
+      "llm_evidence_cn": "用于地理定位的时间序列特征提取",
+      "llm_evidence": "用于地理定位的时间序列特征提取",
+      "canonical_evidence": "用于地理定位的时间序列特征提取",
+      "llm_tldr_en": "Proposes GeoGNN, a two-tower GNN architecture for time series geo-localization, where temporal tower extracts informative representations from time series.",
+      "llm_tldr_cn": "GeoGNN提出双塔图神经网络用于时间序列地理定位：空间塔利用地理邻接图学习候选区嵌入，时间塔从时间序列中提取判别性表示。通过点积匹配推断地理来源，实验表明该方法能有效定位时间序列。",
+      "llm_tldr": "GeoGNN提出双塔图神经网络用于时间序列地理定位：空间塔利用地理邻接图学习候选区嵌入，时间塔从时间序列中提取判别性表示。通过点积匹配推断地理来源，实验表明该方法能有效定位时间序列。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.08674v1",
+      "source": "arxiv",
+      "title": "BioVid: Autoregressive Video Generation with Biological Behavior Semantic Comprehension",
+      "abstract": "Existing video generation frameworks treat sequence duration as an externally prescribed parameter -- fixed frame counts or text prompts -- producing clips whose temporal boundaries are decoupled from the statistical structure of real behavioral data. This assumption is fundamentally misaligned with biological behavior, where action duration varies naturally across individuals and instances and is encoded in the data itself. We present BioVid, a data-driven autoregressive video generation framework that learns the temporal structure of biological behaviors directly from training data, including their natural length distributions. In the first stage, a Finite Scalar Quantization GAN (FSQ-R3GAN) tokenizer encodes each video frame into a compact discrete representation, combining the stabilized relativistic training objective of R3GAN with FSQ's guaranteed codebook utilization to achieve high-fidelity spatial reconstruction without codebook collapse. In the second stage, a causal Transformer models the resulting token sequences autoregressively and learns to emit an End-of-Sequence (EOS) token when the behavioral event reaches semantic closure, with the termination distribution emerging naturally from the training data rather than any human-specified constraint. Experiments on a human drinking behavior dataset (NTU RGB+D, A001, n=94) demonstrate that BioVid's generated length distribution closely matches that of held-out test data, achieving a Wasserstein-1 distance of 1.24 against the ground truth -- compared to 6.05 for a fixed-length baseline and 15.48 for VideoGPT -- while maintaining competitive spatial fidelity.",
+      "authors": [
+        "Tsung-Wei Pan",
+        "Jung-Hua Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-06-07T15:23:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.08674v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "video frame sequence generation as time series",
+      "llm_evidence_cn": "视频帧序列生成作为时间序列",
+      "llm_evidence": "视频帧序列生成作为时间序列",
+      "canonical_evidence": "视频帧序列生成作为时间序列",
+      "llm_tldr_en": "Proposes BioVid, an autoregressive video generation framework that learns temporal structure of biological behaviors directly from data.",
+      "llm_tldr_cn": "BioVid提出数据驱动的自回归视频生成框架，直接从训练数据学习生物行为的时序结构，包括自然时长分布。使用FSQ-R3GAN tokenizer编码帧后自回归生成，模型能生成与真实行为数据时序统计一致的视频片段。",
+      "llm_tldr": "BioVid提出数据驱动的自回归视频生成框架，直接从训练数据学习生物行为的时序结构，包括自然时长分布。使用FSQ-R3GAN tokenizer编码帧后自回归生成，模型能生成与真实行为数据时序统计一致的视频片段。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
