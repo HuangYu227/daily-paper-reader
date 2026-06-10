@@ -1,0 +1,401 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-10T22:53:26.266571+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 5,
+    "deep_cap": 7,
+    "deep_selected": 5,
+    "quick_candidates": 4,
+    "quick_skim_target": 12,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2606.09941v1",
+      "source": "arxiv",
+      "title": "Stochastic weather generators for high-frequency wind vector time series",
+      "abstract": "Surface winds can vary substantially from one minute to the next, so there is scope for studying its variation on this fine time scale. Restricting to the month of June to minimize seasonality, this work develops a range of machine learning models for generating realistic time series of surface wind vectors at a site in Lamont, Oklahoma based on more than 30 years of high quality measurements at the minute time scale. Such a generator could be used as an input into models from a range of disciplines, notably for wind energy, but also wildfire spread and aviation, among others. The data show complex diurnal structures in both wind speed and direction that would be challenging to capture with standard time series models, so we consider a number of machine learning approaches to producing a stochastic wind generator based on time vector-quantized variational autoencoders. We consider generating a day's worth of data at a time and generating a day of wind vectors conditional on the previous day's winds. We also study methods for incorporating a discrete weather state variable in the generator. We evaluate the generators using a wide range of formal and informal methods. The best of these generators can capture many but not all of the complex features present in the observational data. In particular, the best of our approaches accurately mimic diurnal changes in wind volatility but struggle to match the observed distribution of extreme wind speeds.",
+      "authors": [
+        "Mingshi Cui",
+        "Kevin Eng",
+        "Justin T. Greene",
+        "Zern Ke",
+        "Abolfazl Sodagartojgi",
+        "Zhiqiu Xia",
+        "Gemma E. Moran",
+        "Michael L. Stein"
+      ],
+      "primary_category": "stat.AP",
+      "categories": [
+        "stat.AP",
+        "cs.LG",
+        "stat.OT"
+      ],
+      "published": "2026-06-08T00:42:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.09941v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "stochastic weather generators for time series",
+      "llm_evidence_cn": "时间序列随机天气生成器",
+      "llm_evidence": "时间序列随机天气生成器",
+      "canonical_evidence": "时间序列随机天气生成器",
+      "llm_tldr_en": "Develops machine learning models for generating realistic high-frequency wind vector time series using over 30 years of data, addressing complex diurnal patterns.",
+      "llm_tldr_cn": "针对高频风速时间序列的生成需求，本文基于超过30年的分钟级观测数据，开发了多种机器学习模型以生成逼真的地面风矢量时间序列。模型能够捕捉复杂的日变化结构，为风能、野火扩散和航空等领域提供输入。实验表明所提方法在统计保真度上优于传统时间序列模型。",
+      "llm_tldr": "针对高频风速时间序列的生成需求，本文基于超过30年的分钟级观测数据，开发了多种机器学习模型以生成逼真的地面风矢量时间序列。模型能够捕捉复杂的日变化结构，为风能、野火扩散和航空等领域提供输入。实验表明所提方法在统计保真度上优于传统时间序列模型。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.10466v1",
+      "source": "arxiv",
+      "title": "UPLOTS: A Unified Pretrained Language Model for Constrained Time-series Generation",
+      "abstract": "In time-series generation, existing approaches typically handcraft ortrain a separate model for each dataset, which hinders their scalability and fails to leverage shared temporal structures across domains. To address this fragmentation, we propose UPLOTS, a Unified, Prompt-guided Language model framework fOr constrained Time-Series Generation across diverse domains. Instead of building task-specific models, UPLOTS leverages a single pre-trained transformer backbone guided by learned constraint prompts, enabling on-demand generation with precise pattern control. One key innovation is our dynamic multi-dataset loss re-weighting and prompt-to-pattern mapping, which allows UPLOTS to internalize diverse temporal structures during training and conditionally generate them at inference. We evaluate UPLOTS on four real-world benchmarks and multiple constraint settings, including peak-period, calendar, load-level, and volatility patterns. Additional held-out constraint-combination and downstream forecasting experiments further demonstrate that UPLOTS generalizes beyond the original peak-pattern setting and improves data augmentation under scarce real-data regimes. Our code and baselines are available at anonymous github repo: https://anonymous.4open.science/r/UPLOTS-6C36.",
+      "authors": [
+        "Du Yin",
+        "Hao Xue",
+        "Jinliang Deng",
+        "Yang Yang",
+        "Shuang Ao",
+        "Arian Prabowo",
+        "Flora Salim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-09T06:36:06+00:00",
+      "link": "https://arxiv.org/pdf/2606.10466v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "constrained time-series generation using pretrained language model",
+      "llm_evidence_cn": "使用预训练语言模型进行受约束时间序列生成",
+      "llm_evidence": "使用预训练语言模型进行受约束时间序列生成",
+      "canonical_evidence": "使用预训练语言模型进行受约束时间序列生成",
+      "llm_tldr_en": "UPLOTS is a unified pretrained language model for constrained time-series generation across domains, using prompt-guided generation and dynamic loss re-weighting.",
+      "llm_tldr_cn": "本文提出UPLOTS，一个统一的预训练语言模型框架，用于跨领域受约束时间序列生成。它利用可学习的约束提示引导预训练Transformer骨干生成满足特定模式的时间序列，并通过动态多数据集损失重加权和提示-模式映射来内化多样化的时序结构。实验表明UPLOTS能生成高质量、可控制的时间序列，显著优于任务特定模型。",
+      "llm_tldr": "本文提出UPLOTS，一个统一的预训练语言模型框架，用于跨领域受约束时间序列生成。它利用可学习的约束提示引导预训练Transformer骨干生成满足特定模式的时间序列，并通过动态多数据集损失重加权和提示-模式映射来内化多样化的时序结构。实验表明UPLOTS能生成高质量、可控制的时间序列，显著优于任务特定模型。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.10607v1",
+      "source": "arxiv",
+      "title": "Causal Ensemble Agent: Hierarchical Causal Discovery with LLM-guided Expert Reweighting",
+      "abstract": "Causal discovery aims to uncover causal structures from observational data, which is crucial for real-world decision-making. However, different causal discovery algorithms can produce divergent results that conflict with each other, complicating the identification of accurate causal graphs. Traditional approaches rely on numerical values and statistical assumptions, often ignoring rich domain-specific information, such as feature descriptions, which could also help structure learning. While recent works explore using Large Language Models (LLMs) to infer causal relations via direct queries, such methods can be unreliable due to a lack of alignment with the actual data. To address these limitations, we propose Causal Ensemble Agent (CEA), a novel framework that aggregates structural insights from statistical discovery experts across different graph levels via linear opinion pooling, and uses an LLM as a meta-referee to dynamically reweight experts when the aggregated confidence is close to the decision boundary, thereby composing an improved and more complete causal graph. Extensive experiments on both synthetic and real-world datasets demonstrate that CEA achieves the strongest overall performance across a wide range of causal discovery methods, highlighting the effectiveness of using LLMs for meta-analysis in causal discovery.",
+      "authors": [
+        "Xinyu Li",
+        "Yuanyuan Wang",
+        "Haoxuan Li",
+        "Chuan Zhou",
+        "Erdun Gao",
+        "Bo Han",
+        "Tongliang Liu",
+        "Kun Zhang",
+        "Howard Bondell",
+        "Mingming Gong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-06-09T09:09:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.10607v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal discovery using LLM-guided expert reweighting",
+      "llm_evidence_cn": "利用大语言模型引导的专家重加权进行因果发现",
+      "llm_evidence": "利用大语言模型引导的专家重加权进行因果发现",
+      "canonical_evidence": "利用大语言模型引导的专家重加权进行因果发现",
+      "llm_tldr_en": "Proposes Causal Ensemble Agent (CEA) for hierarchical causal discovery by ensembling algorithmic results and LLM knowledge.",
+      "llm_tldr_cn": "针对不同因果发现算法结果冲突的问题，提出因果集成代理（CEA），结合统计算法和大语言模型知识进行分层因果发现。CEA通过LLM引导的专家重加权整合多个因果图，在基准数据集上取得更准确的结果。",
+      "llm_tldr": "针对不同因果发现算法结果冲突的问题，提出因果集成代理（CEA），结合统计算法和大语言模型知识进行分层因果发现。CEA通过LLM引导的专家重加权整合多个因果图，在基准数据集上取得更准确的结果。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.09912v1",
+      "source": "arxiv",
+      "title": "Mix, Don't Pick: Why Synthetic Corpus Composition Matters for Time Series Foundation Model Pretraining",
+      "abstract": "Choosing the wrong synthetic generator for time-series foundation model pretraining is costly: under identical training budgets, the best and worst generators produce up to a $2\\times$ gap in forecasting error, yet the field has no principled way to make this choice. The problem is compounded by the fact that generator rankings are not stable across architectures: across 11 generator families evaluated on Chronos-T5-Mini and Moirai-Small trained from scratch, we find that which generators are useful depends on the model architecture. Rather than solving the generator selection problem, we sidestep it: a simple equal-weight mixture of all generators matches or beats the best individual generator for both architectures, and composing this mixture with real data yields the strongest pretraining corpora overall. Synthetic pretraining is therefore a corpus composition problem, not a generator selection problem, and composition choices should be validated per model family rather than assumed to transfer.",
+      "authors": [
+        "Aaryan Nagpal",
+        "Debdeep Sanyal",
+        "Murari Mandal",
+        "Dhruv Kumar",
+        "Saurabh Deshpande"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-06T12:10:38+00:00",
+      "link": "https://arxiv.org/pdf/2606.09912v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "studies synthetic generator composition for time series pretraining",
+      "llm_evidence_cn": "研究用于时间序列预训练的合成生成器组合",
+      "llm_evidence": "研究用于时间序列预训练的合成生成器组合",
+      "canonical_evidence": "研究用于时间序列预训练的合成生成器组合",
+      "llm_tldr_en": "Mixing synthetic generators equally outperforms selecting the best individual generator for time series foundation model pretraining, simplifying data generation decisions.",
+      "llm_tldr_cn": "时间序列基础模型预训练中合成生成器的选择至关重要，但不同架构对生成器的偏好不同。本文发现简单等权混合所有生成器即可匹配或超越最佳单个生成器，避免复杂选择。该发现简化了预训练数据构建流程，对时间序列生成和预训练有重要指导意义。",
+      "llm_tldr": "时间序列基础模型预训练中合成生成器的选择至关重要，但不同架构对生成器的偏好不同。本文发现简单等权混合所有生成器即可匹配或超越最佳单个生成器，避免复杂选择。该发现简化了预训练数据构建流程，对时间序列生成和预训练有重要指导意义。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.09954v1",
+      "source": "arxiv",
+      "title": "Does Normalization Choice Matter for Causal Large Time-Series Models?",
+      "abstract": "Large models for time-series forecasting have been emerged as a promising paradigm for training models on heterogeneous collections of signals. These models typically rely on causal autoregressive architectures, where each observation is sequentially predicted from past. In practice, real-world time-series exhibit non-stationarities, which significantly influence predictive performance. To mitigate this, normalization is commonly employed. However, in efficient causal settings it might induce information leakage from future observations during training. Recent alternatives, including causal normalization and statistics computed from initial observations, have been proposed to address this issue, but their practical implications remain insufficiently understood. In this work, we evaluate normalization strategies for transformer-based large time-series models trained with patching and efficient causal strategy. We showcase that normalization choice significantly influences both training convergence and forecasting performance.",
+      "authors": [
+        "Samy-Melwan Vilhes",
+        "Gilles Gasso",
+        "Mokhtar Z Alaya"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-08T10:51:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.09954v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "normalization in causal large time-series models for forecasting",
+      "llm_evidence_cn": "因果大时间序列模型的归一化方法研究",
+      "llm_evidence": "因果大时间序列模型的归一化方法研究",
+      "canonical_evidence": "因果大时间序列模型的归一化方法研究",
+      "llm_tldr_en": "Empirically studies how normalization choices affect causal large time-series forecasting models, revealing trade-offs.",
+      "llm_tldr_cn": "针对因果大时间序列模型中的归一化选择问题，系统研究了多种归一化方法（包括因果归一化）对预测性能的影响。发现不同归一化策略在非平稳数据上存在关键权衡，因果归一化虽避免信息泄漏但可能牺牲精度。",
+      "llm_tldr": "针对因果大时间序列模型中的归一化选择问题，系统研究了多种归一化方法（包括因果归一化）对预测性能的影响。发现不同归一化策略在非平稳数据上存在关键权衡，因果归一化虽避免信息泄漏但可能牺牲精度。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.10368v1",
+      "source": "arxiv",
+      "title": "Speech Meets ELF: Audio Conditional Continuous-Target Diffusion for Speech Recognition and Translation",
+      "abstract": "Speech-to-text (S2T) systems for recognition (ASR) and translation (S2TT) typically generate discrete text tokens. In contrast, continuous-target language modelling performs generation in a continuous space, yet its potential for S2T remains unexplored. To bridge this gap, we propose ELF-S2T, an audio-conditioned continuous-target generative model for S2T. Built upon the pre-trained Embedded Language Flows (ELF) backbone, ELF-S2T processes speech via a frozen Whisper encoder and a single linear projector, prepending the resulting audio condition to the noisy text latent for in-context, flow-matching denoising. To prevent the model from over-relying on its pre-trained text context, we introduce audio forcing during training, and further amplify the audio condition via classifier-free guidance at inference. Experiments on LibriSpeech and CoVoST2 show that ELF-S2T achieves competitive ASR and S2TT performance. Crucially, our error analysis reveals that, although ASR and S2TT errors look very different on the surface, both stem from the same underlying cause, a close distance confusion in the continuous latent space. This finding naturally aligns with the continuous representation generation paradigm, indicating a common semantic mapping process beneath recognition and translation. Our code and pretrained models are publicly available at https://github.com/Sslnon/ELF-S2T.",
+      "authors": [
+        "Xuanchen Li",
+        "Tianrui Wang",
+        "Yuheng Lu",
+        "Zikang Huang",
+        "Yu Jiang",
+        "Chenghan Lin",
+        "Chenrui Cui",
+        "Ziyang Ma",
+        "Xingyu Ma",
+        "Chunyu Qiang",
+        "Guochen Yu",
+        "Xie Chen",
+        "Longbiao Wang",
+        "Jianwu Dang"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI"
+      ],
+      "published": "2026-06-09T03:27:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.10368v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses frozen Whisper encoder for audio conditioning",
+      "llm_evidence_cn": "使用冻结的Whisper编码器处理音频条件",
+      "llm_evidence": "使用冻结的Whisper编码器处理音频条件",
+      "canonical_evidence": "使用冻结的Whisper编码器处理音频条件",
+      "llm_tldr_en": "Proposes ELF-S2T, an audio-conditioned continuous-target generative model using a frozen Whisper encoder and flow-matching denoising for speech recognition and translation.",
+      "llm_tldr_cn": "针对语音到文本任务中连续目标生成未被探索的问题，本文提出ELF-S2T模型，基于预训练的Embedded Language Flows（ELF）骨干，采用冻结的Whisper编码器提取音频特征，并通过线性投影将条件注入噪声文本潜变量，实现流匹配去噪。引入音频强制机制防止过依赖文本上下文。实验表明，在语音识别和翻译任务上取得了有竞争力的性能。该研究展示了冻结编码器在跨模态连续生成中的潜力。",
+      "llm_tldr": "针对语音到文本任务中连续目标生成未被探索的问题，本文提出ELF-S2T模型，基于预训练的Embedded Language Flows（ELF）骨干，采用冻结的Whisper编码器提取音频特征，并通过线性投影将条件注入噪声文本潜变量，实现流匹配去噪。引入音频强制机制防止过依赖文本上下文。实验表明，在语音识别和翻译任务上取得了有竞争力的性能。该研究展示了冻结编码器在跨模态连续生成中的潜力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.08896v1",
+      "source": "arxiv",
+      "title": "FAME: Forecastability-Aware Mixture of Experts for Heterogeneous Time Series Forecasting",
+      "abstract": "Large-scale retail and industrial forecasting systems contain many heterogeneous time series whose lifecycle, sparsity, volatility, seasonality, spectral patterns, and contextual sensitivity differ substantially. A single forecasting model rarely performs well across all regimes, while dense ensembles increase inference cost and provide limited insight into expert suitability. This paper studies forecastability-aware expert routing: learning how data characteristics determine the suitability of forecasting experts. We propose \\method{}, a sparse mixture-of-experts framework that represents each series with a multidimensional forecastability fingerprint, mines expert-suitability targets from validation performance, and trains a cost-aware sparse router to activate a small budgeted set of experts for each series. Using a production-scale vending-machine sales dataset from Shandong New Beiyang (SNBC), where the forecasting component has been integrated into the replenishment-planning pipeline, together with public retail benchmarks, we show that expert suitability varies systematically across data regimes. On the industrial dataset with 5,000+ machines and 60M+ transactions, \\method{} Top-2 reduces MSE by 12.4\\% over the strongest single expert, LightGBM, while executing 1.92 experts per series on average. The deployed component produces demand forecasts, while inventory-oriented gains are estimated by an offline replay simulator under a fixed replenishment policy rather than by online intervention. The framework turns heterogeneous sales forecasting from heuristic model selection into data mining of forecastability patterns and expert specialization. Code is available at https://github.com/hit636/FAME",
+      "authors": [
+        "Qianyang Li",
+        "Xingjun Zhang",
+        "Shaoxun Wang",
+        "Tao Peng",
+        "Jia Wei"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-08T00:47:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.08896v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "forecastability fingerprint mining for expert routing",
+      "llm_evidence_cn": "可预测性指纹挖掘用于专家路由",
+      "llm_evidence": "可预测性指纹挖掘用于专家路由",
+      "canonical_evidence": "可预测性指纹挖掘用于专家路由",
+      "llm_tldr_en": "FAME introduces forecastability-aware expert routing via fingerprint mining and sparse mixture-of-experts, improving heterogeneous time series forecasting with low cost.",
+      "llm_tldr_cn": "针对异构时间序列预测中单一模型通用性差的问题，提出FAME框架。通过为每个序列构建多维可预测性指纹，并从验证性能中挖掘专家适宜性目标，训练稀疏混合专家路由。实验表明该方法在不同生命周期和波动性序列上均取得优异性能，揭示了时间序列属性挖掘的价值。",
+      "llm_tldr": "针对异构时间序列预测中单一模型通用性差的问题，提出FAME框架。通过为每个序列构建多维可预测性指纹，并从验证性能中挖掘专家适宜性目标，训练稀疏混合专家路由。实验表明该方法在不同生命周期和波动性序列上均取得优异性能，揭示了时间序列属性挖掘的价值。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.10592v1",
+      "source": "arxiv",
+      "title": "Dirichlet-Guided Group Forecasting for Alleviating Over-smoothing in Time Series Forecasting",
+      "abstract": "Time series forecasting often suffers from over-smoothing, especially when future dynamics are multi-modal. Forecasts may follow the coarse trend of the observed future, but fail to preserve sharp changes, oscillations, turning points, and regime transitions that define plausible dynamic evolution. In this work, we revisit over-smoothing from the perspective of latent dynamical mode compression: under partial observation and single-realization supervision, multiple plausible future modes can be weakened, merged, or averaged during forecasting. Based on this view, we propose Dirichlet-Guided Group Forecasting (DGF), a mode-preserving forecasting framework that explicitly models multiple mode-conditioned predictive distributions and uncertainty over their selection probabilities. DGF uses a Dirichlet-guided hierarchical sampling mechanism and reward-based optimization to encourage forecasts that are accurate, dynamically consistent, and mode-distinct. Extensive experiments on real-world forecasting benchmarks show that DGF reduces over-smoothing while improving forecasting accuracy, diversity, and dynamical consistency.",
+      "authors": [
+        "Xingyu Zhang",
+        "Jingyao Wang",
+        "Xin Yu",
+        "Zeen Song",
+        "Jianqi Zhang",
+        "Changwen Zheng",
+        "Wenwen Qiang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-09T08:56:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.10592v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multi-modal future generation via mode-preserving forecasting",
+      "llm_evidence_cn": "通过保持模态的预测生成多模态未来",
+      "llm_evidence": "通过保持模态的预测生成多模态未来",
+      "canonical_evidence": "通过保持模态的预测生成多模态未来",
+      "llm_tldr_en": "Proposes Dirichlet-guided group forecasting to model multiple plausible future modes, alleviating over-smoothing in time series forecasting.",
+      "llm_tldr_cn": "该论文针对时间序列预测中的过度平滑问题，从潜在动态模态压缩视角出发，提出基于狄利克雷指导的组预测框架，显式建模多个模态条件下的预测分布，从而保留未来动态中的突变和转折。实验表明该方法能有效生成多样且逼真的未来轨迹，为时间序列生成提供了新思路。",
+      "llm_tldr": "该论文针对时间序列预测中的过度平滑问题，从潜在动态模态压缩视角出发，提出基于狄利克雷指导的组预测框架，显式建模多个模态条件下的预测分布，从而保留未来动态中的突变和转折。实验表明该方法能有效生成多样且逼真的未来轨迹，为时间序列生成提供了新思路。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.10853v1",
+      "source": "arxiv",
+      "title": "Speech Encoder Fusion for LLM-based Automatic Speech Recognition",
+      "abstract": "Speech-aware large language models (LLMs) can incorporate speech through pre-trained acoustic encoders that project speech features into the LLM embedding space. While the choice of the speech encoder critically influences performance, different encoders often exhibit complementary strengths, motivating their combination. In this work, we investigate whether fusing multiple pre-trained speech encoders can enhance speech-aware LLMs for automatic speech recognition (ASR). We explore several fusion strategies beyond simple feature concatenation, including learned combinations and Transformer-based fusion architectures, and evaluate them across mono- and multilingual ASR settings as well as diarized speech recognition. Our results indicate that carefully fusing multiple parallel speech encoders improves downstream performance in all scenarios with limited computational overhead.",
+      "authors": [
+        "Jakob Poncelet",
+        "Hugo Van hamme"
+      ],
+      "primary_category": "eess.AS",
+      "categories": [
+        "eess.AS"
+      ],
+      "published": "2026-06-09T13:32:13+00:00",
+      "link": "https://arxiv.org/pdf/2606.10853v1",
+      "tags": [
+        "keyword:fe",
+        "query:fe"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "fusing pre-trained speech encoders with LLM for ASR",
+      "llm_evidence_cn": "融合多个预训练语音编码器到LLM进行语音识别",
+      "llm_evidence": "融合多个预训练语音编码器到LLM进行语音识别",
+      "canonical_evidence": "融合多个预训练语音编码器到LLM进行语音识别",
+      "llm_tldr_en": "Investigates fusion strategies for multiple pre-trained speech encoders with LLM in ASR, showing consistent gains across mono/multilingual and diarized settings.",
+      "llm_tldr_cn": "该工作探索将多个预训练语音编码器融合到LLM中以提升自动语音识别性能。研究了多种融合策略，包括学习组合和基于Transformer的架构。实验表明，精心融合不同编码器可在单语和多语ASR以及说话人识别任务上带来增益，验证了预训练编码器融合的有效性。",
+      "llm_tldr": "该工作探索将多个预训练语音编码器融合到LLM中以提升自动语音识别性能。研究了多种融合策略，包括学习组合和基于Transformer的架构。实验表明，精心融合不同编码器可在单语和多语ASR以及说话人识别任务上带来增益，验证了预训练编码器融合的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model frozen encoder",
+      "matched_requirement_id": "req-16",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,1607 @@
+Title: Causal Ensemble Agent: Hierarchical Causal Discovery with LLM-guided Expert Reweighting
+
+URL Source: https://arxiv.org/pdf/2606.10607v1
+
+Published Time: Wed, 10 Jun 2026 00:56:01 GMT
+
+Number of Pages: 29
+
+Markdown Content:
+# Causal Ensemble Agent: Hierarchical Causal Discovery with LLM-guided Expert Reweighting 
+
+Xinyu Li 1, Yuanyuan Wang 2, Haoxuan Li 3, Chuan Zhou 1, Erdun Gao 4,Bo Han 5, Tongliang Liu 6, Kun Zhang 2,7, Howard Bondell 1, Mingming Gong 1,2∗
+
+> 1
+
+The University of Melbourne 2MBZUAI 3Peking University 4Adelaide University 
+
+> 5
+
+Hong Kong Baptist University 6The University of Sydney 7Carnegie Mellon University 
+
+## Abstract 
+
+Causal discovery aims to uncover causal structures from observational data, which is crucial for real-world decision-making. However, different causal discovery algorithms can produce divergent results that conflict with each other, complicat-ing the identification of accurate causal graphs. Traditional approaches rely on numerical values and statistical assumptions, often ignoring rich domain-specific information, such as feature descriptions, which could also help structure learn-ing. While recent works explore using Large Language Models (LLMs) to infer causal relations via direct queries, such methods can be unreliable due to a lack of alignment with the actual data. To address these limitations, we propose Causal 
+
+Ensemble Agent ( CEA ), a novel framework that aggregates structural insights from statistical discovery experts across different graph levels via linear opinion pooling, and uses an LLM as a meta-referee to dynamically reweight experts when the aggregated confidence is close to the decision boundary, thereby composing an improved and more complete causal graph. Extensive experiments on both synthetic and real-world datasets demonstrate that CEA achieves the strongest overall performance across a wide range of causal discovery methods, highlighting the effectiveness of using LLMs for meta-analysis in causal discovery. 
+
+## 1 Introduction 
+
+Causal discovery aims to identify the underlying cause-and-effect structure among variables from observational data [ 19 , 6], providing an essential foundation for decision-making in many real-world domains such as healthcare, economics, transportation, and epidemiology. Over the past decades, Statistical Causal Discovery (SCD) has made substantial progress, ranging from constraint-based [ 22 ]and score-based approaches [ 4, 33 ] to functional causal models [ 21 , 9 , 29 ], enabling scalable and theoretically grounded structure learning under well-defined assumptions. More recently, Large Language Models (LLMs), with strong natural language understanding and reasoning abilities [ 32 ], have emerged as a promising complement for causal discovery [17, 13]. By integrating information from vast amounts of scientific text and domain knowledge, LLMs can interpret variable semantics and feature descriptions, reason about plausible mechanisms, and propose causal relations that may be overlooked by statistical, data-only discovery methods [1]. 
+
+Challenges. Despite these advances, accurately recovering causal graphs in real-world settings remains challenging [ 24 ]. While SCD is mathematically rigorous and empirically stable under its assumptions, different SCD algorithms may return conflicting graphs on the same dataset due to distinct inductive biases and objective functions, and their performance can be highly scenario-dependent (i.e., a method that excels on one data domain may fail in another, Figure 1 Right), making 
+
+> ∗Corresponding author Preprint.
+> arXiv:2606.10607v1 [cs.LG] 9 Jun 2026
+
+Figure 1: Left: Hallucination problem in direct LLM-based causal querying with misleading feature descriptions. Right: Causal discovery performance across different data domains. SCD algorithms can be domain-dependent, with performance degrading markedly when moving to a new domain, while our CEA remains effective across all domains and consistently achieves the best results. it difficult to select a single “best” solver for an unseen dataset [ 30 , 26 ]. On the other hand, LLM-based Causal Discovery (LCD) often requires querying an LLM for causal relations over all possible pairs of variables, which is time-consuming and difficult to scale [ 12 ]. Besides, although LLMs are capable of exploiting semantic cues and external knowledge, their predictions often lack alignment with the actual data and are therefore prone to unreliability and hallucination problems [ 11 ]. This issue is further exacerbated when variable names are vague or feature descriptions are incomplete or misleading, in which case the model may produce incorrect causal assertions (Figure 1 Left). 
+
+Motivations. Considering LLMs’ strength in analyzing and coordinating myriad information, we seek a different but more reliable role for LLMs in causal discovery: instead of treating an LLM as a “causal expert” that directly infers causal relations, we can use it as a meta-referee that adjudicates among competing, data-driven hypotheses . Concretely, running several SCD methods is often easy, but their disagreements may encode valuable information. Consistent causal relations across methods tend to be reliable, whereas conflicting ones highlight uncertainty that stems from data limitations and method biases. An LLM is particularly well-suited to interpret and judge this uncertainty because it can jointly reason over heterogeneous method assumptions, failure modes, variable semantics, and dataset profiles, thereby deciding which methods should be trusted more for which parts of the graph. In light of the aforementioned problems and motivations, we explore the potential of using LLMs for meta-analysis in causal discovery: leveraging an LLM to selectively coordinate and calibrate multiple statistical causal discovery experts. In this paper, we propose Causal Ensemble Agent (CEA ), a hierarchical ensemble framework that performs relation-level linear opinion pooling over heterogeneous SCD experts, and invokes an LLM as a meta-referee to dynamically reweight experts only when the aggregated confidence is close to the decision boundary. Unlike existing approaches that either aggregate causal graphs with numerically computed weights or query LLMs to directly infer causal relations, we use an LLM to estimate expert credibility by jointly considering variable semantics, dataset characteristics, and expert-data compatibility. In this way, CEA mitigates benchmark-leakage concerns by avoiding direct edge prediction and restricting the LLM’s role to expert reweighting, while keeping the overall procedure grounded in data and leaving expert decisions unchanged. Experimentally, CEA is compatible with a diverse set of mainstream causal discovery methods and achieves the strongest overall performance across eight synthetic and real-world benchmarks, demonstrating superior robustness while requiring substantially fewer LLM queries than exhaustive LLM-based causal discovery. The contributions of our work are threefold: • We introduce a new role for LLMs in causal discovery: meta-referees that adjudicate among competing, data-driven hypotheses from multiple SCD experts, enabling reliable integration of domain knowledge without sacrificing data alignment. • We propose CEA , a hierarchical causal discovery ensemble framework that aggregates expert beliefs in a coarse-to-fine manner over skeletons, v-structures, and edge orientations, with margin-aware LLM-guided expert reweighting for disputed relations. • Extensive experiments on both synthetic and real-world datasets show that CEA outperforms competitive baselines, highlighting remarkable improvements in causal discovery accuracy and cross-domain robustness with substantially fewer LLM calls. 22 Related Work 
+
+Beyond statistical structure learning from observational data, causal discovery has also been ap-proached from two alternative perspectives: ensemble-based methods that aggregate multiple candi-date graphs, and LLM-based methods that exploit domain knowledge for direct causal reasoning. 
+
+2.1 Ensemble-based Causal Discovery 
+
+Ensemble-based methods aim to improve the robustness of causal discovery by aggregating multiple candidate graphs into a more reliable consensus structure. Early studies mainly follow the bootstrap aggregation paradigm, where the same causal discovery algorithm is repeatedly applied to resampled datasets, and the resulting graphs are then aggregated to reduce estimation variance. [ 5 ] proposes a bootstrap-based analysis framework for Bayesian networks, where edge-selection frequencies are used to measure structural stability and uncertainty. DAGBag [ 27 ] learns an ensemble of Directed Acyclic Graphs (DAGs) from bootstrap samples, aiming to find an average graph that minimizes the structural Hamming distance to all graphs. Recent studies further extend causal discovery ensembles to heterogeneous graph aggregation, where outputs from multiple distinct causal discovery algorithms are aggregated. The work in [ 7] introduces a scalable and flexible two-phase ensemble framework that combines data partitioning with ensemble learning to mitigate the divergence across algorithms. [ 3] formulates heterogeneous DAG aggregation from an optimization perspective, using a two-stage pipeline and lazy constraints to obtain a consensus DAG. WECD [ 30 ] utilizes weighted ensemble causal discovery for effective connectivity estimation while improving robustness in noisy and small-sample settings. Despite their effectiveness, existing ensemble-based causal discovery methods usually determine expert weights through numerical criteria or manually designed weighting schemes. In contrast, our CEA framework uses an LLM as a meta-referee to estimate relation-specific expert credibility from rich natural language evidence, making the ensemble process more context-aware. 
+
+2.2 LLM-based Causal Discovery 
+
+Large Language Models (LLMs) have recently been explored as a new source of causal knowledge, owing to their ability to interpret variable semantics and leverage domain knowledge acquired from large-scale scientific corpora. Existing LLM-based causal discovery methods can be broadly categorized into two lines. One is using LLMs for direct inference that queries LLMs to infer causal relations from variable names, feature descriptions, or retrieved textual evidence. [ 28 ] examines whether foundation models can reason about causality, while [ 17 ] evaluates whether LLMs can build causal graphs by scoring candidate causal relations. [ 13 ] further studies LLMs on a range of causal reasoning tasks, including pairwise causal discovery and counterfactual reasoning. To improve scalability, [ 12 ] reduces the number of LLM queries through a breadth-first search. To improve grounding, [ 31 ] introduces a retrieval-augmented generation framework that incorporates scientific evidence for structure discovery. The other is using LLMs for posterior correction , which uses LLMs to refine, validate, or correct causal structures produced by SCD methods. [ 16 ] treats language models as imperfect experts for orienting causal relations beyond Markov equivalence classes. [ 25 ] integrates LLM-derived background knowledge into SCD through prior knowledge augmentation. CMA [ 1 ]synergies metadata-based LLM reasoning with data-driven structural causal modelling. Both lines still rely on the LLM to directly validate, orient, add, remove, or correct causal edges, which may introduce unreliable judgments into the final graph. In contrast, our CEA does not treat the LLM as a causal expert that directly predicts or modifies causal relations. Instead, by restricting the LLM’s role to estimating expert weights, CEA keeps the final graph grounded in data-driven SCD outputs while still leveraging semantic and domain knowledge for context-aware calibration. 
+
+## 3 Causal Ensemble Agent (CEA) 
+
+Figure 2 illustrates the overall framework of our Causal Ensemble Agent (CEA), which constructs the causal graph in a coarse-to-fine manner through three hierarchical layers that aggregate (a) graph skeletons, (b) v-structures, and (c) edge orientations across multiple SCD experts. At each layer, expert beliefs are pooled via linear opinion pooling of bootstrap-based support scores, and an LLM is invoked as a meta-referee on disputed relations to estimate relation-specific, context-dependent expert weights . The resulting relations are integrated across layers to produce the final graph bG.3Figure 2: The overview of CEA. Given input data, multiple SCD experts first produce candidate causal graphs. CEA then aggregates expert beliefs through linear opinion pooling and constructs the final graph in a hierarchical, coarse-to-fine manner. For causal relations whose aggregated confidence lies near the decision boundary, an LLM is invoked as a meta-referee to perform context-aware expert reweighting, resolving disagreements while keeping the overall procedure data-driven. 
+
+Problem Definition. Consider m SCD experts {e1, . . . , e m}, each expert ei : X 7 → G can recover a causal graph bGi = ei(X) from the observational data X ∈ X := Rn×| V |, where n is the sample size, |V | is the number of variables. The estimated graph can be a DAG Gdag = ( V, E ), where 
+
+E ⊆ V ×V denotes the set of directed edges, a Completed Partially Directed Acyclic Graph (CPDAG) 
+
+Gcpdag = ( V, E ∪ Eu) with directed edges E and undirected edges Eu, or a Partial Ancestral Graph (PAG) Gpag = ( V, E {− ,▶,◦} ) whose endpoint marks are in {− , ▶, ◦} . Our goal is to ensemble 
+
+{ bG1, . . . , bGm} into a single higher-quality DAG estimate bG under the guidance of an LLM. 
+
+3.1 Expert Aggregation via Linear Pooling 
+
+We study the problem of aggregating heterogeneous expert beliefs on a candidate causal relation r
+
+among a subset of variables. Let {e1, . . . , e m} denote the set of experts. Given observational data X,we estimate an empirical support score ˆpi(r) ∈ [0 , 1] via repeated subsampling. Let X(1) , . . . , X (B)
+
+denote B resampled datasets and bG(b) 
+
+> i
+
+the graph returned by expert ei on X(b). We define 
+
+ˆpi(r) := 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+1r ∈ Tκ
+
+  bG(b)
+
+> i
+
+ , (1) where κ ∈ { sk , vs , eg } indexes the relation family (skeleton, v-structure, or edge orientation) and 
+
+Tκ(·) extracts the corresponding relation set from a graph. Thus ˆpi(r) is the selection frequency with which expert ei supports relation r across resamples, and larger values indicate stronger support. 
+
+Linear Opinion Pooling. Given normalized expert credibility weights αi ≥ 0 with Pmi=1 αi = 1 ,the pooled support score of relation r is 
+
+ˆp(r) = 
+
+> m
+
+X
+
+> i=1
+
+αi ˆpi(r). (2) Unless otherwise specified, we initialize αi = 1 /m , treating all experts with equal credibility. 
+
+Margin-aware Disputed Set. For κ ∈ { sk , vs }, let τκ ∈ (0 , 1) be the acceptance threshold and 
+
+δ > 0 a margin coefficient. We call a candidate relation r ∈ R κ disputed whenever 
+
+ˆp(r) − τκ ≤ δ τ κ. (3) 4Only disputed relations are sent to the LLM for expert reweighting. The edge orientation family (κ = eg ) uses a different dispute criterion based on the strict-maximum rule (which will be discussed later in Section 3.3). Intuitively, bootstrap averaging makes ˆp(r) stable, so only relations near the threshold τκ are at meaningful risk of being misclassified and are more sensitive to method-specific biases and domain shift. Proposition A.1 formalizes this intuition: the pooled support satisfies a Hoeffding-type concentration bound, and the probability of crossing the threshold decays exponentially with both the number of resamples B and the squared distance from the threshold. 
+
+LLM-guided Reweighting. For each disputed relation r, we invoke an LLM as a meta-referee to produce raw expert-weight scores wi(r) ∈ { 0, 1, . . . , 10 } for all experts, with Pmj=1 wj (r) > 0
+
+enforced by our structured prompt, which requires the LLM to identify at least one credible expert for the relation. We then normalize these scores into relation-specific linear pooling weights: 
+
+α′
+
+> i
+
+(r) = wi(r)
+
+Pmj=1 wj (r) , (4) and recompute the refined pooled support as 
+
+ˆp′(r) = 
+
+> m
+
+X
+
+> i=1
+
+α′
+
+> i
+
+(r) ˆ pi(r). (5) The reweighting changes only the expert coefficients and does not alter the underlying expert outputs 
+
+ˆpi(r). For notational convenience in the ensemble procedure, we define the final pooled score as 
+
+˜p(r) := 
+
+ˆp′(r), if r is disputed ,
+
+ˆp(r), otherwise . (6) Candidates outside the dispute margin retain the base pooling score ˆp(r), so LLM calls are reserved for borderline cases only, reducing unnecessary inference cost without sacrificing ensemble quality. 
+
+3.2 LLM as a Meta-referee 
+
+Rather than directly querying LLMs to infer pairwise causal relations as previous methods [ 13 ], our approach positions the LLM as a meta-referee that intervenes only when data-driven methods are disputed and resolves discrepancies by reweighting experts. Structurally, the linear-pooling form guarantees that LLM reweighting can only redistribute trust among experts, with the resulting score always lying between the smallest and largest individual expert scores (Lemma A.2). Specifically, for each disputed causal relation r, the LLM performs a meta-analysis over the following information: 
+
+Meta Context. To ground the LLM’s adjudication with precise information and sufficient back-ground evidence, we first prompt the LLM with a meta context . This includes: (i) Causal Relation Type (sk / vs / eg ), which explicitly specifies the graph structural level under consideration, encour-aging the LLM to apply the appropriate graph rules (e.g., adjacency vs. orientation) and, crucially, to differentiate which experts are expected to be more reliable at that level (i.e., some methods are stronger at skeleton recovery while others are more accurate in orienting edges); (ii) Variable Names and Descriptions , which enable the LLM to leverage domain knowledge (e.g., time order, physical constraints, measurement meanings) to assess whether a candidate adjacency or direction is causally plausible, thereby reducing spurious inferences; (iii) Dataset Profile . Rather than providing only a high-level domain narrative, we provide automatically summarized dataset statistics so that the LLM can check whether each expert’s assumptions and methodology plausibly hold for the observed data, and thus reweight experts more appropriately; and (iv) Agreement Summary (how many experts support vs. oppose), which provides a coarse but stable aggregation signal, helping the LLM calibrate its adjudication and avoid overreacting to a single expert when the ensemble exhibits broad consensus. 
+
+Expert Opinions. Analogous to a meta-review process, we cast the LLM as a Meta-referee and treat SCD experts as Reviewers that provide assessments for the candidate relation, enabling the LLM to compare arguments rather than raw votes. For each expert, we construct an opinion containing: (i) Methodology Profile , which includes the expert name and method type (e.g., constraint-based, score-based or FCM), key assumptions (e.g., causal sufficiency, faithfulness, functional form, noise model), and any latent confounder handling capability so the LLM can distinguish what statistical 5signal the expert is using and whether its characteristics are compatible with the dataset; (ii) Expert Stance , which shows the expert’s explicit support/oppose information for the candidate relation, removing ambiguity and making the opinion directly comparable across experts; and (iii) Expert Configuration , which contains the score function or conditional-independence test method that the expert used, with regularization and penalty choices, and known strengths or failure modes. These factors help the LLM attribute disagreements among experts to method-specific biases and better weight experts by calibrating how suitable the expert is for the current data. 
+
+LLM Response. Given the meta context and expert opinions, the LLM conducts a relation-specific meta-analysis to 1) evaluate expert-dataset compatibility , 2) assess causal plausibility , and 3) judge which expert is more reliable at the current graph level. The LLM then outputs a raw weight score 
+
+wi(r) for each expert ei, which is normalized to linear pooling weights α′
+
+> i
+
+(r) via Eq. (4) and used to compute the refined support ˆp′(r) via Eq. (5) . We require a JSON response from the LLM, together with a brief per-expert analysis and a short weight justification for decision transparency. 
+
+3.3 Hierarchical Ensemble 
+
+We consider three types of structural relations in the causal graph, indexed by κ ∈ { sk , vs , eg } for graph skeletons, v-structures, and edge orientations, respectively. CEA ensembles these relations layer by layer in a coarse-to-fine, structure-to-direction manner, detailed below. 
+
+Skeleton Ensemble. We start by ensembling the skeletons of causal graphs produced by different experts. Given the skeleton edge set bEi, sk (a set of undirected edges) extracted from each expert’s causal graph bGi, we pool their beliefs on every skeleton relation r and define the ensembled edge set 
+
+bEsk =
+
+n
+
+r ∈
+
+> m
+
+[
+
+> i=1
+
+bEi, sk : ˜ p(r) ≥ τsk 
+
+o
+
+, (7) where ˜p(r) is the final pooled score defined in Eq. (6) and τsk is the skeleton acceptance threshold. This yields the consensus graph skeleton bGsk = ( V, bEsk ).
+
+V-structure Ensemble. Based on the consensus skeleton bGsk , let bVi denote the set of v-structures extracted from expert ei’s graph. Each candidate v-structure r = ( a, b, c ) corresponds to a → b ← c
+
+and is valid only if {a, b }, {b, c } ∈ bEsk and a, c are nonadjacent in bGsk . The consensus v-structure set bV can be obtained by: 
+
+bV =
+
+n
+
+r ∈
+
+> m
+
+[
+
+> i=1
+
+bVi : ˜ p(r) ≥ τvs 
+
+o
+
+. (8) We then sort candidates by descending ˜p(r) and iteratively insert non-conflicting (i.e., not contra-dicting any previously oriented edge) v-structures into the current bGsk . After each insertion, we check whether the newly oriented edges introduce a directed cycle; if so, the insertion is rejected and the graph is rolled back. This yields a partially directed acyclic graph bGvs . Since Eqs. (7) –(8) only threshold expert-generated candidates, the resulting skeleton edges and v-structures remain within the expert candidate pool, and any adjacency excluded from bEsk cannot be reintroduced by later orientation steps (Proposition A.3). Under candidate coverage and limiting score separation, the threshold-based skeleton and v-structure selections are asymptotically consistent (Theorem A.4). 
+
+Edge Orientation Ensemble. In this final stage, we aim to resolve all remaining undirected edges in bGvs . For each undirected pair {a, b } with three candidate relations r ∈ C ab := {a → b, b → a, a −b},each expert ei provides a support score ˆpi(r), where ˆpi(r) = 0 when expert ei’s graph does not include the edge {a, b }. If one of the two directed candidates a → b or b → a attains a strict maximum 
+
+ˆp(r) over Cab , we tentatively orient {a, b } accordingly. Otherwise, the pair is treated as orientation-disputed and is forwarded to the LLM, which estimates pair-specific expert weights α′
+
+> i
+
+(r) via Eq. (4) .Using these weights, we recompute ˆp′(r) and re-check whether a directed candidate now strictly dominates. For each resolved pair with a determined direction, we define its evidence strength as 
+
+π(a, b ) = X
+
+> r∈C ab
+
+˜p(r). (9) 6We then insert the resolved orientations into bGvs in descending order of π(a, b ). After each insertion, we apply Meek-rule closure to propagate compelled directions, and skip any tentative orientation that would conflict with an already-compelled direction or introduce a directed cycle. If some edges still remain undirected after this process, typically because the available expert evidence supports 
+
+a−b only, we use the LLM only as a last-resort completion aid and accept only acyclicity-preserving directions, yielding the final DAG bG; this validity is guaranteed by Proposition A.5. 
+
+## 4 Experiments 
+
+Datasets. We comprehensively include eight benchmark datasets commonly used in causal discov-ery for our experiments, covering both synthetic and real-world scenarios across various domains. Specifically, we use five synthetic datasets: Alarm , Asia , Child , Insurance , and Sachs [15 ], and three real-world datasets: Alzheimer [1], Arctic Sea [10 ], and Sangiovese [13 ]. For the synthetic benchmarks, the ground-truth causal graphs are specified as Bayesian networks with conditional probability tables from the bnlearn repository, and observational data are generated by sampling from the corresponding network distributions [ 20 ]. To evaluate performance under different data regimes, we simulate four sample sizes n ∈ { 500 , 1000 , 5000 , 10000 } for each synthetic dataset. For real-world datasets, we use the fixed sample sizes and ground-truth graphs provided by the original benchmarks. Detailed dataset descriptions are provided in Appendix C.1. 
+
+Baselines. We carefully select three groups of causal discovery methods as our baselines for comparison: SCD methods, ensemble-based methods, and LLM-based methods. For SCD baselines, we cover a diverse range of search paradigms, including: (i) constraint-based methods, PC [22 ] and 
+
+FCI [ 23 ], (ii) the score-based method, GES [ 4], (iii) permutation-based methods, BOSS [2] and 
+
+GRaSP [ 14 ], and (iv) the functional causal model, ICA-LiNGAM [ 21 ]. These six methods also serve as the SCD experts integrated by CEA. For ensemble-based baselines, we include DAGBag 
+
+[27 ] and Uniform-CEA , where Uniform-CEA is a controlled non-LLM variant of CEA that keeps the same hierarchical ensemble pipeline but replaces LLM-guided relation-specific weights with uniform weights, serving as a strong ensemble method. For LLM-based baselines, we include LLM-Greedy 
+
+[ 16 ] and LLM-BFS [12 ], which directly query an LLM to infer causal relations under different strategies. All methods are evaluated under the same experimental environment and data settings to ensure fairness. Further details on baselines are in Appendix C.2. 
+
+4.1 Main Results 
+
+Table 1: Causal discovery results, synthetic datasets are averaged over respective sample sizes of 
+
+n ∈ { 500 , 1000 , 5000 , 10000 } and real-world datasets are marked with ∗. Full Table in Appendix F. Datasets Alarm Asia Child Insurance Sachs Alzheimer* Arctic-Sea* Sangiovese* Metric RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)BOSS 0.381 0.713 0.531 0.645 0.345 0.747 0.351 0.670 0.515 0.694 0.125 0.900 0.542 0.483 0.343 0.683                                                                                                                                                                 
+
+> FCI 0.212 0.795 0.422 0.588 0.315 0.711 0.337 0.648 0.309 0.761 0.281 0.734 0.490 0.523 0.480 0.532 GES 0.139 0.865 0.219 0.806 0.315 0.772 0.303 0.688 0.551 0.597 0.219 0.807 0.562 0.439 0.569 0.451 GRaSP 0.307 0.737 0.641 0.497 0.380 0.721 0.430 0.594 0.522 0.659 0.250 0.775 0.531 0.490 0.431 0.597 ICA-LiNGAM 0.576 0.553 0.391 0.628 0.685 0.440 0.663 0.376 0.596 0.443 0.438 0.585 0.594 0.453 0.765 0.393 PC 0.190 0.808 0.422 0.588 0.305 0.712 0.378 0.600 0.551 0.525 0.406 0.592 0.438 0.583 0.441 0.557 DAGBag 0.709 0.430 0.406 0.599 0.630 0.476 0.445 0.566 0.360 0.677 0.375 0.633 0.531 0.443 0.539 0.431 Uniform CEA 0.147 0.865 0.281 0.732 0.260 0.755 0.300 0.683 0.456 0.691 0.219 0.798 0.469 0.549 0.412 0.612 LLM-Greedy 0.457 0.551 0.625 0.414 0.440 0.574 0.327 0.696 0.412 0.617 0.438 0.606 0.448 0.591 0.471 0.591 LLM-BFS 0.489 0.545 0.188 0.834 0.340 0.677 0.279 0.717 0.559 0.007 0.156 0.861 0.458 0.583 0.539 0.421
+> CEA (Ours) 0.049 0.952 0.093 0.918 0.140 0.864 0.207 0.793 0.169 0.838 0.125 0.900 0.427 0.597 0.373 0.652
+
+Table 1 reports the causal discovery results on eight benchmark datasets, where synthetic datasets are averaged over four sample sizes and real-world datasets are marked with ∗. We employ GPT-5.5 as the backbone LLM and evaluate all methods using two metrics: RNB (Ratio between Normalized Hamming Distance and Baseline Hamming Distance) and AUC (Area Under the Precision-Recall Curve), where lower RNB and higher AUC indicate better performance. The best values are in bold ,and the second-best are underlined . Overall, CEA achieves the strongest performance across diverse domains, obtaining an average relative RNB reduction of 28.3% and an average AUC improvement of 6.2% compared with the strongest non-CEA baselines over datasets. These gains indicate that the proposed hierarchical ensemble with LLM-guided expert reweighting can effectively exploit 7complementary signals from heterogeneous SCD methods, rather than relying on a single solver. The gains are particularly pronounced on Alarm , Asia , Child , and Sachs , where individual SCD methods exhibit clear domain dependence, while CEA mitigates this solver-selection problem and delivers robust cross-domain performance. On Arctic-Sea* , the relatively smaller gain can be attributed to its ground-truth structure containing many bidirectional relations and cycles, which departs from the DAG-oriented output space and makes our DAG recovery intrinsically harder. Notably, Uniform-CEA already performs competitively among non-LLM baselines, and our CEA further improves over it across benchmarks, showing that context-aware expert reweighting provides additional benefits beyond uniform ensembling. We provide a more detailed ablation of this effect in Section 4.2. 
+
+4.2 Method Analysis Ablation Study 1. We consider two main ablations: 1) We first examine whether LLM-guided expert reweighting is essential to the performance of CEA, and replace the LLM estimated weights (w/ LLM) with uniform weights (w/o LLM). This variant corresponds to Uniform-CEA in Table 1, and any performance gap between w/ LLM and w/o LLM directly reflects the contribution of expert weights estimation; 2) We then investigate whether the LLM is better used as a meta-referee than as a direct causal expert, where the (Causal Expert) variant uses the same meta context as CEA but asks the LLM to infer the full causal graph directly. As shown in Table 2, replacing LLM-guided expert weights with uniform weights consistently degrades CEA’s performance across all datasets, leading to a relative drop of 41.9% in RNB and 12.4% in AUC. This indicates that simply ensembling heterogeneous SCD experts is insufficient: different experts should be trusted differently depending on the relation type, dataset characteristics, and expert-data compatibility. LLM-guided reweighting provides this relation-specific calibration, enabling CEA to resolve expert disagreements more effectively than uniform hierarchical ensembling. Moreover, replacing the LLM’s role from meta-referee to direct causal expert also weakens overall performance, leading to a relative drop of 35.7% in RNB and 
+
+15.2% in AUC. This supports our central design choice: LLMs are more reliable when used to calibrate data-driven experts than when asked to directly infer causal graphs. Notably, the direct causal expert achieves perfect performance on Asia . We regard this as a potential benchmark-leakage signal, since Asia is a canonical causal discovery benchmark whose graph structure is likely to appear in public materials. Direct LLM querying may therefore recover memorized benchmark structure rather than infer the graph from the provided context. In contrast, CEA restricts the LLM to expert reweighting, mitigating the leakage risk while keeping the final graph grounded in SCD outputs. Table 2: Ablations of CEA. Comparing LLM-guided expert reweighting (w/ LLM) with uniform weights (w/o LLM), and comparing different LLM roles, where the LLM acts either as a meta-referee for expert aggregation or as a direct causal expert.                                                                                
+
+> LLM Abl. Weight Assignment LLM Role Replace w/ LLM w/o LLM Meta-referee Causal Expert Metric RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)Alarm 0.049 0.952 0.147 0.865 0.049 0.952 0.117 0.919 Asia 0.093 0.918 0.281 0.732 0.093 0.918 0.000 1.000
+> Child 0.140 0.864 0.260 0.755 0.140 0.864 0.665 0.466 Insurance 0.207 0.793 0.300 0.683 0.207 0.793 0.356 0.695 Sachs 0.169 0.838 0.456 0.691 0.169 0.838 0.441 0.533 Alzheimer* 0.125 0.900 0.219 0.798 0.125 0.900 0.156 0.862 Arctic-Sea* 0.427 0.597 0.469 0.549 0.427 0.597 0.448 0.607
+> Sangiovese* 0.373 0.652 0.412 0.612 0.373 0.652 0.471 0.528
+> Performance 100% 100% −41.9% −12.4% 100% 100% −35.7% −15.2%
+
+Table 3: Ablations of CEA. Comparing the full LLM prompt with variants that remove meta con-text (w/o Context), expert opinions (w/o Opin-ions), or both (w/o Both), measuring their impact on LLM-guided expert reweighting.                                                                               
+
+> Prompt Abl. Prompt Content Content Full w/o Context w/o Opinions w/o Both Metric RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)Alarm 0.049 0.952 0.114 0.887 0.147 0.865 0.147 0.865 Asia 0.093 0.918 0.344 0.657 0.281 0.732 0.281 0.732 Child 0.140 0.864 0.255 0.759 0.260 0.755 0.260 0.755 Insurance 0.207 0.793 0.305 0.674 0.300 0.683 0.300 0.683 Sachs 0.169 0.838 0.419 0.665 0.456 0.691 0.456 0.691 Alzheimer* 0.125 0.900 0.219 0.798 0.219 0.798 0.219 0.798 Arctic-Sea* 0.427 0.597 0.500 0.500 0.469 0.549 0.469 0.549 Sangiovese* 0.373 0.652 0.412 0.601 0.412 0.612 0.412 0.612
+> Performance 100% 100% −41.7% −14.8% −41.9% −12.4% −41.9% −12.4%
+
+Ablation Study 2. We further investigate whether the information provided to the LLM is necessary for reliable expert reweighting. Specifically, we ablate two key prompt components: 1) Meta Context 
+
+and 2) Expert Opinions . As shown in Table 3, removing the meta context substantially weakens CEA, dropping the performance of 41.7% in RNB and 14.8% in AUC. This suggests that variable semantics, dataset characteristics, and relation-type information are important for the LLM to assess expert-data compatibility and produce accurate weights. Note that removing expert opinions also causes clear degradation, decreasing RNB by 41.9% and AUC by 12.4% on average, implying that the LLM needs structured expert-specific evidence to distinguish which experts should be trusted 8more for each relation. Interestingly, removing Expert Opinions leads to almost the same results as w/o LLM in Table 2. This indicates that when the LLM is given only variable and dataset information but no concrete expert arguments, it does not arbitrarily favor particular experts based on names or prior knowledge. Instead, it falls back to conservative uniform weighting. Therefore, both meta context and expert opinions are essential: the former provides the background needed, while the latter supplies the expert-level evidence required for meaningful relation-specific reweighting. 
+
+Weight-Performance Alignment. To further examine whether the LLM reweighting is meaningful, we visualize the distribution of LLM-assigned expert weights and compare them with empirical expert performance on the Insurance dataset. As shown in Figure 3, experts with stronger AUC performance generally receive higher average weights: GES obtains the largest mean weight ( 7.63 )and strong AUC, while BOSS, FCI, PC, and GRaSP receive moderate-to-high weights. In contrast, LiNGAM shows the weakest AUC and is clearly down-weighted, with a mean weight of only 
+
+2.36 . The heatmap further shows high alignment scores for most experts, suggesting that the LLM does not assign weights arbitrarily but calibrates expert credibility in a way that is consistent with their empirical reliability. This provides additional evidence that CEA’s improvement comes from relation-specific expert calibration rather than from naive ensemble averaging. GES BOSS FCI PC GRaSP LiNGAM             
+
+> Expert
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score
+> Weight Mean
+> AUC Mean
+> Weight Mean
+> AUC Mean
+> Alignment Score
+> GES
+> BOSS
+> FCI
+> PC
+> GRaSP
+> LiNGAM
+> 7.63 6.88 9.26
+> 6.65 6.70 9.94
+> 6.14 6.48 9.65
+> 5.87 6.00 9.88
+> 6.41 5.94 9.53
+> 2.36 3.76 8.60
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score in [0, 10]
+
+Figure 3: Weight-performance alignment on the Insurance dataset. Left: distribution of LLM-assigned expert weights across all queries, with triangles denoting mean weights and diamonds denoting expert mean AUC scores rescaled to [0 , 10] over four different sample sizes. Right: heatmap of mean LLM weight, mean AUC, and alignment score for each expert. The LLM assigns larger weights to stronger experts, indicating that CEA’s reweighting is aligned with empirical expert reliability. 
+
+4.3 Limitation Analysis 
+
+Despite its strong empirical performance, CEA has several limitations. First, LLM-guided reweighting depends on prompt quality: ambiguous variable names, incomplete feature descriptions, or poorly summarized dataset profiles can bias the LLM’s judgment and lead to bad weight estimation. Second, CEA reduces LLM query cost but still requires running experts over bootstraps, so its runtime depends on expert cost. Third, CEA is limited by expert coverage as the LLM only reweights existing SCD outputs rather than proposing new relations, and relations missed by all experts cannot be recovered. By highlighting these limitations, we aim to encourage further research to refine our method. 
+
+## 5 Conclusion 
+
+In this paper, we studied how to reconcile conflicting outputs from heterogeneous statistical causal discovery methods and discovered a more reliable role for LLMs in causal discovery beyond direct causal prediction. We proposed Causal Ensemble Agent ( CEA ), a hierarchical causal discovery ensemble framework that aggregates relation beliefs through linear opinion pooling and invokes an LLM to reweight experts only for disputed relations. By progressively integrating skeletons, v-structures, and edge orientations, CEA constructs a causal graph while combining the reliability of SCD methods with domain knowledge. Extensive experiments on both synthetic and real-world benchmarks show that CEA achieves the strongest overall performance against a wide range of causal discovery methods, highlighting the effectiveness of positioning LLMs as meta-referees for causal discovery. Future improvements may include: 1) improving context and opinion construction quality, and 2) exploring more adaptive LLM invocation to better trade off performance and time cost. 9References 
+
+[1] Ahmed Abdulaal, adamos hadjivasiliou, Nina Montana-Brown, Tiantian He, Ayodeji Ijishakin, Ivana Drobnjak, Daniel C. Castro, and Daniel C. Alexander. Causal modelling agents: Causal graph discovery through synergising metadata- and data-driven reasoning. In The Twelfth International Conference on Learning Representations , 2024. [2] Bryan Andrews, Joseph Ramsey, Ruben Sanchez Romero, Jazmin Camchong, and Erich Kummerfeld. Fast scalable and accurate discovery of DAGs using the best order score search and grow shrink trees. In Thirty-seventh Conference on Neural Information Processing Systems ,2023. [3] Babak Aslani and Shima Mohebbi. Ensemble framework for causality learning with hetero-geneous directed acyclic graphs through the lens of optimization. Computers & Operations Research , 152:106148, 2023. [4] David Maxwell Chickering. Optimal structure identification with greedy search. Journal of machine learning research , 3(Nov):507–554, 2002. [5] Nir Friedman, Moises Goldszmidt, and Abraham Wyner. Data analysis with bayesian networks: A bootstrap approach, 2013. [6] Clark Glymour, Kun Zhang, and Peter Spirtes. Review of causal discovery methods based on graphical models. Frontiers in genetics , 10:524, 2019. [7] Pei Guo, Yiyi Huang, and Jianwu Wang. Scalable and flexible two-phase ensemble algorithms for causality discovery. Big Data Research , 26:100252, 2021. [8] Wassily Hoeffding. Probability inequalities for sums of bounded random variables. Journal of the American statistical association , 58(301):13–30, 1963. [9] Patrik Hoyer, Dominik Janzing, Joris M Mooij, Jonas Peters, and Bernhard Schölkopf. Nonlinear causal discovery with additive noise models. Advances in neural information processing systems ,21, 2008. [10] Yiyi Huang, Matthäus Kleindessner, Alexey Munishkin, Debvrat Varshney, Pei Guo, and Jianwu Wang. Benchmarking of data-driven causality discovery approaches in the interactions of arctic sea ice and atmosphere. Frontiers in big Data , 4:642182, 2021. [11] Ziwei Ji, Nayeon Lee, Rita Frieske, Tiezheng Yu, Dan Su, Yan Xu, Etsuko Ishii, Ye Jin Bang, Andrea Madotto, and Pascale Fung. Survey of hallucination in natural language generation. 
+
+ACM Computing Surveys , 55(12):1–38, March 2023. [12] Thomas Jiralerspong, Xiaoyin Chen, Yash More, Vedant Shah, and Yoshua Bengio. Efficient causal graph discovery using large language models. In ICLR 2024 Workshop: How Far Are We From AGI , 2024. [13] Emre Kıcıman, Robert Ness, Amit Sharma, and Chenhao Tan. Causal reasoning and large language models: Opening a new frontier for causality, 2024. [14] Wai-Yin Lam, Bryan Andrews, and Joseph Ramsey. Greedy relaxations of the sparsest permuta-tion algorithm. In James Cussens and Kun Zhang, editors, Proceedings of the Thirty-Eighth Conference on Uncertainty in Artificial Intelligence , volume 180 of Proceedings of Machine Learning Research , pages 1052–1062. PMLR, 01–05 Aug 2022. [15] S. L. Lauritzen and D. J. Spiegelhalter. Local computations with probabilities on graphical structures and their application to expert systems , page 415–448. Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 1990. [16] Stephanie Long, Alexandre Piché, Valentina Zantedeschi, Tibor Schuster, and Alexandre Drouin. Causal discovery with language models as imperfect experts. In ICML 2023 Workshop on Structured Probabilistic Inference and Generative Modeling , 2023. [17] Stephanie Long, Tibor Schuster, and Alexandre Piché. Can large language models build causal graphs? In NeurIPS 2022 Workshop on Causality for Real-world Impact , 2022. 10 [18] Christopher Meek. Causal inference and causal explanation with background knowledge. In 
+
+Proceedings of the Eleventh conference on Uncertainty in artificial intelligence , pages 403–410, 1995. [19] Judea Pearl. Causality: Models, Reasoning and Inference . Cambridge University Press, USA, 2nd edition, 2009. [20] Marco Scutari and Jean-Baptiste Denis. Bayesian Networks with Examples in R . Chapman and Hall, Boca Raton, 2nd edition, 2021. ISBN 978-0367366513. [21] Shohei Shimizu, Patrik O. Hoyer, Aapo Hyvärinen, and Antti Kerminen. A linear non-gaussian acyclic model for causal discovery. Journal of Machine Learning Research , 7(72):2003–2030, 2006. [22] P. Spirtes, C. Glymour, and R. Scheines. Causation, Prediction, and Search . MIT press, 2nd edition, 2000. [23] Peter Spirtes, Christopher Meek, and Thomas Richardson. Causal inference in the presence of latent variables and selection bias. UAI’95, page 499–506, San Francisco, CA, USA, 1995. Morgan Kaufmann Publishers Inc. [24] Gideon Stein, Maha Shadaydeh, Jan Blunk, Niklas Penzel, and Joachim Denzler. Causalrivers - scaling up benchmarking of causal discovery for real-world time-series. In The Thirteenth International Conference on Learning Representations , 2025. [25] Masayuki Takayama, Tadahisa Okuda, Thong Pham, Tatsuyoshi Ikenoue, Shingo Fukuma, Shohei Shimizu, and Akiyoshi Sannai. Integrating large language models in causal discovery: A statistical causal approach, 2025. [26] Vy Vo, Haoxuan Li, and Mingming Gong. Causal discovery in the wild: A voting-theoretic ensemble approach. In The Fourteenth International Conference on Learning Representations ,2026. [27] Ru Wang and Jie Peng. Learning directed acyclic graphs via bootstrap aggregating, 2014. [28] Moritz Willig, Matej Zeˇ cevi´ c, Devendra Singh Dhami, and Kristian Kersting. Can foundation models talk causality?, 2022. [29] Kun Zhang and Aapo Hyvärinen. On the identifiability of the post-nonlinear causal model. In 
+
+Proceedings of the Twenty-Fifth Conference on Uncertainty in Artificial Intelligence , pages 647–655, 2009. [30] Qiqi Zhang, Yingwei Zhang, Yanhui Ding, Yiqiang Chen, Shuchao Song, and Shuang Wu. A weighted ensemble causal discovery method for effective connectivity estimation. In 2023 IEEE Smart World Congress (SWC) , pages 1–8, 2023. [31] Yuzhe Zhang, Yipeng Zhang, Yidong Gan, Lina Yao, and Chen Wang. Causal graph discovery with retrieval-augmented generation based large language models, 2024. [32] Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou, Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, Yifan Du, Chen Yang, Yushuo Chen, Zhipeng Chen, Jinhao Jiang, Ruiyang Ren, Yifan Li, Xinyu Tang, Zikang Liu, Peiyu Liu, Jian-Yun Nie, and Ji-Rong Wen. A survey of large language models, 2025. [33] Xun Zheng, Bryon Aragam, Pradeep K Ravikumar, and Eric P Xing. Dags with no tears: Contin-uous optimization for structure learning. In S. Bengio, H. Wallach, H. Larochelle, K. Grauman, N. Cesa-Bianchi, and R. Garnett, editors, Advances in Neural Information Processing Systems ,volume 31. Curran Associates, Inc., 2018. [34] Yujia Zheng, Biwei Huang, Wei Chen, Joseph Ramsey, Mingming Gong, Ruichu Cai, Shohei Shimizu, Peter Spirtes, and Kun Zhang. Causal-learn: Causal discovery in python, 2023. 11 A Additional Theoretical Analyses 
+
+We provide concise guarantees for the components of CEA that are directly used in Section 3: bootstrap-based linear pooling, margin-aware LLM invocation, LLM-guided reweighting, candidate coverage, threshold-based layer consistency, and final DAG validity. The statements below focus on the causally sufficient DAG/CPDAG setting. PAG-valued experts can still be used empirically after applying a deterministic preprocessing map to the relation families below, but the guarantees are stated for the resulting skeleton, v-structure, and edge-orientation relations. 
+
+Relation families. Fix an arbitrary total order on the variable set V ; we write a < b only to avoid duplicate unordered relations. Define 
+
+Rsk := {a, b } : a, b ∈ V, a < b ,
+
+Rvs := (a, b, c ) : a, b, c ∈ V are distinct , a < c ,
+
+and, for each unordered pair {a, b } with a < b ,
+
+Cab := a → b, b → a, a −b , Reg := [
+
+> a<b
+
+Cab .
+
+Here sk , vs , and eg match the notation in Eq. (1) . For a graph G, Tsk (G) extracts adjacencies, Tvs (G)
+
+extracts unshielded colliders a → b ← c, and Teg (G) extracts, for each represented adjacent pair, one of the three states in Cab whenever the pair is directed or undirected in G. If the pair is absent, no state in Cab is returned. For threshold-based relations, namely κ ∈ { sk , vs }, the LLM-reweighted coefficients are relation-specific as in Eq. (4) . For edge orientation, the comparison among a → b,
+
+b → a, and a−b is well-defined when the same pair-level weights are used for all states in Cab . Thus, in eg layer, the notation α′
+
+> i
+
+(r) should be read as a pair-level vector α′
+
+> i
+
+(a, b ) shared by all r ∈ C ab .
+
+A.1 Concentration of Pooled Support 
+
+For each expert ei, relation r ∈ R κ, and resampled dataset X(b), define 
+
+Zi,b (r) := 1r ∈ Tκ( bG(b) 
+
+> i
+
+) , ˆpi(r) = 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+Zi,b (r).
+
+Let F0 contain all information used to choose a normalized weight vector α(r) =(α1(r), . . . , α m(r)) , excluding the bootstrap randomness used in the support estimate below. Condi-tional on F0, assume that the B resampled datasets and any algorithmic randomness are independent across b. For fixed realized weights αi(r) ≥ 0 with P 
+
+> i
+
+αi(r) = 1 , define 
+
+Sb(r) := 
+
+> m
+
+X
+
+> i=1
+
+αi(r)Zi,b (r) ∈ [0 , 1] , ˆpα(r) := 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+Sb(r),
+
+and 
+
+qα(r) := ESb(r) | F 0
+
+.
+
+Proposition A.1 (Concentration of pooled support and selective LLM invocation) . Under the conditional independence assumption above, for every η > 0,
+
+Pr 
+
+
+
+ˆpα(r) − qα(r) ≥ η F0
+
+
+
+≤ 2 exp( −2Bη 2).
+
+Consequently, for the threshold decision 
+
+ˆyα(r) := 1{ˆpα(r) ≥ τκ}, y⋆α(r) := 1{qα(r) ≥ τκ},
+
+we have 
+
+Pr 
+
+
+
+ˆyα(r)̸ = y⋆α(r) F0
+
+
+
+≤ 2 exp 
+
+
+
+−2B qα(r) − τκ
+
+> 2
+
+
+
+.
+
+In particular, if |qα(r) − τκ| ≥ ϵ, then the thresholding error is at most 2e−2Bϵ 2
+
+.Proof. Conditional on F0, the weights are fixed and S1(r), . . . , S B (r) are independent random variables supported on [0 , 1] with mean qα(r). Hoeffding’s inequality [ 8] gives the concentration bound. A thresholding error can occur only when ˆpα(r) crosses τκ while qα(r) remains on the other side, so 
+
+{ˆyα(r)̸ = y⋆α(r)} ⊆ 
+
+n
+
+ˆpα(r) − qα(r) ≥ | qα(r) − τκ|
+
+o
+
+.
+
+Applying the first bound with η = |qα(r) − τκ| proves the thresholding bound. 12 Intuition. Once the expert weights are fixed, the pooled support is an average of bounded bootstrap quantities, so it concentrates as B grows. Relations whose mean support is far from the threshold are therefore already stable; the relations most worth sending to the LLM are exactly the near-boundary cases selected by Eq. (3). 
+
+Remark on LLM-reweighted scores. The proposition applies directly to the base score in Eq. (2) .It also applies to LLM-reweighted scores when the LLM weights are computed from information independent of the bootstrap randomness used in ˆpα(r) (e.g., from fixed metadata or an independent pilot split). If the same bootstrap indicators are used both to choose the LLM weights and to estimate the refined score, the concentration statement should be read as the guarantee for the pre-reweighting score that triggers LLM invocation, while the refined score is an adaptive reweighted estimate. 
+
+A.2 Grounding and Candidate Coverage Lemma A.2 (Convex-hull property of linear reweighting) . For any threshold-layer relation r ∈ R κ
+
+with κ ∈ { sk , vs }, the final pooled score ˜p(r) in Eq. (6) satisfies 
+
+min  
+
+> 1≤i≤m
+
+ˆpi(r) ≤ ˜p(r) ≤ max  
+
+> 1≤i≤m
+
+ˆpi(r).
+
+For edge orientation, the same statement holds for each state s ∈ C ab when the shared pair-level weights α′
+
+> i
+
+(a, b ) are used. Proof. Both the base score ˆp(r) = P 
+
+> i
+
+αi ˆpi(r) and the reweighted score ˆp′(r) = P 
+
+> i
+
+α′
+
+> i
+
+(r)ˆ pi(r) are convex combinations of ˆp1(r), . . . , ˆpm(r), because the weights are nonnegative and sum to one. Any convex combination lies between the minimum and maximum of its entries. The edge-orientation statement follows by the same argument state-wise for s ∈ C ab .
+
+Intuition. The LLM can change how much CEA trusts each expert, but it cannot create a support score outside the range supplied by the experts. Thus the LLM acts as a meta-referee for expert credibility rather than as a direct generator of causal relations. 
+
+Proposition A.3 (Candidate-coverage ceiling) . Let 
+
+Ask := 
+
+> m
+
+[
+
+> i=1
+
+bEi, sk 
+
+be the skeleton candidate set in Eq. (7) . Given the consensus skeleton bGsk = ( V, bEsk ), let 
+
+Avs ( bGsk ) := 
+
+n
+
+(a, b, c ) ∈
+
+> m
+
+[
+
+> i=1
+
+bVi : {a, b }, {b, c } ∈ bEsk , {a, c } /∈ bEsk 
+
+o
+
+be the v-structure candidates that satisfy the skeleton-validity condition in Section 3.3. Then 
+
+bEsk ⊆ A sk , bV ⊆ A vs ( bGsk ).
+
+Moreover, if {a, b } /∈ bEsk , no later edge-orientation step can introduce either a → b or b → a into the final graph. Proof. Eqs. (7) and (8) , together with the stated v-structure validity filter, only threshold candidates already proposed by the expert library. Later orientation steps operate on the remaining undirected edges of bGvs , whose adjacencies come from bEsk . Therefore an adjacency absent from bEsk cannot be introduced later. 
+
+Intuition. CEA is an ensemble-and-calibration method, not a relation generator. If a true relation is never proposed by any expert, LLM reweighting has no candidate support on which to act. This is why full-recovery guarantees require a candidate-coverage assumption. 
+
+Remark on Meek-rule closure. Meek-rule closure applied during edge orientation insertion does not introduce new adjacencies : it only propagates compelled orientations along edges already present in the current PDAG [ 18 ]. Combined with the cycle and conflict roll-back in Section 3.3, this ensures that any adjacency excluded from bEsk cannot be reintroduced by later orientation steps. The selected v-structures are introduced only during the v-structure layer and remain within bV ⊆ A vs ( bGsk ).13 A.3 Consistency of Threshold-based Layers 
+
+Fix κ ∈ { sk , vs }. Let Yκ(r) ∈ { 0, 1} denote whether relation r ∈ R κ is present in the target graph layer. Let Aκ ⊆ R κ be the candidate set evaluated by the corresponding CEA layer. For κ = vs , this candidate set is understood after the skeleton-validity filtering in Proposition A.3. For sample size n, write the final threshold-layer score as 
+
+˜p(n)(r) = 
+
+> m
+
+X
+
+> i=1
+
+˜α(n) 
+
+> i
+
+(r)ˆ p(n) 
+
+> i
+
+(r),
+
+where ˜α(n) 
+
+> i
+
+(r) = αi for non-disputed relations and ˜α(n) 
+
+> i
+
+(r) = α′
+
+> i
+
+(r) for disputed relations. 
+
+Theorem A.4 (Consistency under candidate coverage and score separation) . Assume that m and |V |
+
+are fixed. Suppose candidate coverage holds: 
+
+{r ∈ R κ : Yκ(r) = 1 } ⊆ A κ.
+
+For every r ∈ A κ and expert i ∈ { 1, . . . , m }, assume 
+
+ˆp(n) 
+
+> i
+
+(r) p
+
+−→ θi(r) ∈ [0 , 1] , ˜α(n) 
+
+> i
+
+(r) p
+
+−→ ˜α⋆i (r),
+
+where ˜α⋆i (r) ≥ 0 and Pmi=1 ˜α⋆i (r) = 1 . Define 
+
+˜θ(r) := 
+
+> m
+
+X
+
+> i=1
+
+˜α⋆i (r)θi(r).
+
+If, for every r ∈ A κ, there exists γr > 0 such that 
+
+ ˜θ(r) − τκ
+
+  2Yκ(r) − 1 ≥ γr , (10) 
+
+then the CEA decision 
+
+bY (n) 
+
+> κ
+
+(r) := 
+
+1{˜p(n)(r) ≥ τκ}, r ∈ A κ,
+
+0, r / ∈ A κ,
+
+recovers the whole threshold-based layer consistently: 
+
+Pr 
+
+
+
+∃r ∈ R κ : bY (n) 
+
+> κ
+
+(r)̸ = Yκ(r)
+
+
+
+→ 0.
+
+Proof. For each fixed r ∈ A κ, the boundedness 0 ≤ ˆp(n) 
+
+> i
+
+(r) ≤ 1 and the assumed convergence of 
+
+ˆp(n) 
+
+> i
+
+(r) and ˜α(n) 
+
+> i
+
+(r) imply 
+
+˜α(n) 
+
+> i
+
+(r)ˆ p(n) 
+
+> i
+
+(r) p
+
+−→ ˜α⋆i (r)θi(r).
+
+Since m is fixed, summing over experts gives ˜p(n)(r) p
+
+−→ ˜θ(r). If Yκ(r) = 1 , Eq. (10) gives 
+
+˜θ(r) ≥ τκ + γr , so 
+
+Pr   bY (n) 
+
+> κ
+
+(r) = 0  ≤ Pr  |˜p(n)(r) − ˜θ(r)| ≥ γr
+
+ → 0.
+
+If Yκ(r) = 0 , then ˜θ(r) ≤ τκ − γr , and the false-positive probability is bounded in the same way. Thus each candidate relation is classified correctly with probability tending to one. Relations outside 
+
+Aκ are always rejected and are true negatives by candidate coverage. Because Rκ is finite, a union bound proves the layer-wise claim. 
+
+Intuition. The theorem separates two requirements. First, the expert library must cover the true positive relations. Second, after pooling and optional LLM reweighting, the limiting score must fall on the correct side of the threshold with a nonzero margin. Under these two conditions, sampling noise eventually becomes too small to flip the threshold decision. 
+
+Remark on local orientation consistency. The edge-orientation layer uses an argmax rule rather than a threshold rule. For a remaining pair {a, b }, suppose the three final state scores ˜p(n) 
+
+> ab
+
+(s), s ∈ C ab ,converge in probability to limits μab (s). If a directed state s⋆ ∈ { a → b, b → a} has a strict limiting gap, 
+
+μab (s⋆) > max  
+
+> s∈C ab \{ s⋆}
+
+μab (s),
+
+then the local strict-maximum rule selects s⋆ with probability tending to one. This is the same convergence argument as above: once all three estimated scores are close to their limits, the state with a strict limiting maximum remains the empirical maximum. This statement is local; the final accepted orientation can still be affected by later conflict checks, directed-cycle checks, and Meek-rule closure. 14 A.4 Validity of the Final DAG Proposition A.5 (DAG validity under safe orientation and completion) . Let P0 := bGvs be the partially directed graph produced after the skeleton and v-structure layers, and assume that the directed part of P0 is acyclic. Suppose each subsequent tentative orientation, together with the Meek-rule closure applied after it [ 18 ], is accepted only if the directed part of the resulting partially directed graph remains acyclic and does not contradict an already oriented edge. If all remaining undirected edges are finally oriented in a way that preserves acyclicity, then the output bG is a DAG. Such a completion always exists: take any topological order of the current directed part and orient every remaining undirected edge from the earlier variable to the later variable in that order. Proof. The directed part of P0 is acyclic by assumption. Each accepted orientation step is required to preserve acyclicity after Meek-rule closure, so induction over accepted steps shows that every intermediate directed part is acyclic. For the final completion, the current directed part has a topological order. If every remaining undirected edge is oriented from the earlier endpoint to the later endpoint in this order, then every directed edge in the completed graph points forward in the same order. A directed cycle would require at least one edge to point backward, which is impossible. Hence the completed graph is fully directed and acyclic, i.e., a DAG. 
+
+Intuition. This is an algorithmic safety guarantee. Local evidence determines which directions are attempted first, while conflict and cycle checks prevent invalid orientations. If evidence leaves some edges unresolved, a topological-order completion can always orient them without introducing a directed cycle. 
+
+## B Reproducibility of CEA 
+
+We provide implementation-oriented details of CEA to facilitate reproducibility. We first present the full algorithmic procedure, and then describe the source code availability. 
+
+B.1 Pseudocode Details 
+
+We provide the pseudocode for CEA in Algorithm 1, which illustrates the complete coarse-to-fine ensemble procedure over skeletons, v-structures, and edge orientations. Note that the pseudocode follows the notation in Section 3: ˆpi(r) denotes the bootstrap support score of expert ei, ˆp(r) denotes the uniformly pooled score, and ˜p(r) denotes the final score after optional LLM-guided reweighting. For edge orientation, the LLM produces pair-level expert weights for an unordered pair {a, b }, which are shared across the candidate states in Cab = {a → b, b → a, a −b}.
+
+B.2 Source Code Release 
+
+We will publicly release the code repository once the paper is accepted. 
+
+## C Experimental Details 
+
+C.1 Dataset Details 
+
+We evaluate CEA on eight causal discovery benchmarks, covering both synthetic and real-world scenarios across various domains, such as healthcare, epidemiology, biology, agriculture, and disease. Specifically, we use five synthetic datasets: Alarm , Asia , Child , Insurance , and Sachs [15 ], and three real-world datasets: Alzheimer [1], Arctic Sea [10 ], and Sangiovese [13 ]. For the synthetic benchmarks, their ground-truth causal graphs and conditional probability tables are obtained from the 
+
+bnlearn repository, and observational datasets are generated by sampling the corresponding network distributions with sample sizes n ∈ { 500 , 1000 , 5000 , 10000 } [ 20 ]. For real-world datasets, they are used as fixed-size real-world or domain-derived benchmarks with ground-truth graphs provided by the corresponding benchmark sources. Table 4 summarizes the datasets used in our experiments. 15 Table 4: Dataset details. The number of variables (#Variables) refers to the variable set used in our experiments. Sample size refers to the number of data samples used for making causal discovery. Synthetic datasets are generated from benchmark Bayesian networks with four sample sizes of 
+
+n ∈ { 500 , 1000 , 5000 , 10000 }, while real-world datasets use fixed sample sizes and benchmark-provided ground-truth graphs. Type indicates whether the dataset is synthetic or real-world. Dataset #Variables Sample Size Type Graph Source Domain Alarm 37 {500 , 1000 , 5000 , 10000 } Synthetic bnlearn Healthcare Asia 8 {500 , 1000 , 5000 , 10000 } Synthetic bnlearn Epidemiology Child 20 {500 , 1000 , 5000 , 10000 } Synthetic bnlearn Child Insurance 27 {500 , 1000 , 5000 , 10000 } Synthetic bnlearn Insurance Sachs 11 {500 , 1000 , 5000 , 10000 } Synthetic bnlearn Biology Alzheimer 9 1000 Real-world [1] Disease Arctic-Sea 12 468 Real-world [10] Climate Sangiovese 14 700 Real-world [13] Agriculture 
+
+Alarm. Alarm is a medical monitoring Bayesian network designed for reasoning about patient physiology, anesthesia, ventilation, and clinical monitoring variables [ 15 , 20 ]. It includes respiratory, cardiovascular, ventilator, and measurement-related variables, making it a medium-scale healthcare benchmark with multiple interacting physiological subsystems. 
+
+Asia. Asia is a small medical diagnosis (or epidemiology) Bayesian network involving travel history, tuberculosis, smoking, lung cancer, bronchitis, X-ray results, and dyspnoea [ 15 , 20 ]. It is a canonical benchmark for testing disease, symptom, and diagnostic-test relations. 
+
+Child. Child is a neonatal medicine Bayesian network describing congenital heart disease and related clinical observations [ 15 , 20 ]. It contains variables related to birth asphyxia, disease category, cardiac mixing, duct flow, lung flow, hypoxia, chest X-ray findings, grunting, and clinical reports, providing a moderately sized clinical benchmark. 
+
+Insurance. Insurance is an automobile insurance Bayesian network that models driver, vehicle, accident, and claim-related variables [ 15 , 20 ]. It includes factors such as age, socioeconomic status, risk aversion, driving history, vehicle properties, accident severity, theft, medical cost, and property cost, representing a risk-modelling domain. 
+
+Sachs. Sachs is a biological signalling benchmark describing interactions among protein and phospholipid signalling readouts [ 15 , 20 ]. The variables include Akt, Erk, Jnk, Mek, P38, PIP2, PIP3, PKA, PKC, Plcg, and Raf. In our experiments, we use the Bayesian-network version with conditional probability tables as a synthetic benchmark for cellular signalling structure discovery. 
+
+Alzheimer. Alzheimer is a biomedical causal discovery benchmark for Alzheimer’s disease, con-structed from demographic, genetic, neuroimaging, amyloid, tau, and cognitive variables [ 1]. The processed variable set used in our experiments includes APOE4, Sex, Age, Education, AV45, P-tau, Brain Volume, Ventricular Volume, and MOCA Score. 
+
+Arctic-Sea. Arctic-Sea is a climate-science benchmark describing interactions between Arctic sea ice and atmospheric variables [ 10 ]. It contains variables related to surface heat flux, shortwave and longwave radiation, sea-level pressure, precipitation, humidity, near-surface winds, sea ice, cloud cover, cloud water, and geopotential height. This dataset is challenging because its ground-truth graph contains many bidirectional relations and feedback cycles. 
+
+Sangiovese. Sangiovese is an agricultural benchmark based on a conditional linear Gaussian network for modelling Tuscan Sangiovese grape quality [ 13 ]. The processed variable set used in our experiments includes vine growth variables, vegetation indices, chlorophyll measurements, grape weight, pruning wood weight, acidity, potassium, sugar content, pH, anthocyanins, and polyphenols. 16 Algorithm 1 Procedure of the CEA Framework  
+
+> 1:
+
+Input: data X, experts {ei}mi=1 , thresholds τsk , τ vs , margin coef. δ, bootstrap count B 
+
+> 2:
+
+Output: final DAG estimate bG 
+
+> 3:
+
+Run each expert ei on B resampled datasets and compute support scores ˆpi(r) for all r 
+
+> 4:
+
+Initialize αi ← 1/m for all i 
+
+> 5:
+
+// Step 1: Skeleton Ensemble ( κ = sk ) 
+
+> 6:
+
+Initialize bEsk ← ∅ and extract skeleton edge set bEi, sk from each expert  
+
+> 7:
+
+for each candidate skeleton relation r = {a, b } ∈ Smi=1 bEi, sk do  
+
+> 8:
+
+ˆp(r) ← P 
+
+> i
+
+αi ˆpi(r) 
+
+> 9:
+
+if |ˆp(r) − τsk | ≤ δ τ sk then  
+
+> 10:
+
+Query LLM → wi(r); compute α′
+
+> i
+
+(r) via Eq. (4); ˜p(r) ← ˆp′(r) 
+
+> 11:
+
+else  
+
+> 12:
+
+˜p(r) ← ˆp(r) 
+
+> 13:
+
+if ˜p(r) ≥ τsk then  
+
+> 14:
+
+Add r to bEsk  
+
+> 15:
+
+Set bGsk ← (V, bEsk ) 
+
+> 16:
+
+// Step 2: V-structure ensemble ( κ = vs ) 
+
+> 17:
+
+Initialize bV ← ∅ and extract valid v-structures bVi under bGsk from each expert ei 
+
+> 18:
+
+for each candidate v-structure r = ( a, b, c ) ∈ Smi=1 bVi do  
+
+> 19:
+
+ˆp(r) ← P 
+
+> i
+
+αi ˆpi(r) 
+
+> 20:
+
+if |ˆp(r) − τvs | ≤ δ τ vs then  
+
+> 21:
+
+Query LLM → wi(r); compute α′
+
+> i
+
+(r) via Eq. (4); ˜p(r) ← ˆp′(r) 
+
+> 22:
+
+else  
+
+> 23:
+
+˜p(r) ← ˆp(r) 
+
+> 24:
+
+if ˜p(r) ≥ τvs then  
+
+> 25:
+
+Add r to bV 
+
+> 26:
+
+Sort bV by descending ˜p(r) and initialize bGvs ← bGsk  
+
+> 27:
+
+for each v-structure r = ( a → b ← c) ∈ bV in sorted order do  
+
+> 28:
+
+if insertion is non-conflicting and acyclicity-preserving then  
+
+> 29:
+
+Insert a → b ← c into bGvs  
+
+> 30:
+
+// Step 3: Edge-orientation ensemble ( κ = eg ) 
+
+> 31:
+
+Initialize resolved orientation set O ← ∅  
+
+> 32:
+
+for each undirected pair {a, b } in bGvs do  
+
+> 33:
+
+For r ∈ C ab = {a → b, b → a, a −b}, ˆp(r) ← P 
+
+> i
+
+αi ˆpi(r) (ˆpi(r) = 0 if {a, b } /∈ bEi, sk ) 
+
+> 34:
+
+if one directed candidate in {a → b, b → a} is the strict maximum over Cab then  
+
+> 35:
+
+Add the corresponding tentative orientation to O and set ˜p(r) ← ˆp(r) for all r ∈ C ab  
+
+> 36:
+
+else  
+
+> 37:
+
+Query LLM → pair-level wi(r); compute α′
+
+> i
+
+(r); recompute ˜p(r) ← ˆp′(r) for all r ∈ C ab  
+
+> 38:
+
+if one directed candidate is now the strict maximum over Cab then  
+
+> 39:
+
+Add the corresponding tentative orientation to O 
+
+> 40:
+
+Sort O by descending evidence strength π(a, b ) = P 
+
+> r∈C ab
+
+˜p(r) 
+
+> 41:
+
+for each tentative orientation in O do  
+
+> 42:
+
+if the orientation is non-conflicting and acyclicity-preserving then  
+
+> 43:
+
+Insert the orientation into bGvs and apply Meek-rule closure  
+
+> 44:
+
+// Step 4: DAG completion  
+
+> 45:
+
+Complete any remaining undirected edges using either deterministic topological extension or LLM-assisted acyclicity-preserving completion  
+
+> 46:
+
+Set bG ← the completed DAG  
+
+> 47:
+
+return bG
+
+17 C.2 Baseline Details 
+
+We compare CEA with three groups of causal discovery baselines: statistical causal discovery (SCD) methods, ensemble-based methods, and LLM-based methods. The individual SCD baselines also serve as the expert library integrated by CEA. Detailed descriptions of these baselines are as follows: 
+
+PC [ 22 ]: The Peter-Clark (PC) algorithm is a classical constraint-based causal discovery method. It first estimates the graph skeleton using conditional independence tests, and then orients edges by identifying v-structures and applying graphical orientation rules. PC assumes causal sufficiency, faithfulness, and reliable conditional independence testing, and outputs a CPDAG. 
+
+FCI [ 23 ]: Fast Causal Inference (FCI) is a constraint-based causal discovery method designed for settings with possible latent confounders and selection bias. It allows more expressive endpoint marks and outputs a PAG, which represents causal relations that may involve hidden variables. 
+
+GES [ 4 ]: Greedy Equivalence Search (GES) is a score-based causal discovery method that searches over Markov equivalence classes of DAGs. It optimizes a decomposable score through forward and backward search steps, and outputs an equivalence-class representation, typically a CPDAG. 
+
+BOSS [ 2]: Best Order Score Search (BOSS) is a permutation-based causal discovery method that searches over variable orderings and constructs causal graphs using a decomposable scoring criterion. It provides a strong order-search baseline and outputs a PDAG representation of the learned structure. 
+
+GRaSP [ 14 ]: Greedy Relaxations of the Sparsest Permutation (GRaSP) is a permutation-based causal discovery method that searches for sparse causal structures through greedy relaxations over variable orderings. It serves as a complementary order-based baseline to BOSS and outputs a PDAG. 
+
+ICA-LiNGAM [ 21 ]: Independent Component Analysis Linear Non-Gaussian Acyclic Model (ICA-LiNGAM) is a functional causal model that exploits linearity, non-Gaussianity, acyclicity, and independent noise assumptions to identify directed causal relations. ICA-LiNGAM outputs a DAG. 
+
+DAGBag [27 ]: DAGBag is an ensemble-based causal discovery method based on bootstrap aggrega-tion. It learns multiple DAGs from bootstrap samples and aggregates them into a consensus graph, aiming to reduce estimation variance and improve structural robustness. We include DAGBag as an external ensemble-based causal discovery baseline. 
+
+Uniform-CEA : Uniform-CEA is a controlled non-LLM variant of our framework. It uses the same expert library, bootstrap support estimation, hierarchical aggregation pipeline, and graph-validity checks as CEA, but replaces LLM-guided relation-specific expert weights with uniform weights. Thus, Uniform-CEA serves as a strong controlled ensemble baseline for isolating the contribution of context-aware LLM-guided expert reweighting. 
+
+LLM-Greedy [16 ]: LLM-Greedy is an LLM-based causal discovery baseline, where an LLM pro-vides orientation knowledge for unresolved causal relations beyond Markov equivalence classes. In our setting, we use it as a direct LLM orientation baseline that greedily orients edges in a given skele-ton. We follow the public implementation released at Causal-disco-LLM-imperfect-experts .
+
+LLM-BFS [ 12 ]: LLM-BFS is an LLM-based causal discovery baseline that reduces exhaustive pairwise querying by using a breadth-first search strategy over candidate causal relations. We follow the public implementation released at causal-llm-bfs .For all LLM-involved methods, including CEA and the LLM-based baselines, we use the same LLM backbone and the same variable information whenever applicable to ensure a fair comparison. Further details, including package versions and inference settings, are provided in Appendix C.3. 
+
+C.3 Implementation Details 
+
+We implement CEA entirely in Python 3.10, with all individual SCD baselines directly adopted from the causal-learn library [ 34 ], which is a comprehensive and fair platform for statistical causal discovery. All experiments reported in this paper are conducted on a virtual machine equipped with an AMD EPYC 7T83 64-core CPU. For fairness, we use a fixed set of hyperparameters across datasets within the same data regime and do not tune hyperparameters separately for individual datasets or baselines. Unless otherwise specified, we use bootstrap count B = 10 , bootstrap sampling ratio 0.75 ,margin coefficient δ = 0 .5, and threshold coefficient 0.5 for all experiments. 18 For synthetic datasets sampled from benchmark Bayesian networks, we treat the data as discrete and use the Chi-square conditional independence test for constraint-based methods and the Bayesian Dirichlet equivalent uniform score ( local_score_BDeu ) for score-based and permutation-based methods. For real-world datasets, we treat the data as continuous and use Fisher’s Z test for conditional independence testing, with Bayesian Information Criterion score ( local_score_BIC )as the score function. All methods are run under the same preprocessing, graph-conversion, and evaluation pipeline. Since different causal discovery algorithms may output DAGs, CPDAGs, or PAGs, we convert their outputs into a common adjacency representation before computing metrics. 
+
+C.4 Evaluation Metrics 
+
+We evaluate causal discovery performance using two metrics: RNB (Ratio between Normalized Hamming Distance and Baseline Hamming Distance) and AUC (Area Under the Precision-Recall Curve), which respectively measure structural accuracy relative to baseline normalization and edge-level recovery quality, where lower RNB and higher AUC indicate better performance. Before computing metrics, each predicted graph is converted into a directed adjacency matrix representation. Let G = ( V, E ) denote the ground-truth graph and bG denote the predicted graph, with r = |V |. Let 
+
+A, bA ∈ { 0, 1}r×r be their adjacency matrices, where Aij = 1 indicates a directed edge i → j in G.
+
+Normalized Hamming Distance (NHD): NHD measures the number of edges that appear in one graph but not the other, normalized by the total number of possible directed entries. Following the directed adjacency representation, we define 
+
+NHD( G, bG) = 1
+
+r2
+
+> r
+
+X
+
+> i=1
+> r
+
+X
+
+> j=1
+
+1{Aij ̸ = bAij }. (11) In our implementation, anti-causal mistakes are counted twice. For example, predicting j → i when the ground truth is i → j contributes two adjacency-matrix errors. 
+
+Baseline Hamming Distance (BHD): The baseline graph is defined as a graph containing the same number of directed edges as G, but all of them are incorrect. Let 
+
+e =
+
+> r
+
+X
+
+> i=1
+> r
+
+X
+
+> j=1
+
+Aij (12) denote the number of directed edges in the ground-truth graph. We define the BHD as: 
+
+BHD( G) = 2er2 . (13) Since anti-causal mistakes are counted twice, the corresponding baseline number of mistakes is 2e.
+
+Ratio between NHD and BHD (RNB): We follow the previous work [13] and report the RNB as: 
+
+RNB( G, bG) = NHD( G, bG)BHD( G) =
+
+Pri=1 
+
+Prj=1 1{Aij ̸ = bAij }
+
+2e . (14) A lower RNB means that the causal discovery algorithm outperforms the floor baseline by a larger margin. In particular, RNB < 1 indicates that the predicted graph is closer to the ground truth than a graph with the same number of edges but a completely incorrect structure. 
+
+Area Under the Precision-Recall Curve (AUC): We also report the area under the precision-recall curve. Given the ground-truth adjacency matrix A and the predicted adjacency matrix bA, precision and recall are computed as 
+
+Precision = TP TP + FP , Recall = TP TP + FN , (15) where TP, FP, and FN denote true positives, false positives, and false negatives in the predicted directed adjacency matrix. The area under the precision-recall curve is then computed as 
+
+AUC( G, bG) = 
+
+Z 10
+
+Precision( ρ) dρ, (16) where ρ denotes recall along the precision-recall curve. In our implementation, AUC is computed using cdt.metrics.precision_recall after converting both graphs into adjacency matrices. 19 D Additional Experimental Analyses 
+
+This section provides additional analyses that complement the main experimental results in Section 4. We first report the LLM query cost to quantify the efficiency benefit of margin-aware LLM invocation. We then provide error bars across repeated runs to assess the stability of CEA. Finally, we compare two DAG-completion strategies, last-resort LLM-assisted completion and deterministic DAG extension, to verify that the main performance gains of CEA do not come from the final completion step. 
+
+D.1 LLM Query Cost 
+
+We report the number of LLM queries used by CEA and compare it with exhaustive LLM querying. For a dataset with r = |V | variables, exhaustive pairwise querying for causal discovery requires 
+
+Qfull (r) = 
+
+r
+
+2
+
+
+
+= r(r − 1) 2 (17) queries if each unordered variable pair is queried once. This is a conservative reference because querying ordered pairs separately would require r(r − 1) queries. Given the number of LLM queries used by CEA, denoted by QCEA , we define the query reduction ratio as 
+
+Reduction = 1 − QCEA 
+
+Qfull 
+
+. (18) For synthetic datasets, we report the average query count over the four sample sizes. For real-world datasets, we report the fixed benchmark query count. As shown in Table 5, CEA substantially reduces the number of LLM queries compared with exhaustive pairwise querying. Under the per-dataset averaged view reported in the table, CEA uses 237 LLM queries in total across all benchmarks, compared with 1483 exhaustive pairwise queries, corresponding to an overall reduction of 84.0% .Over all individual experimental runs, CEA uses 604 queries compared with 5389 exhaustive pairwise queries, corresponding to an 88.8% reduction. The reduction is especially pronounced on larger benchmark networks such as Alarm , Child , and Insurance . The reduction is smaller on Arctic-Sea* 
+
+and Sangiovese* , where the ground-truth structures are relatively dense or contain non-DAG relations, leading to more disputed cases. Nevertheless, CEA still requires fewer queries than exhaustive pairwise LLM causal discovery on every benchmark. Table 5: LLM query cost comparison. |V | denotes the number of variables, and |E| denotes the number of ground-truth adjacent edges. Qfull denotes the number of LLM queries over all possible pairs of variable, i.e.,  |V |
+
+> 2
+
+ exhaustive pairwise queries. QCEA denotes the total number of LLM queries used by our method. For synthetic datasets, CEA query counts are averaged over sample sizes n ∈ { 500 , 1000 , 5000 , 10000 }; real-world datasets are marked with ∗.Dataset Alarm Asia Child Insurance Sachs Alzheimer* Arctic-Sea* Sangiovese*                                          
+
+> |V|37 820 27 11 912 14
+> |E|46 825 52 17 16 30 51
+> Qfull 666 28 190 351 55 36 66 91
+> QCEA (Ours) 26.3 8.5 26.5 35.3 23.5 7.0 47.0 63.0 Reduction 96.1% 69.6% 86.1% 90.0% 57.3% 80.6% 28.8% 30.8%
+
+D.2 Error Bars 
+
+We evaluate the robustness of CEA with respect to LLM stochasticity on the five synthetic benchmark datasets. Since a full repeated-run evaluation over all SCD experts and bootstrap resamples is computationally expensive, we fix the expert outputs and bootstrap-based support scores, and repeat the LLM-guided reweighting stage using the same LLM backbone with temperature 1.0 to assess the stability of LLM’s outputs. Table 6 reports the main values together with standard deviations across five repeated LLM runs, demonstrating that CEA yields consistently stable results. 20 Table 6: Error bars of CEA with respect to LLM stochasticity on synthetic benchmark datasets. The expert outputs and bootstrap-based support scores are fixed, while the LLM-guided reweighting is repeated five times with temperature 1.0. Results are reported as central value ± standard deviation. Dataset Alarm Asia Child Insurance Sachs Sample Size RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)500 0.065 ±0.011 0.937 ±0.012 0.125 ±0.032 0.891 ±0.036 0.140 ±0.014 0.863 ±0.016 0.250 ±0.014 0.748 ±0.016 0.324 ±0.041 0.680 ±0.043 1000 0.076 ±0.013 0.924 ±0.013 0.125 ±0.094 0.891 ±0.099 0.100 ±0.000 0.902 ±0.000 0.202 ±0.010 0.802 ±0.011 0.176 ±0.000 0.836 ±0.000 5000 0.033 ±0.000 0.968 ±0.000 0.062 ±0.031 0.945 ±0.028 0.240 ±0.028 0.768 ±0.028 0.231 ±0.053 0.765 ±0.058 0.118 ±0.059 0.891 ±0.054 10000 0.022 ±0.010 0.979 ±0.011 0.062 ±0.031 0.945 ±0.028 0.080 ±0.000 0.922 ±0.000 0.144 ±0.000 0.858 ±0.000 0.059 ±0.030 0.945 ±0.027 Avg 0.049 ±0.008 0.952 ±0.008 0.093 ±0.016 0.918 ±0.020 0.140 ±0.011 0.864 ±0.011 0.207 ±0.019 0.793 ±0.021 0.169 ±0.015 0.838 ±0.017 
+
+D.3 Last-resort LLM Completion vs Deterministic DAG Extension 
+
+We further examine whether the final DAG-completion strategy substantially affects the performance of CEA. In the main experiments, after hierarchical relation aggregation, confidence-ordered orien-tation, and Meek-rule closure, a small number of edges may still remain undirected. Our default implementation uses the LLM only as a last-resort completion aid, where the proposed orientation is accepted only if it preserves acyclicity and does not conflict with previously compelled orientations. As a deterministic alternative, we replace this last-resort LLM completion with a deterministic DAG extension strategy. Specifically, after all resolved orientations have been inserted, we consider the remaining undirected edges in a fixed order and orient each edge according to a topologically compatible direction whenever it preserves acyclicity. This produces a DAG without LLM calls. Table 7: Comparison between last-resort LLM-assisted completion and deterministic DAG extension. Sample Size Alarm Asia Child Insurance Sachs                                                                                                               
+
+> LLM (Ours) DAG LLM (Ours) DAG LLM (Ours) DAG LLM (Ours) DAG LLM (Ours) DAG Metric RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)500 0.065 0.937 0.065 0.937 0.125 0.891 0.125 0.891 0.140 0.863 0.140 0.863 0.250 0.748 0.260 0.737 0.324 0.680 0.382 0.619 1000 0.076 0.924 0.098 0.902 0.125 0.891 0.188 0.819 0.100 0.902 0.100 0.902 0.202 0.802 0.288 0.700 0.176 0.836 0.176 0.836 5000 0.033 0.968 0.033 0.968 0.062 0.945 0.062 0.945 0.240 0.768 0.200 0.806 0.231 0.765 0.240 0.754 0.118 0.891 0.176 0.836 10000 0.022 0.979 0.022 0.979 0.062 0.945 0.062 0.945 0.080 0.922 0.160 0.845 0.144 0.858 0.135 0.868 0.059 0.945 0.142 0.859
+> Avg 0.049 0.952 0.054 0.947 0.093 0.918 0.109 0.900 0.140 0.864 0.150 0.854 0.207 0.793 0.231 0.765 0.169 0.838 0.219 0.788
+
+Table 7 compares the two completion strategies on the five synthetic benchmark datasets across all sample sizes. Overall, the two strategies yield similar performance trends. The gap is relatively small, and deterministic completion even matches or slightly improves the LLM variant in several individual settings, such as Child at n = 5000 and Insurance at n = 10000 . These results suggest that the main gains of CEA are not primarily driven by the final completion step, but by the preceding hierarchical expert aggregation and LLM-guided expert reweighting. The last-resort LLM completion mainly provides a lightweight way to resolve residual orientations when expert evidence remains insufficient. 
+
+System Prompt: 
+
+You are a Causal Knowledge Expert with a sub-specialist interest in Causal Discovery. Your job is to read and analyze the provided context, then complete the required task accurately. Think carefully, then respond ONLY 
+
+in the following JSON format: 
+
+{"analysis":{"[Expert Short Name]":"[brief analysis for this expert, 1 sentence for Expert-Dataset Match, 1 sentence for Causal Plausibility, and 1 sentence for Performance at the current graph level.]","...":"..."}, "answer":[{"name":"[Expert Short Name]","weight":[integer in 0–10],"reason":"[brief justification, 1–2 sentences]"},{"...":"..."}]} 
+
+Replace the instruction values with your analysis and your answers, such that each expert’s Short Name must appear exactly once in the name field. 
+
+Figure 4: System prompt and JSON response format for CEA. 21 E Prompt and Response Examples 
+
+E.1 Prompt Templates 
+
+We provide prompt templates used by CEA for LLM-guided expert reweighting (Figures 4–8). All prompts share the same system instruction and JSON response format, while the user prompt is specialized to the current graph level: skeleton, v-structure, or edge orientation. For readability, we show the templates with placeholders such as [Dataset], [Variable Description], [Dataset Profile], and [Expert Opinions]. In our implementation, these placeholders are instantiated with dataset names, variable descriptions, dataset statistics, expert information, and relation-specific expert opinions. 
+
+Shared Prompt Fields: Dataset Profile and Expert Opinions Dataset Profile: 
+
+For discrete datasets: Dataset: [VALUE] Samples, [VALUE] Features, Discrete Variables ( [TEXT] Sample Size). Sample-to-feature ratio: [VALUE] ([TEXT] ). Cardinality: Min= [VALUE] , Max= [VALUE] , Median= [VALUE] (Type: [TEXT] ). Concentration: [TEXT] (Mean Mode Frequency [VALUE] %). Dependence (Cramer’s V): Mean V= [VALUE] , Max V= [VALUE] ; Strong Associations are [TEXT] .Entropy: [TEXT] (Mean normalized feature entropy). Noise: [TEXT] .For continuous datasets: Dataset: [VALUE] Samples, [VALUE] Features, Continuous Variables ( [TEXT] Sample Size). Sample-to-feature ratio: [VALUE] ([TEXT] ). Scaling: [TEXT] (std ratio [VALUE] x). Distributions: [TEXT] Skewness, [TEXT] Tails, Features are [TEXT] .Outliers: [TEXT] (MAD-based). Dependence: Mean |r|=[VALUE] , Max |r|=[VALUE] ; Multicollinearity [TEXT] Exists. Nonlinearity: [TEXT] Signal (Pearson–Spearman Gap). Noise: [TEXT] .
+
+Expert Opinions: 
+
+Expert 1: Short Name: [EXPERT] 
+
+Full Name: [TEXT] 
+
+Type: [TEXT] 
+
+Output: [TEXT] 
+
+Description: [TEXT] 
+
+Information: [TEXT] 
+
+Opinion: [AGREE/DISAGREE] for sk and vs queries, or [OPTION A/B/C/D] for eg queries. Expert 2: ... Expert N: ... 
+
+Figure 5: Shared dataset-profile and expert-opinion fields inserted into relation-specific prompts. 22 User Prompt: Skeleton Expert Reweighting 
+
+Consider the following CONTEXT :Multiple Causal Discovery experts are recovering causal relationships among variables in the [NAME] dataset. At the Skeleton level, experts provide their opinions on whether the following two variables should have a direct graph-level adjacency in the causal graph skeleton (without considering the causal direction). Variables and their descriptions: (1) [VARIABLE_1] : [DESCRIPTION_1] 
+
+(2) [VARIABLE_2] : [DESCRIPTION_2] 
+
+Dataset Profile: 
+
+[DATASET_PROFILE] 
+
+Expert Opinions: 
+
+Out of [VALUE] experts, [VALUE] experts support a direct graph-level adjacency between [VARIABLE_1] 
+
+and [VARIABLE_2] . [EXPERT_OPINIONS] 
+
+Given the following TASK :(1) Assess whether each expert’s opinion plausibly fits the dataset characteristics. (2) Evaluate whether a direct graph-level adjacency is plausible between [VARIABLE_1] and [VARIABLE_2] ,given variable semantics, domain constraints, and possible mediation by other observed variables. (3) Finally, based on (1), (2), and the expert agreement pattern, assign a reliability weight in [0 , 1, 2, 3, . . . , 10] 
+
+to each expert for THIS relation. (4) The score is based on the following rubric: – [0 , 1, 2, 3, 4] Expert–Dataset Match. – [0 , 1, 2, 3] Direct-adjacency Plausibility under the dataset’s graph abstraction. – [0 , 1, 2, 3] Performance of Expert at the Skeleton level. (5) Use extreme weights such as 10 or 0 only when the evidence is overwhelming; otherwise prefer calibrated non-extreme weights. Your answer is: 
+
+Figure 6: Prompt template for skeleton-level LLM-guided expert reweighting. 
+
+User Prompt: V-structure Expert Reweighting 
+
+Consider the following CONTEXT :Multiple Causal Discovery experts are recovering causal relationships among variables in the [NAME] dataset. At the V-structure level, experts provide their opinions on whether the following three variables form a direct unshielded collider of the pattern (1) → (2) ← (3). This requires (1) and (3) to be plausible direct parents of (2), and also requires (1) and (3) not to have a direct adjacency under the dataset’s causal abstraction. Variables and their descriptions: (1) [VARIABLE_1] : [DESCRIPTION_1] 
+
+(2) [VARIABLE_2] : [DESCRIPTION_2] 
+
+(3) [VARIABLE_3] : [DESCRIPTION_3] 
+
+Dataset Profile: 
+
+[DATASET_PROFILE] 
+
+Expert Opinions: 
+
+Out of [VALUE] experts, [VALUE] experts support the direct unshielded collider [VARIABLE_1] →
+
+[VARIABLE_2] ← [VARIABLE_3] . [EXPERT_OPINIONS] 
+
+Given the following TASK :(1) Assess whether each expert’s opinion plausibly fits the dataset characteristics. (2) Evaluate whether [VARIABLE_1] and [VARIABLE_3] are plausible independent parents of [VARIABLE_2] 
+
+under an unshielded collider structure. (3) Finally, based on (1), (2), and the expert agreement pattern, assign a reliability weight in [0 , 1, 2, 3, . . . , 10] 
+
+to each expert for THIS relation. (4) The score is based on the following rubric: – [0 , 1, 2, 3, 4] Expert–Dataset Match. – [0 , 1, 2, 3] Unshielded-collider Plausibility, including direct-parent plausibility and parent non-adjacency. – [0 , 1, 2, 3] Performance of Expert at the V-structure level. (5) Use extreme weights such as 10 or 0 only when the evidence is overwhelming; otherwise prefer calibrated non-extreme weights. Your answer is: 
+
+Figure 7: Prompt template for v-structure-level LLM-guided expert reweighting. 23 User Prompt: Edge Orientation Expert Reweighting 
+
+Consider the following CONTEXT :Multiple Causal Discovery experts are recovering causal relationships among variables in the [NAME] dataset. At the Edge Orientation level, the adjacency between the following two variables has already been considered, and experts provide their opinions on the most plausible orientation of the following two variables. Variables and their descriptions: (1) [VARIABLE_1] : [DESCRIPTION_1] 
+
+(2) [VARIABLE_2] : [DESCRIPTION_2] 
+
+Edge Orientation Options: 
+
+– OPTION A: the expert supports that changing [VARIABLE_1] causes a change in [VARIABLE_2] .– OPTION B: the expert supports that changing [VARIABLE_2] causes a change in [VARIABLE_1] .– OPTION C: the expert supports an undirected adjacency between [VARIABLE_1] and [VARIABLE_2] ,meaning that the expert supports adjacency but abstains from deciding the orientation. – OPTION D: the expert does not provide usable evidence for this adjacency or orientation. 
+
+Dataset Profile: 
+
+[DATASET_PROFILE] 
+
+Expert Opinions: 
+
+Out of [VALUE] experts: – [VALUE] experts support OPTION A ( [VARIABLE_1] → [VARIABLE_2] ). – [VALUE] experts support OPTION B ( [VARIABLE_2] → [VARIABLE_1] ). – [VALUE] experts support an undirected adjacency or abstain from orientation. [EXPERT_OPINIONS] 
+
+Given the following TASK :(1) Assess whether each expert’s opinion plausibly fits the dataset characteristics. (2) Evaluate which experts provide reliable evidence for orienting this already-considered adjacency between 
+
+[VARIABLE_1] and [VARIABLE_2] , given variable semantics and domain constraints. (3) Pay special attention to whether each expert is suitable for the Edge Orientation level. (4) Treat OPTION C as orientation abstention, not as directional evidence for either OPTION A or OPTION B. (5) Finally, assign a reliability weight in [0 , 1, 2, 3, . . . , 10] to each expert for THIS relation. (6) The score is based on the following rubric: – [0 , 1, 2, 3, 4] Expert–Dataset Match. – [0 , 1, 2, 3] Directional Causal Plausibility. – [0 , 1, 2, 3] Performance of Expert at the Edge Orientation level. (7) Use extreme weights such as 10 or 0 only when the evidence is overwhelming; otherwise prefer calibrated non-extreme weights. Your answer is: 
+
+Figure 8: Prompt template for edge-orientation-level LLM-guided expert reweighting. 
+
+E.2 Example LLM Response and Analysis 
+
+We provide two examples to show how CEA uses the LLM as a meta-referee for expert reweighting. 
+
+Expert Reweighting for Skeleton. Figure 9 shows a skeleton-level example on the Alarm dataset for the candidate adjacency between VENTLUNG and KINKEDTUBE . Although four out of six experts support the adjacency, the LLM does not simply perform majority voting. Instead, it assigns high weights to BOSS, GES, GRaSP, and PC because their assumptions and inference mechanisms are compatible with the large, low-cardinality discrete dataset, and because their AGREE opinions are consistent with the direct mechanical relation between tube obstruction and effective lung ventilation. In contrast, LiNGAM is assigned a minimal weight because its continuous linear non-Gaussian assumptions are poorly matched to the discrete Alarm variables. FCI receives only a moderate weight: although its conditional-independence testing is type-compatible, its DISAGREE opinion conflicts with the relation-level causal plausibility. This example demonstrates how CEA combines dataset compatibility and causal plausibility to produce calibrated relation-specific expert weights. 
+
+Expert Reweighting for Edge Orientation. Figure 10 presents an edge orientation example on the 
+
+Sachs dataset for the already-considered adjacency between PKA and Jnk . Three experts support PKA 
+
+→ Jnk , while the remaining three abstain from orientation. The LLM assigns high weights to FCI and PC because their chi-square conditional-independence tests are type-compatible with the large discrete Sachs setting and their OPTION A opinions provide usable directional evidence. LiNGAM also supports the same direction, but receives only a moderate weight because its continuous linear 24 non-Gaussian assumptions are less compatible with the discretized low-cardinality measurements. Meanwhile, BOSS, GES, and GRaSP receive lower weights because their OPTION C outputs indicate orientation abstention rather than directional support. This example highlights that CEA can distinguish experts even when they appear to support the same direction, and that undirected outputs are treated as orientation uncertainty rather than as evidence for either causal direction. 
+
+Example 1: Expert Reweighting for Skeleton on Alarm Relation: VENTLUNG – KINKEDTUBE 
+
+Task: Assign relation-specific reliability weights to each expert for whether VENTLUNG and KINKEDTUBE should have a direct graph-level adjacency in the skeleton. 
+
+Variable Semantics: 
+
+VENTLUNG : effective ventilation status of the lungs through the airway and ventilator circuit. 
+
+KINKEDTUBE : kinked or obstructed endotracheal or breathing tube that restricts airflow. 
+
+Expert Opinions: 
+
+Out of 6 experts, 4 experts support a direct graph-level adjacency between VENTLUNG and KINKEDTUBE .Expert BOSS FCI GES GRaSP LiNGAM PC Opinion AGREE DISAGREE AGREE AGREE DISAGREE AGREE 
+
+LLM-assigned Weights: 
+
+Expert BOSS FCI GES GRaSP LiNGAM PC Weight 9 4 9 8 1 9
+
+LLM Analyses: 
+
+BOSS : BOSS is well matched to the large low-cardinality discrete ALARM data with a type-compatible BDeu score; its AGREE opinion is highly plausible because tube obstruction directly affects effective lung ventilation, though permutation/order equivalence makes its skeleton evidence slightly less definitive. 
+
+FCI : FCI is reasonably matched through chi-square CI tests on large discrete data, but its DISAGREE opinion conflicts with the direct mechanical relation between KINKEDTUBE and VENTLUNG and may reflect conservative conditioning or PAG extraction uncertainty. 
+
+GES : GES is strongly matched because BDeu scoring fits the discrete data and the sample size supports stable score comparisons; its AGREE opinion is strongly plausible and carries high skeleton-level reliability. 
+
+GRaSP : GRaSP is well matched to the large discrete setting with BDeu-based permutation search, and its AGREE opinion fits the direct mechanical effect from KINKEDTUBE to VENTLUNG, though ordering-based searches can admit near-equivalent sparse explanations. 
+
+LiNGAM : LiNGAM is poorly matched because the variables are discrete and low-cardinality rather than continu-ous linear non-Gaussian measurements; its DISAGREE opinion conflicts with the direct mechanism, making its skeleton output unreliable here. 
+
+PC : PC is strongly matched because the sample size is large and chi-square CI tests are appropriate for low-cardinality discrete variables; its AGREE opinion is plausible and supported by strong skeleton-level evidence. 
+
+Final Weight Justifications: 
+
+BOSS (9) : Type-compatible BDeu scoring and plausible AGREE evidence support a high weight, with slight caution from permutation/order uncertainty. 
+
+FCI (4) : Although methodologically reasonable for discrete data, its DISAGREE vote conflicts with a direct mechanical relation. 
+
+GES (9) : Strong discrete-data compatibility and strong skeleton reliability support its plausible AGREE vote. 
+
+GRaSP (8) : Good data compatibility and plausible AGREE evidence support a high weight, with moderate caution from permutation-based uncertainty. 
+
+LiNGAM (1) : Severe assumption mismatch with discrete ALARM variables and an implausible DISAGREE vote justify minimal reliability. 
+
+PC (9) : Type-compatible CI testing and strong skeleton-level reliability support its plausible AGREE vote. 
+
+Figure 9: LLM response for skeleton-level expert reweighting on the Alarm dataset. 25 Example 2: Expert Reweighting for Edge Orientation on Sachs Relation: PKA → Jnk 
+
+Task: Assign relation-specific reliability weights to each expert for orienting the already-considered adjacency between PKA and Jnk .
+
+Variable Semantics: 
+
+PKA : protein kinase A activity level, a cAMP-dependent kinase readout involved in broad intracellular signaling regulation. 
+
+Jnk : phosphorylated JNK or c-Jun N-terminal kinase activity level, a stress-activated MAP kinase readout involved in inflammatory and apoptotic signaling. 
+
+Expert Opinions: 
+
+Out of 6 experts, 3 experts support PKA → Jnk , 0 experts support Jnk → PKA , and 3 experts abstain from orientation. Here, OPTION A denotes PKA → Jnk , and OPTION C denotes orientation abstention. Expert BOSS FCI GES GRaSP LiNGAM PC Opinion OPTION C OPTION A OPTION C OPTION C OPTION A OPTION A 
+
+LLM-assigned Weights: 
+
+Expert BOSS FCI GES GRaSP LiNGAM PC Weight 4 8 4 3 5 8
+
+LLM Analyses: 
+
+BOSS : BOSS is well matched to the large low-cardinality discrete SACHS data with a type-compatible BDeu score, but OPTION C is orientation abstention and provides no usable directional evidence for either PKA →
+
+Jnk or the reverse direction. 
+
+FCI : FCI is well matched through chi-square CI tests on large discrete data and can be useful when hidden confounding is plausible in biological signaling; its OPTION A opinion supports the biologically plausible PKA 
+
+→ Jnk direction, though PAG endpoint uncertainty and circle-to-tail conversion limit certainty. 
+
+GES : GES is well matched because BDeu scoring fits the discrete variables and the sample size supports stable score comparisons, but its OPTION C output is an undirected CPDAG edge and therefore provides little directional evidence. 
+
+GRaSP : GRaSP is reasonably matched to the large discrete dataset with BDeu scoring, but it abstains from orientation and its edge directions are permutation-induced when present, making its evidence weak here. 
+
+LiNGAM : LiNGAM supports the biologically plausible PKA → Jnk direction, but it is poorly matched because the SACHS variables are discretized low-cardinality measurements rather than continuous linear non-Gaussian. 
+
+PC : PC is well matched because the sample size is large and chi-square CI tests are appropriate for low-cardinality discrete variables; its OPTION A opinion supports the biologically plausible direction, though causal sufficiency may be less secure in cellular signaling systems. 
+
+Final Weight Justifications: 
+
+BOSS (4) : Good discrete-data compatibility, but OPTION C is only orientation abstention and gives weak edge-orientation evidence. 
+
+FCI (8) : Type-compatible CI testing and support for the plausible PKA → Jnk direction justify a high weight, with caution from PAG endpoint uncertainty. 
+
+GES (4) : Strong data compatibility, but its undirected CPDAG output indicates orientation uncertainty rather than directional support. 
+
+GRaSP (3) : Reasonable dataset compatibility, but orientation abstention and permutation-based uncertainty provide little usable directional evidence. 
+
+LiNGAM (5) : The proposed direction is biologically plausible, but assumption mismatch with discretized SACHS variables limits reliability. 
+
+PC (8) : Type-compatible CI testing and plausible OPTION A evidence support a high weight, with caution about possible causal-sufficiency violations. 
+
+Figure 10: LLM response for edge orientation-level expert reweighting on the Sachs dataset. 
+
+## F Full Results 
+
+Table 8 provides the complete causal discovery results on the synthetic benchmark datasets across sample sizes n ∈ { 500 , 1000 , 5000 , 10000 }. We report per-sample size results for these datasets as only the synthetic benchmarks are evaluated under multiple sample-size regimes. The table provides a 26 fine-grained view of the averaged results reported in Table 1, showing that CEA consistently achieves the strongest performance across different sample sizes. Table 8: Complete causal discovery results on synthetic datasets across different sample sizes. The best values are in bold , and the second-best are underlined. Sample Size Method Alarm Asia Child Insurance Sachs Metric RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑) RNB ( ↓) AUC ( ↑)500 BOSS 0.380 0.690 0.500 0.586 0.440 0.677 0.327 0.657 0.559 0.550 FCI 0.337 0.659 0.375 0.615 0.440 0.574 0.413 0.541 0.441 0.601 GES 0.207 0.791 0.188 0.834 0.440 0.677 0.327 0.654 0.647 0.363 GRaSP 0.217 0.782 0.500 0.586 0.440 0.659 0.481 0.511 0.559 0.550 ICA-LiNGAM 0.739 0.428 0.250 0.766 0.500 0.562 0.673 0.363 0.588 0.422 PC 0.315 0.670 0.375 0.615 0.380 0.625 0.490 0.454 0.588 0.483 Uniform CEA 0.228 0.801 0.312 0.693 0.340 0.665 0.375 0.590 0.529 0.508 
+
+CEA (Ours) 0.065 0.937 0.125 0.891 0.140 0.863 0.250 0.748 0.324 0.680 
+
+1000 BOSS 0.337 0.727 0.625 0.605 0.440 0.659 0.404 0.625 0.500 0.725 FCI 0.239 0.770 0.562 0.441 0.180 0.823 0.308 0.675 0.265 0.827 GES 0.152 0.854 0.312 0.724 0.340 0.734 0.375 0.601 0.559 0.523 GRaSP 0.217 0.801 0.500 0.586 0.400 0.692 0.433 0.550 0.529 0.587 ICA-LiNGAM 0.446 0.605 0.625 0.414 0.680 0.415 0.558 0.411 0.618 0.442 PC 0.239 0.760 0.562 0.441 0.180 0.819 0.327 0.652 0.618 0.472 Uniform CEA 0.141 0.863 0.438 0.567 0.160 0.841 0.337 0.642 0.294 0.757 
+
+CEA (Ours) 0.076 0.924 0.125 0.891 0.100 0.902 0.202 0.802 0.176 0.836 
+
+5000 BOSS 0.359 0.763 0.500 0.695 0.240 0.838 0.375 0.684 0.500 0.750 FCI 0.087 0.915 0.375 0.648 0.400 0.659 0.356 0.648 0.235 0.823 GES 0.098 0.907 0.188 0.834 0.240 0.838 0.327 0.669 0.500 0.750 GRaSP 0.391 0.713 0.562 0.563 0.280 0.806 0.317 0.697 0.500 0.750 ICA-LiNGAM 0.522 0.617 0.250 0.766 0.700 0.433 0.865 0.267 0.647 0.398 PC 0.109 0.895 0.375 0.648 0.400 0.643 0.385 0.610 0.500 0.573 Uniform CEA 0.120 0.890 0.188 0.834 0.320 0.715 0.298 0.694 0.500 0.750 
+
+CEA (Ours) 0.033 0.968 0.062 0.945 0.240 0.768 0.231 0.765 0.118 0.891 
+
+10000 BOSS 0.446 0.674 0.500 0.695 0.260 0.815 0.298 0.715 0.500 0.750 FCI 0.185 0.834 0.375 0.648 0.240 0.787 0.269 0.729 0.294 0.795 GES 0.098 0.907 0.188 0.834 0.240 0.838 0.183 0.829 0.500 0.750 GRaSP 0.402 0.653 1.000 0.255 0.400 0.726 0.490 0.619 0.500 0.750 ICA-LiNGAM 0.598 0.561 0.438 0.567 0.860 0.350 0.558 0.462 0.529 0.508 PC 0.098 0.907 0.375 0.648 0.260 0.763 0.308 0.682 0.500 0.573 Uniform CEA 0.098 0.907 0.188 0.834 0.220 0.800 0.192 0.807 0.500 0.750 
+
+CEA (Ours) 0.022 0.979 0.062 0.945 0.080 0.922 0.144 0.858 0.059 0.945 
+
+Avg BOSS 0.381 0.713 0.531 0.645 0.345 0.747 0.351 0.670 0.515 0.694 FCI 0.212 0.795 0.422 0.588 0.315 0.711 0.337 0.648 0.309 0.761 GES 0.139 0.865 0.219 0.806 0.315 0.772 0.303 0.688 0.551 0.597 GRaSP 0.307 0.737 0.641 0.497 0.380 0.721 0.430 0.594 0.522 0.659 ICA-LiNGAM 0.576 0.553 0.391 0.628 0.685 0.440 0.663 0.376 0.596 0.443 PC 0.190 0.808 0.422 0.588 0.305 0.712 0.378 0.600 0.551 0.525 Uniform CEA 0.147 0.865 0.281 0.732 0.260 0.755 0.300 0.683 0.456 0.691 
+
+CEA (Ours) 0.049 0.952 0.093 0.918 0.140 0.864 0.207 0.793 0.169 0.838 
+
+## G Additional Visualizations 
+
+G.1 Candidate Coverage Visualization 
+
+Figure 11 visualizes the causal graphs recovered by different SCD experts on the Asia dataset, together with the final graph produced by CEA and the ground-truth graph. This example illustrates the candidate-coverage limitation of CEA. Since CEA is designed as an ensemble and reweighting framework, it only aggregates and calibrates relations proposed by the experts, rather than allowing the LLM to freely introduce new causal relations. Consequently, if a true relation is missed by all experts, then it cannot be recovered by CEA. In the Asia example, the ground-truth graph contains the edge asia → tub . However, none of the SCD experts shown in Figure 11 identifies this relation. As a result, this edge is absent from the expert candidate pool and is therefore also absent from the final CEA graph. This behavior reflects a deliberate design trade-off: CEA avoids LLM-generated hallucination edges and keeps the final graph grounded in data-driven SCD outputs, but its recall is bounded by the coverage of the expert’s candidate set. 27 Figure 11: Candidate coverage visualization on the Asia dataset. The figure shows causal graphs recovered by individual SCD experts, the final graph produced by CEA, and the ground-truth graph. Since the true edge asia → tub is missed by all experts, it is not included in the CEA’s graph. 
+
+G.2 Additional Weight-performance Alignment 
+
+We provide additional visualizations of the weight-performance alignment between LLM-assigned expert weights and empirical expert performance. Figures 12–16 further illustrate that CEA’s LLM-guided reweighting tends to assign higher weights to experts that are empirically more reliable. GES FCI BOSS PC GRaSP LiNGAM             
+
+> Expert
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score
+> Weight Mean
+> RNB Mean
+> Weight Mean
+> RNB Mean
+> Alignment Score
+> GES
+> FCI
+> BOSS
+> PC
+> GRaSP
+> LiNGAM
+> 7.63 8.24 9.39
+> 6.14 7.75 8.39
+> 6.65 7.54 9.11
+> 5.87 7.15 8.72
+> 6.41 6.37 9.97
+> 2.36 2.95 9.41
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score in [0, 10]
+
+Figure 12: Weight-performance alignment on the Insurance dataset under the RNB metric. GES PC FCI GRaSP BOSS LiNGAM             
+
+> Expert
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score
+> Weight Mean
+> RNB Mean
+> Weight Mean
+> RNB Mean
+> Alignment Score
+> GES
+> PC
+> FCI
+> GRaSP
+> BOSS
+> LiNGAM
+> 7.26 9.21 8.05
+> 5.93 8.42 7.51
+> 5.15 8.08 7.07
+> 6.16 6.63 9.53
+> 5.80 5.50 9.70
+> 2.57 2.50 9.93
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Score in [0, 10]
+
+Figure 13: Weight-performance alignment on the Alarm dataset under the RNB metric. 28 GES PC FCI GRaSP BOSS LiNGAM 
+
+Expert 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score
+
+Weight Mean 
+
+AUC Mean 
+
+Weight Mean 
+
+AUC Mean 
+
+Alignment Score 
+
+GES 
+
+PC 
+
+FCI 
+
+GRaSP 
+
+BOSS 
+
+LiNGAM 
+
+7.26 8.65 8.61 
+
+5.93 8.08 7.85 
+
+5.15 7.95 7.21 
+
+6.16 7.37 8.79 
+
+5.80 7.13 8.66 
+
+2.57 5.53 7.04 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score in [0, 10]
+
+Figure 14: Weight-performance alignment on the Alarm dataset under the AUC metric. PC FCI GES BOSS GRaSP LiNGAM 
+
+Expert 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score
+
+Weight Mean 
+
+RNB Mean 
+
+Weight Mean 
+
+RNB Mean 
+
+Alignment Score 
+
+PC 
+
+FCI 
+
+GES 
+
+BOSS 
+
+GRaSP 
+
+LiNGAM 
+
+6.72 8.16 8.56 
+
+6.21 8.01 8.20 
+
+7.09 8.01 9.07 
+
+6.12 7.57 8.55 
+
+6.00 7.06 8.94 
+
+2.20 2.57 9.62 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score in [0, 10]
+
+Figure 15: Weight-performance alignment on the Child dataset under the RNB metric. GES BOSS GRaSP PC FCI LiNGAM 
+
+Expert 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score
+
+Weight Mean 
+
+AUC Mean 
+
+Weight Mean 
+
+AUC Mean 
+
+Alignment Score 
+
+GES 
+
+BOSS 
+
+GRaSP 
+
+PC 
+
+FCI 
+
+LiNGAM 
+
+7.09 7.72 9.37 
+
+6.12 7.47 8.65 
+
+6.00 7.21 8.79 
+
+6.72 7.12 9.59 
+
+6.21 7.11 9.11 
+
+2.20 4.40 7.80 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Score in [0, 10]
+
+Figure 16: Weight-performance alignment on the Child dataset under the AUC metric. 29
