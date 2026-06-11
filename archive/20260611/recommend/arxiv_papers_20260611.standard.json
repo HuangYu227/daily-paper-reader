@@ -1,0 +1,256 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-11T22:27:50.008961+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 4,
+    "quick_skim_target": 12,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2606.11990v1",
+      "source": "arxiv",
+      "title": "Time-Series Foundation Model Embeddings for Remaining Useful Life Estimation",
+      "abstract": "Remaining Useful Life (RUL) prediction is essential for industrial predictive maintenance, yet many learning-based approaches rely on extensive feature engineering or large labeled datasets to train task-specific sequence models. In this work, we introduce a lightweight learning approach, in which we leverage a frozen pretrained time-series foundation model (TSFM) and combine it with a small regression head for RUL estimation from multivariate sensor streams. More specifically, we use Chronos-2 as a frozen backbone to extract context window features and train a lightweight regression neural network for RUL prediction. Experiments on real-world industrial sensor data from two device types show that Chronos-2 features consistently improve over recurrent, convolutional, Transformer-based, and gradient-boosting baselines under the same preprocessing and evaluation protocol. We further analyze the impact of context length and find that performance improves significantly with longer histories, indicating that TSFM representation offer a practical and data-efficient alternative for RUL estimation in industrial settings.",
+      "authors": [
+        "Amir El-Ghoussani",
+        "Michele De Vita",
+        "Ronald Naumann",
+        "Valiseios Belagiannis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-10T12:14:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.11990v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses frozen pretrained time-series foundation model as encoder",
+      "llm_evidence_cn": "使用冻结的预训练时间序列基础模型作为编码器",
+      "llm_evidence": "使用冻结的预训练时间序列基础模型作为编码器",
+      "canonical_evidence": "使用冻结的预训练时间序列基础模型作为编码器",
+      "llm_tldr_en": "Proposes lightweight RUL estimation by leveraging a frozen Chronos-2 backbone for feature extraction and a small regression head, showing improved performance on real-world sensor data.",
+      "llm_tldr_cn": "针对工业预测性维护中的剩余使用寿命预测问题，现有方法依赖大量特征工程或标注数据。本文提出一种轻量学习方法，利用冻结的预训练时间序列基础模型Chronos-2作为特征提取器，结合小型回归头进行预测。在真实工业传感器数据上的实验表明，该方法一致优于基线，展示了冻结时间序列编码器在特征提取中的有效性。",
+      "llm_tldr": "针对工业预测性维护中的剩余使用寿命预测问题，现有方法依赖大量特征工程或标注数据。本文提出一种轻量学习方法，利用冻结的预训练时间序列基础模型Chronos-2作为特征提取器，结合小型回归头进行预测。在真实工业传感器数据上的实验表明，该方法一致优于基线，展示了冻结时间序列编码器在特征提取中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder for time series",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.11745v1",
+      "source": "arxiv",
+      "title": "From Prompts to Tokens: Internalizing Causal Supervision in Vision-Language Model for Multi-Image Causal Reasoning",
+      "abstract": "Visual causal reasoning is essential for understanding and intervening in the physical world, requiring identification of causal variables from visual inputs and reasoning over intervention effects. Despite recent progress, large vision--language models (VLMs) remain brittle at such tasks, especially for interventional and counterfactual queries over multi-image inputs. Most existing explorations inject causal knowledge via textual prompts, leaving causal mechanisms external to model execution and limiting reliable control during inference. To address this problem, we propose BridgeVLM, which internalizes visual causal reasoning by inducing a causal graph from multi-image inputs and converting it into structured Causal Tokens executed by RAMP layers injected into the LLM decoder for causal message passing. We further introduce a unified training interface M3S for fine-grained causal supervision from different granularities (local/global level). BridgeVLM achieves 54.4% accuracy on intervention tasks on CausalVLBench (vs. 33.2% with prompt-level supervision), improves results on Causal3D from 43.6% to 49.0%, and substantially improves causal structure learning on CausalVLBench ($F_1$: 33.4% $\\rightarrow$ 75.1%).",
+      "authors": [
+        "Haoping Yu",
+        "Yuanxi Li",
+        "Jing Ma"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-06-10T07:21:45+00:00",
+      "link": "https://arxiv.org/pdf/2606.11745v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "internalizing causal reasoning in vision-language models via causal graph induction",
+      "llm_evidence_cn": "通过因果图归纳将因果推理内化到视觉-语言模型中",
+      "llm_evidence": "通过因果图归纳将因果推理内化到视觉-语言模型中",
+      "canonical_evidence": "通过因果图归纳将因果推理内化到视觉-语言模型中",
+      "llm_tldr_en": "Proposes BridgeVLM which internalizes visual causal reasoning by inducing a causal graph from multi-image inputs and converting it into structural tokens.",
+      "llm_tldr_cn": "该论文针对视觉-语言模型在多图像因果推理中的不足，提出BridgeVLM，通过从多图像输入归纳因果图并将其结构化转换为令牌，将因果推理内化到模型执行中。在因果干预和反事实推理任务上表现优异。",
+      "llm_tldr": "该论文针对视觉-语言模型在多图像因果推理中的不足，提出BridgeVLM，通过从多图像输入归纳因果图并将其结构化转换为令牌，将因果推理内化到模型执行中。在因果干预和反事实推理任务上表现优异。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.08498v1",
+      "source": "arxiv",
+      "title": "Tests for Independence of High-Dimensional Nonstationary Time Series",
+      "abstract": "This manuscript studies the problem of independence testing between two high-dimensional time series without assuming weak stationarity, that is, allowing their autocovariances to vary over time. To this end, we propose a bimodal weighted-average test statistic that removes the bias induced by temporal dependence under the null hypothesis, thereby avoiding the need to whiten the time series prior to hypothesis testing -- a procedure that is challenging in high-dimensional and nonstationary settings. To facilitate statistical inference, we develop a dependent wild bootstrap procedure. On the theoretical side, we derive a concentration inequality for quadratic forms of time series data stemming from a class of high-dimensional, nonlinear, and nonstationary processes. This result enables us to derive the asymptotic null distribution of the proposed test statistic and to establish the validity of the bootstrap algorithm. Numerical results show that the proposed test attains desired size and good power performance even when the dimension exceeds the sample size or when the data-generating process exhibits time-varying autocovariances. In contrast, tests based on whitening time series fail to maintain correct size in the presence of unstable autocovariance structures. Since nonstationary autocovariances commonly arise in real-life time series data, our work offers a robust procedure for independence testing.",
+      "authors": [
+        "Yunyi Zhang"
+      ],
+      "primary_category": "math.ST",
+      "categories": [
+        "math.ST",
+        "stat.ME"
+      ],
+      "published": "2026-06-07T07:54:53+00:00",
+      "link": "https://arxiv.org/pdf/2606.08498v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "independence testing for high-dimensional nonstationary time series, relevant to temporal causal discovery",
+      "llm_evidence_cn": "高维非平稳时间序列的独立性检验，与时间因果结构学习相关",
+      "llm_evidence": "高维非平稳时间序列的独立性检验，与时间因果结构学习相关",
+      "canonical_evidence": "高维非平稳时间序列的独立性检验，与时间因果结构学习相关",
+      "llm_tldr_en": "This paper proposes a bimodal weighted-average test and dependent wild bootstrap for independence testing between high-dimensional nonstationary time series, enabling temporal causal structure discovery without assuming stationarity.",
+      "llm_tldr_cn": "本文针对高维非平稳时间序列的独立性检验问题，提出了一种双峰加权平均检验统计量和依赖野自助法，避免了平稳性假设和预白化步骤，为从非平稳时间序列中发现时间因果结构提供了可行的统计工具。",
+      "llm_tldr": "本文针对高维非平稳时间序列的独立性检验问题，提出了一种双峰加权平均检验统计量和依赖野自助法，避免了平稳性假设和预白化步骤，为从非平稳时间序列中发现时间因果结构提供了可行的统计工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal structure learning from time series",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.04833v1",
+      "source": "arxiv",
+      "title": "Signed Dual Attention: Capturing Signed Dependencies in Time Series Forecasting",
+      "abstract": "Initially developed for natural language processing, Transformer architectures and attention mechanisms are now central to a wide range of deep learning models, including applications in time series forecasting. A standard attention mechanism, however, implicitly assumes homophilic interactions, limiting its ability to model data with positive and negative dependencies, such as time series. In this work, we introduce the Signed Dual Attention, a novel attention formulation that captures both positive and negative relational patterns without additional parameters. By leveraging a dual message-passing scheme inspired by correlation structures, Signed Dual Attention propagates both supportive and contrastive information within a single shared block, effectively achieving the expressiveness of two head attention without additional parameters. This module can be seamlessly integrated into existing architectures and can yield performance gains in certain situations, requiring signed relational modeling. This approach opens a pathway toward more expressive and parameter-efficient transformers.",
+      "authors": [
+        "Balthazar Courvoisier",
+        "Tristan Cazenave"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-03T13:02:14+00:00",
+      "link": "https://arxiv.org/pdf/2606.04833v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series forecasting with signed attention",
+      "llm_evidence_cn": "带符号依赖的时间序列预测",
+      "llm_evidence": "带符号依赖的时间序列预测",
+      "canonical_evidence": "带符号依赖的时间序列预测",
+      "llm_tldr_en": "Proposes Signed Dual Attention to capture both positive and negative dependencies in time series forecasting, without extra parameters.",
+      "llm_tldr_cn": "针对标准注意力机制假设同质性而无法建模时间序列中正负依赖的问题，该论文提出有符号双注意力，通过双消息传递机制在一个共享块内同时传播支持和对比信息。该方法无需额外参数，能有效捕捉时间序列中正负两种关系模式，提升预测性能。",
+      "llm_tldr": "针对标准注意力机制假设同质性而无法建模时间序列中正负依赖的问题，该论文提出有符号双注意力，通过双消息传递机制在一个共享块内同时传播支持和对比信息。该方法无需额外参数，能有效捕捉时间序列中正负两种关系模式，提升预测性能。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-05-730511-v1",
+      "source": "biorxiv",
+      "title": "BiXformer: A Bidirectional Cross Attention Transformer for Disentangling Inter-Regional Neural Dynamics",
+      "abstract": "Advances in high-throughput neural recording technologies enable simultaneous measurement of activity across multiple brain regions in behaving animals, producing datasets of unprecedented scale and richness. Interpreting these data remains challenging due to the bidirectional and temporally offset nature of inter-regional communication, where feedforward and feedback signals are superimposed within neural populations. We introduce BiXformer, a bidirectional cross-attention transformer that disentangles these interactions by decomposing inter-regional communication into causal and acausal streams using directionally masked attention. By enforcing temporal constraints within attention heads, BiXformer recovers low-dimensional, directed latent dynamics and estimates communication delays without relying on linearity or stationarity assumptions. We validate the model on synthetic datasets with known ground-truth delays, demonstrating accurate recovery of both latent structure and inter-regional timing. Applied to simultaneous neural-behavioral recordings and multi-region neural recordings during a movement task, BiXformer reveals interpretable, temporally structured components consistent with the coexistence of sensory feedback and motor-related signals. These results establish BiXformer as a flexible framework for uncovering dynamic, directed communication in complex neural circuits.",
+      "authors": [
+        "El Sayed, O.",
+        "Han, Y.",
+        "Dragoi, T.",
+        "Economo, M. N.",
+        "DePasquale, B."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-10T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.05.730511v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "disentangles causal and acausal streams in neural time series using masked attention",
+      "llm_evidence_cn": "使用掩码注意力在神经时间序列中分离因果与非因果流",
+      "llm_evidence": "使用掩码注意力在神经时间序列中分离因果与非因果流",
+      "canonical_evidence": "使用掩码注意力在神经时间序列中分离因果与非因果流",
+      "llm_tldr_en": "BiXformer uses bidirectional cross-attention with temporal masks to decompose inter-regional neural communication into causal and acausal streams, recovering low-dimensional dynamics and causal interactions.",
+      "llm_tldr_cn": "多脑区神经记录中存在双向且时序偏移的通信，导致因果与反馈信号叠加难以解释。本文提出BiXformer，通过方向掩码注意力将脑区间相互作用分解为因果流和非因果流，并利用时序约束恢复低维动力学。在合成和真实神经数据上，该方法有效识别了因果连接，为神经因果发现提供了新工具。",
+      "llm_tldr": "多脑区神经记录中存在双向且时序偏移的通信，导致因果与反馈信号叠加难以解释。本文提出BiXformer，通过方向掩码注意力将脑区间相互作用分解为因果流和非因果流，并利用时序约束恢复低维动力学。在合成和真实神经数据上，该方法有效识别了因果连接，为神经因果发现提供了新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.10678v1",
+      "source": "arxiv",
+      "title": "One Step Closer to Ground Truth: A Multi-Scale Residual-Aware Representation Learning Pipeline for Predicting Time Series Data",
+      "abstract": "Transformer-based models have emerged as leading paradigms in time-series forecasting in recent years, employing self-attention mechanisms to capture long-range dependencies. Despite their success, these single-stage forecasting architectures exhibit persistent systematic residual biases arising from structural discrepancies, unmodeled stochastic components, or inadequate multi-scale temporal representations. This limitation persists when residuals are treated as irreducible noise, precluding adaptive correction of structured error patterns. To address this limitation, we introduce a two-stage, model-agnostic framework that explicitly decouples forecasting and residual learning into distinct stages of representation learning. A base transformer first generates the initial predictions. Subsequently, a dedicated meta-corrector dynamically models structured error patterns across multivariate channels, preserves cross-variable dependencies, and iteratively refines the residual bias of the base transformer. By formalizing this pipeline as a hypothesis space expansion, our framework addresses approximation limitations inherent in single-stage architectures, removes reliance on restrictive assumptions, and enables end-to-end learning of complex error dynamics. Evaluated on eight popular benchmark datasets using established protocols, our approach achieves state-of-the-art performance, with significant improvements in standard metrics (MSE, MAE). The results demonstrate the framework's ability to mitigate systematic biases and enhance robustness to complex temporal dynamics, advancing the practical applicability of transformer-based forecasting models.",
+      "authors": [
+        "Amrijit Biswas",
+        "Mustafa Kamal",
+        "Robin Krambroeckers",
+        "M. M. Lutfe Elahi",
+        "Sifat Momen",
+        "Nabeel Mohammed",
+        "Shafin Rahman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-09T10:31:54+00:00",
+      "link": "https://arxiv.org/pdf/2606.10678v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multi-scale residual-aware framework for time series forecasting, relevant to composite time series theme",
+      "llm_evidence_cn": "多尺度残差感知的时间序列预测框架，与复合时间序列主题相关",
+      "llm_evidence": "多尺度残差感知的时间序列预测框架，与复合时间序列主题相关",
+      "canonical_evidence": "多尺度残差感知的时间序列预测框架，与复合时间序列主题相关",
+      "llm_tldr_en": "This paper introduces a two-stage framework that decouples forecasting and residual learning, improving time series prediction by adaptively correcting structured errors.",
+      "llm_tldr_cn": "现有单阶段时间序列预测模型存在系统性残差偏差，本文提出两阶段模型无关框架，将预测和残差学习解耦，通过多尺度表示自适应性修正误差模式，在多个基准上提升了预测精度，为时间序列预测提供了新思路。",
+      "llm_tldr": "现有单阶段时间序列预测模型存在系统性残差偏差，本文提出两阶段模型无关框架，将预测和残差学习解耦，通过多尺度表示自适应性修正误差模式，在多个基准上提升了预测精度，为时间序列预测提供了新思路。",
+      "llm_tags": [
+        "query:tsc:composite"
+      ],
+      "matched_query_tag": "query:tsc:composite",
+      "matched_query_text": "Papers central to 请帮我查找有关时间序列生成、因果学习的论文。, especially work that connects or combines: time series generation; causal learning; generative models for time series; causal time series forecasting; temporal causal discovery; causal sequence generation; papers on time series generation using causal models; causal learning methods for time series data; generative adversarial networks for time series with causal constraints; temporal causal structure learning from time series.",
+      "matched_requirement_id": "req-composite-tsc",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
