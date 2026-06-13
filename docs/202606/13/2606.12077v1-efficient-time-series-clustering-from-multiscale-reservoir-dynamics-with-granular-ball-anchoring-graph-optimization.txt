@@ -1,0 +1,416 @@
+Title: Efficient Time Series Clustering from Multiscale Reservoir Dynamics with Granular-Ball Anchoring Graph Optimization
+
+URL Source: https://arxiv.org/pdf/2606.12077v1
+
+Published Time: Thu, 11 Jun 2026 01:05:20 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Efficient Time Series Clustering from Multiscale Reservoir Dynamics with Granular-Ball Anchoring Graph Optimization 
+
+## Yifan Wang 1, Lifeng Shen 1∗, Shuyin Xia 1, Yi Wang 21 Chongqing Key Laboratory of Computational Intelligence, Key Laboratory of Cyberspace Big Data Intelligent Security, Ministry of Education, Sichuan-Chongqing Co-construction Key Laboratory of Digital Economy Intelligence and Key Laboratory of Big Data Intelligent Computing, College of Computer Science and Technology, Chongqing University of Posts and Telecommunications  
+
+> 2
+
+## Chongqing Ant Consumer Finance Co,. Ltd , Ant Group. wangyifan421@foxmail.com, shenlf@cqupt.edu.cn, xiasy@cqupt.edu.cn, haonan.wy@myxiaojin.cn 
+
+## Abstract 
+
+Time-series clustering remains challenging due to the inherent trade-off between clustering effec-tiveness and computational efficiency. Similarity-based methods often suffer from quadratic com-plexity caused by pairwise distance computations, while deep learning–based approaches typically rely on costly iterative training and a large num-ber of trainable parameters. In this paper, we pro-pose MSRGC-Net, an efficient time-series cluster-ing framework that integrates multiscale reservoir computing, granular-ball-based anchoring graph construction, and consensus learning. MSRGC-Net adopts a training-free reservoir computing paradigm to extract multiscale temporal represen-tations from raw time series without backpropa-gation, significantly reducing computational over-head. To capture the intrinsic structure of the re-sulting representations, granular-ball computing is employed to adaptively model data distributions via density-consistent regions, yielding compact and robust anchor graph representations. Furthermore, a consensus-based anchoring graph optimization strategy is introduced to effectively align multi-scale reservoir representations and integrate com-plementary information across temporal scales. Extensive experiments on widely used univariate and multivariate benchmark datasets demonstrate that MSRGC-Net consistently outperforms state-of-the-art methods in clustering performance while maintaining superior computational efficiency. 
+
+## 1 Introduction 
+
+Massive time-series data are ubiquitous in both scientific re-search and real-world applications, including health monitor-ing [Mikalsen et al. , 2016], human activity recognition [Ma et al. , 2017], speech analysis [Trentin et al. , 2015] and environ-mental science [Hipel and McLeod, 1994]. As a fundamental unsupervised learning task, time-series clustering aims to dis-
+
+> ∗Corresponding Author
+
+cover intrinsic temporal structures from unlabeled sequential data and plays a crucial role in large-scale data analysis. Early time-series clustering methods typically combine classical clustering algorithms, such as k-means [Petitjean et al. , 2011] and k-Shape [Paparrizos and Gravano, 2015], with distance measures defined directly on raw time series, includ-ing Euclidean distance [Yang and Leskovec, 2011] and Dy-namic Time Warping (DTW) [Cuturi and Blondel, 2017]. Al-though conceptually simple, these distance-based approaches suffer from two well-known limitations: they are sensitive to noise and complex temporal variations, and they incur quadratic computational complexity due to repeated pairwise distance calculations, which severely limits their scalability. To alleviate these issues, feature-based clustering meth-ods [Guo et al. , 2008] first transform time series into com-pact representations before clustering. While improving ef-ficiency and robustness, their performance strongly depends on handcrafted features and domain expertise, and important temporal information may be lost during feature extraction. Moreover, deep learning–based approaches [Madiraju, 2018; Ma et al. , 2019] have demonstrated powerful representation learning capability. However, their reliance on iterative train-ing, extensive hyperparameter tuning, and large computa-tional budgets poses significant challenges for large-scale and resource-constrained time-series clustering scenarios. These limitations highlight a fundamental challenge in time-series clustering: how to learn expressive temporal rep-resentations while maintaining high computational efficiency .Addressing this challenge requires rethinking both represen-tation learning and clustering strategies. In particular, two key issues remain largely unresolved. First, temporal representations learned under different model configurations or scales often capture complementary dynamic characteristics. Although exploiting such diversity is beneficial for clustering, existing methods typically rely on repeated training or complex ensembles, leading to substan-tial computational overhead. How can multiscale and diverse representations be generated efficiently without costly train-ing procedures? Second, most existing methods apply k-means–based or spectral clustering directly to learned representations, which assume simple cluster geometries and scale poorly with 
+
+> arXiv:2606.12077v1 [cs.LG] 10 Jun 2026
+
+dataset size. How can clustering be redesigned to improve ro-bustness and scalability while avoiding expensive point-wise affinity modeling? In this paper, we propose MSRGC-Net (Multi-Scale Reservoir Granular-ball Consensus Network), an efficient time-series clustering framework that integrates multi-scale reservoir computing, granular-ball-based anchoring graph construction, and consensus learning to address these chal-lenges. MSRGC-Net adopts a training-free reservoir comput-ing paradigm to extract multiscale temporal representations using a set of fixed reservoirs with different spectral radii, en-abling efficient representation learning without backpropaga-tion. To capture the intrinsic structure of the resulting reser-voir representations, granular-ball computing is employed to model data distributions via compact, density-consistent re-gions, yielding a set of representative anchors. Furthermore, a consensus-based anchoring graph optimization strategy is introduced to align and integrate multiscale reservoir repre-sentations within a unified clustering framework. By combin-ing training-free multiscale encoding, region-level abstrac-tion, and anchor-based consensus graph modeling, MSRGC-Net effectively balances representation expressiveness and computational efficiency, making it well suited for large-scale time-series clustering. Main contributions are summarized as follows i) We propose a training-free multiscale reservoir encoding mechanism that captures complementary temporal dynamics with different spectral radii. ii) We introduce a granular-ball–based anchoring represen-tation that compactly models the reservoir state distributions and enables efficient clustering. iii) We formulate time-series clustering as a consensus-based anchoring graph optimization problem, providing a unified and lightweight framework for integrating multiscale dynamics. 
+
+## 2 Related Work 
+
+2.1 Time-Series Clustering 
+
+Time-series clustering aims to group unlabeled time series by exploiting their intrinsic dynamics. Early methods are mainly relying on similarity measures defined directly on time series, such as DTW-based clustering [Cuturi and Blondel, 2017] and k-Shape [Paparrizos and Gravano, 2015]. Although ef-fective in capturing local temporal patterns, these approaches require pairwise distance computations and thus suffer from quadratic complexity, limiting their scalability. To improve efficiency, representation-based methods adopt a “transform-then-cluster” paradigm. Representative ap-proaches include statistical feature extraction [Guijo-Rubio et al. , 2020], kernel-based models such as TCK [Mikalsen et al. ,2018], and feature fusion frameworks like Time2Feat [Boni-fati et al. , 2022]. While reducing computational cost, these methods rely on handcrafted or predefined representations and may fail to capture complex nonlinear dynamics. More recently, deep learning–based methods learn data-adaptive temporal representations, including autoencoder-based approaches [Ma et al. , 2019; Yang and Lin, 2024] and joint learning frameworks [Madiraju, 2018; Meng et al. ,𝐀 𝐀  
+
+> 𝐀 𝐀
+> Input space
+> (i)
+> (ii) (iii)
+> (iv)
+> Figure 1: Example of using granular balls for anchoring.
+
+2023]. Despite their strong expressive power, these meth-ods require iterative training with many parameters, resulting in high computational cost and limited scalability. In con-trast, our work achieves expressive temporal representations without iterative network training by exploiting the intrinsic dynamics of reservoir computing and coupling them with a lightweight clustering optimization strategy. 
+
+2.2 Reservoir Computing for Time-Series 
+
+Reservoir computing (RC), particularly Echo State Networks (ESNs) [Jaeger, 2001], provides an efficient framework for temporal modeling by employing fixed recurrent dynamics and avoiding backpropagation. Owing to its training-free na-ture, RC has been widely applied to time-series forecasting, classification, and anomaly detection [Bianchi et al. , 2015; Ullah et al. , 2022]. To enhance representation capacity, deep and multi-reservoir ESN architectures have been explored to capture temporal dynamics at multiple scales [Ma et al. ,2020]. However, existing reservoir-based methods are mainly designed for supervised tasks, and unsupervised approaches typically rely on a single reservoir and apply conventional clustering directly to reservoir states, limiting their ability to exploit complementary multiscale dynamics. 
+
+2.3 Multi-View Graph Clustering 
+
+Multi-view graph clustering [Zhan et al. , 2017; Li et al. ,2020] is an important branch of multi-view clustering [Gao 
+
+et al. , 2023]. Our work is also inspired by multi-view graph clustering, which fuses complementary representations via graph-based optimization. Although anchor-based meth-ods [Wang et al. , 2022] improve scalability, their extension to time-series data remains limited due to the difficulty of cap-turing multiscale temporal representations. Granular-ball computing (GBC) [Xia et al. , 2019] pro-vides a density-aware, region-level abstraction that enables each anchor to represent a compact local region rather than an isolated data point, as illustrated in Figure 1. By op-erating at the regional level, GBC captures intrinsic local structures and bridges fine-grained instance-level informa-tion with higher-level semantic organization—an effect that is difficult to achieve using purely point-based representa-tions [Xia et al. , 2025b; Wang et al. , 2026b; Xia et al. ,2022]. Such region-based modeling is particularly beneficial Time series      
+
+> ⋯
+> ⋯
+> ⋯
+> reservoir-1
+> reservoir -2
+> reservoir-V collected
+> echo states
+> ⋯⋯
+> ⋯
+> ⋯
+> ⋯
+> Z
+> consensus
+> anchoring graph clustering output
+> i) multiscale reservoir encoding ii) granular-ball anchoring
+> graph construction
+> iii) consensus-based graph
+> optimization Figure 2: Illustration of the proposed MSRGC-Net.
+
+for multiscale reservoir representations [Shen et al. , 2026; Xia et al. , 2025a], where structural patterns are distributed across different temporal resolutions. Motivated by this ob-servation, we incorporate granular-ball-based anchoring into a consensus-based multi-view graph optimization framework, enabling scalable and structure-aware time-series clustering. 
+
+## 3 Methodology 
+
+In this section, we formally elaborate on the pro-posed MSRGC-Net (Multi-Scale Reservoir Granular-ball Consensus Network), a multiscale reservoir network with granular-ball-based anchoring graph optimization for effi-cient time-series clustering. As illustrated in Figure 2, MSRGC-Net consists of three main stages: i) multiscale reservoir encoding, which extracts training-free temporal representations from raw time series; ii) granular-ball anchoring graph construction, which builds a structured and compact graph representation to capture the in-trinsic data organization; and iii) consensus-based graph opti-mization for clustering, which integrates multi-scale reservoir representations through lightweight optimization. 
+
+3.1 Multi-Scale Reservoir Encoding 
+
+Echo State Networks (ESNs) are a representative realization of reservoir computing, where a fixed recurrent neural net-work projects low-dimensional input sequences into a high-dimensional dynamical state space. Given a multivariate time series dataset X = {xi}Ni=1 (xi ∈ RT ×D), the reservoir state of the i-th sample at time step t, denoted by hi,t ∈ RR, is obtained by the following update equation: 
+
+hi,t = tanh( Win xi,t + Wrhi,t −1) , (1) where Win ∈ RR×D and Wr ∈ RR×R are the input and recurrent weight matrices, and R is the number of reservoir units. In practice, hi(0) can be initialized as a zero vec-tor (or a small random vector), and the nonlinear activation 
+
+tanh( ·) provides a bounded and smooth state transition to capture nonlinear temporal dependencies. These weights are randomly initialized and kept fixed during learning, enabling efficient and stable extraction of temporal dynamics without backpropagation. A single ESN configuration is generally inadequate for modeling the diverse temporal dependencies exhibited by complex time series. The dynamical behavior and mem-ory capacity of an ESN are largely determined by the spec-tral radius ρ of the recurrent weight matrix Wr. Specifi-cally, smaller values of ρ favor short-term transient dynamics, whereas values approaching unity drive the reservoir toward the “edge of chaos,” enabling the preservation of long-term temporal dependencies [Ma et al. , 2020]. Motivated by this observation, we construct V independent reservoirs with dis-tinct spectral radii P = {ρ1, . . . , ρ V } to capture complemen-tary temporal patterns at multiple scales, thereby forming a set of multi-scale reservoir views . For the i-th time series processed by the v-th reservoir, a sequence of reservoir states {h(v) 
+
+> i,t
+
+}Tt=1 is generated according to Equation (1). To obtain a compact view-specific represen-tation, temporal aggregation is applied to the reservoir states, yielding 
+
+¯h(v) 
+
+> i
+
+= 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+h(v) 
+
+> i,t
+
+∈ RR. (2) By stacking the aggregated representations of all N sam-ples, we form the view-specific feature matrix H(v) =[¯h(v)1 , ¯h(v)2 , . . . , ¯h(v) 
+
+> N
+
+]⊤ ∈ RN ×R, which is subsequently used as the input to the granular-ball anchoring graph construction. 
+
+3.2 Granular-Ball Anchoring Graph 
+
+Given multi-scale reservoir representations {H(v)}Vv=1 , di-rectly constructing a consensus graph over all samples is computationally prohibitive. To enable scalable modeling while preserving the intrinsic structure of the data, we con-struct a granular-ball anchoring graph based on granular-ball computing (GBC) [Xia et al. , 2019]. Specifically, GBC trans-forms each view-specific feature matrix H(v) into a com-pact set of representative anchors, which serve as structural proxies of the original data distribution [Jiang et al. , 2025] and form the basis of an anchor-based graph representation [Cheng et al. , 2023]. Intuitively, granular-ball computing can be regarded as a region-inducing operator that groups point-wise representa-tions into adaptive local regions, thereby capturing density and geometric structure beyond individual samples. Given 
+
+H(v), the operator iteratively partitions the feature space and outputs a collection of granular regions, referred to as granu-lar balls. This design is inspired by the global-priority princi-ple in cognitive computing and the multi-granularity learning framework. Below, we introduce the key components of the granular-ball anchoring graph construction. 
+
+Definition 1. Granular Ball. Given the representations H(v)
+
+of all samples, granular-ball computing produces a set of granular balls GB = {GB k}Mk=1 . Each granular ball GB k
+
+is characterized by a center ck and a radius rk, defined as 
+
+ck = 1
+
+|GB k|
+
+X 
+
+> ¯hik∈GB k
+
+¯hik , (3) 
+
+rk = max  
+
+> ¯hik∈GB k
+
+∥¯hik − ck∥2. (4) 
+
+Definition 2. Quality of Granular Ball. The structural qual-ity of a granular ball GB k is measured by the distribution measure (DM) [Xie et al. , 2024], defined as 
+
+DM (GB k) = 1
+
+|GB k|
+
+X 
+
+> ¯hik∈GB k
+
+∥¯hik − ck∥2, (5) 
+
+where a smaller DM value indicates a more compact and ho-mogeneous region. 
+
+Definition 3. Granular-Ball Splitting Criterion. To adap-tively refine granular regions, each granular ball GB is ten-tatively split into two sub-balls GB 1 and GB 2 using 2-means clustering. The split is accepted if the following weighted cri-terion is satisfied: 
+
+DM w = |GB 1||GB | DM (GB 1) + |GB 2||GB | DM (GB 2). (6) 
+
+If DM w < DM (GB ), the split is retained; otherwise, the splitting process terminates. This procedure is repeated until no further quality-improving splits are possible. 
+
+Applying the granular-ball operator yields M granular balls, where M controls the granularity of the induced regions and balances structural fidelity with computational efficiency. To construct a compact anchoring graph, we select the top m
+
+core granular-ball anchors ( m < M < N ). Anchor selection is guided by the following score: 
+
+score (GB i) = DM (GB i) · min 
+
+> j∈S q−1
+
+∥ci − cj ∥2, (7) where Sq−1 denotes the set of previously selected anchors. This criterion jointly accounts for regional compactness and spatial diversity, enabling the selected anchors to preserve the skeletal structure of the data distribution. Given m granular-ball anchors for each view, denoted as 
+
+{A(v) 
+
+> gb
+
+∈ Rm×R}Vv=1 , where each anchor corresponds to the center of a selected granular ball, we construct a view-specific granular-ball anchoring graph Z ∈ RN ×m to obtain a sample-to-anchor representation [Liu et al. , 2026]. Unlike con-ventional point-to-point affinity graphs, this anchoring graph models relationships between samples and density-consistent granular-ball anchors, whose centers summarize local data re-gions and capture intrinsic structural patterns while suppress-ing the influence of local noise. By replacing sample-level interactions with anchor-level connections, the proposed rep-resentation significantly reduces memory and computational complexity, while providing a robust and structurally faithful foundation for subsequent consensus learning. 
+
+3.3 Consensus Anchoring Graph Learning 
+
+Based on {Z(v)}Vv=1 the view-specific granular-ball anchor-ing graphs constructed in the previous step, we further learn a unified consensus representation Z that integrates comple-mentary information from multiple views. To jointly model view-wise data reconstruction, cross-view alignment, and global structural regularization, we formulate the following unified optimization problem: 
+
+min   
+
+> Z,{Z(v)},{α(v)}
+> V
+
+X
+
+> v=1
+
+H(v) − Z(v)A(v)
+
+> gb
+> 2
+> F
+
++ γ
+
+> V
+
+X
+
+> v=1
+
+(α(v))r Z − Z(v) 2
+
+> F
+
++ λ∥Z∥2
+
+> F
+
+s.t. Z ≥ 0, Z(v) ≥ 0, Z1 = 1, Z(v)1 = 1,
+
+(8) where Z(v) ∈ RN ×m denotes the view-specific sample-to-anchor assignment matrix, and Z ∈ RN ×m represents the global consensus anchoring graph. Intuitively, the first term enforces faithful reconstruction of view-specific reser-voir representations using granular-ball anchors. The second term encourages consistency between each view-specific an-choring graph and the global consensus graph, while the third term imposes global regularization to improve robustness and prevent overfitting. The adaptive weights {α(v)}Vv=1 automat-ically adjust the contribution of each view according to its alignment quality with the consensus representation. Follow-ing [Chen et al. , 2023], we set r = 2 to ensure stable weight smoothing and convergence behavior. The parameters γ and 
+
+λ control the strength of cross-view consistency and global regularization, respectively. Note that the objective function in Equation (8) is not jointly convex with respect to all vari-ables. We therefore adopt an alternating optimization strat-egy, iteratively updating one variable while fixing the others until convergence. 
+
+Update of Z(v). Fixing Z and {α(v)}, the subproblem with respect to Z(v) reduces to a regularized least-squares prob-lem. Its closed-form solution is given by          
+
+> Z(v)=
+> 
+> H(v)A(v)⊤
+> gb +γ(α(v))rZ
+>  
+> A(v)
+> gb A(v)⊤
+> gb +γ(α(v))rI
+> −1
+> .
+
+(9) Negative entries are truncated to zero to satisfy the non-negativity constraint. Update of Z. Fixing {Z(v)} and {α(v)}, global consensus anchoring graph admits the closed-form update 
+
+Z = γ PVv=1 (α(v))r Z(v)
+
+γ PVv=1 (α(v))r + λ , (10) which corresponds to a weighted aggregation of view-specific anchoring graphs, with adaptive emphasis on more consistent views. 
+
+Update of α. Fixing Z and {Z(v)}, the adaptive view weights are updated via the Lagrange multiplier method as 
+
+α(v) = (q(v)) 11−r
+
+PVv=1 (q(v)) 11−r
+
+, (11) where q(v) = γ∥Z − Z(v)∥2 
+
+> F
+
+measures the alignment error of the v-th view with respect to the consensus graph. Views with smaller alignment errors are thus assigned larger weights. After convergence, the learned consensus anchoring graph 
+
+Z ∈ RN ×m serves as a low-rank affinity representation of our MSRGC-Net. Final cluster assignments are obtained via spectral clustering by performing singular value decomposi-tion: 
+
+Z = UΣV ⊤, (12) where U ∈ RN ×k contains the top-k left singular vectors. The final labels are produced by applying k-means to the rows of U.
+
+3.4 Complexity Analysis 
+
+The computational complexity of MSRGC-Net follows its three-stage framework. In the multiscale reservoir encoding stage, V training-free reservoirs perform forward propagation over T time steps, resulting in a complexity of O(V N T R 2),where R denotes the reservoir size. In the granular-ball an-choring graph construction stage, m representative anchors are generated with approximately linear complexity O(N R ).In the consensus-based graph optimization stage, MSRGC-Net learns a sample-to-anchor graph Z ∈ RN ×m, and the dominant cost comes from the spectral decomposition on Z
+
+with complexity O(N m 2).Since both the reservoir size R and the number of an-chors m are typically fixed and satisfy m ≪ N , MSRGC-Net achieves an overall near-linear complexity with respect to the number of samples N . Moreover, by integrating training-free reservoir computing and granular-ball region abstraction with an anchor-based consensus graph, MSRGC-Net avoids costly iterative optimization and point-wise affinity model-ing, thereby offering a clear efficiency advantage over con-ventional quadratic graph-based clustering methods and deep models. 
+
+## 4 Experiments 
+
+Dataset. We evaluate the proposed MSRGC-Net on ten benchmark time-series datasets drawn from the UCR and UEA archives [Dau et al. , 2019; Bagnall et al. , 2018], cov-ering a wide range of application domains, including hu-man activity recognition, healthcare, industrial manufactur-ing, speech processing, etc. The datasets span diverse se-quence lengths and dataset sizes. 
+
+Evaluation metrics. Clustering performance is evaluated us-ing three standard metrics [Rand, 1971]: Normalized Mutual Information (NMI), Adjusted Rand Index (ARI), and Rand Index (RI). Together, these metrics provide complementary information-theoretic and pairwise-consistency evaluations. 
+
+Baselines. We compare MSRGC-Net with representative time-series clustering methods from three categories. (i) Raw data-based methods operate directly on the original time series, including k-Shape [Paparrizos and Gravano, 2015], Fuzzy-kShape [Fahiman et al. , 2017], and TCK [Mikalsen 
+
+et al. , 2018]. (ii) Representation learning-based meth-ods perform clustering in a learned feature space, covering both feature learning and deep clustering approaches, such as Modular-RC [Petitjean et al. , 2011], GRAIL [Paparri-zos and Franklin, 2019], Time2Feat [Bonifati et al. , 2022], DEC [Xie et al. , 2016], TimeSURL [Liu and Chen, 2024], and TFMCC [Wang et al. , 2026a]. (iii) Multi-view clustering methods integrate information from multiple views, including GB-SMKKM [Xia et al. , 2025c] and MV-CAGAF [Wang et al. , 2025]. 
+
+Implementation details. A common set of reservoir hyper-parameters was used across all datasets, including reservoir size R = 400 , connectivity β = 0 .25 , input scaling ω = 0 .15 ,noise level ξ = 0 .001 , number of views V = 3 , and a spectral radius determined by a predefined strategy. For the consensus graph optimization, two regularization parameters were tuned from small candidate sets via grid search, with the multi-view alignment coefficient γ = 10 3 and the structural constraint parameter λ = 10 −1. All experiments were repeated ten times with random initializations and conducted on a 64-bit machine with an Intel i7-12700 CPU and 64 GB RAM. 
+
+4.1 Main Results 
+
+As shown in Table 1, MSRGC-Net achieves competitive and stable performance on multivariate time series clustering tasks, yielding favorable results compared with ten represen-tative and state-of-the-art baseline methods across NMI, ARI, and RI. Across 5 multivariate datasets and 15 evaluation re-sults, MSRGC-Net obtains the best performance on 12 met-rics and ranks second on two metrics, indicating consistent behavior across different settings. Improvements are more noticeable on datasets with higher channel dimensions and longer sequences, where modeling cross-variable temporal dependencies becomes increasingly important. For example, on the JapaneseVowels (JV) dataset, which involves variable-length and strongly coupled speech signals, MSRGC-Net achieves an ARI of 0.750, improv-ing upon the second-best method GRAIL by 16.9%. On the Cricket (Cric) dataset with ultra-long time series ( T =1197 ), MSRGC-Net maintains strong performance across all three metrics, with an average score of 0.932. Similarly, on the CharacterTrajectories (CT) dataset containing 20 classes, MSRGC-Net attains the highest NMI of 0.789, markedly out-performing the single-view baseline rm-ESN (NMI = 0.476). Compared with raw data-based methods, MSRGC-Net lever-ages reservoir-based feature extraction to capture temporal dynamics across multiple variables. Relative to deep learn-ing approaches, MSRGC-Net attains comparable or improved Models CT JV BM Cric SCP1 
+
+NMI ARI RI NMI ARI RI NMI ARI RI NMI ARI RI NMI ARI RI TCK 0.589 0.158 0.811 0.446 0.268 0.676 0.689 0.603 0.841 0.812 0.647 0.947 0.141 0.198 0.621               
+
+> (0.004) (0.003) (0.002) (0.005) (0.004) (0.006) (0.006) (0.005) (0.007) (0.002) (0.003) (0.001) (0.008) (0.007) (0.005)
+
+K-shape 0.322 0.107 0.684 0.143 0.064 0.778 0.598 0.543 0.830 0.508 0.276 0.835 0.073 0.085 0.542               
+
+> (0.012) (0.008) (0.006) (0.015) (0.009) (0.008) (0.018) (0.015) (0.010) (0.011) (0.009) (0.007) (0.020) (0.015) (0.012)
+
+Fc-shape 0.421 0.059 0.721 0.210 0.059 0.634 0.664 0.607 0.787 0.804 0.517 0.897 0.132 0.130 0.565               
+
+> (0.011) (0.006) (0.005) (0.014) (0.008) (0.009) (0.015) (0.012) (0.007) (0.010) (0.008) (0.004) (0.019) (0.013) (0.010)
+
+Modular-RC 0.476 0.199 0.819 0.126 0.059 0.656 0.577 0.325 0.620 0.469 0.221 0.754 0.214 0.148 0.575               
+
+> (0.003) (0.002) (0.001) (0.004) (0.003) (0.002) (0.005) (0.004) (0.003) (0.003) (0.002) (0.002) (0.006) (0.005) (0.004)
+
+DEC 0.665 0.406 0.926 0.611 0.477 0.888 0.529 0.391 0.744 0.590 0.323 0.895 0.116 0.134 0.567               
+
+> (0.032) (0.021) (0.014) (0.037) (0.045) (0.019) (0.030) (0.025) (0.015) (0.018) (0.027) (0.010) (0.051) (0.033) (0.024)
+
+GRAIL 0.742 0.608 0.961 0.703 0.581 0.917 0.538 0.309 0.673 0.774 0.699 0.832 0.203 0.112 0.577               
+
+> (0.008) (0.007) (0.003) (0.010) (0.009) (0.005) (0.012) (0.011) (0.014) (0.007) (0.006) (0.004) (0.021) (0.013) (0.009)
+
+Time2feat 0.686 0.410 0.905 0.610 0.417 0.869 0.654 0.600 0.873 0.921 0.822 0.966 0.003 0.001 0.498               
+
+> (0.015) (0.017) (0.016) (0.018) (0.015) (0.009) (0.020) (0.019) (0.008) (0.010) (0.008) (0.000) (0.001) (0.001) (0.005)
+
+TimesURL 0.655 0.403 0.919 0.135 0.028 0.554 0.515 0.399 0.712 0.415 0.344 0.703 0.126 0.148 0.574               
+
+> (0.018) (0.015) (0.007) (0.020) (0.008) (0.010) (0.022) (0.018) (0.012) (0.015) (0.012) (0.009) (0.025) (0.020) (0.016)
+
+TFMCC 0.647 0.409 0.922 0.188 0.067 0.698 0.625 0.468 0.766 0.506 0.243 0.853 0.167 0.211 0.605               
+
+> (0.016) (0.014) (0.006) (0.018) (0.009) (0.011) (0.020) (0.015) (0.010) (0.014) (0.011) (0.008) (0.028) (0.022) (0.014)
+
+GB-SMKKM 0.559 0.338 0.931 0.234 0.112 0.807 0.692 0.558 0.840 0.895 0.761 0.966 0.207 0.263 0.631               
+
+> (0.005) (0.004) (0.002) (0.006) (0.005) (0.004) (0.007) (0.006) (0.005) (0.004) (0.004) (0.002) (0.008) (0.007) (0.005)
+
+MV-CAGAF 0.529 0.467 0.868 0.695 0.235 0.917 0.650 0.526 0.843 0.774 0.636 0.930 0.232 0.161 0.585               
+
+> (0.006) (0.005) (0.003) (0.008) (0.006) (0.004) (0.009) (0.008) (0.006) (0.005) (0.005) (0.003) (0.010) (0.009) (0.007)
+
+MSRGC-Net 0.789 0.645 0.964 0.781 0.750 0.948 0.678 0.615 0.857 0.929 0.884 0.983 0.225 0.270 0.635               
+
+> (0.003) (0.006) (0.001) (0.004) (0.003) (0.001) (0.001) (0.005) (0.004) (0.002) (0.002) (0.000) (0.006) (0.006) (0.004)
+
+Table 1: Clustering results on multivariate time series datasets. Abbreviations: CT - CharacterTrajectories; JV - JapaneseVowels; BM -BasicMotions; Cric - Cricket; SCP1 - SelfRegulationSCP1. 
+
+Variants Multiscale Granular-ball Explicit Multivariate Datasets Univariate Datasets Reservoirs Anchoring Optim. CT JV BM Cric SCP1 BC Crop EPG-R EPG-S Wafer 
+
+1. w/o Multiscale × ✓ ✓ 0.943 0.785 0.844 0.944 0.581 0.738 0.926 0.993 0.997 0.559 2. w/o Granular-ball ✓ × ✓ 0.953 0.920 0.832 0.970 0.579 0.740 0.922 1.000 0.984 0.561 3. w/o Optimization ✓ ✓ × 0.952 0.936 0.811 0.966 0.559 0.713 0.894 0.962 0.958 0.490 
+
+MSRGC-Net (Ours) ✓ ✓ ✓ 0.964 0.948 0.857 0.983 0.635 0.759 0.941 1.000 1.000 0.575 
+
+Table 2: Ablation study results evaluated using the RI metric. 
+
+performance without iterative training. Overall, these obser-vations suggest that the proposed consensus learning frame-work is effective for multivariate time series clustering. 
+
+4.2 Ablation Studies 
+
+To analyze the contribution of each component, we com-pare MSRGC-Net with three ablated variants: (1) w/o Multi-scale , where all reservoirs share a fixed spectral radius of 0.9 to remove multi-scale dynamics; (2) w/o Granular-ball ,where adaptive granular-ball construction is replaced by k-means clustering for anchor selection; (3) w/o Optimization ,where the optimization objective (Eq. 8) is replaced by simple average fusion. Table 2 summarizes the ablation results in terms of the RI metric. On the multivariate datasets, the full MSRGC-Net achieves the highest average RI (0.883), outperforming the w/o Multi-scale, w/o Granular-ball, and w/o Optimization variants by clear margins. Similar trends are observed on uni-variate datasets, where the full model consistently achieves the best or tied-best performance. This demonstrates that all components contribute to the final clustering performance, with the multi-scale mechanism playing a dominant role, while granular-ball anchors and optimization-based fusion further enhance the results. 
+
+4.3 Visualization Analysis 
+
+Figure 3 visualizes the learned representations of the pro-posed model on the JV multimodal dataset. On the left, t-SNE projects the samples into a low-dimensional space, where three representative clusters (Class 1/2/3) are identified for further analysis, showing a clear separation in the learned rep-resentation space. The top-right panel illustrates the trajecto-ries of samples within each cluster (blue: individual samples; orange: cluster mean). The bottom-right panel presents ESN state heatmaps with spectral radii SR = 0 .8 and SR = 1 .0,which provide a more fine-grained view of the underlying dy-namical representations. Green markers highlight early-stage differences between Class 1 and Class 2, with distinct temporal dynamics. Red markers indicate mid-stage differences between Class 1 and Class 3, showing clear dynamical changes. A vertical com-parison across spectral radii reveals complementary tempo-ral patterns: smaller SR emphasizes local transient varia-tions, whereas larger SR captures longer-term dependencies. Class 1    
+
+> Class 2
+> Class 3
+> t-SNE component 1
+> t-SNE component 2
+> SR=0.8
+> Time steps
+> SR=1.0  Amplitude
+> Class 1 Class 2 Class 3
+> Time steps Time steps
+
+Figure 3: Visualization of complementary representations from multi-scale reservoirs, where green and red annotations indicate characteristic dynamical differences across clusters. 10 1 10 2 10 3
+
+> Running Time (seconds)
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> Clustering Performance (Average RI)
+> TFMCC
+> TimesURL
+> DEC
+> Modular-RC
+> GRAIL
+> Time2Feat
+> k-shape
+> Fuzzy-kshape
+> TCK
+> GB-SMKKM
+> MV-CAGAF
+> Ours
+> Fast & Accurate
+
+Figure 4: Running time versus clustering effectiveness. 
+
+This suggests that the multi-scale design enables the model to encode diverse temporal characteristics, thereby enhancing cluster separability in multimodal time-series data. 
+
+4.4 Efficiency–Effectiveness Analysis 
+
+Figure 4 presents an efficiency-effectiveness comparison of all methods across ten datasets spanning both univariate and multivariate settings. The y-axis reports the average RI, while the x-axis shows the average running time on a logarithmic scale. Overall, our method lies in the upper-left region of the plot and on the Pareto frontier, indicating a favorable trade-off between clustering performance and computational cost. It achieves high clustering accuracy with a runtime on the or-der of tens of seconds. In contrast, several baseline methods incur substantially higher computational costs without corre-sponding performance gains. Compared with the second-best method, GB-SMKKM, our approach achieves superior per-formance with roughly an order-of-magnitude lower runtime. Moreover, the comparison with rm-ESN highlights the bene-fit of multi-view reservoir dynamics over single-view repre-sentations. 
+
+Large-scale testing. We further evaluate scalability on an ex-tended Pedestrian dataset containing approximately 1.8 mil-lion samples. As shown in Figure 5, the runtime increases near-linearly with the sample size and remains stable even at the million-sample scale. MSRGC-Net achieves an RI of 0.947 ±0.002, outperforming k-shape (0.882 ±0.004), indi-cating that improved scalability does not come at the expense of clustering quality. This empirical observation is consistent with the theoretical time complexity O(V N T R 2 + N R +
+
+N m 2), where m ≪ N , implying near-linear growth with re-spect to N .40 311561 24k 180k 1.8M 10 0
+
+> 10 5
+> Running Time (seconds)
+> 0.397s 0.590s 6.35s 2.14s 1,256s 8.91s 2,016s 63.3s 25,920s 5,911s 518,439s 69,038s
+> Growth from 180k to 1.8M K-Shape: 20.0× MSRGC-Net: 11.7×
+> K-Shape MSRGC-Net
+
+Figure 5: Scalability evaluation on million-scale samples. 
+
+## 5 Conclusion 
+
+We proposed MSRGC-Net, a multi-scale reservoir-based graph clustering framework for efficient time-series cluster-ing. By employing training-free reservoirs with diverse spec-tral radii, the model captures complementary temporal dy-namics ranging from local transient patterns to long-term dependencies. These multi-scale representations are inte-grated via granular-ball-based anchor construction and a con-sensus graph optimization scheme, enabling effective fu-sion of multi-view temporal information. Extensive exper-iments on both univariate and multivariate datasets demon-strate that MSRGC-Net consistently outperforms state-of-the-art methods. Ablation and visualization analyses further validate the contribution of each component and reveal how the multi-scale design enhances cluster separability. More-over, efficiency–effectiveness analysis shows that MSRGC-Net achieves a favorable balance between clustering accuracy and computational cost. Acknowledgments 
+
+This research was supported by the Chongqing Graduate Research Innovation Program CYB25259 and the National Natural Science Foundation of China under Grant Nos. 62221005, 62450043, 62222601, and 62176033. 
+
+## References 
+
+[Bagnall et al. , 2018] Anthony Bagnall, Hoang Anh Dau, Ja-son Lines, Michael Flynn, James Large, Aaron Bostrom, Paul Southam, and Eamonn Keogh. The uea multivari-ate time series classification archive, 2018. arXiv preprint arXiv:1811.00075 , 2018. [Bianchi et al. , 2015] Filippo Maria Bianchi, Simone Scar-dapane, Aurelio Uncini, Antonello Rizzi, and Alireza Sadeghian. Prediction of telephone calls load using echo state network with exogenous variables. Neural Networks ,71:204–213, 2015. [Bonifati et al. , 2022] Angela Bonifati, Francesco Del Buono, Francesco Guerra, and Donato Tiano. Time2feat: learning interpretable representations for multivariate time series clustering. Proceedings of the VLDB Endowment (PVLDB) , 16(2):193–201, 2022. [Chen et al. , 2023] Zhaoliang Chen, Lele Fu, Jie Yao, Wen-zhong Guo, Claudia Plant, and Shiping Wang. Learnable graph convolutional network and feature fusion for multi-view learning. Information Fusion , 95:109–119, 2023. [Cheng et al. , 2023] Dongdong Cheng, Ya Li, Shuyin Xia, Guoyin Wang, Jinlong Huang, and Sulan Zhang. A fast granular-ball-based density peaks clustering algorithm for large-scale data. IEEE Transactions on Neural Networks and Learning Systems , 35:17202–17215, 2023. [Cuturi and Blondel, 2017] Marco Cuturi and Mathieu Blon-del. Soft-dtw: a differentiable loss function for time-series. In International Conference on Machine Learning , pages 894–903. PMLR, 2017. [Dau et al. , 2019] Hoang Anh Dau, Anthony Bagnall, Kaveh Kamgar, Chin-Chia Michael Yeh, Yan Zhu, Shaghayegh Gharghabi, Chotirat Ann Ratanamahatana, and Eamonn Keogh. The ucr time series archive. IEEE/CAA Journal of Automatica Sinica , 6(6):1293–1305, 2019. [Fahiman et al. , 2017] Fateme Fahiman, James C Bezdek, Sarah M Erfani, Marimuthu Palaniswami, and Christopher Leckie. Fuzzy c-shape: A new algorithm for clustering fi-nite time series waveforms. In 2017 IEEE International Conference on Fuzzy Systems (FUZZ-IEEE) , pages 1–8. IEEE, 2017. [Gao et al. , 2023] Jing Gao, Meng Liu, Peng Li, Jianing Zhang, and Zhikui Chen. Deep multiview adaptive cluster-ing with semantic invariance. IEEE Transactions on Neu-ral Networks and Learning Systems , 35(9):12965–12978, 2023. [Guijo-Rubio et al. , 2020] David Guijo-Rubio, Anto-nio Manuel Dur´ an-Rosal, Pedro Antonio Guti´ errez, Alicia Troncoso, and C´ esar Herv´ as-Mart´ ınez. Time-series clus-tering based on the characterization of segment typologies. 
+
+IEEE Transactions on Cybernetics , 51(11):5409–5422, 2020. [Guo et al. , 2008] Chonghui Guo, Hongfeng Jia, and Na Zhang. Time series clustering based on ica for stock data analysis. In 2008 4th International Conference on Wireless Communications, Networking and Mobile Computing , pages 1–4. IEEE, 2008. [Hipel and McLeod, 1994] Keith W Hipel and A Ian McLeod. Time series modelling of water resources and environmental systems , volume 45. Elsevier, 1994. [Jaeger, 2001] Herbert Jaeger. The “echo state” approach to analysing and training recurrent neural networks-with an erratum note. Bonn, Germany: German national research center for information technology gmd technical report ,148(34):13, 2001. [Jiang et al. , 2025] Bingbing Jiang, Chenglong Zhang, Zhongli Wang, Xinyan Liang, Peng Zhou, Liang Du, Qinghua Zhang, Weiping Ding, and Yi Liu. Scalable fuzzy clustering with collaborative structure learning and preservation. IEEE Transactions on Fuzzy Systems ,33(9):3047–3060, 2025. [Li et al. , 2020] Xuelong Li, Han Zhang, Rong Wang, and Feiping Nie. Multiview clustering: A scalable and parameter-free bipartite graph fusion method. IEEE Trans-actions on Pattern Analysis and Machine Intelligence ,44(1):330–344, 2020. [Liu and Chen, 2024] Jiexi Liu and Songcan Chen. Timesurl: Self-supervised contrastive learning for universal time series representation learning. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 38, pages 13918–13926, 2024. [Liu et al. , 2026] Shuaiyu Liu, Song Wu, Jie Xu, Yazhou Ren, Yang Yang, Xiaorong Pu, and Guoying Wang. Views attention fusion of granular-ball fuzzy representations split for improved multi-view clustering. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 40, pages 23810–23818, 2026. [Ma et al. , 2017] Qianli Ma, Lifeng Shen, Enhuan Chen, Shuai Tian, Jiabing Wang, and Garrison W Cottrell. Walk-ing walking walking: Action recognition from action echoes. In International Joint Conference on Artificial In-telligence , pages 2457–2463, 2017. [Ma et al. , 2019] Qianli Ma, Jiawei Zheng, Sen Li, and Gary W Cottrell. Learning representations for time se-ries clustering. Advances in Neural Information Process-ing Systems , 32, 2019. [Ma et al. , 2020] Qianli Ma, Lifeng Shen, and Garrison W Cottrell. Deepr-esn: A deep projection-encoding echo-state network. Information Sciences , 511:152–171, 2020. [Madiraju, 2018] Naveen Sai Madiraju. Deep temporal clus-tering: Fully unsupervised learning of time-domain fea-tures. Master’s thesis, Arizona State University, 2018. [Meng et al. , 2023] Qianwen Meng, Hangwei Qian, Yong Liu, Lizhen Cui, Yonghui Xu, and Zhiqi Shen. Mhccl: masked hierarchical cluster-wise contrastive learning for multivariate time series. In Proceedings of the AAAI Con-ference on Artificial Intelligence , volume 37, pages 9153– 9161, 2023. [Mikalsen et al. , 2016] Karl Øyvind Mikalsen, Fil-ippo Maria Bianchi, Cristina Soguero-Ruiz, Stein Olav Skrøvseth, Rolv-Ole Lindsetmo, Arthur Revhaug, and Robert Jenssen. Learning similarities between irregularly sampled short multivariate time series from ehrs. 2016. [Mikalsen et al. , 2018] Karl Øyvind Mikalsen, Fil-ippo Maria Bianchi, Cristina Soguero-Ruiz, and Robert Jenssen. Time series cluster kernel for learning similar-ities between multivariate time series with missing data. 
+
+Pattern Recognition , 76:569–581, 2018. [Paparrizos and Franklin, 2019] John Paparrizos and Michael J Franklin. Grail: efficient time-series represen-tation learning. Proceedings of the VLDB Endowment ,12(11):1762–1777, 2019. [Paparrizos and Gravano, 2015] John Paparrizos and Luis Gravano. k-shape: Efficient and accurate clustering of time series. In Proceedings of the 2015 ACM SIGMOD International Conference on Management of Data , pages 1855–1870, 2015. [Petitjean et al. , 2011] Franc ¸ois Petitjean, Alain Ketterlin, and Pierre Ganc ¸arski. A global averaging method for dy-namic time warping, with applications to clustering. Pat-tern Recognition , 44(3):678–693, 2011. [Rand, 1971] William M Rand. Objective criteria for the evaluation of clustering methods. Journal of the Ameri-can Statistical association , 66(336):846–850, 1971. [Shen et al. , 2026] Lifeng Shen, Liang Peng, Ruiwen Liu, Shuyin Xia, and Yi Liu. Finding time series anomalies us-ing granular-ball vector data description. In Proceedings of the AAAI Conference on Artificial Intelligence , 2026. [Trentin et al. , 2015] Edmondo Trentin, Stefan Scherer, and Friedhelm Schwenker. Emotion recognition from speech signals via a probabilistic echo-state network. Pattern Recognition Letters , 66:4–12, 2015. [Ullah et al. , 2022] Waseem Ullah, Tanveer Hussain, Zul-fiqar Ahmad Khan, Umair Haroon, and Sung Wook Baik. Intelligent dual stream cnn and echo state net-work for anomaly detection. Knowledge-Based Systems ,253:109456, 2022. [Wang et al. , 2022] Siwei Wang, Xinwang Liu, Li Liu, Wenxuan Tu, Xinzhong Zhu, Jiyuan Liu, Sihang Zhou, and En Zhu. Highly-efficient incomplete large-scale multi-view clustering with consensus bipartite graph. In Pro-ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 9776–9785, 2022. [Wang et al. , 2025] Siwei Wang, Xinwang Liu, Qing Liao, Yi Wen, En Zhu, and Kunlun He. Scalable multi-view graph clustering with cross-view corresponding anchor alignment. IEEE Transactions on Knowledge and Data Engineering , 2025. [Wang et al. , 2026a] Congyu Wang, Du Mingjing, and Jiang Xiang. Time-frequency augmented multi-level contrastive clustering for time series. In Proceedings of the AAAI Con-ference on Artificial Intelligence , 2026. [Wang et al. , 2026b] Yifan Wang, Lifeng Shen, and Shuyin Xia. A structure-aware multi-subspace granular-ball clus-tering framework. Information Sciences , page 123472, 2026. [Xia et al. , 2019] Shuyin Xia, Yunsheng Liu, Xin Ding, Guoyin Wang, Hong Yu, and Yuoguo Luo. Granular ball computing classifiers for efficient, scalable and robust learning. Information Sciences , 483:136–152, 2019. [Xia et al. , 2022] Shuyin Xia, Xiaochuan Dai, Guoyin Wang, Xinbo Gao, and Elisabeth Giem. An efficient and adaptive granular-ball generation method in classification problem. IEEE Transactions on Neural Networks and Learning Systems , 35(4):5319–5331, 2022. [Xia et al. , 2025a] Shuyin Xia, Xinjun Ma, Zhiyuan Liu, Cheng Liu, Sen Zhao, and Guoyin Wang. Graph coarsen-ing via supervised granular-ball for scalable graph neural network training. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 39, pages 12872–12880, 2025. [Xia et al. , 2025b] Shuyin Xia, Bolun Shi, Yifan Wang, Jiang Xie, Guoyin Wang, and Xinbo Gao. Gbct: effi-cient and adaptive clustering via granular-ball computing for complex data. IEEE Transactions on Neural Networks and Learning Systems , 36(7):12159–12172, 2025. [Xia et al. , 2025c] Shuyin Xia, Yifan Wang, Lifeng Shen, and Guoyin Wang. Granular-ball-induced multiple kernel k-means. In International Joint Conference on Artificial Intelligence , 2025. [Xie et al. , 2016] Junyuan Xie, Ross Girshick, and Ali Farhadi. Unsupervised deep embedding for clustering analysis. In International conference on machine learn-ing , pages 478–487. PMLR, 2016. [Xie et al. , 2024] Jiang Xie, Xuexin Xiang, Shuyin Xia, Lian Jiang, Guoyin Wang, and Xinbo Gao. Mgnr: A multi-granularity neighbor relationship and its application in knn classification and clustering methods. IEEE Trans-actions on Pattern Analysis and Machine Intelligence ,46(12):7956–7972, 2024. [Yang and Leskovec, 2011] Jaewon Yang and Jure Leskovec. Patterns of temporal variation in online media. In Proceedings of the Fourth ACM International Conference on Web Search and Data Mining , pages 177–186, 2011. [Yang and Lin, 2024] Jie Yang and Chin-Teng Lin. To-ward autonomous distributed clustering. IEEE Transac-tions on Emerging Topics in Computational Intelligence ,9(2):2065–2072, 2024. [Zhan et al. , 2017] Kun Zhan, Changqing Zhang, Junpeng Guan, and Junsheng Wang. Graph learning for mul-tiview clustering. IEEE Transactions on Cybernetics ,48(10):2887–2895, 2017.

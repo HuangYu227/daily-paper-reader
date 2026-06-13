@@ -1,0 +1,224 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-13T21:26:45.806254+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 5,
+    "quick_skim_target": 12,
+    "quick_selected": 5
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.08674v2",
+      "source": "arxiv",
+      "title": "BioVid: Autoregressive Video Generation with Biological Behavior Semantic Comprehension",
+      "abstract": "Existing video generation frameworks treat sequence duration as an externally prescribed parameter -- fixed frame counts or text prompts -- producing clips whose temporal boundaries are decoupled from the statistical structure of real behavioral data. This assumption is fundamentally misaligned with biological behavior, where action duration varies naturally across individuals and instances and is encoded in the data itself. We present BioVid, a data-driven autoregressive video generation framework that learns the temporal structure of biological behaviors directly from training data, including their natural length distributions. In the first stage, a Finite Scalar Quantization GAN (FSQ-R3GAN) tokenizer encodes each video frame into a compact discrete representation, combining the stabilized relativistic training objective of R3GAN with FSQ's guaranteed codebook utilization to achieve high-fidelity spatial reconstruction without codebook collapse. In the second stage, a causal Transformer models the resulting token sequences autoregressively and learns to emit an End-of-Sequence (EOS) token when the behavioral event reaches semantic closure, with the termination distribution emerging naturally from the training data rather than any human-specified constraint. Experiments on a human drinking behavior dataset (NTU RGB+D, A001, n=94) demonstrate that BioVid's generated length distribution closely matches that of held-out test data, achieving a Wasserstein-1 distance of 1.24 against the ground truth -- compared to 6.05 for a fixed-length baseline and 15.48 for VideoGPT -- while maintaining competitive spatial fidelity.",
+      "authors": [
+        "Tsung-Wei Pan",
+        "Jung-Hua Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-06-07T15:23:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.08674v2",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "autoregressive video generation with learning temporal structure",
+      "llm_evidence_cn": "自回归视频生成，学习时间结构",
+      "llm_evidence": "自回归视频生成，学习时间结构",
+      "canonical_evidence": "自回归视频生成，学习时间结构",
+      "llm_tldr_en": "Proposes BioVid, a data-driven autoregressive video generation framework that learns the natural temporal length distribution of biological behaviors.",
+      "llm_tldr_cn": "现有视频生成框架将时长视为外部参数，与真实行为数据统计结构脱节。本文提出BioVid，一种自回归视频生成框架，从训练数据中直接学习动作的天然时间长度分布。采用有限标量量化GAN（FSQ-R3GAN）作为分词器，将每帧编码为离散token，再自回归生成。在生物行为数据集上生成了更符合真实时长分布的视频。",
+      "llm_tldr": "现有视频生成框架将时长视为外部参数，与真实行为数据统计结构脱节。本文提出BioVid，一种自回归视频生成框架，从训练数据中直接学习动作的天然时间长度分布。采用有限标量量化GAN（FSQ-R3GAN）作为分词器，将每帧编码为离散token，再自回归生成。在生物行为数据集上生成了更符合真实时长分布的视频。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.10678v1",
+      "source": "arxiv",
+      "title": "One Step Closer to Ground Truth: A Multi-Scale Residual-Aware Representation Learning Pipeline for Predicting Time Series Data",
+      "abstract": "Transformer-based models have emerged as leading paradigms in time-series forecasting in recent years, employing self-attention mechanisms to capture long-range dependencies. Despite their success, these single-stage forecasting architectures exhibit persistent systematic residual biases arising from structural discrepancies, unmodeled stochastic components, or inadequate multi-scale temporal representations. This limitation persists when residuals are treated as irreducible noise, precluding adaptive correction of structured error patterns. To address this limitation, we introduce a two-stage, model-agnostic framework that explicitly decouples forecasting and residual learning into distinct stages of representation learning. A base transformer first generates the initial predictions. Subsequently, a dedicated meta-corrector dynamically models structured error patterns across multivariate channels, preserves cross-variable dependencies, and iteratively refines the residual bias of the base transformer. By formalizing this pipeline as a hypothesis space expansion, our framework addresses approximation limitations inherent in single-stage architectures, removes reliance on restrictive assumptions, and enables end-to-end learning of complex error dynamics. Evaluated on eight popular benchmark datasets using established protocols, our approach achieves state-of-the-art performance, with significant improvements in standard metrics (MSE, MAE). The results demonstrate the framework's ability to mitigate systematic biases and enhance robustness to complex temporal dynamics, advancing the practical applicability of transformer-based forecasting models.",
+      "authors": [
+        "Amrijit Biswas",
+        "Mustafa Kamal",
+        "Robin Krambroeckers",
+        "M. M. Lutfe Elahi",
+        "Sifat Momen",
+        "Nabeel Mohammed",
+        "Shafin Rahman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-09T10:31:54+00:00",
+      "link": "https://arxiv.org/pdf/2606.10678v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Multi-scale residual-aware representation learning pipeline for time series prediction",
+      "llm_evidence_cn": "多尺度残差感知表示学习流水线用于时间序列预测",
+      "llm_evidence": "多尺度残差感知表示学习流水线用于时间序列预测",
+      "canonical_evidence": "多尺度残差感知表示学习流水线用于时间序列预测",
+      "llm_tldr_en": "Proposes a two-stage framework separating forecasting and residual learning, using multi-scale representations to correct systematic biases in time series prediction.",
+      "llm_tldr_cn": "单阶段时序预测模型存在系统性残差偏差。本文提出两阶段模型无关框架：第一阶段预测基线，第二阶段学习残差模式。通过多尺度残差感知表示，有效校正结构化误差。在多个真实数据集上，该方法显著提升了预测精度，尤其擅长捕捉低频波动，为时间序列预测提供了通用增强策略。",
+      "llm_tldr": "单阶段时序预测模型存在系统性残差偏差。本文提出两阶段模型无关框架：第一阶段预测基线，第二阶段学习残差模式。通过多尺度残差感知表示，有效校正结构化误差。在多个真实数据集上，该方法显著提升了预测精度，尤其擅长捕捉低频波动，为时间序列预测提供了通用增强策略。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.12077v1",
+      "source": "arxiv",
+      "title": "Efficient Time Series Clustering from Multiscale Reservoir Dynamics with Granular-Ball Anchoring Graph Optimization",
+      "abstract": "Time-series clustering remains challenging due to the inherent trade-off between clustering effectiveness and computational efficiency. Similarity-based methods often suffer from quadratic complexity caused by pairwise distance computations, while deep learning-based approaches typically rely on costly iterative training and a large number of trainable parameters. In this paper, we propose MSRGC-Net, an efficient time-series clustering framework that integrates multiscale reservoir computing, granular-ball-based anchoring graph construction, and consensus learning. MSRGC-Net adopts a training-free reservoir computing paradigm to extract multiscale temporal representations from raw time series without backpropagation, significantly reducing computational overhead. To capture the intrinsic structure of the resulting representations, granular-ball computing is employed to adaptively model data distributions via density-consistent regions, yielding compact and robust anchor graph representations. Furthermore, a consensus-based anchoring graph optimization strategy is introduced to effectively align multiscale reservoir representations and integrate complementary information across temporal scales. Extensive experiments on widely used univariate and multivariate benchmark datasets demonstrate that MSRGC-Net consistently outperforms state-of-the-art methods in clustering performance while maintaining superior computational efficiency.",
+      "authors": [
+        "Yifan Wang",
+        "Lifeng Shen",
+        "Shuyin Xia",
+        "Yi Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-10T13:42:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.12077v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Extracts multiscale temporal representations for efficient clustering; serves as feature extraction method",
+      "llm_evidence_cn": "提取多尺度时间表示用于高效聚类，可作为特征提取方法",
+      "llm_evidence": "提取多尺度时间表示用于高效聚类，可作为特征提取方法",
+      "canonical_evidence": "提取多尺度时间表示用于高效聚类，可作为特征提取方法",
+      "llm_tldr_en": "Proposes MSRGC-Net for efficient time-series clustering using training-free multiscale reservoir computing and granular-ball graph, achieving high accuracy with low complexity.",
+      "llm_tldr_cn": "时间序列聚类面临效果与效率的权衡。本文提出MSRGC-Net，集成无训练的多尺度储备池计算、粒球锚定图构建和共识学习，从原始时间序列中高效提取多尺度表示。实验证明，该方法在多个基准数据集上聚类准确率媲美深度学习，而计算开销大幅降低，为大规模时间序列分析提供了实用方案。",
+      "llm_tldr": "时间序列聚类面临效果与效率的权衡。本文提出MSRGC-Net，集成无训练的多尺度储备池计算、粒球锚定图构建和共识学习，从原始时间序列中高效提取多尺度表示。实验证明，该方法在多个基准数据集上聚类准确率媲美深度学习，而计算开销大幅降低，为大规模时间序列分析提供了实用方案。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-08-730880-v1",
+      "source": "biorxiv",
+      "title": "TMO: ASYMMETRIC CROSS-MODAL ATTENTION FOR LEARNINGCELL-STATE-DEPENDENT REGULATORY LAGS FROM SINGLE-CELL MULTIOMIC DATA",
+      "abstract": "Abstract Background: Single-cell multi-omics technologies simultaneously measure chromatin accessibility (ATAC) and gene expression (RNA), providing a unique window into the temporal ordering of regulatory events during differentiation. However, most computational models treat the two modalities symmetrically, ignoring the directional relationship between chromatin and transcription, and existing lag-aware methods estimate a single global lag per gene, failing to capture cell-state-dependent dynamics. Methods and Results: We introduce Temporal Multi-Omics (TMO), a deep learning framework that learns signed, cell-state-conditional regulatory lags ({Delta}{tau}) using asymmetric cross-modal attention. TMO projects RNA and ATAC into 50 latent components each, tokenises each cell as a sequence of 100 tokens, and uses a two-pass transformer in which a data-driven lag prior - derived from a sliding-window cross-correlation function - directly biases attention asymmetrically. On four independent 10x Multiome datasets (mouse brain, human brain, mouse kidney, human PBMC), the asymmetric model achieves Lag Concordance Scores (LCS) of 0.988-0.999, compared to 0.048-0.108 for an architecturally identical symmetric baseline. A stratified 80/20 held-out experiment confirms that the learned component-lag ordering generalises to unseen cells (held-out LCS 0.85-0.99). Clustered {Delta}{tau} heatmaps show positive {Delta}{tau} (ATAC-led priming) in early pseudotime and negative {Delta}{tau} (RNA-led, activity-dependent regulation) in late pseudotime; the ATAC-RNA correlation heatmap exhibits a U-shaped pattern indicative of developmental decoupling. Components with the most positive {Delta}{tau} are enriched for chromatin organization and stem cell differentiation (FDR < 0.05), while those with the most negative {Delta}{tau} are enriched for synaptic signalling and immune activation. Ablating the cell-state information from the lag predictor reduces the LCS and collapses per-component temporal dynamics (KS p [&le;] 0.039 in all four tissues), proving that TMOs dynamic lag patterns depend on cell-state conditioning. Independent ChIP-seq validation for four transcription factors (PAX5, Pax6, ASCL1, Hnf4) confirms highly significant separation between target genes and expression-matched background (p < 10-4 in all cases). Two Multiome Perturb-seq screens provide causal validation: SMARCB1 knockout shows a directional trend (1.5-fold target shift, p = 0.056, n = 147 perturbed cells), and SMARCE1 knockout reaches statistical significance (p = 0.0089, n = 3,394 perturbed cells). Gene-level cross-correlation independently validates that the regulatory lag signal is present in the raw data, and TMO further identifies rare, statistically significant biphasic gene programs where the regulatory direction reverses across pseudotime. Conclusions: TMO is the first method to make regulatory lag a learnable, cell-state-conditional, and architecturally encoded parameter. It is scalable, interpretable, and open-source, providing a powerful tool for studying regulatory timing in development, disease, and perturbation screens.",
+      "authors": [
+        "Lopez-Delgado, P. A.",
+        "Delgado-Carlo, M. M."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-11T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.08.730880v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "asymmetric cross-modal attention for learning regulatory lags from single-cell multiomic data",
+      "llm_evidence_cn": "从单细胞多组学数据学习调控滞后的非对称交叉注意力",
+      "llm_evidence": "从单细胞多组学数据学习调控滞后的非对称交叉注意力",
+      "canonical_evidence": "从单细胞多组学数据学习调控滞后的非对称交叉注意力",
+      "llm_tldr_en": "Introduces TMO, a deep learning framework that learns signed, cell-state-conditional regulatory lags using asymmetric cross-modal attention, relating to temporal causal discovery in biological sequences.",
+      "llm_tldr_cn": "现有单细胞多组学模型忽略染色质与转录之间的方向性因果关系，且只能估计全局滞后。本文提出TMO框架，利用非对称交叉注意力学习时变、细胞状态依赖的调控滞后（Delta tau）。在模拟和真实数据上，TMO准确恢复了已知的调控时序，揭示了细胞状态特异性动态。该方法为时序因果发现提供了新工具。",
+      "llm_tldr": "现有单细胞多组学模型忽略染色质与转录之间的方向性因果关系，且只能估计全局滞后。本文提出TMO框架，利用非对称交叉注意力学习时变、细胞状态依赖的调控滞后（Delta tau）。在模拟和真实数据上，TMO准确恢复了已知的调控时序，揭示了细胞状态特异性动态。该方法为时序因果发现提供了新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-1101-2025-02-07-637062-v3",
+      "source": "biorxiv",
+      "title": "Computation-through-DynamicsToolkit: Simulated datasets and quality metrics for dynamical models of neural activity",
+      "abstract": "A primary goal of systems neuroscience is to discover how ensembles of neurons transform inputs into goal-directed behavior, a process known as neural computation. A powerful framework for understanding neural computation uses neural dynamics - the rules that govern how neural activity evolves over time - to explain how goal-directed input-output transformations occur. As dynamical rules are not directly observable, we need computational models that can infer neural dynamics from recorded neural activity. We typically validate such models using synthetic datasets with known ground-truth dynamics, but unfortunately existing synthetic datasets dont reflect fundamental features of neural computation and may therefore be poor proxies for neural systems. Further, the field lacks validated metrics for quantifying the accuracy of the dynamics inferred by models. The Computation-through-Dynamics Toolkit (CtDToolkit) addresses these critical gaps by providing: 1) synthetic datasets that reflect computational properties of biological neural circuits, 2) interpretable metrics for quantifying model performance, and 3) a standardized pipeline for training and evaluating models with or without known external inputs. In this manuscript, we demonstrate how CtDToolkit can help guide the development, tuning, and troubleshooting of neural dynamics models. In summary, CtDToolkit provides a necessary framework for model developers to better understand and characterize neural computation through the lens of dynamics.\n\nAuthor SummaryUnderstanding how the brain works requires interpretable accounts of how populations of neurons process information to produce behavior. One powerful approach is to study \"neural dynamics\", the patterns of how neural activity evolves over time. Scientists develop computational models to infer these dynamics from neural recordings, but it has been challenging to know when the inferred dynamics are trustworthy. Existing datasets often lack key features of biological neural circuits, and current performance metrics can provide an incomplete picture of model quality.\n\nWe developed the Computation-through-Dynamics Toolkit (CtDToolkit) to solve these problems. Our toolkit provides three key resources: biologically motivated synthetic datasets, improved metrics that provide more holistic accounts of model performance, and a standardized workflow for training and evaluating models. We hope that CtDToolkit enables researchers to rigorously test, improve, and troubleshoot their models before applying them to real brain data. This work establishes a crucial foundation for developing better methods to understand neural computation, ultimately advancing our ability to decode how the brain transforms sensory information into thought and action.",
+      "authors": [
+        "Versteeg, C.",
+        "McCart, J. D.",
+        "Ostrow, M.",
+        "Zoltowski, D. M.",
+        "Washington, C. B.",
+        "Driscoll, L.",
+        "Codol, O.",
+        "Michaels, J. A.",
+        "Linderman, S. W.",
+        "Sussillo, D.",
+        "Pandarinath, C."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-05T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.02.07.637062v3.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "generates simulated time series data for neural dynamics",
+      "llm_evidence_cn": "生成神经动力学模拟时间序列数据",
+      "llm_evidence": "生成神经动力学模拟时间序列数据",
+      "canonical_evidence": "生成神经动力学模拟时间序列数据",
+      "llm_tldr_en": "This paper presents a toolkit that generates simulated neural activity time series datasets with known ground-truth dynamics, directly supporting time series generation for model validation.",
+      "llm_tldr_cn": "现有合成数据集未能反映神经计算的核心特征，限制了动态模型的验证。本文提出Computation-through-DynamicsToolkit，一个生成具有已知真实动态的神经活动时间序列模拟数据集的工具包，并提供质量度量指标。该工具生成的序列可用于基准测试动态模型，填补了神经科学中合成数据生成的空白，有助于推动神经动力学建模研究。",
+      "llm_tldr": "现有合成数据集未能反映神经计算的核心特征，限制了动态模型的验证。本文提出Computation-through-DynamicsToolkit，一个生成具有已知真实动态的神经活动时间序列模拟数据集的工具包，并提供质量度量指标。该工具生成的序列可用于基准测试动态模型，填补了神经科学中合成数据生成的空白，有助于推动神经动力学建模研究。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

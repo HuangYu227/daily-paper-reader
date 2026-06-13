@@ -1,0 +1,1067 @@
+Title: 2606.08674v2.pdf
+
+URL Source: https://arxiv.org/pdf/2606.08674v2
+
+Published Time: Wed, 10 Jun 2026 01:06:36 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+BIO VID : AUTOREGRESSIVE VIDEO GENERATION 
+
+# WITH BIOLOGICAL BEHAVIOR SEMANTIC 
+
+# COMPREHENSION 
+
+Tsung -Wei Pan a, Jung -Hua Wang a,b*  
+
+> aDepartment of Electrical Engineering, National Taiwan Ocean University, Keelung, Taiwan
+> bAI research center, National Taiwan Ocean University, Keelung, Taiwan
+
+# Ab stract 
+
+Existing video generation frameworks treat sequence duration as an externally prescribed parameter ,
+
+fixed frame counts or text prompts , producing clips whose temporal boundaries are decoupled from 
+
+the statistical structure of real behavioral data. This assumption is fundamentally misaligned with 
+
+biological behavior, where action duration varie s naturally across individuals and instances and is 
+
+encoded in the data itself. We present BioVid, a data -driven autoregressive video generation framework 
+
+that learns the temporal structure of biological behaviors directly from training data, including the ir 
+
+natural length distributions. In the first stage, a Finite Scalar Quantization GAN (FSQ -R3GAN) 
+
+tokenizer encodes each video frame into a compact discrete representation, combining the stabilized 
+
+relativistic training objective of R3GAN with FSQ's guaran teed codebook utilization to achieve high -
+
+fidelity spatial reconstruction without codebook collapse. In the second stage, a causal Transformer 
+
+models the resulting token sequences autoregressively and learns to emit an End -of -Sequence (EOS) 
+
+token when the behavioral event reaches semantic closure, with the termination distribution emerging 
+
+naturally from the training data rather than any human -specified constraint. Experiments on the dataset 
+
+of NTU RGB+D demonstrate that BioVid's generated length distributi on closely matches that of held -
+
+out test data, achieving a Wasserstein -1 distance of 1.24 against the ground truth , compared to 6.05 for 
+
+a fixed -length baseline and 15.48 for VideoGPT , while maintaining competitive spatial fidelity. 
+
+Keywords : autoregressiv e video generation; discrete tokenization; finite scalar quantization; end -
+
+of -sequence token; biological behavior synthesis 
+
+# 1 In troduction 
+
+Biological behavior video generation has emerged as a critical research frontier in computer vision, 
+
+underpinning appli cations from action recognition to scientific simulation of animal and human 
+
+dynamics. The ability to synthesize high -fidelity behavioral videos that faithfully reflect the statistical 
+
+properties of real -world observations would substantially advance our u nderstanding of action 
+
+semantics and temporal dynamics. However, realizing this goal requires confronting a fundamental 
+
+challenge that existing frameworks have yet to address: the natural duration of a biological action is 
+
+not a fixed constant, but a varia ble quantity encoded in the data itself. 
+
+Current mainstream approaches fall into two broad categories, both of which impose artificial 
+
+temporal constraints. Diffusion -based models such as Sora [1] , built upon the Diffusion Transformer architecture [2] , ach ieve unprecedented visual realism but operate exclusively in continuous latent 
+
+spaces. Because diffusion is inherently a regression task over continuous noise, these models cannot 
+
+learn a discrete sequence boundary; their temporal extent is rigidly dictate d by external frame windows 
+
+rather than behavioral semantics. Autoregressive approaches, while better suited to discrete sequence 
+
+modeling, face their own limitations. VideoGPT [3] encodes video into discrete tokens via a 3D -
+
+VQVAE, but its vector quantizat ion stage is prone to codebook collapse as vocabulary size grows —
+
+an increasing fraction of codewords receive no gradient signal and become unused, degrading 
+
+representational capacity. Crucially, VideoGPT and its successors such as HARP (High -fidelity 
+
+Aut oRegressive latent video Prediction) [4] and TATS (Time -Agnostic VQGAN and Time -Sensitive 
+
+Transformer ) [5] all generate sequences of fixed, externally specified length. Large -scale multimodal 
+
+models such as Google’s VideoPoet [6] extend this paradigm to ze ro -shot generation but remain 
+
+dependent on text prompts to control duration, producing content for as long as the prompt dictates 
+
+rather than stopping when the depicted action is semantically complete. None of these approaches treat 
+
+action duration as a le arnable property of the data. 
+
+In this work, we propose BioVid , a data -driven autoregressive video generation framework that 
+
+learns the temporal structure of biological behaviors directly from training data, including their natural 
+
+length distributions. BioVid consists of two stages. In the first stage, FSQ -R3GAN bui lds upon the 
+
+VQ -GAN pipeline [7] , replacing vector quantization with Finite Scalar Quantization (FSQ) [8] to 
+
+eliminate codebook collapse, and substituting the standard GAN objective with the regularized 
+
+relativistic loss of R3GAN [9] to achieve stable trai ning without empirical tricks. In the second stage, 
+
+a causal Transformer models the resulting discrete token sequences autoregressively and is trained to 
+
+emit an End -of -Sequence (EOS) token when the behavioral event reaches semantic closure. The 
+
+terminatio n distribution emerges naturally from the training data, with no dependence on predefined 
+
+frame counts or text prompts. 
+
+We evaluate BioVid on the NTU RGB+D human action dataset [10] , a rare benchmark in which 
+
+each clip is trimmed to precise action onset an d termination boundaries across 60 human action classes ,
+
+a property essential for learning semantically grounded length distributions. We focus on drinking 
+
+behavior (A001) of [10] , selected for its relatively high temporal variance among action classes 
+
+(co efficient of variation, CV = std/mean × 100% = 23.9%), using 94 held -out test clips for evaluation. 
+
+BioVid achieves a Wasserstein -1 distance of 1.24 against the ground truth length distribution with a 
+
+CV of 21.6%, closely matching the ground truth , compare d to 6.05 for a fixed -length baseline fixed at 
+
+the dataset mean (CV = 0%) and 15.48 for VideoGPT, which generates all clips at a fixed 16 frames 
+
+(CV = 0%) , demonstrating that the model learns, rather than ignores, the statistical structure of 
+
+behavioral du ration. 
+
+The contributions of this work are threefold : (1) Data -Driven Length Generation : We introduce an 
+
+EOS token mechanism into autoregressive video generation, enabling the model to learn action -
+
+specific length distributions directly from data, eliminat ing any dependence on externally specified 
+
+frame counts. (2) FSQ -R3GAN Tokenizer : We propose a discrete video tokenizer combining FSQ's guaranteed codebook utilization with R3GAN's convergent relativistic training objective, addressing 
+
+both codebook collap se and GAN training instability within a single framework. (3) Empirical 
+
+Validation on Biological Behavior : We demonstrate on NTU RGB+D that BioVid's generated length 
+
+distributions closely match real behavioral data, with W -1 = 1.24 versus 15.48 for VideoG PT, 
+
+establishing a new baseline for semantically grounded biological behavior synthesis. 
+
+# 2 Related work 
+
+2.1 Foundations of Autoregressive Video Generation 
+
+The paradigm of autoregressive (AR) video generation was largely catalyzed by the success of discrete 
+
+laten t representations in high -resolution image synthesis. The foundational work, Taming 
+
+Transformers, introduced the VQ -GAN architecture, which effectively compressed images into a 
+
+discrete codebook via vector quantization. This crucial step allowed transforme rs to model visual data 
+
+as one -dimensional sequential tokens, treating image generation akin to natural language processing. 
+
+Building upon this spatial discretization, VideoGPT seamlessly extended the framework into the 
+
+spatio -temporal domain by utilizing a 3D -VQVAE to encode video frames into latent sequences, 
+
+followed by a GPT -like autoregressive transformer to model temporal dynamics. These pioneering 
+
+works established the standard two -stage pipeline for non -diffusion video synthesis. However, they 
+
+were primarily constrained by lower visual fidelity and rigid temporal structures, typically generating 
+
+clips restricted to fixed frame counts without considering the natural temporal variance of the depicted 
+
+actions. 
+
+2.2 Spatio -Temporal Scaling and Efficiency 
+
+To a ddress the limitations in generation quality and computational bottlenecks, subsequent research 
+
+introduced more sophisticated AR architectures. For instance, HARP significantly scaled the AR 
+
+framework to achieve higher resolutions. By integrating a more ro bust VQ -GAN generator with a 
+
+causal transformer, HARP improved the visual fidelity of future frame predictions, particularly in 
+
+complex dynamic environments. Concurrently, models like TATS were proposed to optimize the heavy 
+
+computational burden of self -attention across multiple frames . TATS enhanced processing efficiency 
+
+by factorizing spatial and temporal attention mechanisms, allowing the network to handle 
+
+multidimensional dependencies with reduced compu tational overhead. Despite these significant 
+
+advancements in spatial fidelity and temporal efficiency, both HARP and TATS fundamentally treat 
+
+video generation as a continuous, fixed -horizon token prediction task. They lack an intrinsic 
+
+mechanism to dynamic ally halt generation based on the semantic completion of an action, inevitably 
+
+leading to artificial truncation of long behaviors. 
+
+2.3 Diffusion Transformers and the Continuity Bottleneck 
+
+Built upon the Diffusion Transformer (DiT) architecture [2] , representat ive models such as Sora extract 
+
+spatio -temporal patches from videos and apply an iterative denoising process. While DiTs achieve 
+
+unprecedented visual realism, they are fundamentally limited by their continuous latent representations. Because diffusion is i nherently a regression task operating on continuous noise spaces, these models 
+
+lack a discrete sequence boundary. Consequently, models such as Sora cannot intrinsically learn a "stop 
+
+signal" based on behavioral semantics. Their temporal generation remains rigidly dictated by external 
+
+temporal windows or predefined frame extraction loops, making them incapable of autonomously 
+
+determining the natural termination of a biological event. 
+
+2.4 Large -Scale AR Models and the Generalization Dilemma 
+
+Parallel to diffusion models, massive autoregressive approaches such as VideoPoet have pushed the 
+
+boundaries of discrete token generation. Operating as a massive, multimodal foundation model using 
+
+a decoder -only LLM architecture, VideoPoet pursues absolute generality and zero -shot generation 
+
+capabilities. However, its success relies heavily on scaling laws, necessitating immense, diverse 
+
+datasets to function effectively. When applied to highly specialized, single -task domains with scarce 
+
+data —such as embryo time -lapse imaging —these massive models struggle. The lack of sufficient 
+
+domain -specific data often leads to severe overfitting or biologically implausible hallucinations. 
+
+Furthermore, VideoPoet’s duration control is still heavily contingent upon continuo us text prompts; it 
+
+lacks an inherent behavioral stop -logic, generating content as long as the prompt sequence dictates 
+
+rather than stopping when the semantic action concludes. 
+
+# 3 Preliminaries 
+
+3.1 VQ -GAN: Discrete Visual Tokenization 
+
+VQ -GAN establishes the two -stage pipeline underlying discrete visual generation. The framework 
+
+learns to represent any image as a spatial collection of discrete codebook entries, which can 
+
+subsequently be modeled autoregressively by a transformer. 
+
+Stage 1: Learning the Codebook. Give n an image 𝑥 ∈ ℝ𝐻 ×𝑊 ×3, a convolutional encoder E maps 
+
+it to a continuous feature map ẑ = 𝐸 (𝑥 ) ∈ ℝℎ×𝑤 ×𝑛 𝑧 , where 𝑛 𝑧 is the dimensionality of codes . We 
+
+then obtain 𝑧 𝑞 via a subsequent element -wise quantization q(⋅) of each spatial code 𝑧 ̂𝑖𝑗 ∈ ℝ𝑛 𝑧 onto 
+
+its closest entry in a learned codebook 𝑍 = {𝑧 𝑘 }𝑘 =1 
+
+> 𝐾
+
+⊂ ℝ𝑛 𝑧 :
+
+𝑧 𝑞 = 𝑞 (𝑧 ̂ ) ≔ (𝑎𝑟𝑔𝑚𝑖𝑛 
+
+> 𝑧 𝑘 ∈𝑍
+
+‖𝑧 ̂𝑖𝑗 − 𝑧 𝑘 ‖ ) ∈ ℝℎ×𝑤 ×𝑛 𝑧 (1)
+
+The resulting token map {kᵢⱼ} of size h × w serves as the discrete interface between the convolutional 
+
+encoder and the downstream autoregressive transformer. Since the argmin operation is non -
+
+differentiable, gradients are passed via the straight -through estimator (STE). The VQ training objective 
+
+is prescri bed as 
+
+𝐿 𝑉𝑄 (𝑥 ) = ‖𝑥 − 𝑥 ̂ ‖2 + ‖𝑠𝑔 [𝐸 (𝑥 )] − 𝑧 𝑞 ‖2 
+
+> 2
+
++ ‖𝑠𝑔 [𝑧 𝑞 ] − 𝐸 (𝑥 )‖2 
+
+> 2
+
+(2)
+
+where sg[·] denotes the stop -gradient operator, and the three terms correspond to reconstruction, 
+
+codebook, and commitment losses respectively. 
+
+Perceptually Rich Codebook via Adversarial Training. To push compression limits while 
+
+maintaining perceptual quality, VQ -GAN augments the objective with a patch -based discriminator D: 𝐿 𝐺𝐴𝑁 (𝑥 ) = [𝑙𝑜𝑔𝐷 (𝑥 ) + log (1 − 𝐷 (𝑥 ̂ ))] (3)
+
+The complete optimization objective becomes: 
+
+argmin 
+
+> 𝐸 ,𝐺 ,𝑍
+
+max  
+
+> 𝐷
+
+𝔼 𝑥 ~𝑃 (𝑥 )[𝐿 𝑉𝑄 (𝑥 ) + 𝜆 𝐿 𝐺𝐴𝑁 (𝑥 )] (4)
+
+where the adaptive weight λ balances reconstruction and adversarial losses. 
+
+Limitations. Despite its effectiveness, VQ -GAN suffers from two fundamental limitations that 
+
+motivate FSQ -R3GAN. First, the codebook Z is prone to collapse: as K incr eases, an increasing 
+
+fraction of codewords receive no gradient signal and remain unused, reducing effective 
+
+representational capacity. Practitioners have proposed workarounds — EMA updates, periodic 
+
+reseeding, entropy penalties — each adding hyperparameter s without fully resolving the issue. Second, 
+
+the standard GAN objective in Eq. (3) is known to be training -unstable, requiring careful regularization. 
+
+These two limitations — codebook collapse in the quantization stage and training instability in the 
+
+gener ative backbone — motivate the two core architectural substitutions in FSQ -R3GAN: replacing 
+
+VQ with FSQ and replacing the standard GAN objective with R3GAN's regularized relativistic loss. 
+
+3.2 R3GAN: Stabilized GAN Training 
+
+Huang et al. argue that the instabili ty of GAN training stems not from architectural complexity, but 
+
+from a poorly -behaved loss function. The standard GAN objective in Eq. (3) is prone to two failure 
+
+modes: mode collapse, where the generator concentrates mass on a small subset of the target 
+
+distribution, and non -convergence, where training oscillates or diverges entirely. 
+
+From Standard GAN to RpGAN. The root cause of mode collapse is that Eq. (3) only requires the 
+
+discriminator D to separate real from fake data via a single global decision bou ndary. R3GAN instead 
+
+adopts the relativistic pairing GAN (RpGAN) loss [11] , which evaluates each fake sample's realness 
+
+relative to a paired real sample: 
+
+𝐿 (𝜃 , 𝜓 ) = 𝔼 𝑧 ~𝑃 𝑧 
+
+> 𝑥 ~𝑝 𝐷
+
+[𝑓 (𝐷 𝜓 (𝐺 𝜃 (𝑧 )) − 𝐷 𝜓 (𝑥 ))] (5)
+
+Unlike Eq. (3), RpGAN maintains a local decision boun dary near every real sample, structurally 
+
+preventing the generator from ignoring any region of the data distribution and thus eliminating mode 
+
+collapse. 
+
+Zero -Centered Gradient Penalties. While RpGAN resolves mode collapse, unregularized RpGAN 
+
+does not alwa ys converge. R3GAN augments the objective with two zero -centered gradient penalties 
+
+R₁ and R₂, proven to facilitate convergent training [12] :
+
+𝑅 1(𝜓 ) = 𝛾 
+
+2 𝔼 𝑥 ~𝑝 𝐷 [‖∇𝑥 𝐷 𝜓 ‖2]
+
+𝑅 2(𝜃 , 𝜓 ) = 𝛾 
+
+2 𝔼 𝑥 ~𝑝 𝜃 [‖∇𝑥 𝐷 𝜓 ‖2]
+
+(6)
+
+R₁ penalizes the gradient norm of D on real data, and R₂ on fake data. Huang et al. prove that RpGAN 
+
++ R₁ + R₂ is locally convergent under assumptions analogous to those in classical GAN theory — a
+
+guarantee that neither unregularized RpGAN nor single -sided regularization can provide. 
+
+Modernized Backbone. With a principled loss in place, R3GAN discards all empirical tricks from StyleGAN2 [13] and replaces its backbone with a modernized architecture: proper ResNet design, 
+
+modern initialization, no normalization layers, and grouped convolution. The result surpasse s
+
+StyleGAN2 on FFHQ, ImageNet, and CIFAR in terms of Fréchet Inception Distance, while being 
+
+simpler and more computationally transparent. Pan et al. [14] further demonstrated that this stability 
+
+makes R3GAN particularly effective for medical image generation under data scarcity — a property 
+
+directly relevant to BioVid's biological domain. 
+
+3.3 Discrete Latent Representations: From VQ to FSQ 
+
+As established in Section 3. 1, VQ -GAN's codebook is prone to collapse as K increases, and the 
+
+auxiliary commitment and codebook losses in Eq. (2) introduce additional optimization complexity. 
+
+Mentzer et al.  [8]  proposed Finite Scalar Quantization (FSQ) as a p rincipled drop -in replacement that 
+
+eliminates both failure modes. 
+
+Core Mechanism. Rather than maintaining an explicit high -dimensional codebook, FSQ projects the 
+
+encoder output to a low -dimensional vector z ∈ ℝᵈ (typically d < 10), and independently bounds each 
+
+scalar dimension to a small finite set of L integer values via a bounded activation function such as a 
+
+scaled tanh, followed by rounding. The quantized code z̃ thus takes values in a d -dimensional integer 
+
+grid, implicitly defining a codebook of size Lᵈ without ever instantiating the codebook explicitly. 
+
+Advantages over VQ. This reformulation has three key consequences. First, because every 
+
+combination of bounded integer values is reachable by the encoder through ordinary gradient descent 
+
+on the recons truction loss, FSQ achieves near -complete codebook utilization by construction —
+
+without EMA updates, periodic reseeding, or entropy penalties. Second, the commitment and 
+
+codebook losses in Eq. (2) are eliminated entirely, simplifying the training objectiv e to reconstruction 
+
+alone. Third, the effective codebook size Lᵈ scales flexibly by adjusting d or L, without the 
+
+optimization difficulty of maintaining K explicit codewords. 
+
+FSQ has been demonstrated [ 8] that it serves as a competitive replacement for VQ across image 
+
+generation and dense prediction tasks with less than 3% degradation in quantitative metrics. This 
+
+combination of training simplicity, guaranteed utilization, and architectural flexibility motivates our 
+
+adoption of FSQ as the quantization stage in FSQ -R3GAN, directly addressing the codebook collapse 
+
+limitation identified in Section 3. 1. 
+
+# 4 Me thodology 
+
+4.1 Overview 
+
+BioVid is a two -stage data -driven framework for biological behavior video generation. In the first stage, 
+
+an FSQ -R3GAN tokenizer compresses each video frame into a compact grid of discrete tokens, 
+
+converting the continuous video into a one -dimensional sequence amenable to autoregressive 
+
+modeling. In the second stage, a causal Transformer models this token sequence autoregressively and, 
+
+critic ally, learns to emit an End -of -Sequence (EOS) token when the depicted behavior reaches semantic completion. We adopt a discrete autoregressi ve design rather than a diffusion -based one for a specific 
+
+reason: only a discrete sequence formulation admits a natural termination symbol. Because diffusion 
+
+operates over continuous latent spaces, it has no notion of a "stop token" and must rely on an ex ternally 
+
+fixed frame horizon. By casting generation as next -token prediction over a finite vocabulary 
+
+augmented with an EOS symbol, BioVid is able to learn the length of a behavior as an intrinsic property 
+
+of the data rather than a hyperparameter. The comp lete pipeline is illustrated in  Fig. 1.
+
+4.2 FSQ -R3GAN Tokenizer 
+
+Motivation: from VQ to FSQ. As discussed in Section 3, the conventional vector quantization (VQ) 
+
+stage of VQ -GAN is susceptible to codebook collapse: although the codebook nominally contains K 
+
+entries, in practice only a small fraction are ever used, while the remainder become dead codes that 
+
+receive no gradient signal. This pathology is especially severe on action video datasets, where the 
+
+limited diversity of motion types concentrates the latent distribution and accelerates degeneration. Our 
+
+own preliminary VQ -based tokenizer (voca bulary size 1024 ) exhibited exactly this symptom, 
+
+plateauing at a reconstruction loss of 0.93 as the model resorted to reconstructing from a small set of             
+
+> Fig. 1.The inference pipeline of BioVid. The first frame is encoded by the FSQ -R3 Encoder into a quantized
+> token, which conditions the Causal Transformer to autoregressively predict subsequent tokens until an EOS
+> token is emitted. Each predicted token is then decoded by the FSQ -R3 Decoder into a frame, and the resulting
+> frames are assembled into the generated video.
+> Fig. 2.Qualitative comparison of VQ and FSQ reconstructions. Evaluated at the identical 100,000 -image
+> training stage .The top ,mid, bottom row sare ground truth, VQ baseline, and FSQ , respectively .
+
+surviving codes. FSQ eliminates this failure mode at its root. Rather than learning an explicit codebo ok, 
+
+FSQ applies scalar quantization (a bounded tanh activation followed by rounding) independently to 
+
+each latent dimension. Because every quantization cell is reachable by construction, there are no dead 
+
+codes, no commitment loss, and no need for codebook restart heuristics, yielding markedly more stable 
+
+training. This theoretical stability translates into observable improvements in visual fidelity, even 
+
+during the early stages of training.  Fig. 2 provides a side -by -side reconstruction comparison after 
+
+processing 100,000 images. While the outputs from both models remain expectedly coarse at this 
+
+preliminary phase, FSQ already exhibits noticeably better structural clari ty and color saturation than 
+
+the VQ baseline. Crucially, FSQ begins to resolve local details that the VQ model still heavily blurs. 
+
+Codebook design. We configure FSQ with five dimensions and per -dimension levels [8, 8, 8, 6, 5], 
+
+yielding an effective vocab ulary of 8×8×8×6×5 = 15,360 entries. This is substantially larger than the 
+
+512 –8,192 range typical of VQ -VAE tokenizers, providing greater representational capacity. The 
+
+deliberately non -uniform level assignment introduces a mild information asymmetry acro ss 
+
+dimensions, allocating finer resolution to some axes than others. Crucially, despite expanding the 
+
+effective vocabulary roughly 60 -fold relative to our earlier VQ tokenizer (256 entries), FSQ incurs no 
+
+collapse risk, decoupling vocabulary size from trai ning stability. 
+
+R3GAN backbone. The tokenizer's encoder –decoder is built on a symmetric R3GAN architecture (an 
+
+R3 -symmetric encoder paired with an R3 spatial decoder), replacing the conventional ResNet blocks 
+
+of VQGAN with R3GAN residual blocks. This brings R3GAN's training stability in to the tokenizer: 
+
+no spectral normalization and no instance normalization are required, and the zero -centered gradient 
+
+penalties yield cleaner optimization dynamics. To our knowledge, this combination of FSQ with an 
+
+R3GAN backbone is not present in the ori ginal FSQ or R3GAN formulations. The encoder compresses 
+
+each 256×256 frame to a 16×16 spatial grid of tokens. We additionally maintain an exponential moving 
+
+average (EMA) of the model weights; the EMA checkpoint improves reconstruction FID from 24.09 
+
+to 22 .28 (a 7.7% reduction), reflecting the smoothness of the training trajectory.     
+
+> Fig. 3.EOS/PAD Scheme for Variable -Length Video Tokens .Each video is encoded into a variable -
+> length sequence of visual tokens. An EOS token is appended after the last visual token to indicate the
+> stopping point, and PAD tokens are added to align all sequences to the maximum length.
+
+In summary, introducing FSQ into the R3GAN architecture resolves the codebook collapse problem 
+
+of conventional VQ while supporting a large 15,360 -entry vocabulary without trainin g instability, 
+
+achieving rFID = 22.28 on the NTU RGB+D A001 test set — a 39% improvement over the VQ -VAE 
+
+tokenizer of VideoGPT (rFID = 36.53). 
+
+4.3 Variable -Length Autoregressive Transformer 
+
+The decoded token grids are rasterized into a one -dimensional sequence and modeled by a causal 
+
+decoder -only Transformer with approximately 66M trainable parameters.  The central contribution of 
+
+this stage is a mechanism that allows the model to determine video length from data rather than from 
+
+a fixed architectural horizon. 
+
+EOS mechanism for variable -length generation. We augment the FSQ vocabulary with two special 
+
+symbols — EOS and PAD. Each preprocessed frame is encoded independently by the trained FSQ -
+
+R3GAN tokenizer into a 16×16 token grid, or 256 v isual tokens per frame. For a clip with T frames, 
+
+the frame -level grids are flattened in raster order and concatenated along time to form a visual -token 
+
+sequence of length 256T. We append one EOS token immediately after the final visual token of the 
+
+clip. Thus, the endpoint supervision is derived directly from the empirical end of each preprocessed 
+
+clip, rather than requiring additional manual stop annotations. The EOS token is heavily up -weighted 
+
+in the loss (eos_loss_weight = 10.0). Because EOS appears on ly once per sequence yet governs the 
+
+entire length prediction, an unweighted objective would underemphasize it and the model would fail 
+
+to learn when to stop; the 10× weighting makes EOS prediction dependable. In contrast, PAD tokens 
+
+serve a purely structu ral role: during batching, variable -length sequences are padded with PAD tokens 
+
+to the length of the longest sequence in the dataset, as shown in  Fig. 3; PAD is used only for tensor 
+
+alignment and is masked out of the loss entirely. 
+
+The Transformer is trained with shifted next -token prediction: the input sequence contains all tokens 
+
+except the last one, and the target sequence is shifted by one position . As a result, the model learns 
+
+both visual -token continuation and when to emit EOS. At inference time, generation starts from the 
+
+first -frame prompt and terminates naturally when EOS is generated, instead of relying on a fixed frame 
+
+horizon. 
+
+3D rotary po sitional encoding. Rather than a conventional 1D positional embedding, we apply 3D 
+
+RoPE to the rasterized token sequence. The temporal, height, and width axes each receive an 
+
+independent rotary embedding, which are then concatenated. This makes positional encoding aware of 
+
+the underlying 3D structure of the video rather than treating the tokens as a spatially meaningless 1D 
+
+stream, allowing the model to implicitly infer which frame, row, and column a token belongs to —
+
+beneficial for both spatial coherence and temporal modeling. 
+
+4.4 Training and Inference Strategy 
+
+Human -centered preprocessing. Our initial experiments showed that directly using the standard 
+
+NTU RGB+D center crop was insufficient for generation. The actor's location and apparent scale still 
+
+varied across clips, causing the same body part to appear in different spatial regions and forcing the model to spend capacity on crop -induced misalignment. We therefore use YOLO to detect the human 
+
+subject in each clip, smooth the detected bounding boxes over t ime, crop around the actor, and resize 
+
+the result to 256×256. This produces a temporally ordered frame directory for each clip and 
+
+canonicalizes the actor's position and scale, which substantially improves the consistency of both 
+
+tokenizer reconstruction a nd autoregressive generation. 
+
+ROI -aware loss weighting. Although the human -centered crop places the actor consistently in the 
+
+frame, it also introduces a distributional imbalance: the background regions remain nearly static across 
+
+frames while the human bo dy undergoes rapid and complex motion. Left unconstrained, the model 
+
+tends to minimize loss by over -fitting the easy -to -learn static background, leaving the semantically 
+
+critical human body region insufficiently learned. To counteract this, we apply a spat ially weighted 
+
+loss that forces the model to prioritize the human body region. Since the actor is consistently near the 
+
+center after preprocessing, we up -weight the central human -body region and down -weight peripheral 
+
+background regions. In FSQ -R3GAN, this spatial mask is applied to the reconstruction objective so 
+
+that errors on the actor contribute more strongly than errors on mostly static background. In the 
+
+Transformer, the same idea is applied to the 16×16 token grid, assigning higher weights to central 
+
+visual tokens and lower weights to edge tokens. The mask is normalized to have unit mean, keeping 
+
+the average loss scale comparable to the unweighted objective while reallocating model capacity 
+
+toward the action -relevant region. 
+
+Two -stage pretrain –finetun e. In early experiments, we trained the Transformer directly on a single 
+
+target behavior class. The model rapidly memorized the training set and exhibited a critical failure 
+
+mode at inference: when conditioned on a first frame outside the training distribu tion, the model would 
+
+immediately emit EOS, collapsing the generated sequence to a single token. This behavior indicated 
+
+that the model had learned to associate unseen first frames with termination rather than generation, a 
+
+consequence of insufficient gene ralization from the small single -class dataset. To resolve this, we 
+
+adopted a two -stage training strategy. We first pretrain the Transformer on the full NTU RGB+D 
+
+dataset spanning actions A001 –A049 ( single -person action classes ), with an action embedding 
+
+supplied as an additional conditioning signal. This stage teaches the model a broad token -level 
+
+language of human motion, enabling it to generate coherent sequences conditioned on arbitrary first 
+
+frames. We then fine -tune on the target class A001 , specializing the model to the target behavior's 
+
+length distribution and semantic structure. After fine -tuning, the premature EOS collapse was 
+
+eliminated: the model consistently produces complete behavioral sequences even when conditioned 
+
+on held -out firs t frames. 
+
+Generation diversity. Having established training stability through the two -stage strategy, we further 
+
+explored techniques to improve generation diversity and robustness. We apply scheduled sampling 
+
+during fine -tuning, stochastically substituting the model's own predictions for ground -truth tokens with 
+
+probability 0.2. Naive teacher forcing trains the model exclusively on ground -truth context, whereas 
+
+at inference the model must condition on its own outputs — a distributional mismatch known as 
+
+exp osure bias that causes errors to compound over long sequences. Scheduled sampling bridges this gap by exposing the model to its own predictions during training. At inference, we apply classifier -
+
+free guidance (CFG): a MASK token is introduced and used to r andomly replace the first -frame tokens 
+
+with probability 0.1 during training, producing unconditional examples under the same model. At 
+
+inference, conditional and unconditional logits are interpolated as logits_guided = logits_cond + 
+
+cfg_scale × (logits_con d − logits_uncond). Tokens are then sampled using temperature scaling and 
+
+top -k filtering, where temperature controls the sharpness of the predicted distribution and top -k
+
+restricts sampling to the k most probable tokens. The configuration cfg_scale = 1.5, temperature = 1.0, 
+
+and top -k = 20 represents the optimal setting identified through systematic parameter search; detailed 
+
+ablation results are provided in Appendix A. 
+
+# 5 Experimental Results 
+
+5.1 Experimental Setup 
+
+Datasets. All experiments are conducted on the N TU RGB+D dataset (Shahroudy et al., 2016), 
+
+focusing on the drinking behavior class (A001). Prior to training, all clips undergo the human -centered 
+
+preprocessing described in Section 4.4: YOLO -based person detection, temporally smoothed bounding 
+
+box croppin g, and resizing to 256×256. For BioVid, we apply a stride -3 frame subsampling strategy 
+
+to ensure sufficient inter -frame variation, as adjacent frames in the original clips are often nearly 
+
+identical. For fixed -length baseline models, we apply uniform frame subsampling to match the target 
+
+sequence length. The dataset is split as follows: pretraining uses 41,846 clips spanning all single -person 
+
+action classes (A001 –A049), fine -tuning uses 854 clips from A001, and evaluation uses 94 held -out 
+
+test clips from A0 01. 
+
+Baselines and training procedure. Due to the domain -specific nature of the NTU RGB+D dataset, 
+
+no publicly available model checkpoints are directly applicable to our evaluation setting. We therefore 
+
+retrain all baseline models using their official imple mentations, adapting them to the NTU RGB+D 
+
+evaluation setting. All models follow the two -stage pretrain –fine -tune procedure described in Section 
+
+4.4. Prior to training, we align all models on the following shared conditions: total parameter count, 
+
+total tr aining budget (number of gradient steps), learning rate, and dropout probability. Model -specific 
+
+architectural hyperparameters (e.g., codebook size) follow each model's original default settings. All 
+
+models are evaluated under a first -token conditioning pr otocol, where the first token of each test clip 
+
+is provided as the generation condition. For BioVid, the first token corresponds exactly to the first 
+
+frame, as our FSQ -R3GAN tokenizer operates at single -frame granularity, allowing generated 
+
+sequence length to align as closely as possible with the ground truth length distribution. For baseline 
+
+models that employ 3D tokenizers compressing multiple frames into a single token (typically 4 frames), 
+
+the conditioning token implicitly encodes more temporal informat ion than BioVid's first -frame 
+
+condition — representing a systematic advantage for the baselines in terms of generation context. 
+
+5.2 Video Generation Visual Quality 
+
+Given the limited test set size of 94 clips, FVD is reported for reference only, since it estima tes a video -
+
+level feature distribution from only 94 generated samples and is therefore sensitive to sample count. In contrast, FID is computed at the frame level using all decoded frames from the generated videos 
+
+and all real frames from the test set. The real A001 test set contains 8,792 frames, while each evaluated 
+
+generated set contains at least 2,800 decoded frames across the 94 clips. Thus, FID estimates the 
+
+feature distribution from a substantially larger pool of frame -level samples, making it more st atistically 
+
+reliable than FVD in this evaluation setting. Therefore, we use FID as the primary indicator of visual 
+
+frame quality 
+
+Action Score evaluates semantic motion quality by measuring whether the generated clip is 
+
+recognizable as the target action. It is computed using a VideoMAE -based action recognition model 
+
+fine -tuned on NTU RGB+D. For each generated clip, 16 frames are uniformly sampled and the top -5
+
+predicted action classes are retrieved. To avoid relying on a single aggregation rule, we report three 
+
+scores derived from the same top -5 predictions: Top -1 accuracy, Top -5 accuracy, and an exponential 
+
+weighted score. Top -1 accuracy counts whether the target action appears as the highest -ranked 
+
+prediction, while Top -5 accuracy counts whether it appears anywhere in the top five. The exponential 
+
+score assigns ranks 1/2/3/4/5/miss scores of 16/8/4/2/1/0 . The exponential score is used as the primary 
+
+action score because it preserves rank information while emphasizing high -confidence recognition; 
+
+however, all three variants are reported to show that the observed trends are not an artifact of a single 
+
+weighting scheme. 
+
+As shown in  Table 1 and  Table 2, BioVid achieves visual generation quality competitive with state -
+
+of -the -art video generation models across FID, FVD, and Action Score. Here, d ue to the limited 
+
+number of samples, FVD is incl uded for reference only. It is important to note that all three metrics 
+
+evaluate either individual frame quality or action recognition from uniformly sampled frames , neither 
+
+captures the temporal extent of the generated clip. A model that generates all cli ps at a fixed length 
+
+may score well on action recognition, as the depicted motion is consistent, yet its generated sequences 
+
+are constrained to a single duration regardless of the natural variation in how long a given action takes. 
+
+This limitation is invis ible to frame -level and recognition -based metrics. The following section   
+
+> Table 1.Comparison of FID and FVD.
+
+Mo dels  FID ↓ FVD ↓
+
+VideoGPT  96.3 9 45.61 
+
+TATS  75.16  43.75 
+
+BioVid (ours)  39.31  42.60 
+
+Table 2. Comparison of the action score .             
+
+> Models To p 1 accuracy ↑Top 5 accuracy ↑Exponential score ↑
+> VideoGPT 4593958
+> TATS 1986734
+> BioVid (o urs) 3762736
+
+therefore examines the length distribution of each model's generated clips and evaluates how faithfully 
+
+each model reproduces the temporal structure of the real behavioral data. 
+
+5.3 Video Generation Length Distribution 
+
+For length -distribution evaluation, we compare the generated video lengths with the real test -set length 
+
+distribution. We use the Wasserstein -1 distance (W -1) as the main metric because it evaluates the 
+
+distance between two length distributions rather than enforcing one -to -one length matching between 
+
+each generated video and its source clip. This is consistent with our goal of generating videos whose 
+
+durations follow the real data distribution while still allowing temporal di versity. 
+
+We also report the mean, standard deviation, and coefficient of variation (CV) of the generated video 
+
+lengths. The mean describes whether the generated videos match the average duration of the real test 
+
+set, while the standard deviation and CV me asure the diversity of generated lengths. These statistics 
+
+complement W -1 by showing whether a model merely matches the average length or actually preserves 
+
+meaningful temporal variation across generated videos. 
+
+Conventional video generation models are typ ically evaluated under a fixed -length generation 
+
+setting, where each generated video contains a predefined number of frames. To represent this 
+
+traditional setting, we include a 16 -frame VideoGPT * baseline, since VideoGPT follows the standard 
+
+fixed -length v ideo generation pipeline used in prior work. This 16 -frame result serves as a reference 
+
+for the conventional short fixed -length generation setting, rather than exhaustively evaluating every 
+
+comparison model at 16 frames. To further examine whether fixed -le ngth models can better 
+
+approximate the target length distribution when their output length is manually adjusted, we evaluate 
+
+multiple comparison models using an output length close to the average length of the test set. For 
+
+models based on 3D tokenizers, e ach generated latent token corresponds to a temporal block of 
+
+multiple frames, commonly four frames. Therefore, their output length can only be controlled at a 
+
+coarser temporal granularity. We set these models to generate 32 frames, which is the nearest fe asible 
+
+length to the test -set average. For BioVid, we report two variants: the proposed variable -length version 
+
+with the EOS mechanism and a fixed -length version with the EOS mechanism removed. The fixed -
+
+length BioVid variant is set to generate 31 frames, matching the rounded average length of the test set. 
+
+This is possible because BioVid uses frame -level tokenization, allowing the generated length to be 
+
+controlled at single -frame granularity. Denote VideoGPT* as VideoGPT evaluated under its original 
+
+fixed 16 -frame architecture ), results in  Table 3 indicate that even when the output lengths of 
+
+comparison models are manually set near the test -set average, their W -1 distances remain substantially 
+
+higher than that of BioVid. This shows tha t matching only the average video length is insufficient to 
+
+reproduce the real length distribution, while the EOS -based variable -length generation mechanism 
+
+enables BioVid to better capture the temporal duration statistics of the dataset. 
+
+To visual ize the difference between fixed -length and variable -length generation,  Fig. 4 shows the 
+
+length distributions of BioVid and fixed -length baselines. Fixed -length generation co llapses to a single 
+
+duration, while BioVid produces a broader distribution that better follows the real test -set pattern. 6 Limitations and Future Work 
+
+A key limitation of the current BioVid design is its reliance on a 2D frame -level tokenizer. While 
+
+this approach effectively preserves single -frame temporal granularity —enabling the model to generate 
+
+variable -length videos that accurately match real -world distributions —it encodes each frame 
+
+independently. Consequently, temporal information is not explicitly fused within the tokenizer, which 
+
+can result in weaker inter -frame consistency and more visible flickering compared to 3D tokenizers. 
+
+To address this, f uture work should explore temporally aware tokenizers or decoder designs that 
+
+maintain frame -level granularity while enhancing temporal consistency. Advancing this research 
+
+direction is crucial for biomedical applications like abnormal fish behavior detect ion [15] and medical 
+
+image analysis [16], where capturing precise temporal dynamics is essential to overcome challenges 
+
+like class imbalance and data scarcity. Another limitation is that BioVid is currently designed for 
+
+generating short, well -defined biolo gical actions. This setting is suitable for our target task, where the 
+
+generated video only needs to capture a complete and recognizable behavior. However, the model has 
+
+not yet been extended to long -duration video generation. In future work, BioVid could be combined 
+
+with long -video generation techniques inspired by TATS, such as hierarchical temporal modeling or 
+
+segment -wise generation, to support longer and more complex biological behavior sequences.       
+
+> Table 3.Comparison of l ength distribution in frame sevaluated in various metrics .
+
+Models  Mean  Std  CV(%)  W-1↓
+
+Ground Truth  31.48  7.51  23.86  0
+
+VideoGPT*  16 0 0 15.48 
+
+VideoGPT  32 0 0 6.18 
+
+TATS  32 0 0 6.18 
+
+BioVid w/o EOS  31 0 0 6.05 
+
+BioVid (ours)  30.68  6.62  21.56  1.24    
+
+> Fig. 4.Length Distribution Comparison. Comparison of video length distributions between the real
+> test set, BioVid, and fixed -length baselines. BioVid better follows the real duration distribution, while
+> fixed -length baselines collapse to a single predefined length.
+
+# 7 Conclusion 
+
+In this work, we proposed BioVid, a variable -length video generation framework designed for 
+
+biological behavioral videos. Unlike conventional fixed -length video generation models, BioVid 
+
+introduces an EOS -based autoregressive generation mechanism that allows the model to determine 
+
+when an action is complete. By using frame -level tokenization, BioVid achieves fine -grained temporal 
+
+control and generates videos whose duration distribution closely matches that of the real test set. 
+
+Experimental results show that BioVid substantially outperforms fixed -len gth baselines in length -
+
+distribution modeling, achieving a much lower Wasserstein -1 distance than models constrained to 
+
+predefined output lengths. This demonstrates that simply matching the average video length is 
+
+insufficient for reproducing the real temp oral distribution, and highlights the importance of explicit 
+
+variable -length modeling. In terms of generation quality, BioVid produces competitive visual and 
+
+semantic results, with FID used as the primary frame -quality metric and Action Score used to evalu ate 
+
+whether the generated motion is recognizable as the target behavior. 
+
+Overall, BioVid provides an effective step toward temporally adaptive biological video generation. 
+
+While the current frame -level tokenizer may limit temporal coherence compared with 3 D-tokenizer -
+
+based models, the proposed EOS mechanism enables more realistic duration modeling and opens a 
+
+path toward future video generation systems that can produce biologically meaningful actions with 
+
+flexible temporal structure. 
+
+# Reference s
+
+[1] OpenAI. "Video Generation Models as World Simulators." OpenAI. URL: 
+
+https://openai.com/index/video -generation -models -as -world -simulators/  (accessed Apr. 28, 2026). 
+
+[2] W. Peebles and S. Xie, "Scalable Diffusion Models with Transformers," in Proceedings of the IEEE/CVF 
+
+International Conference on Computer Vision (ICCV) , 2023, pp. 4195 –4205. 
+
+[3] W. Yan, Y. Zhang, P. Abbeel, and A. Srinivas, " VideoGPT: Video Generation using VQ -VAE and 
+
+Transformers," 2021, arXiv:2104.10157 . doi: 10.48550/arXiv.2104.10157. 
+
+[4] Y. Seo, K. Lee, F. Liu, S. James, and P. Abbeel, "HARP: Autoregressive Latent Video Prediction with 
+
+High -Fidelity Image Generator," in 20 22 IEEE International Conference on Image Processing (ICIP) , 2022, 
+
+pp. 3943 –3947. doi: 10.1109/ICIP46576.2022.9897982. 
+
+[5] S. Ge, T. Hayes, H. Yang, X. Yin, G. Pang, D. Jacobs, J. -B. Huang, and D. Parikh, "Long Video 
+
+Generation with Time -Agnostic VQGAN and Time -Sensitive Transformer," in Computer Vision – ECCV 
+
+2022 , S. Avidan, G. Brostow, M. Cissé, G. M. Farinella, and T. Hassner, Eds. Cham, Switzerland: Springer 
+
+Nature Switzerland, 2022, pp. 102 –118. doi: 10.1007/978 -3-031 -19790 -1_7. 
+
+[6] D. Kondratyuk et a l. , "VideoPoet: A Large Language Model for Zero -Shot Video Generation," 2024, 
+
+arXiv:2312.14125 . doi: 10.48550/arXiv.2312.14125. 
+
+[7]  P. Esser , R.Rombach , B. Ommer , “Taming Transformers for High -Resolution Image Synthesis,” 2021, 
+
+https://doi.org/10.48550/arXiv.2012.09841 
+
+[8] F. Mentzer, D. Minnen, E. Agustsson, and M. Tschannen, "Finite Scalar Quantization: VQ -VAE Made 
+
+Simple," presented at the 12th International Conference on Learning Representations (ICLR) , 2023. 
+
+[9] H. Huang, A. Gokaslan, V. Kuleshov, and J. Tompkin, “The GAN is dead; long live the GAN! A 
+
+modern GAN baseline,” in Proc. 38th Conf. Neural Inf. Process. Syst. (NeurIPS), Vancouver, Canada, 2024. [10] A. Shahroudy, J. Liu, T. -T. Ng, and G. Wang, "NTU RGB+D: A Large Scale Dataset for 3D Human 
+
+Activity Analysis," in Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition 
+
+(CVPR) , 2016, pp. 1010 –1019. 
+
+[11 ] A. Jolicoeur -Martineau, "The relativistic discriminator: a key element missing from st andard GAN," 
+
+2018, arXiv:1807.00734 . doi: 10.48550/arXiv.1807.00734. 
+
+[12 ] L. Mescheder, A. Geiger, and S. Nowozin, "Which Training Methods for GANs do actually Converge?," 
+
+in Proceedings of the 35th International Conference on Machine Learning (ICML) , 2018, pp. 3481 –3490. 
+
+[13] T. Karras, S. Laine, M. Aittala, J. Hellsten, J. Lehtinen, and T. Aila, "Analyzing and Improving the Image 
+
+Quality of StyleGAN," 2020, arXiv:1912.04958 . doi: 10.48550/arXiv.1912.04958. 
+
+[14 ] T. -W. Pan, C. -H. Wu, J. -H. Wang, M. -J. C hen, Y. -C. Yi, and T. -H. Lee, "Beyond Data Scarcity 
+
+Optimizing R3GAN for Medical Image Generation from Small Datasets," 2025, arXiv:2510.26828 . doi: 
+
+10.48550/arXiv.2510.26828. 
+
+[1 5] J. Wang et al., "Anomalous behaviors detection for underwater fish using AI techniques," IEEE Access, 
+
+vol. 8, p. 2243, 2020. 
+
+[1 6] T. Wang et al., "Diabetic macular edema detection using end -to -end deep fusion model and anatomical 
+
+landmark visualization on an edge computing device," Front. Med., vol. 9, Art. no. 851644, Apr. 2022 , doi: 
+
+10.3389/fmed.2022.851644.
