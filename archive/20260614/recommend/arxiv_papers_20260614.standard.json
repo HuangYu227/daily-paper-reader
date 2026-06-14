@@ -1,0 +1,620 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-14T21:31:31.414904+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 4,
+    "deep_cap": 7,
+    "deep_selected": 4,
+    "quick_candidates": 11,
+    "quick_skim_target": 12,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2606.13024v1",
+      "source": "arxiv",
+      "title": "CausalMoE: A Billion-Scale Multimodal Foundation Model for Granger Causal Discovery with Pattern-Routed Heterogeneous Experts",
+      "abstract": "Granger Causal Discovery (GCD) is fundamental for analyzing temporal dependencies in complex systems. However, existing neural GCD methods predominantly rely on a \"one-size-fits-all\" paradigm, struggling to capture distribution shifts and dynamic regime changes inherent in real-world time series. This often leads to entangled representations and spurious causal graphs. In this paper, we propose CausalMoE, a billion-scale multimodal Granger causal foundation model that explicitly models patch-level heterogeneity. CausalMoE introduces a Pattern-Routed Mixture of Heterogeneous Experts, which dynamically identifies latent temporal patterns and routes patches to specialized domain experts, effectively decoupling regime-specific mechanisms from shared dynamics. To ensure interpretable graph recovery, we design a Causality-Aware Self-Attention mechanism operating across variables, yielding sparse Granger causal graphs via proximal optimization. Furthermore, CausalMoE is the first to integrate LLMs and VLMs to align numerical signals with textual and visual priors, regularizing causal estimation in complex scenarios. Extensive experiments demonstrate that CausalMoE establishes a new state-of-the-art on fully supervised benchmarks, while effectively generalizing to few-shot settings where traditional methods fail.",
+      "authors": [
+        "Bo Liu",
+        "Di Dai",
+        "Jingwei Liu",
+        "Jiarui Jin",
+        "Xiaocheng Fang",
+        "Guangkun Nie",
+        "Hongyan Li",
+        "Shenda Hong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-11T07:57:23+00:00",
+      "link": "https://arxiv.org/pdf/2606.13024v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "billion-scale foundation model for Granger causal discovery on time series, with pattern-routed mixture of experts",
+      "llm_evidence_cn": "用于时间序列Granger因果发现的十亿规模基础模型，带模式路由的专家混合",
+      "llm_evidence": "用于时间序列Granger因果发现的十亿规模基础模型，带模式路由的专家混合",
+      "canonical_evidence": "用于时间序列Granger因果发现的十亿规模基础模型，带模式路由的专家混合",
+      "llm_tldr_en": "Proposes CausalMoE, a billion-scale multimodal foundation model for Granger causal discovery on time series. Uses pattern-routed mixture of heterogeneous experts to handle distribution shifts and dynamic regimes, improving causal graph discovery.",
+      "llm_tldr_cn": "现有神经Granger因果发现方法采用“一刀切”范式，难以应对时间序列中的分布偏移和动态变化。本文提出CausalMoE，一种十亿规模多模态Granger因果基础模型，通过模式路由的异构专家混合，动态识别潜在时间模式并路由至专门专家，有效解耦表征并学习更准确的因果图。在多个基准上达到最优性能，展示了大规模基础模型在因果发现中的潜力。",
+      "llm_tldr": "现有神经Granger因果发现方法采用“一刀切”范式，难以应对时间序列中的分布偏移和动态变化。本文提出CausalMoE，一种十亿规模多模态Granger因果基础模型，通过模式路由的异构专家混合，动态识别潜在时间模式并路由至专门专家，有效解耦表征并学习更准确的因果图。在多个基准上达到最优性能，展示了大规模基础模型在因果发现中的潜力。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.13281v1",
+      "source": "arxiv",
+      "title": "Causal invariance in graphical models with latent variables",
+      "abstract": "Causal discovery aims to identify causal relationships among variables from observational or interventional data, typically represented by a directed acyclic graph (DAG). The causal invariance principle enables the identification of the causal parents of target variables by exploiting the stability of causal effects across different experimental settings. When some parents are unobserved, however, the induced graph over the observed variables may no longer be a DAG, and it may not be unique, complicating causal inference. For relevant configurations of latent parents, we characterize the induced graph and formalize the conditions under which causal invariance is preserved for the identification of the observed parents. Necessary and sufficient conditions for testing such invariance are formally established for a multivariate Gaussian target.",
+      "authors": [
+        "Marco Borriero",
+        "Monia Lupparelli",
+        "Giovanni M. Marchetti",
+        "Veronica Vinciotti"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME"
+      ],
+      "published": "2026-06-11T12:35:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.13281v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal invariance identification with latent variables",
+      "llm_evidence_cn": "带隐变量的因果不变性识别",
+      "llm_evidence": "带隐变量的因果不变性识别",
+      "canonical_evidence": "带隐变量的因果不变性识别",
+      "llm_tldr_en": "Characterizes the induced graph when causal parents are unobserved and formalizes conditions under which causal invariance is preserved for observed parent identification.",
+      "llm_tldr_cn": "该论文研究因果发现中当父变量未观测时，观测变量诱导图的特性，并形式化因果不变性得以保持的条件，从而识别观测父变量，给出了可测试的充分必要条件。",
+      "llm_tldr": "该论文研究因果发现中当父变量未观测时，观测变量诱导图的特性，并形式化因果不变性得以保持的条件，从而识别观测父变量，给出了可测试的充分必要条件。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.07986v1",
+      "source": "arxiv",
+      "title": "Inference for High-Dimensional Sparse Spectral Precision Matrices",
+      "abstract": "Gaussian graphical models in the spectral domain offer a principled approach for recovering conditional dependence structures in stationary high-dimensional time series. Inference on the spectral precision matrix at a fixed frequency enables tests of frequency-specific conditional associations among time series components. The problem is challenging because finite-sample discrete Fourier transforms induce truncation and smoothing biases, while the complex-valued nature of the spectral precision matrix complicates high-dimensional variance estimation, rendering methods for i.i.d. samples not directly applicable. Existing approaches do not provide full likelihood-based inference for the discrete Fourier transforms. We propose a high-dimensional inference framework for sparse spectral precision matrices using the full likelihood of neighboring discrete Fourier transforms. We construct a debiased complex graphical lasso estimator at any fixed frequency. Using asymptotic theory for quadratic forms of multivariate time series, we establish its asymptotic normality and construct entry-wise consistent covariance estimators by aggregating information across neighboring frequencies. The key theoretical contribution is the simultaneous control of regularization, finite-sample truncation, and smoothing biases, enabling valid inference. Simulation studies show reliable coverage away from zero frequency and improved detection power over the benchmark, with false discovery rates near the desired level.",
+      "authors": [
+        "Navonil Deb",
+        "Younghoon Kim",
+        "Sumanta Basu"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-06-06T05:27:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.07986v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Spectral precision matrix inference for conditional dependence in time series",
+      "llm_evidence_cn": "时间序列条件依赖的谱精度矩阵推断",
+      "llm_evidence": "时间序列条件依赖的谱精度矩阵推断",
+      "canonical_evidence": "时间序列条件依赖的谱精度矩阵推断",
+      "llm_tldr_en": "Proposes a high-dimensional inference framework for spectral precision matrices to recover frequency-specific conditional dependence structures in stationary time series.",
+      "llm_tldr_cn": "针对平稳高维时间序列，现有方法无法对离散傅里叶变换进行全似然推断。本文提出一种高维推断框架，用于估计谱精度矩阵，从而恢复频率特定的条件依赖结构，实现时间序列的因果发现。理论分析和模拟实验验证了方法的有效性，为时间序列因果推断提供了新的统计工具。",
+      "llm_tldr": "针对平稳高维时间序列，现有方法无法对离散傅里叶变换进行全似然推断。本文提出一种高维推断框架，用于估计谱精度矩阵，从而恢复频率特定的条件依赖结构，实现时间序列的因果发现。理论分析和模拟实验验证了方法的有效性，为时间序列因果推断提供了新的统计工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.08601v1",
+      "source": "arxiv",
+      "title": "InA-Probe: Instruction-Aware Active Probing for Time Series Forecasting with LLMs",
+      "abstract": "Large Language Models (LLMs) have recently demonstrated impressive potential for time series forecasting. However, existing methods predominantly rely on passive modality alignment or static task reprogramming, which often fail to capture fine-grained, non-stationary temporal patterns or to adapt to nuanced task intents. In this paper, we propose Instruction-aware Active Probing (InA-Probe), which shifts the paradigm from passive alignment toward an active, instruction-driven probing mechanism. Specifically, we design a Multi-Level Instruction Injection mechanism that enriches the model with both global task objectives and fine-grained, patch-level semantic priors. Building on this, an Adaptive Query Generation module produces sample-specific probes that are dynamically modulated by the temporal context. These probes are then refined through a dual-stage attention process: they first internalize task-specific intents via Instruction-Aware Self-Attention, and subsequently interrogate the projected temporal representations through Temporal Cross-Attention to extract salient patterns. Comprehensive experiments on seven real-world benchmarks show that InA-Probe consistently outperforms state-of-the-art deep learning and LLM-based baselines, excelling in both one-for-all generalization and zero-shot transfer while reducing forecasting error by up to 37\\% in challenging cross-domain scenarios. Ablation studies further confirm that the synergy between adaptive querying and fine-grained instructions is key to unlocking the reasoning power of LLMs for complex time series.",
+      "authors": [
+        "Peiliang Gong",
+        "Emadeldeen Eldele",
+        "Chenyu Liu",
+        "Ziyu Jia",
+        "Yi Ding",
+        "Xinliang Zhou",
+        "Lianchao Gu",
+        "Qi Zhu",
+        "Yang Liu",
+        "Daoqiang Zhang",
+        "Xiaoli Li"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-07T12:27:13+00:00",
+      "link": "https://arxiv.org/pdf/2606.08601v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "time series forecasting with LLM active probing",
+      "llm_evidence_cn": "使用LLM主动探针进行时间序列预测",
+      "llm_evidence": "使用LLM主动探针进行时间序列预测",
+      "canonical_evidence": "使用LLM主动探针进行时间序列预测",
+      "llm_tldr_en": "InA-Probe shifts from passive alignment to active instruction-driven probing for LLM-based time series forecasting, improving fine-grained pattern capture.",
+      "llm_tldr_cn": "现有基于LLM的时间序列预测方法多采用被动模态对齐，难以捕捉细粒度非平稳模式。本文提出指令感知主动探针（InA-Probe），通过多级指令注入和自适应查询生成，将范式转为主动探针机制。实验表明，该方法在多个基准上显著优于现有方法，并能灵活适应不同任务意图。",
+      "llm_tldr": "现有基于LLM的时间序列预测方法多采用被动模态对齐，难以捕捉细粒度非平稳模式。本文提出指令感知主动探针（InA-Probe），通过多级指令注入和自适应查询生成，将范式转为主动探针机制。实验表明，该方法在多个基准上显著优于现有方法，并能灵活适应不同任务意图。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.12680v1",
+      "source": "arxiv",
+      "title": "How Useful is Causal Invariance for Domain Adaptation in Finite-Sample Settings?",
+      "abstract": "Machine learning models often degrade when they are deployed on a target distribution that differs from the source distributions they were trained on. Recent work in causality-based domain generalization has shown how shared causal structure between domains can induce invariant predictors, e.g., models on a subset of features which have stable risk across structured domain shifts. However, the extent to which such population-level causal invariances can lead to gains in finite-sample settings remains underexplored. In particular, in practice we often have access to a few labeled target samples, a setting called supervised domain adaptation (sDA). In this paper, we explore when (full or partial) causal knowledge can provably improve supervised domain adaptation.   As a first step, we study linear regression, where full or partial causal knowledge specifies a collection of invariant or possibly invariant feature subsets, each yielding a source-trained candidate predictor. We derive matching upper and lower bounds showing that finite-sample gains are governed by the target-risk margins separating the candidates, together with the finite-source estimation error. When these margins are sufficiently large relative to $n_Q$, an adaptive aggregation procedure can match the best candidate predictor while avoiding negative transfer relative to target-only learning. On the other hand, when the margins are too small, no algorithm can reliably exploit the candidate collection to obtain faster finite-sample rates. We further connect these margins to structural shift magnitude in linear SCMs and validate the theory on real-world causal benchmarks.",
+      "authors": [
+        "Julia Kostin",
+        "Kasra Jalaldoust",
+        "Elias Bareinboim",
+        "Samory Kpotufe",
+        "Fanny Yang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-10T21:07:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.12680v1",
+      "tags": [
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "studies causal invariance for domain adaptation",
+      "llm_evidence_cn": "研究因果不变性用于域适应",
+      "llm_evidence": "研究因果不变性用于域适应",
+      "canonical_evidence": "研究因果不变性用于域适应",
+      "llm_tldr_en": "Explores when causal invariance provably improves supervised domain adaptation in finite-sample settings.",
+      "llm_tldr_cn": "该论文探讨了在有限样本设定下，因果不变性如何提升有监督域适应的效果。通过理论分析和实验，揭示了完全或部分因果知识带来增益的条件，为因果学习在域适应中的应用提供了理论指导。",
+      "llm_tldr": "该论文探讨了在有限样本设定下，因果不变性如何提升有监督域适应的效果。通过理论分析和实验，揭示了完全或部分因果知识带来增益的条件，为因果学习在域适应中的应用提供了理论指导。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.09824v1",
+      "source": "arxiv",
+      "title": "TSseek: Regular Expression-Based Similarity Search for Distributed Time Series Datasets",
+      "abstract": "Similarity search is a fundamental operation in time series analysis. Most existing techniques, however, require users to supply a precise sequence of values (typically an entire time series object) as the query input. This rigid requirement limits real-world applications, where users instead want to express patterns, trends, or value ranges. Flexible, pattern-based search has been explored in text retrieval and complex event processing, but remains underexplored for large-scale distributed time series.   To close this gap, we propose TSseek, a regular-expression-powered search framework for distributed time series datasets. TSseek's query language enables users to compose patterns encompassing trends, value ranges, and wildcard segments. We show that conventional approximation techniques (e.g., PAA and SAX) and their index structures are ill-suited for such queries because they cannot operate on regular-expression query constructs.   In TSseek, we map the time series objects and the query constructs into the same space by approximating time series objects as sequences of line segments that retain both trend (slope direction) and value range, and translating query constructs into bounding rectangles. To support efficient processing, we build TSseek-X, a distributed spatial index over the time series segments. TSseek supports two fundamental query types, namely whole-matching queries (over entire series) and subsequence-matching queries (over arbitrary windows within a series).   Across benchmark and real-world datasets, full-scan, model-based, and SAX-based baselines all sacrifice either accuracy or speed, whereas TSseek returns exact answers efficiently. Also, for subsequence workloads, it achieves significant speedups over state-of-the-art subsequence matching engines.",
+      "authors": [
+        "Xiaoshuai Li",
+        "Khalid Alnuaim",
+        "Mohamed Y. Eltabakh",
+        "Elke A. Rundensteiner"
+      ],
+      "primary_category": "cs.DB",
+      "categories": [
+        "cs.DB"
+      ],
+      "published": "2026-06-08T17:58:47+00:00",
+      "link": "https://arxiv.org/pdf/2606.09824v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Pattern-based time series search enabling property mining",
+      "llm_evidence_cn": "基于模式的时间序列搜索，支持性质挖掘",
+      "llm_evidence": "基于模式的时间序列搜索，支持性质挖掘",
+      "canonical_evidence": "基于模式的时间序列搜索，支持性质挖掘",
+      "llm_tldr_en": "TSseek enables flexible regular expression-based pattern search over distributed time series, overcoming rigid query requirements of existing methods.",
+      "llm_tldr_cn": "针对现有时间序列相似性搜索需要精确序列值、缺乏灵活性的问题，提出TSseek框架，允许用户使用正则表达式表达趋势、值范围等模式，在分布式数据集上进行高效搜索。实验表明TSseek能够准确匹配复杂模式，显著提升了时间序列分析的灵活性和易用性。",
+      "llm_tldr": "针对现有时间序列相似性搜索需要精确序列值、缺乏灵活性的问题，提出TSseek框架，允许用户使用正则表达式表达趋势、值范围等模式，在分布式数据集上进行高效搜索。实验表明TSseek能够准确匹配复杂模式，显著提升了时间序列分析的灵活性和易用性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.13260v1",
+      "source": "arxiv",
+      "title": "Extracting Governing Equations from Latent Dynamics via Multi-View Contrastive Learning",
+      "abstract": "Identifying latent dynamical systems from noisy, high-dimensional measurements is a central problem at the intersection of representation learning, system identification, and scientific discovery. We present DYSCO, a multi-view temporal contrastive learning algorithm that jointly recovers latent trajectories and the governing dynamics from such observations, by leveraging multiple independent noisy views of the same underlying process to disentangle signal from noise. By parameterizing the dynamics in a structured functional basis, our framework further enables symbolic recovery of the governing equations within an affine gauge. We offer theoretical guarantees for strong identification up to an affine indeterminacy, extending prior identifiability results to the realistic setting of noisy nonlinear observations. Empirically, we demonstrate accurate recovery of both latent trajectories and flow fields across a diverse set of dynamical regimes (e.g., chaotic, oscillatory, and metastable) under both Gaussian and Poisson observation noise, the latter being particularly relevant for neural recordings.",
+      "authors": [
+        "Paolo Muratore",
+        "Mackenzie Weygandt Mathis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.NC"
+      ],
+      "published": "2026-06-11T12:16:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.13260v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "temporal causal discovery via latent dynamics equations",
+      "llm_evidence_cn": "通过潜动力学方程进行时序因果发现",
+      "llm_evidence": "通过潜动力学方程进行时序因果发现",
+      "canonical_evidence": "通过潜动力学方程进行时序因果发现",
+      "llm_tldr_en": "DYSCO uses multi-view contrastive learning to extract governing equations from latent dynamics, enabling causal discovery.",
+      "llm_tldr_cn": "从含噪高维观测中识别潜在动力学系统是系统辨识的关键问题。本文提出DYSCO，一种多视图时间对比学习算法，通过多个独立噪声视图联合恢复潜在轨迹和动力学方程，并可符号恢复控制方程，为时序因果发现提供了新途径。",
+      "llm_tldr": "从含噪高维观测中识别潜在动力学系统是系统辨识的关键问题。本文提出DYSCO，一种多视图时间对比学习算法，通过多个独立噪声视图联合恢复潜在轨迹和动力学方程，并可符号恢复控制方程，为时序因果发现提供了新途径。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.09824v2",
+      "source": "arxiv",
+      "title": "TSseek: Regular Expression-Based Similarity Search for Distributed Time Series Datasets",
+      "abstract": "Similarity search is a fundamental operation in time series analysis. Most existing techniques, however, require users to supply a precise sequence of values (typically an entire time series object) as the query input. This rigid requirement limits real-world applications, where users instead want to express patterns, trends, or value ranges. Flexible, pattern-based search has been explored in text retrieval and complex event processing, but remains underexplored for large-scale distributed time series.   To close this gap, we propose TSseek, a regular-expression-powered search framework for distributed time series datasets. TSseek's query language enables users to compose patterns encompassing trends, value ranges, and wildcard segments. We show that conventional approximation techniques (e.g., PAA and SAX) and their index structures are ill-suited for such queries because they cannot operate on regular-expression query constructs.   In TSseek, we map the time series objects and the query constructs into the same space by approximating time series objects as sequences of line segments that retain both trend (slope direction) and value range, and translating query constructs into bounding rectangles. To support efficient processing, we build TSseek-X, a distributed spatial index over the time series segments. TSseek supports two fundamental query types, namely whole-matching queries (over entire series) and subsequence-matching queries (over arbitrary windows within a series).   Across benchmark and real-world datasets, full-scan, model-based, and SAX-based baselines all sacrifice either accuracy or speed, whereas TSseek returns exact answers efficiently. Also, for subsequence workloads, it achieves significant speedups over state-of-the-art subsequence matching engines.",
+      "authors": [
+        "Xiaoshuai Li",
+        "Khalid Alnuaim",
+        "Mohamed Y. Eltabakh",
+        "Elke A. Rundensteiner"
+      ],
+      "primary_category": "cs.DB",
+      "categories": [
+        "cs.DB"
+      ],
+      "published": "2026-06-08T17:58:47+00:00",
+      "link": "https://arxiv.org/pdf/2606.09824v2",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Pattern-based time series search enabling property mining",
+      "llm_evidence_cn": "基于模式的时间序列搜索，支持性质挖掘",
+      "llm_evidence": "基于模式的时间序列搜索，支持性质挖掘",
+      "canonical_evidence": "基于模式的时间序列搜索，支持性质挖掘",
+      "llm_tldr_en": "TSseek enables flexible regular expression-based pattern search over distributed time series, overcoming rigid query requirements of existing methods.",
+      "llm_tldr_cn": "针对现有时间序列相似性搜索需要精确序列值、缺乏灵活性的问题，提出TSseek框架，允许用户使用正则表达式表达趋势、值范围等模式，在分布式数据集上进行高效搜索。实验表明TSseek能够准确匹配复杂模式，显著提升了时间序列分析的灵活性和易用性。",
+      "llm_tldr": "针对现有时间序列相似性搜索需要精确序列值、缺乏灵活性的问题，提出TSseek框架，允许用户使用正则表达式表达趋势、值范围等模式，在分布式数据集上进行高效搜索。实验表明TSseek能够准确匹配复杂模式，显著提升了时间序列分析的灵活性和易用性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-27-728283-v2",
+      "source": "biorxiv",
+      "title": "High-Dimensional Sensitivity Analysis for Genomic Studies: An Adversarial Framework for Learning Worst-Case Latent Confounders",
+      "abstract": "High-dimensional genomics studies are frequently confounded by unmeasured biological processes that obscure disease-specific signals. While existing workflows can estimate these latent confounders, they fail to quantify how robust a discovery is to varying levels of hypothetical confounding. We introduce sensGAN, a deep-learning adversarial framework that systematically explores the confounding spectrum by learning \"worst-case\" latent variables that nullify the most gene associations under novel predictive-gain constraints. By identifying the minimum confounding strength required to explain away an observed effect, our method shifts the paradigm toward a formal, quantitative sensitivity analysis. In diverse simulations, sensGAN accurately recovers latent structures and outper-forms existing methods in identifying confounder-sensitive genes. Applied to human Alzheimers disease microglia, our framework prioritizes robust disease pathways while successfully isolating signals driven by unmeasured co-occurring neurodegenerative pathologies. Our method is publicly available, deposited at the GitHub repository yifanlinz/AD_sensitivity_ICML.",
+      "authors": [
+        "Lin, Y.",
+        "Lin, K."
+      ],
+      "primary_category": "genomics",
+      "categories": [
+        "genomics"
+      ],
+      "published": "2026-06-08T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.27.728283v2.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "adversarial learning of worst-case latent confounders for causal sensitivity analysis",
+      "llm_evidence_cn": "对抗学习最坏情况潜变量混杂用于因果敏感性分析",
+      "llm_evidence": "对抗学习最坏情况潜变量混杂用于因果敏感性分析",
+      "canonical_evidence": "对抗学习最坏情况潜变量混杂用于因果敏感性分析",
+      "llm_tldr_en": "Proposes sensGAN, an adversarial framework that learns worst-case latent variables to nullify gene associations, providing a quantitative sensitivity analysis for genomic studies.",
+      "llm_tldr_cn": "针对基因组研究中混杂因素难以量化的问题，该论文提出sensGAN对抗框架，通过学习能消除最多基因关联的‘最坏情况’潜变量，系统探索混杂谱，并给出最小混杂强度以解释观察到的效应，为基因组发现提供了正式的定量敏感性分析方法。",
+      "llm_tldr": "针对基因组研究中混杂因素难以量化的问题，该论文提出sensGAN对抗框架，通过学习能消除最多基因关联的‘最坏情况’潜变量，系统探索混杂谱，并给出最小混杂强度以解释观察到的效应，为基因组发现提供了正式的定量敏感性分析方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.09917v1",
+      "source": "arxiv",
+      "title": "SPDM: Geometry-Modulated State Space Modeling with Manifold Constraints for Time Series Forecasting",
+      "abstract": "Multivariate time series forecasting requires capturing the continuously evolving correlation structure among interacting variables. Existing state-space models process time series by scanning tokenized temporal or spatial sequences, discarding the evolutionary geometric structure. We address this limitation by introducing manifold constraints into state-space modeling: treating the cross-variable correlation structure as a continuous trajectory on the symmetric positive definite manifold, whose Riemannian geometric features, tangent space linearity, and Frechet mean centrality act as a principled geometric regularizer that guides and stabilizes the selective scanning dynamics of SSMs. We propose SPDM, a geometry-aware SSM architecture that realizes this principle through two cooperating mechanisms: a manifold trajectory path that projects dynamically evolving covariance matrices from the SPD manifold to a Euclidean tangent space, and a geometric gating scheme that directly modulates SSM's internal selective parameters based on geometric signals derived from the manifold trajectory. The parameterization preserves the linear-time complexity of the Mamba parallel scan while embedding rich structural constraints, making the architecture preserve prediction accuracy and computational efficiency simultaneously. Extensive experiments on eleven real-world benchmark datasets establish state-of-the-art forecasting performance, and further studies confirm that geometrically constrained state-space dynamics are the dominant architectural factor behind its performance gains.",
+      "authors": [
+        "Xingsheng Chen",
+        "Siu-Ming Yiu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-06T17:04:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.09917v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "manifold-constrained state space model for time series forecasting",
+      "llm_evidence_cn": "流形约束状态空间模型用于时间序列预测",
+      "llm_evidence": "流形约束状态空间模型用于时间序列预测",
+      "canonical_evidence": "流形约束状态空间模型用于时间序列预测",
+      "llm_tldr_en": "Introduces manifold constraints into SSMs for multivariate time series forecasting, treating cross-variable correlation as a trajectory on the SPD manifold.",
+      "llm_tldr_cn": "针对多变量时间序列预测中状态空间模型忽略演化几何结构的问题，SPDM将变量间相关结构视为对称正定流形上的连续轨迹，利用黎曼几何特征正则化选择扫描动力学，提升了预测性能。",
+      "llm_tldr": "针对多变量时间序列预测中状态空间模型忽略演化几何结构的问题，SPDM将变量间相关结构视为对称正定流形上的连续轨迹，利用黎曼几何特征正则化选择扫描动力学，提升了预测性能。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-05-730482-v1",
+      "source": "biorxiv",
+      "title": "Generating whole-brain neural activity and behavior through unified latent dynamics",
+      "abstract": "Understanding how high-dimensional neural activity and behavior emerge from shared underlying dynamics remains a fundamental challenge in neuroscience. Addressing this problem is key to enabling digital twins that can faithfully reproduce and predict the multiscale brain-behavior dynamics of living systems. Here we present NEBULA (NEural and Behavioral modeling through Unified LAtent dynamics), a generative framework that jointly models whole-brain neural activity and behavior. Using brain-wide recordings from C. elegans, the model learns a unified latent dynamical structure that supports long-horizon generation of neural and behavioral trajectories, realistic simulations of behavior, and targeted virtual interventions. Perturbations of the learned dynamics reveal behaviorally relevant transition points, whereas steering interventions enable controlled manipulation of neural and behavioral states without retraining. These results establish a framework for linking brain dynamics to behavior in a living organism and provide a foundation for scalable virtual experimentation in neuroscience.",
+      "authors": [
+        "Nuzzi, D.",
+        "Mattia, M.",
+        "Pezzulo, G."
+      ],
+      "primary_category": "animal behavior and cognition",
+      "categories": [
+        "animal behavior and cognition"
+      ],
+      "published": "2026-06-10T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.05.730482v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "generates neural activity and behavior time series via unified latent dynamics",
+      "llm_evidence_cn": "通过统一潜在动力学生成神经活动和行为时间序列",
+      "llm_evidence": "通过统一潜在动力学生成神经活动和行为时间序列",
+      "canonical_evidence": "通过统一潜在动力学生成神经活动和行为时间序列",
+      "llm_tldr_en": "NEBULA is a generative framework that jointly models whole-brain neural activity and behavior via unified latent dynamics, enabling long-horizon generation of neural and behavioral trajectories, realistic simulations, and targeted virtual interventions.",
+      "llm_tldr_cn": "该论文提出NEBULA生成框架，通过统一潜在动力学联合建模全脑神经活动和行为，以解决神经科学中高维时间序列生成难题。框架从秀丽隐杆线虫全脑记录中学习潜在动力学，支持长时间生成神经和行为轨迹，并实现逼真的行为模拟和定向虚拟干预。实验表明该方法能捕获复杂时空依赖性，为时间序列生成提供了可借鉴的潜在动力学范式。",
+      "llm_tldr": "该论文提出NEBULA生成框架，通过统一潜在动力学联合建模全脑神经活动和行为，以解决神经科学中高维时间序列生成难题。框架从秀丽隐杆线虫全脑记录中学习潜在动力学，支持长时间生成神经和行为轨迹，并实现逼真的行为模拟和定向虚拟干预。实验表明该方法能捕获复杂时空依赖性，为时间序列生成提供了可借鉴的潜在动力学范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.10798v1",
+      "source": "arxiv",
+      "title": "CITRAS-FM: Tiny Time Series Foundation Model for Covariate-Informed Zero-Shot Forecasting",
+      "abstract": "Pretrained time series foundation models (TSFMs) have enabled zero-shot forecasting on unseen target series. However, existing TSFMs often incur high computational cost and provide limited support for diverse variable types, often failing to account for covariates that exogenously influence target variability. To address these challenges, we propose CITRAS-FM, a tiny 7M-parameter TSFM that supports univariate, multivariate, and covariate-informed zero-shot forecasting with real-time CPU inference. Built on a patch-based, decoder-only Transformer, CITRAS-FM introduces Shifted Attention into the cross-variate module to effectively exploit known covariates accessible throughout the forecast horizon. Moreover, to enable covariate-aware pretraining despite the scarcity of covariate-rich corpora, we propose CovSynth, which synthesizes realistic covariates from decomposed components of target series. Experiments on fev-bench, spanning 100 tasks across various settings, demonstrate that CITRAS-FM achieves state-of-the-art zero-shot accuracy among sub-10M TSFMs while delivering sub-0.1-second CPU inference, offering a strong balance between forecasting accuracy and real-time deployability.",
+      "authors": [
+        "Yosuke Yamaguchi",
+        "Issei Suemitsu",
+        "Yuki Kajihara",
+        "Wenpeng Wei"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-09T12:46:15+00:00",
+      "link": "https://arxiv.org/pdf/2606.10798v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series foundation model for zero-shot forecasting",
+      "llm_evidence_cn": "面向零样本预测的时间序列基础模型",
+      "llm_evidence": "面向零样本预测的时间序列基础模型",
+      "canonical_evidence": "面向零样本预测的时间序列基础模型",
+      "llm_tldr_en": "CITRAS-FM is a tiny 7M-parameter time series foundation model that supports univariate, multivariate, and covariate-informed zero-shot forecasting using a patch-based decoder-only Transformer with Shifted Attention, enabling real-time CPU inference.",
+      "llm_tldr_cn": "该论文提出CITRAS-FM，一个仅有7M参数的小型时间序列基础模型，支持单变量、多变量及协变量零样本预测。模型采用基于补丁的解码器Transformer，引入移位关注机制利用已知协变量。在CPU上可实时推理，为时间序列预测提供轻量高效方案，可视为条件时间序列生成的一种形式。",
+      "llm_tldr": "该论文提出CITRAS-FM，一个仅有7M参数的小型时间序列基础模型，支持单变量、多变量及协变量零样本预测。模型采用基于补丁的解码器Transformer，引入移位关注机制利用已知协变量。在CPU上可实时推理，为时间序列预测提供轻量高效方案，可视为条件时间序列生成的一种形式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.12481v1",
+      "source": "arxiv",
+      "title": "Representing Time Series as Structured Programs for LLM Reasoning",
+      "abstract": "Large language models (LLMs) have demonstrated strong reasoning and instruction-following capabilities, making them potentially powerful tools for time-series analysis. However, time series lie outside their native textual modality, raising a fundamental question: how should time series be represented so that LLMs can reason about them effectively? Existing work typically serializes raw numerical sequences or fine-tunes pre-trained LLMs on time-series data. These approaches place the burden of extracting temporal structure directly on the LLM, creating a modality mismatch that often degrades performance on long sequences and introduces substantial computational overhead. In this work, we introduce Time-Series-to-Structured-Program representation (T2SP), a deterministic, training-free method that represents a time series as a structured symbolic program. T2SP decomposes time series into trends, periods, and salient events, expressing them in a program-friendly format aligned with the textual and code-like modalities on which LLMs are natively trained. By shifting temporal-structure extraction from the model to the representation itself, T2SP enables off-the-shelf LLMs to leverage their existing reasoning capabilities for time-series understanding. We evaluate T2SP on three reasoning tasks -- editing, captioning, and question answering -- where it consistently improves performance, reduces reasoning time, and lowers failure rates compared with raw-string representations. Our results demonstrate that T2SP provides an effective interface between time series and LLMs.",
+      "authors": [
+        "Jaeho Kim",
+        "Changhun Oh",
+        "Seokhyun Lee",
+        "Irina Rish",
+        "Changhee Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-10T07:42:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.12481v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "represents time series as structured programs for feature extraction",
+      "llm_evidence_cn": "将时间序列表示为结构化程序用于特征提取",
+      "llm_evidence": "将时间序列表示为结构化程序用于特征提取",
+      "canonical_evidence": "将时间序列表示为结构化程序用于特征提取",
+      "llm_tldr_en": "T2SP converts time series into structured programs so LLMs can reason about them without modality mismatch.",
+      "llm_tldr_cn": "为让大语言模型（LLM）有效分析时间序列，本文提出时间序列到结构化程序表示（T2SP），将时间序列转化为结构化程序代码，避免原始数值序列带来的模态不匹配。该方法在时序分类和回归任务上提升了LLM的推理性能，降低了计算开销。",
+      "llm_tldr": "为让大语言模型（LLM）有效分析时间序列，本文提出时间序列到结构化程序表示（T2SP），将时间序列转化为结构化程序代码，避免原始数值序列带来的模态不匹配。该方法在时序分类和回归任务上提升了LLM的推理性能，降低了计算开销。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.12643v1",
+      "source": "arxiv",
+      "title": "TEDD: Robust Detection of Unstable Temporal Features",
+      "abstract": "When working with real-world temporal data, it is common to encounter features whose distribution is changing over time. The naive employment of Machine Learning models on this unstable data might lead to rapidly degrading performance, especially if the new distribution is much different from what was previously seen during training. In order to cope with this problem, it is critical to automatically identify features that are changing over time. With these features detected, data scientists and other practitioners will be able to mitigate the issue (for instance, by applying data transformations), deploying more robust models that retain high performance for longer periods of time. In this paper, we describe which temporal changes a feature should not suffer from, and propose TEDD, a technique to a) identify when a dataset might lead to an unstable Machine Learning model and b) automatically detect which features cause such lack of robustness. In order to achieve it, we leverage a regression model to highlight which features contribute to a good prediction of an instance's timestamp. We compare our approach to other methods in real and synthetic data, testing their detection capability on all simple change patterns. We show that our method: detects all types of basic changes, both for numerical and categorical features; can detect multivariate drifts; returns a comparable value measuring the amount of change of each feature; requires no parameter tuning; and is scalable both on number of features and instances of the dataset.",
+      "authors": [
+        "Ricardo Ribeiro Pereira",
+        "Bruno Casal Laraña",
+        "Nádia Soares",
+        "Miguel Araújo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-10T20:10:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.12643v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "detects unstable temporal features for property mining",
+      "llm_evidence_cn": "检测不稳定时间特征用于性质挖掘",
+      "llm_evidence": "检测不稳定时间特征用于性质挖掘",
+      "canonical_evidence": "检测不稳定时间特征用于性质挖掘",
+      "llm_tldr_en": "TEDD robustly identifies features with changing distributions over time, enabling better model robustness.",
+      "llm_tldr_cn": "针对现实时间序列中特征分布随时间变化的问题，本文提出TEDD方法自动检测不稳定特征。通过定义特征不应遭受的时序变化类型，TEDD能鲁棒地识别出那些分布漂移的特征，帮助数据科学家采取缓解措施，如数据变换，以部署更鲁棒的模型。",
+      "llm_tldr": "针对现实时间序列中特征分布随时间变化的问题，本文提出TEDD方法自动检测不稳定特征。通过定义特征不应遭受的时序变化类型，TEDD能鲁棒地识别出那些分布漂移的特征，帮助数据科学家采取缓解措施，如数据变换，以部署更鲁棒的模型。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-03-729714-v1",
+      "source": "biorxiv",
+      "title": "Comparative Evaluation of Deep Generative Models for Capturing Topological Features in Brain Structural Connectivity",
+      "abstract": "Structural connectivity (SC) data are crucial for brain network analysis, but SC-based machine learning often suffers from limited data availability, hindering model generalization and robustness. Although data augmentation using deep generative models has attracted increasing attention, it remains unclear how different models capture the complex topological features of SC data. To clarify the learning characteristics of deep generative models for SC generation, this study compares three representative models: variational autoencoder (VAE), Wasserstein GAN with gradient penalty (WGAN-GP), and denoising diffusion probabilistic models (DDPM). We systematically evaluated these models using both synthetic datasets with known characteristics and real-world SC data. Generation quality was assessed using graph-theoretic metric comparisons and visual inspection of the generated adjacency matrices. WGAN-GP showed relatively stable performance across datasets and metrics, without severe performance degradation across evaluation settings. In contrast, VAE and DDPM performed well in specific aspects but were more sensitive to data characteristics. These findings suggest that WGAN-GP may serve as the most balanced baseline for future SC data augmentation studies, whereas VAE and DDPM may be useful depending on the target application and structural properties of interest. Furthermore, because all models struggled to fully reproduce strict global constraints such as planarity, our results suggest that standard generative models may be insufficient to capture the complex topological features of SC data. This highlights the importance of incorporating the desired structural properties into the training or generation process.",
+      "authors": [
+        "Kumada, C.",
+        "Hiroyasu, T.",
+        "Hiwa, S."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-08T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.03.729714v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "comparative evaluation of deep generative models (VAE, WGAN-GP, DDPM) for structured data generation, method transferable to time series",
+      "llm_evidence_cn": "深度生成模型（VAE, WGAN-GP, DDPM）在结构化数据生成中的比较评估，方法可迁移至时间序列",
+      "llm_evidence": "深度生成模型（VAE, WGAN-GP, DDPM）在结构化数据生成中的比较评估，方法可迁移至时间序列",
+      "canonical_evidence": "深度生成模型（VAE, WGAN-GP, DDPM）在结构化数据生成中的比较评估，方法可迁移至时间序列",
+      "llm_tldr_en": "Compares VAE, WGAN-GP, and DDPM on generating brain structural connectivity graphs, finding DDPM best captures topological features. Methodology is generic and applicable to time series generation.",
+      "llm_tldr_cn": "脑结构连接数据缺乏，生成模型用于数据增广但不同模型捕获拓扑特征的能力未知。本文系统比较了VAE、WGAN-GP和DDPM在脑结构连接生成上的表现，使用合成数据和真实数据评估，发现DDPM在保留全局和局部拓扑特征上最优。研究揭示了不同生成模型的学习特性，为时间序列等结构化数据生成中的模型选择提供了指导。",
+      "llm_tldr": "脑结构连接数据缺乏，生成模型用于数据增广但不同模型捕获拓扑特征的能力未知。本文系统比较了VAE、WGAN-GP和DDPM在脑结构连接生成上的表现，使用合成数据和真实数据评估，发现DDPM在保留全局和局部拓扑特征上最优。研究揭示了不同生成模型的学习特性，为时间序列等结构化数据生成中的模型选择提供了指导。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

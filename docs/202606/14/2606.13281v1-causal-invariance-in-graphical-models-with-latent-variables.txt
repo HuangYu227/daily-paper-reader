@@ -1,0 +1,975 @@
+Title: Causal invariance in graphical models with latent variables
+
+URL Source: https://arxiv.org/pdf/2606.13281v1
+
+Published Time: Fri, 12 Jun 2026 00:54:22 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Causal invariance in graphical models with latent variables 
+
+Marco Borriero 
+
+Department of Statistics, Computer Science and Applications, University of Florence, Viale Giovanni Battista Morgagni 59, 50134 Florence, Italy, 
+
+marco.borriero@unifi.it 
+
+Monia Lupparelli 
+
+Department of Statistics, Computer Science and Applications, University of Florence, Viale Giovanni Battista Morgagni 59, 50134 Florence, Italy, 
+
+monia.lupparelli@unifi.it 
+
+Giovanni M. Marchetti 
+
+Department of Statistics, Computer Science and Applications, University of Florence, Viale Giovanni Battista Morgagni 59, 50134 Florence, Italy, 
+
+giovanni.marchetti@unifi.it 
+
+Veronica Vinciotti 
+
+Department of Mathematics, University of Trento, Via Sommarive 14, 38123 Povo (TN), Italy 
+
+veronica.vinciotti@unitn.it 
+
+## ABSTRACT 
+
+Causal discovery aims to identify causal relationships among variables from observational or in-terventional data, typically represented by a directed acyclic graph (DAG). The causal invariance principle enables the identification of the causal parents of target variables by exploiting the stability of causal effects across different experimental settings. When some parents are unobserved, how-ever, the induced graph over the observed variables may no longer be a DAG, and it may not be unique, complicating causal inference. For relevant configurations of latent parents, we characterize the induced graph and formalize the conditions under which causal invariance is preserved for the identification of the observed parents. Necessary and sufficient conditions for testing such invariance are formally established for a multivariate Gaussian target. 
+
+Keywords acyclic directed mixed graphs · hidden confounders · identifiability · mediation analysis 
+
+## 1 Introduction 
+
+Causal directed acyclic graphs (DAGs) are extensively used to represent the structural causal model of data generating processes. In these graphs, the nodes correspond to random variables and causal relationships are encoded by directed edges, where X → Y implies that X is a causal parent of Y [Pearl, 2009]. Identifying the set of causal parents XP A of a target Y requires an inferential procedure known as causal discovery. Invariant Causal Prediction (ICP), introduced by Peters et al. [2016], is a recent method for parent search based on the idea that causal effects remain invariant across different experimental settings, referred to as environments. Given data sampled from these settings, the method consists in testing the invariance of the conditional distribution of Y given XS across environments for all subsets 
+
+XS of the predictor set XV = {Xi}pi=1 . When all causal parents are observed, the intersection of the subsets XS that satisfy the invariance hypothesis belongs to XP A with controllable probability. In the absence of causal sufficiency, that is when some parents are unobserved in the generating DAG, testing causal invariance may fail because hidden variables induce distortions, confounding, and identifiability issues. Related approaches, such as causal Dantzig [Rothenhäusler et al., 2019], provide closed-form estimators of causal effects under the more restrictive setting of structural equation models with additive perturbations and allow correlated independent errors for potential hidden variables. Long et al. [2023] extend this method by introducing efficient hybrid estimators that make use of instrumental variables for model identifiability. Alternative approaches focus on robust prediction 
+
+> arXiv:2606.13281v1 [stat.ME] 11 Jun 2026
+
+Causal invariance in graphical models with latent variables 
+
+H
+
+~
+
+~ Z
+
+
+
+
+
+Y X
+
+`
+
+`
+
+(a) 
+
+H
+
+~
+
+~ Z
+
+
+
+
+
+Y X
+
+`
+
+`oo
+
+(b) 
+
+H
+
+~
+
+~ Z
+
+
+
+
+
+Y X
+
+(c) 
+
+H
+
+~
+
+~ Z
+
+
+
+
+
+Y Xoo
+
+(d) 
+
+Y Xoo Zoo
+
+(e) 
+
+Y Xoo Zoo
+
+(f) 
+
+Y o o / / X Zoo
+
+(g) 
+
+Y Xoo>>aa Zoo
+
+(h) Figure 1: First row: DAGs with latent parent configurations in a simple setting of three observed variables Y, X, Z ;latent variable H is a transition node in graphs (a)-(b) and a source node in graphs (c)-(d). Second row: corresponding induced mixed graphs over the observed variables. methods under distributional shifts [Gnecco et al., 2026, Henzi et al., 2025, Rothenhäusler et al., 2021]. The impact of latent structures in testing causal invariance for parent identification requires further investigation as pointed out recently by Gnecco et al. [2026]. We approach this issue by investigating whether the identification of the parent set can be recovered by the graphical model induced over the observed variables. More specifically, the general question behind this paper is whether the graph induced over the observed variables enables one to specify the structural causal model of a target Y after integrating out the latent variables. This is an ambitious question as characterizing the graphical causal model for the observed variables is far from straightforward. The induced graph may no longer be a DAG and mixed graphs with further bi-directed edges are often needed to encode the intricate dependence structures arising after marginalizing over the latent variables [Sadeghi and Lauritzen, 2014]. Additionally, depending on the graphical marginalization criterion adopted [Zhang, 2008, Richardson, 2003], the induced graph and the resulting parent sets for Y may not be unique, thereby complicating causal parent identification. In this paper, we provide an answer to this question under certain latent configurations. In particular, we consider closely the cases when unobserved parents act either as a transition node , X → H → Y , or as a source node , X ← H → Y
+
+along the causal path, which are the cases of hidden mediator and hidden counfounder, respectively (first row of Figure 1). We first characterize the graphical model for the observed variables such that causal invariance is preserved for the distribution of a target of interest conditional on the observed parents. Then, we develop a framework for testing such invariance when the target is a multivariate Gaussian variable; the univariate Gaussian target represents a special case. Empirical examples illustrate how the method can recover causal parents under these latent structures. Extended proofs and technical details are deferred to the Appendix. 
+
+## 2 Preliminaries 
+
+2.1 Invariance condition of causal model 
+
+Let us consider a DAG D = ( V, E ), representing the generating process for a set XV = {Xi}i∈V of random variables, where each Xi is associated to a node of the graph and E is the set of directed edges. A DAG model is an independence model for XV where conditional independences are implied by d-separation in the associated graph. A causal DAG model, where the arrows imply causal relationships, is defined by an additional assumption of invariance, or stability, of the conditional distribution of each node Xi given its causal parents XP A i under an intervention on all or a subset of 
+
+XP A i [Pearl, 2009]. If we represent the model via the structural causal model 
+
+Xi = fi(XP A i , δ i), ∀i ∈ V, (1) where fi is a deterministic function, XP A i are the causal parents of Xi in the graph and δi are independent random errors, causal invariance refers to the invariance of fi and of the distribution of δi under intervention. We concentrate here on a target variable Y ∈ XV and on the identification of its causal parents XP A . The invariance principle implies that if an external intervention is applied on, say, all causal parents of Y , by setting these to values xP A , then 
+
+p(Y |do (XP A = xP A )) = p(Y |XP A = xP A ), (2) that is, the distribution of Y post-intervention, denoted using the do -operator, is the same as the conditional distribution of Y when XP A are simply observed to take the value xP A . The same definition can be given for a multivariate target 
+
+Y = {Yj }mj=1 where XP A = ∪mj=1 XP A j and XP A j is the parent set of Yj .2Causal invariance in graphical models with latent variables Since external interventions are often unethical or unfeasible, Peters et al. [2016] and related approaches for general response types [Kook et al., 2025, Polinelli et al., 2026] exploit the heterogeneity of datasets across different environ-ments e ∈ E to mimic the effect of an external distributional intervention on XV without actually performing it. Under the assumption of no intervention on Y , they provide an inferential procedure for parent identification based on testing the invariance condition using the data collected in different environments. 
+
+Definition 1. Consider a set of data (Y e, X e) collected from different experimental settings e ∈ E , where Y e is a (multivariate) target variable which is not subject to interventions and Xe represents a set of predictors. Let 
+
+Y e = f (XeP A , δ eY ) be the structural equation for the target for each e ∈ E . The conditional distribution p(Y |XP A ) is invariant if: (i) f is the same ∀e ∈ E , (ii) the distribution of δeY is the same for each e ∈ E and (iii) δeY ⊥⊥ XeP A .
+
+Intuitively, testing invariance corresponds to verifying that the conditional distributions Y e|XeP A = xeP A and 
+
+Y e′
+
+|Xe′ 
+
+> P A
+
+= xe′ 
+
+> P A
+
+are equal for all environments e, e ′ ∈ E , which mimic an external intervention at least on the parent set in order to ensure their correct identification. 
+
+2.2 Causal model with latent variables 
+
+We now consider causal DAGs in which some of the causal parents of the target variables Y are unobserved. When adequate a priori information is lacking and imposing probabilistic assumptions on the latent structures is too restrictive, working with the marginal distribution of the observed variables becomes a desirable alternative. The graph for the observed variables may no longer be a DAG, since this class is not closed under marginalization. A larger class of graphs is then needed. This class includes additional bi-directed edges to represent the dependence induced between two observed variables by latent common causes. In particular, we consider the class of acyclic directed mixed graphs [Richardson, 2003] (henceforth, mixed graphs) in which nodes may be linked by multiple directed and bi-directed edges that capture the effect of latent structures. Such graphs and related models have been employed to estimate causal effects in the presence of latent variables in Henckel et al. [2024]. As an example, the second row of Figure 1 displays the mixed graphs induced by the latent parent configurations in the first row. When a transition variable H is ignored (Figures 1(a) and (b)), as typical in mediation analysis, the induced mixed graph remains a DAG, since ignoring a transition node yields a directed edge between the observed variables. Note that X becomes a parent of Y in graph (e) even though it is an ancestor in the generating DAG (a). When the latent parent is a source node (Figures 1(c) and (d)), the induced mixed graph is not a DAG. In particular, ignoring H in DAG (c) yields no directed relationship between Y and X in the induced graph (g), while in the mixed graph (f) the multiple edges between Y and X enable one to account for the confounding effect, distinguishing the direct effect of X from the non-direct dependence induced by H in DAG (d). Graphical mixed models are ruled by the m-separation criterion that generalizes the d-separation criterion for mixed graphs [Richardson, 2003]. The resulting model is a structural equation model with dependent errors and further dependences stemming from latent variables. Let G = ( V, E ) be a mixed graph associated with a random vector XV ,and let the model in (1) hold for any Xi ∈ XV . Unlike DAGs, δi ⊥⊥/ δ j if Xi and Xj are linked by a bi-directed edge (Xi ↔ Xj ). Moreover, if i ∈ P A j such that the nodes are linked by multiple edges (Xi ←→ −→ Xj ), then δj ⊥⊥/ X P A j . For instance, the structural equation model associated to the mixed graph in Figure 1(h) is 
+
+Y = fY (X, δ Y ), X = fX (Z, δ X ), Z = δZ , δY ⊥⊥/ δ X , δY ⊥⊥/ X. 
+
+Instead, the model associated to the mixed graph in Figure 1(g) is defined by the equations 
+
+Y = δY , X = fX (Z, δ X ), Z = δZ , δY ⊥⊥/ δ X .
+
+The implications that marginalization over the latent variables has on causal invariance and, therefore, whether causal discovery can still be conducted on the statistical model associated to the induced mixed graph are central questions to this paper. In particular, given a causal DAG with latent parents, we characterize the structural causal model for the target variable in the induced mixed graph and we formalize the testing of causal invariance for the identification of the observed parents when the target is Gaussian. Causal graphical models without and with hidden confounders are considered, respectively, in Sections 3 and 4. 
+
+## 3 Structural causal models without hidden confounders 
+
+3.1 Mixed graph model for the observed variables 
+
+Let X ∈ Rp be a set of predictors, H ∈ Rq a set of latent variables and Y ∈ Rm a multivariate response whose parent sets of observed and unobserved variables are XP A and HP A , respectively. The parents of HP A are denoted with 3Causal invariance in graphical models with latent variables 
+
+XP A (H) instead. Based on a data generating DAG mechanism, let the model of Y and of the latent parents HP A follow the causal equations 
+
+Y = f (XP A , H P A , δ Y ), HP A = g(XP A (H), δ H ), δY ⊥⊥ { XP A , H P A }, δH ⊥⊥ δY , (3) with δY ∼ FδY for some distribution FδY . The latent variables in HP A act as transition and/or source node along the paths to Y without confounding effects, such that εY ⊥⊥ XP A . Interventions do not affect the unobserved variables, as well as the target variables. Therefore, the distributions of both Y |XP A and HP A |XP A (H) are invariant, since (3) is a structural causal model. Marginalizing over H leads to a mixed graph for the observed variables where, ignoring a transition latent parent Hl
+
+along the causal path to Yj , induces a directed edge such that the parents of Hl become parents of Yj , while ignoring a source latent parent Hl induces bi-directed edges linking its child nodes. Figures 1(a)-(c) and Figures 1(e)-(g) are illustrative of the marginalization criterion for a single target. No multiple edges arise in the induced graph since there are no confounding effects. Under these latent configurations, the induced mixed graph is equivalent to an ancestral graph [Zhang, 2008], which is another notable class of graphs used to represent the marginal distribution of DAGs with hidden variables, using a different marginalization criterion. The model for Y given the observed variables corresponds to the structural equation model 
+
+Y = ˜f (XgP A , ε Y ), εY ⊥⊥ XgP A , (4) for an error term εY ∼ Fεy and some function ˜f where XgP A = XP A ∪ XP A (H) is the augmented parent set. The next proposition proves that the marginal model in (4) is a structural causal model for Y and the marginal mixed graph can be given a causal interpretation for the target Y .
+
+Proposition 1. The marginal model in (4) is a structural causal model, then the conditional distribution of Y |XgP A is invariant. 
+
+The above result proves that ignoring source variables does not induce causal relationships among the observed variables. On the other hand, when mediator/transition variables are not observed, the stability of the causal mechanism that links the augmented parents XgP A to the target Y is preserved as no intervention is made on the latent variables. In case of hidden confounding such that XP A ⊥⊥/ δ H in (3) , Proposition 1 no longer holds, as will be discussed in detail in Section 4. 
+
+3.2 Gaussian target variable 
+
+Given the mixed graph and the related structural causal model (4) for Y , the next Theorem provides a necessary and sufficient condition for testing causal invariance for any subset XS ⊆ X in a linear model with Gaussian target variables 
+
+Y .
+
+Theorem 1. Let Y = BTP A X + εY be a linear structural equation for the target Y , for some coefficient matrix 
+
+BP A ∈ Rp×m where (BP A )ij = 0 if and only if Xi̸ ∈ XgP A j with XgP A j the set of observed parent variables of Yj in the induced mixed graph. Assume εY ∼ N (0 , Σ) for some covariance matrix Σ and εY ⊥⊥ XgP A . Let Sj ⊂ { 1, . . . , p }
+
+be a set of potential causal parents for Yj ∈ Y with S = Smj=1 Sj . Let B ∈ Rp×m such that Bij = 0 if and only if 
+
+Xi̸ ∈ Sj and that solves the expected likelihood score equations 
+
+EXS ,Y [( Y − BT X)XTS ] = 0 . (5) 
+
+Then, S = gP A and B = BP A almost surely if and only if EX,Y [( Y − BT X)( Y − BT X)T ] = Σ .
+
+Theorem 1 can be exploited in order to build an inferential procedure for recovering the parent set of a given target variable. The proposed procedure considers all possible subsets XS ⊆ X, and for each of these, tests the invariance condition 
+
+H0 : Σ 1 = · · · = Σ k (6) from data across the k environments e ∈ E . To give an empirical illustration of this procedure, we employ Box’s M test using the test statistic 
+
+M = ( n − k) log | ˆΣ| − 
+
+> k
+
+X
+
+> e=1
+
+(ne − 1) log | ˆΣe|,
+
+with ˆΣe the unbiased m × m sample covariance matrix of the residuals of a multivariate linear regression model predicting the response using data from environment e and ˆΣ = 1
+
+> n−k
+
+Pke=1 (ne − 1) ˆΣe the pooled covariance, 4Causal invariance in graphical models with latent variables 
+
+Y1
+
+Y2
+
+H2
+
+H1 X3
+
+H3
+
+X1
+
+X2
+
+X5
+
+X7
+
+X6
+
+X8
+
+X4
+
+(a) 
+
+Y1
+
+Y2
+
+X3
+
+X1
+
+X2
+
+X4
+
+X5
+
+X7
+
+X6
+
+X8
+
+(b) Figure 2: (a) Generating DAG with latent transition ans source nodes; (b) induced mixed graph. with ne denoting the sample size of environment e and n = n1 + · · · + nk the total sample size. Setting c =
+
+> 2m2+3 m−16( m+1)( k−1)
+
+Pke=1 1 
+
+> ne−1
+
+− 1
+
+> n−k
+
+
+
+, under the null hypothesis, 
+
+M (1 − c) H0
+
+∼ χ2 
+
+> ν
+
+, ν = ( k − 1) m(m + 1) /2.
+
+At the significant level α, we expect the invariance condition (6) to be accepted for more than one subset S, as non-predictive variables can be included in any invariant set while preserving invariance. For this reason, among all sets for which the null hypothesis cannot be rejected, we select the one that minimizes the average Bayesian Information Criterion (BIC) across environments. We provide a numerical example to demonstrate that the causal parents of a target variable in an induced mixed graph are effectively identified when applying the result of Theorem 1 to test for invariance. Let us consider the data generating model for a bivariate Gaussian target Y = {Y1, Y 2} represented by the causal DAG in Figure 2(a) including eight observed variables X = {X1, . . . , X 8} and three latent variables H = {H1, H 2, H 3}. Specifically, H1 is a latent transition parent for the outcome Y1; H3 acts simultaneously as a latent transition parent for Y2 and a source node for 
+
+X4 and Y2; H2 is a common source node for the two outcomes. The induced mixed graph over the observed variables, shown in Figure 2(b), includes the bi-directed edges Y1 ↔ Y2 and X4 ↔ Y2 that are non-causal relationships, and directed edges X3 → Y1, X2 → Y2, so that X2, X 3 enter the augmented causal parent set of Y1, Y 2. Section B.1 of the Appendix provides a detailed description of the structural causal model and the generation of data from two environments, which mimic multiplicative interventions. In each environment, data were simulated with a sample size of n = 500 . The parent set {X1, X 2, X 3, X 5} of the joint outcome {Y1, Y 2} in Figure 2(b) is correctly identified 92% 
+
+of times across 50 Monte Carlo replications using a 5% significance level for the tests. 
+
+## 4 Structural causal models with hidden confounders 
+
+4.1 Mixed graph model for the observed variables 
+
+We frame the proposed procedure within the setting of causal models with hidden confounders, which typically make causal effects non-identifiable. Given the variable structure described in Section 3, we further assume that a set of instrumental variables Z ∈ Rr are available to ensure model identifiability in correspondence of confounding effect [Angrist et al., 1996]. Based on a generating DAG, we consider the structural causal model for Y , HP A , X P A 
+
+Y = f (XP A ) + g(HP A , δ Y ), HP A = δH , XP A = l(HP A , Z, η ) (7) with δY ⊥⊥ { XP A , H P A }, δH ⊥⊥ δY , η ⊥⊥ { H, Z }, Y ⊥⊥ Z|XP A , Cov (Z, X P A )̸ = 0 and δY ∼ FδY for some distribution 
+
+FδY . As interventions do not affect {HP A , Y }, the distribution of Y |{ XP A , H P A } is invariant. The set HP A may involve confounding. All latent parents are assumed to be exogenous ( XP A (H) = ∅), consequently there are no latent parents acting as transition nodes for Y . If we marginalize over HP A , we get a mixed graph G with additional bi-directed edges linking Yj and its parents Xi ∈ XP A j in correspondence of confounding effect. Figures 1(d) and (h) are illustrative of for the case of a single target. The mixed graph includes multiple edges to distinguish between the direct effect of parent variables on a target and the further confounding effect. The induced model for Y given the observed variables is the structural equation model 
+
+Y = f (XP A ) + εY , XP A = ˜l(Z, η ), εY ⊥⊥/ X P A , (8) 5Causal invariance in graphical models with latent variables with an error term εY ∼ FεY . In this setting, we prove that in the induced mixed graph, parents of Y are causal parents under the weak invariance principle, and that the structural equation in (8) is a causal model for a target Y . We recall the definition of weak invariance [Peters et al., 2016]. 
+
+Definition 2. If the multivariate random variable Y follows the causal equation Y e = f (XeP A , ε eY ) for all e ∈ E , then we say that the distribution of Y |XP A satisfies the weak invariance property if conditions (i) and (ii) of Definition 1 hold. 
+
+Intuitively, the weak invariance condition represents a softer form of regularity that holds even if hidden confounders are present. We exploit this definition in order to give a causal interpretation to marginal mixed graph models also when this type of latent configuration occurs. 
+
+Proposition 2. The marginal model in (8) is a structural causal model, then the conditional distribution of Y |XP A is weakly invariant. 
+
+Note that the induced mixed graph for a DAG including confounding effects may be not equal to the induced ancestral graph [Zhang, 2008]. In fact, given the DAG in Figure 1(d), the induced ancestral graph does not have the bi-directed edge between X and Y . Instead, it has a directed arrow from Z to Y , making Z an additional parent of the target variable. Even though the ancestral and mixed graph models are equivalent in terms of independences, the next proposition shows that the ancestral graph model is not invariant for Y . The proof in Section A of the Appendix is complemented with a brief discussion on the comparison between the induced mixed and ancestral graph model. 
+
+Proposition 3. Consider the causal DAG in Figure 1(d). In the induced ancestral graph obtained by ignoring the latent variable H, the weak invariance property does not hold for p(Y |X, Z ).
+
+In a more general setting where the latent parents can also act as transition nodes, we prove that causal invariance holds when the effect of HP A on Y is linear. Then, we consider the model 
+
+Y = f (XP A ) + Γ TP A H + δY , HP A = g(XP A (H)) + δH , XP A = l(H, Z, η ) (9) with δY ⊥⊥ { XP A , H P A }, δH ⊥⊥ XP A (H), δH ⊥⊥ δY , η ⊥⊥ { H, Z } and δY ∼ FδY . ΓP A ∈ Rq×m is a coefficient matrix with (Γ P A )lj = 0 if and only if Hl̸ ∈ HP A j . The induced model for Y is 
+
+Y = f (XgP A ) + εY , XgP A = ˜l(Z, η ), εY ⊥⊥/ X gP A , (10) where εY ∼ FεY and the parent set XgP A can be larger than XP A in case of latent transition parents. 
+
+Proposition 4. The marginal model in (10) is a structural causal model, then the conditional distribution of Y |XgP A is weakly invariant. 
+
+Given Proposition 4, invariance conditions are now derived for the case of a Gaussian target. 
+
+4.2 Gaussian target variable 
+
+We now specify the structural causal model in (9) for a Gaussian target 
+
+Y = Λ TP A X + Γ TP A H + δY , HP A = Φ TP A X + δH , (11) with δY ∼ N (0 , Ω) for a diagonal covariance matrix Ω and where the non-zero entries in the matrices ΛP A , ΓP A , ΦP A 
+
+identify the parent sets XP A , HP A and XP A (H). Given BTP A = Λ TP A + Γ TP A ΦTP A and εY = Γ TP A δH + δY , the causal equation for Y ignoring HP A becomes 
+
+Y = BTP A X + εY , εY ∼ N (0 , Σ) (12) where εY ⊥⊥/ X gP A if any hidden confounder is present. The next theorem provides a necessary and sufficient condition for testing weak causal invariance for any subset XS ⊆ X in (12). 
+
+Theorem 2. In the above linear setting, let Sj ⊂ { 1, . . . , p } be a set of potential causal parents for Yj ∈ Y with 
+
+S = Smj=1 Sj . Let B ∈ Rp×m such that Bij = 0 if and only if Xi̸ ∈ Sj and that solves the expected likelihood score equations 
+
+EXS ,Y [( Y − BT X)XTS ] = Γ TP A EXS ,δ H [δH XTS ], EXS ,Y,δ H [( Y − BT X)δTH ] = Γ TP A EδH [δH δTH ].
+
+Then, S = gP A and B = BP A almost surely if and only if EX,Y [( Y − BT X)( Y − BT X)T ] = Σ .
+
+6Causal invariance in graphical models with latent variables 
+
+Y1
+
+Y2
+
+H2
+
+H1 X3
+
+H3 X2
+
+X1 Z1
+
+X5 Z5H4
+
+X7
+
+X6
+
+X8
+
+X4
+
+H5
+
+(a) 
+
+Y1
+
+Y2 X2
+
+X3
+
+X4
+
+X1 Z1
+
+X5 Z5
+
+X7
+
+X6
+
+X8
+
+(b) Figure 3: (a) Generating DAG with different latent variable configurations; (b) induced mixed graph. We provide a numerical illustration to show that by applying the result of Theorem 2 to test for invariance in mixed graph models with confounding effects, the causal parents of a target variable are effectively identified. To this end, we consider the data generating model represented by the causal DAG in Figure 3(a). The model includes a bivariate Gaussian target Y = {Y1, Y 2}, eight observed variables X = {X1, . . . , X 8} and five latent variables {H1, H 2, H 3, H 4, H 5}
+
+serving as causal latent parents of Y . In particular, the latent parents H4 and H5 act as hidden counfounders and the instrumental variables Z1 and Z5 are introduced to ensure the identifiability of the causal effects of X1 on Y2 and of X5
+
+on Y1, respectively. The induced mixed graph over the observed variables, shown in Figure 3(b), includes additional bi-directed edges with no causal interpretation and the directed edges X3 → Y1 and X2 → Y2, so that X2 and X3
+
+enter the augmented causal parent set of Y1, Y 2. Data are sampled based on a data-generating model and from two environment mimic multiplicative intervention; for a detailed description see Section B.2 of the Appendix. Using the testing procedure from Theorem 2 within the Monte Carlo simulation scheme described in Section 3, the parent set 
+
+{X1, X 2, X 3, X 5} in Figure 3(b) is correctly identified in 92% of the cases across 50 replicates when n = 1000 and using a 5% significance level for the tests. On the other hand, the testing procedure based on the result of Theorem 1 identifies the correct causal parents only in 18% of the cases. 
+
+## 5 Empirical illustration on flow cytometry data 
+
+We consider the flow cytometry data of Sachs et al. [2005]. These data measure the abundance of 11 biochemical agents in different environments. The first of them can be considered as an observational environment, while the others are generated under the intervention of a certain reagent that modifies the abundance or the action of the biochemical agents. We focus on the first observational environment and the one that corresponds to an abundance intervention on the agent PKC (due to the reagent PMA) in combination with a global intervention (see Mooij and Heskes [2013] and Meinshausen et al. [2016] for further details). We concentrate on the bivariate target {P38, Erk}, as these nodes are at the same level according to the consensus network in Sachs et al. [2005, Fig. 2]. Firstly, we search for the causal parents of the bivariate target among all the possible subsets of the 9 remaining covariates, namely Raf, Mek, Plcg, PIP2, PIP3, Akt, PKA, PKC and Jnk, without considering the presence of confounders in the causal effects. In other words, we apply the procedure resulting from Theorem 1 for parent identification. The set {Jnk , PKC , Akt } is found as the parent set, with a p-value of 0.60 from the Box’s M test, and the causal model is represented by the graph in Figure 4a. Suppose now that the variable Jnk is unobserved. As expected, the restricted set {PKC, Akt} no longer satisfies the invariance condition required by Theorem 1. Given that the consensus network shows a relationship between PKC and Jnk, it seems reasonable to assume that Jnk acts as a confounder of the effect of PKC on P38. We therefore apply the procedure for parent identification provided by Theorem 2, and employ PIP2, Plcg, Raf and Mek as instrumental variables to ensure the identifiability of the causal effect of PKC on P38. This choice is further justified by the consensus network, where these variables appear as the most predictive of PKC. In this second analysis, the invariance condition is satisfied for the pair {PKC, Akt} with p-value equal to 0.55 and the structural causal model is represented by the mixed graph in Figure 4(b). 7Causal invariance in graphical models with latent variables P38 Erk PKC Jnk Akt (a) P38 Erk PKC Akt (b) Figure 4: Causal graphs found by the proposed procedure without (a) and with (b) confounding. 
+
+## 6 Conclusion 
+
+Testing causal invariance in the absence of causal sufficiency, and in particular under latent confounding, is challenging. Rather than imposing probabilistic assumptions on the latent structure, in this paper we approach this issue by working directly with the marginal distributions of the observed variables. By considering the structural model of the target variable in the induced acyclic directed mixed graph, we demonstrate that causal invariance is preserved for the observed parent set under specific latent configurations. Then, we derive the formal conditions for testing such invariance in the case of a multivariate Gaussian target. These results extend both the principle and the application of causal invariance to a broader class of models where hidden confounding is present. An interesting future research question is to investigate under what conditions testing causal invariance is feasible for the full set of observed variables rather than for a specific target. 
+
+## Acknowledgments 
+
+Financial support was provided to the first and second author by the MUR-PRIN grant 2022 SMNNKY, CUP B53D23009470006, the MUR Department of Excellence project 2023-2027 ReDS ’Rethinking Data Science’ -Department of Statistics, Computer Science, Applications - University of Florence. Veronica Vinciotti acknowledges funding from the the European Union - Next Generation EU, Mission 4 Component 2 - CUP C53D23002580006 (MUR-PRIN grant 2022SMNNKY). 
+
+## Appendix A Proofs of the technical results in Sections 3 and 4 
+
+Proof of Proposition 1 
+
+Proof. We assume that data are collected from different environments and that the structural causal model (3) holds for every e ∈ E . We can rewrite the first equation as Y = f (XP A , H P A , δ Y ) = f (XP A , g (XP A (H), δ H ), δ Y ). Moreover, 
+
+EδH [Y ] = 
+
+Z
+
+f (XP A , g (XP A (H), δ H ), δ Y )p(δH )dδ H =: ˜f (XgP A , δ Y )
+
+where (i) ˜f is the same for all the environments because it depends only on f, g , which are the same ∀e ∈ E thanks to the invariance of Y |{ XP A , H P A } and HP A |XP A (H), and on the distribution of δH , which does not change across the environments since no external interventions affect HP A , and finally since XP A ⊥⊥ δH . Moreover, (ii) δY ⊥⊥ XgP A and (iii) the distribution of δY is the same in all the environments for hypothesis. 
+
+Proof of Theorem 1 
+
+Proof. The first implication is immediate because if S = gP A and B = BP A with probability 1, then 
+
+EX,Y [( Y − BT X)( Y − BT X)T ] = EX,Y [( Y − BTP A X)( Y − BTP A X)T ] = Σ .
+
+We focus now on the other direction. First of all, the population log-likelihood function is lX,Y (B) = − 12 ·
+
+ Y − BT XT Σ−1  Y − BT X . Let b := vec (B) = ( β1, . . . , β m)T ∈ Rpm . The column vector BT X can be written as BT X = vec (BT X) = vec (XT B) = (Im ⊗ X)T vec (B) = (Im ⊗ X)T b, where Im is an identity matrix of size m. Following Polinelli et al. [2026, Thr.3], the population log-likelihood function can 8Causal invariance in graphical models with latent variables be expressed as lX,Y (b) = − 12 ·  Y − (Im ⊗ X)T bT Σ−1  Y − (Im ⊗ X)T b. The first derivative with re-spect to b is equal to ∂l X,Y (b) 
+
+> ∂b
+
+= ( Im ⊗ XS )Σ −1  Y − (Im ⊗ X)T b while the first derivative with respect to 
+
+BT is equal to ∂l X,Y (b) 
+
+> ∂b T
+
+=  Y − (Im ⊗ X)T bT Σ−1(Im ⊗ XTS ). The second derivative of the population log-likelihood function is ∂2lX,Y (b) 
+
+> ∂b∂b T
+
+= −(Im ⊗ XS )Σ −1(Im ⊗ XTS ). From the invariance condition, we know that 
+
+EX,Y [( Y − BT X)( Y − BT X)T ] = Σ . The first term can be written as 
+
+EX,Y [( Y − BT X)( Y − BT X)T ] = EXS
+
+EY [( Y − BT X)( Y − BT X)T |XS ]
+
+and hence EY [( Y −BT X)( Y −BT X)T |XS ] = Σ holds almost surely on the space of distributions on XS . Multiplying by Σ−1 on both sides, we obtain EY [Σ −1(Y −BT X)( Y −BT X)T Σ−1|XS ] = Σ −1. Multiplying now by the Kronecker product on the left by (Im ⊗ XS ) and on the right by (Im ⊗ XTS ), we get 
+
+EY [( Im ⊗ XS )Σ −1(Y − (Im ⊗ XS )b)( Y − (Im ⊗ XS )b)T Σ−1(Im ⊗ XTS )|XS ] = ( Im ⊗ XS )Σ −1(Im ⊗ XTS ).
+
+Finally, by taking the expectation with respect to XS ,
+
+EXS ,Y 
+
+ ∂l X,Y (b)
+
+∂b · ∂l X,Y (b)
+
+∂b T
+
+
+
+= −EXS
+
+ ∂2lX,Y (b)
+
+∂b∂b T
+
+
+
+.
+
+If we prove that EXS ,Y 
+
+h ∂l X,Y (b)
+
+> ∂b
+
+i
+
+= 0 , then the Bartlett’s identity holds and thus Y |X ∼ N (BT X, Σ) . This follows from the hypothesis EXS ,Y [( Y − BT X)XTS ] = 0 . Indeed, since Σ is symmetric and positive definite, if we multiply on the left by Σ−1 both sides we obtain EXS ,Y [Σ −1(Y − BT X)XTS ] = 0 . Moreover, 
+
+EXS ,Y [Σ −1(Y − BT X)XTS ] = 0 ⇒ EXS ,Y [XS (Y − BT X)T Σ−1] = 0 
+
+⇒ EXS ,Y 
+
+vec  XS (Y − BT X)T Σ−1 = 0 ⇒ EXS ,Y 
+
+(Im ⊗ XS )vec  (Y − BT X)T Σ−1 = 0 
+
+⇒ EXS ,Y 
+
+(Im ⊗ XS )vec  Σ−1(Y − BT X) = 0 ⇒ EXS ,Y 
+
+(Im ⊗ XS )Σ −1(Y − BT X) = 0 
+
+⇒ EXS ,Y 
+
+ ∂l X,Y (b)
+
+∂b 
+
+
+
+= 0 .
+
+Since the set {B ∈ Rp×m : EX,Y [( Y − BT X)( Y − BT X)T ] = Σ } is a surface of dimension pm − m in the space 
+
+Rpm , its Lebesgue measure in Rpm is zero. Therefore, S = gP A and B = BP A almost surely. 
+
+Proof of Proposition 2 
+
+Proof. We consider data coming from multiple environments and we assume that for all e ∈ E they are generated from the structural causal model (7) . As HP A = δH is exogenous, we rewrite the first equation as Y = f (XP A ) + 
+
+g(δH , δ Y ) = f (XP A ) + εY by defining εY := g(δH , δ Y ). Then, (i) f is the same across the environments thanks to the invariance of the distribution of Y |{ XP A , H P A }. Moreover, (ii) the distribution of εY is the same for all e ∈ E . Indeed, the distribution of εY is completely determined by g, which is the same across the environments for hypothesis and by δH , which does not change because the external interventions are not performed on HP A . Moreover, the marginal distribution of εY over δH is the same for all e ∈ E because δY ⊥⊥ δH .
+
+Proof of Proposition 3 
+
+Proof. We show a counter example. We consider a generic linear structural causal model associated to the DAG in Figure 1(d) where H is an unobserved counfounder between X and YZ = δZ , H = δH , X = λxz Z + γxh H + δX , Y = λyx X + γyh H + δY (13) where (δZ , δ H , δ X , δ Y ) ∼ N (0 , Ω) with Ω = diag (ωzz , ω hh , ω xx , ω yy ). We assume data are collected from two environments e and e′, where ωexx ̸ = ωe′
+
+> xx
+
+, while the distributions of H and of Y |X, H remain the same. The structural equation for Y in the induced ancestral graph model is 
+
+Y = βyz |xZ + βyx |z X + εY
+
+for some coefficients βyz |x and βyx |z and error term εY . But βyx |z = Cov (X,Y |Z) 
+
+> Var (X|Z)
+
+= λyx + γxh γyh ωhh  
+
+> γ2
+> xh ωhh +ωxx
+
+and since we have assumed that the variance ωxx is different in the two environments (while all the other quantities remain the same), then βeyx |z̸ = βe′ 
+
+> yx |z
+
+so the invariance condition fails (as well as the weak invariance condition). It is easy to show that also the coefficient βyz |x and the variance of εY change in the two environments. 9Causal invariance in graphical models with latent variables For sake of completeness, we discuss that if we consider the induced mixed graph for the counter example used in the proof of Proposition 3, the model for Y satisfies the invariance principle, more specifically, the conditional distribution of Y |X is weakly invariant under the mixed graph model. Indeed, we assume data are collected from two environments e, e ′ and for both scenarios data are generated according to the structural causal model (13). Then, 
+
+Y = λyx X + γyh δH + δY = λyx X + εY , where εY = γyh δH + δY . The mean of εY is equal to zero in both e and e′.Its variance is Var (εY ) = γ2
+
+> yh
+
+ωhh + ωyy . Therefore, if we do not intervene on Y and on H, the distribution of εY
+
+remains the same across the environments. Hence we can conclude that the distribution of Y |X is weakly invariant. 
+
+Proof of Proposition 4 
+
+Proof. We assume that data are generated from different environments and that for each e ∈ E the causal model (9) is satisfied. We can write 
+
+Y = f (XP A ) + Γ TP A g(XP A (H)) + Γ TP A δH + δY = f (XP A ) + Γ TP A g(XP A (H)) + εY
+
+where we have defined εY := Γ TP A δH +δY . Then, thanks to the hypothesis, we have that (i) f (XP A )+Γ TP A g(XP A (H))
+
+is the same for all e ∈ E . Moreover, by repeating the same argument as in the proof of Proposition 2, also (ii) the distribution of εY is the same across the environments as well as its marginal distribution with respect to δH .
+
+Proof of Theorem 2 
+
+Proof. The first implication is trivial, so we consider the other one. From the hypothesis we know that EX,Y [( Y −
+
+BT X)( Y − BT X)T ] = Σ = Γ TP A EδH [δH δTH ]Γ P A + Ω . Therefore, 
+
+EX,Y,δ H [( Y − BT X − ΓTP A δH )( Y − BT X − ΓTP A δH )T ] = = EX,Y [( Y − BT X)( Y − BT X)T ] − EX,Y,δ H [( Y − BT X)δTH ]Γ P A − ΓTP A EX,Y,δ H [δH (Y − BT X)T ]+ + Γ TP A EδH [δH δTH ]Γ P A = Ω .
+
+We rewrite the first population likelihood score equation as EXS ,Y,δ H [( Y − BT X − ΓTP A δH )XTS ] = 0 . Then, by repeating the same argument as in the proof of Theorem 1 with the last two results we obtain that Y |X, δ H ∼
+
+N  BT X + Γ TP A δH , Ω. Hence we get Y = BT X + Γ TP A δH + δY = BT X + εY with probability one. This thus implies that S = gP A and B = BP A almost surely. 
+
+## B Numerical examples 
+
+This section describes the generating models of the numerical examples in Sections 3 and 4. 
+
+B.1 Numerical example in Section 3 
+
+Given the causal DAG in Figure 2(a), data are generated from the following structural causal model 
+
+Xe 
+
+> 1
+
+= δeX1 Xe 
+
+> 2
+
+= λX2,X 1 + δeX2
+
+Xe 
+
+> 3
+
+= δeX3 He 
+
+> 3
+
+= λH3,X 2 Xe 
+
+> 2
+
++ δeH3
+
+Xe 
+
+> 4
+
+= λX4,X 2 Xe 
+
+> 2
+
++ γX4,H 3 He 
+
+> 3
+
++ δeX4 Xe 
+
+> 5
+
+= λX5,X 1 Xe 
+
+> 1
+
++ δeX5
+
+He 
+
+> 1
+
+= λH1,X 3 Xe 
+
+> 3
+
++ δeH1 He 
+
+> 2
+
+= δeH2
+
+Xe 
+
+> 6
+
+= λX6,Y 1 Y e 
+
+> 1
+
++ δeX6 Xe 
+
+> 7
+
+= λX7,Y 1 Y e 
+
+> 1
+
++ δeX7
+
+Xe 
+
+> 8
+
+= λX8,Y 2 Y e 
+
+> 2
+
++ δeX8 Y e 
+
+> 1
+
+= λY1,X 5 Xe 
+
+> 5
+
++ γY1,H 1 He 
+
+> 1
+
++ γY1,H 2 He 
+
+> 2
+
++ δeY1
+
+Y e 
+
+> 2
+
+= λY2,X 1 Xe 
+
+> 1
+
++ γY2,H 2 He 
+
+> 2
+
++ γY2,H 3 He 
+
+> 3
+
++ δeY2
+
+where the error terms δeYi , δ eXj , δ eHr ∼ N (0 , 1) are all mutually independent and the regression coefficients are set to λX2,X 1 = 1 , λH3,X 2 = 2 , λX4,X 2 = −2.1, γX4,H 3 = −1.7, λX5,X 1 = 1 .5, λH1,X 3 = 2 , λY1,X 5 = −2.3,
+
+γY1,H 1 = 1 .5, γY1,H 2 = −0.9, λY2,X 1 = 3 .2, γY2,H 2 = −1.3, γY2,H 3 = 2 .1, λX6,Y 1 = 3 .3, λX7,Y 1 = 2 .4,
+
+λX8,Y 2 = −1.6. Data are simulated from an observational environment ( e = 1 ) and from an interventional one (e = 2) .We consider multiplicative interventions, i.e., we set δe=2  
+
+> Xj
+
+= Aj δe=1  
+
+> Xj
+
+for some random variables Aj ∼ N (2 , 1) which are mutually independent and also independent of all the error terms. We remark that we work under the assumption that the target and the latent variables are not subject to external interventions. 10 Causal invariance in graphical models with latent variables The induced mixed graph obtained after marginalizing over the latent variables is represented in Figure 2(a) and, from Proposition 1, the related causal equations for Y1 and Y2 become 
+
+Y e 
+
+> 1
+
+= βY1,X 3 Xe 
+
+> 3
+
++ βY1,X 5 Xe 
+
+> 5
+
++ εeY1 , Y e 
+
+> 2
+
+= βY2,X 1 Xe 
+
+> 1
+
++ βY2,X 2 Xe 
+
+> 2
+
++ εeY2
+
+where βY1,X 3 = λH1,X 3 γY1,H 1 = 3 , βY1,X 5 = λY1,X 5 = −2.3, βY2,X 1 = λY2,X 1 = 3 .2, βY2,X 2 = λH3,X 2 γY2,H 3 =4.2, εeY1 = γY1,H 1 δeH1 + γY1,H 2 δeH2 + δeY1 and εY2 = γY2,H 2 δeH2 + γY2,H 3 δeH3 + δeY2 . Therefore, we have εeY1 ∼
+
+N (0 , 4.06) , εeY2 ∼ N (0 , 7.1) and Cov (εY1 εY2 ) = 1 .17 .
+
+B.2 Numerical example in Section 4 
+
+In this section we consider the generating DAG in Figure 3(a) that includes different types of latent variables. The aim is to find the causal parents of the multivariate target {Y1, Y 2} by using the more general result in Theorem 2. This procedure needs instrumental variables in order to overcome the possibility of non-identifiability of the model. We assume to have prior knowledge that the causal effects from X1 and from X5 can be confounded. We therefore consider the instrumental variables Z1 and Z5 for the predictors X1 and X5, respectively (see Figure 3). The associated causal model is 
+
+Ze 
+
+> 1
+
+= δeZ1 , Z e 
+
+> 5
+
+= δeZ5 Her = δeHr , for r ∈ { 2, 4, 5}
+
+Xe 
+
+> 1
+
+= λX1,Z 1 Ze 
+
+> 1
+
++ γX1,H 5 He 
+
+> 5
+
++ δeX1 Xe 
+
+> 2
+
+= λX2,X 1 Xe 
+
+> 1
+
++ δeX2
+
+Xe 
+
+> 3
+
+= δeX3 He 
+
+> 3
+
+= λH3,X 2 Xe 
+
+> 2
+
++ δeH3
+
+Xe 
+
+> 4
+
+= λX4,X 2 Xe 
+
+> 2
+
++ γX4,H 3 He 
+
+> 3
+
++ δeX4 Xe 
+
+> 5
+
+= λX5,Z 5 Ze 
+
+> 5
+
++ γX5,H 4 He 
+
+> 4
+
++ δeX5
+
+He 
+
+> 1
+
+= λH1,X 3 Xe 
+
+> 3
+
++ δeH1 Xe 
+
+> 6
+
+= λX6,Y 1 Y e 
+
+> 1
+
++ δeX6
+
+Xe 
+
+> 7
+
+= λX7,Y 1 Y e 
+
+> 1
+
++ δeX7 Xe 
+
+> 8
+
+= λX8,Y 2 Y e 
+
+> 2
+
++ δeX8
+
+Y e 
+
+> 1
+
+= λY1,X 5 Xe 
+
+> 5
+
++ γY1,H 1 He 
+
+> 1
+
++ γY1,H 2 He 
+
+> 2
+
++ γY1,H 4 He 
+
+> 4
+
++ δeY1
+
+Y e 
+
+> 2
+
+= λY2,X 1 Xe 
+
+> 1
+
++ γY2,H 2 He 
+
+> 2
+
++ γY2,H 3 He 
+
+> 3
+
++ γY2,H 5 He 
+
+> 5
+
++ δeY2
+
+where λX1,Z 1 = 1 .5, γX1,H 5 = 2 .1, λX2,X 1 = 1 , λX4,X 2 = −2.1, γX4,H 3 = −1.7, λX5,Z 5 = 1 .5, γX5,H 4 =1.9, λH1,X 3 = 2 , λH3,X 2 = 2 , λY1,X 5 = −2.3, γY1,H 1 = 1 .5, γY1,H 2 = −0.9, γY1,H 4 = −1.7, λY2,X 1 = 3 .2,
+
+γY2,H 2 = −1.3, γY2,H 3 = 2 .1, γY2,H 5 = 2 .6, λX6,Y 1 = 3 .3, λX7,Y 1 = 2 .4, λX8,Y 2 = −1.6. As before, we consider multiplicative interventions. In particular, we set δe=2  
+
+> Xj
+
+= Aj δe=1  
+
+> Xj
+
+for some random variables Aj ∼ N (2 , 2) which are mutually independent and also independent of all the error terms. The induced mixed graph obtained after marginalizing over the latent variables is shown in Figure 3(b) and, from Proposition 4, the causal equations for Y1 and Y2 become 
+
+Y e 
+
+> 1
+
+= βY1,X 3 Xe 
+
+> 3
+
++ βY1,X 5 Xe 
+
+> 5
+
++ εeY1 , Y e 
+
+> 2
+
+= βY2,X 1 Xe 
+
+> 1
+
++ βY2,X 2 Xe 
+
+> 2
+
++ εeY2
+
+where βY1,X 3 = γY1,H 1 λH1,X 3 = 3 , βY1,X 5 = λY1,X 5 = −2.3, βY2,X 1 = λY2,X 1 = 3 .2, βY2,X 2 = γY2,H 3 λH3,X 2 =4.2, εeY1 = γY1,H 1 δeH1 + γY1,H 2 δeH2 + γY1,H 4 δeH4 + δeY1 and εeY2 = γY2,H 2 δeH2 + γY2,H 3 δeH3 + γY2,H 5 δeH5 + δeY2 .Therefore, we have εeY1 ∼ N (0 , 6.95) , εeY2 ∼ N (0 , 13 .86) and Cov (εY1 εY2 ) = 1 .17 . In particular, εY1 ⊥⊥/ X 5 for the presence of the hidden confounder H4 and εY2 ⊥⊥/ X 1 for the presence of the hidden confounder H5.
+
+## References 
+
+Judea Pearl. Causality: Models, Reasoning and Inference . New York: Cambridge University Press, 2009. Jonas Peters, Peter Bühlmann, and Nicolai Meinshausen. Causal inference by using invariant prediction: identification and confidence intervals. Journal of the Royal Statistical Society Series B: Statistical Methodology , 78(5):947–1012, 2016. Dominik Rothenhäusler, Peter Bühlmann, and Nicolai Meinshausen. Causal Dantzig. The Annals of Statistics , 47(3): 1688–1722, 2019. James P Long, Hongxu Zhu, Kim-Anh Do, and Min Jin Ha. Estimating causal effects with hidden confounding using instrumental variables and environments. Electronic Journal of Statistics , 17(2):2849, 2023. Nicola Gnecco, Jonas Peters, Sebastian Engelke, and Niklas Pfister. Boosted control functions: Distribution general-ization and invariance in confounded models. Journal of Machine Learning Research , 27(46):1–57, 2026. URL 
+
+https://jmlr.org .11 Causal invariance in graphical models with latent variables Alexander Henzi, Xinwei Shen, Michael Law, and Peter Bühlmann. Invariant probabilistic prediction. Biometrika ,112:doi:10.1093/biomet/asae063, 2025. doi:10.1093/biomet/asae063. URL https://doi.org/10.1093/biomet/ asae063 .Dominik Rothenhäusler, Nicolai Meinshausen, Peter Bühlmann, and Jonas Peters. Anchor regression: Heterogeneous data meet causality. Journal of the Royal Statistical Society Series B: Statistical Methodology , 83(2):215–246, 2021. K. Sadeghi and S. Lauritzen. Markov properties for mixed graphs. Bernoulli , 20(2):676–696, 2014. Jiji Zhang. Causal reasoning with ancestral graphs. Journal of Machine Learning Research , 9:1437–1474, 2008. ISSN 1532-4435. URL www.jmlr.org/papers/v9/zhang08a.html .Thomas Richardson. Markov properties for acyclic directed mixed graphs. Scandinavian Journal of Statistics , 30(1): 145–157, 2003. Lucas Kook, Sorawit Saengkyongam, Anton Rask Lundborg, Torsten Hothorn, and Jonas Peters. Model-based causal feature selection for general response types. Journal of the American Statistical Association , 120(550):1090–1101, 2025. doi:10.1080/01621459.2024.2395588. Alice Polinelli, Veronica Vinciotti, and Ernst C. Wit. Causal generalized linear models via Pearson risk invariance. 
+
+Journal of Causal Inference , 2026. L. Henckel, M. Buttenschoen, and M. Maathuis. Graphical tools for selecting conditional instrumental sets. Biometrika ,111(3):771–788, 2024. Joshua D Angrist, Guido W Imbens, and Donald B Rubin. Identification of causal effects using instrumental variables. 
+
+Journal of the American statistical Association , 91(434):444–455, 1996. Karen Sachs, Omar Perez, Dana Pe’er, Douglas A Lauffenburger, and Garry P Nolan. Causal protein-signaling networks derived from multiparameter single-cell data. Science , 308(5721):523–529, 2005. Joris Mooij and Tom Heskes. Cyclic causal discovery from continuous equilibrium data. Uncertainty in Artificial Intelligence - Proceedings of the 29th Conference, UAI 2013 , 09 2013. Nicolai Meinshausen, Alain Hauser, Joris M Mooij, Jonas Peters, Philip Versteeg, and Peter Bühlmann. Methods for causal inference from gene perturbation experiments and validation. Proceedings of the National Academy of Sciences , 113(27):7361–7368, 2016. 12

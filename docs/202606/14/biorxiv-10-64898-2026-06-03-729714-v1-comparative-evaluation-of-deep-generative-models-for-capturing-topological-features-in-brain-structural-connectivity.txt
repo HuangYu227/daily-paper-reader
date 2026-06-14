@@ -1,0 +1,596 @@
+Title: 97831602
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.06.03.729714v1.full.pdf
+
+Number of Pages: 32
+
+Markdown Content:
+1
+
+# Comparative Evaluation of Dee p Generative Models for 1
+
+# Captu ring Topological Features in Brain Structural 2
+
+# Connectivity 3
+
+# Running title: Evaluation of Generative Models for SC 4
+
+Chisato Kumada 1, Tomoyuki Hiroyasu 2, Satoru Hiwa 2
+
+5 
+
+> 1
+
+Graduate School of Life and Medical Sciences, Doshisha University 6 
+
+> 2
+
+Department of Biomedical Sciences and Informatics, Doshisha University 7
+
+Corresponding author : Satoru Hiwa (shiwa@mail.doshisha.ac.jp) 8
+
+Acknowledgement 9
+
+This work was supported by the Japan Society for the Promotion of Science KAKENHI Grant 10 Number JP24K03028, and in part by grants-in-aid from the Harris Science Research Institute of 11 Doshisha University. We acknowledge the significant contributions of the NIMH Healthy Volunteer 12 Dataset, which provided the MRI data and task scores. 13 
+
+Data Availability Statement 14 
+
+The four synthetic datasets were generated using established algorithms (Barabási-Albert model, 15 stochastic block model, Watts–Strogatz model, weighted scale-free model). The source code for 16 this study and the generated synthetic datasets are available on GitHub (https://github.com/MIS-17 Lab-Doshisha/gensc-bench). The planar dataset is available under the MIT license 18 (https://github.com/KarolisMart/SPECTRE). 1 The structural connectivity dataset was derived from 19 the NIMH Healthy Volunteer Dataset 2 and is available in the OpenNeuro repository 20 (https://doi.org/10.18112/openneuro.ds004215.v1.0.0) under a Creative Commons Zero (CC0) 21 license. 22 
+
+Funding Statement 23 
+
+This work was supported by the Japan Society for the Promotion of Science KAKENHI (ROR: 24 https://ror.org/00hhkn466) Grant Number JP24K03028, and the Harris Science Research Institute 25 of Doshisha University. 26 
+
+Conflict of Interest Disclosure 27 
+
+The authors declare no conflicts of interest. 28 
+
+Ethics Approval Statement 29 
+
+This study used publicly available datasets and algorithmically generated synthetic data. 30 Therefore, ethical approval was not required. 31 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+2
+
+Patient consent statement 32 
+
+Not applicable. 33 
+
+Permission to reproduce material from other sources 34 
+
+Not applicable. 35 
+
+Clinical trial registration 36 
+
+Not applicable. 37 38 
+
+Abstract 39 
+
+Structural connectivity (SC) data are crucial for brain network analysis, but SC -based machine learning 40 
+
+often su=ers from limited data availability, hindering model generalization and robustness. Although 41 
+
+data augmentation using deep generative models has attracted increasing attention, it remains unclear 42 
+
+how di=erent models capture the complex topological features of SC data. To clarify the learning 43 
+
+characteristics of deep generative models for SC generation, this study compares three representative 44 
+
+models: variational autoencoder (VAE), Wasserstein GAN with gradient penalty (WGAN -GP), and 45 
+
+denoising di=usion probabilistic models (DDPM). We systematically evaluated these models using both 46 
+
+synthetic datasets with known characteristics and real -world SC data. Generation quality was assessed 47 
+
+using graph -theoretic metric comparisons and visual inspection of the generated adjacency matrices. 48 
+
+WGAN -GP showed relatively stable performance across datasets and metrics, without severe 49 
+
+performance degradation across evaluation settings. In contrast, VAE and DDPM performed well in 50 
+
+specific aspects but were more sensitive to data characteristics. These findings suggest that WGAN -GP 51 
+
+may serve as the most balanced baseline for future SC data augmentation studies, whereas VAE and 52 
+
+DDPM may be useful depending on the target application and structural properties of interest. 53 
+
+Furthermore, because all models struggled to fully reproduce strict global constraints such as planarity, 54 
+
+our results suggest that standard generative models may be insu=icient to capture the complex 55 
+
+topological features of SC data . This highlights the importance of incorporating the desired structural 56 
+
+properties into the training or generation process. 57 
+
+Keywords: Generative Models, Variational Autoencoder (VAE), Generative Adversarial Network 58 (GAN), Denoising Digusion Probabilistic Models (DDPM), Structural Connectivity, Data 59 Augmentation 60 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+3
+
+# 1. Introduction 61 
+
+Recently, brain structural connectivity (SC) has gained significant attention in neuroscience 62 research due to its potential to reveal insights into brain function and organization. 3,4 There has been 63 a growing interest in applying SC to various applications, including investigations into brain 64 development and aging, and analysis of neurological and brain disorders. 5 Specifically, machine 65 learning approaches based on SC have been utilized to diagnose and understand disorders such as 66 Alzheimer’s disease 6 and multiple sclerosis. 7 However, the practical application of SC-based 67 models often sugers from limited data availability, which agects the generalization and robustness 68 of machine learning approaches. Acquiring large-scale dMRI datasets is often challenging due to 69 high costs and time-consuming data collection processes. 8 Neuroimaging studies frequently suger 70 from limited sample sizes, which introduces bias in training data and limits the generalizability of 71 machine learning models. 9 Such data scarcity often leads to overfitting and unreliable model 72 performance in the downstream machine learning analyses, such as prediction or diagnosis. 73 Although data augmentation is an egective strategy for addressing data scarcity, traditional 74 augmentation methods such as rotation or flipping are not applicable to SC data. Because SC data 75 is represented as an adjacency matrix where each row and column corresponds to a specific brain 76 region, such geometric transformations would destroy this correspondence. Therefore, more 77 sophisticated approaches that preserve the topological structure of SC data are required for 78 egective data augmentation. Brain structural networks are characterized by complex topological 79 features, such as short path length, high clustering coegicient, hub presence, and modularity, 80 alongside functionally critical, strong edge weights. 3,10 These features fundamentally facilitate the 81 egicient segregation and integration of information. Thus, generating biologically plausible SC data 82 requires capturing the high-dimensional topological dependencies among multiple regions, a task 83 that is inherently challenging for simple approaches. 84 To overcome this limitation, deep generative models have been explored for SC data augmentation, 85 though a comprehensive understanding of their comparative capabilities remains lacking. By 86 learning the underlying distribution of the training data, these models generate new samples that 87 resemble the original data. Representative models such as variational autoencoders (VAE) 11 and 88 generative adversarial networks (GANs) 12 have been successfully applied to generate synthetic SC 89 data, demonstrating clear improvements in downstream tasks. 13 –15 Additionally, digusion models 16 
+
+90 have emerged as a promising approach for generating high-quality synthetic data across various 91 domains. While their direct application to SC data remains underexplored, researchers have begun 92 exploring digusion models for brain connectivity, such as functional connectivity (FC) generation 93 and bidirectional SC-FC mapping, 17,18 making digusion models an important emerging candidate 94 for SC generation as well. However, previous studies have primarily focused on individual generative 95 models for SC data augmentation, using digerent datasets and evaluation metrics. This makes it 96 challenging to directly compare the ability of digerent generative models to capture the graph 97 topology in this context. Given that VAEs, GANs, and digusion models rely on fundamentally 98 digerent generative paradigms, each model is expected to exhibit distinct behaviors when 99 reconstructing SC structures. Addressing this gap and revealing how each paradigm learns brain 100 network characteristics is a crucial step toward understanding the fundamental capabilities and 101 limitations of deep generative models in this domain. 102 To elucidate how deep generative models learn and reproduce the topological features of SC data, 103 this study evaluates and compares three representative generative models: VAE, Wasserstein GAN 104 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+4with gradient penalty (WGAN-GP), 19 and DDPM. In these comparative evaluations, we focused not 105 only on overall generation quality but also on which graph properties each model reproduced well 106 or poorly. For this purpose, we used five synthetic graph datasets with controlled characteristics, 107 representing hub structure, modularity, small-worldness, weighted edges, and strict global 108 constraints, followed by empirical SC data in which these properties coexist. Model performance 109 was evaluated using Maximum Mean Discrepancy (MMD)-based distributional comparisons, 110 dataset-specific graph-theoretical metrics, and visual inspection of generated adjacency matrices. 111 This framework allows us to characterize model-specific generative biases and provides an 112 empirical basis for improving generative models for future SC data augmentation studies. 113 
+
+# 2. Methods 114 
+
+In this study, we investigated the performance of three generative models for augmenting brain SC 115 data. To comprehensively evaluate performance against SC data, this study employed both 116 synthetic and real-world SC datasets. Since real-world SC data is complex and has an ambiguous 117 ground truth, evaluating solely on real SC data makes it digicult to identify which structural features 118 the model struggles to reproduce. To address this, our evaluation framework first isolates and 119 assesses the ability to reproduce individual features using single, specific network characteristics. 120 Subsequently, we evaluate the models on real-world SC data, where these features are combined. 121 An overview of the experimental framework used in this study is illustrated in Figure 1, which 122 includes the datasets, the compared models, and the evaluation protocols. 123 124 Figure 1 Overview of the entire methods used in this study. 125 
+
+# 2.1. Compar ed Models 126 
+
+To evaluate the potential of digerent generative models, we compared the performance of three 127 fundamental generative models: VAE, WGAN-GP, and DDPM. Details of each model are described 128 below. Detailed loss functions and model architectures can be found in the Supplementary 129 Information. 130 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+5
+
+2.1.1. Variational Autoencoder 131 
+
+VAE, proposed by Kingma and Welling, 11 is a generative model that learns to encode input data into 132 a latent space and decode samples from this space back to the data space. The model consists of 133 two neural networks: an encoder and a decoder. The encoder maps the input data 𝑥 into a latent 134 representation 𝑧 , while the decoder reconstructs the original data from the latent representation. 135 The model is trained to minimize the sum of a reconstruction loss and a Kullback-Leibler (KL) 136 divergence loss. 137 
+
+In this study, both the encoder and the decoder were fully connected neural networks that took the 138 flattened lower-triangular part of the adjacency matrix as input and produced the output. 139 
+
+2.1.2. Wasserstein GAN with Gradient Penalty 140 
+
+WGAN-GP is a variant of GANs that improves training stability by using the Wasserstein distance as 141 a loss function and adding a gradient penalty term, as proposed by Arjovsky et al. 20 and further 142 refined by Gulrajani et al. 19 The model consists of two neural networks: a generator and a critic. The 143 generator creates synthetic data from random noise, while the critic evaluates the authenticity of 144 the given data, which can be either real or generated. 145 In this study, both the generator and the critic were fully connected neural networks that processed 146 the flattened lower-triangular part of the adjacency matrix. 147 
+
+2.1.3. Denoising DiIusion Probabilistic Models (DDPM) 148 
+
+DDPM, proposed by Ho et al. 16 is a generative model that learns to convert random noise into data 149 through a series of denoising steps. The model has two processes: a forward digusion process and 150 a reverse denoising process. In the forward process, Gaussian noise is added to the data over a 151 series of time steps. A neural network is trained to predict the noise added to the original data, given 152 the noisy data and the time step. In the reverse process, the model generates data from random 153 noise by iteratively removing the predicted noise. 154 For the implementation of the DDPM, we adopted the standard U-Net 21 architecture. Although the 155 other evaluated models employ fully connected networks, the U-Net is the established de facto 156 standard for digusion models. To conduct a fair and realistic evaluation of DDPM’s foundational 157 capabilities without bottlenecking its performance through an MLP architecture, we followed this 158 standard practice. The number of the noising and denoising steps was set to 𝑇 = 1000 as in the 159 original paper. 160 
+
+# 2.2. Datasets 161 
+
+Generating realistic SC data requires reproducing topological features inherent in brain networks, 162 such as short path lengths, high clustering coegicients, hub presence, and modularity. 3 These 163 features are crucial for brain function, since they fundamentally facilitate the egicient segregation 164 and integration of information. Specifically, small-worldness, which refers to the coexistence of 165 short path lengths and high clustering coegicients, balances specialized local processing with 166 egective global communication at a lower cost. 22 Modularity, which refers to the organization of the 167 network with densely connected clusters internally and sparsely connected across clusters, 168 supports specialized regional processing. Hubs act as central nodes for information exchange, 169 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+6guaranteeing an optimal balance between this segregation and integration. Furthermore, preserving 170 strong edge weights is also important, as they serve as the foundational backbone that constrains 171 and supports complex communication processes within the brain. 10 
+
+172 Reproducing these features is therefore essential for generating biologically plausible SC data. To 173 evaluate whether the generative models can capture these foundational elements, we selected five 174 distinct synthetic datasets. Each dataset represents a specific SC characteristic, enabling 175 systematic evaluation of the models' learning abilities. 176 
+
+2.2.1. Synthetic Datasets 177 
+
+We selected five types of synthetic datasets to reproduce a range of graph structures and properties. 178 The size of the synthetic datasets was fixed at 64 nodes. Detailed generation procedures and 179 parameter settings for each synthetic dataset are provided in the Supplementary Information. 180 
+
+Barabási -Albert ( 𝑁 = 500 )181 
+
+We utilized the BA dataset to investigate the reproduction of specific degree distributions and hub 182 nodes. BA models generate scale-free networks featuring few high-degree hubs and many low-183 degree nodes. Although brain networks exhibit an exponential degree distribution rather than strictly 184 scale-free, 23,24 we selected the BA dataset because its ability to reproduce hub structures and 185 degree distributions is highly relevant to capturing the fundamental properties of SC. 186 
+
+Planar ( 𝑁 = 200 )187 
+
+The planar dataset benchmarks for evaluating the ability to learn global topological constraints. 188 Planar graphs have a strict global rule that edges must not cross in 2-dimensional space; therefore, 189 investigating whether the generated graphs meet planarity constraints gives insights into a model’s 190 capacity to learn implicit global rules. We used a planar dataset from Martinkus et al. 1
+
+191 
+
+Stochastic Block Model ( 𝑁 = 500 )192 
+
+The SBM dataset was selected to assess the model’s ability to reproduce community structure. SBM 193 graphs consist of distinct communities with random intra- and inter-connections, making them 194 suitable for evaluating community reproduction. Since the brain has an explicit modularity, 195 evaluating the reproduction of these structures is critical for SC generation. 196 
+
+Watts -Strogatz ( 𝑁 = 500 )197 
+
+The WS dataset was chosen to evaluate the models’ capability to capture small-worldness. 198 Because small-worldness is a fundamental property of brain networks that enables egicient 199 information transfer, assessing its reproducibility is essential for validating generative models. 200 
+
+Weighted Scale -Free ( 𝑁 = 500 )201 
+
+We selected a weighted scale-free network to assess the models’ capability to generate weighted 202 graphs. Since SC data forms a weighted network, generating not only the correct binary structure 203 but also precise edge weights is important for reflecting the foundation backbone. We generated 204 500 weighted scale-free graphs using the method proposed by Yook et al. 25 
+
+205 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+7
+
+2.2.2. Structural Connectivity Dataset 206 
+
+To evaluate the generative models on complex real-world brain connectivity data, we utilized an 207 empirical SC dataset. The dataset was derived from digusion MRI and T1-weighted MRI data of 208 healthy adult participants, originally obtained from the NIMH Healthy Volunteer Dataset 209 (https://doi.org/10.18112/openneuro.ds004215.v1.0.0). 2
+
+210 The MRI data preprocessing and structural connectivity mapping were performed as previously 211 described. 26 Briefly, digusion and T1-weighted images were preprocessed using QSIprep (0.15.4) 27 
+
+212 pipeline. Probabilistic tractography (iFOD2) combined with SIFT2 was applied, and the whole brain 213 was parcellated into 116 regions based on the automated anatomical labeling (AAL) atlas to 214 construct the structural connectivity matrices. For detailed procedures for DWI denoising, 215 distortion correction, and fiber orientation estimation, please refer to the previous study. 26 In total, 216 we used data from 107 participants for our experiments. 217 
+
+# 2.3. Training Setup 218 
+
+We evaluated the performance of the three generative models on the six datasets described above. 219 Each model was trained separately on each of the five synthetic datasets and on one real brain 220 structural connectivity (SC) dataset. 221 
+
+2.3.1. Data Preprocessing 222 
+
+For the synthetic datasets, node ordering was fixed based on dataset-specific criteria, motivated by 223 the fact that SC data have a consistent node ordering across samples, meaning that they are not 224 permutation-invariant. To ensure consistent node ordering in the synthetic datasets, we applied the 225 following methods: Depth-First Search (DFS) for BA, Planar, and WSF datasets; k-core ordering for 226 WS dataset; and community-based k-core ordering for SBM dataset. 227 Regarding edge features, SC edge weights represent streamline counts, and their maximum values 228 vary significantly across individuals and acquisition environments, making standard uniform 229 scaling problematic. Consequently, we refrained from applying any scaling procedures to the SC 230 data. To maintain a consistent evaluation framework, we also omitted scaling for all synthetic 231 datasets. While we acknowledge that generative models typically benefit from input data being 232 scaled to a specific optimal range for stable training, we prioritized preserving the inherent 233 distribution and variance of the unscaled connectivity data. 234 
+
+2.3.2. Dataset Separation 235 
+
+Synthetic datasets 236 
+
+For each dataset, we randomly split the data into training, validation, and test sets in a 0.6:0.2:0.2 237 ratio. 238 
+
+Structural Connectivity dataset 239 
+
+The SC dataset was split into discovery and test sets at a 3:1 ratio. The discovery dataset was further 240 split into training and validation sets at a 3:1 ratio. 241 The dataset was split so that fluid intelligence scores were evenly distributed across the sets. These 242 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+8scores were previously calculated as the total age-adjusted score from the NIH Toolbox Cognition 243 Battery. 26,28 A detailed separation process can be found in the Supplementary Information. 244 
+
+2.3.3. Models Training Details 245 
+
+All models were implemented in PyTorch. 29 and trained with the Adam optimizer. Hyperparameters 246 were optimized using Optuna 30 to ensure fair comparison across models and datasets. Early 247 stopping was evaluated based on validation loss for VAE and DDPM, and MMD 31 for WGAN-GP. 248 Detailed descriptions of the computational environment, training settings, and hyperparameter 249 search spaces are provided in the Supplementary Table S1. The selected hyperparameters for each 250 model and dataset are summarized in Supplementary Tables S2 and S3. 251 
+
+# 2.4. Evaluation Metrics 252 
+
+To evaluate how generative models learn the aforementioned topological features essential for 253 brain networks, we selected the following evaluation metrics. The evaluation included both metrics 254 common to all datasets and metrics defined specifically for individual datasets. 255 
+
+2.4.1. Edge Thresholding 256 
+
+For the synthetic datasets, all graphs were thresholded to achieve an edge density similar to that of 257 the training dataset before evaluation, since some models tended to generate subtle edges rather 258 than no edges. The thresholded value was searched in increments of 0.01 to minimize the digerence 259 in edge density between the generated graphs and the whole original dataset. Non-weighted graphs 260 were binarized after thresholding. 261 For the SC dataset, we applied percentile-based thresholding to the edge weights of the generated 262 graphs. This approach was employed to focus on the important connections in the brain network. 263 We retained the top 5%, 10%, 20%, and 30% of the strongest edges in each generated graph for most 264 evaluation metrics. However, for the strong edge preservation metric, we retained the top 1%, 5%, 265 and 10% of the strongest edges to assess the models’ ability to reconstruct the most significant 266 connections. For the hub preservation metric, no thresholding was applied, as node strength can 267 be calculated without thresholding. 268 
+
+2.4.2. Common Metrics 269 
+
+MMD -based Evaluation 270 
+
+Following previous studies, 1,32 we used MMD to quantitatively assess the similarity between the test 271 and generated datasets. Because MMD measures the distance between two underlying probability 272 distributions based on finite samples, it allows us to evaluate the overall characteristics of 273 statistical graph properties rather than relying on a single representative value. Specifically, we 274 computed the MMD for the following graph-theoretical features: node degree, clustering coegicient, 275 orbit counts, the spectrum of the graph Laplacian matrix, and graph embeddings. 276 Since MMD values are relative and depend on the specific datasets and features being compared, 277 we calculated reference MMD values to provide context for interpreting the results. For the BA, SBM, 278 WS, and WSF datasets, we generated new graphs using the same generation process as the original 279 dataset to compute reference MMD values. For the planar and SC datasets, the reference values 280 were calculated using the training and validation sets, since their generation processes were not 281 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+9explicitly defined. 282 
+
+Mean adjacency matrix visualization 283 
+
+Mean adjacency matrices visualization was performed to provide an overview of the generated 284 graphs. The mean adjacency matrix was calculated by averaging the adjacency matrices of all 285 graphs in each dataset generated by each model. This visual inspection was adopted because 286 global quantitative metrics may sometimes overlook spatial biases or the disappearance of specific 287 structural patterns. 288 
+
+2.4.3. Dataset -specific Metrics 289 
+
+To evaluate whether the generative models successfully captured the intrinsic topological 290 properties unique to each dataset, we employed specific metrics that quantify their essential 291 structural characteristics. 292 
+
+Validity 293 
+
+For the Planar dataset, the validity of the generated graphs was evaluated by whether they had a 294 planar structure, that is, the absence of edge crossings in 2-dimensional space. It was calculated 295 to determine whether the generative models could implicitly learn the dataset's global structural 296 constraints. 297 
+
+Modularity 298 
+
+Modularity was calculated to assess community structure, a feature of both the SBM and SC 299 datasets. Modularity quantifies the degree to which a network is partitioned into distinct clusters, 300 with internal edge density higher than external (inter-community) connections. 301 We detected communities using Clauset-Newman-Moore greedy modularity maximization, 302 calculated the modularity of the detected communities, and compared the modularity distributions 303 between the generated and test datasets by computing the Wasserstein distance between them. 304 
+
+Small -worldness 305 
+
+Since the WS and SC datasets are characterized by small-world properties, the small-worldness 306 coegicient 𝜎 of each graph was calculated, following the definition proposed by Humphries and 307 Gurney. 33 This metric was chosen to determine if the generative models can reproduce the balance 308 between local dense connections while maintaining global egicient paths, which are 309 characteristics of brain networks. We compared the distributions of 𝜎 values between the 310 generated and test datasets and calculated the Wasserstein distance between them. 311 
+
+Node Strength MMD 312 
+
+For the WSF and SC datasets, MMD of node strength was calculated to evaluate the models’ ability 313 to reproduce the weighted graph. Node strength, defined as the sum of the weights of all edges 314 connected to a node, is a pivotal metric that integrates topological connectivity with weight intensity. 315 Evaluating node strength reveals the structural rules governing how weights are distributed across 316 the network, such as the concentration of high-intensity connections on specific functional hubs. 317 
+
+Strong Edge/Hub Preservation 318 
+
+To further evaluate the biological plausibility of the generated brain networks, we focused on the 319 preservation of strong edges and hubs consistently observed across individuals. By focusing on the 320 mean adjacency matrix, we specifically assess whether the models can reconstruct the stable, 321 fundamental backbone of the brain network that persists despite individual variations. 322 For strong edge reconstruction, we identified the top 𝑛 % (𝑛 = 1, 5, 10) strongest edges in the mean 323 
+
+adjacency matrix of the test dataset and compared them with those of the generated graphs using 324 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+10 the Jaccard index. This indicates whether the model captures the stable, high-intensity structural 325 backbones of the brain. Regarding hub preservation, we calculated the Spearman correlation 326 coegicient between the node strengths of the mean test dataset and those of the generated 327 datasets. High correlation indicates that the model correctly identifies the hubs. 328 
+
+# 3. Results 329 
+
+# 3.1. Synthetic Datasets 330 
+
+We qualitatively evaluated the generated results for synthetic datasets using mean adjacency 331 matrices (Figure 2) and individual matrices (Figure 3). All models exhibited limitations in reproducing 332 long-range connections (e.g., og-diagonal edges in BA, Planar, WS) and weighted edges (WSF). The 333 residual plot for WSF showed large positive values, showing the underestimation of edge weights 334 across all architectures. 335 VAE replicated high-probability patterns (e.g., edges near the diagonal lines in BA, Planar) but 336 exhibits a bias towards over-representing common patterns, including hub-related edges in BA and 337 intra-community edges in SBM. Consequently, generated graphs lacked the sparsity and long-range 338 connections observed in test data. 339 DDPM, in contrast, excels at reproducing random distributions (e.g., SBM blocks), which was 340 evident in the BA, Planar and WSF datasets. However, it lacked clear diagonal structures 341 characteristic of the Planar and WSF datasets and occasionally failed to generate distinct patterns 342 entirely. 343 WGAN-GP showed balanced ability to reproduce common patterns and generate random edges, 344 capturing the clear patterns without over-emphasizing on common edges. While WGAN-GP 345 generated the more visually plausible compared to the other models, continuous structures in the 346 Planar and WS datasets were fragmented into scattered edges. 347 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+11 348 Figure 2 Mean adjacency matrix analysis across five synthetic datasets (A -E). Top row: Mean 349 
+
+adjacency matrices of the test set (target) and the generated graphs. The color bar indicates 350 
+
+the magnitude of connectivity. Lighter colors indicate greater values. Bottom row: 351 
+
+Correspon ding residual matrices (t arget - generated). Red indicates positive residuals, while 352 
+
+blue indicates negative residuals. Abbreviations : VAE=variational autoencoder, WGAN -353 
+
+GP=Wasserstein GAN with gradient penalty, DDPM=denoising diWusion probabilistic models, 354 
+
+BA= Barabási -Albert , SBM=stochastic block model, WS= Watts –Strogatz , WSF=weighted 355 
+
+scale -free. 356 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+12 357 Figure 3 Individual adjacency matrix analysis across five synthetic datasets (A -E). Each column 358 
+
+represent s random samples from the test set and the generated graphs by each model. The 359 
+
+color bar indicates edge weight, with lighter colors corresponding to high er values. 360 
+
+Abbreviations : VAE=variational autoencoder, WGAN -GP=Wasserstein GAN with gradient 361 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+13 
+
+penalty, DDPM=denoising diWusion probabilistic models, BA= Barabási -Albert ,362 
+
+SBM=stochastic block model, WS= Watts –Strogatz , WSF=weighted scale -free. 363 
+
+Quantitative results showed that model performance is highly dependent on the structural 364 properties of the target graphs (Figure 4). All models struggled with datasets characterized by strict 365 structural constraints or weighted edges. In BA datasets, all models showed high MMD values for 366 degree distributions, indicating digiculty in reproducing the scale-free property of BA. Validity 367 scores for Planar graphs were universally low, and no model achieved the target small-worldness ( 𝜎 )368 for WS graphs. Furthermore, for the WSF dataset, WGAN-GP and DDPM outperformed VAE; they still 369 exhibited high MMD values in several metrics. Notably, across all datasets and metrics, no model 370 consistently reached the performance level of the reference dataset. 371 While VAE achieved lower MMD values across most metrics on the Planar dataset, it demonstrated 372 significant underperformance on the BA, SBM, and WSF datasets compared to other models. In the 373 SBM dataset, the modularity of VAE-generated graphs was much higher than that of the test dataset 374 (Figure 4B). DDPM excelled on the BA, SBM, and WSF datasets compared to VAE, achieving the 375 lowest Wasserstein distances for modularity on the SBM dataset (Figure 4B), but performed poorly 376 in datasets with prominent common patterns (Planar and WS). WGAN-GP demonstrated relatively 377 stable performance across datasets and metrics, without being the worst on any dataset or metric, 378 consistent with qualitative evaluation. 379 380 Figure 4 Quantitative evaluation results of generative models across synthetic datasets . (A) 381 
+
+Heatmap of MMD and validity results for synthetic datasets. Cells are colored based on each 382 
+
+metric’s value across all models and datasets, with lighter colors indicating better 383 
+
+performance. ( B) Distributions of modularity scores and Wasserstein dista nces between 384 
+
+generated graphs and the test set for generated graphs in the SBM dataset. (C) Distributions of 385 
+
+𝝈 values (smallworldness) and Wasserstein distances between generated graphs and the test 386 
+
+set for generated graphs in the WS dataset. Abbreviations : VAE=variational autoencoder, 387 
+
+WGAN -GP=Wasserstein GAN with gradient penalty, DDPM=denoising diWusion probabilistic 388 
+
+models, BA= Barabási -Albert , SBM=stochastic block model, WS= Watts –Strogatz ,389 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+14 
+
+WSF=weighted scale -free. 390 
+
+# 3.2. Structural Connectivity dataset 391 
+
+392 Figure 5 Qualitative and visual comparison of adjacency matrices for the SC dataset . (A) Mean 393 
+
+adjacency matrix analysis of the SC dataset. Top row: Mean adjacency matrices of the test set 394 
+
+and the generated graphs. The color bar indicates the magnitude of connectivity after power 395 
+
+transformation, with an exponent of 𝜸 = 𝟎 . 𝟑 , applied to enhance edge visibility; lighter colors 396 
+
+indicate greater values. Bottom row: Corresponding residual matr ices (test - generated). (B) 397 
+
+Individual adjacency matrix analysis of the SC dataset. Each column represents random 398 
+
+samples from the test set and the generated graphs by each model. The color bar indicates the 399 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+15 
+
+magnitude of connectivity, w ith lighter colors corresponding to high er values. Abbreviations :400 
+
+VAE=variational autoencoder, WGAN -GP=Wasserstein GAN with gradient penalty, 401 
+
+DDPM=denoising diWusion probabilistic models, SC=structural connectivity. 402 
+
+403 Figure 6 Quantitative evaluation results of generative models across SC datasets. (A) Heatmap 404 
+
+of the MMD results for the SC dataset for each thresholding criterion. Cells are colored based 405 
+
+on each metric’s value across all models and thresholding criteria, with lighter colors 406 
+
+indicat ing better performance. (B) Distributions of modulari ty scores and Wasserstein 407 
+
+distances between the generated graphs and the test set for the SC dataset. (C) Distributions 408 
+
+of 𝝈 values (smallworldness) and Wasserstein distances between generated graphs and the 409 
+
+test set for the SC dataset. (D) Summary of strong edge reconstruction between generated 410 
+
+graphs and the test dataset for the SC dataset. Top row: Top n% strong edges in the mean 411 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+16 
+
+adjacency matrices. Middle row: Overlapped strong edges between the test dataset and 412 
+
+generated graphs. Bottom row: Jaccard index of strong edge overlap. Abbreviations :413 
+
+VAE=variational autoencoder, WGAN -GP=Wasserstein GAN with gradient penalty, 414 
+
+DDPM=denoising diWusion probabilistic models, SC=structural connectivity. 415 
+
+For the SC dataset, the mean matrices of the generated data reveal that VAE and WGAN-GP 416 captured the overall pattern of the SC data, whereas DDPM struggled to reproduce its structural 417 characteristics and produced a blurry mean adjacency matrix (Figure 5). SC graphs have partially 418 consistent backbone structures across samples, while also containing inter-subject variability. VAE 419 and WGAN-GP successfully captured these backbone structures. 420 In the quantitative analysis, WGAN-GP achieved the lowest MMD values across most metrics and 421 thresholding criteria, followed by VAE (Figure 6). DDPM showed high MMD values across all metrics 422 and thresholding criteria. Regarding modularity, WGAN-GP generated graphs with distributions 423 closest to the test dataset (Figure 6B), followed by VAE. For small-worldness ( 𝜎 ), WGAN-GP and VAE 424 also generated graphs with distributions similar to the test dataset (Figure 6C); however, the 425 generated distributions showed reduced variability. The DDPM-generated graphs had lower 426 modularity and small-worldness than those in the test dataset. 427 VAE and WGAN-GP also demonstrated strong performance in reconstructing important 428 connections and hub nodes in the SC data (Figure 6D). VAE and WGAN-GP achieved high Jaccard 429 indices, indicating strong edge overlap and node-strength correlation. In contrast, DDPM showed 430 low Jaccard indices and node-strength correlations, indicating that it failed to reconstruct important 431 connections in the SC data. 432 
+
+# 4. Discussion 433 
+
+# 4.1. Synthetic Graphs Reveal Distinct Generative Biases Across Models 434 
+
+The synthetic datasets were used not to directly determine the best model for SC data, but to 435 decompose graph generation into controlled structural properties and to identify model-specific 436 generative biases. Here, we discuss the three major tendencies found: common limitations of 437 standard generative models in reproducing strict graph constraints and weighted edges; 438 architecture-dependent digerences in preserving coordinate-specific adjacency patterns; and 439 paradigm-dependent biases in how each model balances common structures, stochastic 440 variability, and global distributional matching. 441 
+
+4.1.1. Shared Limitations in Reproducing Global Constraints and Weighted Edges 442 
+
+The digiculty of reproducing strict global constraints, which require macroscopic consistency 443 regarding the presence of edges across the entire network, suggests that simple generative models 444 rely on optimizing statistical resemblance and may struggle to implicitly learn the complex 445 topological rules that govern these properties. All models struggled to capture the degree 446 distribution of BA (Figure 4A) and the validity of Planar (VAE: 0.11, WGAN-GP: 0.0030, DDPM: 447 0.0010; Figure 4A). Similarly, capturing the small-world property of WS posed a universal challenge 448 for all models, primarily due to the digiculty of generating sparse long-range connections and the 449 topological constraints. The fact that all models showed smaller 𝜎 values (Figure 4C) and visually 450 plausible local connections indicates a bias that prioritizes local connectivity over the generation of 451 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+17 rare, long-range shortcuts. While WGAN-GP and DDPM generated og-diagonal edges visually 452 (Figure 3D), the 𝜎 discrepancy indicates that these did not serve as structurally precise shortcuts to 453 reduce global path length. Ultimately, relying solely on optimizing statistical resemblance without 454 explicit rules impedes learning higher-order edge dependencies required for global structural 455 consistency. 456 The transition to weighted graphs significantly revealed a critical, shared limitation across all 457 models. Performance deteriorated significantly in WSF compared to structurally similar unweighted 458 BA graphs (Figure 4A), with all architectures underestimating edge weights (Figure 2E). We attribute 459 this performance drop primarily to the ambiguity in continuous matrices. In binary graphs, small-460 weight edges can be treated as non-edges after thresholding. However, in weighted graphs, a low 461 value should represent valid “weak connections”, introducing ambiguity between meaningful 462 connections and background noise. Accurately reproducing continuous weights alongside 463 topological sparsity, therefore, remains a shared, unresolved challenge for these generative 464 baselines. These shared limitations highlight the need to carefully select a baseline based on its 465 specific generative biases rather than expecting perfect reproduction. 466 
+
+4.1.2. Architecture -Dependent Preservation of Coordinate -Specific Patterns 467 
+
+The inherent inductive biases of the network architectures, i.e., MLP versus CNN. Fundamentally 468 dictate the models’ capabilities in reproducing rigid, coordinate-specific graph patterns. As 469 observed in the Planar and WSF datasets, MLP-based models (VAE and WGAN-GP) successfully 470 maintained high-probability, coordinate-specific patterns (Figure 3B, E). Conversely, DDPM 471 struggled with the rigid coordinate-specific patterns, resulting in the disappearance of the required 472 fixed edges near the diagonal. This discrepancy can be attributed to the ways these architectures 473 process data. MLPs process the entire input simultaneously through fully connected layers, which 474 allows them to learn global relationships between all pairs of nodes and generate pixel-wise similar 475 outputs in common patterns. This aligns with findings in Tabular data generation tasks, where MLP-476 based models are reported to outperform CNN-based models, 39 suggesting that MLPs are better 477 suited for generating data where capturing global relationships is more crucial than local features. 478 In contrast, CNNs rely on translation invariance through shared convolutional filters. While this 479 inductive bias is highly advantageous for natural images, it becomes fundamentally detrimental for 480 node-aligned graph data. In adjacency matrices, each cell represents an edge between specific 481 nodes; thus, a slight spatial shift that would be trivial in an image creates a structurally invalid 482 connection between entirely digerent nodes. Because preserving exact spatial coordinates is 483 required for SC adjacency matrices, these results suggest that MLP-based architectures are better 484 suited to this task than CNN-based models. 485 
+
+4.1.3. Paradigm -Dependent Generative Biases 486 
+
+The VAE consistently exhibited a strong bias towards generating common edges, fundamentally 487 struggling to capture rare structural connections and global constraints. This intrinsic bias was 488 clearly shown in the results. Although VAE achieved the highest scores on 4 of 6 metrics for the 489 Planar dataset (Figure 4A), visual inspection shows an exaggerated concentration of edges around 490 the diagonal and visually implausible graphs (Figure 2B). This same overemphasis led to an inflated 491 modularity of nearly 0.5 in the SBM dataset, due to excessive intra-community connections and 492 fewer inter-community connections, resulting in a loss of crucial long-range shortcuts in WS. For 493 WSF, the VAE generated mean-like outputs that lacked sparse edge patterns, resulting in poor 494 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+18 performance in all metrics (Figure 3E). Thus, while this over-smoothing could deceptively lower 495 MMD features for common features, it fundamentally hinders the strict topological generation. This 496 phenomenon is a well-documented characteristic of VAEs; optimizing the element-wise loss forces 497 the model to predict the average of multiple data points mapped to the same latent representation, 498 leading to over-smoothed outputs in which rare or sharp features are lost. 40,41 
+
+499 DDPM exhibits a distinct advantage in capturing stochastic, texture-like connection patterns, but 500 its fundamental generative mechanisms pose significant challenges when applied to sparse graph 501 matrices. This superiority was evident in the capture of the modularity of SBM. The blurriness 502 observed in the mean adjacency matrix (Figure 2C) signifies DDPM’s capacity to capture the 503 underlying connection probabilities rather than overfitting to rigid edges. Since SBM connections 504 are stochastic, the resulting adjacency matrices resemble structured noise-like textures, aligning 505 with recent research showing digusion models’ egicacy in synthesizing textures with rich spatial 506 dynamics. 34 However, compounding its architectural struggle with rigid constraints, the generative 507 mechanics of DDPMs inherently challenge sparse matrix generation. During the forward digusion 508 process, uniform Gaussian noise rapidly obliterates isolated edges in inherently sparse graph 509 matrices, unlike in natural images, where macroscopic, low-frequency structures typically persist. 510 Consequently, the coarse-to-refine denoising process in DDPMs encounters intrinsic digiculties: 511 lacking continuous local context, the model cannot reliably reproduce the existence of edges, 512 potentially contributing to the loss of structural sharpness observed in individual generated 513 samples. 514 Overall, WGAN-GP demonstrated highly balanced generative performance across the synthetic 515 dataset, which may be attributed to its adversarial training framework. Specifically, the model 516 consistently ranked 1st or 2nd across the evaluated metrics (Figure 4A), avoiding the over-517 smoothing or fixed-coordinate collapse observed in VAE and DDPM. However, it is not without 518 limitations: in addition to the universal challenges, visual inspection reveals that continuous 519 structures were fragmented in the Planar and WS datasets (Figure 3B, D), and the model did not 520 achieve quantitative results comparable to the test dataset. This indicates that while adversarial 521 training, rather than element-wise losses, is robust to global distributional matching, this paradigm 522 remains insugicient to perfectly replicate strict local topological rules. Nevertheless, WGAN-GP 523 remains the most balanced baseline among the evaluated models. 524 
+
+# 4.2. Model -Specific Biases in Empirical SC Generation 525 
+
+The SC results were interpreted in light of the model-specific biases identified in the synthetic 526 datasets. This section discusses how the ability to preserve coordinate-specific patterns, common 527 structural backbones, stochastic variability, and weighted edges translated into empirical SC 528 generation. 529 
+
+4.2.1. Preservation of Coordinate -Specific SC Backbones 530 
+
+As discussed in Section 4.1.2, the MLP architecture’s capacity to preserve fixed-coordinate 531 structural properties directly translates to the successful reconstruction of the stable brain network. 532 The strong pattern retention is visually plausible (Figure 5) and quantitatively supported by high 533 preservation scores for both strong edges and hubs. VAE and WGAN-GP achieved Jaccard indices 534 ranging from 0.88 to 0.91 across all thresholds (Figure 6D) and a near-perfect Spearman correlation 535 coegicient of 0.99 in node strength preservation (Table 2). In the human brain, these densely 536 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+19 connected hubs and strong edges form a “rich-club” organization that exhibits low individual 537 variability. 35 These results suggest that the evaluated MLP-based architectures are relatively well-538 suited for graph generation tasks requiring precise preservation of fixed-coordinate structural 539 patterns, aligning with the biological invariance of the rich-club structure forming the SC 540 neuroanatomical backbone. 541 Beyond capturing the average spatial structure of the SC backbone, the MLP-based models 542 successfully replicated its population-level distribution, while revealing the inherent biological limit 543 of leaning towards weaker connections. When evaluated on the top 5% of edges, WGAN-GP 544 exhibited notably low MMD scores across all metrics, comparable to the reference baseline (Figure 545 6A), followed by VAE. This supports that, at the backbone level, these models could reproduce not 546 only the average tendencies but also the precise high-dimensional distribution of each graph (i.e., 547 common strong edges, their weights, and their relationships). However, including weaker edges 548 (beyond the top 10%) led to a striking deterioration in the node-strength MMD. Because MMD 549 compares the distributions across subjects, this degradation reveals a profound mismatch at the 550 population level. Crucially, this severe decline was also observed among the empirical datasets 551 themselves (“Ref.” in Figure 6A). Rather than a generative failure, this phenomenon strongly reflects 552 the inherent biological properties of structural brain networks: in contrast to the top-strong edges, 553 weaker connections are known to exhibit stronger individual variability across subjects. 36 
+
+554 Consequently, the heterogeneity of weak connections prevents the empirical data itself from 555 forming a stable, convergent distribution for the models to learn. 556 Conversely, as anticipated from the architectural bias discussed in Section 4.1.2, DDPM struggled 557 to pinpoint exact edge coordinates in the SC dataset. Qualitative observations reveal that DDPM 558 generated SC-like connection textures, but it cannot pinpoint exact coordinates or maintain 559 consistency across individual samples. This directly reflects the bias observed in the SBM dataset. 560 This lack of coordinate consistency prevents the formation of a stable anatomical backbone, 561 manifesting as a blurry mean adjacency matrix and high MMD scores across most metric-threshold 562 combinations (Figure 6A). These contrasting results underscore that strict coordinate fidelity is an 563 essential architectural requirement for faithfully reproducing the rigid neuroanatomical backbone 564 of empirical SC data. 565 
+
+4.2.2. Anatomy -Assisted Approximation of SC Topology 566 
+
+Beyond architectural biases, the models’ generative paradigms interacted uniquely with the 567 modality-specific properties of SC data. Reflecting its global distributional matching paradigm 568 discussed in Section 4.1.3, WGAN-GP demonstrated highly balanced generative performance, 569 ranking first on approximately 75% of the evaluated metrics. Notably, it achieved the best 570 performance in spectral and embedding MMDs across all threshold criteria for the SC dataset 571 (Figure 6A). For instance, when the most significant digerence was observed in the SC dataset (0.2 572 threshold), WGAN-GP achieved a spectral MMD of 0.00052 and an embedding MMD of 0.0064, both 573 more than ten times lower than those of other models. 574 Interestingly, while VAE and WGAN-GP struggled to replicate global topological metrics in synthetic 575 datasets, they demonstrated a remarkable capability to approximate these structures in empirical 576 SC data. Specifically, VAE and WGAN-GP—especially WGAN-GP—reproduced the distribution 577 peaks of modularity and small-worldness ( 𝜎 ) and their gradual shifts across varying sparsity 578 thresholds (Figure 6B, C). This discrepancy could be attributed to the inherent underlying rules of 579 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+20 the SC dataset. Unlike purely mathematical graphs, SC networks are constrained by human brain 580 anatomy, formed through optimization between wiring costs and network egiciency. 37 Models can 581 capitalize on these probability biases of edge presence (e.g., highly probable anatomically 582 anchored long-range corrections). By learning these spatial probability biases, the models could 583 indirectly approximate modularity and small-worldness. Consequently, the success in the SC 584 dataset could be better interpreted as an anatomy-assisted approximation rather than genuine 585 topological learning. 586 
+
+4.2.3. Implications for SC Data Augmentation 587 
+
+Extrapolating these generative characteristics to potential downstream applications, WGAN-GP 588 emerges as the most promising baseline for future SC data augmentation tasks. Since data 589 augmentation aims to increase data diversity for better generalization, the over-smoothing 590 tendency of VAEs, biasing generation toward high-probability edges, could be a disadvantage for 591 general classification or regression. Similarly, DDPMs struggle to reliably preserve the exact sparse 592 coordinates of the anatomical network. Conversely, WGAN-GP captured overall network traits, 593 especially for strong edges, preserving graph variety. WGAN-GP outperforms VAE not only in 594 maintaining data diversity but also in accurately reproducing the strong major backbone of the brain, 595 as evidenced by MMD scores in the top 5% of the strongest connections (Figure 6A). Preserving 596 these major structural hubs is crucial, as neurological disorders, such as AD and frontotemporal 597 dementia, selectively target these hubs. 38 Data augmentation with models that egectively 598 reproduce main structures shows potential for studying skeletal abnormalities as biomarkers. Thus, 599 WGAN-GP is recommended for SC data augmentation, as it balances data diversity and topological 600 properties, consistent with its success on the synthetic dataset. However, its impact on 601 downstream tasks such as prediction or classification still needs further validation. 602 
+
+# 4.3. Limitation s and Future Directions 603 
+
+Several limitations should be acknowledged. First, the observed performance digerences may 604 depend on the specific implementations, architectures, and hyperparameters used in this study. In 605 particular, DDPM was implemented with a U-Net architecture, whereas VAE and WGAN-GP were 606 implemented with MLP-based architectures. Therefore, the egects of the generative paradigm and 607 network architecture cannot be fully separated. Furthermore, our decision to omit data scaling 608 might have impacted the training stability and optimal performance of the generative models. 609 Future studies should evaluate alternative architectures, including MLP-based digusion models or 610 graph-specific architectures, to determine whether the observed tendencies generalize beyond the 611 present implementation. 612 Second, this study focused on the structural fidelity of generated graphs rather than directly 613 evaluating their impact on downstream prediction or classification tasks. Although the present 614 results suggest that WGAN-GP provides a balanced baseline for preserving major SC structures, its 615 practical egectiveness as a data augmentation method should be validated in task-specific settings. 616 
+
+# 5. Conclusion 617 
+
+In this study, we evaluated three representative deep generative models—VAE, WGAN-GP, and 618 DDPM—to elucidate their model-specific generative biases and capabilities in capturing the 619 topological features of SC data. By combining synthetic graph datasets with controlled 620 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+21 characteristics and empirical SC data, we examined not only overall generation quality but also 621 which graph properties each model reproduced well or poorly. Among the evaluated models, 622 WGAN-GP emerged as the most balanced baseline. Although it did not perfectly reproduce strict 623 global constraints such as planarity, it better preserved critical SC backbones and avoided severe 624 performance degradation compared with the other models. 625 At the same time, our findings highlight the limitations of directly applying standard image- or 626 vector-based generative models to brain graph data. All evaluated models had digiculty fully 627 reproducing complex graph-theoretic properties, such as higher-order edge dependencies 628 underlying planarity, degree distributions, and weighted edge structures. These results suggest that 629 faithful SC generation requires not only learning statistical similarity but also incorporating graph-630 specific structural constraints or biologically meaningful priors into the training or generation 631 process. Overall, this study provides an empirical basis for selecting and improving generative 632 models for future SC data augmentation studies. 633 
+
+References 634 
+
+1. Martinkus K, Loukas A, Perraudin N, Wattenhofer R. SPECTRE: Spectral Conditioning Helps to 635 Overcome the Expressivity Limits of One-shot Graph Generators. In: Chaudhuri K, Jegelka S, 636 Song L, Szepesvári C, Niu G, Sabato S, eds. International Conference on Machine Learning, 637 
+
+ICML 2022, 17 -23 July 2022, Baltimore, Maryland, USA . Vol 162. Proceedings of Machine 638 Learning Research. PMLR; 2022:15159-15179. 639 https://proceedings.mlr.press/v162/martinkus22a.html 640 2. Nugent AC, Thomas AG, Mahoney M, et al. The NIMH intramural healthy volunteer dataset: A 641 comprehensive MEG, MRI, and behavioral resource. Sci Data . 2022;9(1):518. 642 doi:10.1038/s41597-022-01623-9 643 3. Bullmore E, Sporns O. Complex brain networks: graph theoretical analysis of structural and 644 functional systems. Nat Rev Neurosci . 2009;10(3):186-198. doi:10.1038/nrn2575 645 4. Sporns O. Structure and function of complex brain networks. Dialogues Clin Neurosci .646 2013;15(3):247. doi:10.31887/DCNS.2013.15.3/osporns 647 5. Zhang F, Daducci A, He Y, et al. Quantitative mapping of the brain’s structural connectivity using 648 digusion MRI tractography: A review. NeuroImage . 2022;249:118870. 649 doi:10.1016/j.neuroimage.2021.118870 650 6. Essemlali A, St-Onge E, Descoteaux M, Jodoin PM. Understanding Alzheimer disease’s 651 structural connectivity through explainable AI. In: Proceedings of the Third Conference on 652 
+
+Medical Imaging with Deep Learning . PMLR; 2020:217-229. Accessed December 28, 2025. 653 https://proceedings.mlr.press/v121/essemlali20a.html 654 7. Schiavi S, Azzari A, Mensi A, et al. Classification of multiple sclerosis patients based on 655 structural disconnection: A robust feature selection approach. J Neuroimaging OL J Am Soc 656 
+
+Neuroimaging . 2022;32(4):647-655. doi:10.1111/jon.12991 657 8. Shorten C, Khoshgoftaar TM. A survey on Image Data Augmentation for Deep Learning. J Big 658 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+22 
+
+Data . 2019;6(1):60. doi:10.1186/s40537-019-0197-0 659 9. Arbabshirani MR, Plis S, Sui J, Calhoun VD. Single subject prediction of brain disorders in 660 neuroimaging: Promises and pitfalls. NeuroImage . 2017;145:137-165. 661 doi:10.1016/j.neuroimage.2016.02.079 662 10. Faskowitz J, Betzel RF, Sporns O. Edges in brain networks: Contributions to models of 663 structure and function. Netw Neurosci . 2022;6(1):1-28. doi:10.1162/netn_a_00204 664 11. Kingma DP, Welling M. Auto-Encoding Variational Bayes. In: Proceedings of the 2nd 665 
+
+International Conference on Learning Representations . 2014. 666 12. Goodfellow IJ, Pouget-Abadie J, Mirza M, et al. Generative Adversarial Nets. In: 667 Ghahramani Z, Welling M, Cortes C, Lawrence N, Weinberger KQ, eds. Advances in Neural 668 
+
+Information Processing Systems . Vol 27. Curran Associates, Inc.; 2014. 669 https://proceedings.neurips.cc/paper_files/paper/2014/file/f033ed80deb0234979a61f95710d 670 be25-Paper.pdf 671 13. Li C, Wei Y, Chen X, Schönlieb CB. BrainNetGAN: Data Augmentation of Brain Connectivity 672 Using Generative Adversarial Network for Dementia Classification. In: Engelhardt S, Oksuz I, 673 Zhu D, et al., eds. Deep Generative Models, and Data Augmentation, Labelling, and 674 
+
+Imperfections . Vol 13003. Lecture Notes in Computer Science. Springer International 675 Publishing; 2021:103-111. doi:10.1007/978-3-030-88210-5_9 676 14. Liu Y, Seguin C, Mansour L ․ S, Tian YE, Di Biase MA, Zalesky A. Deep generation of 677 
+
+personalized connectomes based on individual attributes. Med Image Anal . 2025;106:103761. 678 doi:10.1016/j.media.2025.103761 679 15. Barile B, Marzullo A, Stamile C, Durand-Dubief F, Sappey-Marinier D. Data augmentation 680 using generative adversarial neural networks on brain structural connectivity in multiple 681 sclerosis. Comput Methods Programs Biomed . 2021;206:106113. 682 doi:10.1016/j.cmpb.2021.106113 683 16. Ho J, Jain A, Abbeel P. Denoising Digusion Probabilistic Models. In: Advances in Neural 684 
+
+Information Processing Systems . Vol 33. Curran Associates, Inc.; 2020:6840-6851. Accessed 685 March 4, 2026. 686 https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-687 Abstract.html 688 17. Zuo Q, Di Y, Ye C, et al. Bidirectional generative digusion model with cascaded symmetric 689 attention for brain connectivity-to-connectivity translation. Biomed Signal Process Control .690 2025;108:107900. doi:10.1016/j.bspc.2025.107900 691 18. Zhao H, Lou H, Yao L, Zhang Y. Digusion transformer-augmented fMRI functional 692 connectivity for enhanced autism spectrum disorder diagnosis. J Neural Eng .693 2025;22(1):016044. doi:10.1088/1741-2552/adb07a 694 19. Gulrajani I, Ahmed F, Arjovsky M, Dumoulin V, Courville AC. Improved Training of 695 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+23 Wasserstein GANs. In: Advances in Neural Information Processing Systems . Vol 30. Curran 696 Associates, Inc.; 2017. Accessed January 8, 2026. 697 https://papers.nips.cc/paper_files/paper/2017/hash/892c3b1c6dccd52936e27cbd0g683d6-698 Abstract.html 699 20. Arjovsky M, Chintala S, Bottou L. Wasserstein Generative Adversarial Networks. In: Precup 700 D, Teh YW, eds. Proceedings of the 34th International Conference on Machine Learning . Vol 70. 701 Proceedings of Machine Learning Research. PMLR; 2017:214-223. 702 https://proceedings.mlr.press/v70/arjovsky17a.html 703 21. Ronneberger O, Fischer P, Brox T. U-Net: Convolutional Networks for Biomedical Image 704 Segmentation. In: Navab N, Hornegger J, Wells WM, Frangi AF, eds. Medical Image Computing 705 
+
+and Computer -Assisted Intervention – MICCAI 2015 . Vol 9351. Lecture Notes in Computer 706 Science. Springer International Publishing; 2015:234-241. doi:10.1007/978-3-319-24574-4_28 707 22. Han YK, Zhang HJ, Chen YJ, et al. Small-world network and neuroscience. Brain -X.708 2025;3(1):e70025. doi:10.1002/brx2.70025 709 23. Hagmann P, Kurant M, Gigandet X, et al. Mapping Human Whole-Brain Structural Networks 710 with Digusion MRI. PLOS ONE . 2007;2(7):e597. doi:10.1371/journal.pone.0000597 711 24. Hagmann P, Cammoun L, Gigandet X, et al. Mapping the Structural Core of Human 712 Cerebral Cortex. PLOS Biol . 2008;6(7):e159. doi:10.1371/journal.pbio.0060159 713 25. Yook SH, Jeong H, Barabási AL, Tu Y. Weighted Evolving Networks. Phys Rev Lett .714 2001;86(25):5835-5838. doi:10.1103/PhysRevLett.86.5835 715 26. Yamamoto T, Sugiura T, Hiroyasu T, Hiwa S. Task-guided generative adversarial networks 716 for synthesizing and augmenting structural connectivity matrices for connectivity-based 717 prediction. Netw Neurosci . 2025;9(3):1110-1137. doi:10.1162/NETN.a.24 718 27. Cieslak M, Cook PA, He X, et al. QSIPrep: An integrative platform for preprocessing and 719 reconstructing digusion MRI. Nat Methods . 2021;18(7):775-778. doi:10.1038/s41592-021-720 01185-5 721 28. Gershon RC, Wagster MV, Hendrie HC, Fox NA, Cook KF, Nowinski CJ. NIH Toolbox for 722 Assessment of Neurological and Behavioral Function. Neurology . 2013;80(11 Suppl 3):S2-S6. 723 doi:10.1212/WNL.0b013e3182872e5f 724 29. Ansel J, Yang E, He H, et al. PyTorch 2: Faster Machine Learning Through Dynamic Python 725 Bytecode Transformation and Graph Compilation. In: 29th ACM International Conference on 726 
+
+Architectural Support for Programming Languages and Operating Systems, Volume 2 727 
+
+(ASPLOS ’24) . ACM; 2024. doi:10.1145/3620665.3640366 728 30. Akiba T, Sano S, Yanase T, Ohta T, Koyama M. Optuna: A Next-generation Hyperparameter 729 Optimization Framework. In: Proceedings of the 25th ACM SIGKDD International Conference on 730 
+
+Knowledge Discovery & Data Mining . KDD ’19. Association for Computing Machinery; 731 2019:2623-2631. doi:10.1145/3292500.3330701 732 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+24 31. Gretton A, Borgwardt KM, Rasch MJ, Schölkopf B, Smola A. A kernel two-sample test. J733 
+
+Mach Learn Res . 2012;13(25):723-773. 734 32. You J, Ying R, Ren X, Hamilton WL, Leskovec J. GraphRNN: Generating Realistic Graphs 735 with Deep Auto-regressive Models. In: Dy JG, Krause A, eds. Proceedings of the 35th 736 
+
+International Conference on Machine Learning, ICML 2018, Stockholmsmässan, Stockholm, 737 
+
+Sweden, July 10 -15, 2018 . Vol 80. Proceedings of Machine Learning Research. PMLR; 738 2018:5694-5703. http://proceedings.mlr.press/v80/you18a.html 739 33. Humphries MD, Gurney K. Network ‘Small-World-Ness’: A Quantitative Method for 740 Determining Canonical Network Equivalence. Sporns O, ed. PLoS ONE . 2008;3(4):e0002051. 741 doi:10.1371/journal.pone.0002051 742 34. Abbas K, Abry P, Roux SG. Digusion Models for Multifractal Texture Synthesis. In: 2025 743 
+
+33rd European Signal Processing Conference (EUSIPCO) . 2025:1867-1871. 744 doi:10.23919/EUSIPCO63237.2025.11226034 745 35. van den Heuvel MP, Sporns O. Rich-Club Organization of the Human Connectome. J746 
+
+Neurosci . 2011;31(44):15775-15786. doi:10.1523/JNEUROSCI.3539-11.2011 747 36. Huang W, Chen H, Liu Z, et al. Individual Variability in the Structural Connectivity 748 Architecture of the Human Brain. J Neurosci . 2025;45(5):e2139232024. 749 doi:10.1523/JNEUROSCI.2139-23.2024 750 37. Bullmore E, Sporns O. The economy of brain network organization. Nat Rev Neurosci .751 2012;13(5):336-349. doi:10.1038/nrn3214 752 38. Stam CJ. Modern network science of neurological disorders. Nat Rev Neurosci .753 2014;15(10):683-695. doi:10.1038/nrn3801 754 39. Fan J, Chen J, Liu T, Shen Y, Li G, Du X. Relational data synthesis using generative 755 adversarial networks: a design space exploration. Proc VLDB Endow . 2020;13(12):1962-1975. 756 doi:10.14778/3407790.3407802 757 40. Larsen ABL, Sønderby SK, Larochelle H, Winther O. Autoencoding beyond pixels using a 758 learned similarity metric. In: Proceedings of the 33rd International Conference on International 759 
+
+Conference on Machine Learning - Volume 48 . ICML’16. JMLR.org; 2016:1558-1566. 760 41. Zamany S, Li D, Fei H, Li P. Towards Deeper Understanding of Variational Auto-encoders 761 for Binary Collaborative Filtering. In: Proceedings of the 2022 ACM SIGIR International 762 
+
+Conference on Theory of Information Retrieval . ACM; 2022:254-263. 763 doi:10.1145/3539813.3545145 764 42. Preti MG, Bolton TA, Van De Ville D. The dynamic functional connectome: State-of-the-art 765 and perspectives. NeuroImage . 2017;160:41-54. doi:10.1016/j.neuroimage.2016.12.061 766 767 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+25 
+
+# Tables 768 
+
+Table 1 Summary of evaluation metrics used for each dataset. A check mark indicates that 769 
+
+the corresponding metric was used for that dataset. 770 
+
+Dataset 
+
+Degree/CC/ 
+
+Orbit/Spectral 
+
+Planarity Modularity Small -
+
+worldness Strength Edge/Hub 
+
+BA ü – – – – –
+
+Planar ü ü – – – –
+
+SBM ü – ü – – –
+
+WS ü – – ü – –
+
+WSF ü – – – ü –
+
+SC ü – ü ü ü ü
+
+CC=clustering coe/icient, BA=Barabási -Albert, SBM=stochastic block model, WS= Watts –Strogatz, 
+
+WSF=weighted scale -free, SC=structural connectivity 
+
+771 
+
+Table 2 Spearman rank correlation coeWicients ( 𝝆 ) and associated p -values between the 772 
+
+node strengths of the test set and the generated mean adjacency matrices. 773 
+
+Model Spearman correlation 𝑝 -value VAE 0.99 < 0.001 ∗∗∗
+
+WGAN-GP 0.99 < 0.001 ∗∗∗
+
+DDPM 0.40 < 0.001 ∗∗∗
+
+> *
+
+𝑝 < 0.05 , ** 𝑝 < 0.01 , *** 𝑝 < 0.001 
+
+VAE=variational autoencoder, WGAN -GP=Wasserstein GAN with 
+
+gradient penalty, DDPM=denoising di/usion probabilistic models 
+
+774 
+
+775 
+
+# Figure Legends 776 
+
+Figure 1 Overview of the entire methods used in this study. 777 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 8, 2026. ;https://doi.org/10.64898/2026.06.03.729714 doi: bioRxiv preprint
+
+26 
+
+Figure 2 Mean adjacency matrix analysis across five synthetic datasets (A-E). Top row: Mean 778 adjacency matrices of the test set and the generated graphs. The color bar indicates the 779 magnitude of connectivity. Lighter colors indicate greater values. Bottom row: Corresponding 780 residual matrices (test - generated). Red indicates positive residuals, while blue indicates negative 781 residuals. Abbreviations: VAE=variational autoencoder, WGAN-GP=Wasserstein GAN with gradient 782 penalty, DDPM=denoising digusion probabilistic models, BA=Barabási-Albert, SBM=stochastic 783 block model, WS= Watts–Strogatz, WSF=weighted scale-free. 784 
+
+Figure 3 Individual adjacency matrix analysis across five synthetic datasets (A-E). Each column 785 represents random samples from the test set and the generated graphs by each model. The color 786 bar indicates edge weight, with lighter colors corresponding to higher values. Abbreviations :787 VAE=variational autoencoder, WGAN-GP=Wasserstein GAN with gradient penalty, 788 DDPM=denoising digusion probabilistic models, BA=Barabási-Albert, SBM=stochastic block 789 model, WS= Watts–Strogatz, WSF=weighted scale-free. 790 
+
+Figure 4 Quantitative evaluation results of generative models across synthetic datasets. (A) 791 Heatmap of MMD and validity results for synthetic datasets. Cells are colored based on each 792 metric’s value across all models and datasets, with lighter colors indicating better performance. 793 (B) Distributions of modularity scores and Wasserstein distances between generated graphs and 794 the test set for the generated graphs in the SBM dataset. (C) Distributions of 𝜎 values 795 (smallworldness) and Wasserstein distances between generated graphs and the test set for 796 generated graphs in the WS dataset. Abbreviations : VAE=variational autoencoder, WGAN-797 GP=Wasserstein GAN with gradient penalty, DDPM=denoising digusion probabilistic models, 798 BA=Barabási-Albert, SBM=stochastic block model, WS= Watts–Strogatz, WSF=weighted scale-799 free. 800 
+
+Figure 5 Qualitative and visual comparison of adjacency matrices for the SC dataset. (A) Mean 801 adjacency matrix analysis of the SC dataset. Top row: Mean adjacency matrices of the test set and 802 the generated graphs. The color bar indicates the magnitude of connectivity. Lighter colors 803 indicate greater values. Bottom row: Corresponding residual matrices (test - generated). (B) 804 Individual adjacency matrix analysis of the SC dataset. Each column represents random samples 805 from the test set, along with the graphs generated by each model. The color bar indicates the 806 magnitude of connectivity, with lighter colors corresponding to higher values. Abbreviations :807 VAE=variational autoencoder, WGAN-GP=Wasserstein GAN with gradient penalty, 808 DDPM=denoising digusion probabilistic models, SC=structural connectivity. 809 
+
+Figure 6 Quantitative evaluation results of generative models across SC datasets. (A) Heatmap of 810 the MMD results for the SC dataset for each thresholding criterion. Cells are colored based on each 811 metric’s value across all models and thresholding criteria, with lighter colors indicating better 812 performance. (B) Distributions of modularity scores and Wasserstein distances between the 813 generated graphs and the test set for the SC dataset. (C) Distributions of σ values (small-worldness) 814 and Wasserstein distances between generated graphs and the test set for the SC dataset. (D) 815 Summary of strong edge reconstruction between generated graphs and the test dataset for the SC 816 dataset. Top row: Top n% strong edges in the mean adjacency matrices. Middle row: Overlapped 817 strong edges between the test dataset and generated graphs. Bottom row: Jaccard index of strong 818 edge overlap. Abbreviations: VAE=variational autoencoder, WGAN-GP=Wasserstein GAN with 819 gradient penalty, DDPM=denoising digusion probabilistic models, SC=structural connectivity. 820

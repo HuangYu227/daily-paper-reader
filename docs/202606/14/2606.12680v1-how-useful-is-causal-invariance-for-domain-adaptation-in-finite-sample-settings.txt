@@ -1,0 +1,2846 @@
+Title: How Useful is Causal Invariance for Domain Adaptation in Finite-Sample Settings?
+
+URL Source: https://arxiv.org/pdf/2606.12680v1
+
+Published Time: Fri, 12 Jun 2026 00:19:03 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+# How Useful is Causal Invariance for Domain Adaptation in Finite-Sample Settings? 
+
+## Julia Kostin ∗1, Kasra Jalaldoust ∗2, Elias Bareinboim 2, Samory Kpotufe 3 and Fanny Yang 11Department of Computer Science, ETH Zurich 
+
+> 2
+
+## Causal Artificial Intelligence Lab, Columbia University 
+
+> 3
+
+## Department of Statistics, Columbia University 
+
+Abstract 
+
+Machine learning models often degrade when they are deployed on a target distribution that differs from the source distributions they were trained on. Recent work in causality-based domain generalization has shown how shared causal structure between domains can induce invariant predictors, e.g., models on a subset of features which have stable risk across structured domain shifts. However, the extent to which such population-level causal invariances can lead to gains in finite-sample settings remains underexplored. In particular, in practice we often have access to a few labeled target samples, a setting called supervised domain adaptation (sDA). In this paper, we explore when (full or partial) causal knowledge can provably improve supervised domain adaptation. As a first step, we study linear regression, where full or partial causal knowledge specifies a collection of invariant or possibly invariant feature subsets, each yielding a source-trained candidate predictor. We derive matching upper and lower bounds showing that finite-sample gains are governed by the target-risk margins separating the candidates, together with the finite-source estimation error. When these margins are sufficiently large relative to nQ, an adaptive aggregation procedure can match the best candidate predictor while avoiding negative transfer relative to target-only learning. On the other hand, when the margins are too small, no algorithm can reliably exploit the candidate collection to obtain faster finite-sample rates. We further connect these margins to structural shift magnitude in linear SCMs and validate the theory on real-world causal benchmarks. 
+
+# 1 Introduction 
+
+Causal invariance has garnered much recent attention in domain generalization as a way to model invariant information that might be transferable across prediction tasks involving different data distributions [ 1 –4 ]. For example, one may expect that the causal relationships between feature variables X .
+
+= [X(1) , . . . , X (d)] and output variable Y hold across domains P and Q, e.g. across geographic regions or patient populations. Then, it is possible that for certain subsets I ⊂ [d] of features of X (especially, but not exclusively, the causes of Y ), the regression functions of the form hI
+
+.
+
+= E[Y | XI ] remain unchanged, i.e., hI,P = hI,Q = hI .As outlined in Section 1.1, existing works in causal domain generalization primarily focus on 1) identifying causal relationships and the resulting invariant models and 2) characterizing the structural shift from P to Q under which such invariant models are guaranteed to have bounded, though not necessarily low, risk under Q. However, despite much promising work on the subject, the extent to which such causal knowledge might be leveraged in certain finite-sample settings of interest (involving P and Q data) remains unclear, as we will soon describe. In case an invariant feature set I exists, with qualitative knowledge of causal relationships and structural shift, even with no data from Q, we may perform well under Q by estimating invariant hI from P data alone [ 1, 5, 6]. However, we typically do not have such causal knowledge in practice, only allowing us to identify a set of candidate invariant models. Furthermore, not all of these models actually have low Q-risk and some could be too conservative and perform poorly under Q compared to the best predictor hQ that uses all features. Fortunately, in many settings, we have access not only to data from P , but also to a limited amount of target data from Q. These samples might be useful for identifying which candidates to leverage among the invariant 
+
+> *Equal contribution.
+
+1
+
+> arXiv:2606.12680v1 [cs.LG] 10 Jun 2026
+
+Figure 1: A toy causal supervised adaptation problem. The graph depicts simplified relationships between the most common causes and symptoms of skin cancer. The light green shift node indicates which variables may be shifted between two patient subpopulations (domains) P and Q, where the dashed edge indicates a symptom, which, unbeknownst to us, remains unshifted between P and Q. Two feature sets result in invariant models: The set of causes , or parents, I1 = {GP, SE }, which results in a model ignoring symptoms of the disease, and the bigger set I2 = {GP, SE, M T }, which includes an unshifted symptom. 
+
+hI , I ∈ I that are trainable on source data from P . In this work, we are interested in how useful (partial) causal knowledge is in such settings with finite samples from both P and Q. For instance, suppose we have a collection 
+
+I of candidate invariant feature subsets that correspond to the available causal knowledge. Further assume that one of the candidate sets in I has a very low population Q-risk RQ(hI ). Is it always possible to leverage I to achieve a better Q-risk than the baseline of using the P and Q data alone, ignoring the partial causal knowledge that yields I? The answer turns out to be mixed with both positive and negative results, and tightly depends on the interplay between certain risk margins separating candidate invariants I ∈ I and the amount of samples from P and Q.To provide quantitative answers to these questions, we consider a linear regression setting in Rd with nP samples from a source distribution P , and nQ samples from a target Q. The goal is to return a regression estimate ˆh
+
+with low L2 excess risk EQ( ˆh) .
+
+= RQ( ˆh) − RQ(h∗
+
+> Q
+
+) w.r.t. an unknown best linear function h∗ 
+
+> Q
+
+under Q. While our analysis makes no assumption on the relation between nP , n Q, we are mostly interested in regimes with 
+
+nP ≫ nQ, and where prior knowledge of causal invariances might be leveraged to harness the large data from P
+
+to do well on Q. Thus, we aim to characterize situations when prior causal knowledge, even if imperfect, can be used to achieve an excess risk rate strictly faster than any learner without access to such causal knowledge. 
+
+As alluded to so far, prior causal knowledge and remaining uncertainties can for example be captured using a collection I that consists of all candidate subsets I that may remain invariant under possible shifts (cf. Section 2.3 for a more formal discussion). For now, consider the concrete example in Figure 1 for intuition: suppose we would like to predict Y (skin cancer) using 4 groups of features X = {GP, SE, MC, MT }, and assume the depicted causal graph is known a priori along with the fact that Y is not intervened on in the shift P → Q.Depending on the amount of knowledge about the structural shift between P andQ , this collection may contain different sets. For instance, suppose we know that P and Q are populations with different skin tones, modeled as a shift arrow on MC in the graph. At the same time assume that we do not know whether MT is shifted, as indicated by the dashed edge on MT in Figure 1. In that case, I1
+
+.
+
+= {GP, SE } and I2
+
+.
+
+= {GP, SE, MT } are the possible invariant sets and the collection I = {I1, I 2} reflects the uncertainty about the shift in MT. If the causal mechanism of MT shifts from source to target, then I1 would be the only valid invariant subset inside the collection I. However, if MT does not shift, I2 is invariant as well and could in fact yield better Q risk since it uses an informative, unshifted symptom . This example illustrates how I can encode uncertainty in invariants owing to partial knowledge of causal mechanisms. We can now describe our main results in the context of a simplifying assumption: Suppose a learner has access to prior (partial) causal knowledge encoded by the collection I that includes an invariant subset I⋆ with hI⋆ = hQ.Can any learner ˆh given I recognize that I⋆ is a good (the best!) subset and, that using P data to learn hI⋆
+
+would lead to low risk under Q? We show that the answer depends not only on the amount of data available in 2both P and Q, but crucially on margins ∆I
+
+.
+
+= RQ(hI ) − RQ(hI⋆ ) – that is, the difference of the Q-risks between candidates I ∈ I and the a priori best choice, such as I⋆ in this example. In particular, we show that larger risk margins make it easier to leverage I. Our main technical effort is in deriving sufficient and necessary conditions on the magnitude of such ∆I ’s w.r.t. sample sizes nP , n Q to guarantee benefits from prior causal knowledge. Our results imply the following: 
+
+• As a positive result, we show that margins satisfying inf I∈I ∆I ≳ log |I| /n Q are sufficient to successfully leverage causal knowledge at a given nQ, provided (i) nP itself is sufficiently large to properly estimate regression functions, and (ii) the shift PX to QX is sufficiently controlled, so that errors under P may be related to errors under Q. Under such conditions, knowledge of causal invariances enables few-shot learning in the following sense: in favorable settings, instead of Ω( d/ϵ ), we require only Ω( d) samples to achieve ϵ excess risk. We emphasize that in order to identify the best predictive model hI⋆ with a sufficient margin order of n−1 
+
+> Q
+
+, we require careful model selection. In particular, as the technical reader may note, using uniform convergence arguments, naïve cross-validation may in general require a margin of order n−1/2 
+
+> Q
+
+to succeed. Instead, the small margin requirement of order n−1 
+
+> Q
+
+is achieved via iterative refinements of carefully constructed confidence sets centered at optimal aggregation estimators. 
+
+• Further, we show that this upper bound is tight. In particular, we show that even in the two-model case and with infinite source data, if the risk margin satisfies ∆ ≲ log |I| /n Q, no algorithm can reliably achieve the risk of the better candidate with an error of order less than ∆. Thus, the margin-driven sample complexity 
+
+nQ ≳ Ω(1 /∆) in our upper bound is necessary. Hence, we cannot always leverage I—even when it contains arbitrarily good invariants—to achieve a better rate than that of a learner which ignores I altogether. With these main results at hand, we return to our original question: can causal knowledge improve supervised domain adaptation when a small number of labeled samples from the target distribution ( Q) is available? In linear structural causal models, we first show that large structural shifts induce large target-risk margins between candidate models. Our subsequent guarantees echo a familiar message from the causality literature: causal knowledge is particularly useful under large shifts. For the first time however, we establish usefulness of even incomplete causal knowledge under such shifts, and show how labeled samples from a fixed target distribution can be used more efficiently when some causal knowledge is available. Thus, our setting differs from the classical domain generalization perspective, where causal invariance is used to guarantee robust performance over a class of possible target distributions; here, labeled samples from a fixed target ( Q) change the benchmark to 
+
+target-specific performance relative to alternatives such as target-only learning. We now discuss the relation to prior work in more detail. 
+
+## 1.1 Related work 
+
+Causality-based Domain Generalization. A long line of work in domain generalization (DG) leverages shared structure between source and target distributions to derive predictors that remain valid under unseen shifts. Early instances assume global covariate or label shift [ 7–11 ]; more structural approaches posit that the data-generating process is governed by shared causal mechanisms [ 12 , 13 ], and exploit the resulting invariances either through distributional ( P (Y | XI⋆ )) or regression function ( EP [Y | XI⋆ ]) invariance, specified by an “invariant” feature subset XI⋆ . The invariance hI⋆,Q = hI⋆,P is a special case of causal transportability , where an object of interest under the target distribution Q, e.g., hI⋆,Q , can be uniquely computed from the source distribution P . When qualitative knowledge of causal relationships and structural shifts is available, even with no data from Q, one may transport hI⋆ from P to Q [ 6, 14 –16 ]. Invariant predictions are of particular interest [ 1– 3, 5, 17 –23 ], since they allow the model hI⋆,Q to be directly estimated from P data. The strength of an identified invariant predictor is that it provides robust generalization guarantees against worst-case shifts. In practice, however, these methods are frequently outperformed by plain source-based empirical risk minimization (ERM) on realistic benchmarks [ 24 – 26 ], for two reasons: (i) the invariant feature set is typically not identifiable 
+
+from the available source distributions, and (ii) even when it is, restricting prediction to invariant features can yield weakly predictive models on a specific target. Recent relaxations partially address these issues: partial transportability [27 ] and worst-case robustness [ 28 ] extend worst-case guarantees to partially identifiable settings, while bounded robustness [ 29 –32 ] and the stable blanket of [ 33 ] retain non-invariant features when shifts are assumed bounded or partially structured. Notably, relaxations outlined above still aim to be robust against a worst-case target distribution; albeit from a smaller family. In contrast, in the field of domain adaptation, which we describe below, the target distribution is viewed as fixed. If some target data is available, one has to compete with both source and target ERM, and robustness to worst-case target distributions may hurt generalization in 3presence of target data. 
+
+Domain adaptation. This related paradigm investigates to which extent access to some data from the target domain can improve transfer from the source distribution. The field is conventionally split into unsupervised (uDA) [ 34 –39 ] and supervised (sDA) [ 40 –45 ] regimes, with the latter additionally assuming a (typically small) labeled target sample, also referred to as transfer learning . Classical theory characterizes transferability through a distributional discrepancy between source and target [ 35 , 36 , 38 , 39 , 46 ], and shows that without further structure, adaptation is provably hard whenever this discrepancy is unrestricted [ 47 –49 ]. Such distance-based guarantees can be vacuous in regimes where the source-target shift is large but structurally constrained—precisely the regime in which causal invariances ought to help. Several methods inject structural assumptions into DA [ 50 – 53 ], but they predominantly target the unsupervised setting, require strict identifiability, and have been observed to suffer from label flipping when these assumptions fail [ 53 – 55 ]. Empirically, access to a handful of labeled target samples has been observed to substantially improve causality-based DA over pooled-source models [ 52 , 56 ], yet—to the best of our knowledge—no prior work provides finite-sample sDA bounds that quantify when, and by how much, partial causal knowledge accelerates adaptation with target samples. 
+
+Model selection aggregation. Our procedure builds on the model selection aggregation literature [ 57 , 58 ], which takes a fixed dictionary of candidate predictors and an i.i.d. sample from a single distribution, and outputs an aggregate whose risk is close to that of the best dictionary element. Crucially, improper aggregation procedures, such as exponential weights aggregation [ 59 –61 ], Q-aggregation [ 62 ], and the STAR estimator [ 60 , 63 ], attain the fast rate log |I| /n , in contrast to the slow rate plog |I| /n of naïve empirical risk minimization over the dictionary. The fast log |I| /n Q rate of aggregation allows us to convert risk margins between candidate models into the fast target sample complexity bounds of our main results. Standard aggregation results, however, neither address transfer between distributions nor permit the dictionary to depend on the data; we adapt them to a transfer setting in which candidates are first trained on source data and then aggregated on target. We discuss model aggregation more in Appendix D. 
+
+# 2 Setting 
+
+In this section we briefly introduce our supervised domain adaptation setting and notation, and give a short primer on causal graphs and shift mechanisms that the experienced reader is invited to skip. In Section 2.3 we discuss candidate set collections I that may be constructed using different degrees of causal knowledge. 
+
+## 2.1 Supervised domain adaptation setting 
+
+Given a feature space X ⊆ Rd and a label space Y ⊆ R, we denote by D any joint probability distribution over X × Y (also referred to as a domain ). We aim to find a hypothesis with a low average loss on a certain data domain. A loss ℓ : H × X × Y → R≥0 takes a hypothesis h : X → Y and a (feature, label)-pair (x, y ),and returns a non-negative penalty value. Throughout this paper, we focus on regression with the squared loss 
+
+ℓ(h, (x, y )) = ( h(x) − y)2. For any joint data distribution D and hypothesis h, we define the risk of h as 
+
+RD (h) = E(x,y )∼D [ℓ(h, (x, y ))] = ED [ℓ(h, (x, y ))] .
+
+Of special interest is the excess risk 
+
+ED (h; H) := RD (h) − inf  
+
+> h′∈H
+
+RD (h′),
+
+which expresses how much worse the hypothesis h is compared to the best choice in H. We also write ED (h)
+
+when H is clear from the context. Given a dataset DD = {(xi, y i)}ni=1 of n i.i.d. samples from D, we define the empirical risk bRD (h) := 1
+
+> n
+
+Pni=1 ℓ(h, (xi, y i)) and the empirical excess risk bED (h; H) := bRD (h) − min h′∈H bRD (h′).The learning setting we consider in this paper is supervised domain adaptation, sometimes also referred to as transfer learning: we have access to a finite dataset DP = {(xi, y i)}nP 
+
+> i=1
+
+containing nP i.i.d. samples from the 
+
+source distribution P and a (typically small) labeled dataset DQ = {(xi, y i)}nQ 
+
+> i=1
+
+from the target distribution Q.Whenever multiple source distributions {Pe}e∈E are available, we denote by P their mixture P 
+
+> e
+
+wePe, where 
+
+we > 0 is the probability of sampling from source Pe. The goal is to construct a procedure which depends on 
+
+DP and DQ, and outputs a hypothesis bh ∈ H with a low target excess risk EQ(bh).Our analysis focuses on the class of (bounded) linear functions h : X → Y as HB := {x 7 → ⟨ w, x ⟩ | w ∈ Rd, ∥w∥2 ≤
+
+B} where B ∈ [0 , ∞). We write H = HB when clear from the context. For an index set I ⊆ [d] = {1, ..., d },4denote by ΠI : X → X the projection onto the features XI . We define the restricted class HI = H ◦ ΠI ⊆ H ,that contains all linear functions only depending on features XI . We denote any feature-subset population and empirical risk minimizer as 
+
+hI,D ∈ arg min 
+
+> h∈H I
+
+RD (h) and bhI,D ∈ arg min 
+
+> h∈H I
+
+bRD (h). (1) 
+
+Definition 2.1. For two distributions D, D ′, we call a subset of indices I ⊆ [d] and the corresponding feature set XI (as well as its corresponding model hI,P ) (D, D ′)-invariant, if the following holds: 
+
+D(Y | XI ) = D′(Y | XI ).
+
+Further we have ED [Y | XI ] = ED′ [Y | XI ] and under the realizability assumption that ED [Y | XI ] ∈ H I , we also have hI,D = hI,D ′ .If one abstracts away how the candidate models are obtained from source data, supervised domain adaptation with a finite candidate set is closely related to the model selection aggregation literature. In its classical form, model selection aggregation considers a finite dictionary H = {hm : m ∈ [M ]} of predictors hm : X → R, together with an i.i.d. labeled sample D = {(Xi, Y i)}ni=1 from a distribution D. The goal is to output an aggregate predictor in the convex hull hagg ∈ Conv (H) whose risk is close to that of the best dictionary element. Our algorithm uses such aggregation procedures as subroutines, and our generalization bounds rely on well-known fast-rate guarantees from that literature. In particular, we use deviation-optimal aggregation procedures, which satisfy, with probability at least 1 − α,
+
+RQ(hagg ) ≤ min   
+
+> m∈[M]
+
+RQ(hm) + C log( M/α )
+
+n .
+
+We review several deviation-optimal aggregation procedures and their guarantees in Appendix D. 
+
+## 2.2 Causality Primer 
+
+This paper considers the setting where data might come from different domains. Whether data from some domains can be leveraged for prediction in another depends crucially on how the shifts between domains are modeled. Causality-based methods assume that domains share certain causal mechanisms, often formalized via a structural causal model (SCM). An SCM M over the observable variables V1, V 2, ..., V p is defined using a joint distribution over unobserved variables U and a set of structural equations or causal mechanisms ,
+
+Vi ← f Di (Vpa( Vi), Ui) i = 1 , ..., p, 
+
+where pa (Vi) ⊆ [d + 1] are called the parents or direct causes of Vi, and Ui ⊆ U is a subset of unobserved variables that affect Vi. For an SCM, its causal graph G is a graph with vertices V, a directed edge from Vi
+
+to Vj whenever i ∈ pa (Vj ), and a bi-directed edge between Vi and Vj whenever they are confounded , i.e., the noise vectors Ui and Uj are dependent. We assume that the causal graph is acyclic [ 64 ]. Further, we say that a distribution D over V := ( X1, ..., X d, Y ) has a causal structure if there exists an SCM MD over V characterized by causal mechanisms {f D 
+
+> 1
+
+, ..., f Dd , f DY } and a joint distribution DU over the noise variables, such that D is induced by the SCM MD .When we are dealing with different domains with distributions D and D′ that we believe to follow the structural causal models MD and MD′ respectively, one way to model their difference is to assume structural shifts , or causal mechanism shifts : that is, for some variables Vi ∈ { X1, ..., X d, Y }, their assignment function and/or their noise distribution differ across the domains, i.e. f Di̸ = f D′ 
+
+> i
+
+and/or the marginal distributions over the noise vectors 
+
+DUi̸ = D′ 
+
+> Ui
+
+. The domain discrepancy , or shift set S(D, D ′) ⊆ [d + 1] consists of all variables that experience structural shift across the domains. One prominent example of a shift set S(D, D ′) in the literature are the set of variables that are intervened on between D, D ′ [64 ], while the structural equations of all other variables are shared across D, D ′. When both domains only differ in terms of such structural shifts, one can represent both domains and the structural shift between them via a so-called selection diagram : it is constructed by augmenting the causal graph with a square node sD,D ′ that points to all shifted variables Vi with i ∈ S(D, D ′). See Figure 2 for the formal selection diagram that captures the example in Figure 1 described in the introduction. In the causal invariance literature, finding invariant (sometimes also referred to as stable) feature sets I (cf. Definition 2.1) is often considered the ultimate goal in the presence of unknown structural shifts. The rationale 5Figure 2: (Generally unknown) underlying causal structure of the data shared across source and target domains P
+
+and Q. The parents of Y are indicated in blue. The node sP,Q points to variables whose causal mechanisms shift from P to Q. The striped node X3 is the shifted child of Y . (b) Corresponding sufficient invariance collections for varying degrees of causal knowledge. Here, S(P, Q ) = {1, 2, 3}. The green singleton collection IS(P,Q ),G 
+
+corresponds to full knowledge of the causal graph G and the shift set S(P, Q ) = {1, 2, 3}. The yellow collection 
+
+IG corresponds to knowledge of the graph but not the shift. The orange collection IS(P,Q ),G corresponds to knowledge of the shift set and partial knowledge of the graph, where G = {G′ : 1 ∈ pa (Y ) in G′} (cf. Section 4.1) is discoverable using two source domains where only X1 shifts between them. Finally, the red collection IG
+
+corresponds to partial knowledge of graph G and no knowledge of the shift. The grey collection contains all feature subsets. is that the corresponding feature-subset minimizers in Equation (1) have controlled risk for any admissible target distribution. However, in practice, we often cannot guarantee full knowledge of the graph and structural shift, for example due to lack of heterogeneity in the source distributions. Instead, we sometimes can at most identify a few edges in the causal graph and only have partial knowledge about shift set. For instance, we could know that the structural equations of certain variables are definitely invariant between source and the target, while for some other variables they have possibly shifted. As a consequence, we may only be able to identify a collection of many possible invariant sets (only few of which are truly invariant for a particular target). Such a collection then reflects the remaining uncertainty about the causal graph and structural shift. 
+
+## 2.3 Collections of feature sets 
+
+One broad objective could be to find a collection of predictors (trained on the source distribution P ) that contains at least one predictor with bounded Q-risk. In this section we show how to construct such a candidate collection that reflects causal knowledge and in Section 3, we show how this collection can be used for supervised domain adaptation. Our main results in Section 3 however apply to any collection of feature-restricted source models, whether or not they follow the specific constructions discussed here and throughout the causal inference literature. Consider a collection of feature subsets I ⊆ 2[d], and the corresponding collection of feature-restricted source predictors hI,P . Recall that under the realizability assumption, it holds that hI,P = hI,Q for any (P, Q )-invariant 
+
+I ∈ I . The (P, Q )-invariance of feature-restricted models allows us to train a model on the source and safely use it for prediction in the target. However, no amount of source data alone can determine whether a feature subset I ⊆ [d] is (P, Q )-invariant, and therefore, access to knowledge of the causal graph and structural shift is necessary. Given the causal graph G and the shift set S(P, Q ) ⊆ [d], we could directly find (P, Q )-invariant models: For a feature set I ⊆ [d], if the label Y and the shift node sP,Q are d-separated given XI (denoted as 6Y ⊥d sP,Q | XI in G) then I is (P, Q )-invariant 1. However, the causal graph G is rarely fully known in advance. Instead, given the source P , one may still be able to partially discover the causal graph and obtain a set G of possible candidate graphs: for example, under the causal faithfulness assumption, we can use the source data 
+
+P to obtain the Markov Equivalence Class (MEC) of causal diagrams represented by a PAG/CPDAG [ 66 ]. A complementary line of work [ 67 ] quantifies the statistical uncertainty in discovery, returning valid confidence sets of causal orderings that can be translated into an uncertainty set of graphs G.We can now formally define a collection of most predictive invariant sets that depends on the degree of knowledge about the causal graph and the shift set. 
+
+Definition 2.2. We define the sufficient invariance collection as the collection of maximal feature subsets that could be (P, Q )-invariant under an admissible Q, and for different degrees of causal knowledge: 
+
+• Given full causal knowledge G and S(P, Q ), we have 
+
+Isuff = IS(P,Q ),G := I ⊆ [d] maximal such that Y ⊥d sP,Q | XI in G ,
+
+where I is maximal when ∄ I′ with I ⊊ I′ with Y ⊥d sP,Q | XI′ .
+
+• When the causal graph is only partially known, i.e., G ∈ G where G is a set of possible causal graphs, we have 
+
+Isuff = IS(P,Q ),G := [
+
+> G∈G
+
+IS(P,Q ),G .
+
+• When the shift set is partially known, e.g., one has access to S ⊆ 2[d] such that S(P, Q ) ∈ S , we define, 
+
+Isuff = IS,G := [
+
+> S∈S
+
+IS,G .
+
+• Finally, when both the causal graph and the shift set are partially known, encoded by G ∋ G, S ∋ S(P, Q ),we use 
+
+Isuff = IS,G := [
+
+> S∈S
+
+IS, G = [
+
+> G∈G
+
+IS,G .
+
+When no knowledge of the shift set is given at all, we write IG := I2[d],G and IG := I2[d],G as a shorthand. For an illustration of sufficient invariance collections, cf. Figure 2. In the absence of confounding (i.e., the Markovian setting), knowledge of the causal graph and the shift set is enough to obtain a single (P, Q )-invariant model with lowest Q-risk so that Isuff = {I} with I = [ d] \ S  
+
+> X∈Ch( Y)∩S(P,Q )
+
+De (X). This set has been referred to as the stable blanket in [ 33 ] and the maximum invariant set in [ 68 ]. In non-Markovian cases, however, even the full-knowledge sufficient invariance collection IS(P,Q ),G may contain as many as 2d/ 4 feature subsets [6]. From the domain adaptation perspective, a desirable property of a collection I of feature subsets is to contain 
+
+Q-predictive (P, Q )-invariant models, as we may then achieve a low Q-risk when we aggregate the collection of predictors I using the Q samples. The sufficient invariance collection defined in Definition 2.2 satisfies this property, that is, 
+
+min 
+
+> I∈I suff
+
+RQ(hI,P ) ≤ min   
+
+> (P,Q )-invariant I⊂[d]
+
+RQ(hI,P ) (2) for any degree of causal knowledge. 
+
+Construction of Isuff . In the case of partial causal knowledge, we may bypass the exhaustive iteration of finding IS(P,Q ),G over all graphs G ∈ G . For example, when we have a MEC, for every feature subset I ⊆ [d],one can test the membership IS(P,Q ),G using possible d-separation graphical criteria in the PAG/CPDAG that represents the MEC, cf., [ 69 , 70 ]. In the presence of heterogeneous source data distributions {P e}e∈E , where E
+
+denotes the set of source domains, we may use recent work (e.g., [ 1]) to identify some parents of Y – another way to induce a set G of possible graphs, as we will discuss next. Multi-source data can also be used to obtain Markov equivalence classes [71–73], which yield sufficient invariance collections akin to Definition 2.2. Besides the causal graph, the shift set S(P, Q ) ⊆ [d] may also be unknown. In the absence of any knowledge about S(P, Q ), we may simply choose S = 2 [d] ∋ S(P, Q ), resulting in Isuff = IG . Note that adding a parent   
+
+> 1The converse is not true in general, however, under the additional assumption of causal faithfulness [ 65 ] we can obtain a direct correspondence between d-separation and invariance.
+
+7to a feature subset that d-separates Y from sP,Q preserves d-separation. Therefore, due to maximality in Definition 2.2 all definite parents of Y in G must be included in every I ∈ I G , that is 
+
+Xi ∈ pa( Y ) for all G ∈ G =⇒ i ∈ \
+
+> I∈I G
+
+I. (3) 
+
+Alternative collections using multiple environments. Now note that Equation (3) can in fact be interpreted in the inverse direction: one can find parents of Y by finding sufficient invariance collections and considering their intersection. In fact, this approach is taken in Invariant Causal Prediction (ICP), which outputs an intersection of source-invariant subsets to gain (partial) knowledge of the causal parents and obtain a set G.The key difference is that the construction of that collection does not need explicit causal knowledge to begin with but is directly based on the invariance using the different domains. We now formalize these statements. More concretely, consider the setting where data from multiple source distributions {P e}e∈E is available, and let 
+
+P = P 
+
+> e∈E
+
+weP e denote the pooled source distribution. Suppose for every source index e ∈ E , the distribution 
+
+P e is generated by its own SCM over X, Y , and the structural equation of Y remains unchanged across all source and target SCMs. Now for every I ⊆ [d], one can verify whether the invariance hI,P e
+
+> ?
+
+= hI,P holds for all e ∈ E ,and this defines the following collection. 
+
+Definition 2.3. For a set of source domains E, we define the source-invariance collection of feature subsets as 
+
+Iinv (E) := {I ⊆ [d] such that I is (P e, P e′
+
+)-invariant ∀e, e ′ ∈ E} .
+
+where we usually omit the explicit dependence on E.Note that the source-invariance collection itself may not contain the most Q-predictive (P, Q )-invariant model (cf. Section 4.1), and therefore, does not satisfy Equation (2) and hence differs significantly from Isuff . However, it contains at least one (P, Q )-invariant model; so if that model happens to be Q-predictive, then we may gain in the supervised domain adaptation setting. In Appendix A we elaborate more on collections that have desirable properties for supervised domain adaptation. As mentioned earlier, a major advantage compared to sufficient invariance collection is that the (P e, P e′
+
+)-invariances are testable using source domains alone, without any 
+
+explicit knowledge about the SCM a priori. At the same time, one can also use Iinv to obtain partial knowledge — encoded via G — about the underlying graph, and, with that, build the corresponding sufficient invariance collection. In particular, akin to the converse of Equation (3), source-invariance collection can be used to reason about the possible parents of Y , that in turn gives rise to a set G of possible graphs. Invariant Causal Prediction (ICP) [ 1] takes the intersection of all feature subsets in the collection Iinv , which, under certain conditions, is guaranteed to contain definite parents of Y :
+
+IICP := \
+
+> I∈I inv
+
+I ⊆ pa( Y ) in all G ∈ G .
+
+With access to sufficiently diverse source domains, ICP is guaranteed to perfectly identify the parent set pa (Y ).In practice, the set IICP is often empty, or contains only a very small subset of the parents pa (Y ), e.g. when the source domains are not diverse enough or if Y is confounded. In contrast, under the same assumptions, the collection Iinv is guaranteed to contain a (P, Q )-invariant model even if the source heterogeneity is insufficient, making it a desirable object for adaptation. 
+
+# 3 Main results 
+
+In the previous section, we have introduced the concept of a collection of candidate invariants, and, as an example, discussed so-called sufficient invariance collections (cf. Definition 2.2). The remaining question is whether we can leverage any such collection and a (small) target sample DQ to obtain a model with low target risk; in particular, whether there exists a procedure depending on DP , DQ and I which results in much lower target risk than the retraining-on-target baseline bhQ. If so, we would like to quantify how many target samples are sufficient and necessary to benefit from knowledge of a collection I, and whether there are collections which enable especially fast target adaptation. The rest of this section is agnostic to the "causal nature" of the candidate collection 
+
+I. In particular, the following results are valid regardless of whether I contains a feature set with low target 8risk, or a (P, Q )-invariant feature set. We discuss how the degree of causal knowledge in I affects the resulting adaptation guarantees in linear SCMs in Section 4. Denote by HI := {bhI,P : I ∈ I} the collection of models resulting from training a feature-subset model bhI,P on DP
+
+for each candidate feature set I ∈ I . As a first thought, we might want to take the straightforward approach and output the best model given DQ, i.e., compute the empirical risk minimizer bhERM (HI ) ∈ arg min I∈I bRQ(bhI,P )
+
+over the finite collection of the candidate models bhI,P . This naive strategy has multiple drawbacks: first, empirical risk minimization over finite classes only guarantees a slow rate of the form plog( |I| )/n Q. Thus, the corresponding excess target risk guarantee for the naive approach would be 
+
+EQ(bhERM (HI )) ≤ min  
+
+> I∈I
+
+EQ(bhI,P ) + C
+
+s
+
+log |I| 
+
+nQ
+
+.
+
+In particular, if the collection is large, i.e. |I| = Θ(2 d), such an estimator is generally outperformed by the target linear model bhQ, which achieves the fast rate of linear regression EQ(bhQ) ≤ Creg d/n Q [ 74 ] (cf. Lemma E.2). Moreover, if all candidate models in HI have high target excess risk (for instance, in case of a large Y -shift, or bad estimation of hI,P caused by small nP or large covariate shift), bhERM is bound to have a high target risk even for very large nQ, where it is outperformed by the target baseline bhQ. These caveats imply that the potential disadvantage of bhERM compared to retraining on target data, also called negative transfer , is unavoidable. In the following sections, we show that it is possible to avoid negative transfer and achieve no worse than the best risk 
+
+min I∈I EQ(bhI,P ) in the collection given potentially a small amount of target samples, even if the collection I
+
+is large. Further, we show that a similar amount of target samples is necessary to benefit from a collection I.First, we outline a two-step adaptive procedure which achieves our target risk guarantees. 
+
+## 3.1 Adaptive procedure 
+
+We outline and discuss Algorithm 1, a theoretical procedure for supervised domain adaptation under partial knowledge of causal invariances in form of a collection I ⊆ 2[d] of candidate feature sets. 
+
+Input. We are given datasets DP and DQ from the source and target distributions, together with a collection of feature subsets I ⊆ 2[d] which induces a collection of feature-restricted linear models HI := {bhI,P : I ∈ I} 2.The algorithm receives a confidence level 0 < α < 1 and constants C1, C 2 > 0. We split the target dataset into two equal folds, D1 
+
+> Q
+
+and D2
+
+> Q
+
+. We state the steps of the procedure informally: 
+
+Step 1. Guard against negative transfer. In the first step, we use the first fold of the target data D1 
+
+> Q
+
+to retain all models which are guaranteed to have (population) target risk at most of the same order as the target ERM. The goal of Step 1 is to avoid negative transfer , i.e. outputting a model with a worse target risk compared to retraining. We refer to the retained set as H0acc . If H0acc is empty, bhQ is returned. 
+
+Step 2. Aggregate, refine and iterate. The second step can be performed once or iteratively. On D2
+
+> Q
+
+, we compute a model selection aggregate hagg (Hi
+
+> acc
+
+) over the current retain set Hi 
+
+> acc
+
+(cf. Appendix D for a discussion of different aggregation methods and their guarantees). We then reject any model whose bΣQ-weighted distance to the aggregate is not within the confidence band log |H i 
+
+> acc |
+> nQ
+
+, which corresponds to the convergence rate of the aggregate. Finally, we update the retain set Hi 
+
+> acc
+
+to exclude the rejected models. Iterative refinement stops when either no more models are rejected or the retain set is empty. In the following sections, we provide target generalization guarantees for Algorithm 1 and show how it allows for fast adaptation under favorable target risk margin conditions in the candidate collection HI .
+
+## 3.2 Supervised adaptation guarantees 
+
+Our adaptation guarantees rely on some distributional assumptions on the source and target domains that we discuss below.    
+
+> 2In the following, we assume that Iis always augmented by [d], i.e. our collection always includes the full-feature source model.
+
+9Algorithm 1 Two-step Adaptation via Iterative Localized Aggregation 
+
+Require: Source data DP = {(xi, y i)}i∈[nP ], target data DQ = {(xi, y i)}i∈[nQ] s.t. |D Q| ≥ 2 split into (D1
+
+> Q
+
+, D2
+
+> Q
+
+),collection of feature subsets I ⊆ 2[d], constants C1, C 2 > 0, confidence level 0 < α < 1. 
+
+> 1:
+
+Step 0: Split the data and compute models.  
+
+> 2:
+
+For each I ∈ I , compute the feature-subset model bhI,P using source data.  
+
+> 3:
+
+Define HI ← { bhI,P : I ∈ I} . 
+
+> 4:
+
+Split target data into two equal parts, D1 
+
+> Q
+
+and D2
+
+> Q
+
+. 
+
+> 5:
+
+Compute the target ERM bhQ on D1
+
+> Q
+
+. 
+
+> 6:
+
+Step 1: Guard against negative transfer.  
+
+> 7:
+
+On D1
+
+> Q
+
+, retain candidates within confidence band of bhQ: 
+
+> 8:
+
+H0acc ←
+
+n bhI,P : ∥bhI,P − bhQ∥2ˆΣQ
+
+≤ C1 d+log(1 /α )
+
+> nQ
+
+o
+
+. 
+
+> 9:
+
+if H0acc = ∅ then  
+
+> 10:
+
+return ˜h = bhQ 
+
+> 11:
+
+end if  
+
+> 12:
+
+Step 2: Aggregate, refine and iterate.  
+
+> 13:
+
+Iteratively reject models worse than their aggregate:  
+
+> 14:
+
+Set i ← 0 
+
+> 15:
+
+while true do  
+
+> 16:
+
+On D2
+
+> Q
+
+, compute model selection aggregate hagg (Hi
+
+> acc
+
+). 
+
+> 17:
+
+Retain candidates within confidence band of hagg (Hi
+
+> acc
+
+): 
+
+> 18:
+
+Hi+1 acc ← { bhI,P ∈ H i 
+
+> acc
+
+: ∥bhI,P − hagg (Hi
+
+> acc
+
+)∥2ˆΣQ
+
+≤ C2 log |H i 
+
+> acc |+log(1 /α )
+> nQ
+
+}. 
+
+> 19:
+
+if Hi+1 acc = ∅ then  
+
+> 20:
+
+return ˜h ∈ arg min bhI,P ∈H i
+
+> acc
+
+∥bhI,P − hagg (Hi
+
+> acc
+
+)∥2ˆΣQ 
+
+> 21:
+
+else if Hi+1 acc = Hi 
+
+> acc
+
+then  
+
+> 22:
+
+return ˜h = hagg (Hi
+
+> acc
+
+). 
+
+> 23:
+
+end if  
+
+> 24:
+
+i ← i + 1 . 
+
+> 25:
+
+end while 3.2.1 Distributional assumptions Assumption 3.1 (Boundedness) . For D ∈ { P, Q }, the covariates X are bounded with ∥X∥2 ≤ BX a.s., and 
+
+|Y | ≤ σY . Additionally, we consider the bounded linear hypothesis class HB with B < ∞, implying bounded restricted hypothesis classes HI for any feature subset I ⊆ [d].We note that Assumption 3.1 is widely regarded necessary to establish fast deviation-optimal guarantees for model selection aggregation of form log |H|  
+
+> n
+
+. Model selection aggregation is part of Algorithm 1 (cf. Algorithm 1, Step 2). Consequently, generalizations of aggregation guarantees to sub-Gaussian and heavy-tailed noise designs immediately establish our result in these settings. We provide more details on extensions beyond bounded designs in Appendix B and Appendix D. 
+
+Assumption 3.2 (Conditioning of covariances) . There exists λmin > 0 such that for D ∈ { P, Q }, the matrix 
+
+ΣD := ED [XX ⊤] is positive definite with λmin (ED [XX ⊤]) ≥ λmin .In particular, Assumption 3.2 implies that the quantity λmax := λmax (Σ −1 
+
+> P
+
+ΣQ), which is a measure of covariate shift between P and Q, is finite. 
+
+3.2.2 Upper bound 
+
+Denote by I⋆ ∈ arg min I∈I EQ(hI,P ) any best candidate feature set from I on Q in population, and by 
+
+ϵI⋆ := EQ(hI⋆,P ) its target excess risk (similarly, ϵI := EQ(hI,P ) for other candidates). We express our target risk guarantees in terms of the following key quantities. For any I ∈ I , a key quantity are the target risk margins 
+
+∆I := ϵI − ϵI⋆ .
+
+10 Further, the ∆I -estimation error due to having only nP source samples is captured by the residual 
+
+r(nP ) := λmax Creg 
+
+d + log( |H I |/α )
+
+nP
+
++ 2 
+
+s
+
+sup 
+
+> I∈I
+
+ϵI
+
+
+
+λmax Creg 
+
+d + log( |H I |/α )
+
+nP
+
+, (4) where Creg is the linear regression concentration constant as in Lemma E.2. We note that r(nP ) = O(pd/n P ),in particular, r(nP ) → 0 as nP → ∞ . Next, by Step 1 of Algorithm 1, our upper bounds inherit the fast rate of the excess risk of model selection aggregation for strongly convex losses ragg (nQ) := Cagg log |H 0acc |+log(1 /α ) 
+
+> nQ
+
+,where Cagg is the aggregation concentration constant (see Appendix D) and |H 0acc | ≤ |H I | ≤ 2d is the size of the accepted collection in Step 1 of Algorithm 1. In particular, this rate appears in the largest margin error incurred at (nP , n Q):
+
+∆max (nP , n Q) := sup ∆I : ∆ I ≤ c0(ϵI⋆ + ragg (nQ) + r(nP )) . (5) We can now state our main result. 
+
+Theorem 3.1. Let HI = {bhI,P : I ∈ I} be a collection of feature-subset linear models indexed by a collection 
+
+I. Let 0 < α < 1. Let ˜h be the output of Algorithm 1. Assume that nQ ≥ C(BX , λ min , d, α ) as in Lemma E.1, 
+
+C1 ≥ 4Creg and C2 ≥ 3Cagg . Then, under Assumptions 3.1 and 3.2, it holds with probability at least 1 − α:         
+
+> EQ(˜h)≤min
+> n
+> C d+ log(1 /α )
+> nQ
+> |{z }
+> T R
+> , ϵ I⋆
+> |{z}
+> BR
+> +∆ max (nP, n Q) + 3 r(nP)
+> |{z }
+> M E
+> o
+> ,
+
+where C, c 0 > 0 are universal constants. 
+
+We prove Theorem 3.1 in Section E.3.3. The upper bound in Theorem 3.1 is a minimum of two rates: T R (target rate), the convergence rate of the target linear model, and BR + M E (best risk + margin error), the target excess risk of the best candidate model plus a margin error term M E that converges to zero as nP , n Q → ∞ .
+
+M E corresponds to the largest risk margin not rejectable by the procedure. The T R term guarantees no negative transfer : the generalization error is never worse than the rate of the linear model which uses target data only and ignores source data. The second term in the minimum, BR + M E , represents the possibly much lower excess risk one could obtain by utilizing source data and partial causal structure as encoded in the candidate set collection I. In particular, if M E = 0 , we achieve the "best of both worlds" – the generalization guarantee is both never worse than that of the target model, and potentially as low as the lowest possible excess risk among candidate models from the collection I trained using source data only. In what follows, we refer to this as the "optimal" gain. For the following discussion, we assume that the excess risk of the best candidate model is small, ϵI⋆ ≲
+
+log |H 0acc |/n Q. We ask: in which sample size regimes and margin constellations can we successfully leverage access to a collection I – and its induced best target risk ϵI⋆ ? In other words, in which settings does the bound get close to the "optimal" gain min {T R, BR }? We observe that if the source data is sufficiently abundant such that r(nP ) ≲ log |H 0acc |/n Q, we achieve excess risk of at most ϵI⋆ up to the fast decreasing margin error 
+
+∆max (nP , n Q) + 3 r(nP ) ≲ log |H 0acc |/n Q. (6) Note that the resulting rate depends only on the size |H 0acc | of the accepted collection, which can be much smaller than the initial number of candidates |H I | that appears in the term r(nP ). In particular, if most models are "outperformed by the target baseline", in the sense that EQ(hI,P ) ≳ dnQ , then even for exponential-sized collections |H I | = 2 d, it may be that |H 0acc | = O(1) , resulting in the rate O(1 /n Q).We note that Theorem 3.1 requires a minimum number of target samples nQ ≥ C(BX , λ min , d, α ), where 
+
+C(BX , λ min , d, α ) = O
+
+ B2 
+
+> X
+> λmin
+
+log( dα )
+
+
+
+. In particular, Assumption 3.2 implies that nQ ≳ d log dα target samples are required for our generalization bound to hold. Although the minimum number of samples scales linearly in d,it does not depend on the excess risk which the bound potentially achieves: while the standard linear regression estimator requires nQ ≳ dϵ samples to achieve an excess risk of at most ϵ, in case of favorable margin structure, an arbitrarily low excess risk ϵI⋆ can be achieved via Theorem 3.1 given an amount of target samples which does not depend on ϵI⋆ . In particular, in such settings, our bound can enable few-shot learning : achievement of much lower excess risk than the target estimator given the same amount of samples. 11 3.2.3 Corollaries 
+
+For the rest of the discussion, we assume nP → ∞ for simplicity. Under the conditions of small excess risk ϵI⋆ , the amount nQ ≳ max { log |H 0acc |  
+
+> inf I∈I ∆I
+
+, C (BX , λ min , d, α )} of target samples suffice to achieve the excess risk ϵI⋆ of the best candidate model: In this case, we have ∆max (nP , n Q) = 0 so that the convergence rate 
+
+∆max (nP , n Q) + 3 r(nP ) = 0 . The following corollary directly follows from the theorem and illustrates how the margin determines the sample complexity in the two-model case. 
+
+Corollary 3.1 (Two models) . Let HI = {hI⋆,P , h I,P }. Recall the risk margin ∆I = ϵI −ϵI⋆ . There exist constants 
+
+0 < c 0 < 1, C0 > 0 such that if ϵI⋆ ≤ c0∆I , or ϵI⋆ ≤ C0ragg (nQ), and nQ ≳ max { log(1 /α )∆I , C (BX , λ min , d, α )}, it holds with probability at least 1 − α for the output ˜h of Algorithm 1 that 
+
+EQ(˜h) ≤ min 
+
+
+
+C d + log(1 /α )
+
+nQ
+
+, ϵ I⋆
+
+
+
+.
+
+In other words, given just nQ ≳ 1∆I target samples, it is possible to pick either the best candidate model or the target estimator. For instance, if the two-model collection consists of the source model hP and one identified invariant model hI,P , Corollary 3.1 allows us to pick the "best of both worlds", as opposed to the structure-agnostic transfer bound EQ( ˜h) ≤ min 
+
+n
+
+C d+log(1 /α ) 
+
+> nQ
+
+, EQ(hP )
+
+o
+
+in [ 45 ] involving just the source model. As we illustrate in Section 4, this allows gains w.r.t. the source model in large-shift scenarios, as well as w.r.t. the invariant model in small-shift scenarios. We can easily extend the spirit of the two model case to multiple models. In the following corollary, we illustrate an advantageous case for adaptation in which a group of " τ -optimal" models is separated from a group of much worse models by a large margin ∆τ :
+
+Corollary 3.2 (Adaptation with low- and high-risk models) . For τ ≥ ϵI⋆ , let ∆τ := inf ϵI >τ ϵI − sup ϵI′ ≤τ ϵI′ .There exists 0 < c 0 < 1, such that if τ ≤ c0∆τ and nQ ≳ max { log |H 0acc |+log(1 /α )∆τ , C (BX , λ min , d, α )}, with probability at least 1 − α it holds that 
+
+EQ(˜h) ≤ min 
+
+
+
+C d + log(1 /α )
+
+nQ
+
+, τ 
+
+
+
+.
+
+In other words, even if there is a large group of candidate models with target risk at most τ ≪ dnQ , nQ ≳ log |H 0acc |
+
+> ∆τ
+
+target samples suffice to achieve risk τ , and large margins ∆τ between groups of "good" and "bad" models enable fast adaptation even if the best model cannot be identified (cf. Figure 3). We show how this situation can occur under shared causal structure of the data and strong structural shifts in Section 4.1. 
+
+Figure 3: Guarantees for our procedure ˜h (shown in purple) in the case of Corollary 3.2. A small excess risk τ
+
+can be achieved given nQ ≳ log |H 0acc |/∆τ samples, provided ∆τ is sufficiently large. In particular, ˜h does not have to select the best model hI⋆,P to achieve the guarantee. 
+
+3.2.4 Comparison with naïve model selection and aggregation 
+
+We now discuss how some natural approaches, which utilize a collection of models for adaptation, generally result in slower rates than Theorem 3.1. As we have suggested earlier, one straightforward way of utilizing the candidate model collection HI is to simply perform ERM over these models using target data. Even if we 12 include a target model (trained on a separate target data split) as a candidate in our collection, we merely obtain 
+
+EQ(bhERM (HI )) ≤ min 
+
+
+
+Creg 
+
+d + log(1 /α )
+
+nQ
+
+, ϵ I⋆
+
+
+
++ C
+
+s
+
+log |I| 
+
+nQ
+
+.
+
+The slow rate 
+
+q log |I|  
+
+> nQ
+
+of ERM over models does not prevent negative transfer, depends on the – potentially very large - initial number |I| of candidate models, and is worse than our guarantee in most adaptation regimes (cf. Figure 4). A more advanced baseline—Step 1 of Algorithm 1 followed by ERM over the accepted models—results in margin error term of order 
+
+q log |H 0acc | 
+
+> nQ
+
+, a slow rate compared to the margin error incurred in Theorem 3.1. 
+
+Figure 4: Guarantees for our procedure ˜h (shown in purple), model aggregation hagg (HI ) (teal) and ERM over models bhERM (HI ) (yellow) are shown with respect to the excess risk of the best candidate model hI⋆,P . Excess risk guarantee for the target linear model bhQ is shown in red. Grey dots denote candidate models hI,P ∈ H I .The figure illustrates the scenario nP → ∞ , ϵI⋆ ≲ log |H 0acc |/n Q.Another line of well-developed literature [ 57 , 58 , 62 , 75 ] would suggest directly leveraging the candidate collection by more efficient model aggregation (cf. Appendix D) that can achieve an excess risk bound 
+
+EQ(hagg ) ≤ E Q(hI⋆,P ) + Cagg 
+
+log |H I |
+
+nQ
+
+.
+
+Again, the initial number of models |H I | can be much larger than |H 0acc | which enters our rate via ragg (nQ).Further, our margin error ∆max (nP , n Q) is upper bounded by the aggregation rate in case of small ϵI⋆ . Addi-tionally, it can in fact be zero, and thus much smaller than the aggregation rate (cf. Figure 4) in case the risk margins ∆I to the other candidates are sufficiently large (cf. Corollary 3.1 and Corollary 3.2). 
+
+## 3.3 Lower bounds 
+
+In the following lower bounds, we show necessity of our margin-driven sample complexity nQ ≳ 1/∆ in the two model case |I| = 2 . For brevity, we assume nP = ∞ and note that the lower bounds trivially hold for 
+
+nP < ∞. For a fixed best excess target risk ϵ1 ≥ 0 and margin ∆ ≥ 0, consider the family Σ( ϵ1, ∆, I) of pairs of distributions (P, Q ) on Rd × R for which there exists a collection I = {I1, I 2} s.t. 
+
+min {E Q(hI1,P ), EQ(hI2,P )} ≤ ϵ1;max {E Q(hI1,P ), EQ(hI2,P )} ≤ ϵ1 + ∆ .
+
+In other words, we consider all pairs of distributions (P, Q ) for which there exists a feature-set collection 
+
+I = {I1, I 2} such that the best candidate model trained on P has target excess risk at most ϵ1, and the second-best candidate model has target excess risk at most ϵ1 + ∆ .First, we outline a lower bound for all selector algorithms, i.e., all algorithms which can output either hI1,P or 
+
+hI2,P . We implicitly assume max {ϵ1, ϵ 1 + ∆ } ≲ dnQ , as we are interested in the optimality of selection of the candidate models, as opposed to interpolation between the candidates and the target model. For latter, we refer to the lower bound in [45]. 
+
+Theorem 3.2 (Selection lower bound) . Let d ≥ 3. Consider the family Σ( ϵ1, ∆) of pairs of distributions (P, Q )
+
+on Rd × R. Given datasets DP , DQ, consider any selector algorithm A : DP × D Q × { I1, I 2} → { hI1,P , h I2,P }.There exist constants c0, c 1 > 0 such that if nQ ≤ c0/∆,
+
+inf  
+
+> A
+
+sup 
+
+> Σ
+
+Q(EQ(A) ≥ ϵ1 + ∆) ≥ c1.
+
+13 We prove Theorem 3.2 in Appendix E.4. Theorem 3.2 implies tightness of our upper bound in the target sample size nQ for selector algorithms, as well as necessity of the margin-driven target sample complexity nQ ≳ 1/∆. In words, any selector algorithm, if given nQ ≲ 1/∆ samples, necessarily incurs the target risk ϵ1 + ∆ of the worst candidate model. In particular, our lower bound outlines a regime in which there is indeed no benefit of causal knowledge in the form of the collection I compared to unstructured sDA which picks a single model from the collection (source model): the resulting guarantees are trivially upper bounded by the risk of the worst model in the collection. Next, we state our information-theoretic lower bound, which holds for any algorithm not limited to selectors. 
+
+Theorem 3.3 (Information-theoretic lower bound) . Consider the family Σ( ϵ1, ∆) and any learning algorithm A
+
+with domain DP × D Q × { I1, I 2}. There exist constants c1, c 0 > 0 such that if nQ ≤ c0/∆,
+
+inf  
+
+> A
+
+sup 
+
+> Σ
+
+Q(EQ(A) ≥ 18 ∆) ≥ c1.
+
+We prove Theorem 3.3 in Section E.4.2. Theorem 3.3 shows that no learning algorithm, even improper, can utilize the candidate models for adaptation beyond the risk margin error ∆ if nQ ≲ 1/∆. We conclude that our upper bound is tight in the regime ϵ1 ≲ ∆ and |H 0acc | = O(1) .In total, our lower bounds Theorem 3.2 and Theorem 3.3 show optimality of the 1/∆ margin dependence of our generalization upper bound. Further, they illustrate an important scenario in which we indeed cannot benefit 
+
+from partial knowledge of causal invariances: whenever the margins ∆ are not sufficiently large with respect to the target sample size nQ, or, equivalently, not enough target samples are observed to distinguish predictive and non-predictive candidates, an excess risk price of order ∆ has to be paid. Still, our results leave open the question whether the log |H 0acc | dependence on the number of accepted candidates is necessary or can be further reduced, for instance, in large-margin scenarios such as Corollary 3.2. We leave this as an open question for future work. 
+
+# 4 Benefits of causal invariance for sDA 
+
+In this section, we instantiate and interpret the bounds in Section 3 in concrete causal examples, in particular, in the case of full and partial causal knowledge. We specifically focus on risk margins and their relation to structural shift magnitude, as discussed in causal finite robustness literature [29, 30]. 
+
+## 4.1 Toy causal example 
+
+Recall the skin cancer example illustrated in Figure 1. We can formalize it as a regression problem with features 
+
+X = ( X1, X 2, X 3, X 4) ∈ R4 and label Y ∈ R. Assume that the source and target distributions P, Q are generated by the following linear structural causal models (SCMs) indexed by D ∈ { P, Q }:
+
+U1,U 2, U 3, U 4, U Yi.i.d. 
+
+∼ Unif([ −√3, √3]) 
+
+X1 = U1 + μD, 1, X2 = U2 + μD, 2, (7) 
+
+Y = X1 + X2 + UY , X3 = Y + U3 + μD, 3,X4 = Y + U4 + μD, 4.
+
+Evident from the structural equations above, the feature Xi shifts between domains D, D ′ if μD,i ̸ = μD′,i .Suppose μQ, 4 = μP, 4, while μQ,i − μP,i = t > 0 for i ∈ { 1, 2, 3}, i.e., the causal mechanism of X4 is shared across source and target domains, whereas X1, X 2, X 3 each undergo a structural shift of magnitude t. In this sense, the shift set is S(P, Q ) = {1, 2, 3}, and the corresponding selection diagram is shown in Figure 2 (a). Depending on the shift magnitude t, different feature-subset models achieve best risk on Q: for instance, if t = 0 , we have trivially P = Q and hP corresponds to the best predictor. More concretely, the “causal” predictor h{1,2},P on the parents pa (Y ) = {1, 2} of the label Y is (P, Q )-invariant, and thus – for the linear SCMs in Equation (7) – it has 
+
+invariant risk RQ(h{1,2},P ) = RP (h{1,2},P ) = 1 regardless of the target shift strength t, and even regardless of the shift set S(P, Q ). However, since S(P, Q ) = {1, 2, 3}, there exists another (P, Q )-invariant feature set {1, 2, 4},which allows us to achieve an even better target risk RQ(h{1,2,4},P ) = 1 /2 regardless of the shift strength t. In contrast, the full-feature model hP attains potentially unbounded target risk RQ(hP ) = 1 /3 + t2/9. At the same time, for small shifts t ≤ p3/2 , the full-feature model outperforms both invariant models (cf. Figure 5). 14 (a) Source subset models and ˜h for Iinv . (b) ˜h compared with bhQ for nQ = 4 . (c) ˜h compared with bhQ for nQ = 8 .
+
+Figure 5: Target risk for the toy example in Equation (7) as a function of the shift size t. (a) Population target risks of the candidate feature-subset models trained on P (nP = 1000 ): hP (orange), h{1},P (brown), h{1,2},P 
+
+(blue), h{1,2,4},P (green); dashed purple line: Bayes risk RQ(hQ) = 1 /3. Overlaid in black are two instances of Algorithm 1 on Iinv at nQ ∈ { 4, 8} (light shade for nQ = 4 , dark shade for nQ = 8 ). (b) ˜h at nQ = 4 across three candidate collections: Isuff ∪ { [d]} (green), Iinv (black), Inone = 2 [d] (blue); the target-only baseline bhQ at 
+
+nQ = 4 in orange (dashed). (c) Same as (b), at nQ = 8 . Each curve is the smoothed median across 3000 runs; the shaded band is the 16 th– 84 th percentile of RQ(bhr ) over runs. 
+
+Comparison with prior work. As discussed in Section 2.3, prior work in causality-based DG often relies on invariance tests on multi-source data. Suppose in this example, we have data from two source domains, 
+
+P 1 and P 2 that are generated by the template Equation (7), with μP 1,1 − μP 2,1 > 0, and μP 1,i = μP 2,i for 
+
+i ∈ { 2, 3, 4}. This means that the cross-source shift set is S(P 1, P 2) = {1} and the source-target shift set is 
+
+S(P, Q ) = {1, 2, 3}. By testing invariance across the sources, we will obtain the source-invariance collection 
+
+Iinv = {I ⊆ [d] : {1} ⊆ I}, and consequently IICP = {1} that corresponds to the model h{1},P with unbounded target risk (cf. Figure 5), i.e., the subset of parents of Y discovered by ICP is not (P, Q )-invariant. Additionally, other multi-source domain generalization methods such as IRM [ 3], VREx [ 76 ] and groupDRO [ 77 ] all coincide with the source model hP which also has unbounded target risk (cf. Figure 5). In contrast, in our example, the collection Iinv satisfies Equation (2) regardless of the magnitude of the shift t > 0, since it contains the most 
+
+Q-predictive (P, Q )-invariant model h{1,2,4},P .We now discuss how this picture changes when we are given a limited amount of target data from Q, and how the bound in Theorem 3.1 applies to our toy example. 
+
+Two-model collection. We first consider the simplest case in which both the causal graph and the shift set 
+
+S(P, Q ) = {1, 2, 3} are known, but the shift magnitude t is not. Under full causal knowledge, the sufficient invariance collection (cf. Section 2.3) reduces to the singleton Isuff = {{ 1, 2, 4}} ; we augment it with the full feature set [d] as a baseline, giving the two-element collection Isuff ∪ { [d]} = {{ 1, 2, 4}, [d]} and the corresponding two-model dictionary HI = {h{1,2,4},P , h P }. Recall from above that, for any such target Q,
+
+RQ(h{1,2,4},P ) = 1 /2, RQ(hP ) = 13 + t2
+
+9 .
+
+First, consider the small shift case t ≤ p3/2, in which case hP is the best model. For the SCM in Equation (7), additive shifts leave the residual structure intact, so RQ(hQ) = 1 /3 at every t and the two-model excess risks are EQ(hP ) = t2/9 and EQ(h{1,2,4},P ) = 1 /6. Then, the risk margin is ∆ = 1 /6 − t2/9 and for nQ ≳ 1/∆, the procedure in Algorithm 1 correctly selects the full-feature source model and achieves the best target excess risk 
+
+EQ( ˜h) = EQ(hP ) as long as EQ(hP ) = t2/9 ≲ 1/n Q (cf. Corollary 3.1). In particular, for very small shifts t,the procedure achieves near-zero excess risk given a constant nQ. Next, consider the large shift case t ≥ p3/2,resulting in the invariant model h{1,2,4},P as the best model. The risk margin is ∆ = t2/9 − 1/6 = Θ( t2) and the excess target risk of the invariant model is the constant EQ(h{1,2,4},P ) = 1 /6. Thus, in the target sample regime 
+
+1/t 2 ≲ nQ, our procedure achieves the low target risk of the best invariant model EQ( ˜h) = EQ(h{1,2,4},P ) = 1 /6.This shows how large shifts t result in large risk margins and thus enable fast adaptation – excess risk capped at a constant given only nQ ≳ 1/t 2 target samples, while structure-agnostic procedures incur the unbounded source-model risk RQ(hP ) = 1 /3 + t2/9.
+
+Adaptation using multiple source domains. Returning to the multi-source setting introduced above, 15 suppose we now additionally observe a few target samples from Q. Recall that cross-source invariance testing yields only the source-invariance collection Iinv = {I : {1} ⊆ I}, since it cannot distinguish which features beyond X1 are stable from source to target. Within Iinv , the two (P, Q )-invariant models h{1,2},P and h{1,2,4},P 
+
+have the stable target risks 1 and 12 , while every remaining candidate has target risk scaling as Θ( t2). For large shifts t, this separation between “stable-risk” and “unstable-risk” models places us in the regime of Corollary 3.2 with the “stable-risk threshold” τ ≤ 23 and margin ∆τ = Θ( t2). For the adaptive procedure, Corollary 3.2 then implies: If nQ ≳ 1
+
+t2 , EQ(˜h) ≤ 23 .
+
+Whether the procedure can further refine “an invariant” to “the best invariant” model — i.e., improve from the parents-based model h{1,2},P to the true best (P, Q )-invariant model h{1,2,4},P — depends on the risk margin 
+
+1/2 between the two, which does not increase with the shift strength t.We illustrate these regimes empirically in Figure 5. Figure 5 (a) shows two instances of Algorithm 1 on the cross-source invariance collection Iinv at nQ ∈ { 4, 8} together with the four source candidate models: at small shifts, the algorithm selects hP ; at large shifts, the margin grows as Θ( t2) and the procedure switches to the maximal-invariant h{1,2,4},P . The two nQ values differ in the intermediate-shift regime: nQ = 4 target samples do not suffice to iteratively prune the eight candidates in Iinv ; at nQ = 8 the band is much tighter and the excess risk is markedly smaller. In Figure 5 (b) and (c), the collection is varied across Isuff ∪ { [d]}, Iinv and 
+
+Inone = 2 [d], at nQ = 4 (panel (b)) and nQ = 8 (panel (c)). Three regimes are visible. (i) Small shifts. For both 
+
+nQ values the three algorithm curves nearly coincide and track RQ(hP ) = 1 /3 + t2/9: in every collection, hP
+
+has the lowest target risk and is well separated from the invariants by the constant margin ∆ = 1 /6 − t2/9, so the procedure falls back to the source model. (ii) Medium shifts . The risks of the non-invariant candidates scale as Θ( t2) (cf. Corollary 4.1); at nQ = 4 such candidates cannot be reliably pruned, and the algorithm climbs above the invariant baseline, more so the larger the collection, with a hump roughly ordered by collection size. At nQ = 8 the bands tighten and the three curves move toward the invariant baseline. (iii) Large shifts. The risk margin Θ( t2) is now large enough that even Inone ’s iterative filter rejects hP and the other non-invariant models at both nQ values, and all three curves converge to RQ(h{1,2,4},P ) = 1 /2.In the next section, we generalize our observations made on the toy SCM example to all linear SCMs under additive shifts. 
+
+## 4.2 Supervised adaptation bound for linear SCMs under additive shifts 
+
+In this section, we show that our toy example illustrates a phenomenon which holds for a general type of shared causal structure, namely when the data (X, Y ) are generated by a linear Markovian structural causal model and 
+
+P and Q differ via an additive shift . More concretely, we fix a DAG over the variables V = ( X, Y ) ∈ Rd. Let 
+
+B ∈ R(d+1) ×(d+1) be a weighted adjacency matrix such that Bij = 0 whenever i / ∈ pa (Vj ) and U ∈ Rd+1 a vector of independent unobserved variables with EP [U ] = EQ[U ] = 0 , Var P (U ) = Var Q(U ) = Σ := diag (σ21 , ..., σ 2
+
+> d
+
+, σ 2 
+
+> Y
+
+).The SCM is given by 
+
+V = BV + U + tA D , (8) where w.l.o.g. AP = 0 P -a.s., and AQ is a random variable satisfying U ⊥ AQ, EQ[AQ] = μ with ∥μ∥2 = 1 
+
+and Var Q(AQ) = H = diag (η). Hence, EQ[tA Q] = tμ and Var Q(tA Q) = t2H. In other words, for t > 0, tA Q is a (random) additive shift with varying shift strength t. If H = 0 , it reduces to a deterministic mean shift as illustrated in our toy example. Let S(P, Q ) ⊂ [d] be the shift set from P to Q. Observe that in μ, η the non-zero indices are a subset of S(P, Q ). As before, we augment the causal graph with the shift node sP,Q pointing to nodes in S(P, Q ) (cf. Section 2.2). The following supervised adaptation guarantee illustrates how the magnitude of additive shifts in linear SCMs influences the risk margin structure between the candidate models: 
+
+Corollary 4.1 (Linear SCMs under additive shifts) . Assume that P and Q follow the data-generating process (8) 
+
+and nP = ∞. Consider a collection I ⊆ 2[d] of feature sets and the corresponding collection HI of feature-subset models hI,P . Define the sub-collection Isep := {I ∈ I : Y ⊥d sP,Q | XI }, which are (P, Q )-invariant feature sets in I. Then, for all (B, Σ, μ ) except a measure-zero set, it holds for the target risks of the candidate models: 
+
+RQ(hI,P ) = RP (hI,P ) if I ∈ I sep ;
+
+RQ(hI,P ) = RP (hI,P ) + Θ( t2) otherwise. 
+
+16 10 15 20 25 30 35 40 
+
+> Target sample size
+> 1000
+> 2000
+> 3000
+> 4000
+> 5000
+> 6000
+> MAE
+> Source ERM
+> Target model
+> Oracle target
+> ICP (intersection)
+> Anchor regression
+> ERM
+> Our method
+
+(a) Causal Chambers experiment. 10 20 30 40 50 60  
+
+> Target sample size
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> 0.18
+> 0.20
+> 0.22
+> 0.24
+> MSE
+> Source model
+> Target model
+> ICP (intersection)
+> Anchor regression
+> ERM
+> Our method
+
+(b) Gene expression experiment. 
+
+Figure 6: Target error (MAE and MSE, respectively) of the source and target model, causal DG methods, naive ERM and our procedure as a function of labeled target sample size nQ. Results are averaged over 50 and 20 
+
+runs, respectively. Shaded regions indicate standard error across runs. 
+
+In particular, for nQ ≳ max { log |I|  
+
+> t2
+
+, C (BX , λ min , d )}, we have 
+
+RQ(˜h) ≤ sup 
+
+> I∈I sep
+
+RP (hI,P ).
+
+We prove Corollary 4.1 in Appendix E.5. Corollary 4.1 instantiates the setting of low- and high-risk models in Corollary 3.2 with τ = sup I∈I sep RP (hI,P ) and ∆τ = Θ( t2). In particular, we observe how large additive shifts separate a collection I into "stable" and "unstable" models with either invariant or large risk. Target adaptation is then governed by the worst-case target risk among (P, Q )-invariant models in the collection I. This illustrates the influence of increasing causal knowledge on the speed of adaptation: knowing both the graph and the shift set enables us to have as little as one (P, Q )-invariant model in the collection, resulting in small target risk in Corollary 4.1. In contrast, if the causal graph and/or the shift set are not known, sufficient invariance collections can include many more (P, Q )-invariant models, resulting in more pessimistic risk guarantees even under large additive shifts. 
+
+# 5 Experiments 
+
+In this section, we outline real-world experiments in which we utilize varying collections of candidate feature sets for supervised domain adaptation on new target domains. 
+
+## 5.1 Causal Chamber data 
+
+We consider the light tunnel collection of datasets from the Causal Chamber benchmark [ 78 ]. The light tunnel dataset contains sensor recordings in a real-world physical system, and is comprised of one observational domain as well as multiple domains arising through interventions on concrete parts of the light tunnel. We take 3
+
+available domains as source domains and a previously unseen interventional domain as a target domain. We consider the collection of candidate models {bhI,P : I ∈ I inv } satisfying invariances across multiple domains as described in Section 2.3. We sample a few datapoints from the target domain and evaluate the target risk of some DG baselines (such as ICP intersection [ 1] and anchor regression [ 29 ]), naive DA baselines, as well as our adaptive procedure. The results are shown in Figure 6 (a). Full details of the light tunnel experiment and implementation of our algorithm can be found in Section C.1.1. 
+
+## 5.2 Gene expression data 
+
+We consider a subset of the RPE1 single-cell gene expression dataset [ 79 ], which contains expression levels of the 
+
+10 most highly expressed genes in the circuit. We consider a randomly selected gene as the target variable Y .As source domains, we pick the observational domain and 3 randomly selected interventional domains. Since 17 the considered gene subnetwork is a highly confounded system with many unobserved variables, we find that no candidate sets are accepted by ICP. Therefore, we resort to the collection Inone = 2 [d] that corresponds to no causal knowledge of the shift set or the graph, and is trivially guaranteed to contain the most Q-predictive invariant model (cf. Equation (2)). We fit the corresponding 512 linear models on source data. We evaluate multiple DG and DA baselines as well as our procedure given an increasing amount nQ of available labeled target samples. Our results are shown in Figure 6 (b). Full details of the gene expression experiment can be found in Appendix C.2. Finally, in Section C.1.2, we explore a generalization of our causal domain adaptation setting beyond linear feature-subset models. Using the Causal Chamber image dataset [ 78 ], we construct a collection of candidate linear probes on pretrained CLIP embeddings. We describe the results and details of our image regression experiment in Section C.1.2. 
+
+# 6 Outlook 
+
+In this work, we studied linear supervised domain adaptation under partial knowledge of the shared causal structure. We showed 1) how access to a dictionary of potentially invariant models can improve supervised adaptation; 2) access to some target data can weaken the strict assumption-reliance of causality-based domain generalization methods. We put the notion of causal invariance in a finite-sample setting and demonstrated how the finite-sample effects of both source and target data cannot be ignored when utilizing causal invariance for generalization. We discuss promising future directions and potential extensions of our work in Appendix B. 
+
+# 7 Acknowledgments 
+
+JK was supported by the SNF grant number 204439. We thank Tobias Wegel and Linus Kuehne for helpful discussions. This work is a result of collaboration which started while JK, KJ, SK and FY were visiting the Simons Institute for the Theory of Computing. 18 References 
+
+[1] Jonas Peters, Peter Bühlmann, and Nicolai Meinshausen. Causal inference by using invariant predic-tion: identification and confidence intervals. Journal of the Royal Statistical Society Series B: Statistical Methodology , 78(5):947–1012, 2016. [2] Mateo Rojas-Carulla, Bernhard Schölkopf, Richard Turner, and Jonas Peters. Invariant models for causal transfer learning. The Journal of Machine Learning Research , 19(1):1309–1342, 2018. [3] Martin Arjovsky, Léon Bottou, Ishaan Gulrajani, and David Lopez-Paz. Invariant risk minimization. arXiv preprint arXiv:1907.02893 , 2019. [4] Elias Bareinboim and Judea Pearl. Transportability from multiple environments with limited experiments: Completeness results. Advances in neural information processing systems , 27, 2014. [5] Peter Bühlmann. Invariance, causality and robustness. Statistical Science , 35(3):404–426, 2020. [6] Kasra Jalaldoust and Elias Bareinboim. Transportable representations for domain generalization. Proceedings of the AAAI Conference on Artificial Intelligence , 38(11):12790–12800, Mar. 2024. [7] Hidetoshi Shimodaira. Improving predictive inference under covariate shift by weighting the log-likelihood function. Journal of Statistical Planning and Inference , 90(2):227–244, 2000. [8] Masashi Sugiyama, Matthias Krauledat, and Klaus-Robert Müller. Covariate shift adaptation by importance weighted cross validation. Journal of Machine Learning Research , 8(5), 2007. [9] Amos Storkey. When training and test sets are different: characterizing learning transfer. 2008. [10] Zachary Lipton, Yu-Xiang Wang, and Alexander Smola. Detecting and correcting for label shift with black box predictors. In International conference on machine learning , pages 3122–3130. PMLR, 2018. [11] Saurabh Garg, Yifan Wu, Sivaraman Balakrishnan, and Zachary Lipton. A unified view of label shift estimation. Advances in Neural Information Processing Systems , 2020. [12] Stuart S Glennan. Mechanisms and the nature of causation. Erkenntnis , 44(1):49–71, 1996. [13] Peter Machamer, Lindley Darden, and Carl F Craver. Thinking about mechanisms. Philosophy of science ,67(1):1–25, 2000. [14] Judea Pearl and Elias Bareinboim. Transportability of causal and statistical relations: A formal approach. In 2011 IEEE 11th International Conference on Data Mining Workshops , pages 540–547, 2011. [15] Juan D Correa and Elias Bareinboim. From statistical transportability to estimating the effect of stochastic interventions. In IJCAI , pages 1661–1667, 2019. [16] Juan Correa and Elias Bareinboim. General transportability of soft interventions: Completeness results. 
+
+Advances in Neural Information Processing Systems , 33:10902–10912, 2020. [17] Rune Christiansen, Niklas Pfister, Martin Emil Jakobsen, Nicola Gnecco, and Jonas Peters. A causal framework for distribution generalization. IEEE Transactions on Pattern Analysis and Machine Intelligence ,44(10):6614–6630, 2021. [18] Christina Heinze-Deml, Jonas Peters, and Nicolai Meinshausen. Invariant causal prediction for nonlinear models. Journal of Causal Inference , 6(2):20170016, 2018. [19] Biwei Huang, Kun Zhang, and Bernhard Schölkopf. Invariant causal prediction for nonlinear models. Journal of Causal Inference , 8(1):350–367, 2020. [20] Jindong Wang, Cuiling Lan, Chang Liu, Yidong Ouyang, Tao Qin, Wang Lu, Yiqiang Chen, Wenjun Zeng, and Philip Yu. Generalizing to unseen domains: A survey on domain generalization. IEEE Transactions on Knowledge and Data Engineering , 2022. [21] Yoav Wald, Amir Feder, Daniel Greenfeld, and Uri Shalit. On calibration and out-of-domain generalization. In A. Beygelzimer, Y. Dauphin, P. Liang, and J. Wortman Vaughan, editors, Advances in Neural Information Processing Systems , 2021. 19 [22] Krikamol Muandet, David Balduzzi, and Bernhard Schölkopf. Domain generalization via invariant feature representation. In International conference on Machine Learning , pages 10–18. PMLR, 2013. [23] Ya Li, Mingming Gong, Xinmei Tian, Tongliang Liu, and Dacheng Tao. Domain generalization via conditional invariant representations. In Proceedings of the AAAI conference on artificial intelligence ,volume 32, 2018. [24] Ishaan Gulrajani and David Lopez-Paz. In search of lost domain generalization. In International Conference on Learning Representations , 2021. [25] Vivian Yvonne Nastl and Moritz Hardt. Do causal predictors generalize better to new domains? In The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. [26] Shanmukha Ramakrishna Vedantam, David Lopez-Paz, and David J. Schwab. An empirical investigation of domain generalization with empirical risk minimizers. In A. Beygelzimer, Y. Dauphin, P. Liang, and J. Wortman Vaughan, editors, Advances in Neural Information Processing Systems , 2021. [27] Kasra Jalaldoust, Alexis Bellot, and Elias Bareinboim. Partial transportability for domain generalization. In The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. [28] Julia Kostin, Nicola Gnecco, and Fanny Yang. Achievable distributional robustness when the robust risk is only partially identified. Advances in Neural Information Processing Systems , 37:83915–83950, 2024. [29] Dominik Rothenhäusler, Nicolai Meinshausen, Peter Bühlmann, and Jonas Peters. Anchor regression: Heterogeneous data meet causality. Journal of the Royal Statistical Society Series B: Statistical Methodology ,83(2):215–246, 2021. [30] Xinwei Shen, Peter Bühlmann, and Armeen Taeb. Causality-oriented robustness: exploiting general additive interventions. arXiv preprint arXiv:2307.10299 , 2023. [31] Lucas Kook, Beate Sick, and Peter Bühlmann. Distributional anchor regression. Statistics and Computing ,32(3), May 2022. [32] Martin Emil Jakobsen and Jonas Peters. Distributional robustness of K-class estimators and the PULSE. 
+
+The Econometrics Journal , 25(2):404–432, 2022. [33] Niklas Pfister, Evan G Williams, Jonas Peters, Ruedi Aebersold, and Peter Bühlmann. Stabilizing variable selection and regression. The Annals of Applied Statistics , 15(3):1220–1246, 2021. [34] Ievgen Redko, Emilie Morvant, Amaury Habrard, Marc Sebban, and Younès Bennani. A survey on domain adaptation theory: learning bounds and theoretical guarantees. arXiv preprint arXiv:2004.11829 , 2020. [35] Shai Ben-David, John Blitzer, Koby Crammer, and Fernando Pereira. Analysis of representations for domain adaptation. In B. Schölkopf, J. Platt, and T. Hoffman, editors, Advances in Neural Information Processing Systems , volume 19. MIT Press, 2006. [36] Shai Ben-David, John Blitzer, Koby Crammer, Alex Kulesza, Fernando Pereira, and Jennifer Wortman Vaughan. A theory of learning from different domains. Machine learning , 79:151–175, 2010. [37] Corinna Cortes, Yishay Mansour, and Mehryar Mohri. Learning bounds for importance weighting. In J. Lafferty, C. Williams, J. Shawe-Taylor, R. Zemel, and A. Culotta, editors, Advances in Neural Information Processing Systems , volume 23. Curran Associates, Inc., 2010. [38] John Blitzer, Ryan McDonald, and Fernando Pereira. Domain adaptation with structural correspondence learning. In Proceedings of the 2006 Conference on Empirical Methods in Natural Language Processing ,pages 120–128, 2006. [39] Yishay Mansour, Mehryar Mohri, and Afshin Rostamizadeh. Domain adaptation with multiple sources. In 
+
+Advances in Neural Information Processing Systems , volume 21. Curran Associates, Inc., 2008. [40] John Blitzer, Sham Kakade, and Dean Foster. Domain adaptation with coupled subspaces. In Proceedings of the Fourteenth International Conference on Artificial Intelligence and Statistics , volume 15 of Proceedings of Machine Learning Research , pages 173–181. PMLR, 2011. 20 [41] Rita Chattopadhyay, Wei Fan, Ian Davidson, Sethuraman Panchanathan, and Jieping Ye. Joint transfer and batch-mode active learning. In Sanjoy Dasgupta and David McAllester, editors, Proceedings of the 30th International Conference on Machine Learning , volume 28 of Proceedings of Machine Learning Research ,pages 253–261, Atlanta, Georgia, USA, 17–19 Jun 2013. PMLR. [42] Liu Yang, Steve Hanneke, and Jaime Carbonell. A theory of transfer learning with applications to active learning. Machine Learning , 90, 02 2013. [43] Avishek Saha, Piyush Rai, Hal Daumé, Suresh Venkatasubramanian, and Scott L. DuVall. Active supervised domain adaptation. In Dimitrios Gunopulos, Thomas Hofmann, Donato Malerba, and Michalis Vazirgiannis, editors, Machine Learning and Knowledge Discovery in Databases , pages 97–112, Berlin, Heidelberg, 2011. Springer Berlin Heidelberg. [44] Steve Hanneke and Samory Kpotufe. On the value of target data in transfer learning . Curran Associates Inc., Red Hook, NY, USA, 2019. [45] Steve Hanneke and Samory Kpotufe. Adaptive sample aggregation in transfer learning, 2025. [46] Shai Ben-David and Reba Schuller. Exploiting task relatedness for multiple task learning. In Proceedings of the 16th Annual Conference on Learning Theory (COLT) , pages 567–580, 2003. [47] Shai Ben-David, Tyler Lu, Teresa Luu, and Dávid Pál. Impossibility theorems for domain adaptation. In Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics , pages 129–136. JMLR Workshop and Conference Proceedings, 2010. [48] Shai Ben-David and Ruth Urner. On the hardness of domain adaptation and the utility of unlabeled target samples. In Nader H. Bshouty, Gilles Stoltz, Nicolas Vayatis, and Thomas Zeugmann, editors, Algorithmic Learning Theory , pages 139–153, Berlin, Heidelberg, 2012. Springer Berlin Heidelberg. [49] Shai Ben-David and Ruth Urner. Domain adaptation–can quantity compensate for quality? Annals of Mathematics and Artificial Intelligence , 70(3):185–202, 2014. [50] Mingming Gong, Kun Zhang, Tongliang Liu, Dacheng Tao, Clark Glymour, and Bernhard Schölkopf. Domain adaptation with conditional transferable components. In International Conference on Machine Learning , pages 2839–2848. PMLR, 2016. [51] Christina Heinze-Deml and Nicolai Meinshausen. Conditional variance penalties and domain shift robustness. 
+
+Machine Learning , 110(2):303–348, 2021. [52] Yuansi Chen and Peter Bühlmann. Domain adaptation under structural causal models. Journal of Machine Learning Research , 22(261):1–80, 2021. [53] Keru Wu, Yuansi Chen, Wooseok Ha, and Bin Yu. Prominent roles of conditionally invariant components in domain adaptation: Theory and algorithms. arXiv preprint arXiv:2309.10301 , 2023. [54] Han Zhao, Remi Tachet Des Combes, Kun Zhang, and Geoffrey Gordon. On learning invariant representations for domain adaptation. In International conference on machine learning , pages 7523–7532. PMLR, 2019. [55] Fredrik D Johansson, David Sontag, and Rajesh Ranganath. Support and invertibility in domain-invariant representations. In The 22nd International Conference on Artificial Intelligence and Statistics , pages 527–536. PMLR, 2019. [56] Malte Londschien, Manuel Burger, Gunnar Rätsch, and Peter Bühlmann. Domain generalization and adaptation in intensive care with anchor regression. arXiv preprint arXiv:2507.21783 , 2025. [57] Alexandre B Tsybakov. Optimal rates of aggregation. In Learning Theory and Kernel Machines: 16th Annual Conference on Learning Theory and 7th Kernel Workshop, COLT/Kernel 2003, Washington, DC, USA, August 24-27, 2003. Proceedings , pages 303–313. Springer, 2003. [58] Philippe Rigollet. Kullback-leibler aggregation and misspecified generalized linear models. The Annals of Statistics , pages 639–665, 2012. [59] Yuhong Yang. Model selection for nonparametric regression. Statistica Sinica , pages 475–499, 1999. 21 [60] Jean-Yves Audibert. Progressive mixture rules are deviation suboptimal. Advances in Neural Information Processing Systems , 20, 2007. [61] Anatoli Juditsky, Philippe Rigollet, and Alexandre B Tsybakov. Learning by mirror averaging. 2008. [62] Guillaume Lecué and Philippe Rigollet. Optimal learning with q-aggregation. 2014. [63] Jean-Yves Audibert. Proof of the optimality of the empirical star algorithm. Technical note , 2007. [64] Judea Pearl. Causality: Models, Reasoning and Inference . Cambridge University Press, USA, 2nd edition, 2009. [65] Peter Spirtes, Clark Glymour, and Richard Scheines. Causation, prediction, and search . MIT press, 2001. [66] Peter Spirtes, Clark N Glymour, and Richard Scheines. Causation, prediction, and search . MIT press, 2000. [67] Y Samuel Wang, Mladen Kolar, and Mathias Drton. Confidence sets for causal orderings. Journal of the American Statistical Association , 121(553):690–703, 2026. [68] Yihong Gu, Cong Fang, Peter Bühlmann, and Jianqing Fan. Causality pursuit from heterogeneous environments via neural adversarial invariance learning. arXiv preprint arXiv:2405.04715 , 2024. [69] Jiji Zhang. On the completeness of orientation rules for causal discovery in the presence of latent confounders and selection bias. Artificial Intelligence , 172(16-17):1873–1896, 2008. [70] Emilija Perković, Johannes Textor, Markus Kalisch, and Marloes H Maathuis. Complete graphical charac-terization and construction of adjustment sets in markov equivalence classes of ancestral graphs. Journal of Machine Learning Research , 18(220):1–62, 2018. [71] Adam Li, Amin Jaber, and Elias Bareinboim. Causal discovery from observational and interventional data across multiple environments. Advances in Neural Information Processing Systems , 36:16942–16956, 2023. [72] Alain Hauser and Peter Bühlmann. Characterization and greedy learning of interventional markov equivalence classes of directed acyclic graphs. The Journal of Machine Learning Research , 13(1):2409–2464, 2012. [73] Karren Yang, Abigail Katcoff, and Caroline Uhler. Characterizing and learning equivalence classes of causal dags under interventions. In International Conference on Machine Learning , pages 5541–5550. PMLR, 2018. [74] Daniel Hsu, Sham M Kakade, and Tong Zhang. Random design analysis of ridge regression. In Conference on learning theory , pages 9–1. JMLR Workshop and Conference Proceedings, 2012. [75] Dong Dai, Philippe Rigollet, and Tong Zhang. Deviation optimal learning using greedy q-aggregation. 2012. [76] David Krueger, Ethan Caballero, Joern-Henrik Jacobsen, Amy Zhang, Jonathan Binas, Dinghuai Zhang, Remi Le Priol, and Aaron Courville. Out-of-distribution generalization via risk extrapolation (REx). In 
+
+International Conference on Machine Learning , pages 5815–5826. PMLR, 2021. [77] Shiori Sagawa*, Pang Wei Koh*, Tatsunori B. Hashimoto, and Percy Liang. Distributionally robust neural networks for group shifts: On the importance of regularization for worst-case generalization. In International Conference on Learning Representations , 2020. [78] Juan L. Gamella, Jonas Peters, and Peter Bühlmann. Causal chambers as a real-world physical testbed for AI methodology. Nature Machine Intelligence , 2025. [79] Joseph M Replogle, Reuben A Saunders, Angela N Pogson, Jeffrey A Hussmann, Alexander Lenail, Alina Guna, Lauren Mascibroda, Eric J Wagner, Karen Adelman, Gila Lithwick-Yanai, et al. Mapping information-rich genotype-phenotype landscapes with genome-scale Perturb-seq. Cell , 185(14):2559–2575, 2022. [80] Stéphane Gaîffas and Guillaume Lecué. Hyper-sparse optimal aggregation. The Journal of Machine Learning Research , 12:1813–1833, 2011. [81] Niklas Pfister, Peter Bühlmann, and Jonas Peters. Invariant causal prediction for sequential data. Journal of the American Statistical Association , 114(527):1264–1276, 2019. 22 [82] Nicola Gnecco, Jonas Peters, Sebastian Engelke, and Niklas Pfister. Boosted control functions. arXiv preprint arXiv:2310.05805 , 2023. [83] Kartik Ahuja, Karthikeyan Shanmugam, Kush Varshney, and Amit Dhurandhar. Invariant risk minimization games. In International Conference on Machine Learning , pages 145–155. PMLR, 2020. [84] Joel A Tropp et al. An introduction to matrix concentration inequalities. Foundations and Trends ® in Machine Learning , 8(1-2):1–230, 2015. 23 Appendix 
+
+The following sections provide deferred discussions, proofs and experimental details. 
+
+## Table of contents 
+
+A An Idealistic Construction of Feature subset Collections 25 B Future directions 26 C Additional details on the real-world experiments 28 
+
+C.1 The Causal Chamber dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28 C.1.1 Causal Chambers: linear regression experiment . . . . . . . . . . . . . . . . . . . . . . . . 28 C.1.2 Causal Chamber: image regression experiment with linear probes . . . . . . . . . . . . . . 29 C.2 Experiments on gene expression data . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 
+
+D Background on model selection aggregation 32 E Deferred Proofs 34 
+
+E.1 Proof of Proposition A.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 E.2 Proof of Proposition A.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 E.3 Proof of Theorem 3.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35 E.3.1 High-probability excess risk bounds for linear regression . . . . . . . . . . . . . . . . . . . 35 E.3.2 Effect of finite source data . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 E.3.3 Proof of Theorem 3.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 E.4 Lower bound proofs . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 E.4.1 Proof of Theorem 3.2. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 E.4.2 Proof of Theorem 3.3. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42 E.5 Proof of Corollary 4.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 46 24 A An Idealistic Construction of Feature subset Collections 
+
+Suppose we have (partial) knowledge of the underlying SCMs over (X, Y ) in source P and target Q – for instance, a causal graph, and some partial knowledge of the structural shift between P and Q (for instance, the shift set 
+
+S(P, Q )). This knowledge specifies a family of distributions Q containing all admissible target distributions Q.Recall that throughout this work we consider no structural shift on the label, i.e., Y̸ ∈ S(P, Q ). We will consider the following degrees of causal knowledge (cf. Figure 2 (b)): 
+
+Q0 := {Q : SCM MQ differs from MP in unknown S(P, Q )̸ ∋ Y } no causal knowledge ;
+
+QG := {Q : SCM MQ induces G ∈ G , unknown S(P, Q )̸ ∋ Y } partial knowledge of graph ;
+
+QG := {Q : SCM MQ induces G, unknown S(P, Q )̸ ∋ Y } full knowledge of the graph ;
+
+QG,S (P,Q ) := {Q : SCM MQ induces G, known S(P, Q )̸ ∋ Y } full causal knowledge .
+
+In our example in Section 4.1, we have observed that even under full causal knowledge QG,S (P,Q ), we could only identify a collection of candidate best models {h{1,2,4},P , h P } of which either could be preferred for a concrete 
+
+Q ∈ Q G,S (P,Q ). Motivated by this observation, for a family Q of admissible target distributions, we might wish to construct what we will call an " optimistic " collection: 
+
+Iopt optimistic w.r.t. Q if ∀Q ∈ Q : arg min 
+
+> I⊆[d]
+
+RQ(hI,P ) ∩ I opt ̸ = ∅.
+
+Notice that the sufficient invariance collection (Definition 2.2) are desirable specifically because they are op-timistic collection. In words, Iopt is guaranteed to contain some best-performing feature subset model for any admissible target domain Q. In particular, the best model from such an optimistic collection is guar-anteed to do at least as well as any (P, Q )-invariant model and the full-feature source model. An obvious collection that is optimistic w.r.t. any family of target distributions Q is 2[d], containing all of the feature subsets. However, using the available causal knowledge, we might want to construct a smaller, non-trivial collection which is still optimistic w.r.t. Q. For instance, in the example in Section 4.1, if we only know 
+
+Y̸ ∈ S(P, Q ), i.e., Q ∈ Q 0, then the full collection Iopt = 2 [4] is the only option. A more refined knowledge is having a subset of the parents, i.e., G ∈ G = {G : s.t X1 ∈ pa (Y )}; for every Q ∈ Q G at least one of the best performing feature subsets must include X1. If we further know the graph G in Figure 2 (without the 
+
+s-node), then we can deduce that X1, X 2 belong to at least one of the best performing feature subsets for every Q ∈ Q G. If we additionally know S(P, Q ) = {X1, X 2, X 3}, then we can make a stronger claim that that every feature subset of every optimistic set contains X1, X 2, X 4. Next, we propose a procedure to iter-atively remove certain feature subsets from any optimistic collection while preserving it as an optimistic collection. 
+
+Proposition A.1. Suppose we have full causal knowledge, i.e., Q ∈ Q G,S (P,Q ). Also, assume causal faithfulness. For a subset I ⊆ [d], consider the following: There exist disjoint subsets I′, I ′′ ⊆ [d] where I′ ∪ I′′ ̸ = ∅, and, 1. Y is d-separated from XI′ given XI in GXI′ .2. XI′′ is d-separated from S(P, Q ) given XI∪I′ , Y ;3. XI′′ is not d-separated from Y given XI∪I′ .If the feature set I satisfies (1,2,3), then for every optimistic collection Iopt , the collection Iopt \ { I} is also optimistic w.r.t. QG,S (P,Q ).
+
+We note that this result is not a complete characterization of minimal optimistic collections; by iterative application of the rule one can arrive at an irreducible optimistic collection, and still, that collection might contain a strict optimistic collection. Thus, an idealistic goal is to construct a minimal optimistic collection, 
+
+Iopt ,min minimal optimistic w.r.t. Q if Iopt ,min ∈ arg min   
+
+> Iopt optimistic w.r.t. Q
+
+|I opt |.
+
+A parametric search over the space of SCMs may allow us to verify whether a given collection Iopt is minimal and optimistic w.r.t. QG,S (P,Q ) (i.e., given the full causal knowledge): One may consider the parametric SCM pairs 
+
+(MP , M Q), and constrain them to generate the source and target distributions P, Q while inducing the selection diagram G, S (P, Q ), and then verify if every feature subset I ∈ I opt is the most Q-predictive (P, Q )-invariant model for some plausible pair (MP , M Q). For discrete variables, there exists such a canonical parameterization 25 of SCMs, cf., [ 27 ], but a canonical parametric form for real-valued SCMs remains an open research question. With additional assumptions it may be possible to find a minimal optimistic collection Iopt ,min : For instance, in linear structural models under additive shifts, deciding whether a set I belongs to Iopt ,min w.r.t. QG,S (P,Q )
+
+reduces to a quadratic feasibility problem in the shift parameter, and finding Iopt ,min corresponds to solving 2d
+
+such feasibility problems. Beyond computational intractability, the next result outlines another issue with the goal of finding minimal optimistic collections Iopt ,min for this linear setting: 
+
+Proposition A.2. 1. There exists a distribution P induced by a linear Gaussian SCM MP on (X, Y ), and a shift set S(P, Q ), for which, given full causal knowledge QG,S (P,Q ), we have for any Iopt : |I opt | = 2 d.2. There exists a distribution P induced by a linear Gaussian SCM MP with |pa (Y )| = d − 1 and |S(P, Q )| = 1 ,for which, given QG,S (P,Q ), we have for any Iopt : |I opt | ≥ 2d−1 + 1 .
+
+We prove Proposition A.2 in Appendix E.2. In particular, our result implies that even in benign settings with full causal knowledge where most features are causal, the mechanism shift is extremely sparse and known, Iopt 
+
+generally cannot be reduced beyond exponential size. 
+
+# B Future directions 
+
+Our work makes the first step towards establishing scenarios under which (partial) causal invariances enable fast supervised domain adaptation. Our setting already accounts for finite-sample effects in both source and target data, as well as model misspecification, both of which generalize the typical population-level assumptions in causal domain generalization. However, our theoretical results are, so far, limited to the linear regression setting and rely on further regularity assumptions such as boundedness of the noise and the function class. Below, we outline the main future directions of our work as well as potential challenges which might arise while extending our results. 1. Extension beyond the linear regression setting. Our analysis relies on linearity in multiple places. First, Step 1 of Algorithm 1 makes use of so-called weak confidence sets first introduced in [ 45 ]. For a given hypothesis class H and any source model bhI,P , guarantees of style min {E Q(bhQ), EQ(bhI,P )} can be easily given if one can compute the weak confidence sets ˆHP , ˆHQ and output an element of their intersection. [45 ] compute weak confidence sets for classification. However, weak confidence sets for linear regression enjoy convenient geometric properties and are easy to compute, both theoretically and empirically. An exciting direction for future work is thus to compute such confidence sets for other parametric classes, enabling guarantees for Step 1 of Algorithm 1. 2. Extension beyond bounded noise. The boundedness assumption Assumption 3.1 is required to establish high-probability guarantees for model selection aggregation (cf. Appendix D). [ 80 ] provide extended guarantees for model selection aggregation for sub-exponential and sub-Gaussian noise. The resulting rate ragg = (log( |I| ) log(1 /α ) log nn has an additional multiplicative log n dependency. Our results immediately transfer to the setting of bounded linear function class and sub-Gaussian noise via this guarantee, however, it is unclear whether guarantees without an additional multiplicative log n dependency are possible for unbounded, but "well-behaved" variables. In particular, it remains an important open question to establish optimal high-probability guarantees for model selection aggregation under fully sub-Gaussian designs. 3. Other adaptive procedures. Although Algorithm 1 achieves a fast adaptation guarantee, it is an interesting open question whether the same guarantee can be established for a procedure based on an end-to-end loss function. Further, Algorithm 1 requires as input two constants C1, C 2 which have to be fixed a priori or estimated from (limited) target data. It remains an important open question, especially for practitioners, whether a hyperparameter-free adaptation method for supervised adaptation under partial causal knowledge could be developed, and whether such a method could match our fast convergence guarantees theoretically. 4. Assumption of partially known causal mechanisms. Our assumptions go beyond the common assumption of full identifiability in causality-oriented robustness frameworks [ 1, 18 , 81 ]. Unlike prior work that either assumes identifiability of the invariant representation or restricts distribution shift directions 26 (e.g., [ 29 , 82 ]), we do not impose such restrictions. In Section 2.2, we discuss how sets of candidate invariant models can be obtained from structure learning or multi-environment approaches. However, in practice, especially under confounding or model misspecification, these methods may fail to recover the correct set 
+
+I of plausible invariant models. The performance of our adaptive procedure may thus degrade if this set is poorly estimated. This highlights the need for further research on partial-identifiability-aware methods that output multiple candidate invariant models from multi-environment data, only committing to a single choice when full identifiability is given. 5. Extension to possibly invariant representations. A broad line of work (e.g., [ 3, 53 , 83 ]) aims to learn a representation ϕ(X) of the covariates such that the conditional distribution P (Y | ϕ(X)) , or the corresponding prediction risk, is invariant across environments. This setting generalizes ours, since restriction onto a subset of features is a special case of a representation map ϕ. It is well known that in misspecified scenarios, such as insufficient distributional variability across training domains, there may exist multiple local minima of the invariance-penalized loss, potentially leading the method to select an incorrect, non-invariant representation. Due to the non-convex nature of these objectives, developing methods that output multiple invariant representations and allow interpolation between them using limited target data remains a challenging and important direction for future work. 27 Figure 7: The causal graph of the light tunnel variables used in our experiment. 
+
+# C Additional details on the real-world experiments 
+
+## C.1 The Causal Chamber dataset 
+
+The Causal Chambers [ 78 ] are physical testbeds designed to generate large-scale real-world datasets with known causal structure and controlled interventions. One of the chambers is a light tunnel , which consists of a controllable RGB light source, two linear polarizers and multiple light sensors positioned before, between and after the polarizers. In the following, we describe two experiments on light tunnel data: 1) a linear regression experiment with light tunnel sensors as variables; 2) an image regression experiment in which the candidate models are varying linear probes based on a fixed CLIP representation. 
+
+C.1.1 Causal Chambers: linear regression experiment Data. For the first experiment, we consider the lt _interventions _standard _v1 dataset consisting of sensor measurements under interventions. The light tunnel setup provides measurements of 41 variables, out of which 
+
+32 can be intervened on. Since the tunnel as a physical system is well-understood, the causal ground truth is available (cf. Figure 7). As demonstrated in [ 78 ] (Task b1), the light tunnel can be used as a benchmark for out-of-distribution (OOD) generalization, since one has access to both observational data and data from various interventions. In the following, we follow the setting of Task b1 with some light modifications. We consider a subgraph of the light tunnel depicted in Figure 7. The subgraph contains the most important sensor variables. The omitted variables act as hidden confounders (depicted as bidirected dashed edges). 
+
+Multi-domain setup. In our linear regression experiment, we consider ˜I1 as the target variable and exclude the polarizer angles θ1,2, resulting in 9 variables in total. As multi-environment data for (partial) causal discovery, we take the reference (non-intervened) environment as well as two domains generated by interventions on unobserved variables θ1 and T I 
+
+> 2
+
+, resulting in 3 domains in total with 10000 samples each. We denote this collection as Etrain .
+
+Candidate sets. We run invariant causal prediction (ICP) [ 1] on Etrain . ICP is a hypothesis-testing based method which iterates over all subsets of features and for each subset I, tests the null hypothesis H0,I (Etrain ):"there exists a linear relationship between XI and Y with residuals invariant across all environments". We denote with Iinv the collection of all feature sets I for which H0,I (Etrain ) could not be rejected. This collection corresponds to the collection discussed in Section 2.3. We compute the resulting collection of candidate models 
+
+HI = {bhI,P : I ∈ I inv }.
+
+(Domain generalization) baselines. The output of ICP as a method is the intersection IICP = T 
+
+> I∈I inv
+
+I. Thus, for ICP as a baseline, we fit a linear model trained on this subset of features and denote it by ICP (intersection). As another baseline, we fit the anchor regression estimator [ 29 ] on Etrain (we pick the best regularization parameter λ by cross-validation). The anchor regression estimator aims to be robust to bounded additive shifts under potential confounding between X and Y , and, depending on the strength of the regularization parameter, interpolates between ERM and IV regression. We fit the source model on pooled source data. 
+
+Target-dependent baselines. As the target distribution, we consider the intervention on T V 
+
+> 1
+
+, which in the light tunnel dataset induces a strong distribution shift. We vary the available number nQ of labeled target samples and compute the empirical target model bhQ based on the small sample as well as the oracle target model, which is computed on a large held-out target dataset. As a "naive" sDA baseline, we take ERM over the 28 (a) Light tunnel image data under interventions (Figure due to [78]). 550 600 650 700 750 800 850 900 
+
+> Target Sample Size
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> MAE
+> Target: shutter_speed_0.001
+> Source ERM
+> GroupDRO
+> IRM
+> Target model
+> Model ERM
+> Exp. weights
+> Our method
+
+(b) MAE of various methods as a function of nQ
+
+for the image regression experiment. 
+
+Figure 8: (a) Examples of light tunnel image data under various interventions on the camera and tunnel setup. (b) MAE (mean absolute error) of various domain generalization/adaptation methods as a function of nQ for the image regression experiment with linear probe candidates based on a frozen CLIP backbone. Results are averaged over 5 runs. The shaded regions depict the standard error of the mean (SE). candidate model set. We split the target data and include the empirical target model as a candidate for the ERM baseline. 
+
+Our method. For our procedure Algorithm 1, we use (inside the algorithm) exponential weights aggregation and pick a significance level α = 0 .05 . The main challenge of Algorithm 1 is picking the constants C1 and C2
+
+which control the selection against the target model and refinement around the aggregator, respectively. It is well known from linear regression literature that the optimal value is Creg = σ2res where σ2res = Var (Y − hQ(X)) 
+
+is the variance of the residuals of the optimal linear model. We use adaptive values for C1, C 2: given a small target sample, we fit a linear model on one half of the data and estimate the variance of its residuals on the other half. We then compute the upper bound bσ2res for the 95% -confidence interval for σ2res and average predictions on both folds. We then set C1, C 2 = bσ2res . We note that Theorem 3.1 sets a requirement for the relationship of 
+
+C1, C 2 and Creg , C agg . This relationship is not guaranteed to hold with our heuristic choice of C1 and C2, but leads to the best performance in practice. As with other target-dependent baselines, we add the empirical target model trained on another split to our set of candidates. However, we only do this if Step 1 of Algorithm 1 is passed. Otherwise the full empirical target model is returned. 
+
+Results. We evaluate all methods on 6000 held-out target samples and plot the MAE (mean absolute error) as a function of the available target sample size nQ. The results are averaged over 50 runs. The shaded regions depict standard error of the mean. We observe that the source model has the highest target MAE, followed by anchor regression and ICP (intersection). Our method achieves low target risk in the low-sample regime with advantage over the naive ERM in the larger sample regime. 
+
+C.1.2 Causal Chamber: image regression experiment with linear probes Problem setting. In this experiment, we consider an image regression problem under distribution shift. In particular, we consider more general candidate models: 1) instead of pure linear regression, we compute linear probes based on a pretrained representation. 2) Since feature-subset models are not interpretable in this setting, 29 we compute models satisfying subsets of invariances , namely, for any subset E ⊆ E train of training domains, we compute a model minimizing a certain risk measure on E. We then perform supervised adaptation with the generated candidates. 
+
+Data. We consider the lt _color _regression _v1 dataset from the Causal Chambers benchmark [ 78 ]. This dataset is collected from the light tunnel augmented with a camera, producing images from inside the tunnel. Along with the images, we have access to the ground-truth (R, G, B ) values of the LEDs before passing the tunnel. Our task is to predict the "brightness" value 13 (R + G + B) from the light tunnel images. The dataset provides 10 environments, including the reference environment and 9 interventional environments with changes in the camera parameters (e.g., aperture and shutter speed), polarization filters and LED brightness. 
+
+Multi-domain setup. As before, to ensure an under-identified scenario, as source data, we take data from three domains: reference , aperture _5.0, and shutter _speed _0.002 .
+
+Pretrained backbone. We extract features from the image data using the frozen encoder of the pretrained CLIP ViT-B/32 model with "openai" weights. We encode the images and normalize the resulting 512 -dimensional representations. 
+
+Candidate set of linear probes. To obtain the candidate models, for every non-empty subset E ⊆ { 0, 1, 2}
+
+of the source environments, we compute the linear model on the CLIP features minimizing 1) the pooled loss (ERM objective); 2) the IRM objective [ 3]; 3) the groupDRO objective [ 77 ]. For IRM, we take hyperparameters 
+
+epochs = 500 , lr = 10 −3, λ = 1 .0 and use Adam as optimizer. For groupDRO, we take epochs = 500 , lr = 10 −3,
+
+η = 0 .1. In total, we obtain 3 × 7 = 21 candidate models. 
+
+Baselines. As baselines, we consider the groupDRO and IRM models trained on all sources, as well as the source ERM model. The target-dependent baselines include the target empirical model, exponential weights aggregation and naive ERM over models. 
+
+Our method. We implement our procedure Algorithm 1 as in Section C.1.1. 
+
+Results. We evaluate all methods on 6000 held-out target samples and plot the MAE (mean absolute error) as a function of the target sample size. The shaded regions represent standard error of the mean. We observe that source ERM, groupDRO and IRM all result in high target risk. In fact, due to insufficient diversity of environments and high expressivity of the pretrained features, all three algorithms result in very similar models (compare with Section 4.1). In contrast, our method Algorithm 1 is the only target-dependent procedure which successfully interpolates between the target MAE of the best candidate model and the target linear probe. Importantly, the naive ERM (with the target model included as a candidate) does not achieve such interpolation and exhibits negative transfer. All listed experiments were run on an Apple M2 Max GPU in under 1 hour. 
+
+## C.2 Experiments on gene expression data 
+
+Source multi-environment setup and target data. We analyze single-cell gene-expression data from a pooled CRISPRi Perturb-seq experiment in RPE1 cells [ 79 ]. The dataset includes 424 domains, each induced by a different gene knockdown. We consider a collection of 10 most highly expressed genes in the observational (non-targeting) environment. We collect 10 environments corresponding to interventions (knockdowns) of the 10 
+
+observed genes, resulting in a total of 11 environments. We randomly pick one of the genes as the target variable 
+
+Y and use the rest as features X. To ensure stability of the causal mechanism of Y , we discard the environment in which Y is knocked down, resulting in a pool of 10 environments. We center each interventional environment by subtracting the (X, Y ) mean within the observational environment. As source data, we take the observational environment together with 3 randomly selected knockdown environments. As the target environment, we pick the most challenging one, characterized by the biggest shift in E[XX ⊤].
+
+Candidate set. Due to strong confounding induced by a large number of unobserved genes, and possibly nonlinear relationships in the data, ICP [ 1] fails to accept any feature subsets, even on subsets of environments. As candidate sets, we thus consider all feature subsets over the d predictors, resulting in 512 candidates. This collection corresponds to Isuff in Section 2.2, and to no causal knowledge : although we believe that the gene expression data has a fixed underlying causal graph, and that some causal mechanisms remain invariant, we cannot extract any information about its structure from multiple domains. For each candidate feature set, we fit a linear model bhI,P on the source data pooled from all 4 environments. 30 Baselines. As baselines, we include the source model trained on pooled data, the ICP model (which for the gene data results in a constant linear model), and anchor regression trained on source environments. As in previous experiments, as sDA baselines, we include ERM over candidate models + target model as well as exponential weights aggregation, for which we take the temperature β = 2 ˆσ2 
+
+> Y
+
+(in the notation of Appendix D, so that the weights are λm ∝ exp (−nQ bR(hm)/β ) = exp (−nQ bR(hm)/(2 ˆσ2 
+
+> Y
+
+)) ). We implement our method as discussed in Section C.1.1. 
+
+Results. We iterate over nQ = {5, 10 , 20 , 25 , 30 , 40 , 50 , 60 } and average over 20 runs. We evaluate the MSE of all methods on 62 held-out target samples (due to the small number of samples in the target environment, the oracle target model cannot be reliably approximated). The shaded regions depict standard error of the mean. 31 D Background on model selection aggregation 
+
+Given a finite dictionary of functions H = {h1, ..., h M } and a finite dataset {(Xi, Y i)}ni=1 , the goal of model selection (MS) aggregation is to construct a procedure whose risk is closest to the best function in the dictionary. We emphasize that despite the name model selection , MS aggregation does not actually select a model from the dictionary. Instead, the goal of MS aggregation is to be as good as the best model in the dictionary. We consider the risk induced by the mean squared error (MSE). Formally, a good model aggregation procedure should satisfy 
+
+R(hagg ) ≤ min   
+
+> m∈[M]
+
+R(hm) + ∆ n,M (9) with the remainder ∆n,M as small as possible. In the classical line of work on MS aggregation [ 57 , 58 ] it has been established that the smallest possible order for ∆n,M is log M/n . In contrast, any selector from the dictionary 
+
+H, including the straightforward choice of ERM over the dictionary, cannot satisfy (9) with a remainder smaller than p(log M )/n . It has been concluded that any procedure satisfying (9) with the fast remainder term must in some sense "hedge", or "average" candidate models: hλ = PMm=1 λmhm with λ ∈ Λ (the simplex). 
+
+Exponential weights aggregation. One of the earliest and most practical MS aggregation estimators is based on exponential weights [59 –61 ]. Given a prior π ∈ Λ over models and a temperature parameter β > 0, the exponential weights are defined by 
+
+λEXP  
+
+> m
+
+∝ πm exp( −n bR(hm)/β ).
+
+The most straightforward choice of the prior is π = (1 /M, ..., 1/M ) (uniform). Exponential weights achieve the optimal aggregation rate in expectation. However, [ 75 ] have shown that exponential weights are generally suboptimal in the sense that (9) cannot hold with high probability, unless additional Bernstein assumptions hold. 
+
+Q-Aggregation. 3 Q-aggregation [ 62 ] is explicitly designed to be optimal in deviation and uses higher interpola-tion orders between models. For a prior π and hyperparameters ν, β , the weights of the Q-aggregator minimize the penalized Q-functional 
+
+ˆλ ∈ arg min 
+
+> λ∈Λ
+
+"
+
+(1 − ν) bR(hλ) + ν
+
+> M
+
+X
+
+> m=1
+
+λm bR(hm) − βn
+
+> M
+
+X
+
+> m=1
+
+λm log πm
+
+#
+
+.
+
+Assume that the label and the output space are uniformly bounded: 
+
+|Y | ≤ b; max  
+
+> h∈H
+
+|h(X)| ≤ b a.s. Under standard loss regularity conditions satisfied for squared loss, a temperature condition β ≥ C(b, ν ) and a uniform prior, we obtain optimal high-probability guarantees 
+
+R(hˆλ) ≤ min  
+
+> m
+
+R(hm) + 2 β log M + log(1 /α )
+
+n .
+
+We define Cagg (B) := 2 β.
+
+The STAR estimator. The STAR estimator [ 60 , 63 ] is another deviation-optimal aggregation procedure. Notably, the algorithm is parameter-free: it considers the star-shaped union of line segments between hERM (the model with the lowest empirical risk in the dictionary) and all other models hm. It then performs empirical risk minimization on this star-shaped set. Under standard boundedness assumptions |Y | ≤ B and ∥hm∥∞ ≤ B, the STAR method enjoys the high-probability guarantee 
+
+R(hSTAR ) ≤ min  
+
+> m
+
+R(hm) + Cagg (B) log M + log(1 /α )
+
+n .
+
+Hyper-sparse optimal aggregation. [ 80 ] introduce hyper-sparse aggregation and show that the minimal amount of models which have to be combined to achieve the optimal MS aggregation rate is two. Assume 
+
+Y = h⋆(X) + ϵ,   
+
+> 3We remark that Q-aggregation does not refer to our target distribution Qand is merely a notational coincidence.
+
+32 with ∥ϵ∥ψ1 ≤ B, where ∥ϵ∥ψ1 denotes the sub-exponential norm. Assume that sup h∈H ∥h − h⋆∥ ≤ B. In particular, [ 80 ] allow for unbounded output Y and heavy-tailed noise. [ 80 ] propose a procedure which with probability at least 1 − α achieves 
+
+R(hagg ) ≤ min   
+
+> m∈[M]
+
+R(hm) + Cagg (B) (1 + log(1 /α )) log M log nn . (10) We observe that the guarantee (10) differs from the optimal rate via a log n factor and multiplicative dependence on log (1 /α ). To the best of our knowledge, it remains an open question whether optimal high-probability guarantees can be established for MS aggregation for regression under random design. Importantly, the guarantee (10) allows our result Theorem 3.1 to hold under the assumption of sub-exponential, in particular, sub-Gaussian residuals , i.e., if sup I ∥Y − E[Y |XI ]∥ψ1 ≤ B, with ragg := CB (1+log(1 /α )) log M log nn .
+
+33 E Deferred Proofs 
+
+## E.1 Proof of Proposition A.1 
+
+Derivation: 
+
+RQ(hI∪I′∪I′′ ) = EQ[( Y − EP [Y | XI∪I′∪I′′ ]) 2]= EQ
+
+E(Y − EP [Y | XI∪I′∪I′′ ]) 2 | Y, X I∪I′
+
+ Tower rule 
+
+= EQ
+
+EQ
+
+E[( Y − EP [Y | XI∪I′∪I′′ ]) 2 | XI′′ ] | Y, X I∪I′
+
+ Tower rule 
+
+= EQ
+
+EP
+
+E[( Y − EP [Y | XI∪I′∪I′′ ]) 2 | XI′′ ] | Y, X I∪I′
+
+ Due to condition (2) 
+
+< EQ
+
+EP
+
+E[( Y − EP [Y | XI∪I′ ]) 2 | XI′′ ] | Y, X I∪I′
+
+ Worse under P (XI′′ | Y, X I∪I′ )= EQ
+
+E[( Y − EP [Y | XI∪I′ ]) 2 | Y, X I∪I′
+
+ Tower rule 
+
+= EQ
+
+EQ
+
+E[( Y − EP [Y | XI∪I′ ]) 2 | Y, X I
+
+, do (XI′ ) Due to (1) and rule 3 of do-calc. 
+
+≤ EQ
+
+EQ
+
+E[( Y − EP [Y | XI ]) 2 | Y, X I
+
+ | do (XI′ ))  Worse under Q(Y, X I | do (XI′ )) = EQ
+
+EQ
+
+E[( Y − EP [Y | XI ]) 2 | Y, X I
+
+ | XI′
+
+ Due to (1) and rule 3 of do-calc. 
+
+= EQ
+
+(Y − EP [Y | XI ]) 2 Tower rule 
+
+= RQ(hI,P )
+
+By (2), XI′′ is d-separated from SP,Q given XI∪I′ , Y , and therefore, it is a stable variable under P, Q , thus, adding XI′′ to XI∪I′ does not hurt the prediction. By (3), XI′′ is not d-separated from Y given XI∪I′ ,and therefore, the strict inequality holds under a stricter notion of faithfulness assumptions: the equality holds only if hI∪I′,P = hI∪I′∪I′′ ,P , and in that case, we expect XI′′ to be d-separated from Y given XI,I ′ ,which contradicts condition (3). Lastly, by (1), Y is d-separated from XI′ given XI in GXI′ , which is the graph obtained from G by removing the edges going into the XI′ nodes. Therefore, by rule 3 of do-calculus, 
+
+Q(Y | XI , X I′ ) = Q(Y | XI , do (XI′ )) ; in this regime, XI′ is a sink node, unaffected by SP,Q , therefore adding it does not hurt the risk. For every admissible distribution Q, we showed RQ(hI∪I′∪I′′ ,P ) < RQ(hI,P ), and therefore, we conclude I̸ ∈ I opt ,min .
+
+## E.2 Proof of Proposition A.2 
+
+Example 1. For the first example, we consider the causal graph described by Ch (Y ) = X. More precisely, consider the linear Gaussian SCM 
+
+Y = UY ; Xj = Y + Uj for j ∈ [d],
+
+where UY ∼ N (0 , 1) , Uj ∼ N (0 , 1) are all independent. Let S(P, Q ) = [ d]. For any non-empty subset J ⊆ [d],consider μ ∈ Rd with μj = 0 if j ∈ J and μj = M otherwise. Define the target distribution Q by the mean shift 
+
+μ by setting Xj = Y + Uj + μj . The distribution of Y remains invariant. Then, we compute 
+
+RQ(hJ′,P ) = 11 + |J′| +
+
+P 
+
+> j∈J′
+
+μ2
+
+> j
+
+1 + |J′|
+
+!2
+
+.
+
+In other words, the risks of all models hJ′,P with J′̸ = J grows as M 2. The empty-set model has (invariant) risk 
+
+1, in particular it achieves a worse target risk than hJ,P . It follows that there exists M > 0 large enough such that hJ,P has overall minimal target risk. Thus, it has to hold that J ∈ I opt .
+
+Example 2. For the second example, we consider the causal graph described by the following: pa (Y ) = (X1, ..., X d−1), pa (Xd) = ( X1, ..., X d−1, Y ). We set S(P, Q ) = {d}, i.e., only the causal mechanism of the child node can be shifted. Let X1, ..., X d−1 ∼ N (0 , 1) , UY ∼ N (0 , 1) , U ∼ N (0 , 1) , all independent. Define 
+
+Y = Pd−1 
+
+> i=1
+
+Xi + UY , Xd = P 
+
+> j<d
+
+0 · Xj + Y + U . First, we note that for a large enough mean shift on Xd,
+
+[d−1] = pa (Y ) becomes the target risk minimizer among feature-subset models, thus [d−1] is in Iopt ,min . Further, 
+
+[d] is in Iopt ,min since Q = P is admissible. Now, for any J ⊊ [d − 1] , let k = |J| and write SJ = P 
+
+> j∈J
+
+Xj . We compute the linear regression coefficient 
+
+hJ∪{ d},P = αJ XJ + βJ Xd,
+
+34 where αJ = 1 
+
+> d−k+1
+
+, βJ = d−kd−k+1 . We have βJ > 0 for every J. Under Q, we now define the new causal mechanism 
+
+Xd = d − k + 1 
+
+d − k Y − 1
+
+d − k
+
+X
+
+> j∈J
+
+Xj .
+
+It then follows RQ(hJ∪{ d},P ) = 0 . We note that any predictor that doesn’t include Xd has risk at least 
+
+Var (UY ) = 1 . Any other predictor using Xd and J′̸ = J has coefficients strictly different from hJ∪{ d},P and thus incurs a non-zero risk. It follows that J ∪ { d} has to be contained in Iopt . We note that the coefficients of X1, ..., X d−1 can be made strictly positive in the source data-generating process: since the linear regression coefficients and the risk are continuous functions of the linear SCM coefficients, there exists a neighborhood around zero for which the same risk inequalities hold under the described causal mechanism shifts. 
+
+## E.3 Proof of Theorem 3.1 
+
+First, we list lemmas related to matrix concentration and convergence of linear regression. These lemmas are an integral part of the proof of our main results, and are of independent interest. 
+
+E.3.1 High-probability excess risk bounds for linear regression 
+
+Let D be a joint distribution over (X, Y ). We assume that ΣD := ED [XX ⊤] is positive definite with λmin (Σ D ) ≥
+
+λmin > 0. The following lemma [45] establishes covariance concentration for small sample sizes: 
+
+Lemma E.1 (Matrix concentration) . Let ΣD = ED [XX ⊤] and ˆΣD = E ˆD [XX ⊤]. Assume that ∥X∥2 ≤ BX
+
+almost surely and that 
+
+λmin (Σ D ) ≥ λmin > 0.
+
+Then there exists a constant C = C(BX , λ min , τ ) such that if n ≥ C(BX , λ min , τ ) log (d/τ ), then with probability at least 1 − τ ,
+
+12 ΣD ⪯ ˆΣD ⪯ 32 ΣD .
+
+Equivalently, for every v ∈ Rd,
+
+12 ∥v∥2ΣD ≤ ∥ v∥2ˆΣD
+
+≤ 32 ∥v∥2ΣD .
+
+Proof. Let Z := Σ −1/2 
+
+> D
+
+X. Then E[ZZ ⊤] = Id. Moreover, since λmin (Σ D ) ≥ λmin and ∥X∥2 ≤ BX almost surely, 
+
+∥Z∥22 ≤ B2
+
+> X
+
+λmin 
+
+. (11) Hence sup X ∥Σ−1/2 
+
+> D
+
+X∥22 ≤ B2 
+
+> X
+> λmin
+
+.Now define 
+
+ˆΣZ := 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ZiZ⊤ 
+
+> i
+
+= Σ −1/2 
+
+> D
+
+ˆΣD Σ−1/2 
+
+> D
+
+.
+
+By the matrix concentration result in [ 84 ], there exists a constant c = K · B2 
+
+> X
+
+/λ min such that with probability at least 1 − τ ,
+
+ˆΣZ − Id op 
+
+≤
+
+r c log( d/τ )
+
+n + c log( d/τ )
+
+n .
+
+Therefore, if n ≥ C(BX , λ min , τ ) log( d/τ ), the right-hand side is at most 1/2. This implies 
+
+12 Id ⪯ ˆΣZ ⪯ 32 Id.
+
+Multiplying on the left and right by Σ1/2 
+
+> D
+
+yields 
+
+12 ΣD ⪯ ˆΣD ⪯ 32 ΣD .
+
+35 For completeness, we also state the high-probability excess-risk bound for linear regression [ 45 , 74 ], instantiated under Assumption 3.1: since ∥X∥2 ≤ BX and |Y | ≤ σY almost surely, X is sub-Gaussian with norm O(BX ) and 
+
+Y is sub-Gaussian with variance proxy O(σ2 
+
+> Y
+
+), so the standard random-design linear-regression result applies in the bounded case. 
+
+Lemma E.2 (Upper bounds for linear regression) . Let h⋆ ∈ arg min h∈H lin RD (h). Let bh ∈ arg min h∈H lin 
+
+bRD (h).Let α > 0. There exist absolute constants c0, C 0 > 0 such that if n ≥ c0 B4
+
+> X
+> λ2min
+
+(d + log (1 /α )) , then with probability at least 1 − α
+
+RD (bh) − R D (h⋆) ≤ Creg 
+
+d + log(1 /α )
+
+n ,
+
+where Creg := C0 B2 
+
+> Xσ2
+> Y
+> λ2min
+
+.
+
+E.3.2 Effect of finite source data 
+
+In this section, we prove statements which allow us to bound the population target risks of feature-subset linear models bhI,P computed on the finite source dataset DP , as well as gaps between these risks. For completeness, we restate the notation for population and empirical feature-subset models. For a feature subset I ⊂ [d], recall the definitions 
+
+hI,P := arg min 
+
+> h∈H I
+
+RP (h); bhI,P := arg min 
+
+> h∈H I
+
+bRP (h),
+
+where HI = {h : Rd → R, h (x) = w⊤x, supp w ⊆ I}. For a collection I ⊂ 2[d] of feature subsets, write 
+
+I⋆ ∈ arg min  
+
+> I∈I
+
+RQ(hI,P ) and bI⋆ ∈ arg min 
+
+> I∈I
+
+bRP (bhI,P )
+
+for the indices of the best population candidate model on the target distribution and of the best finite-sample 
+
+source model on the source distribution, respectively. This induces four candidate models: hI⋆,P (the best population candidate), bhI⋆,P (its finite-sample fit at the same index I⋆), bhcI⋆,P (the empirically-selected candidate), and hcI⋆,P (its population counterpart at the same index bI⋆). Note that neither the population models hI⋆,P and 
+
+hcI⋆,P , nor the empirical models bhI⋆,P and bhcI⋆,P necessarily coincide unless nP = ∞.We first state a "sandwich" bound for the population target risk of any candidate model bhI,P :
+
+Lemma E.3 (Excess target risk of source models) . Let λmax = λmax (Σ −1 
+
+> P
+
+ΣQ). Let I ∈ I . Let 0 < α < 1. Then, with probability at least 1 − α,
+
+EQ(hI,P ) − Err P (nP , I, α ) ≤ E Q(bhI,P ) ≤ E Q(hI,P ) + Err P (nP , I, α ), (12) 
+
+where Err P (nP , I, α ) := 2 pEQ(hI,P )pRate( nP , I, α ) +Rate (nP , I, α ), and Rate (nP , I, α ) := Creg λmax |I|+log(1 /α )
+
+> nP
+
+is the standard rate of convergence of linear regression weighted by the covariate shift ratio λmax .Proof. We compute 
+
+EQ(bhI,P ) = ∥bhI,P − hQ∥2ΣQ ≤ (∥bhI,P − hI,P ∥ΣQ + ∥hI,P − hQ∥ΣQ )2 (13) 
+
+≤ (pλmax ∥bhI,P − hI,P ∥ΣP +
+
+q
+
+EQ(hI,P )) 2, (14) where we have used the finiteness of the covariate shift ratio λmax . The term ∥bhI,P − hI,P ∥ΣP is exactly the square root of the source excess risk of bhI,P with respect to the hypothesis class HI . We thus use Lemma E.2 with dimension |I| to obtain with probability at least 1 − α
+
+∥bhI,P − hI,P ∥2ΣP ≤ Creg 
+
+|I| + log(1 /α )
+
+nP
+
+,
+
+where Creg = C(BX , λ min , σ 2 
+
+> Y
+
+) as in Lemma E.2. Inserting this in (13) yields the upper bound. The lower bound follows similarly by Lemma E.2 and reverse triangle inequality. 36 Looking at the sandwich bound (12) , we observe that Err P (nP , I, α ) → 0 as nP → ∞ . However, the speed of convergence depends on the value of EQ(hI,P ). If EQ(hI,P ) ≲ Rate (nP , I, α ), then Err P (nP , I, α ) = O(d/n P ),resulting in fast convergence. However, when EQ(hI,P ) ≳ Rate (nP , I, α ), we have Err P (nP , I, α ) = O(pd/n P ).Since both the linear regression bound in Lemma E.2 and the inequality |a + b|2 ≤ (|a| + |b|)2 are tight, we remark that this slow-fast rate for the target risk of candidate linear models is unavoidable. The following bound for the gaps between target risks of finite-sample source models follows immediately from Lemma E.3: 
+
+Lemma E.4. Consider two models hI1,P and hI2,P . Define the risk margins ∆( hI1,P , h I2,P ) = |R Q(hI2,P ) −RQ(hI1,P )| and ∆( bhI1,P , bhI2,P ) = |R Q(bhI2,P ) − R Q(bhI1,P )|. Let 0 < α < 1. There exists a constant C =
+
+C(BX , λ min , σ 2 
+
+> Y
+
+) such that with probability at least 1 − α,
+
+∆( hI1,P , h I2,P ) − Err P (nP , I 1, α ) − Err P (nP , I 2, α ) ≤ ∆( bhI1,P , bhI2,P )
+
+≤ ∆( hI1,P , h I2,P ) + Err P (nP , I 1, α ) + Err P (nP , I 2, α ).
+
+Again, we observe that as nP → ∞ , both the lower and upper bound converge to the P -population risk margin 
+
+∆( hI1,P , h I2,P ). However, now the speed of convergence is governed by max {E Q(hI1,P ), EQ(hI2,P )}, and the fast rate for the gap is achieved whenever max {E Q(hI1,P ), EQ(hI2,P )} ≲ dnP .
+
+E.3.3 Proof of Theorem 3.1 
+
+From the auxiliary lemmas in Section E.3.1 and Section E.3.2, we obtain the following facts that we will use in the main proof below: 
+
+1. Concentration of empirical covariance-weighted norm: For nQ ≥ C(BX , λ min , α ) log (d/α ), with probability at least 1 − α, it holds for any vector v ∈ Rd:
+
+12 ∥v∥2ΣD ≤ ∥ v∥2ˆΣD
+
+≤ 32 ∥v∥2ΣD .
+
+2. Excess risk of the linear regression estimator: If n ≥ c0 B4
+
+> X
+> λ2min
+
+(d + log (1 /α )) , then with probability at least 1 − α
+
+RD (bh) − R D (h⋆) ≤ Creg 
+
+d + log(1 /α )
+
+n ,
+
+3. Sandwich identity for the target risk of the source candidate models: With probability at least 
+
+1 − α,
+
+EQ(hI,P ) − Err P (nP , I, α ) ≤ E Q(bhI,P ) ≤ E Q(hI,P ) + Err P (nP , I, α ),
+
+where Err P (nP , I, α ) := 2 pEQ(hI,P )pRate( nP , I, α ) + Rate (nP , I, α ), and Rate (nP , I, α ) := Creg λmax |I|+log(1 /α )
+
+> nP
+
+is the standard rate of convergence of linear regression weighted by the covariate shift ratio λmax .
+
+Excess risk guarantees for the adaptive procedure. We now consider the output of Algorithm 1 step-by-step and prove excess risk guarantees for the first iteration of the algorithm. We then show that additional iterations cannot increase the excess risk of the output. 
+
+Step 1: Guard against negative transfer. First, if HI is empty (corresponding to an empty feature set collection I), the target model is chosen, and the target rate term in the minimum is attained. Thus, without loss of generality, we assume that HI is not empty. We condition on the event of Lemma E.1 on D1 
+
+> Q
+
+(concentration of bΣQ),the event of Lemma E.2 on D1 
+
+> Q
+
+(convergence of linear regression) and the event of Lemma E.3 for all 
+
+I ∈ I (target risk of empirical source models). First, consider the case that after completing Step 1, the accepted set H0acc is empty; that is, ∥bhI,P − bhQ∥2
+
+> bΣQ
+
+>C1 d+log(1 /α ) 
+
+> nQ
+
+and the output of the algorithm ˜h = bhQ. Further, we know by Lemma E.2 that EQ(bhQ) = 
+
+37 ∥bhQ − hQ∥2ΣQ ≤ Creg where Creg = C(BX , λ min , σ 2 
+
+> Y
+
+) from Lemma E.2 Observe that for any model bhI,P ∈ H I
+
+(including I = I⋆), we have by triangle inequality 
+
+∥bhI,P − bhQ∥2ΣQ ≤ 2∥bhI,P − hQ∥2ΣQ + 2 ∥bhQ − hQ∥2ΣQ , (15) and given that the accepted set is empty, we further have by Lemma E.1 that 
+
+∥bhI,P − hQ∥2ΣQ ≥ 13 ∥bhI,P − bhQ∥2
+
+> bΣQ
+
+− ∥ hQ − bhQ∥2ΣQ ≥ ( 13 C1 − Creg ) d + log(1 /α )
+
+nQ
+
+.
+
+In particular EQ(bhI⋆,P ) ≥ c d+log(1 /α ) 
+
+> nQ
+
+for some non-negative constant c > 0. Recall that bhI⋆,P be s.t. I⋆ ∈
+
+arg min I∈I EQ(hI,P ) (the best candidate model) and ϵI⋆ = EQ(hI⋆,P ) as well as bϵI⋆ = EQ(bhI⋆,P ). Further, with 
+
+r(nP ) defined in Equation (4), observe that by Lemma E.3 we have bϵI⋆ ≤ ϵI⋆ + r(nP ). Thus, the first term in the minimum is attained with the constant 13 C1 − Creg > 0 since C1 > 3Creg .Now, let us consider the case that after completing Step 1, H0acc is non-empty. Then, for any accepted model 
+
+bhI,P ∈ H 0acc , it again holds by Lemma E.1 and triangle inequality that 
+
+∥bhI,P − hQ∥2ΣQ ≤ 4∥bhI,P − bhQ∥2
+
+> bΣQ
+
++ 2 ∥hQ − bhQ∥2ΣQ ≤ (4 C1 + 2 Creg ) d + log(1 /α )
+
+nQ
+
+.
+
+Thus, the excess risk is upper bounded by the first term in the minimum with constant C = 4 C1 + 2 Creg .We now show that the excess risk of the output of our procedure is indeed smaller than the second term in the minimum. For this, first, we need to show that I⋆ ∈ H 0acc . One can verify, using again Equation (15) and Lemma E.1, that if ϵI⋆ + r(nP ) ≤ (C1/3 − Creg ) d+log(1 /α ) 
+
+> nQ
+
+, since bϵI⋆ ≤ ϵI⋆ + r(nP ), the model bhI⋆,P satisfies the criterion of Stage 1 and thus bhI⋆,P ∈ H 0acc . Otherwise we have ϵI⋆ + r(nP ) ≥ (C1 − 13 Creg ) d+log(1 /α ) 
+
+> nQ
+
+, and it follows for any bhI,P ∈ H 0acc that 
+
+EQ(bhI,P ) ≤ (4 C1 + 2 Creg ) d + log(1 /α )
+
+nQ
+
+≤ (4 C1 + 2 Creg )
+
+C1 − 13 Creg 
+
+(ϵI⋆ + r(nP )) ,
+
+from which the bound of Theorem 3.1 follows with c0 = (4 C1+2 Creg )  
+
+> C1−13Creg
+
+for any bhI,P , regardless of pruning in Stage 2. Thus, without loss of generality, we restrict ourselves to the case when the best model is accepted, i.e. 
+
+bhI⋆,P ∈ H 0acc .
+
+Step 2: Iterative aggregation and refinement. Here, we prove guarantees for the first iteration of Step 2. We then show that consecutive iterations do not worsen the guarantee. The set H0acc contains |H 0acc | models. We consider a model selection aggregation estimator hagg (H0acc ), or hagg for short (cf. Appendix D), over the dictionary of models H0acc satisfying, with probability 1 − α, the oracle inequality 
+
+EQ(hagg ) ≤ E Q(bhcI⋆,P ) + Cagg 
+
+log |H 0acc | + log(1 /α )
+
+nQ
+
+=: bϵcI⋆ + ragg ,
+
+where bhcI⋆,P = arg min bhI,P ∈H 0acc 
+
+EQ(bhI,P ) is the empirical best model and bϵcI⋆ = EQ(bhI,P ) is its excess target risk (cf. Section E.3.2). On D2
+
+> Q
+
+, we perform the update 
+
+H1acc ←
+
+bhI,P : ∥hagg − bhI,P ∥2
+
+> bΣQ
+
+≤ C2
+
+log |H 0acc | + log(1 /α )
+
+nQ
+
+
+
+.
+
+Case 1: The set H1acc is empty. First, consider the case that the updated set H1acc is empty. If it were to hold that EQ(bhcI⋆,P ) ≤ C log |H 0acc |+log(1 /α ) 
+
+> nQ
+
+, it would follow that 
+
+∥bhcI⋆,P − hagg ∥2ΣQ ≤ ∥ bhcI⋆,P − hQ∥2ΣQ + 2 ∥bhcI⋆,P − hQ∥ΣQ ∥hagg − hQ∥ΣQ + ∥hagg − hQ∥2ΣQ
+
+≤ 2( C + 2 √CpC + Cagg + C + Cagg ) log |H 0acc | + log(1 /α )
+
+nQ
+
+≤ C2
+
+log |H 0acc | + log(1 /α )
+
+nQ
+
+,
+
+38 where we have used Lemma E.1 and assumed C2 > 2Cagg and C ≤ (C2−2Cagg )2
+
+> 8C22
+
+. Thus, the empirical-best model 
+
+bhcI⋆,P would be accepted. It follows that EQ(bhcI⋆,P ) ≥ C log |H 0acc |+log(1 /α ) 
+
+> nQ
+
+. According to Algorithm 1, we output a model bhI,P ∈ arg min bhI,P ∥hagg − bhI,P ∥2
+
+> bΣQ
+
+with the minimal distance to the aggregator. For such a model 
+
+bhI,P , it holds 
+
+∥hagg − bhI,P ∥2
+
+> bΣQ
+
+≤ ∥ hagg − bhcI⋆,P ∥2
+
+> bΣQ
+
+≤ 32 ∥hagg − bhcI⋆,P ∥2ΣQ
+
+≤ 3∥hagg − hQ∥2ΣQ + 3 ∥bhcI⋆,P − hQ∥2ΣQ ≤ 3ragg + 6 bϵcI⋆ .
+
+It follows that 
+
+EQ(bhI,P ) = ∥bhI,P − hQ∥2ΣQ ≤ 4∥hagg − bhI,P ∥2
+
+> bΣQ
+
++ 2 ∥hagg − hQ∥2ΣQ ≤ 24 bϵcI⋆ + 5 ragg .
+
+Define the risk gap b∆I := RQ(bhI,P ) − R Q(bhcI⋆,P ). It thus follows for the output ˜h of Algorithm 1 that 
+
+EQ(˜h) ≤ bϵcI⋆ + sup    
+
+> b∆I≤23 bϵcI⋆+5 ragg
+
+b∆I .
+
+Case 2: The set H1acc is non-empty. Now, consider the case that the updated set H1acc is non-empty. For any accepted model bhI,P it follows that 
+
+∥bhI,P − hQ∥2ΣQ ≤ 2∥bhI,P − hagg ∥2ΣQ + 2 ∥hagg − hQ∥2ΣQ
+
+≤ 4 C2
+
+Cagg 
+
+ragg + 2 bϵcI⋆ + 2 ragg ≤ 2bϵcI⋆ + (4 C2
+
+Cagg 
+
++ 2) ragg .
+
+In particular, for any accepted model bhI,P ∈ H 1acc (and, by convexity, also its aggregate hagg ), it holds that 
+
+EQ(bhI,P ) ≤ bϵcI⋆ + sup    
+
+> b∆I≤bϵcI⋆+Cr agg
+
+b∆I , (16) where C = (4 C2 
+
+> Cagg
+
++ 2) . In particular, if there exists a constant c0 such that bϵcI⋆ ≤ c0ragg , we conclude the guarantee for both Case 1 and Case 2: 
+
+EQ(˜h) ≤ bϵcI⋆ + sup  
+
+> b∆I≲ragg
+
+b∆I . (17) We remark that the guarantees (16) and (17) hold for any element of H1acc , and thus, continue to hold after an arbitrary number of iterations, since a member of H1acc is returned in any case. 
+
+From empirical to population margins. The only remaining step now is to relate our guarantees based on empirical source models to their population counterparts to quantify the effect of source data. Recall the population-best source model 
+
+hI⋆,P ∈ arg min  
+
+> hI,P ∈H I
+
+EQ(hI,P )
+
+and its finite-sample counterpart bhI⋆,P . By definition of the empirical best model bhcI⋆,P , it holds that bϵcI⋆ =
+
+EQ(bhcI⋆,P ) ≤ E Q(bhI⋆,P ). Consider a model bhI,P for which it holds that EQ(bhI,P ) ≤ c1EQ(bhcI⋆,P ) + c2ragg with 
+
+c1, c 2 ≥ 1. Such a model is returned in Case 1 and Case 2. It follows that 
+
+EQ(bhI,P ) ≤ c1EQ(bhI⋆,P ) + c2ragg ,
+
+and thus 
+
+sup    
+
+> EQ(bhI,P )≤c1EQ(bhcI⋆,P )+ c2ragg
+
+EQ(bhI,P ) ≤ sup   
+
+> EQ(bhI,P )≤c1EQ(bhI⋆,P )+ c2ragg
+
+EQ(bhI,P ).
+
+Define the following risk margins: 
+
+∆I := RQ(hI,P ) − R Q(hI⋆,P ); b∆I,I ⋆ := RQ(bhI,P ) − R Q(bhI⋆,P ); ∆I, cI⋆ := RQ(hI,P ) − R Q(hcI⋆,P ); b∆I := RQ(bhI,P ) − R Q(bhcI⋆,P ).
+
+39 We can decompose 
+
+EQ(bhI,P ) = EQ(bhI⋆,P ) + b∆I,I ⋆ ,
+
+and thus rewrite the upper bound as 
+
+EQ(bhI,P ) ≤ E Q(bhI⋆,P ) + sup   
+
+> b∆I,I ⋆≤(c1−1) EQ(bhI⋆,P )+ c2ragg
+
+b∆I,I ⋆ .
+
+Finally, we use Lemma E.3 and Lemma E.4 (taking a union bound over all candidate models) to obtain 
+
+EQ(bhI⋆,P ) ≤ E Q(hI⋆,P ) + Err P (nP , I ⋆, α ); 
+
+b∆I,I ⋆ ≤ ∆I + Err P (nP , I ⋆, α ) + Err P (nP , I, α ).
+
+Denoting ϵI⋆ := EQ(hI⋆,P ), we can express upper bound in terms of population quantities and source-finite-sample error terms as follows: 
+
+EQ(˜h) ≤ ϵI⋆ + Err P (nP , I ⋆, α ) + sup       
+
+> ∆I≲ϵI⋆+Err P(nP,I ⋆,α )+Err P(nP,I,α )+ ragg
+
+∆I + Err P (nP , I ⋆, α ) + Err P (nP , I, α ).
+
+Finally, we take the supremum over Err P (nP , I, α ) which results in r(nP ), define ∆max as in Equation (5), take 
+
+c0 to be max {c1, c 2} over Case 1 and Case 2, and take a union bound over the conditioned events, where for Lemma E.2 for hI,P we use confidence α/ |H I |. This yields the claim. 40 E.4 Lower bound proofs 
+
+E.4.1 Proof of Theorem 3.2. Lemma E.5 (Basic lemma) . Let D1, D 2 be distributions and Z ∼ D⊗nω with ω ∼ Unif ({1, 2}). For any test 
+
+ˆω(Z) ∈ { 1, 2},
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> D⊗nω
+
+(ˆ ω(Z)̸ = ω) ≥ 12
+
+
+
+1 − TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+)
+
+
+
+.
+
+Moreover, by Pinsker and additivity of KL, 
+
+TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+) ≤
+
+r 12 KL( D⊗n 
+
+> 1
+
+∥D⊗n 
+
+> 2
+
+) = 
+
+r n
+
+2 KL( D1∥D2).
+
+Hence, 
+
+sup 
+
+> ω
+
+Pr(ˆ ω(Z)̸ = ω) ≥ 12
+
+
+
+1 −
+
+r n
+
+2 KL( D1∥D2)
+
+
+
+.
+
+Proof. Consider the product distributions D⊗n 
+
+> 1
+
+and D⊗n 
+
+> 2
+
+. Any test ˆω can be identified with a measurable set 
+
+A ⊆ Z n via A := {z : ˆ ω(z) = 1 }. Then, under the uniform prior on ω ∈ { 1, 2},
+
+Pr(ˆ ω(Z)̸ = ω) = 12 Pr 
+
+> Z∼D⊗n
+> 1
+
+(ˆ ω(Z) = 2) + 12 Pr 
+
+> Z∼D⊗n
+> 2
+
+(ˆ ω(Z) = 1) = 12 D⊗n 
+
+> 1
+
+(Ac) + 12 D⊗n 
+
+> 2
+
+(A) = 12
+
+ 1 − (D⊗n 
+
+> 1
+
+(A) − D⊗n 
+
+> 2
+
+(A)) .
+
+Hence 
+
+Pr(ˆ ω(Z)̸ = ω) ≥ 12
+
+ 1 − sup 
+
+> B
+
+(D⊗n 
+
+> 1
+
+(B) − D⊗n 
+
+> 2
+
+(B)) . (18) By the definition of total variation distance, 
+
+TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+) := sup 
+
+> B
+
+|D⊗n 
+
+> 1
+
+(B) − D⊗n 
+
+> 2
+
+(B)| = sup 
+
+> B
+
+(D⊗n 
+
+> 1
+
+(B) − D⊗n 
+
+> 2
+
+(B)) .
+
+Plugging this into (18) yields 
+
+Pr(ˆ ω(Z)̸ = ω) ≥ 12
+
+ 1 − TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+).
+
+Finally, since sup ω Pr D⊗nω ( ˆω(Z)̸ = ω) is at least the average error Pr ( ˆω(Z)̸ = ω) under the uniform prior, we obtain 
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> D⊗nω
+
+(ˆ ω(Z)̸ = ω) ≥ 12
+
+
+
+1 − TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+)
+
+
+
+.
+
+For the second part, by Pinsker’s inequality, 
+
+TV( P, Q ) ≤
+
+r 12 KL( P ∥Q).
+
+By the product property of the KL divergence 
+
+KL( D⊗n 
+
+> 1
+
+∥D⊗n 
+
+> 2
+
+) = n KL( D1∥D2).
+
+In total, 
+
+TV( D⊗n 
+
+> 1
+
+, D ⊗n 
+
+> 2
+
+) ≤
+
+r 12 KL( D⊗n 
+
+> 1
+
+∥D⊗n 
+
+> 2
+
+) = 
+
+r n
+
+2 KL( D1∥D2).
+
+Substituting into the previous inequality concludes the proof. 
+
+Construction of the source distribution. Consider the feature sets I1 = {1}, I2 = {2}. Consider the source distribution with the following marginal: (X1, X 2) ∈ { e1, e 2} with probability 1/2 each, and X3 ∼
+
+Unif ({− 1, +1 }) with (X1, X 2) ⊥ X3. Set Y = √∆. Then the source candidate models are h1,P (X) = √∆X1
+
+and h2,P (X) = √∆X2.41 Construction of the target distribution. We let QX = PX . For ω ∈ { 1, 2}, we define 
+
+Y = √∆1{Xω = 1 } + √ϵI⋆ X3 + ξ, ξ ∼ N (0 , 1) .
+
+We compute the Bayes regression function mω (X) = √∆1{X = eω } + √ϵI⋆ X3. We compute the excess risks of the candidates under the target distribution: under ω = 1 , we have 
+
+EQ(h1,P ) = ϵI⋆ ; EQ(h2,P ) = ∆ + ϵI⋆ .
+
+Under ω = 2 ,
+
+EQ(h1,P ) = ϵI⋆ + ∆; EQ(h2,P ) = ϵI⋆ .
+
+Excess risk lower bound. Let A be any mapping DP × D Q → { h1,P , h 2,P }. Let ˆh = 1 if A outputs h1,P 
+
+and ˆh = 2 otherwise. W.l.o.g., we let A = A(DQ) since DP carries no information about ω. We have 
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> DQ∼D⊗nQω
+
+
+
+EQ(ω) (A(DQ)) ≥ ϵI⋆ + ∆ 
+
+
+
+≥ Eω∼Unif( {1,2}) Pr 
+
+> DQ∼D⊗nQω
+
+
+
+EQ(ω) (A(DQ)) ≥ ϵI⋆ + ∆ 
+
+
+
+= Pr  
+
+> ω∼Unif( {1,2}),DQ∼D⊗nQω
+
+
+
+EQ(ω) (A(DQ)) ≥ ϵI⋆ + ∆ 
+
+
+
+= Pr  
+
+> ω∼Unif( {1,2}),DQ∼D⊗nQω
+
+(ˆh(DQ)̸ = ω).
+
+By Lemma E.5, we have 
+
+inf 
+
+> ˆh
+
+Pr  
+
+> ω∼Unif( {1,2}),DQ∼D⊗nQω
+
+(ˆh(DQ)̸ = ω) ≥ 12
+
+
+
+1 −
+
+r nQ
+
+2 KL( Q1∥Q2)
+
+
+
+.
+
+It remains to bound KL (Q1∥Q2). Since Q1 and Q2 have the same marginal QX and Y | X is Gaussian with unit variance under both hypotheses, we have 
+
+KL( Q1∥Q2) = EX∼QX
+
+h
+
+KL  Q(1)   
+
+> Y|X
+
+∥ Q(2)  
+
+> Y|X
+
+i
+
+= ∆2 ,
+
+where we used KL( N (μ, 1) ∥N (ν, 1)) = (μ−ν)2 
+
+> 2
+
+. Therefore, 
+
+inf  
+
+> A
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> Q(ω)
+
+
+
+EQ(A) ≥ ϵI⋆ + ∆ 
+
+
+
+≥ 12
+
+
+
+1 −
+
+r nQ∆4
+
+
+
+.
+
+In particular, if ∆ ≤ 116 nQ , then 
+
+inf  
+
+> A
+
+sup 
+
+> ω
+
+Pr 
+
+
+
+EQ(A) ≥ ϵI⋆ + ∆ 
+
+
+
+≥ 716 =: c1.
+
+This proves the claim with c0 = 116 .
+
+E.4.2 Proof of Theorem 3.3. 
+
+As in the proof of Theorem 3.2, we first outline our (P, Q ) construction including the two candidate models and then prove the lower bound via reduction to testing. 
+
+Construction of (P, Q (1) , Q (2) ) and the candidates. Fix ∆ ∈ (0 , 1/4] and set 
+
+a := √∆ ∈
+
+
+
+0, 12
+
+i
+
+.
+
+Source distribution and candidates. Let X ∈ Rd take values in {e1, e 2} with 
+
+PX (e1) = PX (e2) = 12 .
+
+42 We consider Y ∈ {− 1, +1 }. Define the conditional distribution of Y given XP (Y = +1 | X = x) = 1 + a
+
+2 , P (Y = −1 | X = x) = 1 − a
+
+2 ∀x ∈ { e1, e 2}.
+
+Hence, EP [Y | X = x] = a for x = e1, e 2.Let I1 = {1} and I2 = {2}. Consider the squared-loss population ERM predictors restricted to these feature sets. The restricted predictors take the form 
+
+hI1,P (x) = a X 1, hI2,P = aX 2.
+
+Target distributions. Define two target regression functions m1, m 2 : {e1, e 2} → R by 
+
+m1(e1) = a, m1(e2) = 0 , m2(e1) = 0 , m2(e2) = a. 
+
+Given ω ∈ { 1, 2}, define Q(ω) on (X, Y ) ∈ { e1, e 2} × {− 1, +1 } by the marginal QX = PX and setting 
+
+Qω (Y = +1 | X = x) = 1 + mω (x)2 , Qω (Y = −1 | X = x) = 1 − mω (x)2 .
+
+Then Eω [Y | X = x] = mω (x).
+
+Target excess risks of the candidates. For squared loss and binary Y ∈ {− 1, +1 }, the Bayes regressor under Q(ω) is the conditional mean mω (X), and for any predictor f we have 
+
+EQ(ω) (f ) := RQ(ω) (f ) − inf  
+
+> g
+
+RQ(ω) (g) = EQ(ω)
+
+(f (X) − mω (X)) 2.
+
+We now compute these excess risks for hI1,P and hI2,P .
+
+Case ω = 1 . Recall m1(e1) = a and m1(e2) = 0 . Also, hI1,P (e1) = a and hI1,P (e2) = 0 , hence hI1,P (X) = m1(X)
+
+almost surely and 
+
+EQ(1) (hI1,P ) = E(hI1,P (X) − m1(X)) 2 = 0 .
+
+On the other hand, hI2,P (e1) = 0 and hI2,P (e2) = a, so 
+
+(hI2,P (e1) − m1(e1)) 2 = (0 − a)2 = a2, (hI2,P (e2) − m1(e2)) 2 = ( a − 0) 2 = a2.
+
+Since QX (e1) = QX (e2) = 1 /2, we obtain 
+
+EQ(1) (hI2,P ) = 12 a2 + 12 a2 = a2 = ∆ .
+
+Case ω = 2 . Under the swapped regression functions m2(e1) = 0 , m2(e2) = a,
+
+EQ(2) (hI2,P ) = 0 , EQ(2) (hI1,P ) = ∆ .
+
+Separation between Q(1) and Q(2) . We have 
+
+∥m1 − m2∥2  
+
+> L2(QX)
+
+= EX∼QX
+
+(m1(X) − m2(X)) 2 = 12 a2 + 12 a2 = a2 = ∆ .
+
+From any algorithm to a decision rule. Let A be any learning algorithm and let ˆf = A(DP , DQ) denote its output predictor (possibly improper). Define the decision rule ˆh(DQ) ∈ { 1, 2, −1} by 
+
+ˆh(DQ) = 
+
+
+
+1, ˆf (e1) > a/ 2 and ˆf (e2) < a/ 2,
+
+2, ˆf (e1) < a/ 2 and ˆf (e2) > a/ 2,
+
+−1, otherwise .
+
+Let A := {D Q : ˆh(DQ)̸ = −1}. In the following lemma, we connect the output of our decision rule to the excess risk of the algorithm: 43 Lemma E.6. For each ω ∈ { 1, 2}, on the event {ˆh(DQ) = −1} we have 
+
+EQ(ω) ( ˆf ) ≥ ∆8 .
+
+Proof. We prove the claim for ω = 1 ; the case ω = 2 is symmetric. Write u1 := ˆf (e1) and u2 := ˆf (e2). Under 
+
+ω = 1 , we have 
+
+EQ(1) ( ˆf ) = 12 (u1 − a)2 + 12 (u2 − 0) 2.
+
+On the event {ˆh = −1}, it is not the case that (u1 > a/ 2 & u2 < a/ 2) , so either u1 ≤ a/ 2 or u2 ≥ a/ 2. If 
+
+u1 ≤ a/ 2 then |u1 − a| ≥ a/ 2 and thus (u1 − a)2 ≥ a2/4. If u2 ≥ a/ 2 then |u2 − 0| ≥ a/ 2 and thus u22 ≥ a2/4.Therefore (u1 − a)2 + u22 ≥ a2/4, and consequently 
+
+EQ(1) ( ˆf ) ≥ 12 · a2
+
+4 = a2
+
+8 = ∆8 .
+
+We observe that for any ω,
+
+{ˆh(DQ)̸ = ω} ⊆ 
+
+
+
+EQ(ω) ( ˆf ) ≥ ∆8
+
+
+
+. (19) Indeed, if ˆh = −1 this follows from Lemma E.6. Otherwise ˆh ∈ { 1, 2} and ˆh̸ = ω implies that ˆf places the “high” value (above a/ 2) on the wrong atom relative to mω , which forces at least one of | ˆf (e1) − mω (e1)| or 
+
+| ˆf (e2) − mω (e2)| to be at least a/ 2, and yields EQ(ω) ( ˆf ) ≥ ∆/8 as in the proof of Lemma E.6. Consequently, for all ω,
+
+Pr 
+
+> Q(ω)
+
+
+
+EQ(ω) ( ˆf ) ≥ ∆8
+
+
+
+≥ Pr 
+
+> Q(ω)
+
+ ˆh(DQ)̸ = ω. (20) 
+
+Lower bounding the testing error via KL. Let Dω denote the single-sample distribution of (X, Y ) under 
+
+Q(ω). By Lemma E.5 in Section E.4.1, 
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> D⊗nω
+
+(ˆh̸ = ω) ≥ 12
+
+
+
+1 −
+
+r n
+
+2 KL( D1∥D2)
+
+
+
+. (21) It remains to upper bound KL( D1∥D2).Under ω = 1 , we compute 
+
+p := Pr 
+
+> ω=1
+
+(Y = +1 | X = e1) = 1 + a
+
+2 ,
+
+while 
+
+Pr 
+
+> ω=1
+
+(Y = +1 | X = e2) = 1 + 0 2 = 12 .
+
+Under ω = 2 , the conditionals are swapped. Therefore, 
+
+KL( D1∥D2) = 12 KL(Ber( p)∥Ber(1 /2)) + 12 KL(Ber(1 /2) ∥Ber( p)) .
+
+We use the standard bound KL ( Ber (r)∥Ber (s)) ≤ (r−s)2 
+
+> s(1 −s)
+
+for r, s ∈ (0 , 1) . With r = p = 1+ a 
+
+> 2
+
+and s = 12 , we have 
+
+KL(Ber( p)∥Ber(1 /2)) ≤ (a/ 2) 2
+
+1/4 = a2, KL(Ber(1 /2) ∥Ber( p)) ≤ (a/ 2) 2
+
+p(1 − p) .
+
+Moreover, p(1 − p) = 1−a2 
+
+> 4
+
+≥ 316 for a ≤ 1/2, so 
+
+KL(Ber(1 /2) ∥Ber( p)) ≤ (a/ 2) 2
+
+3/16 = 43 a2.
+
+44 Combining the bounds gives 
+
+KL( D1∥D2) ≤ 12
+
+
+
+a2 + 43 a2
+
+= 76 a2 = 76 ∆. (22) Plugging (22) into (21) yields 
+
+sup 
+
+> ω
+
+Pr( ˆh̸ = ω) ≥ 12
+
+
+
+1 −
+
+r n
+
+2 · 76 ∆
+
+
+
+= 12
+
+
+
+1 −
+
+r 7n∆12 
+
+
+
+.
+
+Combining with (20), we conclude that for any learning algorithm A,
+
+sup 
+
+> ω∈{ 1,2}
+
+Pr 
+
+> Q(ω)
+
+
+
+EQ(ω) (A) ≥ ∆8
+
+
+
+≥ 12
+
+
+
+1 −
+
+r 7nQ∆12 
+
+
+
+.
+
+In particular, if ∆ ≤ 328 nQ , then 
+
+q 7nQ∆12 ≤ 14 and hence 
+
+inf  
+
+> A
+
+sup 
+
+> Σ(0 ,∆)
+
+Q
+
+
+
+EQ(A) ≥ ∆8
+
+
+
+≥ 38 .
+
+This proves the claim with c0 = 328 and c1 = 38 .45 E.5 Proof of Corollary 4.1 
+
+Proof. Since the graph is acyclic, ( Id − B) is invertible. We define W = ( Id − B)−1. We define the source covariance matrix Ω = W ΣW ⊤. It follows from the invertibility of W and Σ that ΩI,I is invertible for every I.We thus have for the population source linear regression coefficients: 
+
+hI,P = Ω −1 
+
+> I,I
+
+ΩI,Y .
+
+We consider the residual eI = Y − h⊤ 
+
+> I,P
+
+XI . Defining cI ∈ Rd+1 s.t. (cI )Y = 1 , (cI )k = −(hI,P )k for k ∈ I and 0
+
+otherwise, we obtain eI = c⊤ 
+
+> I
+
+V . Finally, we define 
+
+αI = W ⊤cI .
+
+Importantly, it follows for the target residuals: 
+
+eI,Q = c⊤ 
+
+> I
+
+VQ = ( W ⊤c⊤ 
+
+> I
+
+)( U + tA Q) = α⊤ 
+
+> I
+
+U + tα ⊤ 
+
+> I
+
+AQ.
+
+We compute EQ[eI ] = tα ⊤ 
+
+> I
+
+μ and Var Q(eI ) = σ2 
+
+> I
+
++ t2α⊤ 
+
+> I
+
+Hα I , where σ2 
+
+> I
+
+= EQ[( α⊤ 
+
+> I
+
+U )2] = α⊤ 
+
+> I
+
+ΣαI . It follows for the source and target risk of a model hI,P :
+
+RP (hI,P ) = σ2 
+
+> I
+
+RQ(hI,P ) = σ2 
+
+> I
+
++ t2(( α⊤ 
+
+> I
+
+μ)2 + α⊤ 
+
+> I
+
+Hα I ).d-separation implies invariant risk. Let I ∈ I . First, consider the case that I d -separates Y from sP,Q .Since the SCM is Markovian, it follows that Y ⊥ sP,Q | XI . This again implies invariance of the regression function across the domains: E[Y | XI , s P,Q = 0] = E[Y | XI , s P,Q = 1] and in particular hI,P = hI,Q . We now want to show that αI,S (P,Q ) = 0 , i.e. αI is 0 on S(P, Q ). Since the above invariance holds for any additive shift AQ with support in S(P, Q ), it holds in particularly for mean shifts of form te j for any t for j ∈ S(P, Q ).Invariance of residuals then implies that αI,j = 0 , for any j ∈ S(P, Q ).
+
+Non-d-separation almost always implies quadratically growing risk. We now consider the case that I
+
+does not d-separate Y from sP,Q . Define a map gI (B, Σ) = ∥αI,S (P,Q )∥2 which maps the SCM parameters to the squared norm of the coefficients of αI on S(P, Q ). This map is real-analytic since it is rational. In particular, it is either zero or has a countable number of zeros. For any I which is non-d-separating, there exists an active path from sP,Q given XI , in particular, one can choose B and σ such that the active connection results in dependence of the residual on at least one shifted coordinate, i.e. αI,S (P,Q )̸ = 0 . Thus, there exists at least one point (B0, Σ0) s.t. gI (B0, Σ0)̸ = 0 . Therefore, gI is not zero and the set of its zeros has Lebesgue measure zero. This implies αI,S (P,Q )̸ = 0 for almost all (B, Σ) if I is not d-separating. Finally, the set of vectors μ which satisfies μ⊤αI = 0 for αI,S (P,Q )̸ = 0 forms a codimension-one hyperplane in Rd+1 and is thus a set of measure zero. Finally, a union of such hyperplanes over the finite set of non-d-separating I is still a set of measure zero. Taking everything together, we obtain that for all combinations (B, Σ, μ ) apart from a set of Lebesgue measure zero, we have α⊤ 
+
+> I
+
+μ̸ = 0 for all non-d-separating sets I and thus for all such sets, 
+
+RQ(hI,P ) = σ2 
+
+> I
+
++ t2(( α⊤ 
+
+> I
+
+μ)2 + α⊤ 
+
+> I
+
+Hα I ) = σ2 
+
+> I
+
++ Θ( t2).
+
+Finally, we observe that for the risk margin between the d-separating and the non-d-separating I, it holds 
+
+inf 
+
+> I∈I\I sep
+
+RQ(hI,P ) − sup 
+
+> I∈I sep
+
+RQ(hI,P ) = Θ( t2)
+
+and invoke Corollary 3.2 to make our last claim. 46
