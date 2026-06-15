@@ -1,0 +1,335 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-15T22:53:48.301042+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2606.13823v1",
+      "source": "arxiv",
+      "title": "A Stationarity-and-Coupling Criterion for Training-Free Time-Lagged Spectral Embeddings of Multivariate Time Series",
+      "abstract": "We study training-free fixed-length descriptors for multivariate time series and ask not merely whether such a descriptor performs well, but when it can be expected to work at all. Our object of study is $D(τ)$, built from a time-lagged correlation matrix truncated at the Marchenko-Pastur edge so that only signal-bearing eigenvalues survive and classified by cosine similarity to class centroids with zero learned parameters. The central contribution is not the descriptor but a falsifiable applicability criterion for it. Working from a stationary Gaussian VAR(1) model, we argue that $D(τ)$ separates two classes when the signals are approximately stationary and the class information lives in their cross-channel temporal coupling rather than in marginal per-channel power. We derive, semi-formally, three consequences: a distinguishability condition, why the static ($τ=0$) covariance collapses to chance, and why a stationary but power-discriminated paradigm defeats the descriptor. The criterion is operational: a two-part pre-flight test -- an augmented Dickey-Fuller stationarity check and a power-baseline saturation check -- predicts applicability before any training. We validate both halves on a mixed assortment. On four paradigms that satisfy the criterion (Sleep-EDF, BCI-IV-2a, MIT-BIH, ESC-50) the descriptor is competitive with strong baselines at a fraction of their cost, reaching $88.5\\pm4.5\\%$ under 20-subject leave-one-subject-out on Sleep-EDF on a single CPU thread. On three that violate it -- non-stationary ERPs, and financial-volatility and wearable-stress regimes that are power-discriminated -- it fails exactly as the pre-flight predicts, and these negatives are the more informative half. We are explicit that $D(τ)$ is not the most accurate representation; its value is a compact, training-free embedding whose domain of validity is known in advance.",
+      "authors": [
+        "Siddharth Pal",
+        "Viktoria Rojkova"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP",
+        "stat.ML"
+      ],
+      "published": "2026-06-11T18:54:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.13823v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "training-free fixed-length descriptors for multivariate time series feature extraction",
+      "llm_evidence_cn": "无训练固定长度描述符用于多元时间序列特征提取",
+      "llm_evidence": "无训练固定长度描述符用于多元时间序列特征提取",
+      "canonical_evidence": "无训练固定长度描述符用于多元时间序列特征提取",
+      "llm_tldr_en": "Proposes a falsifiable criterion for when training-free time-lagged spectral embeddings work for time series classification, based on stationarity and cross-channel coupling.",
+      "llm_tldr_cn": "本文研究无训练的多变量时间序列固定长度描述符，提出一个可证伪的适用性准则。基于平稳性和跨通道耦合条件，通过时间滞后相关矩阵的谱嵌入实现分类，无需学习参数。实验表明，仅当信号近似平稳且类别信息存在于跨通道时，描述符有效。为无训练时间序列特征提取提供了理论指导。",
+      "llm_tldr": "本文研究无训练的多变量时间序列固定长度描述符，提出一个可证伪的适用性准则。基于平稳性和跨通道耦合条件，通过时间滞后相关矩阵的谱嵌入实现分类，无需学习参数。实验表明，仅当信号近似平稳且类别信息存在于跨通道时，描述符有效。为无训练时间序列特征提取提供了理论指导。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-11-731556-v1",
+      "source": "biorxiv",
+      "title": "Prediction of fMRI activity using vector autoregressive models: a comparison of sparse and low-rank approaches",
+      "abstract": "Vector autoregressive (VAR) models have a history of being used to examine functional connectivity in the brain, as captured by functional MRI studies. Such models allow for an estimation of Granger-causal relationships between regions of interest across the brain. Unfortunately, since the number of parameters in the VAR model scales as the square of the number of regions, and this is typically large compared to the number of temporal observations, these parameter estimates will exhibit high variance. To address this challenge, we introduce a low-rank pre-smoothing method that applies a low-rank approximation to the observations before fitting a VAR model. We estimate these models using individual subject data from both task-based and resting-state conditions, tuning hyper-parameters at the population level. Our low-rank approach is directly compared against sparse and unconstrained estimation methods. Evaluations of predictive performance and model structure reveal that our pre-smoothing technique enables robust individual-level parameter estimation and significantly reduces prediction error, a finding further validated by synthetic experiments where the ground-truth parameters are known.",
+      "authors": [
+        "Tian, X.",
+        "Gibberd, A.",
+        "Roy, S.",
+        "Nunes, M."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-15T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.11.731556v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "VAR models for Granger causal analysis of fMRI time series",
+      "llm_evidence_cn": "使用VAR模型对fMRI时间序列进行Granger因果分析",
+      "llm_evidence": "使用VAR模型对fMRI时间序列进行Granger因果分析",
+      "canonical_evidence": "使用VAR模型对fMRI时间序列进行Granger因果分析",
+      "llm_tldr_en": "Compares sparse and low-rank VAR approaches for fMRI connectivity; proposes low-rank pre-smoothing to reduce parameter variance in Granger causal estimation.",
+      "llm_tldr_cn": "fMRI功能连接研究中VAR模型参数过多导致高方差。本文引入低秩预平滑方法，先对观测数据做低秩近似再拟合VAR模型。在个体数据上比较了稀疏和低秩方法，发现低秩预平滑能有效降低估计方差，并增强Granger因果关系的稳定性。",
+      "llm_tldr": "fMRI功能连接研究中VAR模型参数过多导致高方差。本文引入低秩预平滑方法，先对观测数据做低秩近似再拟合VAR模型。在个体数据上比较了稀疏和低秩方法，发现低秩预平滑能有效降低估计方差，并增强Granger因果关系的稳定性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.13119v1",
+      "source": "arxiv",
+      "title": "MP3: Multi-Period Pattern Pre-training forSpatio-Temporal Forecasting",
+      "abstract": "Spatio-Temporal forecasting is crucial in diverse fields, such as transportation, climate, and energy. Urban spatio-temporal data exhibits temporal mirage: similar short-window inputs have divergent future trends, and vice versa. Existing spatio-temporal graph neural networks (STGNNs) cannot effectively identify such mirages. We argue that the core reason lies in the short-window inputs that have incomplete period observation, heterogeneous global spatial correlation, and cross-period superposition causality. To bridge this gap, we develop a novel Multi- Period Pattern Pre-training (MP3), a plug-and-play pre-training plugin for distinguishing temporal mirages. MP3 presents two core innovations: (1) The multi-period pattern learning is designed to learn multi-period patterns from long time series. Specifically, multi-period temporal modeling leverages edge convolution to identify different multi-period patterns. Multi-period spatial modeling uses a bottleneck project and a global memory bank to capture heterogeneous global spatial relations efficiently. Cross-period pattern interaction employs a causality-enhanced Transformer to capture dependencies across different period patterns. (2) This plugin can seamlessly integrate into existing STGNN backbones to strengthen their forecasting performance. The experiment on five STGNN baselines across five real-world datasets (including a large-scale dataset CA) verify the effectiveness, superior scalability and strong adaptability of MP3, which brings consistent and robust performance improvements across all evaluated baselines. On average, MP3 reduces the MAE 4.7% and the RMSE 5.0%. The code can be available at https://github.com/YAN-outlook/MP3.",
+      "authors": [
+        "Lilan Peng",
+        "Yandi Liu",
+        "Qingren Yao",
+        "Chongshou Li",
+        "Tianrui Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.NE"
+      ],
+      "published": "2026-06-11T09:48:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.13119v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "mentions cross-period causality in time series forecasting",
+      "llm_evidence_cn": "在时空预测中考虑跨周期叠加因果性",
+      "llm_evidence": "在时空预测中考虑跨周期叠加因果性",
+      "canonical_evidence": "在时空预测中考虑跨周期叠加因果性",
+      "llm_tldr_en": "MP3 proposes multi-period pattern pre-training for spatio-temporal forecasting, exploiting cross-period causal relations to distinguish temporal mirages and improve prediction.",
+      "llm_tldr_cn": "该论文针对时空数据中的时间幻象问题，即相似输入可能导致不同未来趋势，提出MP3多周期模式预训练方法，通过设计多周期模式学习和因果性建模，有效区分时空模式，可作为即插即用插件提升现有STGNN的预测性能。实验表明MP3在多个数据集上取得了改进。",
+      "llm_tldr": "该论文针对时空数据中的时间幻象问题，即相似输入可能导致不同未来趋势，提出MP3多周期模式预训练方法，通过设计多周期模式学习和因果性建模，有效区分时空模式，可作为即插即用插件提升现有STGNN的预测性能。实验表明MP3在多个数据集上取得了改进。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.13119v2",
+      "source": "arxiv",
+      "title": "MP3: Multi-Period Pattern Pre-training for Spatio-Temporal Forecasting",
+      "abstract": "Spatio-Temporal forecasting is crucial in diverse fields, such as transportation, climate, and energy. Urban spatio-temporal data exhibits temporal mirage: similar short-window inputs have divergent future trends, and vice versa. Existing spatio-temporal graph neural networks (STGNNs) cannot effectively identify such mirages. We argue that the core reason lies in the short-window inputs that have incomplete period observation, heterogeneous global spatial correlation, and cross-period superposition causality. To bridge this gap, we develop a novel Multi- Period Pattern Pre-training (MP3), a plug-and-play pre-training plugin for distinguishing temporal mirages. MP3 presents two core innovations: (1) The multi-period pattern learning is designed to learn multi-period patterns from long time series. Specifically, multi-period temporal modeling leverages edge convolution to identify different multi-period patterns. Multi-period spatial modeling uses a bottleneck project and a global memory bank to capture heterogeneous global spatial relations efficiently. Cross-period pattern interaction employs a causality-enhanced Transformer to capture dependencies across different period patterns. (2) This plugin can seamlessly integrate into existing STGNN backbones to strengthen their forecasting performance. The experiment on five STGNN baselines across five real-world datasets (including a large-scale dataset CA) verify the effectiveness, superior scalability and strong adaptability of MP3, which brings consistent and robust performance improvements across all evaluated baselines. On average, MP3 reduces the MAE 4.7% and the RMSE 5.0%. The code can be available at https://github.com/YAN-outlook/MP3.",
+      "authors": [
+        "Lilan Peng",
+        "Yandi Liu",
+        "Qingren Yao",
+        "Chongshou Li",
+        "Tianrui Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.NE"
+      ],
+      "published": "2026-06-11T09:48:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.13119v2",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "spatio-temporal forecasting with causal analysis",
+      "llm_evidence_cn": "时空预测与因果分析",
+      "llm_evidence": "时空预测与因果分析",
+      "canonical_evidence": "时空预测与因果分析",
+      "llm_tldr_en": "MP3 pre-trains multi-period patterns to distinguish temporal mirages for spatio-temporal forecasting using causal insights.",
+      "llm_tldr_cn": "针对时空数据中的时间幻象（短窗口输入相似但未来趋势不同）问题，本文提出MP3多周期模式预训练方法，利用跨周期叠加因果性识别幻象，提升预测准确性。",
+      "llm_tldr": "针对时空数据中的时间幻象（短窗口输入相似但未来趋势不同）问题，本文提出MP3多周期模式预训练方法，利用跨周期叠加因果性识别幻象，提升预测准确性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.14079v1",
+      "source": "arxiv",
+      "title": "Deep Spectral Learning of Embedded Latent Transfer Operators for Stochastic Dynamical Systems",
+      "abstract": "We propose a spectral learning method for stochastic nonlinear dynamical systems represented with embedded latent transfer operators in deep feature spaces. We instantiate the method as Deep Spectral Encoder (DSE), an operator-based latent state-space model in which a time-invariant neural encoder implements learnable nonlinear feature maps from observations, and these features define Markovian latent states whose temporal evolution and observation mapping are described by the transfer and observation operators, respectively. Functional canonical correlation analysis in a learnable Galerkin-projected feature space provides state coordinates from past and future observations, and the two linear operators are estimated on the state coordinates as ridge-regularized closed-form solutions that coincide with Galerkin projections of the associated covariance operators. On this representation, we generalize sequential Bayesian filtering and Koopman spectral mode decomposition in feature space. Experiments on several scenarios show stable and superior performance with sequential Bayesian filtering and dynamic mode decomposition baselines even under noise and partial observability.",
+      "authors": [
+        "Ryogo Tanaka",
+        "Yoshinobu Kawahara"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-12T03:55:11+00:00",
+      "link": "https://arxiv.org/pdf/2606.14079v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "generative latent state-space model for stochastic dynamical systems applicable to time series generation",
+      "llm_evidence_cn": "适用于时间序列生成的随机动力系统生成式潜在状态空间模型",
+      "llm_evidence": "适用于时间序列生成的随机动力系统生成式潜在状态空间模型",
+      "canonical_evidence": "适用于时间序列生成的随机动力系统生成式潜在状态空间模型",
+      "llm_tldr_en": "Proposes Deep Spectral Encoder (DSE), an operator-based latent state-space model using neural encoder and transfer operators, enabling sequence generation for stochastic dynamical systems.",
+      "llm_tldr_cn": "该论文针对随机动力系统的建模与生成问题，提出深度谱编码器（DSE），一种基于算子的潜在状态空间模型。通过时间不变的神经编码器实现可学习的非线性特征映射，并利用传递算子描述潜在状态的时序演化。在可学习的Galerkin投影特征空间中，利用函数典型相关分析从过去和未来观测中获取状态坐标。该方法为时间序列生成提供了新的谱学习框架，适用于随机动力系统的数据生成。",
+      "llm_tldr": "该论文针对随机动力系统的建模与生成问题，提出深度谱编码器（DSE），一种基于算子的潜在状态空间模型。通过时间不变的神经编码器实现可学习的非线性特征映射，并利用传递算子描述潜在状态的时序演化。在可学习的Galerkin投影特征空间中，利用函数典型相关分析从过去和未来观测中获取状态坐标。该方法为时间序列生成提供了新的谱学习框架，适用于随机动力系统的数据生成。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.14284v1",
+      "source": "arxiv",
+      "title": "Hierarchical ODE: Learning Continuous-Time Physical Prototypes for Early Link Failure Detection",
+      "abstract": "Time series prototype learning is fundamentally challenged by observational ambiguity. Discrete architectures fail to resolve this, as they lack the capacity to decouple stochastic noise from continuous dynamics. Furthermore, rigid closed-set assumptions fail to capture unseen diversity. To address these limitations, we propose a hierarchical ordinary differential equation clustering network, which utilizes neural ordinary differential equation to model latent state evolution as a continuous integral curve. This formulation enforces temporal continuity to effectively disentangle smooth feature trends from stochastic noise, while our adaptive hierarchical mechanism autonomously determines the appropriate number of prototypes without rigid prior constraints. Validated on the early link failure detection task with irregularly sampled time series, the proposed method effectively extracts underlying physical prototypes, thereby enabling robust failure detection. Our code is available at https://github.com/NJ-LNN/Hierarchical-ODE.",
+      "authors": [
+        "Jiaen Lv",
+        "Leran Qi",
+        "Shaowei Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-12T09:06:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.14284v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "uses neural ODE for continuous-time prototype learning from time series, enabling property mining",
+      "llm_evidence_cn": "利用神经常微分方程从时间序列中学习连续时间原型，实现属性挖掘",
+      "llm_evidence": "利用神经常微分方程从时间序列中学习连续时间原型，实现属性挖掘",
+      "canonical_evidence": "利用神经常微分方程从时间序列中学习连续时间原型，实现属性挖掘",
+      "llm_tldr_en": "Proposes a hierarchical ODE clustering network that models latent state evolution continuously, disentangling trends from noise and adaptively determining prototype count for time series feature learning.",
+      "llm_tldr_cn": "该论文针对时间序列原型学习中的观测歧义和离散架构的不足，提出层次常微分方程聚类网络。利用神经常微分方程将潜在状态演化建模为连续积分曲线，有效分离平滑趋势和随机噪声。自适应层次机制自动确定原型数量，无需预设。在网络故障检测任务中，该方法能学习到有意义的物理原型并实现早期故障检测。这项工作为时间序列的连续表示学习和时序特征挖掘提供了新方法。",
+      "llm_tldr": "该论文针对时间序列原型学习中的观测歧义和离散架构的不足，提出层次常微分方程聚类网络。利用神经常微分方程将潜在状态演化建模为连续积分曲线，有效分离平滑趋势和随机噪声。自适应层次机制自动确定原型数量，无需预设。在网络故障检测任务中，该方法能学习到有意义的物理原型并实现早期故障检测。这项工作为时间序列的连续表示学习和时序特征挖掘提供了新方法。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.14153v1",
+      "source": "arxiv",
+      "title": "Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale: A Frozen-Backbone Grafting Diagnostic",
+      "abstract": "Vision-language-action (VLA) policies typically inherit their vision encoder from upstream VLM releases, but it is unclear whether an encoder choice validated on a small VLA transfers to a larger backbone. We introduce a frozen-backbone grafting diagnostic: the vision tower of a released VLA is replaced by a candidate encoder under a fixed protocol (adaptive average pooling, LayerNorm, and a single trainable linear projector), with the language model and action expert frozen. Across four encoders, two LIBERO suites, two backbones (SmolVLA-450M and $π_{0.5}$-3.3B), and two-to-three seeds per cell (40 main grafting runs plus native, LoRA, pooling, and zero-/shuffled-image controls, all scored by offline action MSE), the small-backbone winner does not reliably select the large-backbone top tier: SigLIP is best on SmolVLA across both suites, while on $π_{0.5}$ DINOv2-small leads the spatial suite and the object suite is a seed-sensitive near-tie band; three of the four backbone-suite comparisons (and 11 of 12 seed-level cells) support backbone-dependent rankings. The grafting wrapper is itself non-neutral with opposite sign across backbones (+45-56% MSE on the SmolVLA native tower, -50-52% on $π_{0.5}$), so all conclusions are conditional on the fixed grafting protocol. We position frozen grafting as a cheap target-backbone diagnostic to run before committing to an encoder at scale, not as a closed-loop deployment claim.",
+      "authors": [
+        "Qingping Zeng",
+        "Fei She"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.RO"
+      ],
+      "published": "2026-06-12T06:27:00+00:00",
+      "link": "https://arxiv.org/pdf/2606.14153v1",
+      "tags": [
+        "keyword:fe",
+        "query:fe"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Frozen-backbone grafting diagnostic for VLA",
+      "llm_evidence_cn": "VLA中冻结骨干移植诊断方法",
+      "llm_evidence": "VLA中冻结骨干移植诊断方法",
+      "canonical_evidence": "VLA中冻结骨干移植诊断方法",
+      "llm_tldr_en": "Proposes a frozen-backbone grafting diagnostic to test encoder transferability across VLA scales, revealing that encoder winners do not reliably transfer.",
+      "llm_tldr_cn": "该论文针对视觉-语言-动作（VLA）策略中编码器选择在不同骨干规模下的迁移性问题，提出了一种冻结骨干移植诊断方法：固定语言模型和动作模块，仅替换视觉编码器，并冻结骨干进行测试。结果表明，在小规模VLA上表现最佳的编码器在更大骨干上不一定保持优势，为冻结编码器评估提供了方法论。",
+      "llm_tldr": "该论文针对视觉-语言-动作（VLA）策略中编码器选择在不同骨干规模下的迁移性问题，提出了一种冻结骨干移植诊断方法：固定语言模型和动作模块，仅替换视觉编码器，并冻结骨干进行测试。结果表明，在小规模VLA上表现最佳的编码器在更大骨干上不一定保持优势，为冻结编码器评估提供了方法论。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.14317v1",
+      "source": "arxiv",
+      "title": "CausalMotion: Structured Physical Reasoning as Keyframe and Trajectory Guidance for Training-Free Video Generation",
+      "abstract": "Recent advances in diffusion-based video generation have significantly improved visual quality and short-term temporal coherence. However, existing methods still struggle to produce videos with physically consistent and causally plausible dynamics, especially in scenarios involving long-horizon interactions. This limitation arises from the fact that video diffusion models primarily learn physical consistency implicitly, while vision-language models can directly model physical laws. Based on this idea, in this work, we propose \\textbf{CausalMotion}, a training-free framework that injects explicit physical reasoning into video generation through structured intermediate representations. Our key idea is to decouple reasoning from generation by leveraging a vision-language model to decompose a text prompt into a sequence of causally consistent keyframes and object-centric motion trajectories. These representations are then aligned and integrated as soft constraints to guide a pretrained video diffusion model during inference. This design enables explicit modeling of object dynamics and causal transitions without requiring additional training or supervision. Extensive experiments show that our method consistently improves physical plausibility and temporal coherence, particularly in dynamics-intensive scenarios, while maintaining high perceptual video quality.",
+      "authors": [
+        "Sihan Zhuang",
+        "Xinyuan Chen",
+        "Tianfan Xue",
+        "Yaohui Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-12T09:57:01+00:00",
+      "link": "https://arxiv.org/pdf/2606.14317v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Causal reasoning for video generation",
+      "llm_evidence_cn": "用于视频生成的因果推理",
+      "llm_evidence": "用于视频生成的因果推理",
+      "canonical_evidence": "用于视频生成的因果推理",
+      "llm_tldr_en": "CausalMotion injects explicit causal reasoning into training-free video generation via structured intermediate representations, improving physical consistency.",
+      "llm_tldr_cn": "该论文针对视频生成中物理一致性和因果合理性不足的问题，提出CausalMotion框架。它通过结构化中间表示（关键帧和轨迹）将显式物理推理注入到免训练的视频生成中，解耦物理推理与视觉生成。方法利用视觉-语言模型来建模物理定律，从而生成长程交互中因果合理的动态。实验表明CausalMotion在多个基准上提升了视频的物理一致性和因果连贯性，其因果推理方法可迁移至时间序列生成领域。",
+      "llm_tldr": "该论文针对视频生成中物理一致性和因果合理性不足的问题，提出CausalMotion框架。它通过结构化中间表示（关键帧和轨迹）将显式物理推理注入到免训练的视频生成中，解耦物理推理与视觉生成。方法利用视觉-语言模型来建模物理定律，从而生成长程交互中因果合理的动态。实验表明CausalMotion在多个基准上提升了视频的物理一致性和因果连贯性，其因果推理方法可迁移至时间序列生成领域。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

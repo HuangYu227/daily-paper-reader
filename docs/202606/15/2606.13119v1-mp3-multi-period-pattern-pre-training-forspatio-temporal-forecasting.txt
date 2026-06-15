@@ -1,0 +1,909 @@
+Title: MP3: Multi-Period Pattern Pre-training forSpatio-Temporal Forecasting
+
+URL Source: https://arxiv.org/pdf/2606.13119v1
+
+Published Time: Fri, 12 Jun 2026 00:52:08 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# MP3: Multi-Period Pattern Pre-training for Spatio-Temporal Forecasting 
+
+Lilan Peng, Yandi Liu, Qingren Yao, Chongshou Li, Tianrui Li 
+
+Abstract —Spatio-Temporal forecasting is crucial in diverse fields, such as transportation, climate, and energy. Urban spatio-temporal data exhibits temporal mirage: similar short-window inputs have divergent future trends, and vice versa. Existing spatio-temporal graph neural networks (STGNNs) cannot ef-fectively identify such mirages. We argue that the core reason lies in the short-window inputs that have incomplete period observation, heterogeneous global spatial correlation, and cross-period superposition causality. To bridge this gap, we develop a novel Multi- Period Pattern Pre-training (MP3), a plug-and-play pre-training plugin for distinguishing temporal mirages. MP3 presents two core innovations: (1) The multi-period pattern learning is designed to learn multi-period patterns from long time series. Specifically, multi-period temporal modeling leverages edge convolution to identify different multi-period patterns. Multi-period spatial modeling uses a bottleneck project and a global memory bank to capture heterogeneous global spatial relations efficiently. Cross-period pattern interaction employs a causality-enhanced Transformer to capture dependencies across different period patterns. (2) This plugin can seamlessly integrate into existing STGNN backbones to strengthen their forecasting performance. The experiment on five STGNN baselines across five real-world datasets (including a large-scale dataset CA) verify the effectiveness, superior scalability and strong adaptability of MP3, which brings consistent and robust performance improve-ments across all evaluated baselines. On average, MP3 reduces the MAE 4.7% and the RMSE 5.0%. The code can be available at https://github.com/YAN-outlook/MP3. 
+
+Index Terms —Spatio-Temporal Graph Neural Network, Pre-Training Plugin, Multi-Period Patterns Learning. 
+
+I. I NTRODUCTION 
+
+Spatio-Temporal forecasting refers to analyzing historical observation data to reveal potential evolution patterns of spatio-temporal data and predict future conditions. It has at-tracted widespread attention due to its critical impact in diverse real-world applications, including intelligent transportation [1], crime prediction [2], and air quality prediction [3]. Early work in spatio-temporal prediction relied primarily on statistical models (e.g., Historical Average (HA) [4] and ARIMA [5], [6]) and early machine learning techniques such as vector Auto-Regression [7], [8]. The advent of spatio-temporal big data has prompted a paradigm shift towards data-driven deep learning approaches [9]–[12], which excel at learning the inherent spatio-temporal dependencies in dynamic systems [13]. Recent significant efforts [14] have been devoted to 
+
+Lilan Peng, Yandi Liu, Chongshou Li, Tianrui Li are with the School of Computing and Artificial Intelligence, Southwest Jiaotong University, Chengdu 611756, China. (E-mail: llpeng@my.swjtu.edu.cn, LYD270816@outlook.com, lics@swjtu.edu.cn, trli@swjtu.edu.cn) Qingren Yao is at Eindhoven University of Technology, Eindhoven 5612 AZ, Nether-lands. (E-mail:q.yao@tue.nl ) Corresponding Authors: Tianrui Li (trli@swjtu.edu.cn). Value    
+
+> Time Steps
+> (a) Multi -Period Patterns in Long Time Series
+> Time Domain (T= 1200)
+> FFT
+> Period Pattern 1 Period Pattern 2 Period Pattern 3
+> Frequency
+> Normalized Amplitude
+> (b) Incomplete Period Observation in Short Time Series
+> Value
+> Time Steps
+> Long Time Series
+> (T= 1200)
+> W3 W1 W2
+> : Short Window
+> : Long Window
+> : Future Time Series
+> What each window sees:
+> Frequency
+> P1
+> P2
+> P3
+> Frequency Domain
+> Short windows miss full periodic patterns
+> (c) Temporal Mirage
+> Time Steps
+> Value
+> Time Steps
+> Value
+> Temporal Mirage : Similar Input & Different Output
+
+Figure 1 Period Patterns for Long and Short Time Series and Temporal Mirage. As shown in Figure (a), long time series exhibit rich period patterns (period pattern 1, period pattern 2, period pattern 3), which can be clearly reflected in the frequency domain through dominant peaks (P1, P2, P3). In contrast, Figure (b) shows that short windows capture only partial period information, failing to identify temporal mirages: similar inputs (W1, W3) have divergent future trends, as depicted in Figure (c). Our plugin MP3 is capable of effectively distinguishing temporal mirages by learning multi-period patterns from long time series. designing increasingly intricate spatio-temporal graph neural networks (STGNNs), such as improved graph convolution net-works [15]–[19], adaptive graph structure learning [20]–[27], efficient attention mechanisms [28]–[32], and other advanced frameworks [33]–[36], which yield incremental yet meaningful performance gains. Despite continuous architectural innovations, performance improvements have gradually slowed and tend to saturate, which can be primarily attributed to a key problem: most of these existing models struggle to identify temporal mirages. As shown on the left in Figure 1(c), spatio-temporal data exhibit a temporal mirage phenomenon, where short-term inputs can be very similar, yet the future trends are completely different; conversely, similar future trends may be from entirely identical  
+
+> arXiv:2606.13119v1 [cs.LG] 11 Jun 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2
+
+short-term inputs. We argue that the reasons arise from three main factors when observations are confined to short windows: 
+
+incomplete period observation, heterogeneous global spatial correlation, and cross-period superposition causality .
+
+Incomplete period observation: Most current models usually use a small window input, e.g., the past twelve time steps (one hour) to predict the future twelve time steps, which is blind to context information (e.g., multi-period patterns) beyond the window. As shown in Figure 1(b), short windows merely capture local, incomplete period observation. On the contrary, long time series, as illustrated in Figure 1(a), inherently con-tain diverse multi-period patterns (e.g., period pattern 1, 2, and 3), which can be clearly presented as distinct prominent peaks (P1, P2, and P3) in the frequency domain. Moreover, two similar short-term trends may exist in a completely different position of a long time series. For example, the local pattern of ’a continuous increase in passenger flow over one hour’ could occur during the ’initial phase of the morning peak’ (suggesting continued future growth) or during the ’peak-to-decline phase of the morning peak’ (suggesting an impending drop). Short time series fail to encode the absolute period position to which they belong, leading to misjudgments about the future. 
+
+Heterogeneous global spatial correlation: Similar short-term temporal dynamics may correspond to completely differ-ent global spatial association patterns. For instance, the same local pattern of ’increasing morning peak flow’ can appear in a ’commuting core business district’ versus a ’suburban scenic area’. The underlying global spatial association (such as origin-destination patterns of passenger flow) is entirely different in these two spatial contexts. Short-window inputs lack sufficient statistical evidence to distinguish these context-dependent spatial patterns, leading models to make erroneous inferences. 
+
+Cross-period superposition causality: We observe that multi-period patterns exhibit unidirectional causal influence from strong to weak period patterns. This inherent causal direction is determined by the strength of each pattern, not its cycle length. For instance, taking ’passenger flow at 8:00 AM’ as an example, it depends not only on the immediate trend of the ’past five minutes’ but is also jointly shaped by long-cycle patterns such as ’whether it is the morning peak (intraday period)’ and ’whether it is a working day (weekly period)’. On workdays, the intraday morning peak is a strong pattern and exerts one-way causal effects on short-term fluctu-ations. On weekends, the weekly pattern becomes dominant, unidirectionally suppressing the usual morning peak. Fundamentally, all three challenges stem from the inability of short-window inputs to support explicit modeling of multi-period patterns in long spatio-temporal sequences. An intuitive solution to the above challenges is to adopt an end-to-end model. However, existing models rely heavily on intricate and tailored designs; any attempt to decouple or reassemble their components often results in degraded prediction performance, lacking scalability and generality. Moreover, the computational and memory cost of STGNNs grows exponentially when the input window length increases. Pre-training strategies have achieved remarkable success in natural language processing [37] and computer vision [38], and have recently inspired ini-tial explorations in spatio-temporal forecasting [39]–[41]. By learning context-rich representations, pre-training can effec-tively enhance various downstream models. Motivated by these advantages, we propose a scalable and general multi-period pattern pre-training framework MP3 that can be seamlessly integrated into nearly arbitrary STGNNs and applied across a wide range of spatio-temporal datasets. The core of MP3 is a multi-period pattern learning module, which systematically solves the three aforementioned challenges. Multi-period tem-poral modeling employs edge convolution to decouple inde-pendent patterns of different periods from long time series and learn intra- and inter-period temporal variation dependencies, thereby obtaining a unique multi-period position identity to resolve the incomplete period observation problem. Multi-period spatial modeling represents large-scale, heterogeneous, and global spatial interactions through bottleneck projection and global memory bank strategies, directly capturing the 
+
+heterogeneous global spatial correlation . Cross-period pattern interaction leverages a causal-enhanced transformer to learn interactions across various period patterns, explicitly learning the cross-period superposition causality that is invisible in short windows. Our contributions are delivered as follows.  
+
+> •
+
+We introduce MP3, a scalable and general plug-and-play pre-training module to capture multi-period patterns from long-term spatio-temporal data. Built upon multi-period temporal modeling, multi-period spatial modeling, and cross-period pattern interaction, MP3 effectively models spatio-temporal dependencies in a period pattern, as well as causal correlations across different period patterns.  
+
+> •
+
+We seamlessly integrate MP3 into existing STGNN back-bones, significantly enhancing forecasting performance. Specifically, we freeze the parameters of the pre-trained MP3 and employ a gating mechanism to adaptively fuse the extracted multi-period patterns with short-term inputs.  
+
+> •
+
+We evaluate MP3 on four publicly available spatio-temporal datasets and a large-scale dataset CA with five representative STGNN backbones. The experimen-tal results demonstrate that MP3 consistently improves prediction performance on different models and datasets, confirming its stronger capability in modeling multi-period patterns from long-term spatio-temporal data. Fur-thermore, notable gains on the large-scale CA dataset demonstrate MP3’s strong scalability. II. R ELATED WORK 
+
+A. Spatio-Temporal Prediction 
+
+Spatio-Temporal forecasting, which aims to employ histor-ical observation data to predict future conditions, has long been a focus of research [42], [43]. Early statistical approaches gained some improvement but frequently proved inadequate in capturing dynamic spatial correlation and complex spatio-temporal dependencies in spatio-temporal data [14]. To solve these issues, attention has shifted toward deep learning frame-works, which excel at learning complex and dynamic features, like nonlinear spatio-temporal correlations [15], [44]. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3
+
+STGNNs [14] bring a paradigm shift in spatio-temporal prediction by seamlessly integrating graph neural networks [45] and temporal modeling methods [16]. Several influential STGNNs [15], [23], [24], [44] have been developed, further enhanced by attention mechanisms [28] for dynamic relation modeling. Several advanced methods have focused explicitly on modeling spatio-temporal heterogeneity. Specifically, Gao et al. [41] devise a decoupled masked strategy to distill spatial and temporal knowledge in the pre-training stage [41]. A heterogeneity-informed learning Network [27] lever-ages dedicated spatial, temporal, and spatio-temporal meta parameter learning to model complex and dynamic spatio-temporal heterogeneity. Furthermore, self-supervised learning paradigms for multi-modal forecasting integrate contrastive learning and data augmentation to capture cross-modal hetero-geneous patterns [46]. Nevertheless, these methods suffer from a critical limitation: they cannot provide representations for multi-period patterns in long-range traffic sequences. Existing pre-training plugins only focus on generic spatio-temporal knowledge distillation, while neglecting the inherent period that dominates spatio-temporal variations. To fill this gap, we design a plug-and-play pre-training plugin MP3, which explicitly models and distills multi-period pattern knowledge to enhance spatio-temporal forecasting. 
+
+B. Period Patterns Modeling 
+
+Modeling Period patterns is critical in spatio-temporal pre-diction. Early research employed various methods to capture these patterns: Zhang et al. [9] utilize convolutional neural net-works to separately capture daily and weekly cycles in traffic data; Ye et al. [21] analyze the evolutionary patterns of graph structures across different temporal scales through temporal feature aggregation; Ma et al. [22] design a time-aware graph learning method, combining temporal difference learning with a period discriminant function to construct dynamic spatio-temporal graphs, thereby capturing spatial dependencies with both trend and period features. However, these multi-period modeling approaches generally rely on short-term time series for period pattern identification, failing to adequately learn the complex and rich period regularities present in long-term time series. For time series prediction, TimesNet [47] reshapes 1D time series into 2D tensors, using a CNN-based hierarchical structure to learn correlations across different time scales. However, directly employing convolutional operations to ex-tract multi-period features may lead to information loss and reduced accuracy. Furthermore, although TimesNet presents 2D reshape visualizations, explaining their correspondence to the original 1D temporal semantics remains challenging. MSGNet [48] employs a graph convolution module to capture inter-series relations and utilizes an attention mechanism to model intra-series dependencies, yet its adaptive graph con-volution mechanism significantly increases model complex-ity and computational overhead. MICN [49] integrates local feature extraction and global correlation modeling through a multi-scale convolutional architecture, but its performance is highly sensitive to hyperparameter tuning (e.g., convolution scales), and its fully convolutional design sacrifices model interpretability. To model complex temporal dynamics in long sequences, recent work leverages transformer-based encoders within pre-training modules, thereby extracting robust long-term depen-dencies. For instance, STD-MAE [41] devises a decoupled masking strategy across spatial and temporal dimensions to distill spatio-temporal knowledge in pre-training stage. Han et al. [50] develop a linearized Transformer to learn long-term time series features in pre-training stage. While these approaches can represent long-term spatio-temporal depen-dencies, they fall short in distilling multi-period knowledge. Therefore, we provide a novel plug-and-play pre-training plugin MP3 that extracts multi-period pattern knowledge from long-term sequences and ensembles them into STGNN backbones to strengthen the performance of spatio-temporal prediction. III. METHODOLOGY 
+
+Spatio-Temporal Forecasting: Given historical T-step spatio-temporal data Xt−T +1: t and graph network G, spatio-temporal forecasting for the next Q time steps can be defined as follows: 
+
+ˆXt+1: t+Q = Fθ (Xt−T +1: t; G) (1) Here Fθ represents the objective function, and Xt =(x1 
+
+> t
+
+, x 2 
+
+> t
+
+, . . . , x Nt ) ∈ RN ×D is real observation values of N
+
+nodes at time t with D input dimensions. MP3 is a plug-and-play pre-training plugin, as is depicted in Figure 2, that extracts and distills multi-period pattern knowl-edge from long-term time series. By seamlessly integrating into existing STGNN backbones, MP3 significantly enhances its ability to model complex long-term multi-period spatio-temporal dependencies during the forecasting stage. First, we perform context-aware embedding (section III-A) on long-term spatio-temporal data, followed by a temporal structure transform (section III-B) that extracts diverse period features and transforms 1D time series into a 2D representation. Furthermore, we design a multi-period pattern learning mod-ule, which consists of three components: multi-period tem-poral modeling (section III-C), multi-period spatial modeling (section III-D), and cross-period pattern interaction (section III-E). Multi-period temporal modeling captures dependencies of intra and inter-period variations via edge convolution. Multi-period spatial modeling efficiently learns multi-period spatial dependencies using bottleneck projection and memory bank strategies. The cross-period pattern interaction employs a causality-enhanced Transformer to capture dependencies among different period patterns. 
+
+A. Context-Aware Embedding 
+
+Formally, we start with the historical observation sequence 
+
+Xt−T +1: t. The context-aware embedding (CAE) module is devised to preserve the intrinsic period feature of spatio-temporal data while compressing long input sequences to reduce computational complexity. Crucially, leveraging con-volutional translation invariance, CAE aligns distant recurring JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4Temporal Structure   
+
+> Transform
+> Long -Term Time Series
+> Prediction
+> (c) Cross -Period
+> Pattern Interaction
+> (b) Multi -Period
+> Spatial Modeling
+> Context -Aware
+> Embedding
+> Period Pattern 1
+> Period Pattern k
+> Multi -Period Pattern
+> Learning
+> Inter -Period Variation
+> Horizontal Convolution Vertical Convolution
+> (a) Multi -Period
+> Temporal Modeling
+> Attention
+
+V
+
+K
+
+Q k×k
+
+> Causal Matrix
+
+𝑋 0𝜖 𝑅 𝑇 ×𝑁 ×𝐷 
+
+> Scaling &
+> Softmax
+> Batch -node input
+
+T
+
+×
+
+D
+
+N
+
+T
+
+×
+
+D
+
+N
+
+> Output
+
+D D
+
+D’  
+
+> Bottleneck
+> Momentum Global Memory
+> Sparse Graph Convolution
+
+(a) Multi -Period Temporal Modeling 
+
+(b) Multi -Period Spatial Modeling 
+
+(c) Cross -Period Pattern Interaction 
+
+Figure 2 depicts the framework of MP3. The core module is multi-period pattern learning, which integrates multi-period temporal modeling, multi-period spatial modeling, and cross-period pattern interaction to capture multi-period patterns in long-term time series. Multi-period temporal modeling captures both intra- and inter-period variations via edge convolution. Multi-period spatial modeling then efficiently models heterogeneous global spatial correlation using bottleneck projection and memory bank strategies. Finally, cross-period pattern interaction leverages a causality-enhanced Transformer to capture dependencies across different period patterns. patterns, thereby preserving long-range inter-period dependen-cies. We first apply a context convolutional layer to the input tensor Xt−T +1 ∈ RT ×N ×D. This operation compresses the temporal length of the sequence while preserving core period patterns like daily morning and evening peaks. 
+
+B. Temporal Structure Transform 
+
+Each time point exhibits two types of temporal variations: (1) intra-period variation among adjacent time points within the same period, and (2) inter-period variation across different periods at the same phase. For instance, in a one-week cycle, t=0 days and t=7 days (i.e., next Monday) represent distinct temporal instances yet share the same phase, as both align with the early morning start of Monday. However, conventional 1D temporal representations are limited to capturing only intra-period variations between adjacent time points, failing to model inter-period dependencies that share the same phase. To tackle this issue, we design a temporal structure transform module that includes multi-period identification, main period selection, and time series reshaping to accurately mine and structurally represent dynamic implicit periods in long-term time series. 
+
+a) Multi-Period Identification: The insight of this mod-ule is to extract multi-period features via frequency-domain analysis. Inspired by TimesNet [47], we extract the dominant period components from the embedded sequence XE using the Fast Fourier Transform (FFT). 
+
+F = Avg  Amp (FFT (XE))  (2) Specifically, we first apply FFT (·) to transform the embed-ded sequence into frequency domain, then use the Amp (·)
+
+operator to extract the amplitude values corresponding to each frequency, and averaged over the feature dimension D via Avg (·) to obtain the aggregated frequency vector F ∈ RL,where L denotes the frequency dimension. Thus, Vector F provides a frequency-domain feature of XE.
+
+b) Main Period Selection: Temporal dynamics often ex-hibit non-stationary period features, and the frequency-driven period selection mechanism enables the model to track time-varying period scales adaptively. Therefore, based on the ag-gregated frequency F , we further select the set of main period lengths {p1, . . . , p k}. Specifically, we apply the arg Top-k function to identify the k largest amplitudes corresponding to the top-k strongest period patterns, obtaining the dominant frequencies {f1, . . . , f k} associated with the corresponding period patterns {p1, . . . , p k}sorted in descending order of amplitude strength. This ordering defines the causal interaction sequence in Section E. The formulation is as follows: JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 5FFT    
+
+> F1
+> F2 Fk
+> Reshape Reshape Reshape
+> .
+> .
+> .
+> Amplitude
+> Flow  Period
+> Patten 1
+> Period
+> Patten 2
+> Period
+> Patten k
+
+Figure 3 2D Time Structures. We leverage Fast Fourier Transform to transform 1D time series into 2D time variances and select the top-k prominent period patterns. 
+
+f1, . . . , f k = arg Top-k 
+
+> f∗∈{ 1,...,L/ 2}
+
+(F )
+
+pi = Lfi
+
+.
+
+(3) 
+
+c) Time Series Reshape: We argue that although the strength of period patterns may fluctuate locally, the structural dependencies across different period patterns remain relatively stable, which allows the model to learn consistent intra-series and inter-series correlations. Therefore, after determining the main period patterns {p1, . . . , p k} and their corresponding frequencies {f1, . . . , f k}, we explicitly decouple period cor-relations through time series reconstruction. For each period pattern pi, we first perform zero-padding on the embedded sequence XE to ensure compatibility with the Reshape pi,f i
+
+operation, and convert the 1D time series XE into a set of 2D tensors Xi ∈ RN ×pi×fi×D through the following transformation: 
+
+Xi = Reshape pi,f i (Padding (XE)) , i ∈ { 1, . . . , k } (4) Through this transformation, the original sequence is reor-ganized according to different period patterns. This not only retains intra-period variations within individual period tensors, but also establishes inter-period variations across different period slices. 
+
+C. Multi-Period Temporal Modeling 
+
+To tackle the inability of short-window inputs to derive discriminative multi-period positional representations, we need to decouple and model intra-period and inter-period temporal variations separately from long time series. We observe that intra-period variations and inter-period variations are relatively independent in temporal dependencies, which is also vali-dated in section IV-F4. Thus, different from the 2D-Inception Block leveraged in TimesNet [47], we devise a multi-period temporal modeling block to model intra-period and inter-period variations separately, achieving dense and decoupled feature learning for both temporal variations. Specifically, we adopt edge convolution for temporal modeling, which com-prises two parallel operations: horizontal convolution Ch(Xi)
+
+with an inception-inspired set of [1 , 2l + 3] kernels, where 
+
+l = 0, 1, . . . , P − 1, operating along the fi dimension to capture inter-period variations, and P denotes the set number of convolution kernels. Meanwhile, the vertical convolution 
+
+Cv (Xi) employs a corresponding set of [2 l + 3 , 1] kernels on the pi dimension to capture intra-period variations. The formulation is as follows: 
+
+Ch(Xi) =  
+
+> P−1
+
+X
+
+> l=0
+
+Conv (Xi, K = (1 , 2l + 3)) 
+
+Cv (Xi) =  
+
+> P−1
+
+X
+
+> l=0
+
+Conv (Xi, K = (2 l + 3 , 1)) 
+
+(5) 
+
+XEdge  
+
+> i
+
+= Ch(Xi) + Cv (Xi) (6) Subsequently, an adaptive average pooling layer [51] is applied to resolve scale discrepancies induced by the convo-lutions. Crucially, this operation restores the feature map di-mensions to (pi, f i), ensuring that the total spatial size strictly matches the original time series length (i.e., pi × fi = T ). Finally, a reshape operation projects the 2D time series back to the 1D time series: 
+
+Xti = Reshape 
+
+
+
+AdaptivePool  XEdge  
+
+> i
+
+, (pi, f i)
+
+∈ RN ×T ×D
+
+(7) 
+
+D. Multi-Period Spatial Modeling 
+
+To model heterogeneous global spatial correlation, global topological perception is required to distinguish context-dependent spatial patterns. However, this process faces three practical constraints: prohibitive computational cost for large node sets, global structure loss due to batch sampling, and spatial feature redundancy. To alleviate the above issues, we devise a spatio-temporal bottleneck projection for dimension reduction, a sparse graph convolution on dynamic sub-graphs, and a momentum memory bank for global context restoration. Formally, let the input batch be Xti ∈ RNb×T ×D, where 
+
+Nb is the number of sampled nodes indexed by Ib. The block transforms the input into the output Xsi via a unified residual mapping: 
+
+Xsi = Pout 
+
+N
+
+h
+
+Gθ
+
+ Φ( Xti )| {z }
+
+> Local Aggregation
+
++ E M[Ib]| {z }
+
+> Global Memory
+
+i (8) where N (·) represents the layer normalization operation; 
+
+E(·) is the expansion operator that aligns dimensions via broadcasting; and Pout denotes the linear projection to the output dimension. The process involves three steps: JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 6
+
+a) Spatio-Temporal Bottleneck Projection: We first re-duce the feature dimension from D to D′ = D/ 4 and extract local patterns using a 2D convolution with kernel size 3 × 3:
+
+H = Φ( Xti ) = σ
+
+
+
+BN  Xti ∗ Wϕ
+
+
+
+(9) where ∗ denotes convolution on period and feature di-mensions, Wϕ denotes the learnable convolutional kernel parameters, σ is LeakyReLU, and BN is batch normalization. This step removes redundant information while preserving key spatial correlations. 
+
+b) Sparse Graph Convolution: Next, we aggregate local spatial features using a sub-adjacency matrix ˜Ab, which is dynamically extracted from the global adjacency matrix A
+
+based on the current node indices Ib. The operation yields the local feature representation Zlocal ∈ RNb×T ×D′
+
+:
+
+Zlocal = Gθ (H) = N
+
+  ˜Ab ⊗ HWθ
+
+
+
+(10) Here, ⊗ represents the sparse spatial aggregation operator, which implicitly aligns dimensions to perform message pass-ing between neighboring nodes. Wθ is a learnable projection matrix, and N (·) denotes Layer Normalization. This allows efficient modeling of local dependencies without processing the full graph. 
+
+c) Momentum Global Memory: To recover global struc-tural information lost during batch sampling, we maintain a global memory bank M[Ib] ∈ RN ×D′
+
+. It is updated at each node-batch using an Exponential Moving Average (EMA) of the batch’s static spatial features ¯z ∈ RNb×D′
+
+:
+
+M[Ib+1 ] ← μ · M [Ib] + (1 − μ) · 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Z(t)
+
+> local
+
+!
+
+(11) where M[Ib] represents the memory vectors associated with the current batch indices Ib, and Ib+1 denotes the next node-input batch. The retrieved memory vectors are broadcast across the time and period dimensions to match the shape of local features, and then added directly. This effectively supplements the current batch with global structural information that would otherwise be missing due to node sampling. Finally, Pout 
+
+projects the fused features to the target output dimension. 
+
+d) Complexity Analysis: The complexity of the multi-period spatial modeling block is analyzed as follows. The bottleneck projection compresses the feature dimension by 2D convolution, reducing the subsequent computation from full D-dimensional operations to quarter-scale D′ = D/ 4
+
+ones. The sparse graph convolution performs message passing over only K neighbors per node instead of the full N -node graph, reducing the per-layer cost from O(NbN T D ′) for dense aggregation to O(NbKT D ′ +NbT D ′2), where K ≪ N .The global memory bank updates all N nodes once per batch via exponential moving average at cost O(N D ′); this overhead is negligible during inference since the bank serves as a static lookup table. The output projection maps features back to the target dimension at quarter-scale cost. In total, the block achieves O(NbT D 2 + NbKT D + N D ′) complexity, reducing the quadratic node cost O(N 2T D ) of dense graph convolution to linear and enabling scalable deployment on real-world road networks with thousands of nodes. 𝑎 11  𝑎 12  𝑎 13 
+
+𝑎 21  𝑎 22  𝑎 23 
+
+𝑎 31  𝑎 32  𝑎 33 
+
+Directed Acyclic Graph 
+
+# P1
+
+# P2 P3
+
+Causal Interaction 
+
+P1
+
+P1 P2 P3
+
+P2
+
+P3
+
+1 1 1
+
+0 1 1
+
+0 0 1
+
+b11  b12  b13 
+
+0 b22  b23 
+
+0 0 b33 
+
+Learnable Matrix 
+
+Causal Matrix 
+
+P1 P2 P3
+
+P1
+
+P2
+
+P3
+
+# ⊙
+
+Figure 4 Causal Interaction and Causal Matrix. We observe that strong period patterns (e.g., P1) exert a dominant causal influence on weak period patterns (e.g., P2,P3), and this interaction is unidirectional. Therefore, we define and apply a strict upper triangular matrix (Directed Acyclic Graph) to enforce the acyclic causal constraint of distinct period patterns. 
+
+E. Cross-Period Pattern Interaction 
+
+We design multi-period temporal modeling and multi-period spatial modeling modules to capture spatio-temporal depen-dencies for each period pattern. However, there exist complex causal interactions among various period patterns. We observe an inherent, fixed, and unidirectional causality across diverse period patterns: stronger patterns (e.g., P1) exert a dominant causal influence on weaker ones (e.g., P2, P 3). To model this causal relationship, we develop a cross-period pattern interaction module. We first combine the spatio-temporal dependencies of all k period patterns into Xc =(Xs 
+
+> 1
+
+, X s 
+
+> 2
+
+, . . . , X sk ) ∈ Rk×N ×T ×D , strictly ordered from the strongest pattern P1 to the weakest ones. Breaking this causal ordering leads to a significant drop in model performance, as verified in Section IV-C2. As illustrated in Figure 4, we devise a causal mask operation based on a directed acyclic graph (DAG) to enforce information flow only from stronger patterns to weaker ones. This ensures that the representation of each period pattern is derived from itself and stronger period patterns, thereby effectively capturing cross-period pattern interactions. Then, we generate query Q, key K, and value 
+
+V tensors through three separate linear projection layers: 
+
+Q = Wq (Xc), K = Wk(Xc), V = Wv (Xc) (12) Here Wq , Wk, and Wv denote learnable linear projection matrices with the input and output dimension of D. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 7
+
+Subsequently, we calculate the cross-period similarity ma-trix between query and key: Sim = Q · K⊤
+
+√D (13) where Sim ∈ Rk×k denotes the similarity scores among different period patterns, and √D is the scaling factor. Next, we construct the causal matrix αcausal by imposing a scale-constrained mask on learnable parameters: 
+
+αcausal = σ(α) ⊙ M dag (14) where α ∈ Rk×k is a learnable matrix that adapts cross-scale interaction strengths, σ(·) is the sigmoid activation. 
+
+Mdag ∈ {0, 1}k×k is an upper triangular mask where 
+
+Mdag [i, j ] = 1 if i ≤ j, where smaller indices correspond to stronger period patterns, enforcing that higher-energy patterns only attend to lower-energy ones. The resulting αcausal is a soft causal strength matrix in [0 , 1] , which preserves acyclicity while adaptively learning the magnitude of causal influence between valid period pattern pairs. We then fuse the normalized causal weights with the softmax-normalized similarity matrix to obtain the final causal attention weights: 
+
+W = Softmax (Sim ) ⊙ αcausal (15) Finally, we perform weighted aggregation on V using the causal attention weights and sum the results across all period patterns to obtain the final cross-period feature representation 
+
+Xo ∈ RT ×N ×D :
+
+Xagg = W · VXo =
+
+> K
+
+X
+
+> k=1
+
+Xagg ,k 
+
+(16) 
+
+F. Training Strategy 
+
+MP3 is a universal pre-training plugin to enhance the performance of downstream spatio-temporal prediction. It con-tains a two-step training strategy: a pre-training step and a downstream spatio-temporal forecasting. In the pre-training step, the goal is to learn multi-period patterns from long-term time series. Downstream spatio-temporal forecasting aims to seamlessly integrate MP3 into existing STGNN backbones, thereby improving their predictive performance and serving as a plug-and-play component. In the pre-training step, MP3 takes historical long-term time series Xlong as input, adopts a regression task for prediction to obtain the long-term period pattern features Z, and employs MAE as the loss function. 
+
+Z = f (Xlong ), (17) In the downstream spatio-temporal forecasting step, MP3 is frozen and set to eval mode, as shown in Figure 5. To integrate the learned multi-period pattern features with short-term ob-servations, a gating mechanism is applied to fuse Z with the short-term raw data Xshort = ( Xt−T ′+1 , Xt−T ′+2 , . . . , Xt),MP3 
+
+> Short -Term
+> Time Series
+> Period
+> Features
+> Linear
+> 𝒵 t
+> Gating Mechanism
+> Prediction
+> Time Series
+> Backbones
+> STGNN
+> sigmoid
+> 1-
+
+Figure 5 Downstream Spatio-Temporal Forecasting. As a plug-and-play component, MP3 is frozen and seamlessly integrated with short-term time series features via a gating mechanism to enhance existing STGNN backbones. where T ′ is the predefined length of short-term time series. The fusion process is formally defined as: 
+
+E = Linear  Xshort 
+
+,γ = δ (ZWh, 1 + EW h, 2 + bh) ,
+
+H = γ · Z + (1 − γ) · E,
+
+(18) Where Linear( ·) denotes data linear representation, and δ
+
+is a sigmoid activation function. Wh, 1, Wh, 2 ∈ Rd×d and 
+
+bh ∈ Rd are learnable parameters, enabling the model to autonomously select the period pattern representation learned by MP3. The plugin MP3 effectively mitigates the limitation that downstream models are unable to capture long-term multi-period dependencies. IV. EXPERIMENT 
+
+A. Experimental Setup 1) DataSet: We evaluated MP3 on the four most widely used spatio-temporal prediction benchmarks. PEMS03, PEMS04, PEMS07, PEMS08 datasets [52] and a large-scale dataset CA, which collect from the California Performance Measurement System (PeMS), all sampled at 5-minute in-tervals. CA leverages a full traffic network including 9,638 traffic sensors deployed across all nine districts [50]. More detailed description of these five benchmarks can be presented in Table I. Following standard preprocessing, we applied Z-score normalization to transform raw observations to zero-mean, unit-variance distributions. To maintain a consistent comparison with existing works, we adhere to the conventional dataset partitions widely adopted in prior work. In the case of the five datasets, the split of training, validation, and testing datasets is 6:2:2.                   
+
+> Dataset Sensors Timesteps Time Range PEMS03 358 26,208 09/2018-11/2018 PEMS04 307 16,992 01/2018-02/2018 PEMS07 883 28,224 05/2017-08/2017 PEMS08 170 17,856 07/2016-08/2016 CA 9,638 28,224 04/2022-06/2022
+
+TABLE I: Datasets statistics 
+
+2) Implementation Settings: Our plugin MP3, all base-lines, and benchmarks are implemented with PyTorch, run on a computational server with the Ubuntu 22.04.3 operating system, and the server was outfitted with NVIDIA GeForce RTX 3090 GPUs. For the spatio-temporal forecasting step, each baseline model’s plugin and non-plugin variants use the JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 8
+
+same learning rate and training epochs, while the backbone parameter settings follow the original settings. For MP3, the observation window T is set to 1248, the prediction horizon Q
+
+is set to 12, and the hidden dimension is set to 32. Furthermore, we set parameter k to 3 (selecting the top-3 strongest period patterns by amplitude). We trained the model via the Adam optimizer, configuring a learning rate of 0.001, setting gradient clipping to a maximum value of 5, and running the training for 100 epochs. 
+
+3) Evaluation Metric: The evaluation is conducted using three widely-adopted metrics in spatio-temporal prediction [53]: Mean Absolute Error (MAE), Root Mean Square Error (RMSE), and Mean Absolute Percentage Error (MAPE). These metrics are formulated as: 
+
+M AE = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+| ˆyi − yi| (19) 
+
+RM SE =
+
+vuut 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+( ˆ yi − yi)2 (20) 
+
+M AP E = 100% 
+
+n
+
+> n
+
+X
+
+> i=1
+
+ˆyi − yi
+
+yi
+
+(21) Here n is the number of test samples, ˆyi and yi mean the predicted value and the ground truth, respectively. 
+
+4) Baselines: The MP3 serves as a multi-period pattern learning plugin that can be integrated into various existing spatio-temporal prediction backbones. To validate the en-hancement of MP3, we employ five typical spatio-temporal prediction models as backbones.  
+
+> •
+
+STGCN [44]: STGCN is a typical traffic flow pre-diction method, which designs a sandwich framework consisting of two temporal convolution networks and one graph convolution network, which only leverages the convolution operation to model complex spatio-temporal dependencies.  
+
+> •
+
+GWNet [24]: GWNet combines dilated causal convolu-tions to capture long-range temporal dependencies with a novel self-adaptive graph structure to learn the intrinsic and dynamic spatial relationships between nodes in a graph without requiring a predefined structure.  
+
+> •
+
+STWA [54]: STWA maps time series from distinct traffic sensors into stochastic variables, and dynamically designs location and time customized parameters to model com-plex, evolving traffic patterns.  
+
+> •
+
+MSDR [55]: MSDR proposes a novel variant of recurrent neural networks to tackle the challenge of capturing long-range spatial dependencies, explicitly uses the hidden states from various historical time intervals as inputs. It also develops a Graph-based MSDR framework that integrates MSDR with graph neural networks.  
+
+> •
+
+STNorm [56]: STNorm introduces two modular com-ponents: Temporal Normalization and Spatial Normal-ization. TN separates time series into high- and low-frequency components to enhance the former, while the SN module isolates local, variable-specific components from the raw data. For a fair comparison, we benchmark MP3 against GPT-ST [40], a competitive spatio-temporal modeling plugin that utilizes a specialized parameter learning strategy for spatio-temporal data. To ensure a fair evaluation, both the backbones and MP3-enhanced variants are configured using the optimal hyperparameter settings from the backbones’ official imple-mentations. 
+
+B. Performance Analysis 1) Overall Performance: Table II provides the experimental outcomes of MP3 evaluated over five representative backbones and four spatio-temporal datasets. The results consistently indicate that the integration of MP3 yields substantial perfor-mance improvements across all evaluated backbones. Notably, in the majority of cases, backbones enhanced with MP3 achieve state-of-the-art results, surpassing not only their base models but also those augmented with the competing GPT-ST framework. A comprehensive analysis of MP3’s performance enhancements is conducted from key dimensions:  
+
+> •
+
+Consistent Performance Enhancement with MP3. The experimental results demonstrate that MP3 yields consis-tent performance gains across diverse baseline methods, and such a positive effect is not confined to any specific type of baseline, which manifests the generalization abil-ity of MP3. We attribute this improvement to the multi-period knowledge distillation and multi-period pattern learning of long-term time series in the pre-training stage.  
+
+> •
+
+Comparative Analysis of Different Backbones. On the large-scale PEMS07 dataset, MP3 delivers consistent per-formance gains across all backbone networks and all three evaluation metrics. Moreover, relative to recent meth-ods such as STNorm and MSDR, MP3 yields notably greater performance gains when integrated with classical baselines like STGCN. Specifically, integrating MP3 with STNorm yields gains of 0.95 in MAE, 1.34 in RMSE, and 0.54% in MAPE, whereas integrating MP3 with STGCN leads to larger gains of 2.59 in MAE, 3.32 in RMSE, and 1.34% in MAPE on PEMS07 dataset. This finding can be attributed to the fact that advanced baselines such as STNorm are already carefully designed to cap-ture diverse spatio-temporal patterns, thereby encoding rich prior knowledge and leaving comparatively limited room for additional signals from pre-training. In contrast, classical methods such as STGCN, due to their simpler design and more restricted representational capacity, can exploit the auxiliary information provided by MP3 more effectively, leading to substantially improved modeling of complex dependencies.  
+
+> •
+
+Comparison with Pre-training Methods. Except for evaluating MP3 against STGNNs trained from scratch, we also benchmark MP3 against GPT-ST, a pre-training method designed to learn spatio-temporal heterogeneity. Different from GPT-ST, our MP3 mainly focuses on the multi-period feature and multi-period pattern learning, which achieves superior performance to GPT-ST on all datasets and three evaluation metrics. Furthermore, MP3 validates an even more notable performance advantage JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 9
+
+TABLE II: Experimental results of baseline models and their enhanced versions with GPT-ST and MP3 on four PEMS datasets. Best results in each group are highlighted in bold. 
+
+Model PEMS03 PEMS04 PEMS07 PEMS08 MAE RMSE MAPE MAE RMSE MAPE MAE RMSE MAPE MAE RMSE MAPE STGCN 17.49 30.12 17.15% 19.88 31.19 13.63% 22.79 36.18 9.93% 16.25 25.13 11.07% +GPT-ST 16.83 28.48 18.13% 20.08 35.46 13.22% 22.56 36.91 9.84% 16.24 25.93 10.45% +MP3 15.99 26.02 15.14% 19.03 29.61 13.20% 20.20 32.86 8.59% 14.83 22.81 9.87% 
+
+∆ -1.50 -4.10 -2.01% -0.85 -1.58 -0.43% -2.59 -3.32 -1.34% -1.42 -2.32 -1.20% GWNet 15.27 23.98 14.98% 18.74 28.64 12.87% 20.35 31.98 8.60% 14.40 23.39 9.21% +GPT-ST 14.90 26.92 15.16% 19.01 32.95 12.81% 19.93 33.20 8.33% 13.96 22.83 9.16% +MP3 14.89 23.61 14.44% 18.48 28.33 12.80% 18.89 30.54 8.09% 13.77 21.43 9.14% 
+
+∆ -0.38 -0.37 -0.54% -0.26 -0.31 -0.07% -1.46 -1.44 -0.51% -0.63 -1.96 -0.07% STWA 16.14 25.68 15.65% 19.92 30.02 13.82% 21.41 34.20 9.23% 16.16 25.80 10.55% +GPT-ST 15.46 27.72 15.31% 19.50 33.26 13.08% 20.62 34.52 8.84% 15.29 24.50 9.81% 
+
++MP3 15.88 25.13 15.13% 19.17 29.11 12.90% 20.23 32.07 8.82% 15.03 22.71 10.19% 
+
+∆ -0.26 -0.55 -0.52% -0.75 -0.91 -0.92% -1.18 -2.13 -0.41% -1.13 -3.07 -0.36% MSDR 15.76 24.80 15.51% 20.39 30.93 14.22% 22.18 34.28 9.82% 16.33 24.69 10.60% +GPT-ST 15.87 26.60 16.02% 19.86 33.58 13.50% 21.36 34.54 9.32% 15.92 25.03 10.33% +MP3 15.53 24.75 15.09% 19.64 30.07 13.85% 20.99 32.90 9.26% 15.18 23.32 10.28% 
+
+∆ -0.23 -0.05 -0.42% -0.75 -0.86 -0.37% -1.19 -1.38 -0.56% -1.15 -1.37 -0.32% STNorm 15.69 24.88 15.10% 19.54 29.81 13.51% 21.06 33.46 9.08% 15.82 23.74 10.05% +GPT-ST 15.50 27.52 15.85% 19.15 33.55 12.69% 20.25 34.60 8.54% 15.10 25.10 10.03% +MP3 15.59 24.86 14.66% 18.85 28.74 13.07% 20.11 32.12 8.54% 14.73 22.40 9.85% 
+
+∆ -0.10 -0.02 -0.44% -0.69 -1.07 -0.44% -0.95 -1.34 -0.54% -1.09 -1.34 -0.20% 
+
+Figure 6 Performance Comparison of Forecasting Horizons across Four Datasets on STGCN and MSDR Backbones 
+
+on the large-scale dataset PEMS07. This highlights the broader scalability of MP3. 
+
+2) Performance on Different Forecasting Horizons: Figure 6 reports the MAE results of forecasting horizons 3, 6, 9, 12 cross four datasets on STGCN and MSDR backbones. The key findings are threefold. First, MP3 consistently enhances the performance of STGCN and MSDR across all horizons and surpasses GPT-ST, further validating the robustness of the results in Table II. Second, the improvement of MP3 on MSDR is less pronounced than on STGCN, as MSDR already accounts for complex long-term spatio-temporal dependencies, which is consistent with Table II. Third, MP3 has a greater im-pact on short-horizon predictions, achieving remarkable gains, particularly at Horizon 3. The longer window of Horizon 12 lets the backbone capture more period patterns by itself, while the shorter window at Horizon 3 limits such ability, making the period context(e.g., phase in long-period patterns ) from MP3 more impactful. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 PEMS03 PEMS08      
+
+> 12
+> 14
+> 16
+> 18
+> MAE  15.99
+> 14.83
+> 16.21
+> 14.88
+> 16.89
+> 14.98
+> STGCN+MP3
+> with 2DC
+> with Linear
+> PEMS03 PEMS08
+> 20
+> 25
+> 30
+> RMSE
+> 26.02
+> 22.81
+> 26.21
+> 23.07
+> 27.05
+> 23.02
+> STGCN+MP3
+> with 2DC
+> with Linear
+> PEMS03 PEMS08
+> 5
+> 10
+> 15
+> MAPE (%)
+> 15.14%
+> 9.87%
+> 16.44%
+> 9.97%
+> 16.34%
+> 9.97%
+> STGCN+MP3
+> with 2DC
+> with Linear
+> PEMS03 PEMS08
+> 12
+> 14
+> 16
+> 18
+> MAE  14.89
+> 13.77
+> 14.91
+> 14.11
+> 15.68
+> 13.99
+> GWNet+MP3
+> with 2DC
+> with Linear
+> PEMS03 PEMS08
+> 20
+> 25
+> 30
+> RMSE  23.61
+> 21.43
+> 23.69
+> 21.80
+> 24.37
+> 21.59
+> GWNet+MP3
+> with 2DC
+> with Linear
+> PEMS03 PEMS08
+> 5
+> 10
+> 15
+> MAPE (%)
+> 14.44%
+> 9.14%
+> 14.73%
+> 9.45%
+> 15.32%
+> 9.23%
+> GWNet+MP3
+> with 2DC
+> with Linear
+
+Figure 7 Experimental Results of Multi-Period Temporal Modeling Ablation 
+
+C. Ablation Study 
+
+We carry out ablation studies with multi-period temporal modeling ablation, cross-period pattern interaction ablation, and other variants to investigate how each module affects the performance of MP3 on the PEMS03 and PEMS08 datasets and STGCN and GWNet backbones. 
+
+1) Multi-Period Temporal Modeling Ablation: To validate the impact of multi-period temporal modeling, we introduce two variants for comparison:  
+
+> •
+
+with 2Dc: Replace the edge convolution with 2D convo-lution.  
+
+> •
+
+with Linear: Substitute the edge convolution with a linear layer. Figure 7 presents the experimental results of multi-period temporal modeling variants on PEMS03 and PEMS08 using STGCN and GWNet as backbones. The results indicate that the use of 2-D convolution substantially degrades the per-formance of the model, highlighting the superiority of the proposed edge convolution method. Furthermore, employing Linear, a widely adopted and lightweight temporal dependency modeling approach, also results in a noticeable decline in predictive performance. 
+
+2) Cross-Period Pattern Interaction Ablation: To evaluate the effectiveness of cross-period pattern interaction, we design three ablation variants:  
+
+> •
+
+w/o Cro: Remove cross-period pattern interaction mod-ule.  
+
+> •
+
+w/o CaM: Remove the directed acyclic graph mask matrix, and leverage the traditional transformer.  
+
+> •
+
+w/ Perturb: Manually reverse the natural strength order of period patterns by swapping the feature tensors of top-1 and top-2 period patterns before the DAG causal mask module, breaking the strong-to-weak unidirectional causal interactions. Table III provides the experimental results of cross-period pattern interaction variants on PEMS03 and PEMS08 using STGCN and GWNet as backbones. The results show that ’w/o TABLE III: Experimental result of cross-period pattern in-teraction ablation with STGCN and GWNet backbones on PEMS03 and PEMS08 datasets 
+
+Model PEMS03 PEMS08 MAE RMSE MAPE MAE RMSE MAPE 
+
+STGCN 
+
++MP3 15.99 26.02 15.14 % 14.83 22.81 9.87% 
+
+w/o Cro 16.40 26.48 16.74% 14.97 22.99 10.30% w/o CaM 16.40 26.38 16.49% 14.99 23.19 9.92% w/ Perturb 16.94 26.82 17.67% 15.01 23.16 9.97% 
+
+GWNet 
+
++MP3 14.89 23.61 14.44% 13.77 21.43 9.14% 
+
+w/o Cro 15.91 24.77 15.60% 14.00 21.76 9.38% w/o CaM 15.03 23.62 14.49% 13.86 21.50 9.18% w/ Perturb 15.35 23.86 15.54% 13.91 21.63 9.15% 
+
+Cro’ significantly degrades model performance, highlighting the importance of modeling cross-period pattern interactions. ’w/o CaM’ also impairs performance, implying the causal association across different period patterns. Moreover, The results show that ’w/o Perturb’ consistently degrades model performance under all settings, which highlights that the inher-ent strength order of period patterns is the core foundation of cross-period interaction, and provides solid empirical support for our DAG-based causal mask design. 
+
+3) Other Ablation: To validate the importance of other modules, we consider three ablated versions:  
+
+> •
+
+w/o Cem: Remove context convolution for temporal downsampling module.  
+
+> •
+
+w/o Spa: Delete multi-period spatial modeling module.  
+
+> •
+
+with Fix: In this variant, we replace the dynamic period patterns with fixed period values by removing the multi-period identification and main period selection modules, followed by reshaping the time series with constant periods of 14, 30, and 60. Table IV present the experimental result of the other ablation study. From Table IV, on the PEMS03 and PEMS08 datasets JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 11 Horizon 3 Horizon 6 Horizon 12 Average           
+
+> 0
+> 1
+> 2
+> 3
+> 4
+> MAE
+> 1.24 1.48 1.71
+> 1.43
+> 1.18 1.41 1.65
+> 1.37
+> BigST
+> +MP3
+> Horizon 3 Horizon 6 Horizon 12 Average
+> 2.0
+> 2.5
+> 3.0
+> 3.5
+> 4.0
+> MAPE (%)
+> 2.37%
+> 3.01%
+> 3.61%
+> 2.90%
+> 2.26%
+> 2.89%
+> 3.51%
+> 2.79%
+> BigST
+> +MP3
+> Horizon 3 Horizon 6 Horizon 12 Average
+> 2.0
+> 2.5
+> 3.0
+> 3.5
+> 4.0
+> RMSE
+> 2.49
+> 3.09
+> 3.56
+> 2.96
+> 2.45
+> 3.05
+> 3.54
+> 2.93
+> BigST
+> +MP3
+
+Figure 8 Experimental Results on Large Scale Dataset CA 
+
+TABLE IV: Experimental result of other ablation with STGCN and GWNet backbones on PEMS03 and PEMS08 datasets 
+
+Model PEMS03 PEMS08 MAE RMSE MAPE MAE RMSE MAPE 
+
+STGCN 
+
++MP3 15.99 26.02 15.14% 14.83 22.81 9.87% 
+
+w/o Cem 16.78 26.83 16.93% 15.04 23.19 10.08% w/o Spa 16.44 26.48 16.72% 14.92 22.99 9.94% with Fix 16.34 26.66 15.90% 14.91 22.98 9.94% 
+
+GWNet 
+
++MP3 14.89 23.61 14.44% 13.77 21.43 9.14% 
+
+w/o Cem 15.27 23.99 15.49% 13.94 21.55 9.50% w/o Spa 15.21 24.13 14.75% 13.92 21.62 9.24% with Fix 15.27 23.68 14.92% 13.97 21.77 9.24% 
+
+with STGCN and GWNet as backbones, we can gain the following observations:  
+
+> •
+
+”w/o Cem” has a substantial impact on experimental results, leading to a decrease of 0.79 and 0.21 in MAE on PEMS03 and PEMS08 with STGCN as backbone. This indicates that the context convolution for the temporal downsampling module plays a critical role in strengthen-ing the model’s overall performance.  
+
+> •
+
+”w/o Spa” results in comparable performance degrada-tion, with MAE decreasing by 0.45 and 0.32 on PEMS03 with STGCN and GWNet as backbones. This reveals that multi-period spatial pattern learning is important for the performance improvement of the MP3 model.  
+
+> •
+
+”with Fix” leads to the performance degradation of 0.35 in MAE on PEMS03 with STGCN as backbone, which indicates that the period feature is dynamic and diverse. 
+
+D. Parameter Sensitivity Analysis 
+
+To evaluate the impact of the input window length T on model performance and efficiency, we conducted experiments with four different window sizes: 720, 1248, 1800, and 2040. As shown in the Table V, increasing T leads to moderate improvements in prediction accuracy, with MAE decreasing from 14.18 to 13.71, RMSE from 21.97 to 20.97, and MAPE from 9.34% to 8.88%. However, the training time per epoch increases substantially from 229 seconds to 515 seconds, indicating a clear trade-off between predictive performance and computational cost. Considering both aspects, we select 
+
+T = 1248 as the optimal setting, as it achieves competitive accuracy while maintaining a moderate training time of 385 seconds per epoch, offering a favorable balance between effectiveness and efficiency. TABLE V: Performance comparison under different input window lengths                     
+
+> TMAE RMSE MAPE Training time (s/epoch) 720 14.18 21.97 9.34% 229 1248 13.77 21.43 9.14% 385 1800 13.75 21.21 9.07% 430 2040 13.71 20.97 8.88% 515
+
+E. Scalability for Large Scale Spatio-Temporal Network 
+
+To validate MP3’s superior scalability for large-scale traffic networks, we implement the experiment on the CA dataset and set BigST [50] as the backbone. The experimental results are depicted in Figure 8. We compare BigST with the enhanced model by MP3 on Horizon 3 (15 minutes), Horizon 6 (30 minutes), Horizon 12 (1 hour), and the Average of all 12 horizons with the three metrics. From Figure 8, we draw the following findings:  
+
+> •
+
+MP3 consistently outperforms the baseline across all three evaluation metrics and time horizons, with partic-ularly notable improvements on MAE and MAPE. We attribute this performance gain to the model’s ability to distill multi-period knowledge and capture multi-period patterns from long-term traffic time series during pre-training, which are not considered in the BigST model.  
+
+> •
+
+MP3 presents strong scalability. It consistently ob-tains performance improvements not only on small-scale datasets such as PEMS03, PEMS04, PEMS07, and PEMS08 with hundreds of nodes but also on the large-scale CA dataset with thousands of nodes, manifesting its excellent scalability across diverse traffic network scenarios. 
+
+F. Case Study 1) Visualization of Forecasting Results : To illustrate the generalizability and effectiveness of MP3 across datasets with diverse backbones, Figure 9 visualizes the prediction results of MSDR, STGCN, STWA, and their enhanced models on the PEMS04 and PEMS08 datasets. Based on the comparative analysis of the prediction results, the models with MP3 achieve a better fit with the ground truth, leading to more accurate prediction performance. We attribute this improvement to JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 12 
+
+(a) STGCN on PEMS04 (b) STGCN on PEMS08 (c) MSDR on PEMS04 
+
+(d) MSDR on PEMS08 (e) STWA on PEMS04 (f) STWA on PEMS08 
+
+Figure 9 Comparison of Forecasting Results between MP3 and Three Backbones. P1 P2 P3     
+
+> PEMS03
+> W1
+> W2
+> W3
+> W4
+> W5
+> W6
+> P1 P2 P3
+> PEMS04
+> W1
+> W2
+> W3
+> W4
+> W5
+> W6
+> P1 P2 P3
+> PEMS08
+> W1
+> W2
+> W3
+> W4
+> W5
+> W6
+> 20
+> 40
+> 60
+> 80
+> 100
+
+Figure 10 Dynamic Period Patterns. 
+
+the proposed MP3 model, which more effectively captures long-term and dynamic Period dependencies and learn the interactions among different Period patterns. This capability enables a more precise extraction of long-term trends, which ultimately results in higher accuracy in traffic speed prediction. 
+
+2) Dynamic multi-period patterns: Figure 10 presents the frequency-domain heatmaps of three significant period patterns extracted from long-time series on the PEMS03, PEMS04, and PEMS08 datasets. The figure shows that the period patterns of different input windows (w1,w2,...,w6) vary dynamically. 
+
+3) Visualization of Temporal Mirage: Figure 11(b) illus-trates input time series windows with different temporal lengths. Specifically, MP3 adopts long input windows that span a broader temporal range, enabling the capture of rich temporal context, including period patterns and long-term dependencies. In contrast, short input windows (e.g., STWA) can only access limited recent observations. Figure 11(a) presents the corresponding forecasting results. It can be observed that two similar short input sequences correspond to entirely different future ground-truth trends, which is a typical manifestation of the temporal mirage phenomenon. Models that overly rely on short-term input MP3 Long Input(W2)     
+
+> MP3 Long Input(W1)
+> STWA Short Input(W1)
+> STWA Short Input(W2)
+> Ground truth of W1/W2
+> (a) Temporal Mirage and Forecasting Results of MSDR and +MP3
+> Value
+> Time Steps
+> Time Steps
+> (b) Input Time Series Windows of Node5 on PEMS08
+> Value
+
+Figure 11 Temporal Mirage and Comparison of Forecasting Results 
+
+patterns (e.g., MSDR) struggle to generalize when the data distribution shifts, resulting in significant performance degra-dation. In contrast, the predictions generated by MP3 closely align with the ground truth, demonstrating superior forecasting performance. These results indicate that learning multi-period patterns from long input windows is crucial for enhancing model stability, mitigating the temporal mirage effect, and improving prediction accuracy. 
+
+4) Time 2D Structure: Figure 12 illustrates the Visual-ization of 2D temporal structures from multi-period tempo-ral modeling. Three dominant frequencies (8, 26, 104) on PEMS04 dataset are adaptively extracted via FFT ampli-tude spectra. Regular block-like striped patterns are observed JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 13 
+
+without row-column coupling distortions, reflecting inherent independence between intra-period and inter-period variations and supporting our decoupled edge convolution design. PEMS04 
+
+Figure 12 Case Study of 2D Temporal Structure 
+
+V. CONCLUSION This paper presented MP3, a novel plug-and-play compo-nent designed to enhance urban spatio-temporal prediction by effectively modeling multi-period spatio-temporal depen-dencies from long-term time series. MP3 was composed of two stages. In the pre-training stage, it distilled knowledge of multi-period patterns through multi-period temporal and spatial modeling, along with cross-period pattern interactions. In the downstream forecasting stage, MP3 was seamlessly integrated into existing spatio-temporal graph neural network backbones, strengthening their capacity to identify temporal mirage. Extensive experiments on five spatio-temporal datasets validated that MP3 consistently outperformed existing meth-ods, confirming its effectiveness, scalability, and adaptability for spatio-temporal prediction. For future work, we plan to explore two main directions. First, we intend to integrate more rigorous causal discovery methods into cross-period interaction modeling to improve interpretability. Second, we will further enhance MP3’s ability to support large-scale, low-cost inference for real-world deployment. REFERENCES [1] S. A. Sayed, Y. Abdel-Hamid, H. A. Hefny, Artificial intelligence-based traffic flow prediction: a comprehensive review, Journal of Electrical Systems and Information Technology 10 (2023) 13. [2] Z. Li, C. Huang, L. Xia, Y. Xu, J. Pei, Spatial-temporal hypergraph self-supervised learning for crime prediction, in: IEEE 38th International Conference on Data Engineering, 2022, pp. 2984–2996. [3] K. H. Hettige, J. Ji, S. Xiang, C. Long, G. Cong, J. Wang, Airphynet: Harnessing physics-guided neural networks for air quality prediction, in: Proceedings of the 12th International Conference on Learning Representations, 2024, p. 1–17. [4] B. L. Smith, M. J. Demetsky, Traffic flow forecasting: Comparison of modeling approaches, Journal of Transportation Engineering (1997) 261–266. [5] O. D. Anderson, G. E. P. Box, G. M. Jenkins, Time series analysis: Forecasting and control, The Statistician (1978) 265. [6] M. Lippi, M. Bertini, P. Frasconi, Short-term traffic flow forecasting: An experimental comparison of time-series analysis and supervised learn-ing, IEEE Transactions on Intelligent Transportation Systems (2013) 871–882. [7] H. L¨ utkepohl, New introduction to multiple time series analysis, Springer Berlin Heidelberg eBooks (Jan 2005). [8] E. Zivot, J. Wang, Vector autoregressive models for multivariate time series (2003) 369–413. [9] J. Zhang, Y. Zheng, D. Qi, Deep spatio-temporal residual networks for citywide crowd flows prediction, in: Proceedings of the Thirty-First AAAI Conference on Artificial Intelligence, 2017, p. 1655–1661. [10] X. Ma, Z. Tao, Y. Wang, H. Yu, Y. Wang, Long short-term memory neural network for traffic speed prediction using remote microwave sensor data, Transportation Research Part C: Emerging Technologies (2015) 187–197. [11] S. Hochreiter, J. Schmidhuber, Long short-term memory, Neural Com-putation (1997) 1735–1780. [12] J. Zhang, Y. Zheng, D. Qi, R. Li, X. Yi, Dnn-based prediction model for spatio-temporal data, in: Proceedings of the 24th ACM SIGSPA-TIAL International Conference on Advances in Geographic Information Systems, 2016. [13] Y. Lv, Y. Duan, W. Kang, Z. Li, F.-Y. Wang, Traffic flow prediction with big data: A deep learning approach, IEEE Transactions on Intelligent Transportation Systems (2014) 1–9. [14] G. Jin, Y. Liang, Y. Fang, Z. Shao, J. Huang, J. Zhang, Y. Zheng, Spatio-temporal graph neural networks for predictive learning in urban computing: A survey, IEEE Transactions on Knowledge and Data Engineering (2023) 1–20. [15] Y. Li, R. Yu, C. Shahabi, Y. Liu, Diffusion convolutional recurrent neural network: Data-driven traffic forecasting, in: International Conference on Learning Representations, 2018. [16] L. Zhao, Y. Song, C. Zhang, Y. Liu, P. Wang, T. Lin, M. Deng, H. Li, T-gcn: A temporal graph convolutional network for traffic prediction, IEEE Transactions on Intelligent Transportation Systems (2020) 3848–3858. [17] Z. Fang, Q. Long, G. Song, K. Xie, Spatial-temporal graph ode networks for traffic flow forecasting, in: Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery Data Mining, 2021. [18] J. Ye, L. Sun, B. Du, Y. Fu, H. Xiong, Coupled layer-wise graph convolution for transportation demand prediction, Proceedings of the AAAI Conference on Artificial Intelligence (2022) 4617–4625. [19] C. Wang, K. Zhang, H. Wang, B. Chen, Auto-stgcn: Autonomous spatial-temporal graph convolutional network search, ACM Transactions on Knowledge Discovery from Data (2023) 1–21. [20] Q. Zhang, J. Chang, G. Meng, S. Xiang, C. Pan, Spatio-temporal graph structure learning for traffic forecasting, Proceedings of the AAAI Conference on Artificial Intelligence (2020) 1177–1185. [21] J. Ye, Z. Liu, B. Du, L. Sun, W. Li, Y. Fu, H. Xiong, Learning the evolutionary and multi-scale graph structure for multivariate time series forecasting, in: Proceedings of the ACM SIGKDD Conference on Knowledge Discovery and Data Mining, 2022, pp. 2296–2306. [22] M. Ma, J. Hu, C. S. Jensen, F. Teng, P. Han, Z. Xu, T. Li, Learning time-aware graph structures for spatially correlated time series forecasting, in: 2024 IEEE 40th International Conference on Data Engineering (ICDE), 2024, pp. 4435–4448. [23] L. Bai, L. Yao, C. Li, X. Wang, C. Wang, Adaptive graph convolutional recurrent network for traffic forecasting, in: Proceedings of the 34th International Conference on Neural Information Processing Systems, 2020. [24] Z. Wu, S. Pan, G. Long, J. Jiang, C. Zhang, Graph wavenet for deep spatial-temporal graph modeling, in: Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence, 2019. [25] Z. Wu, S. Pan, G. Long, J. Jiang, X. Chang, C. Zhang, Connecting the dots: Multivariate time series forecasting with graph neural networks, in: Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery Data Mining, 2020, p. 753–763. [26] R. Jiang, Z. Wang, J. Yong, P. Jeph, Q. Chen, Y. Kobayashi, X. Song, S. Fukushima, T. Suzumura, Spatio-temporal meta-graph learning for traffic forecasting, in: Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 37, 2023, pp. 8078–8086. [27] Z. Dong, R. Jiang, H. Gao, H. Liu, J. Deng, Q. Wen, X. Song, Heterogeneity-informed meta-parameter learning for spatiotemporal time series forecasting, in: Proceedings of the 30th ACM SIGKDD JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 14 
+
+Conference on Knowledge Discovery and Data Mining, 2024, pp. 631– 641. [28] C. Zheng, X. Fan, C. Wang, J. Qi, Gman: A graph multi-attention network for traffic prediction, Proceedings of the AAAI Conference on Artificial Intelligence 34 (01) (2020) 1234–1241. [29] S. Guo, Y. Lin, L. Gong, C. Wang, Z. Zhou, Z. Shen, Y. Huang, H. Wan, Self-supervised spatial-temporal bottleneck attentive network for effi-cient long-term traffic forecasting, in: 2023 IEEE 39th International Conference on Data Engineering, 2023, pp. 1585–1596. [30] J. Jiang, C. Han, W. X. Zhao, J. Wang, Pdformer: propagation delay-aware dynamic long-range transformer for traffic flow prediction, in: Proceedings of the Thirty-Seventh AAAI Conference on Artificial Intel-ligence, 2023. [31] S. Guo, Y. Lin, H. Wan, X. Li, G. Cong, Learning dynamics and heterogeneity of spatial-temporal graph data for traffic forecasting, IEEE Transactions on Knowledge and Data Engineering 34 (11) (2022) 5415– 5428. [32] Y. Liang, Y. Xia, S. Ke, Y. Wang, Q. Wen, J. Zhang, Y. Zheng, R. Zimmermann, Airformer: Predicting nationwide air quality in china with transformers, Proceedings of the AAAI Conference on Artificial Intelligence 37 (12) (2023) 14329–14337. [33] L. Cao, B. Wang, G. Jiang, Y. Yu, J. Dong, Spatiotemporal-aware trend-seasonality decomposition network for traffic flow forecasting, in: Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 39, 2025, pp. 11463–11471. [34] Z. Pan, Y. Liang, W. Wang, Y. Yu, Y. Zheng, J. Zhang, Urban traffic prediction from spatio-temporal data using deep meta learning, in: Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery Data Mining, 2019. [35] Z. Li, L. Xia, Y. Xu, C. Huang, Flashst: A simple and universal prompt-tuning framework for traffic prediction, in: Proceedings of the 41st International Conference on Machine Learning, ICML’24, 2024. [36] Z. Zhou, Q. Huang, K. Yang, K. Wang, X. Wang, Y. Zhang, Y. Liang, Y. Wang, Maintaining the status quo: Capturing invariant relations for ood spatiotemporal learning, in: Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, KDD ’23, 2023, p. 3603–3614. [37] J. Devlin, M.-W. Chang, K. Lee, K. Toutanova, Bert: Pre-training of deep bidirectional transformers for language understanding, in: Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume 1 (long and short papers), 2019, pp. 4171–4186. [38] K. He, X. Chen, S. Xie, Y. Li, P. Doll´ ar, R. Girshick, Masked autoen-coders are scalable vision learners, in: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition, 2022, pp. 16000– 16009. [39] Z. Shao, Z. Zhang, F. Wang, Y. Xu, Pre-training enhanced spatial-temporal graph neural network for multivariate time series forecasting, in: Proceedings of the 28th ACM SIGKDD conference on knowledge discovery and data mining, 2022, pp. 1567–1577. [40] Z. Li, L. Xia, Y. Xu, C. Huang, Gpt-st: Generative pre-training of spatio-temporal graph neural networks, in: Advances in Neural Information Processing Systems, 2023, pp. 70229–70246. [41] H. Gao, R. Jiang, Z. Dong, J. Deng, Y. Ma, X. Song, Spatial-temporal-decoupled masked pre-training for spatiotemporal forecasting, in: Pro-ceedings of the Thirty-Third International Joint Conference on Artificial Intelligence, 2024, pp. 3998–4006. [42] J. Wang, J. Jiang, W. Jiang, C. Li, W. X. Zhao, Libcity: An open library for traffic prediction, in: Proceedings of the 29th International Confer-ence on Advances in Geographic Information Systems, Association for Computing Machinery, 2021, p. 145–148. [43] Y. Cai, J. Xu, S. Jiao, Intelligent prediction of urban road network carry-ing capacity and traffic flow based on deep learning, IEEE Transactions on Vehicular Technology 74 (2) (2025) 2067–2079. [44] B. Yu, H. Yin, Z. Zhu, Spatio-temporal graph convolutional networks: a deep learning framework for traffic forecasting, in: Proceedings of the 27th International Joint Conference on Artificial Intelligence, IJCAI’18, 2018, p. 3634–3640. [45] T. N. Kipf, M. Welling, Semi-supervised classification with graph convolutional networks, in: International Conference on Learning Rep-resentations (ICLR), 2017. [46] J. Deng, R. Jiang, J. Zhang, X. Song, Multi-modality spatio-temporal forecasting via self-supervised learning, in: K. Larson (Ed.), Proceed-ings of the Thirty-Third International Joint Conference on Artificial Intelligence, IJCAI-24, International Joint Conferences on Artificial Intelligence Organization, 2024, pp. 2018–2026. [47] H. Wu, T. Hu, Y. Liu, H. Zhou, J. Wang, M. Long, Timesnet: Temporal 2d-variation modeling for general time series analysis, in: International Conference on Learning Representations, 2023. [48] W. Cai, Y. Liang, X. Liu, J. Feng, Y. Wu, Msgnet: learning multi-scale inter-series correlations for multivariate time series forecasting, in: Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence, 2024. [49] H. Wang, J. Peng, F. Huang, J. Wang, J. Chen, Y. Xiao, Micn: Multi-scale local and global context modeling for long-term series forecasting (2023). [50] J. Han, W. Zhang, H. Liu, T. Tao, N. Tan, H. Xiong, Bigst: Linear complexity spatio-temporal graph neural network for traffic forecasting on large-scale road networks, Proceedings of the VLDB Endowment 17 (5) (2024) 1081–1090. [51] C. Szegedy, W. Liu, Y. Jia, P. Sermanet, S. Reed, D. Anguelov, D. Erhan, V. Vanhoucke, A. Rabinovich, Going deeper with convolutions, in: 2015 IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2015, pp. 1–9. [52] C. Song, Y. Lin, S. Guo, H. Wan, Spatial-temporal synchronous graph convolutional networks: A new framework for spatial-temporal network data forecasting, Proceedings of the AAAI Conference on Artificial Intelligence 34 (01) (2020) 914–921. [53] Y. Liang, K. Ouyang, Y. Wang, Z. Pan, Y. Yin, H. Chen, J. Zhang, Y. Zheng, D. S. Rosenblum, R. Zimmermann, Mixed-order relation-aware recurrent neural networks for spatio-temporal forecasting, IEEE Transactions on Knowledge and Data Engineering 35 (9) (2023) 9254– 9268. [54] R.-G. Cirstea, B. Yang, C. Guo, T. Kieu, S. Pan, Towards spatio-temporal aware traffic time series forecasting, in: 2022 IEEE 38th International Conference on Data Engineering (ICDE), 2022, pp. 2900– 2913. [55] D. Liu, J. Wang, S. Shang, P. Han, Msdr: Multi-step dependency relation networks for spatial temporal forecasting, in: Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, 2022, p. 1042–1050. [56] J. Deng, X. Chen, R. Jiang, X. Song, I. W. Tsang, St-norm: Spatial and temporal normalization for multi-variate time series forecasting, in: Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery Data Mining, 2021, pp. 269–278.
