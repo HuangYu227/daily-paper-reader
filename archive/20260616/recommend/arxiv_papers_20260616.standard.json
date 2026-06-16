@@ -1,0 +1,419 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-16T23:03:22.187913+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 6,
+    "deep_cap": 7,
+    "deep_selected": 6,
+    "quick_candidates": 4,
+    "quick_skim_target": 12,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2606.14892v1",
+      "source": "arxiv",
+      "title": "Relational Structural Causal Models",
+      "abstract": "An artificial intelligence must have a model of its environment that is causal, supporting reasoning about interventions and counterfactuals, and also combinatorial, supporting generalization to unseen combinations of objects. In this work, we formally study when and how such a model can be learned. We develop relational structural causal models, extending structural causal models (Pearl 2009) to settings where objects and their relations vary. First, we show how answers to not only causal but also observational queries about unseen combinations of objects can not be identified without further assumptions. To enable such identification--including in the presence of unobserved confounding--we define relational causal graphs and derive symbolic identification criteria. Finally, we propose relational neural causal models, a provably correct approach that outperforms non-relational baselines on simulated traffic scenes with varying cars, signals, and pedestrians.",
+      "authors": [
+        "Adiba Ejaz",
+        "Elias Bareinboim"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG",
+        "cs.SI",
+        "stat.ML"
+      ],
+      "published": "2026-06-12T18:54:06+00:00",
+      "link": "https://arxiv.org/pdf/2606.14892v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "directly proposes relational structural causal models, extending SCMs",
+      "llm_evidence_cn": "直接提出关系结构因果模型，扩展结构因果模型",
+      "llm_evidence": "直接提出关系结构因果模型，扩展结构因果模型",
+      "canonical_evidence": "直接提出关系结构因果模型，扩展结构因果模型",
+      "llm_tldr_en": "Extends structural causal models to relational settings, enabling causal identification in variable object combinations.",
+      "llm_tldr_cn": "本文针对人工智能需要对环境建立因果模型的需求，提出了关系结构因果模型（RSCM），将结构因果模型扩展到对象和关系可变的场景。通过定义关系因果图和符号识别准则，实现了在存在未观测混杂时对未见组合的因果和观测查询的识别。该工作为因果学习在复杂动态环境中的应用提供了理论基础。",
+      "llm_tldr": "本文针对人工智能需要对环境建立因果模型的需求，提出了关系结构因果模型（RSCM），将结构因果模型扩展到对象和关系可变的场景。通过定义关系因果图和符号识别准则，实现了在存在未观测混杂时对未见组合的因果和观测查询的识别。该工作为因果学习在复杂动态环境中的应用提供了理论基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.15172v1",
+      "source": "arxiv",
+      "title": "Towards a Unified Generative Model for Scarce Time Series with Domain Experts",
+      "abstract": "Synthesizing realistic time series with generative models has wide-ranging applications in real-world scenarios. Despite recent progress, most existing methods are trained under the assumption of abundant training data, which substantially limits their effectiveness in data-scarce settings. In this paper, we propose TimeMoDE, a novel framework that integrates Diffusion Transformers with Mixture-of-Experts to exploit both domain adaptability and diffusion-stage awareness for time series generation under data scarcity. It is pre-trained on a large-scale collection of multi-domain datasets to extract domain-agnostic temporal representations and domain-specific information benefiting generalization during fine-tuning. We propose Domain Prompts to condition expert assignment for indistinguishable noised tokens, mitigating the limitations of capturing inter-dataset relationships. Moreover, we incorporate diffusion timestep signals to equip the experts with awareness of time series degradation variations, facilitating adaptive calibrate to stage-dependent denoising requirements. Extensive experiments demonstrate that TimeMoDE outperforms existing methods under diverse low-data settings. It establishes an innovative paradigm for advanced time series few-shot generation.",
+      "authors": [
+        "Zihao Yao",
+        "Qi Zheng",
+        "Jiankai Zuo",
+        "Yaying Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-13T07:41:42+00:00",
+      "link": "https://arxiv.org/pdf/2606.15172v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "proposes TimeMoDE, a unified generative model for scarce time series using diffusion transformers and MoE",
+      "llm_evidence_cn": "提出TimeMoDE，一个统一生成模型，利用扩散变换器和专家混合处理稀缺时间序列生成",
+      "llm_evidence": "提出TimeMoDE，一个统一生成模型，利用扩散变换器和专家混合处理稀缺时间序列生成",
+      "canonical_evidence": "提出TimeMoDE，一个统一生成模型，利用扩散变换器和专家混合处理稀缺时间序列生成",
+      "llm_tldr_en": "Proposes TimeMoDE, a diffusion transformer with mixture-of-experts for time series generation under data scarcity, achieving domain adaptability.",
+      "llm_tldr_cn": "本文针对现有时间序列生成模型在数据稀缺场景下效果有限的问题，提出了TimeMoDE框架。该框架结合扩散变换器与专家混合机制，在大规模多领域数据集上预训练以提取领域无关和领域特定的表示，并通过领域提示实现高效微调。实验表明，TimeMoDE在少量样本下仍能生成高质量的时间序列，显著优于现有方法。",
+      "llm_tldr": "本文针对现有时间序列生成模型在数据稀缺场景下效果有限的问题，提出了TimeMoDE框架。该框架结合扩散变换器与专家混合机制，在大规模多领域数据集上预训练以提取领域无关和领域特定的表示，并通过领域提示实现高效微调。实验表明，TimeMoDE在少量样本下仍能生成高质量的时间序列，显著优于现有方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.15452v1",
+      "source": "arxiv",
+      "title": "PHINN: Persistent Homology Inspired Neural Network for Rare-Event Time Series Generation",
+      "abstract": "Rare events in time series are critical to model but hard to learn due to data scarcity. Current generative models struggle with extreme values. We observe that rare events leave distinct topological fingerprints - transitions in Betti numbers from point-cloud embeddings - that are more stable and discriminative than statistical moments.   We introduce PHINN, a flow-matching framework using dynamic Betti curves as conditioning signals and a persistence landscape loss for homology consistency. It scales to multivariate data, includes a natural-language interface to set Betti targets, supports cross-domain meta-learning and few-shot generation, and provides certified adversarial robustness.   On financial, epidemiological, and multi-modal benchmarks, PHINN outperforms statistical and diffusion baselines in topological fidelity (beta-RMSE down 41-63%, transition accuracy up 84%) and matches jump-diffusion models in tail coverage while exceeding them in shape fidelity. All results have 95% confidence intervals.",
+      "authors": [
+        "Emre Yusuf",
+        "Ren Takahashi",
+        "Jayabrata Bhaduri"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "math.AT",
+        "q-fin.RM",
+        "stat.ML"
+      ],
+      "published": "2026-06-13T19:56:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.15452v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "rare-event time series generation using persistent homology",
+      "llm_evidence_cn": "利用持续同调的罕见事件时间序列生成",
+      "llm_evidence": "利用持续同调的罕见事件时间序列生成",
+      "canonical_evidence": "利用持续同调的罕见事件时间序列生成",
+      "llm_tldr_en": "PHINN uses persistent homology and flow matching to generate rare-event time series with guaranteed topological consistency.",
+      "llm_tldr_cn": "针对稀有事件时间序列生成难题，提出PHINN框架。该方法利用持续同调中的贝蒂数曲线作为条件信号，并引入持久性景观损失保持同调一致性。支持多变量、少样本生成和跨域元学习，通过拓扑特征增强极值事件建模。在金融、流行病学等数据集上验证了有效性。",
+      "llm_tldr": "针对稀有事件时间序列生成难题，提出PHINN框架。该方法利用持续同调中的贝蒂数曲线作为条件信号，并引入持久性景观损失保持同调一致性。支持多变量、少样本生成和跨域元学习，通过拓扑特征增强极值事件建模。在金融、流行病学等数据集上验证了有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.16773v1",
+      "source": "arxiv",
+      "title": "Generative Predictive Distributions for Time Series",
+      "abstract": "We propose a flexible framework for modeling the predictive distributions of nonlinear, possibly multivariate time series. Our approach expresses a general predictive distribution in an appropriate generative representation that is based on a folklore result from measure theoretic probability. This representation provides a direct simulation-based approximation to the predictive distribution, enabling straightforward computation of forecasts for the conditional mean and variance, fan charts, value at risk, expected shortfall, joint tail risks, and other quantities of interest. We estimate this generative representation using a version of conditional generative adversarial networks and provide a formal statistical analysis of estimation under weak temporal dependence. Specifically, estimation is expressed as a particular minimax problem and we establish consistency of its approximate solutions in Hausdorff distance. The empirical relevance of the approach is illustrated using applications to equity returns, realized variance, and realized covariances. The proposed method is also computationally manageable, with estimation in our applications taking approximately one minute on a standard laptop.",
+      "authors": [
+        "Jordi Llorens-Terrazas",
+        "Mika Meitz"
+      ],
+      "primary_category": "econ.EM",
+      "categories": [
+        "econ.EM",
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-06-15T14:20:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.16773v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "time series generation with conditional GAN",
+      "llm_evidence_cn": "使用条件GAN生成时间序列",
+      "llm_evidence": "使用条件GAN生成时间序列",
+      "canonical_evidence": "使用条件GAN生成时间序列",
+      "llm_tldr_en": "Proposes a generative representation for time series predictive distributions using conditional GANs, enabling simulation-based forecasts.",
+      "llm_tldr_cn": "本文针对非线性多元时间序列的预测分布建模，提出一种基于条件生成对抗网络（GAN）的灵活框架。该框架利用测度论概率中的经典结果，将预测分布表示为生成表示，从而支持条件均值、方差、风险值等量的模拟计算。理论分析证明了弱时间依赖下的估计一致性。",
+      "llm_tldr": "本文针对非线性多元时间序列的预测分布建模，提出一种基于条件生成对抗网络（GAN）的灵活框架。该框架利用测度论概率中的经典结果，将预测分布表示为生成表示，从而支持条件均值、方差、风险值等量的模拟计算。理论分析证明了弱时间依赖下的估计一致性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.15778v1",
+      "source": "arxiv",
+      "title": "DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning",
+      "abstract": "Large Language Models (LLMs) struggle to incorporate new knowledge without forgetting or costly retraining. We propose DYNA, a lightweight framework that augments a frozen LLM with a temporal knowledge graph where events are nodes and temporal relations are directed, timestamped edges. The graph serves as an external, updatable memory. At query time, DYNA retrieves relevant nodes via random walks and centrality measures, then augments the LLM's response. Evaluated on three temporal recall tasks, DYNA reduces catastrophic forgetting by ~7% compared to fine-tuning and improves temporal ordering by ~5% over standard RAG. Higher graph clustering coefficients correlate with better retrieval, showing that graph structure matters. Contributions: (1) episodic memory as temporal KG, (2) retraining-free LLM augmentation, (3) graph properties as predictors of retrieval performance.",
+      "authors": [
+        "Ali Sarabadani",
+        "Mahtab Tajvidiyan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "cs.SI"
+      ],
+      "published": "2026-06-14T12:27:26+00:00",
+      "link": "https://arxiv.org/pdf/2606.15778v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "augments frozen LLM with temporal knowledge graph",
+      "llm_evidence_cn": "利用时间知识图增强冻结的大语言模型",
+      "llm_evidence": "利用时间知识图增强冻结的大语言模型",
+      "canonical_evidence": "利用时间知识图增强冻结的大语言模型",
+      "llm_tldr_en": "DYNA augments a frozen LLM with a temporal knowledge graph as external memory, reducing catastrophic forgetting and improving temporal recall.",
+      "llm_tldr_cn": "该论文提出DYNA框架，通过向冻结的大语言模型附加一个时间知识图作为外部可更新记忆，在连续学习场景中缓解灾难性遗忘。检索时通过随机游走和中心性度量获取相关节点，增强LLM响应。实验表明相比微调和标准RAG，在时间顺序任务上分别提升约7%和5%，展示了冻结LLM结合时间知识图的有效性。",
+      "llm_tldr": "该论文提出DYNA框架，通过向冻结的大语言模型附加一个时间知识图作为外部可更新记忆，在连续学习场景中缓解灾难性遗忘。检索时通过随机游走和中心性度量获取相关节点，增强LLM响应。实验表明相比微调和标准RAG，在时间顺序任务上分别提升约7%和5%，展示了冻结LLM结合时间知识图的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model with frozen encoder",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.16925v1",
+      "source": "arxiv",
+      "title": "RAID: Semantic Graph Diffusion for True Cold-Start and Cross-Lingual Forecasting",
+      "abstract": "Time-series foundation models show strong transfer performance when given a non-empty history window. However, true cold-start scenarios, where a new item has no prior observations, violate this assumption. We propose RAID (Retrieval-Augmented Iterative Diffusion) a framework, which replaces history-based correlation learning with metadata-driven semantic retrieval and graph-conditioned diffusion. RAID maps textual metadata into a shared semantic space using a frozen multilingual embedding model and constructs an inductive retrieval graph that extends naturally to unseen items. It first forms a base forecast by aggregating information from semantically related neighbors, then refines this forecast with a gated diffusion module to model residual uncertainty. Under a strict true cold-start protocol, RAID outperforms strong foundation models and competitive baselines on both forecasting accuracy and prediction interval coverage, while reducing inference latency by an order of magnitude through non-autoregressive decoding. The shared semantic space also enables zero-shot cross-lingual transfer, allowing a model trained on English descriptions to generalize to items described in other languages without direct supervision.",
+      "authors": [
+        "Arunkumar V",
+        "Manoranjan Gandhudi",
+        "Gangadharan G. R.",
+        "Arun Prakash",
+        "S. Senthilkumar"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-15T16:27:14+00:00",
+      "link": "https://arxiv.org/pdf/2606.16925v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses frozen multilingual embedding model for time series forecasting",
+      "llm_evidence_cn": "使用冻结的多语言嵌入模型进行时间序列预测",
+      "llm_evidence": "使用冻结的多语言嵌入模型进行时间序列预测",
+      "canonical_evidence": "使用冻结的多语言嵌入模型进行时间序列预测",
+      "llm_tldr_en": "RAID replaces history-based correlation with metadata-driven retrieval and diffusion for cold-start time-series forecasting using a frozen encoder.",
+      "llm_tldr_cn": "该论文提出RAID框架，针对冷启动时间序列预测问题，使用冻结的多语言嵌入模型将元数据映射到语义空间，构建检索图并通过扩散模型生成预测。该方法无需历史观测，适用于新项目，显著提升了零样本和跨语言预测性能。展示了冻结编码器在时间序列预测中的强大潜力。",
+      "llm_tldr": "该论文提出RAID框架，针对冷启动时间序列预测问题，使用冻结的多语言嵌入模型将元数据映射到语义空间，构建检索图并通过扩散模型生成预测。该方法无需历史观测，适用于新项目，显著提升了零样本和跨语言预测性能。展示了冻结编码器在时间序列预测中的强大潜力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder for time series",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.15134v1",
+      "source": "arxiv",
+      "title": "Beyond Scalar Distances: Semantic Attribute Gradients from Frozen MLLMs for Visual Embeddings",
+      "abstract": "Vision encoders for retrieval are typically trained with class-label supervision: each training pair reduces to a scalar that uniformly pushes the embedding apart or pulls it together, as if every visual attribute either differed or matched. A multimodal large language model (MLLM), shown the same pair, can articulate those attributes and use them to predict whether the images share a class. We propose \\textbf{SAGA}, a framework that turns this language-grounded, attribute-aware perception into a training signal for the encoder itself. Specifically, we use Group Relative Policy Optimization (GRPO) to reward the MLLM for correct predictions on the vision encoder's tokens. Since correct predictions require those tokens to expose the specific attributes that differ or match between the pair, the gradient pushes the encoder to encode them, replacing the uniform pair-level scalar with attribute-resolved supervision. An auxiliary attention-distillation loss anchors the encoder's embedding to tokens the MLLM attended to, and a standard metric-learning loss shapes the embedding geometry for nearest-neighbour retrieval. The MLLM is frozen throughout and discarded at inference, matching the deployment cost of a metric-learning baseline. SAGA improves Recall@1 by 3 to 6 points over state-of-the-art baselines on CUB-200-2011, Cars-196, FGVC-Aircraft, and iNaturalist Aves on zero-shot image retrieval.",
+      "authors": [
+        "Shubhang Bhatnagar",
+        "Dheeraj Baiju",
+        "Narendra Ahuja"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-13T05:50:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.15134v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses frozen multimodal LLM to provide semantic attribute gradients for visual encoder training",
+      "llm_evidence_cn": "使用冻结的多模态大语言模型提供语义属性梯度以训练视觉编码器",
+      "llm_evidence": "使用冻结的多模态大语言模型提供语义属性梯度以训练视觉编码器",
+      "canonical_evidence": "使用冻结的多模态大语言模型提供语义属性梯度以训练视觉编码器",
+      "llm_tldr_en": "This paper proposes SAGA, which uses a frozen MLLM to provide attribute-aware training signals for vision encoders via GRPO, enabling learning of semantic embeddings beyond scalar distances.",
+      "llm_tldr_cn": "该论文针对传统视觉编码器仅使用标量分类损失导致忽略属性级语义的问题，提出SAGA框架，利用冻结的多模态大语言模型通过GRPO提供属性感知的梯度信号，使得视觉编码器能够学习到更丰富的语义嵌入，在检索任务上取得提升。",
+      "llm_tldr": "该论文针对传统视觉编码器仅使用标量分类损失导致忽略属性级语义的问题，提出SAGA框架，利用冻结的多模态大语言模型通过GRPO提供属性感知的梯度信号，使得视觉编码器能够学习到更丰富的语义嵌入，在检索任务上取得提升。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.13624v1",
+      "source": "arxiv",
+      "title": "Beyond Uniform Tokens: Adaptive Compression for Time Series Language Models",
+      "abstract": "Large language models (LLMs) have enabled time series (TS) analysis by jointly modeling numerical observations and textual context through a shared token interface. However, TS tokens and prompt tokens exhibit fundamentally different information structures, making uniform token processing inefficient. In this paper, we study token efficiency in TS language modeling from an asymmetric-token perspective. We show that TS tokens have highly uneven spectral contributions, where many tokens share redundant frequency patterns while a small subset preserves critical temporal evidence. We also observe that prompt-token influence attenuates with model depth, suggesting that full prompt retention across all layers is unnecessary. Based on these findings, we develop an adaptive token budgeting framework that compresses TS tokens via frequency-domain structure and progressively reduces prompt tokens across layers. Experiments across forecasting, classification, imputation, and anomaly detection demonstrate up to \\textit{\\textbf{7.68$\\times$}} inference acceleration and performance gains in \\textit{\\textbf{78\\%}} of evaluated settings, showing the effectiveness of asymmetric token compression for scalable TS foundation models.",
+      "authors": [
+        "Jialin Gan",
+        "Xin Qiu",
+        "Guangzhe Chen",
+        "Xue Wang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-11T17:39:26+00:00",
+      "link": "https://arxiv.org/pdf/2606.13624v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "token efficiency for time series language models through adaptive compression",
+      "llm_evidence_cn": "通过自适应压缩提高时间序列语言模型的令牌效率",
+      "llm_evidence": "通过自适应压缩提高时间序列语言模型的令牌效率",
+      "canonical_evidence": "通过自适应压缩提高时间序列语言模型的令牌效率",
+      "llm_tldr_en": "Studies asymmetric token efficiency in TS language models, showing TS tokens have uneven spectral contributions and proposes adaptive compression.",
+      "llm_tldr_cn": "本文从非对称标记视角研究时间序列语言模型中的标记效率。发现时间序列标记的频谱贡献极不均匀，许多标记共享冗余频率模式，而少数标记保留关键时间证据。同时观察到提示标记的影响随模型深度衰减。基于这些发现提出自适应压缩策略，提升标记效率。",
+      "llm_tldr": "本文从非对称标记视角研究时间序列语言模型中的标记效率。发现时间序列标记的频谱贡献极不均匀，许多标记共享冗余频率模式，而少数标记保留关键时间证据。同时观察到提示标记的影响随模型深度衰减。基于这些发现提出自适应压缩策略，提升标记效率。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.15448v1",
+      "source": "arxiv",
+      "title": "EventConnector: Mining Social Event Relations through Temporal Graphs",
+      "abstract": "Understanding and retrieving related real-world events based on their temporal dynamics is a fundamental challenge in time-sensitive applications such as forecasting, information retrieval, and social analysis. Existing methods often rely on semantic similarity or global time-series alignment, which overlook the transient and directional dependencies that frequently underlie real-world correlations. In this work, we introduce \\textit{EventConnector}, a framework that constructs a temporal event graph capturing localized co-fluctuations and lead-lag relationships between events through their time-series trajectories. We further propose \\textbf{EC-Fusion}, an adaptive retrieval mechanism that fuses EventConnector's graph-based scores with a complementary Granger-causal signal via a graph-quality-aware mixing weight. Across two real-world prediction market benchmarks (Polymarket and Kalshi) and nine forecasting architectures evaluated over three random seeds, EC-Fusion is the best non-oracle retrieval method on $17/18$ model--dataset cells, reducing RMSE by $6.87\\%$ on average (up to $10.86\\%$) over the strongest comparable retrieval baseline, with statistical significance at $p < 0.01$ after Holm--Bonferroni correction. These results highlight the effectiveness of temporally grounded graph modeling, augmented with causal-signal fusion, in capturing latent event relationships beyond what semantic similarity or traditional alignment techniques can offer.",
+      "authors": [
+        "Zijie Lei",
+        "Haofei Yu",
+        "Ge Liu",
+        "Jiaxuan You"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR"
+      ],
+      "published": "2026-06-13T19:44:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.15448v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "mining temporal relations and lead-lag dependencies between events",
+      "llm_evidence_cn": "挖掘事件间的时间关系和领先-滞后依赖性",
+      "llm_evidence": "挖掘事件间的时间关系和领先-滞后依赖性",
+      "canonical_evidence": "挖掘事件间的时间关系和领先-滞后依赖性",
+      "llm_tldr_en": "EventConnector constructs temporal event graphs capturing localized co-fluctuations and lead-lag relationships for event retrieval and forecasting.",
+      "llm_tldr_cn": "该论文针对事件间时间动态关系挖掘问题，提出EventConnector框架，通过时间序列轨迹构建局部共波动和领先-滞后关系图，并设计自适应检索机制。该方法有效捕获方向性依赖，在时间敏感应用如预测和信息检索中表现优越，为时间因果发现提供了新思路。",
+      "llm_tldr": "该论文针对事件间时间动态关系挖掘问题，提出EventConnector框架，通过时间序列轨迹构建局部共波动和领先-滞后关系图，并设计自适应检索机制。该方法有效捕获方向性依赖，在时间敏感应用如预测和信息检索中表现优越，为时间因果发现提供了新思路。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.14941v1",
+      "source": "arxiv",
+      "title": "Semantics-Enhanced Retrieval-Augmented Time Series Forecasting",
+      "abstract": "Time series forecasting models often benefit from historical patterns. Inspired by Retrieval-Augmented Generation (RAG), recent research explored retrieving relevant historical time series segments to enhance forecasting. However, relying solely on time series similarity is often insufficient for retrieval under non-stationarity. To address this, we propose a multimodal approach: a \\textbf{S}emantics-\\textbf{E}nhanced \\textbf{R}etrieval-\\textbf{A}ugmented Time Series \\textbf{F}orecasting framework, SERAF. Unlike mainstream approaches that depend only on time series similarity, SERAF conducts dual retrieval over the time series and their self-generated textual descriptions. It retrieves two complementary sets of historical patterns and corresponding futures, which are selectively and jointly used to guide future predictions. Experiments across seven real-world datasets demonstrate the effectiveness of SERAF in bridging numerical and semantic views of time series compared with state-of-the-art baselines.",
+      "authors": [
+        "Shiqiao Zhou",
+        "Zipeng Wu",
+        "Holger Schöner",
+        "Edouard Fouché",
+        "IAG Wilson",
+        "Shuo Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-12T20:32:10+00:00",
+      "link": "https://arxiv.org/pdf/2606.14941v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "semantics-enhanced retrieval for time series",
+      "llm_evidence_cn": "语义增强的时间序列检索",
+      "llm_evidence": "语义增强的时间序列检索",
+      "canonical_evidence": "语义增强的时间序列检索",
+      "llm_tldr_en": "SERAF proposes dual retrieval over time series and their textual descriptions to improve retrieval-augmented time series forecasting under non-stationarity.",
+      "llm_tldr_cn": "SERAF提出了一种多模态检索增强时间序列预测框架，同时对时间序列及其自生成文本描述进行检索，克服了非平稳条件下仅依赖时序相似性的不足。该方法从历史中获取互补的上下文信息，显著提升了预测准确性。这项工作展示了将语义信息融入时间序列特征提取的潜力。",
+      "llm_tldr": "SERAF提出了一种多模态检索增强时间序列预测框架，同时对时间序列及其自生成文本描述进行检索，克服了非平稳条件下仅依赖时序相似性的不足。该方法从历史中获取互补的上下文信息，显著提升了预测准确性。这项工作展示了将语义信息融入时间序列特征提取的潜力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
