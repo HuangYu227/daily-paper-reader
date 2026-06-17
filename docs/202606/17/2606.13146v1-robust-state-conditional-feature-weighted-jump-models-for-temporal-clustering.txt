@@ -1,0 +1,1776 @@
+Title: Robust State-Conditional Feature-Weighted Jump Models for Temporal Clustering
+
+URL Source: https://arxiv.org/pdf/2606.13146v1
+
+Published Time: Fri, 12 Jun 2026 00:53:51 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# Robust State-Conditional Feature-Weighted Jump Models for Temporal Clustering 
+
+Federico P. Cortese 1,3 and Alessio Farcomeni 2
+
+> 1
+
+University of Milan, Department of Economics, Management, and Quantitative Methods 
+
+> 2
+
+University of Rome “Tor Vergata”, Department of Enterprise Engineering 
+
+> 3
+
+National Research Council of Italy, Institute for Applied Mathematics and Information Technologies, Milan 
+
+Abstract 
+
+We propose a robust feature-weighted jump model for time-dependent clustering. A penalty is used to encourage smoothness of transitions over time, while robust-ness is achieved through the use of a Tukey’s biweight loss function. An additional parameter controls the variability of feature weights across states, allowing the model to assign state-specific relevance to each feature. We illustrate in simula-tion how the method accurately recovers the true cluster sequence and reliably identifies relevant features, outperforming competing approaches, particularly in the presence of outliers. We conclude with two empirical applications, one on the number of conflict-related homicides in Kosovo in the period 1998–2000, and another on macroeconomic performance of twelve European countries in the period 1949–2024. 
+
+Keywords: Dissimilarity-based clustering, regime-switching models, time series analysis, unsupervised learning, variable importance. 
+
+## 1 Introduction 
+
+When performing dynamical clustering, it is often crucial to assess which variables contribute the most to the characterisation of the underlying structure. In fact, in many applications one is interested not only in segmenting a multivariate time series into homogeneous states, but also in understanding which variables drive its dynamics, possibly within each regime. An example is provided by jump models (JM, Bempo-rad, Breschi, Piga, & Boyd , 2018 ), which allow the estimation of persistent regimes without requiring a full parametric specification; as required by the related setting of hidden Markov models (HMM, Bartolucci, Farcomeni, and Pennoni (2013 ); Zucchini, 
+
+1
+
+> arXiv:2606.13146v1 [stat.ML] 11 Jun 2026
+
+MacDonald, and Langrock (2017 )). Witten and Tibshirani (2010 ) introduce sparse 
+
+k-means, a framework combining k-means with ℓ1 regularization, later extended by 
+
+Nystrup, Kolm, and Lindstr¨ om (2021 ) to the JM class. See also Nystrup, Lindstr¨ om, and Madsen (2020 ). Extensions of JM include models for mixed-type data with miss-ing data imputation ( Cortese & Pievatolo , 2025 ), soft clustering variants ( Aydınhan, Kolm, Mulvey, & Shu , 2024 ), and spatio-temporal extensions ( Cortese & Pievatolo ,
+
+2026 ). However, most existing approaches involve the same relevance for each feature in each cluster. This assumption is often restrictive, as different subsets of variables may govern different temporal regimes. Robustness is an additional key aspect, especially in the presence of noise and outliers, a common issue in real-world data. In this work, we build on Clustering Objects on Subsets of Attributes (COSA) (Friedman & Meulman , 2004 ; Kampert, Meulman, & Friedman , 2017 ), which is cur-rently restricted to cross-sectional data, to provide a robust clustering approach for multivariate time series. COSA uses a dissimilarity-based formulation, where cluster-specific feature weights are entered directly into the dissimilarity measure. This results in a flexible, interpretable, and data-driven notion of variable relevance. We thus introduce a robust Feature-Weighted Jump Model (FWJM) that jointly estimates a latent state sequence and a matrix of state-specific feature weights. A hyperparameter regulates the frequency of transitions between latent states, while an entropy-based regularization parameter controls the distribution of state-specific feature weights. The resulting model estimates state-conditional feature relevance through weighted combinations of feature-wise dissimilarities, with weights that are specific to each latent state and learned by minimising within-state dispersion. This allows different states to be characterized by different subsets of features, possibly over-lapping. Robustness is achieved through the use of a Tukey-type loss function, which downweights extreme observations. Our model is distribution-free, and consequently flexible even in complex data scenarios. In order to assess the performance of the proposed method and to illustrate the advantage of its main features (robust loss function, cluster-dependent feature weights), we conduct an extensive simulation study, showing that the proposed method accurately recovers the latent state sequence and state-specific feature weights, out-performing competing methods, particularly in the presence of outliers. We finally show two real data applications with slightly different characteristics in terms of latent persistence, sample size, and dimensionality. The rest of the paper is organised as follows. Section 2 introduces the proposed methodology and proposes an efficient algorithm for estimation. Section 3 reports the simulation results, and Section 4 illustrates the empirical applications. Section 5 gives some concluding remarks. 
+
+## 2 Methodology 
+
+We consider multivariate time series data collected in a T × P matrix denoted as 
+
+Y , where each row yt = ( yt1, . . . , y tP ) represents the observation vector at time t.We also indicate the time-specific cluster assignments with s = ( s1, . . . , s T )′, where 2st ∈ { 1, . . . , K } for all t. Let also W denote a K × P matrix of feature weights, with generic element wkp being the weight of feature p in cluster k; and ∑ 
+
+> p
+
+wkp = 1. We base the analyses on an appropriate dissimilarity matrix Dtt ′ [W ] whose generic element corresponds to max 
+
+{ P∑
+
+> p=1
+
+wst ,p dtt ′ ,p ,
+
+> P
+
+∑
+
+> p=1
+
+wst′ ,p dtt ′ ,p 
+
+}
+
+(1) where the use of the maximum operator ensures that Dtt ′ [W ] is well-defined for all pairs ( t, t ′), including those belonging to different clusters. In ( 1), dtt ′ ,p denotes a (possibly robust) dissimilarity between yt and yt′ . To pos-sibly accommodate the methodology for mixed-type measurements, we propose using a (modified) Gower (1971 ) dissimilarity as follows. Partition the feature indices into 
+
+C = {p : continuous },
+
+G = {p : categorical },
+
+O = {p : ordinal }.
+
+For any pair ( t, t ′) and each feature p, the classical Gower (1971 ) dissimilarity is 
+
+dtt ′,p =
+
+
+
+|ytp − yt′p|
+
+γp
+
+, p ∈ C ,
+
+I(ytp 6 = yt′p), p ∈ G ,
+
+∣∣rank t(ytp ) − rank t′ (yt′ p)∣∣
+
+Mp − 1 , p ∈ O .
+
+(2) Here, rank t(ytp ) is the rank among the T values of the feature p, Mp is the number of ordinal levels of the same feature, and γp is the range for continuous features. A robustified version is obtained with a slight modification of the dissimilarity for continuous features. We propose using Tukey’s biweight loss as follows. 1. For p = 1 , . . . , P , we first compute ∆tt ′,p = |ytp − yt′p| , t, t ′ = 1 , . . . , T. (3) 2. Let MAD p = median t (|ytp − median t′ (yt′ p)|) . Then the standardized differences are 
+
+utt ′,p = ∆tt ′ ,p 
+
+MAD p
+
+. (4) 33. Compute 
+
+ρ(utt ′,p ) = 
+
+
+
+c2
+
+6
+
+[
+
+1 −
+
+(
+
+1 −
+
+( utt ′,p 
+
+c
+
+)2)3]
+
+, if |utt ′,p | ≤ c, c2
+
+6 , if |utt ′,p | > c, 
+
+(5) with tuning constant c = 4 .685. We select this value to guarantee approximately 95% asymptotic efficiency at the normal model. 4. Denote by 
+
+rtt ′ ,p = ρ(utt ′,p ) , t, t ′ = 1 , . . . , T, (6) the Tukey-transformed dissimilarities. We finally apply a slice-wise normalization 
+
+dtt ′ ,p = rtt ′ ,p 
+
+max t,t ′ rtt ′ ,p − min t,t ′ rtt ′ ,p 
+
+. (7) 
+
+2.1 Robust Feature Weighted Jump Models 
+
+A FWJM is fitted by minimising the following objective function: 
+
+f (s, W , m) = ∑
+
+> t
+
+∑
+
+> p
+
+wst ,p dtm st ,p + ζ ∑
+
+> k
+
+∑
+
+> p
+
+wkp log wkp + λ 
+
+> T−1
+
+∑
+
+> t=1
+
+I(st 6 = st+1 ), (8) where m denotes a K by P matrix of medoids. That is, mk corresponds to one of the observations yt such that st = k. In ( 13 ), with a slight abuse of notation, dtm st ,p 
+
+denotes the dissimilarity between yt and mst , the medoid of the assigned cluster. Notably, for (at least) one of the cluster members, this dissimilarity will be zero. The first term is the main objective and leads to formal clustering: a small overall dissimilarity indicates that all observations are close to the medoid of their assigned cluster, and consequently to each other. Features with a high weight will contribute more to the determination of cluster assignments, as the first term is directly pro-portional to cluster-specific feature weights wst ,p . The term is a modification of the classical Partitioning Around Medoids (PAM) objective function, where we use possibly robustified dissimilarities, and class-specific feature weights. The second term is a penalty term used to promote less polarised weights. In fact, when ζ → ∞ , the second term dominates and the minimum will be achieved when 
+
+wkp = 1 /P .The third term promotes persistence over time. Intuitively, it forces consecutive observations to stay in the same cluster with respect to observations that are far apart in time. When λ = 0, there is no temporal smoothing of the state sequence. As λ
+
+increases, the penalty enforces persistence in the latent state sequence, discouraging transitions. For λ → ∞ , the model collapses to a single-state solution, i.e. a constant 
+
+st. The range of λ values for which the number of visited states is effectively equal to 
+
+K is approximately [0 , 1] when using the metric defined in Equation ( 2), as empirically confirmed in our simulation study of Section 3. Nevertheless, in general, it is possible 4that for large penalty values some states are estimated as empty. Our estimation procedure, described in the next section, is fairly stable even when this occurs. Empty groups do not contribute to the objective function by definition, and the corresponding weights are estimated as 1 /P .
+
+2.2 Estimation and choice of penalty parameters 
+
+We use a numerical optimisation procedure to minimise ( 13 ). From an initial solution, we iterate three steps, updating each group of parameters separately and decreasing the overall objective function at each step. The procedure is stopped when, after a block of three steps, the improvement in the objective function is below a low tolerance value. At the first step, holding the current weight matrix and cluster assignments fixed, medoids are directly updated in a greedy fashion: 
+
+mk = ytk , s.t. , t k = argmin    
+
+> i:si=k
+
+∑   
+
+> t:st=kP
+
+∑
+
+> p=1
+
+wkp dti,p , (9) for k = 1 , . . . , K . In words, the observation within each cluster that minimises the weighted sums of dissimilarities to the observations in the same cluster is fixed as the current medoid. By construction, the first addend in ( 13 ) is therefore decreased or remains constant; while the other two addends remain constant as they do not depend on the medoid assignment. At the second step, conditionally on m and the current weight matrix W , we update the state sequence via dynamic programming. We do so by defining a value function recursively as 
+
+V (T, k ) = DT t k [W ],V (t, k ) = Dtt k [W ] + min  
+
+> j
+
+{V (t + 1 , j ) + λI(k 6 = j)} , t = 1 , . . . , T − 1, (10) and then updating the optimal state sequence via backtracking 
+
+s1 = arg min  
+
+> j
+
+V (1 , j ),st = arg min  
+
+> j
+
+{V (t, j ) + λI(st−1 6 = j)} , t = 2 , . . . , T. (11) This approach is similar to the one proposed in Nystrup et al. (2020 ) for a slightly different objective function, and it can be shown with similar arguments that the sum of first and third term in ( 13 ) is not increased as a consequence of this update. The second addend remains constant as it is not a function of s.Finally, at the third step, conditionally on s and m, weights are updated in closed form as 
+
+wkp =exp 
+
+(
+
+− Skp 
+
+> ζ
+
+)
+
+∑Pq=1 exp 
+
+(
+
+− Skq 
+
+> ζ
+
+) (12) 5Algorithm 1 Robust Feature Weighted Jump Model (FWJM) fitting 
+
+Input: Data y1, . . . , yT ∈ RP , number of states K, hyperparameters λ and ζ 
+
+> 1:
+
+Initialisation: 
+
+(a) Initialise state sequence s
+
+(b) Initialise weight matrix W 
+
+> 2:
+
+Loop . Repeat until convergence: (i) Compute robust differences dtt ′,p as in ( 2) and ( 7)(ii) Compute pairwise dissimilarities Dtt ′ [W ] using ( 1)(iii) Find medoids m solving ( 9)(iv) Update the state sequence s = ( s1, . . . , s T )′ through ( 10 ) and ( 11 )(v) Update feature weights W using ( 12 ) 
+
+> 3:
+
+Return : medoids m, state sequence s, feature weights matrix W
+
+with 
+
+Skp = ∑ 
+
+> t:st=k
+
+dtm k ,p .
+
+We show in Section S2 of the Supplementary material how this closed form solution minimises the objective function as a function of the weight matrix. The procedure is iterated until convergence of Eq. ( 13 ) or until a maximum number of iterations is reached. Since at each step of the algorithm the objective function is decreased or remains constant, at convergence we will have found a local minimum. Algorithm 1 provides a synthetic description of the estimation procedure. We highlight that the proposed estimation algorithm relies on an alternating opti-mization scheme, and due to the highly non-convex nature of the objective function, the algorithm is not guaranteed to reach the global optimum in general. The classi-cal solution in computational statistics involves a multi-start strategy. We use here the same procedure suggested in Nystrup et al. (2020 ). In our implementation ten different initial solutions are compared. Regarding the choice of the hyperparameters controlling the state persistence ( λ) and the distribution of feature weights ( ζ) one may rely on cross-validation procedures when ground truth labels are available at least for a subset of the data, or on task-specific objective criteria (e.g., as in Nystrup, Boyd, Lindstr¨ om, and Madsen (2019 )). In general, we propose using internal clustering validation measures, such as the Silhouette index ( Rousseeuw , 1987 ). The procedure involves computing the Silhouettes corresponding to different penalty parameter spec-ifications, and selecting the choices yielding the best cluster configuration. This is precisely what we will do in the applications presented in Section 4.Reproducible code for estimation and hyperparameter selection is available in the GitHub repository: https://github.com/FedericoCortese/FWJM .
+
+## 3 Simulation Study 
+
+In order to assess the accuracy of the proposed method, we consider four simulation scenarios. Scenario A represents a classical setting with T = 1 000 observations and 6P = 5 features. Scenario B corresponds to a large-P , small-T setting with T = P = 50. Scenario C considers a high-dimensional setting with T = 1 000 and P = 50, while scenario D corresponds to a very challenging small-P , small-T setting with T = 50 and P = 5. We generate data Y from a multivariate Student-t HMM with ν = 3 degrees of freedom and K = 2 , 3, or 4 latent states. The state-dependent distributions are char-acterized by centroids μk, and covariance matrices with unit variances and constant pairwise correlation ρ = 0 .2 across all features and states. We set the self-transition probabilities πii = P(st = i | st−1 = i), i = 1 , . . . , K ,to 0 .99 in scenarios A and C, while for scenarios B and D they are set to 0 .95 when 
+
+K = 2, to 0 .90 when K = 3, and to 0 .80 when K = 4, in order to ensure an adequate number of visits to all latent states. Off-diagonal transition probabilities are defined as πij = 1−πii  
+
+> K−1
+
+, i 6 = j. 
+
+When K = 2, the centroid are ( −0.5, 0.5) in scenarios A and C, and (1 , 1) in the other two scenarios, while for K = 3, they are ( −1, 0, 1) in scenarios A and C and (−2, 0, 2) in scenarios B and D. When K = 4, the centroids are ( −1.5, −0.5, 0.5, 1.5) in scenarios A and C and ( −3, −1, 1, 3) in scenarios B and D. We choose these configu-rations to control cluster separation across scenarios: adjacent centroids differ by 1 in scenarios A and C, and by 2 in scenarios B and D, the latter therefore exhibiting greater separation to compensate for the increased difficulty induced by the small-sample. For ease of reference, Table 1 summarizes the data-generating parameters that vary across scenarios, including sample size T , number of features P , self-transition probabilities πii , and state-specific centroids μp.
+
+Table 1 : Summary of varying data-generating parameters across scenarios: self-transition probabilities πii , i = 1 , . . . , K , of the latent Markov process and centroids μp, p = 1 , . . . , P , for different values of K.                                                        
+
+> KScenario A Scenario B Scenario C Scenario D
+> T
+> 231 000 50 1 000 50 4
+> P
+> 23550 50 54
+> πii
+> 20.95 0.95 30.99 0.90 0.99 0.90 40.80 0.80
+> μp
+> 2−0.5,0.5−1,1−0.5,0.5−1,13−1,0,1−2,0,2−1,0,1−2,0,24−1.5,−0.5,0.5,1.5−3,−1,1,3−1.5,−0.5,0.5,1.5−3,−1,1,3
+
+Similarly to the simulation studies in Malsiner-Walli, Fr¨ uhwirth-Schnatter, and Gr¨ un (2016 ) and Nystrup et al. (2021 ), we artificially introduce non-informative features by replacing a subset of variables with random noise. Specifically, these are generated as independent draws from a uniform distribution U(ym, y M ), where 
+
+ym = min Y and yM = max Y . Hence, whenever a feature is not relevant for a given 7state, or is purely noise, its values are sampled from this uniform distribution. In sce-narios A and D, each state is associated with two (when K = 2) and one ( K = 3 , 4) state-specific feature and one ( K = 2 , 4) or two ( K = 3) globally informative feature shared across all states. In scenarios B and C, each state is associated with a block of ten ( K = 2) or five ( K = 3 , 4) state-specific informative features, five ( K = 2 , 4) or ten ( K = 3) shared features, and the remaining features are purely noisy. To evaluate robustness, we consider two settings, one with contamination level α =5%, the other with no contamination, α = 0%. We generate contaminated observations from U(ym − q, y M + q), with q = 30: given the heavy-tailed nature of the Student-t
+
+distribution with ν = 3, we empirically observe that this choice helps distinguish true outliers from observations arising from the tails of the distribution. We estimate FWJM and its non-robust counterpart (nr-FWJM), obtained with-out considering the Tukey correction, over a grid of values for λ and ζ. When 
+
+P = 5, we consider ζ ∈ { 0.5, 1, 5, 10 , 25 , 50 , 100 }, whereas for P = 50 we consider 
+
+ζ ∈ { 0.05 , 0.1, 0.2, 0.5, 1, 5, 10 }, since smaller values are expected to be optimal in the presence of many noisy features. Similarly, we consider λ ∈ { 0, 0.25 , 0.5, 0.75 , 1} when 
+
+T = 1 000, and λ ∈ { 0, 0.05 , 0.1, 0.2, 0.5} when T = 50, as smaller values are expected to be optimal for shorter time series. Each configuration is replicated 200 times. The FWJM is compared against several benchmarks, including nr-FWJM, k-means, the JM of Nystrup et al. (2020 ), the SJM of Nystrup et al. (2021 ), a multivariate Student-t HMM, and the COSA method of Friedman and Meulman (2004 ). We evaluate performance in terms of clustering and estimation accuracy. Specif-ically, we report the median balanced accuracy (BAC) and adjusted Rand index (ARI) between the true and estimated state sequences, and the root mean squared error (RMSE) between true centroids and estimated prototypes. For the FWJM, we additionally show the medians of the estimated feature weights across scenarios. 
+
+3.1 Results 
+
+Table 2 summarizes the results for the simulation settings without contamination. Overall, the proposal consistently provides the best clustering performance across all scenarios and values of K, achieving ARI and BAC values close or equal to 1 in most settings, while maintaining competitive RMSE values. Its advantage is particularly pronounced in scenarios A and C ( T = 1 000), where competing approaches often fail to recover the latent state structure. Among the competing methods, COSA generally provides the strongest alternative performance, especially in scenario B and, to a lesser extent, in scenario C. The Stud-t HMM also achieves good performance in some settings, particularly for smaller values of K. In contrast, SJM, JM, and k-means exhibit consistently poor performance across most scenarios. Table 3 reports the results under 5% contamination. Overall, FWJM consistently achieves the best clustering performance across nearly all scenarios and values of K.The advantage of the robust formulation over its non-robust counterpart becomes par-ticularly evident under contamination, with large performance gaps observed across several settings (e.g., ARI equal to 0.99 versus 0.63 in scenario A with K = 3, and 0.99 versus 0.67 for K = 4). COSA generally provides the strongest alternative perfor-mance in scenario B, where the shorter time dimension reduces the benefit of temporal 8Table 2 : Performance comparison across four scenarios with  K = 2 , K  = 3 and  K = 4 latent states and no contamination. Methods include the feature-weighted jump model (FWJM), its non-robust version (nr-FWJM), the sparse jump model (SJM), the jump model (JM),  k-means, Clustering Objects on Subsets of Attributes (COSA), and a Student-t hidden Markov model (Stud-t HMM). Results are reported in terms of median adjusted Rand index (ARI) and balanced accuracy (BAC), with standard deviations in parentheses, and root mean squared errors (RMSE) between true centroids and estimated medoids. Bold values indicate the best performance, corresponding to the highest ARI and BAC and the lowest RMSE. 
+
+> Scenario A  Scenario B  Scenario C  Scenario D
+> K Method  ARI  BAC  RMSE  ARI  BAC  RMSE  ARI  BAC  RMSE  ARI  BAC  RMSE
+> 2FWJM  1.00
+> (0.10)  1.00
+> (0.05)  0.29  1.00
+> (0.39)  1.00
+> (0.16)  0.80  1.00
+> (0.09)  1.00
+> (0.02)  0.15  0.92
+> (0.42)  0.99
+> (0.18)  0.77 nr-FWJM  1.00
+> (0.12)  1.00
+> (0.04)  0.35  1.00
+> (0.36)  1.00
+> (0.12)  0.75  1.00
+> (0.00)  1.00
+> (0.00)  0.11  0.92
+> (0.35)  1.00
+> (0.11)  0.69 SJM  0.09
+> (0.07)  0.72
+> (0.02)  0.83  0.01
+> (0.22)  0.64
+> (0.17)  0.62  0.00
+> (0.09)  0.52
+> (0.09)  0.71  0.05
+> (0.21)  0.75
+> (0.15)  0.87 JM  0.08
+> (0.08)  0.72
+> (0.06)  0.89  0.01
+> (0.31)  0.64
+> (0.18)  0.62  0.00
+> (0.21)  0.52
+> (0.13)  0.63  0.05
+> (0.21)  0.75
+> (0.14)  0.86
+> k-means  0.07
+> (0.08)  0.72
+> (0.07)  0.90  0.01
+> (0.25)  0.62
+> (0.15)  0.64  0.00
+> (0.21)  0.51
+> (0.13)  0.62  0.05
+> (0.17)  0.74
+> (0.14)  0.85 COSA  0.82
+> (0.13)  0.96
+> (0.03)  0.17  0.92
+> (0.34)  0.99
+> (0.09)  0.69  0.98
+> (0.07)  1.00
+> (0.05)  0.16  0.63
+> (0.31)  0.92
+> (0.11)  0.68
+> Stud-t HMM  0.22
+> (0.22)  0.70
+> (0.08)  4.09  0.70
+> (0.40)  0.92
+> (0.19)  2.01  0.98
+> (0.26)  0.99
+> (0.13)  3.90  0.47
+> (0.40)  0.83
+> (0.19)  1.61
+> 3FWJM  1.00
+> (0.10)  1.00
+> (0.06)  2.08  1.00
+> (0.21)  1.00
+> (0.08)  0.74  1.00
+> (0.14)  1.00
+> (0.05)  0.67  0.93
+> (0.25)  0.98
+> (0.09)  1.13 nr-FWJM  1.00
+> (0.05)  1.00
+> (0.06)  1.34  1.00
+> (0.11)  1.00
+> (0.07)  0.77  1.00
+> (0.10)  1.00
+> (0.07)  1.49  0.94
+> (0.10)  0.99
+> (0.07)  1.24 SJM  0.07
+> (0.05)  0.65
+> (0.02)  1.36  0.11
+> (0.25)  0.68
+> (0.11)  0.82  0.00
+> (0.08)  0.52
+> (0.04)  0.95  0.18
+> (0.18)  0.68
+> (0.08)  1.13 JM  0.07
+> (0.05)  0.59
+> (0.02)  1.47  0.11
+> (0.25)  0.67
+> (0.10)  0.82  0.00
+> (0.10)  0.51
+> (0.05)  0.92  0.18
+> (0.20)  0.68
+> (0.08)  1.14
+> k-means  0.07
+> (0.05)  0.59
+> (0.02)  1.47  0.08
+> (0.21)  0.67
+> (0.10)  0.85  0.00
+> (0.10)  0.51
+> (0.05)  0.93  0.15
+> (0.18)  0.67
+> (0.08)  1.14 COSA  0.58
+> (0.12)  0.88
+> (0.05)  0.51  0.91
+> (0.22)  0.98
+> (0.07)  0.68  0.90
+> (0.10)  0.97
+> (0.05)  0.63  0.70
+> (0.21)  0.93
+> (0.09)  0.99
+> Stud-t HMM  0.57
+> (0.17)  0.77
+> (0.05)  4.57  0.62
+> (0.24)  0.82
+> (0.13)  2.66  0.74
+> (0.19)  0.79
+> (0.11)  4.20  0.66
+> (0.26)  0.79
+> (0.12)  2.10
+> 4FWJM  0.99
+> (0.10)  1.00
+> (0.06)  1.04  0.90
+> (0.18)  0.93
+> (0.08)  0.86  1.00
+> (0.15)  1.00
+> (0.05)  1.15  0.78
+> (0.24)  0.85
+> (0.10)  1.61 nr-FWJM  1.00
+> (0.04)  1.00
+> (0.06)  1.44  0.94
+> (0.11)  0.93
+> (0.08)  0.75  1.00
+> (0.10)  1.00
+> (0.08)  1.71  0.85
+> (0.16)  0.89
+> (0.09)  1.78 SJM  0.05
+> (0.04)  0.62
+> (0.02)  1.76  0.12
+> (0.15)  0.66
+> (0.07)  0.87  0.00
+> (0.11)  0.52
+> (0.03)  1.14  0.10
+> (0.12)  0.66
+> (0.06)  1.18 JM  0.05
+> (0.04)  0.57
+> (0.02)  2.20  0.11
+> (0.17)  0.66
+> (0.07)  0.87  0.00
+> (0.06)  0.52
+> (0.03)  1.17  0.10
+> (0.12)  0.66
+> (0.06)  1.18
+> k-means  0.05
+> (0.04)  0.57
+> (0.02)  2.20  0.10
+> (0.16)  0.65
+> (0.07)  0.87  -0.00
+> (0.06)  0.52
+> (0.03)  1.17  0.09
+> (0.10)  0.64
+> (0.06)  1.20 COSA  0.46
+> (0.13)  0.80
+> (0.06)  1.31  0.87
+> (0.16)  0.96
+> (0.06)  0.63  0.89
+> (0.13)  0.97
+> (0.06)  1.19  0.51
+> (0.18)  0.82
+> (0.09)  1.12
+> Stud-t HMM  0.38
+> (0.11)  0.66
+> (0.05)  5.54  0.34
+> (0.17)  0.72
+> (0.07)  3.20  0.54
+> (0.23)  0.72
+> (0.12)  4.78  0.37
+> (0.18)  0.71
+> (0.08)  3.28
+
+9persistence and allows COSA to achieve clustering accuracies comparable to FWJM in some cases, sometimes at the expense of larger RMSE values. The Stud-t HMM attains moderate performance in some settings, especially in scenario C, but remains systematically inferior to FWJM. As before, SJM, JM, and k-means perform poorly across all settings, with ARI values frequently close to zero and BAC values near random-assignment levels. We now turn to the optimal values of the hyperparameters ζ and λ. For the per-sistence parameter λ, larger values are generally preferred when the time horizon T is large, as in scenarios A and C, where temporal information is more informative and persistent state sequences can be reliably estimated. In these settings, the optimal values are typically around λ = 0 .25–0 .75, with values close to 0 .5 most frequently selected. By contrast, when T is smaller, lower persistence penalties are systemati-cally favored, with optimal values usually between λ = 0 .05 and λ = 0 .20. A similar dependence is observed for the hyperparameter ζ. When most features are informative and the temporal signal is strong, larger values of ζ are preferred, typically ranging between 10 and 100, as observed in scenario A. Conversely, in settings characterized by shorter series and a larger proportion of noisy features, smaller values of ζ are sys-tematically selected. In particular, in scenarios B and D the optimal values are often between 0 .2 and 5, with the smallest values generally preferred for larger values of K
+
+and in contaminated settings. The main contribution of FWJM lies in estimating state-dependent feature weights. Therefore, in Figure 1 we report the median estimated feature weights in scenario A for K = 2 , 3 and 4, with 5% contamination, and with λ fixed at its optimal value according to ARI and BAC. The corresponding results in the absence of contamination are qualitatively identical and are therefore omitted for brevity. Results show that the method assigns high weights to features that are informative for discriminating specific states. Values of ζ between 25 and 50 are typically optimal for lower values of K, whereas for larger K they generally range between 10 and 25. This suggests that, as the heterogeneity in feature relevance increases, a smaller contribution of the entropy regularization term in Eq. ( 13 ) is required to achieve an accurate recovery of the true feature importance structure. Figure 2 shows analogous results for scenario B, with the no-contamination setting shown on the left and the 5% contamination setting on the right. Optimal values of ζ
+
+lie in a smaller range, typically between 0 .1 and 1, reflecting the higher level of sparsity in this scenario. In the absence of contamination, the model robustly recovers the true feature-state structure, while performance deteriorates in the contaminated setting, mostly because this scenario is characterized by a small sample size. Nevertheless, for 
+
+K = 3 and K = 4 the model is still able to recover the main feature-state structure. In contrast, when K = 2, where inter-state feature heterogeneity is less pronounced, the model mainly identifies features that are strongly state-specific, while features shared across states and noisy features tend to receive similar weights. Results for scenario C indicate that FWJM accurately recovers the underlying sparse state-feature structure across all values of K, even in the presence of contam-ination. In contrast, scenario D represents the most challenging setting due to the 10 Table 3 : Performance comparison across four scenarios with  K = 2 , K  = 3 and  K = 4 latent states and 5% contamination. Methods include the feature-weighted jump model (FWJM), its non-robust version (nr-FWJM), the sparse jump model (SJM), the jump model (JM),  k-means, Clustering Objects on Subsets of Attributes (COSA), and a Student-t hidden Markov model (Stud-t HMM). Results are reported in terms of median adjusted Rand index (ARI) and balanced accuracy (BAC), with standard deviations in parentheses, and root mean squared errors (RMSE) between true centroids and estimated medoids. Bold values indicate the best performance, corresponding to the highest ARI and BAC and the lowest RMSE. 
+
+> Scenario A  Scenario B  Scenario C  Scenario D
+> K Method  ARI  BAC  RMSE  ARI  BAC  RMSE  ARI  BAC  RMSE  ARI  BAC  RMSE
+> 2FWJM  0.99
+> (0.13)  1.00
+> (0.08)  0.32  0.37
+> (0.44)  0.83
+> (0.24)  5.94  1.00
+> (0.10)  1.00
+> (0.05)  0.23  0.01
+> (0.24)  0.54
+> (0.17)  9.46 nr-FWJM  0.96
+> (0.41)  0.99
+> (0.21)  2.91  -0.01
+> (0.24)  0.49
+> (0.15)  8.03  0.99
+> (0.14)  1.00
+> (0.08)  0.37  0.08
+> (0.45)  0.50
+> (0.22)  8.29
+> SJM  0.05
+> (0.07)  0.68
+> (0.09)  3.52  -0.01
+> (0.05)  0.49
+> (0.05)  6.62  0.00
+> (0.08)  0.52
+> (0.08)  0.83  -0.00
+> (0.06)  0.49
+> (0.03)  10.50 JM  0.02
+> (0.07)  0.68
+> (0.09)  4.19  -0.01
+> (0.04)  0.49
+> (0.03)  8.12  -0.00
+> (0.17)  0.52
+> (0.11)  0.80  -0.01
+> (0.06)  0.49
+> (0.03)  11.60
+> k-means  0.02
+> (0.07)  0.68
+> (0.09)  4.16  -0.02
+> (0.04)  0.49
+> (0.02)  8.01  -0.00
+> (0.17)  0.51
+> (0.11)  0.77  -0.01
+> (0.05)  0.49
+> (0.03)  11.60 COSA  0.08
+> (0.16)  0.70
+> (0.10)  3.51  -0.00
+> (0.25)  0.50
+> (0.15)  8.11  0.87
+> (0.44)  0.97
+> (0.23)  7.53  0.00
+> (0.23)  0.51
+> (0.15)  10.8 Stud-t HMM  0.20
+> (0.18)  0.69
+> (0.07)  4.17  -0.02
+> (0.06)  0.49
+> (0.04)  15.80  0.96
+> (0.37)  0.99
+> (0.18)  4.43  0.00
+> (0.34)  0.51
+> (0.19)  13.50
+> 3FWJM  0.99
+> (0.10)  1.00
+> (0.06)  2.87  0.66
+> (0.34)  0.77
+> (0.12)  7.74  1.00
+> (0.13)  1.00
+> (0.09)  2.59  0.68
+> (0.24)  0.77
+> (0.06)  10.4 nr-FWJM  0.63
+> (0.22)  0.78
+> (0.09)  11.9  0.44
+> (0.33)  0.73
+> (0.13)  8.36  0.59
+> (0.21)  0.77
+> (0.11)  6.77  0.48
+> (0.31)  0.74
+> (0.12)  11.7 SJM  0.03
+> (0.05)  0.60
+> (0.06)  4.97  -0.00
+> (0.09)  0.52
+> (0.05)  6.99  0.00
+> (0.06)  0.51
+> (0.03)  1.30  0.01
+> (0.19)  0.52
+> (0.08)  11.10 JM  0.03
+> (0.05)  0.59
+> (0.05)  5.10  -0.01
+> (0.04)  0.51
+> (0.03)  9.31  0.00
+> (0.07)  0.51
+> (0.04)  1.22  -0.00
+> (0.06)  0.51
+> (0.03)  13.40
+> k-means  0.02
+> (0.05)  0.59
+> (0.05)  5.10  -0.01
+> (0.04)  0.51
+> (0.02)  9.36  0.00
+> (0.07)  0.51
+> (0.04)  1.22  -0.00
+> (0.06)  0.51
+> (0.03)  13.40 COSA  0.42
+> (0.15)  0.72
+> (0.05)  11.9  0.63
+> (0.18)  0.76
+> (0.05)  6.98  0.58
+> (0.11)  0.75
+> (0.02)  9.06  0.55
+> (0.23)  0.75
+> (0.08)  9.96
+> Stud-t HMM  0.51
+> (0.19)  0.76
+> (0.06)  4.59  -0.00
+> (0.23)  0.51
+> (0.08)  18.00  0.66
+> (0.20)  0.78
+> (0.09)  4.91  0.58
+> (0.32)  0.75
+> (0.12)  13.80
+> 4FWJM  0.99
+> (0.14)  1.00
+> (0.08)  3.83  0.50
+> (0.19)  0.68
+> (0.06)  7.25  0.99
+> (0.15)  1.00
+> (0.07)  2.80  0.44
+> (0.24)  0.70
+> (0.08)  9.54 nr-FWJM  0.67
+> (0.17)  0.80
+> (0.08)  11.1  0.43
+> (0.18)  0.68
+> (0.06)  7.47  0.63
+> (0.18)  0.78
+> (0.08)  8.17  0.36
+> (0.19)  0.66
+> (0.06)  10.3 SJM  0.02
+> (0.04)  0.56
+> (0.04)  5.56  0.01
+> (0.11)  0.56
+> (0.05)  5.80  0.00
+> (0.05)  0.52
+> (0.03)  1.56  0.07
+> (0.16)  0.60
+> (0.06)  8.55 JM  0.01
+> (0.04)  0.54
+> (0.03)  5.70  -0.00
+> (0.04)  0.51
+> (0.02)  8.85  0.00
+> (0.05)  0.52
+> (0.03)  1.47  0.01
+> (0.09)  0.53
+> (0.05)  11.40
+> k-means  0.01
+> (0.04)  0.54
+> (0.03)  5.45  -0.00
+> (0.03)  0.51
+> (0.02)  8.86  0.00
+> (0.04)  0.52
+> (0.03)  1.53  0.01
+> (0.09)  0.53
+> (0.05)  11.40 COSA  0.41
+> (0.18)  0.69
+> (0.07)  9.86  0.66
+> (0.15)  0.80
+> (0.07)  5.96  0.74
+> (0.13)  0.82
+> (0.04)  7.01  0.40
+> (0.20)  0.70
+> (0.08)  8.44
+> Stud-t HMM  0.37
+> (0.10)  0.64
+> (0.04)  5.86  0.08
+> (0.18)  0.58
+> (0.07)  18.00  0.42
+> (0.20)  0.68
+> (0.09)  8.85  0.31
+> (0.22)  0.66
+> (0.07)  14.80
+
+11 ζ = 50 ζ = 100                                                    
+
+> ζ = 10 ζ = 25
+> ζ = 1ζ = 5
+> 1234512345212121212121
+> Feature State wkp
+> 0.00 0.31 0.61
+> ζ = 50 ζ = 100
+> ζ = 10 ζ = 25
+> ζ = 1ζ = 5
+> 1234512345321321321321321321
+> Feature State wkp
+> 0.00 0.50 1.00
+> ζ = 50 ζ = 100
+> ζ = 10 ζ = 25
+> ζ = 1ζ = 5
+> 1234512345432143214321432143214321
+> Feature State wkp
+> 0.00 0.50 1.00
+
+Fig. 1 : Normalized median weight matrices for FWJM under scenario A with 5% contamination, for K = 2 (top-left) K = 3 and (top-right) K = 4 (bottom) latent states. combination of small T and high P , leading to a noticeable deterioration in perfor-mance under contamination. Nevertheless, for sufficiently small values of ζ and in the absence of outliers, the model is still able to recover the main state-specific feature structure. Further details for these two scenarios are reported in Section S1 of the Supplementary Material. 
+
+3.2 Sensitivity Analysis 
+
+We now analyze the role of the hyperparameters ζ and λ through a sensitivity analysis based on clustering accuracy. Figure 3 reports ARI for varying values of λ and ζ in scenario A. The role of λ is particularly evident, as introducing temporal regularization (λ > 0) leads the ARI to increase close to one across all settings. Clustering accuracy remains consistently high (ARI ≈ 1) over a broad range of ζ values when K = 2 or 
+
+K = 3. In contrast, for K = 4 the ARI decreases to approximately 0 .9 when ζ > 10, confirming that when heterogeneity in the feature-state structure increases, the choice of ζ becomes more critical. 12 (a) K = 2, α = 0% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 212121212121
+
+Feature State wkp 
+
+0.00 0.04 0.40 
+
+(b) K = 2, α = 5% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 212121212121
+
+Feature State wkp 
+
+0.00 0.04 0.58 
+
+(c) K = 3, α = 0% 
+
+ζ = 1 ζ = 5
+
+ζ = 0.2 ζ = 0.5 
+
+ζ = 0.05 ζ = 0.1 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 321321321321321321
+
+Feature State wkp 
+
+0.00 0.04 0.84 
+
+(d) K = 3, α = 5% 
+
+ζ = 1 ζ = 5
+
+ζ = 0.2 ζ = 0.5 
+
+ζ = 0.05 ζ = 0.1 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 321321321321321321
+
+Feature State wkp 
+
+0.00 0.04 0.93 
+
+(e) K = 4, α = 0% 
+
+ζ = 1 ζ = 5
+
+ζ = 0.2 ζ = 0.5 
+
+ζ = 0.05 ζ = 0.1 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.04 0.52 
+
+(f) K = 4, α = 5% 
+
+ζ = 1 ζ = 5
+
+ζ = 0.2 ζ = 0.5 
+
+ζ = 0.05 ζ = 0.1 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.04 0.52 
+
+Fig. 2 : Normalized median weight matrices for FWJM under scenario B, with 0% and 5% contamination, for K = 2 , K = 3, and K = 4 latent states. 13 (a) K = 2, α = 0% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.50 0.60 0.70 0.80 0.90 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+(b) K = 2, α = 5% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.50 0.60 0.70 0.80 0.90 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+(c) K = 3, α = 0% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+(d) K = 3, α = 5% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+(e) K = 4, α = 0% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+(f) K = 4, α = 5% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.85 0.90 0.95 1.00 
+
+ζ
+
+> ARI
+
+Fig. 3 : Sensitivity analysis for the feature-weighted jump model (FWJM) under sce-nario A, with 0% and 5% contamination, for K = 2 , K = 3 and K = 4 latent states. Each panel reports the median adjusted Rand index (ARI) as a function of the tuning parameters λ and ζ. Grey shaded areas denote 95% confidence intervals. Figure 4 reports the same sensitivity analysis for scenario B. In this setting, per-formance generally deteriorates as λ increases when K = 3 and K = 4, reflecting the lower persistence of the latent states combined with the shorter time horizon, whereas the method is substantially more robust to λ when K = 2. Smaller values of ζ, typically around 1, generally achieve the highest ARI values, as weaker entropy regularization is preferable in this sparse high-noise setting. As expected, the introduction of out-liers leads to a substantial deterioration in performance, particularly for K = 2, where ARI values are often close to zero. In contrast, performance improves for K = 3 and 14 K = 4, likely due to the greater inter-cluster heterogeneity, which makes the latent states more distinguishable. 
+
+(a) K = 2, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.20 0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.20 0.40 0.60 0.80 1.00 
+
+ζ
+
+> ARI
+
+(b) K = 2, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.00 0.10 0.20 0.30 0.40 0.50 
+
+ζ
+
+> ARI
+
+(c) K = 3, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.40 0.60 0.80 1.00 
+
+ζ
+
+> ARI
+
+(d) K = 3, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.40 0.50 0.60 0.70 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.30 0.40 0.50 0.60 0.70 
+
+ζ
+
+> ARI
+
+(e) K = 4, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.40 0.60 0.80 1.00 
+
+ζ
+
+> ARI
+
+(f) K = 4, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.10 0.20 0.30 0.40 0.50 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.00 0.20 0.40 
+
+ζ
+
+> ARI
+
+Fig. 4 : Sensitivity analysis for the feature-weighted jump model (FWJM) under sce-nario B, with 0% and 5% contamination, for K = 2 , K = 3 and K = 4 latent states. Each panel reports the median adjusted Rand index (ARI) as a function of the tuning parameters λ and ζ. Grey shaded areas denote 95% confidence intervals. Results for scenario C show that clustering performance is generally high and relatively robust to the choice of both tuning parameters across all values of K, even under contamination. In contrast, scenario D is substantially more challenging due to the combination of small T and high P , resulting in satisfactory performance mainly 15 in the absence of outliers. In this setting, good clustering performance is typically obtained only for relatively small values of both λ and ζ. Additional sensitivity analyses for the remaining scenarios are reported in Section S1 of the Supplementary Material. Overall, the sensitivity analysis highlights a clear interaction between the optimal tuning parameters and the dimensional and temporal structure of the data. The per-sistence parameter λ is mainly driven by the length of the time series. When T is large, values of λ > 0 improve clustering accuracy. The entropy parameter ζ is instead closely related to the overall dataset dimension and sparsity structure. When P is small and most features are informative, as in scenario A, larger values of ζ are bene-ficial, with optimal values typically ranging between 10 and 50. When P is large and many variables are noisy, as in scenarios B and C, smaller or moderate values of ζ are generally required to avoid assigning excessive weight to irrelevant features. Scenario D combines the most unfavorable conditions, namely small T and large P . In such cases, both hyperparameters should be kept relatively small. 
+
+## 4 Real Data Applications 
+
+In this section, we illustrate our proposal with two different applications in different areas. In the first case, T >> P ; while in the second case T and P are of the same order of magnitude. In real data, we need to select different hyperparameters: to do so, we specify a grid of values and estimate the model separately on each possible combina-tion. For each combination of hyperparameters, we then compute the Silhouette width for each t = 1 , . . . , T . We select the combination of hyperparameters corresponding to the largest median silhouette width, where the median is preferred to the mean to curb the influence of outliers. 
+
+4.1 Kosovo killings in the period 1998-2000 
+
+The Kosovo conflict represents one of the most extensively documented conflicts in recent history. During the escalation of hostilities between Serbian forces and the Kosovo Liberation Army, the civilian population was exposed to brutal violence, forced displacement, and large-scale destruction of infrastructure. Persecutions, homi-cides, and forced displacements were carried out with the general intention of ethnic cleansing. Kosovo represents a unique real-world case study in the conflict litera-ture: memorialisation efforts have led to a rather accurate post-facto list of victims, recorded in the Kosovo Memory Book ( https://www.hlc-rdc.org/en/human-losses/ kosovo-memory-book-ljudski-gubici/kosovo-memory-book/ ). We focus here on daily counts of civilian males and civilian females, and military (regardless of gender) killed in the period between 01/01/1998 and 16/12/2000. A total of 11536 conflict-related deaths (7050 civilian males, 1487 civilian females, and 2999 military) are reported in the Kosovo Memory Book. Most of the homicides occur in the Spring of 1999, as will be seen below. The resulting data set therefore contains daily counts of conflict-related deaths, with T = 1081 days and P = 3. The maximum observed count is 373 for civilian males, 88 for females, and 55 for the military. There are 448 days with no killings for any of the three categories in the period. 16 In order to perform model selection, we let λ = {0, . 25 , . 5, . 75 , . 1, 1.25 } ζ =
+
+{.1, 1, 5, 10 , 50 , 100 , 200 , 500 } and K = {2, 3, 4, 5}. The median Silhouette width is usu-ally very good, with 28.5% of combinations exceeding 90% and half exceeding 84%. The maximum of 96.5% is achieved in K = 2, ζ = 100, and λ = 1. A preference of the criterion for K = 2 could be expected due to the large proportion of zeros, which creates a very strong separation between days without deaths and active war days. We will also show results related to the preferred combination when K = 3, which is 
+
+ζ = 50, and λ = 0, and corresponds to a median Silhouette width of 94.1%. First, we characterize the groups by reporting the average number of deaths for each variable for the times assigned to each group in Table 4. Clusters are clearly very well separated in both cases, with cluster-specific means that are positively associated, as expected.                   
+
+> Cluster Civ. M. Civ. F. Mil.
+> 11.66 0.34 1.07 263.51 13.55 22.76
+> 11.51 0.13 1.05 233.51 10.14 11.97 360.14 11.67 21.25
+
+Table 4: Average number of conflict-related deaths for civilian males and females, and military in Kosovo in the period 1998-2000. The results are stratified by the estimated cluster assignments in a two-cluster (upper panel) and three-cluster (lower panel) config-uration. In Figure 5 we plot the three observed time series, with different colors for each assigned cluster. The configuration with K = 2 clearly identifies one period of high mortality risk for all indicators, while the remaining days are low risk, corresponding to the brutal Spring of 1999. The configuration with K = 3 further separates this cluster by assigning most of Spring 1999 to the new cluster 3; with some mixing between the two periods. The fact that days associated with the most violence are not uniformly labeled should not surprise, as the robust methodology is downweighting their influence on the final estimates. The estimated weight matrices are reported in Table 5. The column-wise hetero-geneity observed supports our proposal, as the optimum is apparently far from the situation of cluster-homogeneous weights. For example, it can be seen that in the three-cluster configuration civilian females drive separation for cluster 1. We conclude this section with some evidence of the necessity of using Tukey’s biweight loss for the data at hand, due to the presence of outlying days with a very large number of killings. In order to do so, we have re-estimated the model with a 17 0100 200 300 
+
+> 1998 1999 2000 2001
+> Days Deaths Civilian Males
+> 025 50 75
+> 1998 1999 2000 2001
+> Days Civilian Females
+> 020 40
+> 1998 1999 2000 2001
+> Days Military
+
+(a) K = 2 
+
+> 0100 200 300
+> 1998 1999 2000 2001
+> Days Deaths Civilian Males
+> 025 50 75
+> 1998 1999 2000 2001
+> Days Civilian Females
+> 020 40
+> 1998 1999 2000 2001
+> Days Military
+
+(b) K = 3 
+
+Fig. 5 : Time series of observed deaths in Kosovo in 1998-2000 by category. Points are colored differently according to the assigned cluster. 
+
+Cluster Civ. M. Civ. F. Mil. 
+
+1 0.13 0.62 0.25 2 0.31 0.36 0.33 
+
+1 0.03 0.88 0.09 2 0.25 0.45 0.30 3 0.29 0.39 0.32 
+
+Table 5 : Estimated weights for the proposed approach when K =2 (upper panel) and K = 3 (lower panel) for the Kosovo killings data. classical square loss, both with K = 2 and K = 3. When K = 2 the weight matrix collapses and for the second group, the third variable (number of military deaths) receives 100% of the weight. The same happens when K = 3, and both cluster 2 and cluster 3 give 100% of the weight to military deaths. The centroids become closer to each other when K = 2, although a good separation can still be observed. When 
+
+K = 3, the third cluster is associated with twice the average deaths of civilians than 18 was reported above; leading to an over-estimation of the conflict burden on civilians for days assigned to clusters 2 and 3. 
+
+4.2 Macroeconomic indicators of Euro countries 
+
+The area of macroeconomics, in our opinion, is strongly relevant for the methodology at hand. Multivariate time series of macroeconomic indicators are often available and, although they mostly evolve smoothly over time, they are also frequently character-ized by structural breaks and jumps due to economic or political shocks, including wars, pandemics, market crashes, and terrorist threats. Furthermore, outliers are often present, and data analysis should take that into account by means of robust methods. We illustrate the use of our approach in macroeconomics with three indicators (household consumption to GDP, imports to GDP, and exports to GDP) for twelve European countries (Austria, Belgium, Estonia, Finland, France, Greece, Ireland, Italy, Malta, Netherlands, Portugal, and Spain), from 1949 to 2024, included. Hence, in this example, T = 49 and P = 12 ∗ 3 = 36. For model selection, we compare all possible combinations of ζ =
+
+{.05 , . 1, . 2, . 5, 1, 5, 10 }, λ = {0, . 25 , . 5, . 75 , 1} and K = {2, 3, 4, 5}.The maximum median Silhouette width of 53.5% corresponds to K = 2, ζ = 1, and λ = .25. A little more sensitivity to the hyperparameters than in the previous example could be expected, and this is indeed seen in the present data. This is due both to a less strong separation between groups (although a Silhouette above 50% is still generally interpreted as a satisfactory cluster representation) and to the high dimensionality of the data. Only 34 (25%) hyperparameter combinations correspond to a median silhouette width greater than 50%; and 10 (7.1%) are less than 25%. For the selected parameters, fifteen of the 36 variables receive near zero weight for one cluster; where all consumption measurements are essentially discarded; together with exports and imports of Estonia, which therefore has zero weight for the first clus-ter. Consumption of Italy, Malta, the Netherlands and Portugal have approximately zero weight also for the second cluster; together with exports and imports of Greece and Malta. The weights are also very heterogeneous when comparing the two groups, with a median relative difference of 24%. 
+
+## 5 Conclusions 
+
+In this work, we proposed a flexible framework for state-dependent variable weighting in robust dynamical clustering of multivariate time series. Simulation studies show that the proposal is able to accurately recover both the latent state sequence and the rele-vant features, even in the presence of noise variables, outliers, and complex temporal patterns. In the empirical applications presented, the necessity of all novel features spe-cific to FWJM is strongly supported, including robust dissimilarities, cluster-specific weights, and time-dependent smoothing of the underlying cluster assignments. We stress that our method is devoted to variable weighting, while exact sparsity (i.e., variable selection) is not achieved as in general all weights are positive. This is an explicit choice, which is shared with many other methods (such as Friedman and Meulman (2004 )). While in our experience, as illustrated also in the simulation study 19 and real data examples, irrelevant features are typically down-weighted to an almost zero weight; we stress that in unsupervised learning, variable selection should arise also from reasoning (linked with the scientific question at hand). A clear limitation of our method is that it does not scale well with large T , as the dissimilarity between all possible pairs of measurements assigned to each cluster must be calculated at each iteration. Future work may be devoted to the development of scalable algorithms for large T and/or high-dimensional settings. 
+
+## References 
+
+Aydınhan, A.O., Kolm, P.N., Mulvey, J.M., Shu, Y. (2024). Identifying patterns in financial markets: Extending the statistical jump model for regime identification. 
+
+Annals of Operations Research , 1–37, Bartolucci, F., Farcomeni, A., Pennoni, F. (2013). Latent Markov Models for Longitudinal Data . Boca Raton, FL: Chapman & Hall/CRC Press. Bemporad, A., Breschi, V., Piga, D., Boyd, S.P. (2018). Fitting jump models. 
+
+Automatica , 96 , 11–21, Cortese, F.P., & Pievatolo, A. (2025). Statistical jump model for mixed-type data with missing data imputation. Advances in Data Analysis and Classification , 1–25, Cortese, F.P., & Pievatolo, A. (2026). Spatio-temporal jump model for urban thermal comfort monitoring. Stochastic Environmental Research and Risk Assessment ,
+
+40 (5), 94, Friedman, J.H., & Meulman, J.J. (2004). Clustering objects on subsets of attributes (with discussion). Journal of the Royal Statistical Society Series B: Statistical Methodology , 66 (4), 815–849, Gower, J.C. (1971). A general coefficient of similarity and some of its properties. 
+
+Biometrics , 857–871, Kampert, M.M., Meulman, J.J., Friedman, J.H. (2017). rCOSA: A software package for clustering objects on subsets of attributes. Journal of Classification , 34 (3), 514–547, Malsiner-Walli, G., Fr¨ uhwirth-Schnatter, S., Gr¨ un, B. (2016). Model-based clustering based on sparse finite Gaussian mixtures. Statistics and Computing , 26 (1), 20 303–324, Nystrup, P., Boyd, S., Lindstr¨ om, E., Madsen, H. (2019). Multi-period portfolio selection with drawdown control. Annals of Operations Research , 282 (1–2), 245–271, Nystrup, P., Kolm, P.N., Lindstr¨ om, E. (2021). Feature selection in jump models. 
+
+Expert Systems with Applications , 184 , 115558, Nystrup, P., Lindstr¨ om, E., Madsen, H. (2020). Learning hidden Markov models with persistent states by penalizing jumps. Expert Systems with Applications , 150 ,113307, Rousseeuw, P.J. (1987). Silhouettes: A graphical aid to the interpretation and vali-dation of cluster analysis. Journal of Computational and Applied Mathematics ,
+
+20 , 53–65, Witten, D.M., & Tibshirani, R. (2010). A framework for feature selection in clustering. 
+
+Journal of the American Statistical Association , 105 (490), 713–726, Zucchini, W., MacDonald, I.L., Langrock, R. (2017). Hidden Markov models for time series: An introduction using R . Boca Raton, FL: CRC press. 21 Supplementary Material 
+
+Section S1 reports additional simulation results. Section S2 derives the closed-form formula for the state-conditional feature weights. 
+
+## S1 Additional simulation results 
+
+Figure 6 reports the results for Scenario C, which corresponds to the richest set-ting in terms of data availability. In this case, the model perfectly recovers the true feature-state structure for values of K = 3 and 4, for all contamination levels. For 
+
+K = 2, however, the model does not identify the five features shared across the two states, assigning them weights close to zero. This likely reflects the increased selec-tivity induced by the larger sample size: as the state-specific signal is estimated more accurately, the model tends to concentrate the weights on features that are genuinely discriminative between states. Figure 7 reports the results for Scenario D, which represents the most challenging setting due to the combination of small T and high P . Accordingly, performance deteriorates substantially, particularly in the presence of outliers. Nevertheless, for small values of ζ and in the absence of contamination, the model is still able to recover the true feature-state structure for all values of K.Figure 8 reports the sensitivity analysis for Scenario C, where clustering per-formance is generally high and robust to the choice of both hyperparameters. Figure 9 reports the sensitivity analysis for Scenario D, where satisfactory perfor-mance is generally achieved only in the absence of outliers. Similarly to Scenario B, the temporal regularization parameter λ must remain relatively small, typically below approximately 0 .2. Likewise, smaller values of ζ, generally between 1 and 5, provide the best result. 22 (a) K = 2, α = 0% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 212121212121
+
+Feature State wkp 
+
+0.00 0.04 0.66 
+
+(b) K = 2, α = 5% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 212121212121
+
+Feature State wkp 
+
+0.00 0.04 0.49 
+
+(c) K = 3, α = 0% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 321321321321321321
+
+Feature State wkp 
+
+0.00 0.04 0.86 
+
+(d) K = 3, α = 5% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 321321321321321321
+
+Feature State wkp 
+
+0.00 0.04 0.70 
+
+(e) K = 4, α = 0% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.04 0.38 
+
+(f) K = 4, α = 5% 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+ζ = 0.1 ζ = 0.2 
+
+1 5 10 15 20 25 30 35 40 45 50 1 5 10 15 20 25 30 35 40 45 50 432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.04 0.64 
+
+Fig. 6 : Normalized median weight matrices for FWJM under Scenario C, with 0% and 5% contamination, for K = 2 , K = 3, and K = 4 latent states. 23 (a) K = 2, α = 0% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5212121212121
+
+Feature State wkp 
+
+0.00 0.32 0.64 
+
+(b) K = 2, α = 5% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5212121212121
+
+Feature State wkp 
+
+0.00 0.23 0.46 
+
+(c) K = 3, α = 0% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5321321321321321321
+
+Feature State wkp 
+
+0.00 0.23 0.46 
+
+(d) K = 3, α = 5% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5321321321321321321
+
+Feature State wkp 
+
+0.00 0.18 0.36 
+
+(e) K = 4, α = 0% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.32 0.64 
+
+(f) K = 4, α = 5% 
+
+ζ = 25 ζ = 50 
+
+ζ = 5 ζ = 10 
+
+ζ = 0.5 ζ = 1
+
+1 2 3 4 5 1 2 3 4 5432143214321432143214321
+
+Feature State wkp 
+
+0.00 0.23 0.46 
+
+Fig. 7 : Normalized median weight matrices for FWJM under Scenario D, with 0% and 5% contamination, for K = 2 , K = 3, and K = 4 latent states. 24 (a) K = 2, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.70 0.80 0.90 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.75 0.80 0.85 0.90 0.95 1.00 
+
+ζ
+
+> ARI
+
+(b) K = 2, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.75 0.80 0.85 0.90 0.95 1.00 
+
+ζ
+
+> ARI
+
+(c) K = 3, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.50 0.60 0.70 0.80 0.90 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.95 0.96 0.97 0.98 0.99 1.00 
+
+ζ
+
+> ARI
+
+(d) K = 3, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.20 0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.92 0.94 0.96 0.98 1.00 
+
+ζ
+
+> ARI
+
+(e) K = 4, α = 0% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.95 0.96 0.97 0.98 0.99 1.00 
+
+ζ
+
+> ARI
+
+(f) K = 4, α = 5% 
+
+ζ = 0.05 ζ = 0.1 ζ = 0.2 ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 
+
+> 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00 0.00 0.25 0.50 0.75 1.00
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0.25 λ = 0.5 λ = 0.75 λ = 1
+
+> 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510 0.05 0.1 0.2 0.5 1510
+
+0.90 0.92 0.95 0.98 1.00 
+
+ζ
+
+> ARI
+
+Fig. 8 : Sensitivity analysis for the feature-weighted jump model (FWJM) under Sce-nario C, with 0% and 5% contamination, for K = 2 , K = 3 and K = 4 latent states. Each panel reports the median adjusted Rand index (ARI) as a function of the tuning parameters λ and ζ. Grey shaded areas denote confidence intervals. 25 (a) K = 2, α = 0% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.00 0.25 0.50 0.75 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.00 0.25 0.50 0.75 1.00 
+
+ζ
+
+> ARI
+
+(b) K = 2, α = 5% 
+
+ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.00 0.02 0.05 0.08 0.10 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.00 0.02 0.05 0.08 0.10 
+
+ζ
+
+> ARI
+
+(c) K = 3, α = 0% 
+
+ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 ζ = 100 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.40 0.60 0.80 1.00 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.40 0.60 0.80 1.00 
+
+ζ
+
+> ARI
+
+(d) K = 3, α = 5% 
+
+ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.30 0.40 0.50 0.60 0.70 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.30 0.40 0.50 0.60 0.70 
+
+ζ
+
+> ARI
+
+(e) K = 4, α = 0% 
+
+ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.20 0.40 0.60 0.80 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.20 0.40 0.60 0.80 
+
+ζ
+
+> ARI
+
+(f) K = 4, α = 5% 
+
+ζ = 0.5 ζ = 1 ζ = 5 ζ = 10 ζ = 25 ζ = 50 
+
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5 0.0 0.1 0.2 0.3 0.4 0.5
+
+0.10 0.20 0.30 0.40 0.50 
+
+λ
+
+> ARI
+
+λ = 0 λ = 0.05 λ = 0.1 λ = 0.2 λ = 0.5 
+
+> 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100 0.5 1510 25 50 100
+
+0.10 0.20 0.30 0.40 0.50 
+
+ζ
+
+> ARI
+
+Fig. 9 : Sensitivity analysis for the feature-weighted jump model (FWJM) under Sce-nario D, with 0% and 5% contamination, for K = 2 , K = 3 and K = 4 latent states. Each panel reports the median adjusted Rand index (ARI) as a function of the tuning parameters λ and ζ. Grey shaded areas denote confidence intervals. 26 S2 Derivation of the feature weights update step 
+
+Considering the objective function 
+
+f (s, W , m) = ∑
+
+> t
+
+∑
+
+> p
+
+wst ,p dtm st ,p + ζ ∑
+
+> k
+
+∑
+
+> p
+
+wkp log wkp + λ 
+
+> T−1
+
+∑
+
+> t=1
+
+I(st 6 = st+1 ), (13) We should solve min 
+
+> W
+
+∑
+
+> p
+
+∑
+
+> k
+
+wkp 
+
+∑ 
+
+> t:st=k
+
+dtm st ,p + ζ ∑
+
+> k
+
+∑
+
+> p
+
+wkp log wkp s.t. 
+
+> P
+
+∑
+
+> p=1
+
+wkp = 1 , wkp ≥ 0.
+
+Define 
+
+Skp = ∑ 
+
+> t:st=k
+
+dtm k ,p ,
+
+then min 
+
+> wkp
+> P
+
+∑
+
+> p=1
+
+wkp Skp + ζ
+
+> P
+
+∑
+
+> p=1
+
+wkp log wkp s.t. 
+
+> P
+
+∑
+
+> p=1
+
+wkp = 1 .
+
+Defining the Lagrangian as 
+
+Lk =
+
+> P
+
+∑
+
+> p=1
+
+wkp Skp + ζ
+
+> P
+
+∑
+
+> p=1
+
+wkp log wkp + μk
+
+( P∑
+
+> p=1
+
+wkp − 1
+
+)
+
+,
+
+and setting its first derivative with respect to wkp equal to zero, we obtain 
+
+wkp = exp 
+
+(
+
+− Skp 
+
+ζ
+
+)
+
+exp 
+
+(
+
+−1 − μk
+
+ζ
+
+)
+
+. (14) By imposing the constraint ∑Pp=1 wkp = 1, we obtain that 
+
+μk = ζ
+
+[
+
+log 
+
+( P∑
+
+> p=1
+
+exp 
+
+(
+
+− Skp 
+
+ζ
+
+))
+
+− 1
+
+]
+
+,
+
+and substituting in Eq. ( 14 ), we finally obtain 
+
+wkp = exp 
+
+(
+
+− Skp 
+
+ζ
+
+) / P∑
+
+> p=1
+
+exp 
+
+(
+
+− Skp 
+
+ζ
+
+)
+
+.
+
+27

@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-17",
+  "date": "2026-06-17",
+  "generated_at": "2026-06-17T22:21:10",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/17/2606.11990v2-time-series-foundation-model-embeddings-for-remaining-useful-life-estimation",
+      "section": "deep",
+      "title_en": "Time-Series Foundation Model Embeddings for Remaining Useful Life Estimation",
+      "authors": "Amir El-Ghoussani, Michele De Vita, Ronald Naumann, Vasileios Belagiannis",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.11990v2",
+      "score": "9.0",
+      "evidence": "冻结预训练时间序列基础模型用于特征提取",
+      "tldr": "工业预测维护中剩余寿命预测至关重要，但现有方法依赖大量标注数据和特征工程。本文提出轻量方法：冻结预训练时间序列基础模型Chronos-2作为特征提取器，搭配小型回归网络。实验表明，在两种工业传感器数据上，该方法优于RNN、CNN、Transformer及梯度提升基线，且更长的上下文历史显著提升性能。该工作为工业RUL估计提供了数据高效、无需繁琐特征工程的实用方案。",
+      "tags": "query:fe",
+      "abstract_en": "Remaining Useful Life (RUL) prediction is essential for industrial predictive maintenance, yet many learning-based approaches rely on extensive feature engineering or large labeled datasets to train task-specific sequence models. In this work, we introduce a lightweight learning approach, in which we leverage a frozen pretrained time-series foundation model (TSFM) and combine it with a small regression head for RUL estimation from multivariate sensor streams. More specifically, we use Chronos-2 as a frozen backbone to extract context window features and train a lightweight regression neural network for RUL prediction. Experiments on real-world industrial sensor data from two device types show that Chronos-2 features consistently improve over recurrent, convolutional, Transformer-based, and gradient-boosting baselines under the same preprocessing and evaluation protocol. We further analyze the impact of context length and find that performance improves significantly with longer histories, indicating that TSFM representation offer a practical and data-efficient alternative for RUL estimation in industrial settings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/17/biorxiv-10-64898-2026-06-10-727770-v1-phi-reason-evidence-grounded-species-level-phage-host-prediction-from-structured-biological-text-profiles",
+      "section": "deep",
+      "title_en": "PHI-Reason: evidence-grounded species-level phage-host prediction from structured biological text profiles",
+      "authors": "Zhang, Y.-z., Xu, L., Imoto, S.",
+      "date": "2026-06-12",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.10.727770v1.full.pdf",
+      "score": "9.0",
+      "evidence": "使用冻结的大型语言模型从结构化生物文本进行物种级预测",
+      "tldr": "噬菌体-宿主相互作用预测是微生物学的基本问题，现有方法依赖数值编码缺乏可解释性。PHI-Reason将预测重构为结构化生物文本推理，将基因组、功能等异质证据转化为模块化自然语言档案，由冻结的大语言模型在推理时整合用于候选宿主排序。该方法在物种水平基准上取得竞争性表现，且其显式档案设计支持证据扰动和归因分析，使预测支持和幻觉风险可量化。PHI-Reason提供了可解释的证据整合方案，展示了大型语言模型在证据驱动的噬菌体宿主预测中的潜力。",
+      "tags": "query:fe",
+      "abstract_en": "Phage-host interaction (PHI) prediction is a fundamental problem in microbiology. Existing approaches typically encode phage and host information as numerical representations derived from sequence similarity, protein content or reference databases, and use them to score candidate hosts or train prediction models. Although effective, this design obscures which biological evidence supports a prediction. Here, we present PHI-Reason, a species-level PHI prediction framework that reformulates host prediction as inference over structured biological text. PHI-Reason converts heterogeneous genomic, functional and contextual evidence into modular natural-language profiles, which a frozen large language model integrates at inference time for candidate-host ranking or pairwise PHI assessment. Across species-level benchmarks, PHI-Reason achieved competitive performance and complementary correct assignments relative to established methods. Its explicit profile design enables evidence perturbation and rationale-grounding analyses, making prediction support and hallucination risk operationally measurable. PHI-Reason provides an interpretable evidence-integration approach and demonstrates how large language models can support evidence-grounded PHI prediction.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/17/2606.18049v1-contex-reformulating-counterfactual-generation-for-time-series-forecasting",
+      "section": "deep",
+      "title_en": "ConTex: Reformulating Counterfactual Generation For Time Series Forecasting",
+      "authors": "Jan Voets, Hasan Tercan, Tobias Meisen, Sebastian Baum",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.18049v1",
+      "score": "8.0",
+      "evidence": "反事实生成用于时间序列预测，提供因果见解",
+      "tldr": "时间序列预测需要反事实解释来指导决策，但现有实例级优化方法存在不一致性和高计算成本。ConTex将反事实生成重构为学习全局一致干预策略的问题，采用分解架构（时间上下文编码器+条件编码器+两个输出头），一次前向传播即可生成跨时间和特征的稀疏反事实。在多个数据集和预测架构上达到最优有效性，同时将计算成本降低12-36倍，支持约0.007秒的实时推理。",
+      "tags": "query:tsc",
+      "abstract_en": "Decision-making with deep learning-based time series forecasting requires not only accurate predictions but also actionable insights. However, current architectures do not inherently provide such information. Specifically, guidance is needed on how current conditions must be modified to shift from a predicted outcome to a desired future scenario. Counterfactual explanations provide a natural framework for this task, as they represent minimal input changes that alter the model's prediction, indicating when and how intervention is required. Existing approaches rely on instance-wise optimization, leading to inconsistency across instances, high computational costs, and limited applicability in real-time settings.   To address these limitations, we reformulate counterfactual generation for time series forecasting as the problem of learning a globally consistent intervention strategy, allowing counterfactuals to be generated through a single shared function. We propose Counterfactual Time Series Explanations (ConTex), a model-agnostic, decomposed architecture comprising a temporal context encoder and a conditional encoder, followed by two heads that capture interventions in terms of temporal relevance and modification strength. This structure overcomes the instability and inconsistency of instance-based approaches by producing targeted, interpretable interventions across time and feature dimensions in a single forward pass, making it suitable for real-time applications.   Across multiple forecasting architectures and benchmark datasets, ConTex achieves state-of-the-art validity while generating sparse counterfactuals that minimize the number of necessary interventions. Additionally, our approach reduces computational cost by at least 12-36x compared to instance-wise generation and supports real-time inference at approximately 0.007 seconds.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/17/2606.13146v1-robust-state-conditional-feature-weighted-jump-models-for-temporal-clustering",
+      "section": "quick",
+      "title_en": "Robust State-Conditional Feature-Weighted Jump Models for Temporal Clustering",
+      "authors": "Federico P. Cortese, Alessio Farcomeni",
+      "date": "2026-06-11",
+      "pdf": "https://arxiv.org/pdf/2606.13146v1",
+      "score": "6.0",
+      "evidence": "时间序列特征加权的聚类方法，用于属性挖掘",
+      "tldr": "时间序列聚类需处理状态转移平滑性和异常值鲁棒性。本文提出鲁棒状态条件特征加权跳跃模型，采用Tukey双权损失函数抗异常，通过惩罚项促进状态平滑过渡，并引入参数控制特征权重跨状态变异性。模拟表明该方法在异常值下准确恢复聚类序列并识别相关特征，优于竞争方法。实证分析科索沃冲突时期和欧洲宏观经济数据验证了其有效性。",
+      "tags": "query:fe",
+      "abstract_en": "We propose a robust feature-weighted jump model for time-dependent clustering. A penalty is used to encourage smoothness of transitions over time, while robustness is achieved through the use of a Tukey's biweight loss function. An additional parameter controls the variability of feature weights across states, allowing the model to assign state-specific relevance to each feature. We illustrate in simulation how the method accurately recovers the true cluster sequence and reliably identifies relevant features, outperforming competing approaches, particularly in the presence of outliers. We conclude with two empirical applications, one on the number of conflict-related homicides in Kosovo in the period 1998-2000, and another on macroeconomic performance of twelve European countries in the period 1949-2024.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

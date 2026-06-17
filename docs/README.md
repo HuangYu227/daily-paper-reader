@@ -6,52 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-16
-- 运行时间：2026-06-16 23:12:07 UTC
+- 最新运行日期：2026-06-17
+- 运行时间：2026-06-17 22:20:59 UTC
 - 运行状态：成功
-- 本次总论文数：10
-- 精读区：6
-- 速读区：4
+- 本次总论文数：4
+- 精读区：3
+- 速读区：1
 
 ### 今日简报（AI）
-1) 今日推荐10篇论文，6篇精读，其中《Relational Structural Causal Models》与《Towards a Unified Generative Model for Scarce Time Series with Domain Experts》获9.0高分。  
-2) 最值得关注：关系结构因果模型拓展因果推断边界，以及结合领域专家知识解决稀缺时间序列生成问题。  
-3) 建议优先精读这两篇9分论文，其余速读论文可按兴趣选读语义梯度、事件关系挖掘或时间序列压缩方向。
-- 详情：[/202606/16/README](/202606/16/README)
+1) 今日精选两篇高分论文：时间序列基础模型嵌入实现剩余寿命估计，以及基于结构化文本的物种级噬菌体宿主预测。  
+2) 方向一：利用时间序列基础模型嵌入可显著提升设备剩余使用寿命的估计精度；方向二：PHI-Reason通过解析生物学文本实现高准确度的噬菌体-宿主匹配。  
+3) 建议关注时间序列基础模型在工业运维中的应用，或探索结构化文本推理在微生物组研究中的潜力。
+- 详情：[/202606/17/README](/202606/17/README)
 
 ### 精读区论文标签
-1. [Relational Structural Causal Models](/202606/16/2606.14892v1-relational-structural-causal-models)  
-   标签：评分：9.0/10、query:tsc
-   evidence：直接提出关系结构因果模型，扩展结构因果模型
-2. [Towards a Unified Generative Model for Scarce Time Series with Domain Experts](/202606/16/2606.15172v1-towards-a-unified-generative-model-for-scarce-time-series-with-domain-experts)  
-   标签：评分：9.0/10、query:tsc
-   evidence：提出TimeMoDE，一个统一生成模型，利用扩散变换器和专家混合处理稀缺时间序列生成
-3. [PHINN: Persistent Homology Inspired Neural Network for Rare-Event Time Series Generation](/202606/16/2606.15452v1-phinn-persistent-homology-inspired-neural-network-for-rare-event-time-series-generation)  
-   标签：评分：9.0/10、query:tsc
-   evidence：利用持续同调的罕见事件时间序列生成
-4. [Generative Predictive Distributions for Time Series](/202606/16/2606.16773v1-generative-predictive-distributions-for-time-series)  
-   标签：评分：9.0/10、query:tsc
-   evidence：使用条件GAN生成时间序列
-5. [DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning](/202606/16/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning)  
-   标签：评分：8.0/10、query:fe
-   evidence：利用时间知识图增强冻结的大语言模型
-6. [RAID: Semantic Graph Diffusion for True Cold-Start and Cross-Lingual Forecasting](/202606/16/2606.16925v1-raid-semantic-graph-diffusion-for-true-cold-start-and-cross-lingual-forecasting)  
-   标签：评分：8.0/10、query:fe
-   evidence：使用冻结的多语言嵌入模型进行时间序列预测
+1. [Time-Series Foundation Model Embeddings for Remaining Useful Life Estimation](/202606/17/2606.11990v2-time-series-foundation-model-embeddings-for-remaining-useful-life-estimation)  
+   标签：评分：9.0/10、query:fe
+   evidence：冻结预训练时间序列基础模型用于特征提取
+2. [PHI-Reason: evidence-grounded species-level phage-host prediction from structured biological text profiles](/202606/17/biorxiv-10-64898-2026-06-10-727770-v1-phi-reason-evidence-grounded-species-level-phage-host-prediction-from-structured-biological-text-profiles)  
+   标签：评分：9.0/10、query:fe
+   evidence：使用冻结的大型语言模型从结构化生物文本进行物种级预测
+3. [ConTex: Reformulating Counterfactual Generation For Time Series Forecasting](/202606/17/2606.18049v1-contex-reformulating-counterfactual-generation-for-time-series-forecasting)  
+   标签：评分：8.0/10、query:tsc
+   evidence：反事实生成用于时间序列预测，提供因果见解
 
 ### 速读区论文标签
-1. [Beyond Scalar Distances: Semantic Attribute Gradients from Frozen MLLMs for Visual Embeddings](/202606/16/2606.15134v1-beyond-scalar-distances-semantic-attribute-gradients-from-frozen-mllms-for-visual-embeddings)  
-   标签：评分：7.0/10、query:fe
-   evidence：使用冻结的多模态大语言模型提供语义属性梯度以训练视觉编码器
-2. [EventConnector: Mining Social Event Relations through Temporal Graphs](/202606/16/2606.15448v1-eventconnector-mining-social-event-relations-through-temporal-graphs)  
-   标签：评分：7.0/10、query:tsc
-   evidence：挖掘事件间的时间关系和领先-滞后依赖性
-3. [Beyond Uniform Tokens: Adaptive Compression for Time Series Language Models](/202606/16/2606.13624v1-beyond-uniform-tokens-adaptive-compression-for-time-series-language-models)  
+1. [Robust State-Conditional Feature-Weighted Jump Models for Temporal Clustering](/202606/17/2606.13146v1-robust-state-conditional-feature-weighted-jump-models-for-temporal-clustering)  
    标签：评分：6.0/10、query:fe
-   evidence：通过自适应压缩提高时间序列语言模型的令牌效率
-4. [Semantics-Enhanced Retrieval-Augmented Time Series Forecasting](/202606/16/2606.14941v1-semantics-enhanced-retrieval-augmented-time-series-forecasting)  
-   标签：评分：6.0/10、query:fe
-   evidence：语义增强的时间序列检索
+   evidence：时间序列特征加权的聚类方法，用于属性挖掘
 
 
 <div class="dpr-home-promo-card">
