@@ -1,0 +1,216 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-19T22:05:22.679491+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.18074v1",
+      "source": "arxiv",
+      "title": "Tensor-based second-order causal discovery",
+      "abstract": "Causal discovery seeks to uncover the causal dependencies among variables. For this purpose, we propose an algorithm called Tensor-based Second-order Causal Discovery (TSCD). Its input is a tensor obtained from the covariance matrices of observational and interventional data. Assuming the causal dependencies follow a linear structural equation model on a directed acyclic graph (DAG), TSCD outputs the DAG and the functions on its edges, requiring only that the noise variables are uncorrelated. We also implement a version of the approach for nonlinear models. Our focus on second-order statistics (via the covariance matrices) is motivated by their statistical and computational efficiency relative to higher-order moments, their identifiability relative to first-order statistics, and that they work regardless of whether the variables are Gaussian. We show that TSCD has identifiable causal order and parameters from a number of interventions that is logarithmic in the number of variables. Experiments show that TSCD is robust to noise, competitive with existing methods, and scales to hundreds of variables.",
+      "authors": [
+        "Nathan Ouyang",
+        "Kexin Wan",
+        "Anna Seigal"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-06-16T15:43:44+00:00",
+      "link": "https://arxiv.org/pdf/2606.18074v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal discovery using covariance tensors",
+      "llm_evidence_cn": "基于张量的因果发现方法",
+      "llm_evidence": "基于张量的因果发现方法",
+      "canonical_evidence": "基于张量的因果发现方法",
+      "llm_tldr_en": "proposes TSCD algorithm using tensor of covariance matrices for causal discovery from observational and interventional data.",
+      "llm_tldr_cn": "针对因果发现任务，提出基于张量的二阶因果发现算法TSCD，利用观测和干预数据的协方差矩阵构成张量，在线性结构方程模型假设下输出有向无环图及其边函数，并扩展到非线性模型，在统计和计算效率上具有优势。",
+      "llm_tldr": "针对因果发现任务，提出基于张量的二阶因果发现算法TSCD，利用观测和干预数据的协方差矩阵构成张量，在线性结构方程模型假设下输出有向无环图及其边函数，并扩展到非线性模型，在统计和计算效率上具有优势。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.18898v1",
+      "source": "arxiv",
+      "title": "Anomaly Detection for Sparse and Irregular Multivariate Time Series with Latent SDEs",
+      "abstract": "Multivariate time series anomaly detection (MTSAD) is critical for a wide range of application areas, such as industrial monitoring, cybersecurity, or healthcare. Real-world data is often sparse, irregularly sampled or partially observed, yet existing methods assume uniformly sampled time series. We propose a generative approach based on Latent SDEs that projects the observed time series on a continuous-time stochastic dynamical system, directly being able to handle missing observations and irregular sampling, while also naturally capturing possible cyclic behavior that many real-world use cases inherently possess. Experiments on six anomaly benchmark datasets show that our proposed method ranks first among state-of-the-art baselines. We further demonstrate that our method remains robust under severe data sparsity, while performance significantly degrades for the tested baseline methods. These results highlight latent SDEs as a natural inductive bias for anomaly detection in multivariate time series, especially in presence of real-world irregularities.",
+      "authors": [
+        "Martin Uray",
+        "Dominik Geng",
+        "Florian Graf",
+        "Stefan Huber",
+        "Roland Kwitt"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-17T10:17:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.18898v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "generative approach based on Latent SDEs for multivariate time series",
+      "llm_evidence_cn": "基于潜在SDE的多元时间序列生成方法",
+      "llm_evidence": "基于潜在SDE的多元时间序列生成方法",
+      "canonical_evidence": "基于潜在SDE的多元时间序列生成方法",
+      "llm_tldr_en": "Proposes a generative method using Latent SDEs for anomaly detection in sparse irregular multivariate time series, achieving state-of-the-art results.",
+      "llm_tldr_cn": "针对稀疏不规则多元时间序列异常检测问题，提出基于潜在随机微分方程（SDE）的生成方法。该方法将观测时间序列投影到连续时间随机动力系统，天然处理缺失值和不等距采样，并捕获周期性。在六个基准数据集上排名第一，表明生成模型在时间序列任务中的有效性。",
+      "llm_tldr": "针对稀疏不规则多元时间序列异常检测问题，提出基于潜在随机微分方程（SDE）的生成方法。该方法将观测时间序列投影到连续时间随机动力系统，天然处理缺失值和不等距采样，并捕获周期性。在六个基准数据集上排名第一，表明生成模型在时间序列任务中的有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.19594v1",
+      "source": "arxiv",
+      "title": "Unsupervised Causal Abstractions Discovery",
+      "abstract": "Causal abstractions formalize when a high-level structural causal model (SCM) captures the interventional behavior of a lower-level SCM. Existing applications of this notion largely follow a hypothesis-testing paradigm: an expert proposes a candidate high-level model and then evaluates if the low-level system implements it. We study the complementary problem of learning a high-level model directly from low-level measurements. Our contributions leverage hypotheses from low-rank causal discovery, and can be summarized as follows: (1) we show that observations generated by a low-rank graph induce latents that form a causal abstraction, (2) we provide identifiability results about these latents, and (3) we propose a practical objective to learn this high-level SCM.",
+      "authors": [
+        "Théo Saulus",
+        "Simon Lacoste-Julien",
+        "Dhanya Sridhar"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-17T20:56:44+00:00",
+      "link": "https://arxiv.org/pdf/2606.19594v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal discovery from low-level measurements",
+      "llm_evidence_cn": "因果学习 from low-rank graph",
+      "llm_evidence": "因果学习 from low-rank graph",
+      "canonical_evidence": "因果学习 from low-rank graph",
+      "llm_tldr_en": "proposes to learn high-level structural causal model directly from low-level measurements using low-rank causal discovery and identifiability results",
+      "llm_tldr_cn": "研究从低层测量数据直接学习高层因果抽象模型的问题，利用低秩因果发现假设，证明观测数据诱导的潜在变量形成因果抽象，提出可扩展的优化目标，在合成和真实数据上验证了有效性。",
+      "llm_tldr": "研究从低层测量数据直接学习高层因果抽象模型的问题，利用低秩因果发现假设，证明观测数据诱导的潜在变量形成因果抽象，提出可扩展的优化目标，在合成和真实数据上验证了有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.16076v1",
+      "source": "arxiv",
+      "title": "Phys-JEPA: Physics-Informed Latent World Models for Multivariate Time-Series Forecasting",
+      "abstract": "Multivariate forecasting in physical systems requires models that predict coupled temporal variables while preserving meaningful state evolution. Deep forecasters can fit temporal correlations, and physics-informed models can regularize predictions with scientific constraints, but these directions are often connected only at the decoded-output level. As a result, the hidden predictive state that generates future trajectories may remain statistically useful but physically unstructured. We introduce Phys-JEPA, a physics-informed joint-embedding predictive architecture for multivariate time-series forecasting. Phys-JEPA learns a latent world model in which predictive states are decomposed into physical and residual components, and physical consistency is imposed directly on latent states and latent transitions rather than only on decoded forecasts. This formulation uses known physical variables to organize the representation space while retaining residual capacity for unresolved dynamics. On Jena Climate 2009--2016, Phys-JEPA reduces aggregate MSE from 0.12482 to 0.12273 and temperature MSE from 0.01892 to 0.01831 at H=24. On Traffic, full Phys-JEPA improves aggregate MSE over the supervised baseline across all tested horizons, reducing H=192 MSE from 0.800784 to 0.773873. On Electricity, the best variant depends on horizon: static latent consistency is strongest at H=24 and H=48, while full Phys-JEPA gives the best aggregate and target-variable MSE at H=192. These initial results suggest that moving physics-informed learning from output space to latent predictive state space is a promising direction for interpretable temporal world models.",
+      "authors": [
+        "Weizhi Nie",
+        "Weichao Liu",
+        "Honglin Guo",
+        "Yuting Su"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.GT"
+      ],
+      "published": "2026-06-15T00:22:54+00:00",
+      "link": "https://arxiv.org/pdf/2606.16076v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "physics-informed latent world model for multivariate time series forecasting",
+      "llm_evidence_cn": "用于多变量时间序列预测的物理信息潜在世界模型",
+      "llm_evidence": "用于多变量时间序列预测的物理信息潜在世界模型",
+      "canonical_evidence": "用于多变量时间序列预测的物理信息潜在世界模型",
+      "llm_tldr_en": "Phys-JEPA decomposes latent states into physical and residual components for physics-constrained multivariate time series forecasting, achieving improved prediction on physical systems.",
+      "llm_tldr_cn": "多变量时间序列预测中，现有模型未在潜状态层面引入物理约束。本文提出Phys-JEPA，将预测状态分解为物理分量和残差分量，在联合嵌入预测架构中学习物理信息潜在世界模型，使轨迹生成更具物理意义。在物理系统数据集上预测精度提升，且潜状态具有可解释性。",
+      "llm_tldr": "多变量时间序列预测中，现有模型未在潜状态层面引入物理约束。本文提出Phys-JEPA，将预测状态分解为物理分量和残差分量，在联合嵌入预测架构中学习物理信息潜在世界模型，使轨迹生成更具物理意义。在物理系统数据集上预测精度提升，且潜状态具有可解释性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.18986v1",
+      "source": "arxiv",
+      "title": "Beyond Tokenization: Direct Timestep Embedding and Contrastive Alignment for Time-Series Question Answering",
+      "abstract": "Recent advances in large language models (LLMs) have given rise to time-series question answering (TSQA), which formulates time-series analysis as natural-language question answering. However, directly feeding raw numerical series into LLMs suffers from a tokenization bottleneck: Byte Pair Encoding fragments continuous values into unstable tokens whose embeddings lack meaningful metric structure, resulting in the loss of magnitude, scale, and trend information. Prior methods use patch-based encoders that split the series into fixed windows, locking in one granularity that breaks patterns and hides exact timesteps, through a separate module that rarely transfers across datasets with different lengths or sampling rates. To address this challenge, we propose CADE (Contrastive Alignment with Direct Embedding), a novel framework for TSQA built upon two key components: direct timestep embedding and semantic alignment. The proposed framework maps each timestep directly into the LLM embedding space through a point-wise linear encoder and MLP projector, preserving exact index-level access while eliminating the need for patching and padding. To further bridge the semantic gap between time-series and language representations, we introduce a novel one-directional supervised contrastive loss that aligns time-series embeddings with frozen class-name text anchors. Experimental results on the public Time-MQA benchmark demonstrate that our framework consistently improves performance across six TSQA tasks, outperforming both open-source and proprietary LLM baselines.",
+      "authors": [
+        "Yafeng Wu",
+        "Huu Hiep Nguyen",
+        "Thin Nguyen",
+        "Hung Le"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-06-17T12:07:23+00:00",
+      "link": "https://arxiv.org/pdf/2606.18986v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "direct timestep embedding and contrastive alignment for time-series QA",
+      "llm_evidence_cn": "直接时间步嵌入和对比对齐用于时间序列问答",
+      "llm_evidence": "直接时间步嵌入和对比对齐用于时间序列问答",
+      "canonical_evidence": "直接时间步嵌入和对比对齐用于时间序列问答",
+      "llm_tldr_en": "Proposes direct timestep embedding to replace tokenization in time-series LLM, with contrastive alignment to preserve magnitude and trend information.",
+      "llm_tldr_cn": "针对LLM处理时间序列时的分词瓶颈，提出直接时间步嵌入和对比对齐方法。该方法保留数值的幅度、尺度和趋势信息，避免标记化带来的信息损失。在时间序列问答任务上，该方法优于基于编码器的基线，且能跨数据集迁移。",
+      "llm_tldr": "针对LLM处理时间序列时的分词瓶颈，提出直接时间步嵌入和对比对齐方法。该方法保留数值的幅度、尺度和趋势信息，避免标记化带来的信息损失。在时间序列问答任务上，该方法优于基于编码器的基线，且能跨数据集迁移。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

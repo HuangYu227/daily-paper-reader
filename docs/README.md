@@ -6,34 +6,39 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-17
-- 运行时间：2026-06-17 22:20:59 UTC
+- 最新运行日期：2026-06-19
+- 运行时间：2026-06-19 22:09:22 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：5
 - 精读区：3
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-1) 今日精选两篇高分论文：时间序列基础模型嵌入实现剩余寿命估计，以及基于结构化文本的物种级噬菌体宿主预测。  
-2) 方向一：利用时间序列基础模型嵌入可显著提升设备剩余使用寿命的估计精度；方向二：PHI-Reason通过解析生物学文本实现高准确度的噬菌体-宿主匹配。  
-3) 建议关注时间序列基础模型在工业运维中的应用，或探索结构化文本推理在微生物组研究中的潜力。
-- 详情：[/202606/17/README](/202606/17/README)
+今日精读两篇8.0分论文，速读时序预测与问答研究。
+
+最值得关注因果发现方向的《Tensor-based second-order causal discovery》与不规则时序异常检测的《Anomaly Detection for Sparse and Irregular Multivariate Time Series with Latent SDEs》。
+
+建议从精读论文入手理解因果推断与动态建模，再速读Phys-JEPA了解物理约束的时序预测思路。
+- 详情：[/202606/19/README](/202606/19/README)
 
 ### 精读区论文标签
-1. [Time-Series Foundation Model Embeddings for Remaining Useful Life Estimation](/202606/17/2606.11990v2-time-series-foundation-model-embeddings-for-remaining-useful-life-estimation)  
-   标签：评分：9.0/10、query:fe
-   evidence：冻结预训练时间序列基础模型用于特征提取
-2. [PHI-Reason: evidence-grounded species-level phage-host prediction from structured biological text profiles](/202606/17/biorxiv-10-64898-2026-06-10-727770-v1-phi-reason-evidence-grounded-species-level-phage-host-prediction-from-structured-biological-text-profiles)  
-   标签：评分：9.0/10、query:fe
-   evidence：使用冻结的大型语言模型从结构化生物文本进行物种级预测
-3. [ConTex: Reformulating Counterfactual Generation For Time Series Forecasting](/202606/17/2606.18049v1-contex-reformulating-counterfactual-generation-for-time-series-forecasting)  
+1. [Tensor-based second-order causal discovery](/202606/19/2606.18074v1-tensor-based-second-order-causal-discovery)  
    标签：评分：8.0/10、query:tsc
-   evidence：反事实生成用于时间序列预测，提供因果见解
+   evidence：基于张量的因果发现方法
+2. [Anomaly Detection for Sparse and Irregular Multivariate Time Series with Latent SDEs](/202606/19/2606.18898v1-anomaly-detection-for-sparse-and-irregular-multivariate-time-series-with-latent-sdes)  
+   标签：评分：8.0/10、query:tsc
+   evidence：基于潜在SDE的多元时间序列生成方法
+3. [Unsupervised Causal Abstractions Discovery](/202606/19/2606.19594v1-unsupervised-causal-abstractions-discovery)  
+   标签：评分：8.0/10、query:tsc
+   evidence：因果学习 from low-rank graph
 
 ### 速读区论文标签
-1. [Robust State-Conditional Feature-Weighted Jump Models for Temporal Clustering](/202606/17/2606.13146v1-robust-state-conditional-feature-weighted-jump-models-for-temporal-clustering)  
+1. [Phys-JEPA: Physics-Informed Latent World Models for Multivariate Time-Series Forecasting](/202606/19/2606.16076v1-phys-jepa-physics-informed-latent-world-models-for-multivariate-time-series-forecasting)  
+   标签：评分：7.0/10、query:tsc
+   evidence：用于多变量时间序列预测的物理信息潜在世界模型
+2. [Beyond Tokenization: Direct Timestep Embedding and Contrastive Alignment for Time-Series Question Answering](/202606/19/2606.18986v1-beyond-tokenization-direct-timestep-embedding-and-contrastive-alignment-for-time-series-question-answering)  
    标签：评分：6.0/10、query:fe
-   evidence：时间序列特征加权的聚类方法，用于属性挖掘
+   evidence：直接时间步嵌入和对比对齐用于时间序列问答
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "extractor": "papercropper",
+  "tables": [
+    {
+      "url": "assets/tables/arxiv/2606.18074v1/table-001.webp",
+      "caption": "",
+      "page": 0,
+      "index": 1,
+      "width": 1621,
+      "height": 1996,
+      "label": "Table"
+    },
+    {
+      "url": "assets/tables/arxiv/2606.18074v1/table-002.webp",
+      "caption": "",
+      "page": 0,
+      "index": 2,
+      "width": 749,
+      "height": 468,
+      "label": "Table"
+    },
+    {
+      "url": "assets/tables/arxiv/2606.18074v1/table-003.webp",
+      "caption": "",
+      "page": 0,
+      "index": 3,
+      "width": 1685,
+      "height": 1538,
+      "label": "Table"
+    }
+  ]
+}
