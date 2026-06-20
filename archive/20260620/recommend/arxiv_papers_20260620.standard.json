@@ -1,0 +1,254 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-20T21:34:30.986894+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 5,
+    "quick_skim_target": 12,
+    "quick_selected": 5
+  },
+  "deep_dive": [
+    {
+      "id": "2606.19610v1",
+      "source": "arxiv",
+      "title": "Latent Confounded Causal Discovery via Lie Bracket Geometry",
+      "abstract": "Recent work on Kan-Do-Calculus (KDC) has established that the boundary between passive observation and active intervention in causal inference is a category-theoretic bi-adjunction, with interventions modeled by left Kan extensions and conditioning by right Kan extensions. This paper introduces two causal discovery algorithms under latent confounding, building on the information-geometric and categorical consequences of KDC. In smooth statistical settings, Radon-Nikodym derivatives between observational and interventional measures induce local causal vector fields; failures of these fields to close under Lie brackets become computable Frobenius residuals, which we interpret as witnesses of failed visible integrability and possible latent or unmodeled structure. Our first algorithm, BRIDGE (Bracket Residuals for Interventional Discovery and Geometric Estimation), combines an interventional density or Radon-Nikodym-ratio engine with a geometric screen that proposes a high-recall family of admissible arrows, identifies non-closing visible pairs as latent-obstruction candidates, and passes the reduced family to downstream score-based or differentiable discovery routines. The second algorithmic contribution, Spectral Kan-Do Flow Matching (SKFM), learns amortized intervention fields and factors latent curvature spectrally, exposing the direct Lie-space endpoint toward which BRIDGE points. A detailed set of experiments show that both algorithms are capable of discovering causal models with latent confounders while collapsing the super-exponential space of possible DAGs by many orders of magnitude. This paper introduces a new paradigm in causal discovery, where latent structure is inferred directly from the geometry of intervention-induced flows.",
+      "authors": [
+        "Sridhar Mahadevan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-17T21:31:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.19610v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Latent confounded causal discovery using Lie bracket geometry",
+      "llm_evidence_cn": "使用李括号几何进行潜在混杂因果发现",
+      "llm_evidence": "使用李括号几何进行潜在混杂因果发现",
+      "canonical_evidence": "使用李括号几何进行潜在混杂因果发现",
+      "llm_tldr_en": "Introduces two causal discovery algorithms under latent confounding by leveraging Lie bracket geometry and Kan-Do-Calculus, using Frobenius residuals to detect unobserved confounders.",
+      "llm_tldr_cn": "本文基于李括号几何和Kan-Do微积分，提出了两种在潜在混杂下的因果发现算法。通过计算观察和干预分布间的Radon-Nikodym导数得到局部因果向量场，利用李括号闭合失败产生的Frobenius残差来检测潜在的未观测混杂结构。为因果发现提供了新的几何视角。",
+      "llm_tldr": "本文基于李括号几何和Kan-Do微积分，提出了两种在潜在混杂下的因果发现算法。通过计算观察和干预分布间的Radon-Nikodym导数得到局部因果向量场，利用李括号闭合失败产生的Frobenius残差来检测潜在的未观测混杂结构。为因果发现提供了新的几何视角。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.18071v1",
+      "source": "arxiv",
+      "title": "Volterra Generative Models",
+      "abstract": "Score-based diffusion models typically use Brownian perturbations, which provide tractable reverse-time dynamics but impose memoryless noising. We introduce Volterra generative models, a continuous-time score-based framework whose forward process injects path-dependent noise through fractional kernels. To handle the non-Markovian and non-semimartingale dynamics, we construct finite-dimensional Markovian lifts using Gaussian quadrature in both regimes and a hybrid finite-difference exponential approximation in the smooth regime. We prove squared error bounds, derive an augmented linear-Gaussian forward process, and show that the learning can remain data-dimensional by considering residual states and analytic auxiliary Gaussian scores. We also identify covariance and reverse-time degeneracies caused by shared Brownian factors and signed smooth-regime weights. The degeneracy motivates stabilized conditioning and, for stiff larger lifts, a Gaussian-bridge reconstruction sampler. Experiments on MNIST and CIFAR-10 show that persistent fractional perturbations with small Markovian lifts can improve score-based generation on MNIST and provide a promising extension to natural images, while the bridge sampler provides a stability mechanism for larger lifts.",
+      "authors": [
+        "Yusen Jia",
+        "Bingyan Han"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-16T15:40:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.18071v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Volterra generative models for continuous-time path-dependent generation",
+      "llm_evidence_cn": "Volterra生成模型用于连续时间路径依赖生成",
+      "llm_evidence": "Volterra生成模型用于连续时间路径依赖生成",
+      "canonical_evidence": "Volterra生成模型用于连续时间路径依赖生成",
+      "llm_tldr_en": "Proposes Volterra generative models, a continuous-time score-based framework with path-dependent fractional noise, enabling non-Markovian generation with theoretical guarantees.",
+      "llm_tldr_cn": "现有扩散模型基于布朗运动引入的马尔可夫噪声，无法建模路径依赖的时间序列。本文提出Volterra生成模型，通过分数阶核函数注入路径依赖噪声，并构建有限维马尔可夫提升来实现可训练的连续时间生成框架。理论证明了误差界，实验表明该模型能有效生成具有长期依赖性的时间序列数据。该工作为生成具有复杂时间依赖性的数据提供了新的范式。",
+      "llm_tldr": "现有扩散模型基于布朗运动引入的马尔可夫噪声，无法建模路径依赖的时间序列。本文提出Volterra生成模型，通过分数阶核函数注入路径依赖噪声，并构建有限维马尔可夫提升来实现可训练的连续时间生成框架。理论证明了误差界，实验表明该模型能有效生成具有长期依赖性的时间序列数据。该工作为生成具有复杂时间依赖性的数据提供了新的范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.20443v1",
+      "source": "arxiv",
+      "title": "Topological Data Analysis for High-Dimensional Dynamic Process Monitoring",
+      "abstract": "Real-time process monitoring requires methods that extract actionable information from high-dimensional time-series data. In this work, we present a new approach for process monitoring that combines tools of topological data analysis (TDA) and machine learning. In the proposed approach, we represent multivariate time-series data as manifolds and use topological descriptors to summarize the structure of such data; we then use a neural ordinary differential equation to learn the dynamic evolution of the topological structure of the system. Using real data from an industrial process, we show that this trajectory-based event detection approach is effective at detecting diverse types of events. We contrast this approach against reconstruction-based approaches such as principal component analysis and autoencoders and against a trajectory-based approach that uses Koopman autoencoders.",
+      "authors": [
+        "Angan Mukherjee",
+        "Tyler A. Soderstrom",
+        "Michael J. Kurtz",
+        "Victor M. Zavala"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.LG",
+        "math.AT"
+      ],
+      "published": "2026-06-18T16:22:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.20443v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Topological data analysis for time series property mining",
+      "llm_evidence_cn": "用于时间序列性质挖掘的拓扑数据分析",
+      "llm_evidence": "用于时间序列性质挖掘的拓扑数据分析",
+      "canonical_evidence": "用于时间序列性质挖掘的拓扑数据分析",
+      "llm_tldr_en": "Combines topological data analysis with neural ODEs to extract shape-based features from multivariate time series for process monitoring, enabling event detection without requiring reconstruction-based methods.",
+      "llm_tldr_cn": "提出了一种结合拓扑数据分析与神经常微分方程的方法，从多变量时间序列中提取基于形状的特征用于过程监控。该方法将时间序列表示为流形，利用拓扑描述子总结结构，并学习其动态演化。在工业数据上展示了有效的异常检测能力，无需重建方法。为时间序列性质挖掘提供了新的视角。",
+      "llm_tldr": "提出了一种结合拓扑数据分析与神经常微分方程的方法，从多变量时间序列中提取基于形状的特征用于过程监控。该方法将时间序列表示为流形，利用拓扑描述子总结结构，并学习其动态演化。在工业数据上展示了有效的异常检测能力，无需重建方法。为时间序列性质挖掘提供了新的视角。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.20055v1",
+      "source": "arxiv",
+      "title": "PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection",
+      "abstract": "Time-series anomaly detection has significant practical value for industrial and medical monitoring, as well as other critical domains. Current Transformer- and large-model-based detection approaches incur excessive computational overhead, while existing lightweight alternatives are constrained by insufficient feature extraction and inadequate modeling of dependencies across multivariate variables. To mitigate the above drawbacks, this study develops a lightweight, efficient anomaly detection model, dubbed PaAno, within the patch-oriented representation learning paradigm. In the encoder module, a multiscale feature-extraction backbone is constructed using convolutional kernels with differentiated receptive fields to capture hierarchical temporal characteristics; subsequent cross-scale adaptive attention aggregation, combined with residual connection optimization, further stabilizes feature representation learning. A cross-variable fusion attention module is embedded to explicitly characterize inter-variable correlations, empowering the model to identify anomalous patterns amid intricate operational conditions. Moreover, a novel pretext task based on temporal patch-window sorting is customized to uncover intrinsic structural properties of time series, and triplet loss is leveraged to optimize the patch embedding space for enhanced feature discrimination. Extensive experiments on the TSB-AD benchmark demonstrate that the proposed PaAno achieves state-of-the-art detection accuracy on both univariate and multivariate tasks, yielding significant performance gains across evaluation metrics, including VUS-PR, relative to the original PaAno. Leveraging a compact network design, the presented model achieves favorable computational efficiency, enabling deployment on resource-limited terminals for real-time anomaly inference.",
+      "authors": [
+        "Youji Zhu",
+        "Hongbing Wang",
+        "Wenchao Liu",
+        "Xiaodong Liu",
+        "Xiangguang Xiong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-18T10:27:59+00:00",
+      "link": "https://arxiv.org/pdf/2606.20055v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multiscale feature extraction for time series anomaly detection",
+      "llm_evidence_cn": "时间序列异常检测的多尺度特征提取",
+      "llm_evidence": "时间序列异常检测的多尺度特征提取",
+      "canonical_evidence": "时间序列异常检测的多尺度特征提取",
+      "llm_tldr_en": "Proposes PaAno+ with multiscale encoding and cross-variable attention for efficient time series anomaly detection.",
+      "llm_tldr_cn": "该论文针对时间序列异常检测中现有模型计算开销大或特征提取不足的问题，提出了一种基于补丁表示学习的轻量级异常检测模型PaAno+。模型通过不同感受野的卷积核构建多尺度特征提取骨干，并引入跨变量注意力机制以充分建模多元时间序列的依赖关系。实验表明该方法在多个基准数据集上取得了高效且准确的检测性能。",
+      "llm_tldr": "该论文针对时间序列异常检测中现有模型计算开销大或特征提取不足的问题，提出了一种基于补丁表示学习的轻量级异常检测模型PaAno+。模型通过不同感受野的卷积核构建多尺度特征提取骨干，并引入跨变量注意力机制以充分建模多元时间序列的依赖关系。实验表明该方法在多个基准数据集上取得了高效且准确的检测性能。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-10-730748-v1",
+      "source": "biorxiv",
+      "title": "SMS: Symmetric Mediation Statistics for Powerful High-Dimensional Mediation Analysis",
+      "abstract": "BackgroundMediation analysis of high-dimensional features, particularly molecular-level omics features, provides important opportunities to uncover biological mechanisms underlying human health and disease. However, two central statistical challenges remain: testing the composite-null hypothesis and maintaining power when the exposure-mediator and mediator-outcome associations differ substantially in statistical significance. Existing methods typically rely on accurate estimation of the proportions of the three null types or on the maximum of the two association p-values, and may not always control the FDR well and may have limited power under imbalanced significance.\n\nMethodsWe propose SMS, a new statistical framework based on symmetric mediation statistics. By exploiting symmetry, SMS calibrates the composite null distribution as a whole for FDR control. It also allows flexible combinations of the two association p-values, including the maximum, and then enables construction of an omnibus test. Moreover, it permits direct use of effect-size estimates, bypassing the need to compute p-values.\n\nResultsSMS controlled the FDR across a wide range of simulation scenarios while achieving a substantial sensitivity gain, often around 20 percentage points, over existing methods including HDMT, DACT, and DEI-B. Applications to a metabolomics dataset and a DNA methylation dataset further corroborated these findings. Notably, SMS discovered five plausible mediators in the metabolomics dataset that were missed by all existing methods considered.",
+      "authors": [
+        "Wang, Y.",
+        "Yan, S.",
+        "Wang, H.-J.",
+        "Hu, Y.-J."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-15T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.10.730748v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mediation analysis for causal inference in high-dimensional omics",
+      "llm_evidence_cn": "高维中介分析方法用于因果推断，提出对称检验统计量",
+      "llm_evidence": "高维中介分析方法用于因果推断，提出对称检验统计量",
+      "canonical_evidence": "高维中介分析方法用于因果推断，提出对称检验统计量",
+      "llm_tldr_en": "SMS proposes symmetric mediation statistics for high-dimensional mediation analysis, addressing composite null testing and power imbalance between exposure-mediator and mediator-outcome associations.",
+      "llm_tldr_cn": "针对高维中介分析中复合零假设检验和统计功效不平衡的问题，该论文提出了基于对称检验统计量的SMS框架。通过理论分析和模拟实验，SMS在有效控制FDR的同时提高了检验功效，尤其适用于暴露-中介与中介-结局效应强度差异较大的场景。该方法为从分子层面揭示因果机制提供了可靠的统计工具。",
+      "llm_tldr": "针对高维中介分析中复合零假设检验和统计功效不平衡的问题，该论文提出了基于对称检验统计量的SMS框架。通过理论分析和模拟实验，SMS在有效控制FDR的同时提高了检验功效，尤其适用于暴露-中介与中介-结局效应强度差异较大的场景。该方法为从分子层面揭示因果机制提供了可靠的统计工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-10-731404-v1",
+      "source": "biorxiv",
+      "title": "The Influence of Prior Precision on the Inference of Hidden Causes",
+      "abstract": "Perception is widely understood as Bayesian inference, integrating prior expectations with sensory evidence to infer the most probable latent cause of a signal. A common assumption holds that precise priors dominate perception by pulling it strongly toward their mean. However, in hierarchically structured contexts where multiple latent causes compete, Bayesian inference predicts the opposite: imprecise priors can dominate perception under sensory uncertainty. We show that human observers exhibit this counterintuitive bias in an ecologically valid scenario of voice recognition: when classifying ambiguous utterances, observers preferentially attributed them to lower-precision (higher-variance) voice priors. This bias was strongest under high sensory ambiguity and increased with explicit knowledge of prior variance. Computational modeling revealed stable, idiosyncratic prior distributions, suggesting inference operates over hierarchically structured representations of voice identity. These findings identify prior precision as a key determinant of perceptual inference under competing priors.",
+      "authors": [
+        "Ufer, C.",
+        "Schneider, F.",
+        "Blank, H."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-12T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.10.731404v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "studies inference of hidden causes using Bayesian framework",
+      "llm_evidence_cn": "使用贝叶斯框架研究隐藏原因的推断",
+      "llm_evidence": "使用贝叶斯框架研究隐藏原因的推断",
+      "canonical_evidence": "使用贝叶斯框架研究隐藏原因的推断",
+      "llm_tldr_en": "Shows that imprecise priors dominate perception in hierarchically structured contexts of hidden cause inference, demonstrated in voice recognition.",
+      "llm_tldr_cn": "该论文通过贝叶斯推理框架研究隐藏原因的感知推断，发现当存在多个竞争潜在原因时，不精确（高方差）的先验反而主导感知，这一反直觉偏差在语音识别实验中得到了验证，且在高感官模糊时最强。",
+      "llm_tldr": "该论文通过贝叶斯推理框架研究隐藏原因的感知推断，发现当存在多个竞争潜在原因时，不精确（高方差）的先验反而主导感知，这一反直觉偏差在语音识别实验中得到了验证，且在高感官模糊时最强。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

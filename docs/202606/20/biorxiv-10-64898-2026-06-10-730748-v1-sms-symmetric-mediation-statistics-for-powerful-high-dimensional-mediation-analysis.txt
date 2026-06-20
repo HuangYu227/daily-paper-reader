@@ -1,0 +1,588 @@
+Title: SMS: Symmetric Mediation Statistics for Powerful High-Dimensional Mediation Analysis
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.06.10.730748v1.full.pdf
+
+Number of Pages: 38
+
+Markdown Content:
+# SMS: Symmetric Mediation Statistics for Powerful High-Dimensional Mediation Analysis 
+
+Yi Wang 1, Shiyu Yan 2, Hai-Jun Wang 2, Yi-Juan Hu 1,3,4∗
+
+> 1
+
+Department of Biostatistics, School of Public Health, Peking University, Beijing, 100191, China. 
+
+> 2
+
+Department of Maternal and Child Health / National Health Commission Key Laboratory of Reproductive Health, School of Public Health, Peking University, China, Beijing 100191, China. 
+
+> 3
+
+Beijing International Center for Mathematical Research, Peking University, Beijing, 100871, China. 
+
+> 4
+
+Center of Statistical Science, Peking University, Beijing, 100871, China. 
+
+> ∗
+
+Corresponding author emails: yijuanhu@bicmr.pku.edu.cn 
+
+Keywords : composite-null hypothesis, false discovery rate (FDR), imbalanced significance, large-scale, mirror statistic, stabilization 1
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Abstract 
+
+Background: Mediation analysis of high-dimensional features, particularly molecular-level omics features, provides important opportunities to uncover biological mechanisms un-derlying human health and disease. However, two central statistical challenges remain: test-ing the composite-null hypothesis and maintaining power when the exposure–mediator and mediator–outcome associations differ substantially in statistical significance. Existing meth-ods typically rely on accurate estimation of the proportions of the three null types or on the maximum of the two association p-values, and may not always control the FDR well and may have limited power under imbalanced significance. 
+
+Methods: We propose SMS, a new statistical framework based on symmetric mediation statistics. By exploiting symmetry, SMS calibrates the composite null distribution as a whole for FDR control. It also allows flexible combinations of the two association p-values, including the maximum, and then enables construction of an omnibus test. Moreover, it permits direct use of effect-size estimates, bypassing the need to compute p-values. 
+
+Results: SMS controlled the FDR across a wide range of simulation scenarios while achiev-ing a substantial sensitivity gain, often around 20 percentage points, over existing methods including HDMT, DACT, and DEI-B. Applications to a metabolomics dataset and a DNA methylation dataset further corroborated these findings. Notably, SMS discovered five plausi-ble mediators in the metabolomics dataset that were missed by all existing methods considered. 2
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Introduction 
+
+In recent years, technologies for profiling diverse omics layers, including transcriptomics, epigenomics, metabolomics, and metagenomics, have advanced rapidly. The resulting high-dimensional molecular data provide new opportunities to investigate biological mechanisms underlying human health and disease. One mechanism of particular interest is causal media-tion, in which an exposure affects an outcome through intermediate variables. As a motivating example, we considered the Peking University–Shandong Preschool Child-hood Obesity case-control study (PKU-SPCO Study) [1]. Conducted by the Peking University research team, the study recruited 128 preschool children from Shandong Province, China, to investigate lifestyle, gut microbiome, and fecal metabolomic factors associated with childhood obesity. Prior studies [1–4] have established a strong association between maternal obesity and childhood obesity, which was also observed in our data (odds ratio = 5 .5; chi-squared p-value = 2 .1 × 10 −5). Our goal was to identify metabolites that mediate the effect of maternal obesity on childhood obesity. To this end, we performed untargeted metabolomics profiling using mass spectrometry, yielding measurements of 1,152 metabolites. Beyond high dimensionality, a central challenge in causal mediation analysis is the com-posite nature of the null hypothesis. Let E denote the exposure, M = ( M1, . . . , M J ) the 
+
+J features, O the outcome, and C the confounding covariates. The mediation relationships under this notation are illustrated in Figure 1(a). For feature j to have a mediation effect, both the exposure–mediator (E–M) and mediator–outcome (M–O, conditional on the expo-sure) associations must be present. Therefore, the null hypothesis of no mediation for feature 
+
+j is composite and comprises three types: 
+
+E → Mj →− O, E →− Mj → O, or E →− Mj →− O, 
+
+referred to as type-I, type-II, and type-III nulls, respectively. While earlier methods such as Sobel’s test [5] and the MaxP test [6] ignored the composite-null structure of mediation analysis, more recent approaches explicitly account for it. HDMT 3
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+[7] uses the maximum of the E–M and M–O association p-values as the test statistic and models its null distribution as a mixture of distributions corresponding to the three null types. The mixing proportions, which equal the proportions of the three null types, are estimated using an adaptation of the procedure of [8]. DACT [9] instead constructs a test statistic from a mixture of null-type-specific p-values, one of which is based on the maximum p-value, with the null proportions estimated following Jin and Cai (2007) [10]. When one null type dominates, DACT adopts a U (0 , 1) null distribution; otherwise, it estimates the null distribution using Efron’s empirical null framework [11]. Thus, both HDMT and DACT depend critically on accurate estimation of the null proportions, which can be difficult in practice [12]. Most recently, DEI-B [13] also uses the maximum p-value as the test statistic, but avoids estimating the null proportions by deriving a closed-form p-value for the composite null as a whole. However, this closed-form result is derived under the assumption of a very small proportion of true mediators and therefore tends to be conservative otherwise. We applied HDMT, DACT, and DEI-B to the PKU-SPCO metabolomics data to identify metabolic mediators, but none detected any signals, despite strong biological evidence reported in the literature [14–17]. This lack of detection may be explained by two factors. First, the null distributions of the test statistics may not be well calibrated, leading to overly conservative results. Second, and likely more importantly, these methods rely on the maximum p-value, which effectively requires both the E–M and M–O associations to be significant for a mediator to be detected. As a result, they can lose power when the two associations differ substantially in significance level, a situation commonly encountered in practice. For example, in our PKU-SPCO metabolomics study, maternal obesity exhibits weaker associations with childhood metabolism than childhood obesity does (Figure 2, left panel). Moreover, HDMT, DACT, and DEI-B all require pairs of p-values from the E–M and M–O association tests. In high-dimensional settings, however, obtaining valid p-values can be diffi-cult. For example, methods such as LDM [18] and LOCOM [19] rely on resampling procedures, which become computationally intensive when estimating extremely small p-values. In recent 4
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+years, methods that bypass p-values to achieve false discovery rate (FDR) control, including the knockoff [20, 21] and data-splitting procedures [22], have received considerable attention. Yet these ideas have not yet been incorporated into high-dimensional mediation analysis. In this article, we introduce SMS, a new framework for mediation analysis with high-dimensional mediators based on symmetric mediation statistics. The proposed statistics are designed to (1) calibrate the rejection threshold for FDR control under the composite null as a whole without estimating the proportions of its component null types, (2) accommodate imbalance in the significance of the E–M and M–O associations, and (3) allow direct use of effect-size estimates while bypassing p-value calculation. The complete workflow of SMS is illustrated in Figure 1(b), and its key features relative to existing methods are summarized in Table 1. We evaluate the performance of SMS through extensive simulation studies and further apply it to two real datasets. In addition to the PKU-SPCO metabolomics data, we reanalyzed DNA methylation data from the Normative Aging Study (NAS) [23], which was previously examined by DACT and DEI-B, thereby enabling direct comparison with these methods. 
+
+Methods 
+
+Symmetric mediation statistic (SMS) 
+
+We begin with a simple setting in which the exposure and outcome are univariate, and both the high-dimensional features and the outcome are continuous; this setting is generalized later. We assume that all features have been standardized to have equal variances, although we show later that one of the proposed statistics is invariant to feature scaling. Following the modern causal inference framework [24], we further assume no unmeasured confounders and no exposure–mediator or mediator–mediator interactions. The classical multiple-mediator model [25] specifies a linear model for each mediator and a linear model for the outcome that 5
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+includes the effects of all mediators: E( Mj |E, C ) = αj0 + βj1E + αT 
+
+> jC
+
+C, (1) E( O|{ Mj , j ∈ M} , E, C ) = θ0 + P
+
+> j∈M
+
+βj2Mj + θ1E + θT 
+
+> C
+
+C, (2) where M denotes the index set of true mediators, βj1 characterizes the effect of the exposure 
+
+E on the jth feature Mj conditional on the confounding covariates C, and βj2 characterizes the effect of Mj on the outcome O conditional on E and C and the remaining mediators. Under this model, the overall (or total) mediation effect is given by P 
+
+> j∈M
+
+βj1βj2 [25]. If the mediators are mutually independent conditional on E and C, each product βj1βj2 can be interpreted as the mediation effect through the individual mediator Mj . Even without this conditional independence assumption, a non-zero value of βj1βj2 indicates a marginal mediation signal. Therefore, mediator detection can be formulated as testing whether βj1βj2 = 0 for each feature 
+
+Mj .Following [7, 9, 13], we estimate βj1 from (1) but estimate βj2 by replacing the joint outcome model in (2) with a marginal outcome model for each Mj :E( O|Mj , E, C ) = θj0 + βj2Mj + θj1E + θT 
+
+> jC
+
+C. (3) The corresponding estimates are denoted by bβj1 and bβj2. We then construct the following product-form statistic for testing the mediation effect of Mj :
+
+Sj = bβj1 bβj2. (4) This is the same product statistic used in Sobel’s test, where inference proceeds by estimating the standard error of Sj and constructing a Wald-type test statistic. However, this test is asymptotically valid only under the type-I and type-II nulls, conservative in finite samples under these nulls, and especially conservative under the type-III null [9]. Instead, we exploit an important symmetry property of Sj under the composite-null hypothesis of no mediation. This symmetry forms the basis for mediator detection with FDR control, in a spirit similar to the knockoff and data-splitting procedures. 6
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+The symmetry property follows from two key observations. First, under the null hypothesis of no E–M association or no M–O association, bβj1 or bβj2 is symmetric about zero, respectively. Second, the two coefficient estimates, bβj1 and bβj2, are independent, as shown by [9]. Therefore, under the composite null, where at least one of the two coefficient estimates is symmetric about zero, their product Sj is also symmetric about zero. In contrast to this null symmetry, under the mediation alternative, the collection of Sj
+
+statistics corresponding to true mediators tends to align in a common direction. Without loss of generality, we orient the outcome so that the E–O association is positive, reversing its sign when necessary. Under a positive total effect of the exposure on the outcome, most mediator-specific effects are expected to be positive. Oppositely directed effects may occur but are likely uncommon; therefore, we focus on mediators whose effects are aligned with the total effect. This implies that, for a true mediator, the E–M and M–O associations are expected to have the same sign, either both positive or both negative. This sign pattern is supported by the NAS data analysis results (Table S1), where all mediators identified by existing methods, which do not impose this assumption, satisfy this pattern. Under this common-direction assumption, a larger positive value of Sj provides stronger evidence that feature Mj is a mediator. This ranking is meaningful because Mj ’s are stan-dardized to have equal variances, making the βj1’s directly comparable across features, and likewise for the βj2’s. Note that βj1 and βj2 for a given feature need not be on the same scale. The distributional properties of Sj discussed above can be empirically verified in the two real datasets. As shown in Figure 3 (upper panel), the distribution of Sj in both datasets exhibits two clear components: a large component that is approximately symmetric about zero, corresponding to null features, and a small component in the positive tail, corresponding to plausible mediators. Because this statistic is analogous to the “symmetric statistic” or “mirror statistic” proposed by Dai et al. [22], we refer to Sj as the symmetric mediation statistic (SMS). Next, we use the symmetry of the SMS among null features to obtain an upper bound on 7
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+the number of false positives. Specifically, let N denote the index set of null features. For any 
+
+t > 0, #{j : Sj > t, j ∈ N } ≈ #{j : Sj < −t, j ∈ N } ≤ #{j : Sj < −t}.
+
+Thus, the false discovery proportion (FDP), FDP ≡ #{j : Sj > t, j ∈ N } 
+
+#{j : Sj > t } ∨ 1 ,
+
+is upper bounded by 
+
+[FDP( t) ≡ #{j : Sj < −t}
+
+#{j : Sj > t } ∨ 1. (5) For a nominal FDR level α, we define the data-driven threshold, 
+
+τα = min 
+
+n
+
+t > 0 : [FDP( t) < α 
+
+o
+
+, (6) and identify mediators as those features satisfying Sj > τ α.To determine the threshold, [FDP( t) is evaluated over {t1, t 2, . . . , t J }, the increasingly or-dered values of {| S1|, |S2|, . . . , |SJ |} . Because [FDP( tj ) generally decreases as tj increases in the threshold region, τα is chosen as the first tj at which [FDP( tj ) falls strictly below the nominal FDR level (Figure S1). As shown in [22], this procedure controls the FDR asymptotically. By comparing the symmetric distribution of null features as a whole with the positive tail enriched for mediators, our method avoids estimating the proportions of different null types separately. In this respect, it shares a key advantage with DEI-B. 
+
+bβ-value vs. Z-score 
+
+When standard error estimates SE( bβjd ), d = 1 , 2, are available, the effect-size estimates bβjd 
+
+used in Sj can be replaced by the corresponding Z-scores, Zjd = bβjd /SE( bβjd ). Equivalently, if the corresponding two-sided p-values pjd are available, the Z-scores can be recovered as 
+
+Zjd = −sign( bβjd )Φ −1(pjd /2), where Φ( ·) is the cumulative distribution function of the stan-dard normal distribution. This standardization eliminates the need to standardize features 8
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+beforehand. We therefore generally recommend using the Z-score-based statistic 
+
+Sj = Zj1Zj2, (7) which is invariant to variable scaling and more directly reflects the statistical significance of the two associations. Nevertheless, as shown below, the two statistics, (4) and (7), are closely related and typically exhibit very similar empirical performance. The two standard error estimates take the forms: 
+
+{SE( bβj1)}2 ∝ (Mj − M j )T(Mj − M j )(1 − R2  
+
+> Mj|E,C
+
+)(E − E)T(E − E)(1 − R2 
+
+> E|C
+
+)and 
+
+{SE( bβj2)}2 ∝ (O − O)T(O − O)(1 − R2  
+
+> O|Mj,E,C
+
+)(Mj − M j )T(Mj − M j )(1 − R2  
+
+> Mj|E,C
+
+),
+
+where X denotes the mean of a generic vector X, R2 
+
+> E|C
+
+is the coefficient of determination R2
+
+> E|C
+
+from the regression of E on C, and R2  
+
+> Mj|E,C
+
+and R2  
+
+> O|Mj,E,C
+
+are coefficients of determination from models (1) and (3), respectively. Note that coefficients of determination are invariant to variable scaling. After ignoring feature-independent factors, the Z-score-based SMS in (7) differs from the bβ-based SMS in (4) only by a factor of (1 − R2  
+
+> O|Mj,E,C
+
+)−1/2. In practice, 
+
+R2  
+
+> O|Mj,E,C
+
+is usually small for each feature Mj , because any individual feature typically explains only a small fraction of the variation in O. Thus, the Z-score-based SMS is expected to perform similarly to the bβ-based SMS. An interesting result, perhaps counterintuitive at first, is that the bβ-based SMS in (4) is invariant to feature scaling and therefore does not require prior feature standardization. This invariance arises because rescaling Mj changes bβj1 and bβj2 in opposite directions, so the feature scale factors cancel in the product bβj1 bβj2. Equivalently, the same cancellation appears in the product of the standard errors, SE( bβj1) × SE( bβj2). However, this property holds only for the product SMS, and does not necessarily extend to other forms of SMS discussed below. To guard against such cases, we standardize features by default whenever the bβ-based SMS is used. 9
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Minimum SMS and omnibus SMS 
+
+For the product SMS in (7), the distributions of type-I, type-II, and type-III null statistics are all symmetric about zero, but they may have different variances. In particular, type-I and type-II null statistics tend to have larger variances than type-III null statistics (Figure S2, left panel); asymptotically, their variance is four times that of type-III null statistics [9]. When type-I and/or type-II nulls make up a non-negligible fraction of all null features, they can dominate the negative-tail calibration and thereby largely determine the threshold τα, whereas type-III nulls, which typically form the largest cluster, contribute little to this calibration. When true mediators are also sparse, the resulting small alternative cluster can be difficult to distinguish from the small type-I/type-II null cluster, resulting in reduced power. To address this issue, we consider the minimum SMS as the signed minimum of |Zj1| and 
+
+|Zj2|:
+
+Sj, min = sign( Zj1Zj2) × min   Zj1 , Zj2
+
+ .
+
+Under this form, the distributions of the three types of null statistics have similar variances (Figure S2, right panel), jointly forming a clearer contrast with the alternative cluster and thereby improving power. For this SMS, using bβ values is less appropriate than for the product SMS (4), even with feature standardization, because the two regression coefficients represent different effects and may have different scales. As a result, min( | bβj1|, | bβj2|) may primarily reflect the coefficient on the smaller scale rather than the weaker association. We therefore define this SMS using Z-scores whenever possible. It can then be used to identify mediators through the same procedure as in (5) and (6). To distinguish this statistic from the product statistic, we rewrite the latter in (7) as 
+
+Sj, × = Zj1Zj2.
+
+We refer to the tests based on Sj, × and Sj, min as SMS-x and SMS-min, respectively. In practice, it is not known a priori which statistic will be more powerful. We therefore construct an omnibus test that combines the information from Sj, × and Sj, min , aiming to 10 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+achieve performance close to the better of the two tests. Specifically, we define the omnibus SMS as 
+
+Sj, omni = sign( bβj1 bβj2) × Sj, min × Sj, ×.
+
+This statistic is again symmetric about zero, with larger positive values indicating stronger evidence for mediation. Although Sj, min and Sj, × are not independent, the sign( bβj1 bβj2) term preserves the sign structure and hence the symmetry of Sj, omni . The same FDP estimation and thresholding procedure in (5) and (6) can then be applied to identify mediators. We refer to this omnibus test as SMS-omni. In the data-splitting framework [22], the symmetric statistic defined as the sum of two coefficient estimates was shown analytically to be optimal relative to the product and minimum statistics. This result, however, does not appear to carry over to our setting (results not shown), primarily because our inferential target is different. The data-splitting framework aims to identify features for which two estimates of the same effect size, obtained from split datasets, are both large. In contrast, mediation analysis targets features with large mediation effects, βj1βj2, allowing one association to be very large even when the other is only moderately large. 
+
+Correction under the global-null setting 
+
+The negative-tail calibration procedure in (5) and (6) performs well when sufficiently many true signals are present in the positive tail, as required by [22]. Under the global null, when signals are completely absent, random variation yields − min j Sj < max j Sj with 50% prob-ability, where Sj denotes any of Sj, ×, Sj, min , or Sj, omni . In this case, evaluating [FDP( t) at 
+
+t = − min j Sj gives 0, so the inequality in (6) is satisfied and τα ≤ − min j Sj . Consequently, the detection set {j : Sj > τ α} is nonempty and contains at least the feature corresponding to max j Sj (Figure S1, left). Under the global null, this yields an empirical FDP of 1 and, after accounting for its 50% probability, an empirical FDR of approximately 50% (Figure S3). 11 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Even when true signals are present, if they are sparse, the same phenomenon can still lead to large empirical FDR values. This problem occurs when random variation drives the negative-tail count (i.e., numerator) of [FDP( t) to zero, making the criterion in (6) too easy to satisfy and leading to overly aggressive detection. To reduce the effect of this randomness, we add a correction term, αC (t), to the negative-tail count of [FDP( t) whenever it becomes zero, where α is the nominal FDR level and C(t) is a binomial quantile specified below. Specifically, we define the corrected FDP estimator as 
+
+]FDP( t) ≡
+
+#{j : Sj < −t} + I
+
+
+
+#{j : Sj < −t} = 0 
+
+
+
+αC (t)#{j : Sj > t } ∨ 1 . (8) To motivate the choice of C(t), suppose that ]FDP( t) is monotonically decreasing in t in the threshold region. Under the global null, symmetry implies that the two events − min j Sj ≥
+
+max j Sj and − min j Sj < max j Sj each occur with probability approximately 50%. When 
+
+− min j Sj ≥ max j Sj , for any t ≥ max j Sj , we have # {j : Sj > t } = 0 and ]FDP( t) ≥ 1; hence, no detection is made and the empirical FDP is 0. When − min j Sj < max j Sj , taking 
+
+t = − min j Sj gives # {j : Sj < −t} = 0 and ]FDP( t) = αC (t)
+
+. 
+
+#{j : Sj > t } ∨ 1
+
+
+
+. If C(t) is chosen such that 
+
+P
+
+]FDP( t) < α 
+
+
+
+= P
+
+
+
+C(t) < #{j : Sj > t } ∨ 1
+
+
+
+= 2 α, 
+
+then, because this case occurs with probability approximately 50%, the empirical FDR is approximately controlled at level α.We next describe how to determine C(t) at t = − min j Sj . Under the global null, # {j :
+
+Sj > t } follows a binomial distribution with J trials and success probability 
+
+π(t) = P  Sj > t ,
+
+where P (.) is evaluated under the composite-null distribution. If π(t) were known, C(t)could be defined as the (1 − 2α)-quantile of this binomial distribution, or equivalently, of the distribution of # {j : Sj > t } ∨ 1, after left truncation at 1. A natural approach is to estimate 12 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+π(t) from the left tail of the empirical distribution of Sj . However, because π(t) is typically extremely small at t = − min j Sj , this empirical estimate may be imprecise when the number of features is moderate, for example J = 1 ,000. To obtain a smoother empirical distribution of Sj , we generate augmented statistics eSj′ by independently resampling one value, Zj′1, from {Zj1, j = 1 , . . . , J } and one value, Zj′2, from 
+
+{Zj2, j = 1 , . . . , J }, and then combining them in the same way as the original statistic. We repeat this procedure to generate 100 ,000 augmented eSj values. We then estimate π(t) as the empirical proportion of eSj > t , or preferably, as one half of the empirical proportion of | eSj | > t .This augmented empirical distribution provides a stable approximation to the composite-null distribution, while avoiding explicit estimation of the proportions of different null types. When the type-I and type-II nulls do not coexist, although either may coexist with type-III nulls, the augmented empirical distribution exactly recovers the composite-null distribution. When type-I and type-II nulls coexist, however, a Zj1 value reflecting an E–M association may be paired by chance with a Zj′2 value reflecting an M–O association, producing an alternative-like 
+
+eSj and leading to overestimation of π(t). In practice, this overestimation should be small: if type-I and type-II nulls each account for 10% of the features, only 1% of augmented statistics arise from such mismatched pairs. Moreover, overestimation of π(t) leads to overestimation of C(t) when calibrating the tail probability at 2 α, making the empirical FDR conservative rather than anti-conservative. When mediation signals are present but sparse, for example with only 10 true mediators, 
+
+]FDP( t) may not fall below α until t = − min j Sj (Figure S1, middle), where # {j : Sj < −t} =0. Thus, the correction can still influence the thresholding rule. In contrast, when mediators are dense, # {j : Sj < −t} > 0 typically holds at the selected threshold t = τα (Figure S1, right), so the correction has little or no effect. A related conservative alternative is the “plus-one” FDP estimator of Barber and Cand` es 13 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+[20], which adds one to the negative-tail count of [FDP( t): 
+
+[FDP +
+
+(t) ≡ #{j : Sj < −t} + 1 #{j : Sj > t } ∨ 1 . (9) This “plus-one” correction is considerably more conservative than our adaptive correction in 
+
+]FDP( t) and can substantially reduce power in sparse-mediator settings, a pattern confirmed in our simulation studies (Figure S4). 
+
+Stabilization under the sparse-mediator setting 
+
+In sparse-mediator settings, ]FDP( t) can fluctuate rather than decrease smoothly with increasing t, which may yield an unstable threshold τα and overly aggressive detection (Fig-ure S1, middle). To stabilize threshold selection, we smooth ]FDP( t) over t using the local moving-average procedure described below. Let {t1, t 2, . . . , t J } be the ordered values of {| S1|, |S2|, . . . , |SJ |} , and let W denote the one-sided window size. For each tj , we smooth ]FDP( tj ) by averaging it over a local window containing up to W neighbors on either side: 
+
+]FDP W (tj ) = 1
+
+|W j |
+
+X
+
+> i∈W j
+
+]FDP( ti),
+
+where Wj = {i : max(1 , j − W ) ≤ i ≤ min( J, j + W )} is the index set of local neighbors and |W j | denotes its cardinality. The threshold τα is then chosen as the smallest tj such that 
+
+]FDP W (tj ) < α . Our numerical studies suggest that a small smoothing window, W = 2, is sufficient to control the FDR (Figure S3). We therefore set W = 2 as the default window size for all SMS implementations. Similar to the correction procedure described above, the stabilization procedure has little effect when mediators are dense (Figure S1, right). More broadly, our work appears to be the first to systematically examine and address FDR-control challenges in the global-null and sparse-signal settings for procedures based on symmetric statistics, including knockoff- and data-splitting-based methods. The proposed correction and stabilization procedures therefore extend beyond our SMS mediation analysis and may be useful for a broader class of FDR-control methods built on symmetric statistics. 14 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Extensions to other settings 
+
+The SMS framework can also accommodate non-continuous outcomes, such as binary or time-to-event outcomes. In these settings, equation (3) can be replaced by an appropriate model, such as a generalized linear model (GLM) or a survival model. When the outcome model is nonlinear, fitting a feature-specific marginal model as in (3) may attenuate effect-size estimates [26]. This attenuation, however, may affect power but not error-rate control. In some applications, each feature may be paired with its own outcome. For example, Dai et al. [7] considered mediation triplets by identifying CpG methylation sites within 500 kb of each risk single-nucleotide polymorphism (SNP) and linking the DNA methylation levels at these sites to the expression levels of the corresponding genes, resulting in 69,902 triplets for mediation analysis. In this setting, each outcome should be oriented, by reversing its sign when necessary, so that the corresponding E–O association is positive. Whenever available, Z-scores or p-values are preferred. When only effect-size estimates are available, however, they can be used directly to construct the product SMS without prior feature standardization. This is because the feature-scale invariance of the bβ-based product SMS extends to all settings described above. To see this, consider first a general univariate outcome and a feature-specific outcome model, such as a GLM or Cox model, that is related to feature Mj through the term βj2Mj . The coefficient estimate bβj2 is thus inversely related to the scale of Mj . Meanwhile, the estimate bβj1 from model (1) is proportional to the scale of 
+
+Mj . The two scale factors of Mj cancel in the product of bβj1 bβj2. When the outcome is feature-specific, bβj2 also depends on the scale of outcome j. After bβj2 is rescaled by the empirical standard deviation of outcome j, prior feature standardization remains unnecessary for the 
+
+bβ-based product SMS. By contrast, feature standardization is always required for the bβ-based minimum SMS. 
+
+Results 
+
+Simulation studies 
+
+15 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+We conducted extensive simulation studies to evaluate the proposed methods, SMS-omni, SMS-x, and SMS-min, relative to existing methods, including HDMT, DACT, and DEI-B. Motivated by the two real datasets, PKU-SPCO and NAS, we varied the sample size n from 100 to 500 and the feature dimension J from 1 ,000 to 50 ,000. For each feature dimension J, we considered a global-null setting with no mediator, sparse-mediator settings with 10 or 25 mediators, and dense-mediator settings with 50 or 100 medi-ators. We further considered four composite-null configurations, with the numbers of type-I and type-II null features set to (10 , 10), (100 , 10), (10 , 100), and (100 , 100), denoted by SS, DS, SD, and DD, respectively, where S and D indicate sparse and dense type-I or type-II nulls. All remaining null features were type-III nulls. For each simulation replicate, we generated a binary exposure Ei ∈ { 0, 1}, with equal numbers of subjects assigned to the two exposure groups. We then generated J features according to Mij = βj1Ei + εij , where εij ∼ N (0 , 1). Continuous outcomes were generated as Oi = PJj=1 βj2Mij + ϵi, where ϵi ∼ N (0 , 1). Binary outcomes were sampled as Oi ∼
+
+Bernoulli( πi), with log {πi/(1 − πi)} = PJj=1 βj2Mij . In settings where each mediator had its own outcome, denoted by Oij , the outcome was generated as Oij = βj2Mij + ϵi.The coefficients βj1 and βj2 were set to zero according to the corresponding null type; otherwise, they were sampled as βj1 ∼ c1Beta(2 , 5) and βj2 ∼ c2Beta(2 , 5). The scaling parameters ( c1, c 2) were initially set to (1 , 1) and then varied over (0 .25 , 4), (0 .5, 2), (2 , 0.5), and (4 , 0.25) to induce different relative strengths of the E–M and M–O associations. Note that the Beta(2 , 5) distribution is asymmetric on [0 , 1], has mode 0.2, and yields only positive values. To allow both positive and negative effects, one-third of the nonzero coefficients were randomly assigned negative signs. For true mediators, the signs of βj1 and βj2 were assigned jointly to ensure positive mediation effects. For each simulated dataset, we obtained effect-size estimates and p-values by fitting a linear regression of Mij on Ei, followed by either a linear or logistic regression of Oi or Oij on Mij and 
+
+Ei, depending on the outcome type. HDMT, DACT, and DEI-B were applied directly to the 16 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+resulting p-values. To ensure comparability with these methods, we first implemented the SMS methods using Z-scores, and then evaluated an alternative implementation based on effect-size estimates after feature standardization. For each method, empirical FDR and sensitivity were assessed at the nominal FDR level of 0 .2. We used 1 ,000 simulation replicates for the global-null and sparse-mediator settings to ensure stable FDR estimates, and 100 replicates for the dense-mediator settings. 
+
+Simulation results 
+
+We mainly present results for a continuous outcome, unless explicitly stated otherwise, because the results for a binary outcome and feature-specific outcomes showed similar patterns. We first examined whether the proposed correction and stabilization procedures were necessary for the SMS methods to control the FDR. Figure S3 shows that, without either correction or stabilization, the empirical FDR reached approximately 0 .5 under the global null and remained substantially inflated when 10 mediators were present. The correction procedure alone reduced the FDR to the nominal level under the global null, but some inflation persisted in the 10-mediator setting. Applying stabilization with W = 1 reduced this remaining inflation, whereas using W = 2 eliminated it entirely. In settings with dense mediators, the combined correction and stabilization procedures had little impact on the results (results not shown). We also found that the “plus-one” correction in (9) was overly conservative. Figure S4 showed that this correction substantially reduced sensitivity, particularly in sparse-mediator settings, with a loss of up to 20 percentage points. Therefore, all subsequent SMS results were obtained using both the proposed correction and stabilization procedures. Figures 4, 5, and 6 summarize the empirical FDR and sensitivity results for J = 1 ,000, 5,000, and 50 ,000, respectively. The SMS methods, including SMS-omni, SMS-x, and SMS-min, consistently maintained the FDR below the nominal level across all settings. The FDR was conservative under the global null across all composite-null configurations because of the stabilization strategy. It was also conservative in the DD setting with sparse mediators due to 17 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+overestimation of π(t). DEI-B yielded empirical FDR close to the nominal level in the global-null and sparse-mediator settings, but became conservative as the number of true mediators increased, particularly when J was relatively small ( J = 1 ,000). HDMT was generally conser-vative when J was not large, although it occasionally showed slight inflation under the global null, for example when J = 1 ,000 under SS. Interestingly, the FDR of DACT was substantially inflated when J = 1 ,000 but markedly deflated when J = 50 ,000. The SMS methods generally achieved the highest sensitivity among methods that controlled the FDR. The sensitivity gain was especially pronounced in dense-mediator settings, with 50 or 100 true mediators. For example, when SMS-omni achieved adequate sensitivity, such as 50%, its sensitivity gain over DEI-B often exceeded 20 percentage points. In sparse-mediator settings with only 10 true mediators, the sensitivity gain was small, especially under the DS and DD settings, although SMS-omni remained at least as sensitive as DEI-B. Because SMS-min uses the same statistics as DEI-B, the sensitivity gain of SMS-min over DEI-B reflects improved FDR calibration. We selected DEI-B as the primary benchmark because it consistently outperformed HDMT and DACT, achieving the highest sensitivity among existing methods while maintaining FDR control across settings. Among the SMS methods, as expected, SMS-omni consistently tracked the better sensitiv-ity between SMS-x and SMS-min. In most settings, especially with dense mediators, SMS-x yielded substantially higher sensitivity than SMS-min. In a few cases where mediators were sparse, type-I or type-II nulls were dense, and J was relatively small, SMS-min was more sensitive than SMS-x. Figure 7 presents results under varying relative strengths of the E–M and M–O associations. We considered two representative scenarios that resemble the configurations observed in the real data: a lower-dimensional setting with J = 1 ,000 under SD, and a high-dimensional setting with J = 50 ,000 under DS. As the association strengths became increasingly imbalanced, SMS-x progressively outperformed SMS-min. Figure S5 shows that using bβ-based statistics led to only a slight loss of sensitivity relative 18 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+to using Z-scores; the difference was particularly small for SMS-x and, consequently, for SMS-omni. Figures S6 and S7 further show that the results for a single binary outcome and feature-specific continuous outcomes followed patterns similar to those observed for a single continuous outcome (Figure 4). 
+
+PKU-SPCO metabolomics study 
+
+Returning to the PKU-SPCO metabolomics study of childhood obesity, we analyzed whether and how maternal obesity, a binary exposure, influences childhood obesity, a binary outcome, through alterations in metabolite abundances. As described earlier, the dataset comprises 128 children, including 70 with obesity and 58 with normal weight, with abundance measurements for 1,152 metabolites, along with parental, demographic, lifestyle, and clinical covariates. The data first confirmed a positive association between maternal obesity and childhood obesity, with an odds ratio of 5.5 and a chi-squared p-value of 2 .1 × 10 −5. Because the total effect was positive, the outcome coding was retained without reversal. Prior to analysis, the metabolomics data were preprocessed by replacing zero values with one-half of the smallest observed positive value for each metabolite, followed by a centered log-ratio (CLR) transformation [27] to account for compositionality. For each metabolite, we fitted a linear regression model of metabolite abundance on maternal obesity and a logistic regression model of childhood obesity on metabolite abundance and maternal obesity. Both models were adjusted for household income and daily total caloric intake. Household income was dichotomized at CNY 200 ,000 per year, and caloric intake was treated as continuous. Figure 2 shows the distributions of the p-values for the E–M and M–O associations. The stronger deviation from the uniform reference among the M–O p-values suggests that the chil-dren’s metabolome was more strongly associated with childhood obesity than with maternal obesity. Figure 3 shows the distributions of the SMS statistics, all of which exhibit a heavier positive tail, suggesting the presence of plausible mediators. We applied SMS-omni to the Z-scores and HDMT, DEI-B, and DACT to the p-values to 19 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+identify mediators at a nominal FDR level of 0.2. As shown in Table 2, none of the existing methods detected significant mediators. Indeed, applying the Benjamini–Hochberg (BH) pro-cedure [28] at FDR level of 0.2 to either set of marginal p-values identified no significant E–M or M–O associations (Table 2). In contrast, SMS-omni identified five significant mediators, with details provided in Table 3. These mediators included not only metabolites with small 
+
+p-values for both associations, but also one metabolite, ranked third, for which one marginal 
+
+p-value was only near significant (0 .0535) while the other was highly significant (0 .0021). This example illustrates how SMS can detect mediators supported by the joint evidence of two as-sociations, even when one marginal association alone would not pass conventional significance thresholds. Previous studies suggested that maternal obesity may shape early offspring gut metabolic profiles through intestinal colonization, fecal short-chain fatty acids, and human milk oligosac-charide (HMO)-microbiome interactions, thereby contributing to childhood adiposity risk [29– 31]. The five metabolites identified here point to several plausible mediating pathways. De-hydroepiandrosterone sulfate (DHEAS) is a host steroid precursor, and may play a medi-ating role consistent with prior evidence linking childhood DHEAS with adiposity, insulin, and cardiometabolic traits [32]. Alpha-L-fucose 1-phosphate may reflect fucose utilization and fucosylated oligosaccharide-related metabolism, a pathway plausibly affected by maternal obesity through altered HMO composition and infant gut development [30, 31, 33]. Dihydroxy-valerate may represent hydroxy fatty acid–related metabolism associated with microbial fer-mentation, fatty acid oxidation, or broader intestinal metabolic activity [34, 35]. L-glutamic acid is involved in amino acid metabolism and has been associated with insulin resistance in pediatric obesity [36]. Bufotalin may be related to oxidative-stress pathways, as experimen-tal studies suggest effects on GPX4 degradation, lipid peroxidation, and ferroptosis [37, 38]. Overall, these findings provide hypothesis-generating evidence that steroid metabolism, or-ganic acid metabolism, amino acid metabolism, fucose utilization, and oxidative-stress-related gut metabolic pathways may mediate the association between maternal obesity and childhood 20 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+obesity risk. 
+
+Normative Aging DNA methylation study 
+
+These data were previously analyzed by DACT and DEI-B, enabling direct comparison between these methods and the SMS methods. The data were obtained from the Normative Aging Study [23] and include DNA methylation measurements for 484 ,613 CpG sites from 603 individuals. The goal was to investigate whether the effect of smoking, a binary exposure, on lung function, a continuous outcome, is mediated through DNA methylation at specific CpG sites. Methylation levels at each CpG site were originally measured as Beta values and then transformed into M-values using the logit function with base 2. We obtained summary statistics, including effect-size estimates, Z-scores, and p-values, for the association between smoking and DNA methylation at each CpG site, and for the associ-ation between CpG methylation and lung function conditional on smoking. Both associations were adjusted for age, height, weight, education history, medication history, blood cell-type abundances, and five principal components. Because smoking was inversely associated with lung function, we flipped the signs of the Z-scores for the CpG methylation–lung function associations. Figure 2 shows that the p-values for the E–M associations are enriched near zero, suggesting substantial effects of smoking on DNA methylation at multiple CpG sites. In contrast, the 
+
+p-values for the M–O associations are approximately uniform, or even sub-uniform, indicating weaker associations between DNA methylation and lung function. Consistently, applying the BH procedure at the nominal FDR level of 0.2 identified 36 significant E–M associations and 10 M–O associations (Table 2). The distributions of the SMS statistics are presented in Figure 3. Owing to the much larger number of features in this dataset, all three distributions exhibit a highly symmetric component centered around zero, corresponding to the composite nulls. In addition, all three display a pronounced positive tail, suggesting the presence of plausible mediators. 21 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+We applied SMS-omni to the Z-scores and HDMT, DEI-B, and DACT to the p-values to identify mediators. The nominal FDR level was set to 0.05 for consistency with previous studies. As shown in Table 2, SMS-omni identified 70 mediators. In comparison, HDMT, DEI-B, and DACT identified 25, 24, and 19 mediators, respectively, with the latter two matching the findings reported in the original DEI-B and DACT papers. Notably, all CpG sites identified by the existing methods were also identified by SMS-omni. Moreover, the detected mediator sets exhibit a strict nested structure: the set identified by SMS-omni contained that identified by HDMT, which contained that identified by DEI-B, which in turn contained that identified by DACT. These patterns align with the simulation results for J = 50 ,000, where SMS-omni achieved the highest sensitivity, followed by HDMT and DEI-B with similar sensitivity, while DACT showed the lowest sensitivity. Detailed information on the identified mediators is summarized in Table S1. Notably, among the mediators identified by the existing methods, all corresponding products Z1j Z2j
+
+had the same sign, even though this is not required by those methods. This pattern supports the sign-consistency assumption underlying the SMS methods. The additional 45 mediators identified by SMS-omni, but not by any existing methods, typically exhibited one moderately significant p-value together with another highly significant p-value, highlighting the advantage of SMS-x. 
+
+Discussions 
+
+We proposed SMS, a new framework for high-dimensional mediation analysis that ex-ploits the symmetry of mediation statistics to calibrate the composite null distribution as a whole. This approach differs fundamentally from traditional methods that explicitly model the composite-null distribution. A key advantage of SMS is its improved power, particularly when the strengths of the E–M and M–O associations are imbalanced. The SMS framework allows flexible combination of evidence from the two associations, and enables construction of an omnibus test for practical use. This property is especially relevant for mediation analysis, 22 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+where the two associations are often imbalanced, unlike in data-splitting settings where the two components are typically more symmetric. The symmetric-statistic framework works best when both the number of features and the number of true signals are large. To evaluate its performance under more challenging and practically relevant conditions, our simulations included settings with as few as 1,000 features, comparable to the PKU-SPCO metabolomics dataset, and as few as 10 true mediators. Al-though we described settings with 50 or more true mediators as dense, this designation is conservative relative to prior studies. For instance, HDMT defined 20% true mediators as dense and 2% as sparse, which correspond to 1,000 and 100 mediators, respectively, even in its lowest-dimensional setting of 5,000 features. Similarly, DACT considered 41 true mediators, and the sparsest-signal setting examined in DEI-B included 50 true mediators. Thus, our simulation design placed particular emphasis on sparse-signal scenarios. High-dimensional features, including metabolites, gene expression levels, and microbes, often exhibit complex feature–feature dependence. Methods such as DACT and DEI-B rely on the BH procedure for multiple-testing correction, which requires independence or certain forms of positive dependence among features [39]. In contrast, the symmetric-statistic framework can accommodate more flexible dependence structures under a weak-dependence condition [22]. Moreover, empirical evidence from Dai et al. [22] suggests that the framework can maintain satisfactory FDR control even when this condition is not strictly satisfied. The proposed SMS methods were implemented in the R package, SMStat , available on CRAN and GitHub at https://github.com/yijuanhu/SMStat . The implementation is highly efficient. As shown in Figure S8, although DEI-B was the fastest method, the SMS methods completed both real-data analyses in fractions of a second and were substantially faster than HDMT and DACT. Computation times were measured after the effect-size estimates, Z-scores, and p-values for the two associations had been obtained. All timings were based on runs performed on a MacBook Air with an Apple M3 chip and 16 GB memory. Our methods use the null statistics to construct a background distribution against which 23 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+statistics under the alternative are contrasted. Therefore, a larger number of null features provides a more stable estimate of this background distribution. In this sense, high dimen-sionality becomes an advantage rather than a burden. For this reason, we do not recommend pre-screening procedures that remove null features before analysis [9]. Nevertheless, our meth-ods remain applicable to moderately sized datasets; for example, they performed well with as few as J = 500 features (Figure S9). 
+
+Funding 
+
+This research was supported by the Fundamental Research Funds for the Central Univer-sities, Peking University, China, and the High-performance Computing Platform of Peking University, China. 
+
+References 
+
+1. Yan S, Liu Y, Yin L, Zhang L, Duan X, Liang B, et al. Factors influencing preschool children’s obesity in two cities of Shandong Province. Chinese Journal of Child Health Care. 2025;33(2):142–148. 2. Godfrey KM, Reynolds RM, Prescott SL, Nyirenda M, Jaddoe VWV, Eriksson JG, et al. Influence of maternal obesity on the long-term health of offspring. The Lancet Diabetes & Endocrinology. 2017;5(1):53–64. 3. Fleming TP, Watkins AJ, Velazquez MA, Mathers JC, Prentice AM, Stephenson J, et al. Origins of lifetime health around the time of conception: causes and consequences. Lancet. 2018;391(10132):1842–1852. 4. Creanga AA, Catalano PM, Bateman BT. Obesity in Pregnancy. New England Journal of Medicine. 2022;387(3):248–259. 5. Sobel ME. Asymptotic confidence intervals for indirect effects in structural equation models. Sociological methodology. 1982;13:290–312. 24 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+6. MacKinnon DP, Lockwood CM, Hoffman JM, West SG, Sheets V. A comparison of methods to test mediation and other intervening variable effects. Psychological methods. 2002;7(1):83. 7. Dai JY, Stanford JL, LeBlanc M. A multiple-testing procedure for high-dimensional medi-ation hypotheses. Journal of the American Statistical Association. 2022;117(537):198– 213. 8. Storey JD, Taylor JE, Siegmund D. Strong Control, Conservative Point Estimation and Simultaneous Conservative Consistency of False Discovery Rates: A Unified Ap-proach. Journal of the Royal Statistical Society Series B: Statistical Methodology. 2004 02;66(1):187–205. 9. Liu Z, Shen J, Barfield R, Schwartz J, Baccarelli AA, Lin X. Large-scale hypothesis testing for causal mediation effects with applications in genome-wide epigenetic studies. Journal of the American Statistical Association. 2022;117(537):67–81. 10. Jin J, Cai TT. Estimating the Null and the Proportion of Nonnull Effects in Large-Scale Multiple Comparisons. Journal of the American Statistical Association. 2007;102(478):495–506. 11. Efron B, Tibshirani R, Storey JD, Tusher V. Empirical Bayes Analysis of a Microarray Experiment. Journal of the American Statistical Association. 2001;96(456):1151–1160. 12. Du J, Zhou X, Clark-Boucher D, Hao W, Liu Y, Smith JA, et al. Methods for large-scale single mediator hypothesis testing: possible choices and comparisons. Genetic epidemiology. 2023;47(2):167–184. 13. Liu Y. A simple and powerful method for large-scale composite null hypothesis testing with applications in mediation analysis. Biometrics. 2025;81(1):ujaf011. 14. Stratakis N, Anguita-Ruiz A, Fabbri L, Maitre L, Gonz´ alez JR, Andrusaityte S, et al. Multi-omics architecture of childhood obesity and metabolic dysfunction uncovers bio-logical pathways and prenatal determinants. Nature Communications. 2025;16(1):654. 25 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+15. Santos Ferreira DL, Williams DM, Kangas AJ, Soininen P, Ala-Korpela M, Smith GD, et al. Association of pre-pregnancy body mass index with offspring metabolic profile: Analyses of 3 European prospective birth cohorts. PLOS Medicine. 2017 08;14(8):1–19. 16. Lowe J William L, Bain JR, Nodzenski M, Reisetter AC, Muehlbauer MJ, Stevens RD, et al. Maternal BMI and Glycemia Impact the Fetal Metabolome. Diabetes Care. 2017 06;40(7):902–910. 17. Catalano PM, Shankar K. Obesity and pregnancy: mechanisms of short term and long term adverse consequences for mother and child. BMJ. 2017;356. 18. Hu YJ, Satten GA. Testing hypotheses about the microbiome using the linear decompo-sition model (LDM). Bioinformatics. 2020;36(14):4106–4115. 19. Hu Y, Satten GA, Hu YJ. LOCOM: A logistic regression model for testing differential abundance in compositional microbiome data with false discovery rate control. Pro-ceedings of the National Academy of Sciences. 2022 7;119(30). 20. Barber RF, Cand` es EJ. Controlling the false discovery rate via knockoffs. The Annals of Statistics. 2015;43(5):2055 – 2085. 21. Cand` es E, Fan Y, Janson L, Lv J. Panning for Gold: ‘Model-X’ Knockoffs for High Dimensional Controlled Variable Selection. Journal of the Royal Statistical Society Series B: Statistical Methodology. 2018 06;80(3):551–577. 22. Dai C, Lin B, Xing X, Liu JS. False discovery rate control via data splitting. Journal of the American Statistical Association. 2023;118(544):2503–2520. 23. Bell B, Rose CL, Damon A. The Normative Aging Study: An Interdisciplinary and Longitudinal Study of Health and Aging. The International Journal of Aging and Human Development. 1972;3(1):5–17. 24. VanderWeele T, Vansteelandt S. Conceptual issues concerning mediation, interventions and composition. Statistics and Its Interface. 2009;2:457–468. 26 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+25. VanderWeele T, Vansteelandt S. Mediation analysis with multiple mediators. Epidemio-logic methods. 2014;2(1):95–115. PMCID: PMC4287269. 26. MacKinnon D, Dwyer J. Estimating Mediated Effects in Prevention Studies. Evaluation Review. 1993;17:144–158. 27. Aitchison J. The statistical analysis of compositional data. Chapman and Hall, London-New York; 1986. 28. Benjamini Y, Hochberg Y. Controlling the false discovery rate: a practical and powerful approach to multiple testing. Journal of the royal statistical society Series B (Method-ological). 1995;p. 289–300. 29. Gilley SP, Ruebel ML, Sims C, Zhong Y, Turner D, Lan RS, et al. Associations between maternal obesity and offspring gut microbiome in the first year of life. Pediatric Obesity. 2022;17(9):e12921. 30. Saben JL, Sims CR, Abraham A, Bode L, Andres A. Human Milk Oligosaccharide Con-centrations and Infant Intakes Are Associated with Maternal Overweight and Obesity and Predict Infant Growth. Nutrients. 2021;13(2). 31. Corona-Cervantes K, Urrutia-Baca VH, G´ amez-Valdez JS, Jim´ enez-L´ opez B, Rodr´ ıguez-Gutierrez NA, Ch´ avez-Caraza K, et al. Maternal obesity alters hu-man milk oligosaccharides content and correlates with early acquisition of late colonizers in the neonatal gut microbiome. Gut Microbes. 2026;18(1):2607043. 32. Santos-Silva R, Fontoura M, Guimar˜ aes JT, Barros H, Santos AC. Association of de-hydroepiandrosterone sulfate, birth size, adiposity and cardiometabolic risk factors in 7-year-old children. Pediatr Res. 2022;91(7):1897–1905. 33. Korpela K, Salonen A, Hickman B, Kunz C, Sprenger N, Kukkonen K, et al. Fucosylated oligosaccharides in mother’s milk alleviate the effects of caesarean birth on infant gut microbiota. Scientific Reports. 2018;8(1):13757. 34. Zhang S, Dang Y. Roles of gut microbiota and metabolites in overweight and obesity of 27 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+children. Front Endocrinol (Lausanne). 2022;13:994930. 35. Mann ER, Lam YK, Uhlig HH. Short-chain fatty acids: linking diet, the microbiome and immunity. Nature Reviews Immunology. 2024;24(8):577–595. 36. Gumus Balikcioglu P, Jachthuber Trub C, Balikcioglu M, Ilkayeva O, White PJ, Muehlbauer M, et al. Branched-chain α-keto acids and glutamate/glutamine: Biomarkers of insulin resistance in childhood obesity. Endocrinol Diabetes Metab. 2023;6(1):e388. 37. Zhang W, Jiang B, Liu Y, Xu L, Wan M. Bufotalin induces ferroptosis in non-small cell lung cancer cells by facilitating the ubiquitination and degradation of GPX4. Free Radical Biology and Medicine. 2022;180:75–84. 38. Ursini F, Maiorino M. Lipid peroxidation and ferroptosis: The role of GSH and GPx4. Free Radic Biol Med. 2020;152:175–185. 39. Benjamini Y, Yekutieli D. The Control of the False Discovery Rate in Multiple Testing under Dependency. The Annals of Statistics. 2001;29(4):1165–1188. 28 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+(a) E
+
+M2
+
+O
+
+M1
+
+> …
+
+C
+
+X
+
+(b) Checking sign(s) 
+
+(outcome sign flipped if exposure –outcome association is negative) 
+
+SMS -x = sign( 𝑍 !𝑍 ") × |𝑍 !| × |𝑍 "| SMS -min = sign( 𝑍 !𝑍 ") × min( |𝑍 !|, |𝑍 "|)
+
+SMS -omni = sign( 𝑍 !𝑍 ") × SMS -x × SMS -min 
+
+Correcting for the global null 
+
+(accounting for random variation) 
+
+Stabiliz ing for sparse mediators 
+
+(window -based smoothing) 
+
+𝐸 𝑀 # ∣ 𝐸 , 𝐶 = 𝛼 #$ + 𝛽 #!𝐸 + 𝛼 #% 
+
+> &
+
+𝐶 ,
+
+𝑍 #! = ,𝛽 #!/SE ,𝛽 #!
+
+or 𝑍 #! = −sign ( ,𝛽 #!)Φ'! 𝑝 #!/2
+
+or 𝑍 #! = ,𝛽 #!(after standardization) 
+
+𝐸 𝑂 ∣ 𝑀 #, 𝐸 , 𝐶 = 𝜃 #$ + 𝛽 #"𝑀 # + 𝜃 #!𝐸 + 𝜃 #%  
+
+> &
+
+𝐶 ,
+
+𝑍 #" = ,𝛽 #"/𝑆𝐸 ,𝛽 #"
+
+or 𝑍 #" = −sign ( ,𝛽 #" )Φ'! 𝑝 #" /2
+
+or 𝑍 #" = ,𝛽 #" (after standardization) 
+
+Computing symmetric mediation statistics 
+
+Fitting two regression models 
+
+Identifying mediators 
+
+(with FDR control) 
+
+Figure 1: (a) Directed acyclic graph (DAG) for mediation analysis. E denotes the exposure, 
+
+M1, M2, . . . denote candidate mediators, O denotes the outcome, and C denotes measured confounders. Solid arrows indicate mediation pathways, the dash-dotted arrow indicates the direct effect, and dashed arrows indicate confounding effects. (b) Workflow of the SMS framework. 29 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+PKU-SPCO metabolomics data NAS DNA methylation data Maternal obesity−metabolite 
+
+p−value Frequency 0.0 0.2 0.4 0.6 0.8 1.0 0 10  20  30  40  50  60  70 Smoking−CpG methylation 
+
+p−value Frequency 0.0 0.2 0.4 0.6 0.8 1.0 0 5000  15000  25000 Metabolite−childhood obesity 
+
+p−value Frequency 0.0 0.2 0.4 0.6 0.8 1.0 0 20  40  60  80  100 CpG methylation−lung function 
+
+p−value Frequency 0.0 0.2 0.4 0.6 0.8 1.0 0 5000  15000  25000 
+
+Figure 2: Distributions of p-values for the E–M associations (upper panel) and M–O associations (lower panel) in the two real datasets. 30 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint PKU-SPCO metabolomics data NAS DNA methylation data SMS-x S j ,x      
+
+> −4 −2 0246
+> 0 50  100  150  200  250  300  350 Frequency (all)
+> 0 20  40  60  80 Frequency (mediators)
+
+S j ,x       
+
+> −10 −5 0510 15 20
+> 0 20000  40000  60000  80000 Frequency (all)
+> 0 200  400  600  800  1000 Frequency (mediators)
+
+SMS-min S j ,mi n     
+
+> −2 −1 012
+> 0 20  40  60  80  100  120 Frequency (all)
+> 0 10  20  30  40  50 Frequency (mediators)
+
+S j ,mi n      
+
+> −2 02468
+> 0 20000  40000  60000  80000 Frequency (all)
+> 0 100  200  300  400  500  600 Frequency (mediators)
+
+SMS-omni S j ,omni      
+
+> −10 −5 0510 15
+> 0 200  400  600 Frequency (all)
+> 0 20  40  60  80  100 Frequency (mediators)
+
+S j ,omni       
+
+> −20 020 40 60 80 100
+> 0 5000  10000  15000  20000 Frequency (all)
+> 0 2000  4000  6000  8000 Frequency (mediators)
+
+Figure 3: Distributions of the statistics in SMS-x, SMS-min, and SMS-omni, for all features in the two real datasets. The red region denotes mediators identified by the corresponding SMS method and is enlarged to show greater detail. For the NAS dataset, the x-axis is truncated at 20 for SMS-x and at 100 for SMS-omni, and the y-axis is truncated at 8,000 and 2,000, respectively, to show greater detail in the positive tail of the gray region. 31 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint 100 mediators 50 mediators 25 mediators 10 mediators No mediator SS 
+
+DS 
+
+SD 
+
+DD Figure 4: Simulation results on empirical FDR and sensitivity, based on J = 1 ,000 features. The dashed gray line indicates the nominal FDR level of 0.2. 32 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint 100 mediators 50 mediators 25 mediators 10 mediators No mediator SS 
+
+DS 
+
+SD 
+
+DD Figure 5: Simulation results on empirical FDR and sensitivity, based on J = 5 ,000 features. The dashed gray line indicates the nominal FDR level of 0.2. 33 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint 100 mediators 50 mediators 25 mediators 10 mediators No mediator SS 
+
+DS 
+
+SD 
+
+DD Figure 6: Simulation results on empirical FDR and sensitivity, based on J = 50 ,000 features. The dashed gray line indicates the nominal FDR level of 0.2. 34 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint (4, 0.25) (2, 0.5) (1, 1) (0.5, 2) (0.25, 4) J = 1000 SD 
+
+J = 50000 DS Figure 7: Simulation results (with 50 true mediators) on the sensitivity of the SMS methods under varying relative strengths of the E–M and M–O associations, governed by different values of ( c1, c 2), across two settings that mimic the real datasets. 35 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint Table 1: High-dimensional mediation analysis methods evaluated in this study Require Use Require Rely on null maximum association the BH Method Reference proportions p-value p-values procedure HDMT Dai et al., 2022 ∗ ∗ ∗
+
+DACT Liu et al., 2022 ∗ ∗ ∗ ∗
+
+DEI-B Liu, 2025 ∗ ∗ ∗
+
+SMS This work Note: ∗ denotes a limiting feature of the method. BH stands for Benjamini–Hochberg [28]. 36 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Table 2: Number of mediators identified in the real datasets Identified Identified E–M M–O Identified Dataset n J associations ∗ associations ∗ Method mediators ∗∗ 
+
+PKU-SPCO 128 1,152 0 0 SMS-omni 5metabolomics HDMT 0data DEI-B 0DACT 0NAS 603 484,613 36 10 SMS-omni 70 DNA methylation HDMT 25 data DEI-B 24 DACT 19 Note: ∗ Identified by applying the BH procedure to the p-values at a nominal FDR level of 0.2. ∗∗ Obtained at FDR level 0.2 for the PKU-SPCO dataset and 0.05 for the NAS dataset. The mediator sets identified by different methods in the NAS data exhibit a strictly nested structure as described in the main text. 37 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted June 15, 2026. ;https://doi.org/10.64898/2026.06.10.730748 doi: bioRxiv preprint
+
+Table 3: Metabolites identified by SMS-omni in the PKU-SPCO dataset Maternal obesity– Metabolite– metabolite childhood obesity association association Rank Metabolite Z-score p-value Z-score p-value 1 Dehydroepiandrosterone sulfate 2.91 0.0043 2.15 0.0317 2 Alpha-L-fucose 1-phosphate −2.73 0.0073 −2.17 0.0303 3 Dihydroxy-valerate 1.95 0.0535 3.07 0.0021 4 L-glutamic acid −2.02 0.0460 −2.38 0.0172 5 Bufotalin 2.17 0.0318 2.10 0.0359 Note: The metabolites are ranked in descending order of the SMS-omni statistic. 38

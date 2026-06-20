@@ -1,0 +1,486 @@
+Title: PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+URL Source: https://arxiv.org/pdf/2606.20055v1
+
+Published Time: Fri, 19 Jun 2026 00:46:39 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+## Youji Zhu a, Hongbing Wang b, Wenchao Liu a, Xiaodong Liu b and Xiangguang Xiong b,∗
+
+> a
+
+School of Mathematical Sciences, Guizhou Normal University, Guiyang 550025, China. 
+
+> b
+
+School of Big Data and Computer Science, Guizhou Normal University, Guiyang 550025, China. 
+
+A R T I C L E I N F O 
+
+Keywords :Time-series anomaly detection Patch representation learning Multiscale convolution Cross-variable attention Self-supervised learning 
+
+A B S T R A C T 
+
+Time-series anomaly detection has significant practical value for industrial and medical monitoring, as well as other critical domains. Current Transformer- and large-model-based detection approaches incur excessive computational overhead, while existing lightweight alternatives are constrained by insufficient feature extraction and inadequate modeling of dependencies across multivariate variables. To mitigate the above drawbacks, this study develops a lightweight, efficient anomaly detection model, dubbed PaAno, within the patch-oriented representation learning paradigm. In the encoder module, a multiscale feature-extraction backbone is constructed using convolutional kernels with differentiated receptive fields to capture hierarchical temporal characteristics; subsequent cross-scale adaptive attention aggregation, combined with residual connection optimization, further stabilizes feature representation learning. A cross-variable fusion attention module is embedded to explicitly characterize inter-variable correlations, empowering the model to identify anomalous patterns amid intricate operational conditions. Moreover, a novel pretext task based on temporal patch-window sorting is customized to uncover intrinsic structural properties of time series, and triplet loss is leveraged to optimize the patch embedding space for enhanced feature discrimination. Extensive experiments on the TSB-AD benchmark demonstrate that the proposed PaAno achieves state-of-the-art detection accuracy on both univariate and multivariate tasks, yielding significant performance gains across evaluation metrics, including VUS-PR, relative to the original PaAno. Leveraging a compact network design, the presented model achieves favorable computational efficiency, enabling deployment on resource-limited terminals for real-time anomaly inference. 
+
+## 1. Introduction 
+
+Time-series observations are chronologically ordered measurements widely deployed in industrial sensing, financial analytics, and clinical diagnosis [1, 2]. Their inherent temporal dependence arises from contextual evolution and system dynamics [3]. System malfunctions, external interference, or manual misoperation can disrupt this temporal correlation and cause anomalous behavior, including abrupt spikes, sharp declines, and persistent offsets. Time-series anomaly detection aims to detect abnormal samples or subsequences that deviate from the normal data distribution [4]. These irregularities generally indicate latent system risks; accordingly, accurate real-time detection is indispensable for reliable operational maintenance in practical applications [3]. Given the latency and hardware constraints of edge terminals, deployed detection methods must balance prediction accuracy and inference efficiency within limited computing resources [4]. Existing time-series anomaly detection techniques fall into three mainstream branches [5, 6]. The first branch covers statistical and conventional machine learning methods (Stat & ML). Reconstruction-oriented approaches such as SubPCA [7] and RobustPCA [8] quantify abnormality via the reconstruction residual after PCA-based dimensionality reduction. Cluster-driven methods, including KMeansAD [9], KShapeAD [10], and CBLOF [11], partition normal samples into distinct clusters and calculate anomaly scores by inter-cluster distance metrics. Fitting-based models such as POLY [12] and SR [13] derive residual values from polynomial or spectral fits to discriminate anomalies. Tree-based detectors, IForest [14] and EIF [15], 
+
+> ∗
+
+Corresponding author 
+
+xxg@gznu.edu.cn (X. Xiong) 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 1 of 21 
+
+> arXiv:2606.20055v1 [cs.LG] 18 Jun 2026 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+measure anomaly probability based on the path length of the sample separation. LOF [16], KNN [17], HBOS [18], and COPOD [19] identify outliers based on local density, neighbor spacing, or histogram-based statistics. MatrixProfile [20], Series2Graph [21], and SAND [22] localize anomalies by computing subsequence similarity or constructing state-transition graphs. Free from the overhead of iterative training, these lightweight methods fit periodic, distribution-specified simple anomaly scenarios [5, 6]. Nevertheless, their fixed-distribution hypothesis impedes nonlinear local feature extraction; susceptibility to miscellaneous noise and neglect of sequential constraints degrade detection accuracy in the presence of complex nonlinear outliers [5]. The second branch corresponds to deep neural network (NN)-based solutions. CNN [23], DeepAnT [24], and TimesNet [25] adopt 1D convolution to extract local temporal features and perform anomaly screening based on prediction or reconstruction residuals. LSTMAD [26] leverages recurrent units to capture sequential dependence and identify anomalies via forecast bias. Classical autoencoder frameworks, including AutoEncoder [27], USAD [28], and OmniAnomaly [29], adopt reconstruction error or adversarial optimization; specifically, OmniAnomaly integrates a stochastic recurrent structure and variational inference for probabilistic reconstruction. The frequency-domain method FITS [30] realizes compact network design via complex-domain interpolation. Compared with traditional statistics-based methods, deep learning architectures capture long-range temporal dependencies and achieve superior detection precision. Still, most existing networks fail to excavate cross-variable long-distance correlations. Excessive parameter count, sensitive window hyperparameter selection, and unstable convergence during training limit their performance on multivariate cross-period anomalous events [5, 6]. The third branch consists of Transformer architectures and large pre-trained foundational models (Transformer). Self-attention-driven detectors, including AnomalyTransformer [31], TranAD [32], DCde-tector [33], PatchTST [34], and iTransformer [35], identify anomalies through discrepancy calculation, adversarial optimization, contrastive attention learning, or block-wise prediction. Large pre-trained models MOMENT [36], TimesFM [37], Chronos [38], and LagLlama [39] exploit masked modeling, decoder attention, temporal binning, and lag-covariate pre-training to support zero-shot or fine-tuning anomaly inference. Designed for global dependency modeling and cross-domain generalization enhancement, such paradigms exhibit promising application potential [5, 6]. However, billions of learnable parameters incur prohibitive memory and computational cost, hindering practical edge deployment and real-time online monitoring [6]. Recent empirical research indicates that biased evaluation protocols, such as inconsistent annotation rules and point-adjusted evaluation metrics, lead to inflated detection performance for large models and a misleading impression of technical advancement [5, 6]. Under standardized, unbiased evaluation rules, oversized foundation models achieve marginal performance gains over compact alternatives while retaining prohibitive computational costs [6]. As a lightweight patch-driven representation-learning baseline, PaAno [6] achieves competitive detection accuracy but suffers from evident structural drawbacks. First, single-receptive-field fixed convolution kernels limit multiscale feature extraction, as they cannot simultaneously adapt to both pointwise abrupt anomalies and long-sequence continuous anomalies. Second, the model independently encodes each multivariate channel in separation mode, ignoring intrinsic inter-variable correlations and thereby weakening its ability to detect interaction-induced outliers. Third, its original auxiliary pretext task only constrains intra-patch temporal continuity, providing insufficient supervisory information for learning fine-grained temporal evolution and thereby limiting the depth of temporal dependency modeling. To remedy the aforementioned defects, this study proposes an improved lightweight detector named PaAno+, whose core contributions are summarized as follows: 
+
+• A multiscale temporal encoder is constructed with multi-branch parallel convolution, cross-scale adaptive attention aggregation, and residual shortcut connection for adaptive multigranularity feature extraction. 
+
+• A cross-variable fusion attention module is proposed to execute multi-head self-attention along variable dimensions and explicitly model pairwise multivariate dependence.   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 2 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+• A novel window-rearrangement pretext task shuffles patch windows and recovers the original temporal order, thereby generating adjustable regularization signals that strengthen the model’s awareness of temporal context variation. 
+
+• Extensive validation on the public TSB-AD benchmark verifies that PaAno+ yields consistent accuracy gains in univariate and hybrid-type anomaly detection while preserving lightweight inference efficiency. The rest of this paper is organized as follows. Section 2.1 elaborates on related literature. Section 3 details the structural design of PaAno+. Section 4 presents the experimental setup and result analysis. Section 5 concludes this work and outlines prospective research directions. 
+
+## 2. Related work 
+
+2.1. Time Series Anomaly Detection 
+
+Time-series anomaly detection aims to detect abnormal samples or subsequences that deviate from the normal data distribution [5, 6]. Based on label availability, existing solutions are grouped into supervised, semi-supervised, and unsupervised frameworks [40]. Due to the extreme sparsity of real-world anomaly annotations, semi-supervised methods trained exclusively on normal samples dominate in practical applications [6]. Classical statistical and machine learning detectors span multiple branches: density-driven LOF [16], boundary-constrained OCSVM [41], and isolation-based IForest [14]; reconstruction-oriented PCA [7] and RobustPCA [8]; and clustering-supported KMeansAD [9], KShapeAD [10], and Series2Graph [21]. Such approaches offer concise implementation and clear interpretability but fail to capture the complex temporal dependencies embedded in raw data [5, 6]. Deep learning has become a prevailing approach to time-series anomaly detection in recent years. Recur-rent architectures such as LSTMAD [26] and OmniAnomaly [29] explicitly model sequential dependencies and identify outliers via prediction or reconstruction residuals. CNN-based schemes, including DeepAnT [24] and TimesNet [25], extract local temporal patterns via convolutional operations. Transformer-type detectors, such as AnomalyTransformer [31], TranAD [32], and PatchTST [34], exploit self-attention to capture long-range temporal correlations. Furthermore, pre-trained time-series foundation models, including MOMENT [36], TimesFM [37], and LagLlama [39], support anomaly inference via zero-shot prediction or parameter fine-tuning. 
+
+2.2. Patch-Based Feature Learning 
+
+Patch-oriented modeling has attracted growing research attention for contemporary time-series analytics. In time-series forecasting, PatchTST [34] integrates a Transformer with patch embedding, compressing the original sequence length 𝐿 to 𝐿 ∕𝑝 to reduce computational overhead and strengthen local pattern perception. TimesNet [25] reshapes 1D sequential input into 2D tensors and applies 2D convolution to capture intra-period and inter-period fluctuation characteristics simultaneously. Driven by such progress, patch modeling has been gradually extended to anomaly detection tasks. DCdetector [33] improves fine-grained anomaly discrimination through patch masking and dual-path contrastive learning, whereas the correlation difference mechanism of AnomalyTransformer [31] relies primarily on local sliding windows and adheres to a patch-based modeling philosophy. A series of dedicated patch-based anomaly detectors has been proposed. PaAno [6] adopts a lightweight 1D-CNN to project segmented time series into latent embeddings, optimizes the discriminative patch embedding space via triplet loss and an auxiliary classification pretext task, and implements online anomaly screening by matching test patches against pre-stored normal patch libraries; it achieves competitive detection accuracy with far fewer parameters than mainstream Transformer models. CATCH [42] migrates the patch partition into the frequency domain and splits the spectrum into patches to retain high-frequency anomalous details. PatchAD [43] substitutes the point-wise reconstruction loss with a patch-level objective by combining MLP-Mixer with masked reconstruction. Generally, patch-centric representation learning focuses on local temporal characteristics, reduces computational cost, and facilitates the detection of subtle outliers, serving as an essential technical path that balances lightweight network design and favorable detection performance [6, 31].   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 3 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+2.3. Multiscale Features and Attention Mechanisms 
+
+The joint use of multi-scale feature extraction and attention constitutes an effective modeling paradigm for temporal anomaly detection, simultaneously capturing fine-grained local details and global interdepen-dencies. Three mainstream multi-scale modeling strategies have been developed. First, multi-sized parallel convolution kernels extract cross-scale local features, as in InceptionTime [44] and MFAM-AD [45]. Second, multi-resolution pyramid architecture builds hierarchical features via layer-wise downsampling, including Pyramid Transformer [46] and CSCAD [47]. Third, period-aware modeling, exemplified by TimesNet [25], restructures 1D time series into periodic 2D tensors and leverages 2D convolution to extract intra-period features and cross-period variation rules. Attention enhances feature modeling by separately modeling temporal and feature dimensions. Along the temporal dimension, long-range dependency can be well characterized: AnomalyTransformer [31] distinguishes normal and abnormal data by the discrepancy between prior and sequential correlations. TranAD [32] captures global temporal trends via adversarial optimization. DCdetector [33] boosts detection precision via asymmetric dual-path attention. In the feature dimension, adaptive multi-scale feature fusion is achieved through attention weighting. MFAM-AD [45] aggregates multi-granularity features with attention weights, and dual-memory architecture [48] embeds attention into memory-augmented modules to refine the final feature representation. Existing multi-scale and attention fusion pipelines fall into two categories. The serial framework first performs multi-scale feature extraction and then further optimizes feature expression via attention; e.g., MFAM-AD [45] adopts cross-scale attention to calibrate and align multi-level feature semantics. The parallel collaborative framework iteratively optimizes multi-scale construction and attention learning: the Pyramid Transformer [46] embeds downsampling and multi-task optimization within each pyramid layer, while the dual-memory model [48] establishes cross-scale information propagation across parallel branches. Multi-scale modeling addresses the representational deficiency of single-scale feature design, and attention dynamically screens for informative temporal cues; together, they stabilize model detection performance in complex, time-varying industrial scenarios. 
+
+2.4. Self-Supervised Pre-training for Time Series 
+
+Self-supervised pre-training mines an effective feature representation from unlabeled sequential data via auxiliary pretext tasks, mitigating the annotation-shortage bottleneck in unsupervised anomaly detection. Current relevant methods are primarily divided into the contrastive and generative learning branches. Contrastive learning constructs paired sample constraints to regularize feature learning. CARLA [49] generates positive/negative pairs via artificial anomaly injection. TimeCLR [50] constructs matching samples based on dynamic time warping. CoST [51] introduces frequency-domain contrast loss to decouple trend and seasonal components. TS2Vec [1] builds hierarchical contextual embeddings. TF-C [52] enforces feature alignment across time and frequency domains. TDSRL [53] combines global dependency modeling and local contrast boundary discrimination to impose composite optimization constraints. Masked reconstruction dominates generative self-supervised pre-training. MAET [54] reconstructs masked subsequences using an LSTM encoder, and TFMAE [55] builds a dual-masked autoencoder spanning time and frequency domains. Patch order restoration is another vital research direction: PPT [56] breaks the original temporal consistency by channel shuffling and integrates an ordering constraint with contrastive learning for model supervision. Existing sequence rearrangement-based approaches include BTSF [57], which performs dual consistency verification at the frame and segment levels, and SIM-AD [58], which unifies contrastive learning and multi-step sequence prediction to enhance embedding discriminability. Modern self-supervised time-series learning evolves from elementary reconstruction and pairwise contrast to multi-task joint optimization, with the modeling scope extended from the pure time domain to frequency and hybrid multidimensional spaces. Reasonably designed pretext tasks compensate for insufficient labeled data and generate high-quality embeddings to support downstream unsupervised anomaly detection.    
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 4 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+> Fig. 1: Classification of common defects found in the current dataset. Anomalies are marked in red.
+
+## 3. Method 
+
+3.1. Problem Definition 
+
+This work addresses the task of semi-supervised time series anomaly detection. Under this paradigm, the training set consists exclusively of normal time series samples. The model learns the distribution and temporal evolution patterns of normal data to identify anomalous time points and segments with deviant behavioral patterns in test series. Let a time series be 𝑿 = { 𝒙 1, 𝒙 2, … , 𝒙 𝑁 } ∈ ℝ𝑑 ×𝑁 , where 𝑁 denotes the total length of the series and 
+
+𝑑 is the dimension of observed variables, 𝒙 𝑡 ∈ ℝ𝑑 represents the observation vector at time step 𝑡 , and 
+
+𝑡 ∈ {1 , 2, … , 𝑁 }. Specifically, the time series is univariate when 𝑑 = 1 , and multivariate when 𝑑 > 1.The model processes the input time series 𝑿 and outputs an anomaly score 𝑠 𝑡 ∈ ℝ for each time step. The magnitude of the anomaly score is positively correlated with the degree of deviation from normal patterns at the corresponding time step. We define a global anomaly threshold 𝜃 ∈ ℝ and adopt an indicator function 
+
+𝐼 (⋅) to discriminate anomalies. 
+
+𝐼 (𝑠 𝑡 , 𝜃 ) = 
+
+{
+
+1, 𝑠 𝑡 > 𝜃, 
+
+0, 𝑠 𝑡 ≤ 𝜃. (1) where 𝐼 (𝑠 𝑡 , 𝜃 ) = 1 indicates that the 𝑡 -th time step is abnormal, while 𝐼 (𝑠 𝑡 , 𝜃 ) = 0 denotes a normal time step. Accordingly, the sets of anomalous and normal time steps are defined as follows. 
+
+anom = { 𝑡 ∣ 𝐼 (𝑠 𝑡 , 𝜃 ) = 1 , 𝑡 ∈ {1 , 2, … , 𝑁 }} ,
+
+norm = { 𝑡 ∣ 𝐼 (𝑠 𝑡 , 𝜃 ) = 0 , 𝑡 ∈ {1 , 2, … , 𝑁 }} . (2) The corresponding anomalous and normal subsequences are formulated as 
+
+𝑿 anom = { 𝒙 𝑡 ∣ 𝑡 ∈ anom },
+
+𝑿 norm = { 𝒙 𝑡 ∣ 𝑡 ∈ norm }. (3) The objective of time series anomaly detection is to characterize the normal behavioral patterns embedded in time series data, compute per-step anomaly scores, and ultimately accurately identify the anomalous time set anom and abnormal subsequence 𝑿 anom .Existing mainstream benchmarks for time-series anomaly detection universally suffer from four inherent defects, as shown in Fig. 1. 
+
+Incorrect annotations : Mislabeling of normal instances as anomalies and missing genuine anomalies introduce label noise and contaminate model optimization. 
+
+Temporal position bias : Anomalies tend to cluster at late timestamps, leading to equipment-failure-induced location bias; this bias misleads the model into fitting positional patterns rather than intrinsic anomalous characteristics.    
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 5 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+> Fig. 2: Architecture of the PaAno+ multivariate time-series anomaly detection system.
+
+Insufficient contextual information : Several abnormal samples lack adjacent normal background data, hindering the model from capturing feature discrepancies between normal and abnormal patterns. 
+
+Unrealistic anomaly ratio : Benchmark datasets assume an excessively high proportion of anomalous samples, which is inconsistent with the extremely sparse real-world anomaly distribution in industrial environments, leading to overestimates of empirical detection performance. 
+
+3.2. Overall Framework 
+
+The overall framework of the proposed method is illustrated in Fig. 2. The core principle is to construct a discriminative embedding space via patch-based representation learning, in which normal temporal patterns form compact feature clusters. In contrast, anomalous patterns deviate from this regular distribution of features, thereby enabling reliable anomaly detection. The proposed method comprises three sequential stages: patch preprocessing, encoder training, and anomaly inference. 
+
+Patch Extraction and Preprocessing : A sliding-window strategy is adopted to extract overlapping short-term patches 𝑝 𝑡 = ( 𝑥 𝑡 , 𝑥 𝑡 +1 , … , 𝑥 𝑡 +𝑤 −1 ) from the raw time series, where 𝑤 denotes the patch window size. Each extracted patch is standardized with instance normalization to improve the model’s robustness to shifts in the data distribution. 
+
+Encoder Training : A lightweight multiscale encoder 𝑓 𝜃 is built to project temporal patches into low-dimensional discriminative embeddings. For multivariate time series, a cross-variable attention mechanism is incorporated to explicitly model inter-variable dependencies. The encoder integrates multiscale temporal encoding with cross-variable feature fusion to enable comprehensive feature learning. The entire network is optimized using a joint loss function that combines triplet and temporal-ordering losses, with the well-trained encoder 𝑓 𝜃 .
+
+Anomaly Detection : A raw memory bank 𝑀 is constructed from patch embeddings derived from the training set, and K-means clustering is then applied to compress 𝑀 into a compact set of prototypes. In the inference stage, the K-nearest-neighbor distances between test patch embeddings and memory bank prototypes are computed for each timestamp, and the average distance is used as the final anomaly score. 
+
+3.3. Multiscale Time-Series Encoder 
+
+The multiscale temporal encoder is designed to capture short-range, medium-range, and long-range sequential features from time-series data. Equipped with cross-scale attention pooling and residual connections, the encoder adaptively fuses multiscale features to produce informative and comprehensive temporal representations. The encoder adopts a three-branch parallel convolutional architecture for multiscale modeling, with kernel sizes of 3, 5, and 9 to capture features at fine, medium, and coarse scales, respectively. Each branch sequentially implements convolution, batch normalization, ReLU activation, and adaptive average pooling, yielding feature embeddings with unified dimensions. A cross-scale attention pooling mechanism is further introduced to realize adaptive multiscale feature fusion. The output features of the three branches are concatenated along the feature dimension, and a fully connected layer is used to compute the attention weight 𝑊 attn ,𝑖 for each scale. Weighted aggregation based on   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 6 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+the learned attention weights is finally performed to generate the refined multiscale temporal representation. 
+
+𝑋 fused =
+
+> 3
+
+∑
+
+> 𝑖 =1
+
+𝑊 attn ,𝑖 ⋅ 𝑋 scale ,𝑖 (4) where 𝑋 scale ,𝑖 denotes the output of the 𝑖 -th scale branch. Subsequently, a residual connection is incorporated to facilitate gradient propagation and feature preservation, as formulated in Eq. (5). 
+
+𝑋 final = 𝑋 fused + 𝛾 ⋅ 𝑋 residual (5) where 𝛾 is a learnable parameter, and 𝑋 residual is a linear mapping of the raw outputs from each branch, as formulated in Eq. (6). 
+
+𝑋 residual ,𝑖 = 𝑊 residual ,𝑖 ⋅ 𝑋 scale ,𝑖 (6) Residual connections are embedded in each convolutional branch to retain intrinsic feature information, thereby strengthening the feature representation capability and stabilizing network optimization. The final fused feature Xfinal aggregates complementary multiscale temporal cues, yielding discriminative embeddings for downstream anomaly detection. Leveraging the multiscale architecture and adaptive attention weighting, the encoder simultaneously captures short- and long-range temporal dependencies, thereby improving its ability to model complex time-series patterns. 
+
+3.3.1. Cross-Scale Attention Fusion 
+
+The cross-variable fusion attention mechanism adaptively models interdependencies among multiple variables. By quantifying each variable’s contribution using multi-head self-attention, the module dynami-cally aggregates features weighted by attention, thereby enhancing the model’s ability to capture complex multivariate temporal correlations. Given input features 𝑋 ∈ ℝ𝐵 ×𝐷 ×𝑇 , where 𝐵 , 𝐷 , and 𝑇 denote the batch size, variable dimension, and time step length, respectively. The input is first projected into a latent feature space via a linear transformation. 
+
+𝑋 proj = 𝑊 proj 𝑋 (7) where 𝑊 proj ∈ ℝ𝑇 ×𝑇 is the transformation matrix, and 𝑋 proj ∈ ℝ𝐵 ×𝐷 ×𝑇 represents mapped feature. The values of 𝑄 , 𝐾 , and 𝑉 are computed based on the mapped features, as formulated in Eq. (8). 
+
+𝑄 = 𝑊 𝑄 𝑋 proj , 𝐾 = 𝑊 𝐾 𝑋 proj , 𝑉 = 𝑊 𝑉 𝑋 proj (8) where 𝑊 𝑄 , 𝑊 𝐾 , and 𝑊 𝑉 ∈ ℝ𝑇 ×𝑇 are the transformation matrices for 𝑄 , 𝐾 , and 𝑉 , respectively. The attention weight matrix is obtained by applying the Softmax normalization to the dot product of 𝑄 and 𝐾 .
+
+𝐴 = Softmax 
+
+(
+
+𝑄𝐾 ⊤
+
+√𝑇 
+
+)
+
+(9) where 𝐴 ∈ ℝ𝐷 ×𝐷 represents the relative importance of the variables. The value matrix is weighted and fused using attention weights, as formulated in Eq. (10). 
+
+𝑋 attn = 𝐴𝑉 (10) Concatenate the attention-weighted features with the original projected features, as formulated in Eq. (11). 
+
+𝑋 concat = Concat (𝑋 attn , 𝑋 proj 
+
+) (11)   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 7 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+The concatenated features contain both weighted and raw information, enhancing expressive power. Finally, the final output is obtained through a fully connected layer. 
+
+𝑦 = 𝑊 out 𝑋 concat (12) where 𝑊 out ∈ ℝ𝑇 ×𝑇 represents the output layer weights, and 𝑦 ∈ ℝ𝐵 ×𝑇 represents the model output. This mechanism adaptively extracts interactive features among variables through multi-head self-attention, thereby enhancing the model’s ability to model multivariate time-series data. 
+
+3.4. Pre-training Loss for Patch Order Restoration 
+
+To enhance the encoder’s ability to model time-series dynamics, this study introduces a time-series sequence-restoration pre-task. Drawing inspiration from visual jigsaw puzzle reconstruction and adapted to the time-series context, this task requires the model to restore the original time-series order from a shuffled sequence of consecutive patches. Let the window size be 𝑇 . For each training sample, a continuous sequence of patches {𝑝 𝑡 , 𝑝 𝑡 +1 , … , 𝑝 𝑡 +𝑇 −1 } is sampled from the patch set 𝑃 . This sequence is then randomly shuffled by a permutation 𝜋 to generate a disordered sequence {𝑝 𝜋 (1) , 𝑝 𝜋 (2) , … , 𝑝 𝜋 (𝑇 )}. The model learns to predict the inverse permutation 𝜋 −1 corresponding to the original time-series order. This study constructs a time-series ranking head 𝑐 𝜃 for task learning. It consists of a two-layer MLP with a hidden dimension of 512 and a dropout rate of 0.1. The concatenated embedding features of 𝑇 patches are fed into the ranking head, which outputs a 𝑇 × 𝑇 Logit matrix 𝑶 , where 𝑂 𝑏,𝑖,𝑗 represents the confidence score of the 𝑖 -th patch at the 𝑗 -th time step in batch 𝑏 . The ranking loss for pre-training is formulated as 
+
+ranking = − 1
+
+𝑀 valid 
+
+> 𝑀 valid
+
+∑
+
+> 𝑏 =1
+> 𝑇
+
+∑
+
+> 𝑖 =1
+
+log exp (𝑂 𝑏,𝑖,𝜋 −1 (𝑖 )
+
+)∑𝑇 𝑗 =1 exp (𝑂 𝑏,𝑖,𝑗 
+
+) (13) where 𝑀 valid denotes the number of valid samples in a batch that contain complete, consecutive 𝑇 -patch sequences, and 𝜋 −1 is the inverse of the original temporal order. This pre-task loss is optimized together with the main anomaly detection loss only during the early training phase, thereby guiding the encoder to capture intrinsic temporal dependencies between adjacent patches and improving final anomaly detection performance. 
+
+3.5. Joint Loss Function 
+
+The overall training objective is a weighted combination of triplet loss and time-series ranking loss. 
+
+total = triplet + 𝜆 ranking (14) where 𝜆 is the weight adjustment factor for the ranking loss. The specific expressions for the two types of loss functions are given below. Triplet loss is used to construct a highly discriminative embedding space, reducing the feature distance between similar time-series patches while increasing the feature differences between dissimilar patches. For any anchor patch 𝑝 𝑖 , the positive sample 𝑝 + 
+
+> 𝑖
+
+is generated by randomly shifting it by ±𝑟 time steps (excluding zero shifts), ensuring that it shares consistent local time-series patterns with 𝑝 𝑖 . For negative samples, the 
+
+𝑝 − 
+
+> 𝑖
+
+strategy employs farthest-negative-sample sampling, selecting the patch in the current mini-batch 𝐵 with the largest cosine distance to the anchor embedding as the negative sample. Compared to random negative sample sampling, this strategy provides stronger contrast constraints, guiding the encoder to learn more discriminative feature representations. Let the encoder 𝑓 𝜃 map the patches to embedded features ℎ = 𝑓 𝜃 (𝑃 ). The 256-dimensional projection head 𝑔 𝜃 further maps the features to the contrastive learning space 𝑧 = 𝑔 𝜃 (ℎ). The specific definition of the triplet loss is 
+
+triplet = 1
+
+𝑀 
+
+> 𝑀
+
+∑
+
+> 𝑖 =1
+
+max {dist( 𝑧 𝑖 , 𝑧 + 
+
+> 𝑖
+
+) − dist( 𝑧 𝑖 , 𝑧 − 
+
+> 𝑖
+
+) + 𝛿, 0} (15)    
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 8 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+> Fig. 3: Training workflow of the PaAno+ model.
+
+where 𝑀 represents the batch size, and the distance function dist( ⋅, ⋅) uses the cosine distance, dist( 𝑎, 𝑏 ) = 1 − cos( 𝑎, 𝑏 ). 𝛿 = 0 .5 is the margin parameter, used to constrain the minimum difference in feature distances between positive and negative samples. This loss function requires that the feature distance between anchor points and negative samples be at least 𝛿 smaller than that between anchor points and positive samples, thereby constructing clear cluster boundaries in the embedding space. Normal time-series patches form compact feature clusters, while anomalous patches, due to their deviation from the normal time-series distribution, fall outside the cluster boundaries, thereby supporting the subsequent calculation of distance-based anomaly scores. As illustrated in Fig. 3, the input time series is partitioned into sequential patches prior to feature extraction using the proposed multiscale encoder. Triplet loss and temporal rearrangement reconstruction loss jointly optimize the entire network. The triplet loss enforces compact feature clustering for homogeneous patches and feature dispersion across dissimilar samples. The rearrangement loss recovers the original temporal order in randomly shuffled patch sequences, thereby excavating fine-grained temporal dependencies. The two loss terms are weighted and aggregated for joint training, with the rearrangement loss weight linearly decaying during the initial training phase. After training convergence, only the learned encoder is preserved for downstream anomaly inference. 
+
+3.6. Memory Banks and Anomaly Score Calculation 
+
+Upon training convergence, the patch encoder 𝑓 𝜃 constructs a discriminative embedding space in which homogeneous normal patches form compact clusters and heterogeneous normal temporal patterns are distributed across disjoint feature regions. In this work, the original memory bank 𝑀 is built from embedding features of all training patches. 
+
+𝑀 = {𝑓 𝜃 (𝑝 𝑡 ) ||| 𝑝 𝑡 ∈ 𝑃 } (16) The memory bank archives store embeddings of normal temporal patterns, which serve as the baseline for anomaly evaluation on test patches. A larger deviation between test patch embeddings and the memorized normal distribution corresponds to a higher anomaly score. To alleviate storage and computational overhead during inference, core-set sampling is adopted to compress the raw memory bank. Specifically, K-means clustering partitions the original memory bank 𝑀 into 𝐾 feature clusters, and the embedding closest to each cluster centroid is selected as the representative prototype to construct a compact, lightweight prototype memory bank. ̂𝑀 = { 𝑚 𝑖 }𝐾 𝑖 =1 (17) This compression strategy substantially reduces memory consumption while preserving the fundamental distribution coverage of normal temporal patterns. As illustrated in Fig. 4, compressing the memory bank to 10% of its original size results in negligible performance degradation. The model maintains stable detection   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 9 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+
+accuracy even at a compression ratio of 1%, demonstrating strong robustness to variations in memory scale. During inference, all patches 𝑃 𝑡 covering each timestamp 𝑡 are first extracted. The patch-level anomaly score is defined as the average cosine distance between the patch embedding and its 𝑘 nearest prototypes retrieved from the compressed memory bank. 
+
+𝑆 (𝑝 𝑡 ) = 1
+
+𝑘 
+
+> 𝑘
+
+∑
+
+> 𝑖 =1
+
+dist (𝑓 𝜃 (𝑝 𝑡 ), 𝑚 (𝑖 )
+
+> 𝑖
+
+) (18) The final anomaly score for each timestamp is computed by averaging the scores of all patches covering that timestamp. 
+
+𝑆 𝑡 ∗ = 1
+
+|𝑃 𝑡 ∗ |∑
+
+> 𝑝 𝑡 ∈𝑃 𝑡 ∗
+
+𝑆 (𝑝 𝑡 ) (19) 
+
+3.7. Evaluation Criteria 
+
+To evaluate the detection performance of PaAno+, this study selected six metrics, grouped into two main categories: interval-level and point-level. The interval-level metrics include: VUS-PR: This metric jointly considers varying classification thresholds and temporal shift tolerance, which comprehensively evaluate the model’s overall anomaly recognition accuracy and abnormal interval localization capability. Its formal definition is given as VUS-PR = ∬𝜏 ∈[0 ,1] ,𝛿 ∈[0 ,Δ] 
+
+PR (𝜏, 𝛿 )d 𝜏 d𝛿 (20) where 𝜏 represents the anomaly detection threshold, 𝛿 is the time-series tolerance offset, Δ is the upper limit of the offset, and PR (𝜏, 𝛿 ) is the precision-recall curve for the corresponding parameters. VUS-ROC: This metric evaluates model ranking performance across diverse decision thresholds under temporal tolerance shifts, with its formal definition presented as VUS-ROC = ∬𝜏 ∈[0 ,1] ,𝛿 ∈[0 ,Δ] 
+
+ROC (𝜏, 𝛿 )d 𝜏 d𝛿 (21) Range-F1: Precision and recall are quantified by the interval overlap between predictions and the ground truth, with the peak F1 value used as the final score. Let ̂ 𝑆 and 𝑆 denote the sets of predicted and ground-truth anomalous intervals, respectively. Its formal definition is expressed as Range-F1 = max 
+
+> 𝜃
+
+2 ⋅ Precision 𝜃 ⋅ Recall 𝜃 
+
+Precision 𝜃 + Recall 𝜃 
+
+(22) where 𝜃 denotes the anomaly decision threshold, and precision and recall are computed using the overlap in duration between predicted and ground-truth anomalous intervals. Point-level metrics include: AUC-PR: This metric measures the area under the precision-recall (PR) curve and is robust against class imbalance inherent to time-series data, whose formal definition is given as AUC-PR = ∫
+
+> 10
+
+𝑃 (𝑅 )d 𝑅 (23) where 𝑅 represents the recall rate, and 𝑃 (𝑅 ) is the precision corresponding to that recall rate. AUC-ROC: This metric calculates the area under the receiver operating characteristic (ROC) curve, which quantifies the model’s overall ranking performance. AUC-ROC = ∫
+
+> 10
+
+TPR (FPR )d( FPR ) (24)   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 10 of 21
+
+PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+Table 1 
+
+Statistics of the TSB-AD benchmark.                                     
+
+> Category Split #TS Avg Length Avg Anomaly Length Avg #Anomalies Anomaly Ratio TSB-AD-U All 870 38814.1 179.5 39.7 2.4% Eval 350 51886.7 321.3 46.6 4.5% Tuning 48 47143.3 185.9 82.6 3.5% TSB-AD-M All 200 107760.4 582.6 71.1 5.1% Eval 180 108826.7 591.2 67.7 5.0% Tuning 20 98164.1 504.7 101.1 5.7%
+
+Point-F1: This metric computes the optimal F1 score based on point-level anomaly detection results across varying classification thresholds. Point-F1 = max 
+
+> 𝜏
+
+2 ⋅ 𝑃 𝜏 ⋅ 𝑅 𝜏 
+
+𝑃 𝜏 + 𝑅 𝜏 
+
+(25) where 𝜏 denotes the threshold for pointwise classification, and 𝑃 𝜏 and 𝑅 𝜏 correspond to the resulting precision and recall at that threshold, respectively. Among the above metrics, the first four are threshold-independent. Notably, all six metrics eliminate pointwise correction operations, thereby preventing evaluation bias. In this work, VUS-PR is adopted as the primary evaluation indicator, while the other five metrics serve as supplementary references. Higher values across all metrics indicate superior anomaly detection performance. 
+
+## 4. Experimentd 
+
+This section presents a comprehensive empirical validation of the proposed method for time-series anomaly detection. It first specifies the experimental datasets, evaluation metrics, and comparative baseline methods, then elaborates on the implementation configurations of the proposed model, and finally provides quantitative results for univariate and multivariate detection tasks. 
+
+4.1. Dataset 
+
+This study uses the TSB-AD benchmark [5] as the experimental dataset, which is designed to address the inherent limitations of conventional evaluation protocols for time-series anomaly detection. The overall statistical attributes of the benchmark are summarized in Table 1. This benchmark consists of two subsets: the univariate TSB-AD-U and the multivariate TSB-AD-M. Specifically, TSB-AD-U includes 350 test sequences with an average length of 51,886.7 timesteps and an anomaly ratio of 4.5%. In comparison, TSB-AD-M comprises 180 test sequences with an average length of 108,826.7 timesteps and an anomaly ratio of 5.0%. All sequences are pre-partitioned into training and test splits, where the training split only contains normal samples and the test split is annotated with accurate anomaly labels. The TSB-AD benchmark eliminates prevalent flaws in raw datasets, including inconsistent annotations and distorted anomaly distributions, and excludes point-adjustment operations that may introduce evaluation bias. Accordingly, it provides a fair and unified evaluation platform for comprehensive comparison among different anomaly detection methods. A data illustration of the benchmark is shown in Table 1. Each subset is further divided into a tuning set and an evaluation set, used for hyperparameter optimization and final performance validation, respectively. All time-series samples have fixed segmentation boundaries, and data segments before the boundaries are designated as training samples. 
+
+4.2. Complexity Analysis 
+
+This section evaluates the computational overhead of PaAno+ under univariate and multivariate time series scenarios in terms of time complexity, space complexity, and model parameter count, as shown in Table 2. The sliding step size is fixed at step = 96 across all experiments; the time series window length is set to 𝑇 = 2 for the univariate setup and 𝑇 = 5 for the multivariate setup. Table 2 summarizes the complexity metrics for the two scenarios. The two variants share identical asymptotic orders of time and space complexity. The multivariate variant incurs only a marginal increase in the number of parameters due 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 11 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection                              
+
+> Table 2
+> Complexity Comparison. Univariate (𝑇 = 2) Multivariate (𝑇 = 5)
+> Time 𝑂 (𝑛𝑡𝑖𝑛 )𝑂 (𝑛𝑡𝑖𝑛 )
+> Space 𝑂 (𝑛𝑡𝑖𝑛 )𝑂 (𝑛𝑡𝑖𝑛 )
+> Param 𝑁 𝑈 =𝑁 𝑀𝑆 +𝑁 𝐶𝑉 +𝑁 𝑃 𝐻 +𝑁 𝑂𝐻 (2) 𝑁 𝑀 =𝑁 𝑀𝑆 +𝑁 𝐶𝑉 +𝑁 𝑃 𝐻 +𝑁 𝑂𝐻 (5)
+
+to the longer time window and cross-variable interaction modules, and the model remains lightweight overall. Specifically, 𝑁 MS denotes the parameter count of the multi-scale encoder, 𝑁 CV that of the cross-variable attention module, 𝑁 PH that of the projection head, and 𝑁 OH that of the temporal ordering head. 
+
+4.3. Baseline Method 
+
+To comprehensively validate the detection performance of the proposed PaAno+, this study includes all baseline methods reported in the TSB-AD benchmark’s univariate and multivariate evaluation protocols, as listed in Tables 3 and 4. These baselines span three mainstream technical paradigms: statistical machine learning, conventional deep neural networks, and Transformer-based architectures. In univariate anomaly detection tasks, the baseline methods employed include statistical and machine learning approaches such as SAND [22], DLinear [59] and NLinear [59]; neural network methods such as TimesNet [25], TranAD [32], FITS [30], DADA [60], KAN-AD [10], PaAno [6], CrossAD [61] and other neural network methods; as well as AnomalyTransformer [31], DCdetector [33], LagLlama [39], OFA [29], PatchTST [34], iTransformer [35], MOMENT (FT/ZS) [36], TimesFM [37], Chronos [38] and other Transformer and foundational model-based methods. In multivariate anomaly detection tasks, baseline methods include: statistical and machine learning methods such as DLinear [59] and NLinear [59]; neural network methods such as TimesNet [25], TranAD [32], FITS [30], DADA [60], KAN-AD [10], CrossAD [61], CATCH [42]; and Transformer and foundational model-based methods such as AnomalyTransformer [31], DCdetector [33], PatchTST [34], OFA [29], and iTransformer [35]. The selected baseline suite includes traditional statistical methods and state-of-the-art deep learning models, enabling a thorough and fair evaluation of PaAno+’s effectiveness and superiority across diverse technical paradigms. 
+
+4.4. Implementation Details 
+
+The multiscale encoder is composed of three parallel convolutional branches with kernel sizes 3, 7, and 15. The first layer is configured with a hidden dimension of 64, and the second layer yields 128-dimensional features followed by adaptive average pooling. Branch outputs are weighted and aggregated, then concatenated with raw branch features, with the first 256 dimensions reserved. A residual linear projection unifies feature dimensions, and the encoder finally outputs a 256-d patch embedding. The cross-variable fusion attention module is exclusively activated for multivariate inputs. It reshapes the 256-d input into a product of the variable count and the per-variable feature dimension, then applies two-headed self-attention with a dropout rate of 0.1. Attention outputs are concatenated with original variable features, and a linear layer projects the concatenated result back to 256 dimensions. The projection head is implemented as a two-layer MLP with 256-d output. The temporal ordering head receives input of size projection dimension × window length and produces an 𝐿 × 𝐿 logit matrix ( 𝐿 denotes the window length) to supervise the patch rearrangement pretext task. Patch configuration for the ordering pretext task varies across univariate and multivariate settings: univariate tasks use a patch length of 64 with two successive windows, while multivariate tasks use a patch length of 96 and five successive windows. The ordering-loss weighting coefficient 𝜆 linearly decays from 1 to 0 over the initial 20 training epochs and is discarded thereafter. The learning rate follows cosine annealing, ranging from 1 × 10 −3 to 1 × 10 −4 , and the total number of training epochs is set to 200. All implementations are developed in PyTorch using the Adam optimizer and a batch size of 512. The triplet margin is fixed at 𝛿 = 0 .5, and the offset radius for positive sample construction is set to 2. Upon convergence, K-means is run on embeddings of all normal training patches, and the top 10% of cluster   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 12 of 21
+
+PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+Table 3 
+
+Sensitivity analysis of patch size. The optimal values for each metric in the table are bolded, and the next-best values are underlined. All experimental results are expressed as percentages.                                                        
+
+> Model Size VUS-PR VUS-ROC Range-F1 AUC-PR AUC-ROC Point-F1 TSB-AD-U 32 42.7 86.2 45.2 36.5 82.2 42.2 64 46.4 89.1 46.5 42.4 86.3 47.4 96 46.4 90.2 48.9 41.4 87.7 48.0
+> 128 46.1 90.7 45.6 38.7 88.4 45.5 TSB-AD-M 32 38.8 80.0 32.9 29.5 71.6 34.5 64 47.6 85.0 39.1 37.4 78.8 43.0 96 47.6 85.0 38.9 37.5 78.9 43.2
+> 128 47.3 82.7 39.8 38.5 77.2 43.1
+
+centroids are retained to build a compact memory prototype set. During inference, each test patch is matched to three memory prototypes via cosine similarity, and the average distance is used as the patch-wise anomaly score. The final pointwise anomaly score is computed by averaging the scores across all patches that cover the corresponding timestamp. All empirical experiments are conducted on a server mounted with an NVIDIA RTX 4090 GPU. 
+
+4.5. Patch Size Sensitivity Analysis 
+
+Table 3 reports the patch-size sensitivity experiments carried out on the TSB-AD tuning subset. Overall detection accuracy varies only slightly with patch length, confirming that on TSB-AD-U and TSB-AD-M, PaAno delivers feasible performance at a patch size of 32, with marginal accuracy gains as patch length increases. For univariate detection, patch sizes of 64 and 96 yield comparable results and outperform sizes of 32 and 128. In the multivariate setting, 64 and 96 are optimal candidates; patch length 96 marginally exceeds 64 on AUC-ROC and Point-F1, whereas excessively small or large patch sizes lead to significant performance deterioration. Based on the above tuning results, the patch size is set to 96 for both univariate and multivariate experiments in subsequent evaluations. 
+
+4.6. Quantitative Results 
+
+4.6.1. Univariate Time Series Anomaly Detection 
+
+Table 4 summarizes quantitative results of all competing approaches evaluated on the TSB-AD-U test set. The proposed PaAno+ achieves optimal scores across all six evaluation metrics (i.e., VUS-PR = 0.55, VUS-ROC = 0.90, Range-F1 = 0.52, AUC-PR = 0.49, AUC-ROC = 0.87, and Point-F1 = 0.54) and comprehensively outperforms the original PaAno and all comparative baselines. Among the statistical machine learning baselines, SNAD performed relatively well, but its overall metrics still fell short of the proposed method. Among the deep network baselines, CrossAD ranked second in overall performance, with a VUS-PR of only 0.45. This model has 0.9 million parameters, which is lower than the 1.1 million in PaAno+, and there is a significant gap in detection accuracy. Various Transformer-based models and foundational large language models performed relatively poorly overall; AnomalyTransformer and DCDetector achieved VUS-PRs of only 0.12 and 0.09, respectively, whilst their parameter counts were significantly higher than that of PaAno+. The proposed PaAno+ achieves detection performance superior to the vast majority of Transformer-based approaches with a parameter count of just 1.1 million, demonstrating that the model successfully balances lightness with detection accuracy. 
+
+4.6.2. Multivariate Time Series Anomaly Detection 
+
+Table 5 presents the quantitative results for all competing methods on the TSB-AD-M test set. PaAno+ retains state-of-the-art performance for multivariate anomaly detection: its VUS-ROC and AUC-ROC attain 0.80 and 0.77, moderately exceeding the corresponding 0.79 and 0.76 of vanilla PaAno. At the same time, the remaining evaluation metrics are comparable to PaAno. Both approaches surpass alternative baseline methods by a noticeable margin. With a total parameter budget of 1.5M, PaAno+ introduces marginal parameter overhead via the embedded multiscale encoder and cross-variable attention module. Yet, these two components substantially strengthen the discriminative capability toward multivariate feature patterns. 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 13 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection                                                                                                                                                                      
+
+> Table 4
+> Performance of each method on the TSB-AD-U Eval dataset. Method Range-Wise Measure ↑Point-Wise Measure ↑Computational Cost ↓
+> VUS-PR VUS-ROC Range-F1 AUC-PR AUC-ROC Point-F1 #Params Time Stat & ML SAND [22] (2022) 0.34 0.76 0.36 0.29 0.73 0.35 0.2M –DLinear [59] (2023) 0.25 0.74 0.22 0.21 0.62 0.26 <0.1M 2.9s NLinear [59] (2023) 0.23 0.72 0.20 0.18 0.62 0.23 <0.1M 5.8s NN TimesNet [25] (2022) 0.26 0.72 0.21 0.18 0.61 0.24 <0.1M 11.2s FITS [30] (2023) 0.26 0.73 0.20 0.17 0.61 0.23 <0.1M 3.1s DADA [60] (2025) 0.31 0.77 0.31 0.29 0.71 0.38 1.84M 0.8s KAN-AD [10] (2025) 0.43 0.82 0.43 0.41 0.80 0.44 <0.1M 12.1s CrossAD [61] (2025) 0.45 0.84 0.41 0.44 0.78 0.47 0.9M 175.8s Transformer TranAD [32] (2022) 0.26 0.68 0.25 0.20 0.57 0.25 1.1M 56.2s AT [31] (2022) 0.12 0.56 0.14 0.08 0.50 0.12 4.8M 48.9s DCdetector [33] (2023) 0.09 0.56 0.10 0.05 0.50 0.10 0.9M 5.8s Lag-Llama [39] (2023) 0.27 0.72 0.31 0.25 0.65 0.30 2.5M 1220.8s OFA [29] (2023) 0.24 0.71 0.20 0.16 0.59 0.22 0.6M 171.1s iTransformer [35] (2024) 0.22 0.74 0.18 0.16 0.61 0.21 0.5M 9.8s MOMENT (FT) [36] (2024) 0.39 0.76 0.35 0.30 0.69 0.35 109.6M 43.6s MOMENT (ZS) [36] (2024) 0.38 0.75 0.36 0.30 0.68 0.35 109.6M 42.9s TimesFM [37] (2024) 0.30 0.74 0.34 0.28 0.67 0.34 203.5M 83.8s Chronos [38] (2024) 0.27 0.73 0.33 0.26 0.66 0.32 8.0M 56.8s PaAno [6] (2026) 0.51 0.88 0.48 0.46 0.85 0.51 0.3M 6.9s PaAno+ (Ours) 0.55 0.90 0.52 0.49 0.87 0.54 1.1M 12.9s
+
+Among the deep network baselines, KAN-AD achieved a VUS-PR of 0.41, ranking third behind PaAno and PaAno+. Among Transformer-based methods, CATCH performed best (VUS-PR = 0.30), but its parameter count was as high as 210.8 million, far exceeding the 1.5 million of PaAno+; AnomalyTransformer and DCdetector achieved VUS-PRs of only 0.12 and 0.10, respectively, with detection performance significantly inferior to that of our method. Among statistical and machine learning methods, both DLinear and NLinear achieved a VUS-PR of 0.29, showing a clear gap compared to PaAno+. Overall empirical evidence verifies that PaAno+ matches or moderately exceeds vanilla PaAno on multivariate detection benchmarks. Benefiting from far fewer learnable parameters than prevalent large Transformer architectures, the proposed framework achieves competitive detection precision, validating the effectiveness and lightweight merits of the multiscale encoder, cross-variable attention, and the temporal rearrangement pretext task under multivariate modeling settings. 
+
+4.7. Ablation Experiment 
+
+To verify the individual efficacy of three core components in PaAno+, namely the multiscale temporal encoder, cross-variable fusion attention, and temporal rearrangement pretext task, ablation studies are implemented on the evaluation splits of TSB-AD-U and TSB-AD-M. All ablated variants inherit the original hyperparameter configuration and experimental pipeline, with VUS-PR as the primary evaluation metric. 
+
+4.7.1. Validity of Multiscale Encoders 
+
+To validate the efficacy of the parallel-branch configuration and the cross-scale fusion mechanism within the multiscale encoder, two model variants are constructed for an ablation study. The first variant eliminates the multiscale structure and adopts four stacked serial convolutional layers (w/o Multiscale). The second variant retains dual parallel convolutional branches and cross-scale attention fusion (w/o dual-scale). As quantified in Table 6, on the univariate TSB-AD-U dataset, the full three-scale PaAno+ model achieves a VUS-PR of 54.6%, while the w/o Multiscale variant declines to 54.2% and the two-scale variant drops to 54.0%. The two-scale structure yields a 0.2% performance improvement over the non-multiscale   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 14 of 21
+
+PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+Table 5 
+
+Performance of each method on the TSB-AD-M Eval dataset. Method Range-Wise Measure ↑ Point-Wise Measure ↑ Computational Cost ↓
+
+VUS-PR VUS-ROC Range-F1 AUC-PR AUC-ROC Point-F1 #Params Time Stat & ML DLinear [59] (2023) 0.29 0.70 0.26 0.27 0.66 0.32 <0.1M 14.8s NLinear [59] (2023) 0.29 0.70 0.28 0.24 0.65 0.31 <0.1M 15.0s NN TimesNet [25] (2022) 0.19 0.64 0.17 0.13 0.56 0.20 <0.1M 52.1s FITS [30] (2023) 0.21 0.66 0.16 0.15 0.58 0.22 <0.1M 16.7s DADA [60] (2025) 0.31 0.73 0.25 0.31 0.69 0.35 1.84M 2.1s KAN-AD [10] (2025) 0.41 0.75 0.41 0.38 0.73 0.42 <0.1M 31.9s CrossAD [61] (2025) 0.33 0.77 0.37 0.34 0.74 0.38 0.9M 194.7s Transformer TranAD [32] (2022) 0.18 0.65 0.21 0.14 0.59 0.21 1.1M 50.4s AT [31] (2022) 0.12 0.57 0.14 0.07 0.52 0.12 4.8M 55.8s DCdetector [33] (2023) 0.10 0.56 0.10 0.06 0.50 0.10 0.9M 15.0s OFA [29] (2023) 0.21 0.63 0.17 0.15 0.55 0.21 81.9M 532.9s PatchTST [34] (2023) 0.28 0.71 0.26 0.26 0.65 0.32 0.5M 66.9s iTransformer [35] (2024) 0.29 0.70 0.23 0.23 0.63 0.28 0.6M 24.4s CATCH [42] (2025) 0.30 0.73 0.27 0.24 0.67 0.30 210.8M 40.1s PaAno [6] (2026) 0.43 0.79 0.41 0.38 0.76 0.43 0.3M 12.8s PaAno+ (Ours) 0.42 0.80 0.41 0.38 0.77 0.43 1.5M 23.5s 
+
+Table 6 
+
+Ablation experiment results. The optimal results for each metric are indicated in bold. All experimental values are presented as percentages (%). Dataset Ablation Variant VUS-PR VUS-ROC Range-F1 AUC-PR AUC-ROC Point-F1 TSB-AD-U w/o MultiScale 54.2 89.9 49.6 47.8 87.7 52.9 w/o dual-scale 54.0 89.6 51.9 48.1 87.4 52.7 w/o pretext_loss 52.8 88.7 50.5 46.4 86.5 51.8 PaAno+ (Ours) 54.6 89.6 51.9 48.7 87.5 53.7 
+
+TSB-AD-M w/o MultiScale 39.8 78.4 38.3 35.3 75.3 40.8 w/o dual-scale 41.0 79.4 40.4 36.2 66.3 42.3 w/o Attention 41.4 79.7 40.3 37.4 76.6 42.3 w/o pretext_loss 39.1 78.0 38.4 34.3 74.7 40.2 PaAno+ (Ours) 42.3 79.8 41.0 37.5 76.7 43.1 
+
+structure, and the three-scale structure further improves the metric by 0.6% compared with the two-scale counterpart. On the multivariate TSB-AD-M dataset, the full model achieves a VUS-PR of 42.3%, whereas the w/o Multiscale variant suffers a 2.5% drop to 39.8%, and the two-scale variant achieves 41.0% with a 1.3% drop. The three-scale structure outperforms the two-scale structure by 1.3% on multivariate tasks. The experimental observations lead to three key conclusions. First, the multiscale encoder delivers stronger performance gains on multivariate tasks, as anomalies in multivariate time series exhibit richer multiscale temporal structure. Second, the three-scale architecture exhibits distinct superiority over the two-scale counterpart. Parallel branches with diverse receptive fields can comprehensively capture local and global anomalous temporal patterns, compensating for the two-scale structure’s insufficient feature coverage. Third, the cross-scale attention fusion mechanism facilitates the interaction and complementary integration of multiscale features, thereby effectively strengthening the model’s feature representation capability. Overall, the three-branch parallel convolution architecture, integrated with cross-scale attention fusion, has proven to be both rational and effective. 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 15 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection   
+
+> Fig. 4: Parameter sensitivity analysis of the PaAno+ model’s Top-𝑘 values and memory bank size on the TSB-AD-U and TSB-AD-M Eval datasets.
+
+4.7.2. Cross-Variable Attention Contributions 
+
+To explore the contribution of cross-variable fusion attention to multivariate anomaly detection, an ablated variant (w/o Attention) is established by removing the cross-variable attention module while preserving the multiscale encoder and temporal ordering pretext task. The corresponding experimental results are presented in Table 6. On the TSB-AD-M dataset, removing cross-variable attention reduces the model’s VUS-PR from 42.3% to 41.4% (a 0.9% drop). It decreases Point-F1 from 43.1% to 42.3% (a 0.8% drop), with consistent declines across other evaluation metrics. These results confirm that cross-variable attention enhances the model’s ability to capture coupling anomalies across variables by explicitly modeling inter-variable dependencies. Since univariate time series contain no additional variable dimensions, this module is disabled for univariate tasks. Therefore, cross-variable attention is a core component enabling PaAno+ to achieve superior performance in multivariate time-series anomaly detection. 
+
+4.7.3. The Role of Time-series Sorting Tasks 
+
+To verify the effectiveness of the proposed temporal sequence reconstruction pretext task, a comparative variant (w/o pretext_loss) is designed that replaces the proposed window-level sequence reconstruction task with the patch-adjacency binary classification task used by vanilla PaAno. This variant only identifies the temporal adjacency between paired patches, without reconstructing the overall temporal order of the shuffled windows. As shown in Table 6, the full PaAno+ model achieves a VUS-PR of 54.6%, while the variant with a modified supervision task drops to 52.8%, resulting in a 1.8% performance degradation. For the TSB-AD-M dataset, the full model’s VUS-PR of 42.3% decreases to 39.1% after task replacement, a 3.2% degradation. These results demonstrate that the temporal ordering reconstruction task provides more rigorous and structured supervision signals than patch-level binary classification. The window ordering task forces the model to recover the inherent temporal order of shuffled windows, driving the network to learn global temporal dependencies. In contrast, patch adjacency binary classification focuses only on local temporal relationships and fails to capture long-range temporal correlations. The performance degradation is more pronounced in multivariate scenarios, attributed to the dual coupling of temporal dependencies and inter-variable correlations in multivariate time series. Such complex characteristics rely heavily on comprehensive ordering supervision signals to optimize discriminative feature learning. 
+
+4.8. Hyperparameter Sensitivity Analysis 
+
+This section conducts a hyperparameter sensitivity analysis across four core configurations of PaAno+: memory compression ratio, multiscale convolutional kernel combination, number of nearest neighbors 𝑘 ,and temporal window length 𝑇 . All experiments are performed on the evaluation splits of the TSB-AD-U and TSB-AD-M datasets. PaAno+ exhibits superior robustness to hyperparameters and maintains stable detection performance across diverse parameter settings. Fig. 4 shows the sensitivity results for the memory bank compression ratio and the number of nearest neighbors. In practical industrial scenarios, time-series data features often exhibit slow distributional drift due to dynamic environmental changes. To address this issue, PaAno+ integrates a training-free online memory bank updating mechanism based on queue management. This strategy continuously updates normal feature patches and removes outdated historical features, ensuring the memory bank stays in sync with the real-time data distribution.      
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 16 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+> Fig. 5: Sensitivity analysis of the performance of univariate and multivariate time-series anomaly detection with respect to window length 𝑇 . All results are presented as percentages (%).
+
+The nearest-neighbor number 𝑘 and the memory compression ratio are two critical control parameters for the updating mechanism. Model performance fluctuates slightly when 𝑘 varies from 1 to 5. The setting 𝑘 = 3 
+
+achieves a favorable trade-off between detection accuracy and operational stability and is adopted as the default configuration for online inference. When the memory compression ratio decreases from 10% to 1%, the overall performance degradation is less than 1.5%, enabling flexible configuration in line with practical hardware storage constraints. The maximum memory bank capacity is determined by the compression ratio, formulated as 𝑟 × 𝑁 , where 𝑁 denotes the total number of original patches. During feature updates, the model maintains a fixed memory scale via a first-in, first-out queue management scheme combined with periodic resampling and K-means reclustering. This design empowers the model to adapt to non-stationary temporal data without repeated retraining, effectively reducing redundant computational overhead. The temporal sequence restoration pretext task shuffles consecutive 𝑇 -patch windows and reconstructs their original order via self-supervised learning. Comparative results with 𝑇 ∈ {2 , 3, 5, 7} are illustrated in Fig. 5. The model achieves stable performance across different window sizes, with no significant drop in accuracy at 𝑇 = 7 compared with 𝑇 = 3 and 𝑇 = 5 , validating the strong robustness of the sequence ordering loss to variations in window size. Nevertheless, an excessively large 𝑇 increases the input dimension of the sequence reconstruction head and raises computational complexity, thereby increasing training and inference latency. To balance detection accuracy and computational efficiency, 𝑇 = 2 and 𝑇 = 5 are adopted for univariate and multivariate tasks, respectively. The sorting loss weight 𝜆 balances the optimization objective between the self-supervised pretext task and the primary anomaly detection task. Sensitivity experiments with 𝜆 ∈ {0 .1, 0.5, 1, 2} demonstrate that 𝜆 = 1 yields the optimal overall performance for both univariate and multivariate detection. Slight performance fluctuations are observed under alternative 𝜆 values, verifying the model’s low sensitivity to this hyperparameter. Such stability effectively reduces parameter tuning costs for industrial deployment. Accordingly, 𝜆 = 1 is set as the default configuration. To investigate the optimization effect of multiscale kernel configuration on patch representation learning, this study fixes the encoder depth and channel dimension. It conducts comparative experiments with four groups of convolutional kernel combinations. The default kernel setting of PaAno+ is (3, 7, 15), and the comparison groups include (3, 5, 9), (5, 9, 19), and (7, 15, 25). Detailed quantitative results are reported in Table 7. On the TSB-AD-U dataset, the proposed (3, 7, 15) configuration achieves optimal or suboptimal results across all six evaluation metrics, with VUS-PR of 54.0%, VUS-ROC of 89.0%, Range-F1 of 51.7%, AUC-PR of 48.0%, AUC-ROC of 86.2%, and Point-F1 of 52.9%. Compared with the second-best (3, 5, 9) setting, the proposed configuration improves VUS-PR by 1.6%, Range-F1 by 1.6%, AUC-PR by 2.0%, and Point-F1 by 1.2%, respectively. This indicates that kernel combinations with medium receptive-field spans are better suited to capturing local anomalous patterns in univariate time series. The small-scale kernel combination (3, 5, 9) maintains competitive performance, demonstrating the superiority of fine-grained kernels for detecting abrupt local anomalies. In contrast, the large-scale combination (7, 15, 25) causes significant performance degradation, as excessive receptive fields smooth subtle short-term temporal variations and impair the model’s ability to characterize anomalies in a fine-grained manner.                                                          
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 17 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection
+> Table 7
+> Hyperparameter sensitivity analysis for different combinations of convolutional kernels. The optimal and suboptimal values for each metric are indicated in bold and underlined, respectively. All experimental results are presented as percentages (%). Dataset Ablation Variant VUS-PR VUS-ROC Range-F1 AUC-PR AUC-ROC Point-F1 TSB-AD-U w/o kernel (3,5,9) 53.0 89.4 51.2 46.9 87.2 51.8 w/o kernel (5,9,19) 53.0 89.3 51.1 47.1 87.2 52.7 w/o kernel (7,15,25) 53.3 88.9 50.2 47.0 86.8 52.3 PaAno+ (3,7,15) 54.6 89.6 51.9 48.7 87.5 53.7
+> TSB-AD-M w/o kernel (3,5,9) 41.6 79.4 40.7 36.6 76.2 42.5 w/o kernel (5,9,19) 40.1 79.2 39.0 35.3 76.1 40.7 w/o kernel (7,15,25) 40.5 79.6 39.9 35.8 76.4 41.1 PaAno+ (3,7,15) 42.3 79.8 41.0 37.5 76.7 43.1
+
+On the TSB-AD-M dataset, the (3, 7, 15) kernel configuration outperforms all baseline variants across all metrics, achieving VUS-PR of 42.3%, VUS-ROC of 79.8%, Range-F1 of 41.0%, AUC-PR of 37.5%, AUC-ROC of 76.7%, and Point-F1 of 43.1%. Although the performance gaps among different kernel combinations narrow in multivariate scenarios, the (5, 9, 19) and (7, 15, 25) combinations still exhibit VUS-PR that are 2.2% and 1.8% lower than the proposed setting, respectively. This phenomenon is attributed to the inherent cross-variable coupling in multivariate time series, which weakens the model’s sensitivity to variations in individual kernel scales. By combining univariate and multivariate experimental results, the (3, 7, 15) kernel combination achieves an optimal balance between multiscale feature learning. The small kernel of 3 captures fine-grained short-term anomalies, the medium kernel of 7 adapts to conventional periodic temporal patterns, and the large kernel of 15 excavates long-range contextual dependencies. This hierarchical multiscale design enables the encoder to integrate coarse and fine temporal features, providing robust representations for both self-supervised pretext-task optimization and downstream anomaly detection. In conclusion, PaAno+ achieves stable, optimal performance across a wide range of hyperparameters and requires minimal parameter tuning. Its outstanding robustness and practicality will satisfy the deployment requirements of real-world industrial anomaly detection tasks. 
+
+## 5. Conclusion 
+
+This study proposes an enhanced, lightweight anomaly detection framework, namely PaAno+, to address the inherent limitations of the original PaAno model in receptive-field adaptive matching, cross-variable dependency modeling, and pretext-task supervision. The proposed framework integrates three core designs: a multiscale temporal encoder, a cross-variable fusion attention module, and a sequence reconstruction-based self-supervised pretext task. By embedding parallel multiscale convolutional branches with cross-scale adaptive attention fusion, variable-dimensional multi-head self-attention, and window-level temporal-order restoration learning, PaAno+ substantially strengthens the representation and modeling capabilities for complex anomalous patterns in both univariate and multivariate time series. Extensive evaluations on the TSB-AD benchmark validate the superiority of PaAno+. In univariate anomaly detection tasks, PaAno+ achieves a VUS-PR of 0.54, demonstrating substantial performance improvements over vanilla PaAno and other baselines. For multivariate detection tasks, PaAno+ achieves VUS-ROC and AUC-ROC scores of 0.80 and 0.77, respectively, with consistent performance gains over the original model. Ablation studies verify the individual efficacy and synergistic effects of all core modules. With only 1.1M and 1.5M parameters for univariate and multivariate tasks, PaAno+ exhibits a much more compact architecture than prevailing Transformer-based detectors. Moreover, hyperparameter sensitivity experiments demonstrate the superior performance stability and robustness of PaAno+ under diverse parameter settings. Future research directions will focus on lightweight network optimization, adaptive receptive field tuning, and the construction of a universal contrastive learning framework. In addition, further validations on diverse   
+
+> Youji Zhu et al.: Preprint submitted to Elsevier Page 18 of 21
+
+PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+real-world industrial datasets will be conducted to improve the generalization and practical adaptability of the proposed method. 
+
+## References 
+
+[1] Z. H. Yue, Y. J. Wang, J. Y. Duan, T. M. Yang, C. R. Huang, Y. H. Tong, and B. X. Xu. Ts2vec: Towards universal representation of time series. In AAAI , 2022. URL https://cdn.aaai.org/ojs/20881/20881-13-24894-1-2-20220628. pdf .[2] F. Jia, K. Wang, Y. Zheng, D. Cao, and Y. Liu. Gpt4mts: Prompt-based large language model for multimodal time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, pages 23343–23351, 2024. doi: 10.1609/aaai.v38i21.30383. [3] J. Paparrizos, P. Boniol, T. Palpanas, R. S. Tsay, A. Elmore, and M. J. Franklin. Volume under the surface: A new accuracy evaluation measure for time-series anomaly detection. Proc. VLDB Endow. , 15(11):2774–2787, 2022. [4] Y. Wang, L. Zhang, T. Si, G. Bishop, and H. Gong. Anomaly detection in high-dimensional time series data with scaled bregman divergence. Algorithms , 18:62, 2025. doi: 10.3390/a18020062. [5] Q. Liu and J. Paparriz. The elephant in the room: Towards a reliable time-series anomaly detection benchmark. In 
+
+Advances in Neural Information Processing Systems , volume 37, pages 108231–108261, 2024. [6] J. Park and S. Kang. Paano: Patch-based representation learning for time-series anomaly detection. In Proceedings of the International Conference on Learning Representations (ICLR) , 2026. URL https://openreview.net/forum?id= NXThkM7Iym .[7] N. Y. Lu, F. R. Gao, Y. Yang, and F. L. Wang. Pca-based modeling and on-line monitoring strategy for uneven-length batch processes. Industrial and Engineering Chemistry Research , 43(13):3343–3352, 2004. doi: 10.1002/aic.10024. [8] E. J. Candès, X. D. Li, Y. Ma, and J. Wright. Robust principal component analysis? Journal of the ACM , 58(3):1–37, 2011. [9] T. Yairi, Y. Kato, and K. Hori. Fault detection by mining association rules from house-keeping data. In Proceedings of the 6th International Symposium on Artificial Intelligence, Robotics and Automation in Space (i-SAIRAS) , pages 18–21, 2001. doi: 10.1.1.102.7045. [10] J. Paparrizos and L. Gravano. k-shape: Efficient and accurate clustering of time series. In Proceedings of the 2015 ACM SIGMOD International Conference on Management of Data , pages 1855–1870, 2015. doi: 10.1145/2723372.2737793. [11] Z. He, X. Xu, and S. Deng. Discovering cluster-based local outliers. Pattern recognition letters , 24(9-10):1641–1650, 2003. [12] Z. Li, H. Ma, and Y. Mei. A unifying method for outlier and change detection from data streams based on local polynomial fitting. In Pacific-Asia Conference on Knowledge Discovery and Data Mining(PAKDD) , pages 150–161, 2007. doi: 10.1007/978-3-540-71701-0_17. [13] H. Ren, B. Xu, and Y. Wang. Time-series anomaly detection service at microsoft. In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining , pages 3009–3017, 2019. doi: 10.1145/3292500.3342043. [14] F. T. Liu, K. M. Ting, and Z. H. Zhou. Isolation forest. In 2008 Eighth IEEE International Conference on Data Mining ,pages 413–422, 2008. doi: 10.1109/ICDM.2008.17. [15] S. Hariri, M. C. Kind, and R. J. Brunner. Extended isolation forest. IEEE Transactions on Knowledge and Data Engineering , 33(4):1479–1489, 2021. doi: 10.1109/TKDE.2019.2947676. [16] M. M. Breunig, H. P. Kriegel, R. T. Ng, and J. Sander. Lof: identifying density-based local outliers. In Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data , pages 93–104, 2000. doi: 10.1145/342009.335388. [17] S. Ramaswamy, R. Rastogi, and K. Shim. Efficient algorithms for mining outliers from large data sets. In Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data , pages 427–438, 2000. doi: 10.1145/342009.335437. [18] M. Goldstein and A. Dengel. Histogram-based outlier score (hbos): A fast unsupervised anomaly detection algorithm. 
+
+KI-2012: poster and demo track , 1:59–63, 2012. [19] Z. Li, Y. Zhao, N. Botta, C. Ionescu, and X. Hu. Copod: Copula-based outlier detection. In 2020 IEEE International Conference on Data Mining , pages 1118–1123, 2020. doi: 10.1109/ICDM50108.2020.00135. [20] C. C. M. Yeh, Y. Zhu, L. Ulanova, N. Begum, Y. Ding, H. A. Dau, D. F. Silva, A. Mueen, and E. Ke. Matrix profile i: All pairs similarity joins for time series: A unifying view that includes motifs, discords and shapelets. In 2016 IEEE 16th International Conference on Data Mining , pages 1317–1322, 2016. doi: 10.1109/ICDM.2016.0179. [21] P. Boniol and T. Palpanas. Series2graph: Graph-based subsequence anomaly detection for time series. Proceedings of the VLDB Endowment , 13(12):1821–1834, 2020. doi: 10.14778/3407790.3407792. [22] P. Boniol, J. Paparrizos, T. Palpanas, and M. J. Franklin. Sand: Streaming subsequence anomaly detection. Proceedings of the VLDB Endowment , 14(10):1717–1729, 2021. doi: 10.14778/3467861.3467863. [23] Z. Wang, W. Yan, and T. Oates. Time series classification from scratch with deep neural networks: A strong baseline. In 
+
+2017 International Joint Conference on Neural Networks , pages 1578–1585, 2017. doi: 10.1109/IJCNN.2017.7966039. [24] M. Munir, S. A. Siddiqui, A. Dengel, and S. Ahmed. Deepant: A deep learning approach for unsupervised anomaly detection in time series. IEEE Access , 7:1991–2005, 2019. doi: 10.1109/ACCESS.2018.2886457. [25] H. X. Wu, T. G. Hu, Y. Liu, H. Zhou, J. M. Wang, and M. S. Long. Timesnet: Temporal 2d-variation modeling for general time series analysis. In International Conference on Learning Representations (ICLR) , 2023. URL 
+
+https://openreview.net/forum?id=ju_Uqw384Oq .[26] P. Malhotra, L. Vig, G. Shroff, and P. Agarwal. Long short-term memory networks for anomaly detection in time series. In 
+
+European Symposium on Artificial Neural Networks, Computational Intelligence and Machine Learning (ESANN) , pages 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 19 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+89–94, 2015. URL https://www.esann.org/sites/default/files/proceedings/legacy/es2015-56.pdf .[27] M. Sakurada and T. Yairi. Anomaly detection using autoencoders with nonlinear dimensionality reduction. In MLSDA 2nd Workshop on Machine Learning for Sensory Data Analysis , pages 4–11, 2014. doi: 10.1145/2689746.2689747. [28] J. Audibert, P. Michiardi, F. Guyard, S. Marti, and M. A. Zuluaga. Usad: Unsupervised anomaly detection on multivariate time series. In Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining ,pages 3395–3404, 2020. doi: 10.1145/3394486.3403392. [29] Y. Su, Y. J. Zhao, C. H. Niu, R. Liu, W. Sun, and D. Pei. Robust anomaly detection for multivariate time series through stochastic recurrent neural network. In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining , pages 2828–2837, 2019. doi: 10.1145/3292500.3330672. [30] Z. J. Xu, A. L. Zeng, and Q. Xu. Fits: Modeling time series with 10k parameters. In International Conference on Learning Representations (ICLR) , 2024. URL https://openreview.net/forum?id=h8eTPQz2jI .[31] J. H. Xu, H. X. Wu, J. M. Wang, and M. S. Long. Anomaly transformer: Time series anomaly detection with association discrepancy. In International Conference on Learning Representations (ICLR) , 2022. URL https://openreview.net/ forum?id=LzQQ89U1qm_ .[32] S. Tuli, G. Casale, and N. R. Jennings. Tranad: Deep transformer networks for anomaly detection in multivariate time series data. Proceedings of the VLDB Endowment , 15(6):1201–1214, 2022. doi: 10.14778/3514061.3514067. [33] Y. Y. Yang, C. L. Zhang, T. Zhou, Q. S. Wen, and L. Sun. Dcdetector: Dual attention contrastive representation learning for time series anomaly detection. In Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pages 3033–3045, 2023. doi: 10.1145/3580305.3599295. [34] Y. Q. Nie, N. H. Nguyen, P. Sinthong, and J. Kalagnanam. A time series is worth 64 words: Long-term forecasting with transformers. In International Conference on Learning Representations (ICLR) , 2023. URL https://openreview.net/ forum?id=Jbdc0vTOcol .[35] Y. Liu, T. G. Hu, H. R. Zhang, H. X. Wu, S. Y. Wang, L. T. Ma, and M. S. Long. itransformer: Inverted transformers are effective for time series forecasting. In International Conference on Learning Representations (ICLR) , 2024. URL 
+
+https://openreview.net/pdf?id=JePfAI8fah .[36] M. Goswami, K. Szafer, A. Choudhry, Y. F. Cai, S. Li, and A. Dubrawski. Moment: A family of open time-series foundation models. In Proceedings of the 41st International Conference on Machine Learning (ICML) , 2024. URL 
+
+https://openreview.net/pdf?id=FVvf69a5rx .[37] A. Das, W. H. Kong, R. Sen, and Y. C. Zhou. A decoder-only foundation model for time-series forecasting. In Proceedings of the 41st International Conference on Machine Learning (ICML) , 2024. URL https://openreview.net/forum?id= jn2iTJas6h .[38] A. F. Ansari, L. Stella, A. C. Turkmen, X. Y. Zhang, P. Mercado, H. B. Shen, O. Shchur, S. S. Rangapuram, S. P. Arango, S. Kapoor, J. Zschiegner, D. C. Maddix, H. Wang, M. W. Mahoney, K. Torkkola, A. G. Wilson, M. Bohlke-Schneider, and B. Wang. Chronos: Learning the language of time series. Transactions on Machine Learning Research (TMLR) , 2024. URL https://openreview.net/forum?id=gerNCVqqtR .[39] K. Rasul, A. Ashok, A. R. Williams, H. Ghonia, R. Bhagwatkar, A. Khorasani, B. M. J. Darvishi, G. Adamopoulos, R. Riachi, N. Hassen, M. Biloš, S. Garg, A. Schneider, N. Chapados, A. Drouin, V. Zantedeschi, Y. Nevmyvaka, and I. Rish. Lag-llama: Towards foundation models for probabilistic time series forecasting. In R0-FoMo Workshop at NeurIPS 2023 , 2023. URL https://openreview.net/forum?id=jYluzCLFDM .[40] Z. Z. Darban, G. I. Webb, S. R. Pan, C. C. Aggarwal, and M. Salehi. Deep learning for time series anomaly detection: A survey. ACM Computing Surveys , 57(1):1–42, 2024. doi: 10.1145/3735790.3735791. [41] B. Schölkopf, A. J. Smola, R. C. Williamson, and P. L. Bartlett. New support vector algorithms. Neural Computation ,12(5):1207–1245, 2000. doi: 10.1162/089976600300015565. [42] X. J. Wu, X. F. Qiu, Z. Y. Li, Y. H. Wang, J. L. Hu, C. J. Guo, H. Xiong, and B. Yang. Catch: Channel-aware multivariate time series anomaly detection via frequency patching. In ICLR , 2025. URL https://openreview.net/forum? id=OY7NBoHUcy .[43] Z. Zhong, Z. Yu, Y. Yang, W. Wang, K. Yang, and C. L. P. Chen. Patchad: A lightweight patch-based mlp-mixer for time series anomaly detection. IEEE Transactions on Big Data , 11(6):3460–3473, 2025. doi: 10.1109/TBDATA.2025.3596745. [44] F. H. Ismail, B. Lucas, G. Forestier, C. Pelletier, D. F. Schmidt, J. Weber, G. I. Webb, L. Idoumghar, P. A. Muller, and F. Petitjean. Inceptiontime: Finding alexnet for time series classification. Data Mining and Knowledge Discovery , 2020. doi: 10.1007/s10618-020-00710-y. [45] S. Xia, W. Sun, X. Zou, P. Chen, D. Ma, H. Xu, M. Chen, and H. Li. Mfam-ad: An anomaly detection model for multivariate time series using attention mechanism. PeerJ Computer Science , 2024. doi: 10.7717/peerj-cs.2201. [46] B. Zhang, B. Qi, J. Wang, and G. Liang. An improved gaussian mixture-probability hypothesis density filter for underwater multiple target tracking in dense clutter scenario. In 2024 OES China Ocean Acoustics , pages 1–7, 2024. doi: 10.1109/COA58979.2024.10723628. [47] H. F. Lee, Z. X. Zeng, Z. P. Qiu, W. F. Zhu, and R. L. Xiao. Cscad: Modeling cross-scale sequence correlations for multivariate time series anomaly detection. Information Processing and Management , 2025. doi: 10.1016/j.ipm.2025. 104315. [48] W. S. Gao, X. Y. Wang, Y. Wang, and X. C. Jing. Dual-stream attention-enhanced memory networks for video anomaly detection. Sensors , 25(17), 2025. doi: 10.3390/s25175496. [49] Z. Z. Darban, G. I. Webb, S. Pan, C. C. Aggarwal, and M. Salehi. Carla: Self-supervised contrastive representation learning for time series anomaly detection. Pattern Recognition , 157, 2025. doi: 10.1016/j.patcog.2024.110874. 
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 20 of 21 PaAno+: Multiscale Encoding and Cross-Variable Attention for Time Series Anomaly Detection 
+
+[50] X. Y. Yang, Z. G. Zhang, and R. Y. Cui. Timeclr: A self-supervised contrastive learning framework for univariate time series representation. Knowledge-Based Systems , 245, 2022. doi: 10.1016/j.knosys.2022.108606. [51] G. Woo, C. H. Liu, D. Sahoo, A. Kumar, and S. C. H. Hoi. Cost: Contrastive learning of disentangled seasonal-trend representations for time series forecasting. In ICLR , 2022. URL https://openreview.net/forum?id=PilZY3omXV2 .[52] X. Zhang, Z. Y. Zhao, T. Tsiligkaridis, and M. Zitnik. Tf-c: Time-frequency contrastive learning for time series. In 
+
+NeurIPS , 2022. URL https://openreview.net/forum?id=OJ4mMfGKLN .[53] Y. S. Dai, H. Wang, K. Rafferty, I. Spence, and B. Quinn. Tdsrl: Time series dual self-supervised representation learning for anomaly detection from different perspectives, 2024. URL httpshdl.handle.net/10419/289582 .[54] Q. Wang, H. Q. Zhu, W. Zhang, F. Jiang, X. L. Wang, and H. Huang. Maet: A generalizable masked autoencoding framework for anomaly detection in time-series data. Journal of Signal Processing Systems , 97:281–291, 2025. doi: 10.1007/s11265-025-01968-5. [55] Y. C. Fang, J. D. Xie, Y. Zhao, L. Chen, Y. J. Gao, and K. Zheng. Tfmae: Temporal-frequency masked autoencoders for time series anomaly detection. In Proceedings of the 40th IEEE International Conference on Data Engineering (ICDE), Utrecht, Netherlands , pages 1228–1241, 2024. doi: 10.1109/ICDE60146.2024.00099. [56] J. Kim, K. Park, S. Yun, and S. Lee. Ppt: Patch order do matters in time series pretext task. In Proceedings of the International Conference on Learning Representations (ICLR), Singapore , 2025. URL https://openreview.net/forum? id=7zwIEbSTDy .[57] Y. Ling and H. Shenda. Unsupervised time-series representation learning with iterative bilinear temporal-spectral fusion. In Proceedings of the 39th International Conference on Machine Learning, PMLR , volume 162, pages 25038–25054, 2022. URL http://proceedings.mlr.press/v162/yang22e.html .[58] Z. J. Zhong, Z. W. Yu, X. Xi, Y. Xu, W. M. Cao, Y. Y. Yang, K. X. Yang, and J. You. Simad: A simple dissimilarity-based approach for time-series anomaly detection. IEEE Transactions on Neural Networks and Learning Systems , 36(11): 19669–19680, 2025. doi: 10.1109/TNNLS.2025.3590220. [59] A. Zeng, M. Chen, L. Zhang, and Q. Xu. Are transformers effective for time series forecasting? In Proceedings of the AAAI conference on artificial intelligence , volume 37, pages 11121–11128, 2023. [60] Q. C. Shentu, B. B. Li, K. Zhao, Y. Shu, Z. W. Rao, L. J. Pan, B. Yang, and C. J. Guo. Towards a general time series anomaly detector with adaptive bottlenecks and dual adversarial decoders. In International Conference on Learning Representations (ICLR) , 2025. URL https://openreview.net/forum?id=aKcd7ImG5e .[61] B. B. Li, Q. C. Shentu, Y. Shu, H. Zhang, M. Li, N. Jin, B. Yang, and C. J. Guo. Crossad: Time series anomaly detection with cross-scale associations and cross-window modeling. In In Advances in Neural Information Processing Systems (NeurIPS 2025) , 2025. URL https://nips.cc/virtual/2025/loc/san-diego/poster/116814 .
+
+Youji Zhu et al.: Preprint submitted to Elsevier Page 21 of 21
