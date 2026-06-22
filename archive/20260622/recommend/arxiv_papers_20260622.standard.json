@@ -1,0 +1,392 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-22T22:45:51.043079+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2606.17106v1",
+      "source": "arxiv",
+      "title": "Informative Missingness to Generate Irregular Clinical Time Series",
+      "abstract": "Laboratory tests in electronic health records are collected irregularly, and the absence of a test order can be as informative as the measurement itself. Such missingness reflects clinicians' decisions and patient physiology, making it important to model it directly rather than treat it as a preprocessing artifact. Here we present a diffusion-based approach for generating clinical time series that jointly models laboratory values and their observation patterns using the public Data Analytics Challenge on Missing Data Imputation (DACMI) benchmark derived from MIMIC-III. To preserve realistic sampling, we align chart times into 4-hour intervals and segment admissions into 7-day windows, producing trajectories that pair each lab value with a corresponding observation indicator. Standard transformations and normalization are applied to stabilize training. Our method extends the TimeDiff framework to learn continuous lab values and discrete missingness patterns through complementary diffusion objectives. Experiments show that the generated data closely match real patient trajectories across individual lab distributions and joint value-missingness embeddings, demonstrating that diffusion models can capture clinically meaningful dependencies between patient physiology and clinicians' testing behavior under MNAR-like (missing-not-at-random) missingness. These preliminary results indicate that our model can serve as an initial component toward developing clinical foundation models. By producing synthetic priors that preserve key physiology-missingness relationships, this work motivates the subsequent training of Prior-Data Fitted Networks capable of leveraging informative missingness, which we will investigate in the extended work.",
+      "authors": [
+        "Hadi Mehdizavareh",
+        "Gabriele Santangelo",
+        "Giovanna Nicora",
+        "Simon Lebech Cichosz",
+        "Arianna Dagliati",
+        "Arijit Khan",
+        "Riccardo Bellazzi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CY"
+      ],
+      "published": "2026-06-14T13:06:03+00:00",
+      "link": "https://arxiv.org/pdf/2606.17106v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "generates clinical time series using diffusion model",
+      "llm_evidence_cn": "使用扩散模型生成临床时间序列",
+      "llm_evidence": "使用扩散模型生成临床时间序列",
+      "canonical_evidence": "使用扩散模型生成临床时间序列",
+      "llm_tldr_en": "Proposes a diffusion-based approach to generate irregular clinical time series by jointly modeling lab values and observation patterns.",
+      "llm_tldr_cn": "该论文针对临床时间序列中测试缺失模式具有信息性的问题，提出了一种基于扩散的生成方法，联合建模实验室值和观测模式。在MIMIC-III基准上，该方法能生成保留真实采样间隔和不规则性的时间序列轨迹，为后续插值和因果分析提供了更真实的数据基础。",
+      "llm_tldr": "该论文针对临床时间序列中测试缺失模式具有信息性的问题，提出了一种基于扩散的生成方法，联合建模实验室值和观测模式。在MIMIC-III基准上，该方法能生成保留真实采样间隔和不规则性的时间序列轨迹，为后续插值和因果分析提供了更真实的数据基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.20244v1",
+      "source": "arxiv",
+      "title": "SPOT-E: Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs",
+      "abstract": "Vision-language models (VLMs) often underperform on evidence intensive tasks because decisive visual evidence are small, localized, and easy to overlook, leading to failures in evidence readout even when high-level reasoning is intact. Prior inference-time visual interventions can improve grounding without retraining, but they are largely open-loop and lack a mechanism to verify whether highlighted evidence is actually used. We study answer-span prediction entropy as a model-internal feedback signal and show that naive entropy minimization is ambiguous, since low entropy may arise from evidence-grounded confidence or shortcut collapse. To resolve this ambiguity, we introduce low-entropy anchors and an entropy-shaping objective that reduces answer uncertainty while preserving baseline high-confidence tokens. We instantiate this principle in SPOT-E, a plug-and-play test-time method that produces question-conditioned spotlights, optimized per instance via light-weight tuning based on Group Relative Policy Optimization (GRPO). Across all benchmarks and different VLM families, SPOT-E yields consistent gains and improved robustness under visual corruptions. Code is publicly available at: \\url{https://github.com/YinBo0927/SPOT-E}",
+      "authors": [
+        "Bo Yin",
+        "Xiaobin Hu",
+        "Chengming Xu",
+        "Ruolin Shen",
+        "Mo Yang",
+        "Jiangning Zhang",
+        "Peng-Tao Jiang",
+        "Cheng Tan",
+        "Shuicheng YAN"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-06-18T13:56:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.20244v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "directly uses frozen vision-language models and proposes test-time entropy shaping",
+      "llm_evidence_cn": "直接使用冻结的视觉语言模型，并提出测试时熵整形方法",
+      "llm_evidence": "直接使用冻结的视觉语言模型，并提出测试时熵整形方法",
+      "canonical_evidence": "直接使用冻结的视觉语言模型，并提出测试时熵整形方法",
+      "llm_tldr_en": "Proposes SPOT-E, a test-time entropy shaping method with visual spotlights for frozen VLMs to improve evidence grounding without retraining.",
+      "llm_tldr_cn": "本文针对冻结视觉语言模型（VLM）在细粒度证据任务中因忽视局部视觉线索而表现不佳的问题，提出SPOT-E方法。该方法利用答案跨度预测熵作为内部反馈信号，设计低熵锚点和熵整形目标，避免朴素熵最小化导致的捷径坍塌，在测试时引导模型关注正确证据。实验表明，SPOT-E在多个视觉问答基准上显著提升冻结VLM的准确率，无需任何重新训练，充分体现了冻结编码器在模型重用中的优势。",
+      "llm_tldr": "本文针对冻结视觉语言模型（VLM）在细粒度证据任务中因忽视局部视觉线索而表现不佳的问题，提出SPOT-E方法。该方法利用答案跨度预测熵作为内部反馈信号，设计低熵锚点和熵整形目标，避免朴素熵最小化导致的捷径坍塌，在测试时引导模型关注正确证据。实验表明，SPOT-E在多个视觉问答基准上显著提升冻结VLM的准确率，无需任何重新训练，充分体现了冻结编码器在模型重用中的优势。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.19138v1",
+      "source": "arxiv",
+      "title": "INDEQS: Informed Neural controlled Differential EQuationS",
+      "abstract": "Neural Controlled Differential Equations (NCDE) provide a powerful continuous-time framework for forecasting time series, but standard graph-based extensions typically learn spatial structure purely from data, even in settings where a directed graph structure is known a priori. We introduce Informed Neural controlled Differential EQuationS (INDEQS), a graph-based NCDE forecasting method that incorporates prior knowledge of a directed graph at distinct architectural positions. INDEQS separates inner mixing of hidden states across graph nodes from outer mixing between vector field and control, and offers both a lightweight graph-constrained variant and a more expressive variant, learning additional graph connections from data via adaptive graph convolutions. To systematically study when graph informedness is beneficial in forecasting, we devise a continuous advection simulation on directed graphs, yielding synthetic spatio-temporal datasets with known ground-truth flow structure. We then evaluate INDEQS on two real-world tasks: river discharge forecasting on a hydrological network and traffic flow prediction on PeMS08. Across these synthetic and real-world benchmarks, outer informedness consistently improves mean absolute error over an uninformed NCDE with comparable parameter count, particularly on larger graphs, while inner informedness offers a more parameter-efficient alternative when strict adherence to a known adjacency is desired. A comparison of discrete convolutional and continuous-time decoders further shows that continuous decoders yield better accuracy and greater temporal flexibility on real-world tasks. An implementation of INDEQS and the advection simulation is available at https://github.com/Mitchi1/indeqs.",
+      "authors": [
+        "Michael Detzel",
+        "Gabriel Nobis",
+        "Kristiyan Blagov",
+        "Juri Schubert",
+        "Jackie Ma",
+        "Wojciech Samek"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-17T14:46:23+00:00",
+      "link": "https://arxiv.org/pdf/2606.19138v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "time series forecasting with prior causal graph",
+      "llm_evidence_cn": "利用先验因果图进行时间序列预测",
+      "llm_evidence": "利用先验因果图进行时间序列预测",
+      "canonical_evidence": "利用先验因果图进行时间序列预测",
+      "llm_tldr_en": "INDEQS incorporates prior directed graph knowledge into neural controlled differential equations for time series forecasting, separating inner and outer mixing to leverage known structure.",
+      "llm_tldr_cn": "现有基于图的时间序列预测方法通常从数据中学习图结构，但许多场景下存在已知的先验有向图。本文提出INDEQS，通过将先验图知识注入神经控制微分方程的不同位置，实现先验约束与数据驱动学习的结合。实验表明，该方法在利用先验信息的同时还能自适应学习额外连接，有效提升了预测精度。",
+      "llm_tldr": "现有基于图的时间序列预测方法通常从数据中学习图结构，但许多场景下存在已知的先验有向图。本文提出INDEQS，通过将先验图知识注入神经控制微分方程的不同位置，实现先验约束与数据驱动学习的结合。实验表明，该方法在利用先验信息的同时还能自适应学习额外连接，有效提升了预测精度。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.16545v1",
+      "source": "arxiv",
+      "title": "Can LLM Coding Agents Reason About Time Series?",
+      "abstract": "Large language models (LLMs) are increasingly being used for automated decision-making systems in finance, healthcare, or environmental monitoring. Time series data are ubiquitous in these fields, yet hard to process automatically. Can time series be analyzed by LLM agents? We examine three approaches: providing the agent with raw numerical data, using the LLM as a coding agent, or a combination of both. In the coding agent setup, the model iteratively queries the data using Python code. Using two time series understanding benchmarks, we show that agents with code access can outperform models processing raw data by up to 10%. However, even the best performing agent still answers about 22-34% of the questions incorrectly. To get insights into models' strategies and reasoning gaps, we analyze the model outputs with a strong LLM judge. Our analysis reveals that coding agents can select appropriate statistical tests, but often miss important nuances. Meanwhile, models with access to raw data can reach the right conclusions using back-of-the-envelope calculations.",
+      "authors": [
+        "Filip Rechtorík",
+        "Ondřej Dušek",
+        "Zdeněk Kasner"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-15T10:49:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.16545v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Investigates LLM agents' ability to reason about time series for property mining",
+      "llm_evidence_cn": "研究LLM代理对时间序列进行推理的能力，应用于性质挖掘",
+      "llm_evidence": "研究LLM代理对时间序列进行推理的能力，应用于性质挖掘",
+      "canonical_evidence": "研究LLM代理对时间序列进行推理的能力，应用于性质挖掘",
+      "llm_tldr_en": "Examines whether LLM coding agents can reason about time series, finding code access improves accuracy by up to 10% but still 22-34% questions are answered incorrectly.",
+      "llm_tldr_cn": "针对时间序列数据难以自动处理的问题，本文探究LLM编码代理能否推理时间序列，比较了提供原始数据、使用编码代理和两者结合三种方式。实验表明编码代理比原始数据处理提升最多10%，但最优代理仍有22-34%的问题回答错误，揭示了当前LLM在时间序列推理上的不足与潜力。",
+      "llm_tldr": "针对时间序列数据难以自动处理的问题，本文探究LLM编码代理能否推理时间序列，比较了提供原始数据、使用编码代理和两者结合三种方式。实验表明编码代理比原始数据处理提升最多10%，但最优代理仍有22-34%的问题回答错误，揭示了当前LLM在时间序列推理上的不足与潜力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.18729v1",
+      "source": "arxiv",
+      "title": "TimeLAVA: Learning-Agnostic Data Valuation for Time Series",
+      "abstract": "Data valuation quantifies the intrinsic quality of individual samples to enable principled data curation, quality control, and robust learning. For time series in critical domains such as healthcare, finance, and industrial monitoring, effective valuation methods are essential yet fundamentally lacking. Existing approaches are either model-dependent, limiting their generalizability, or designed for i.i.d. data and thus fail to capture temporal dependencies, multi-scale patterns, and non-stationary dynamics inherent to sequential data. We introduce TimeLAVA, a learning-agnostic framework that values temporal segments by their marginal contribution to minimizing distributional discrepancy between evaluated and reference data. At its core is a novel Selective Wavelet-based Wasserstein discrepancy combining multi-scale wavelet transforms for temporal localization with unbalanced optimal transport for robustness to distributional shifts. Segment values are efficiently computed via sensitivity analysis without requiring model training and aggregated into point-wise scores. We provide theoretical guarantees linking valuation to model-agnostic generalization and prove bounded sensitivity to outlier contamination. Extensive experiments across anomaly detection, data pruning, and label noise detection demonstrate that TimeLAVA produces significantly more informative value scores than existing methods on diverse real-world datasets.",
+      "authors": [
+        "Wenqin Liu",
+        "Weizhi Quan",
+        "Aoqi Zuo",
+        "Erdun Gao",
+        "Vu Nguyen",
+        "Dino Sejdinovic",
+        "Howard Bondell",
+        "Mingming Gong"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-06-17T06:16:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.18729v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series property mining via data valuation",
+      "llm_evidence_cn": "通过数据估值进行时间序列性质挖掘",
+      "llm_evidence": "通过数据估值进行时间序列性质挖掘",
+      "canonical_evidence": "通过数据估值进行时间序列性质挖掘",
+      "llm_tldr_en": "TimeLAVA introduces a learning-agnostic data valuation framework for time series that values temporal segments by their marginal contribution to minimizing distribution discrepancy.",
+      "llm_tldr_cn": "时间序列数据的价值评估对于数据清洗和鲁棒学习至关重要，但现有方法无法处理其时间依赖和非平稳特性。本文提出TimeLAVA，一种学习无关的估值方法，通过评估每个时间片段对减少评估与参考数据分布差异的边际贡献来度量其价值。实验证明，该方法能够准确识别高质量和低质量的数据段，为时间序列数据管理提供了有效工具。",
+      "llm_tldr": "时间序列数据的价值评估对于数据清洗和鲁棒学习至关重要，但现有方法无法处理其时间依赖和非平稳特性。本文提出TimeLAVA，一种学习无关的估值方法，通过评估每个时间片段对减少评估与参考数据分布差异的边际贡献来度量其价值。实验证明，该方法能够准确识别高质量和低质量的数据段，为时间序列数据管理提供了有效工具。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.17014v1",
+      "source": "arxiv",
+      "title": "Filtered Conformal Ellipsoids for Graph-Native Time Series",
+      "abstract": "Joint prediction sets for multivariate time series should control a single event while adapting to cross-coordinate dependence. We study filtered conformal ellipsoids: a frozen state-space filter emits a one-step predictive mean and covariance, and split-conformal calibration is applied to the resulting Mahalanobis scores. The filter is used to choose the ellipsoid shape; conformal calibration chooses the scalar radius, so the construction benefits from a learned predictive covariance without relying on Gaussian tail probabilities for coverage. The main difficulty is that filtered scores are dependent and learned recurrent filters need not contract in their raw hidden state; we therefore analyse contraction in an observable predictive-law quotient that identifies hidden states producing the same future sequence of emitted Gaussian laws. Under a stable Bayes Gaussian-projection filter, covariance bounds, and a finite-horizon observability Fisher condition, small excess Gaussian negative log-likelihood implies contraction of the learned emitted laws. Combined with a threshold-autocovariance envelope this yields a Chebyshev-type approximate coverage bound for filtered split-conformal prediction under dependence; a sharper Bernstein-type bound requires an additional geometric-mixing concentration assumption. Under Gaussian oracle realisability we also obtain a near-oracle log-volume comparison within the class of conditionally valid Gaussian ellipsoid rules. We instantiate the framework with a GCN-GRU filter with diagonal-plus-low-rank covariance. On moderate-size graph-native traffic benchmarks (METRLA-$20$ and PEMSBAY-$50$), the learned filter gives sharper at-target ellipsoids than static-covariance and non-filter baselines; at full-graph scale and on non-graph-native datasets, factor and copula baselines can be stronger.",
+      "authors": [
+        "Yannick Limmer"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "math.ST",
+        "stat.ML"
+      ],
+      "published": "2026-06-15T17:46:19+00:00",
+      "link": "https://arxiv.org/pdf/2606.17014v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses frozen state-space filter for multivariate time series prediction sets",
+      "llm_evidence_cn": "使用冻结石英空间滤波器进行多元时间序列预测集构建",
+      "llm_evidence": "使用冻结石英空间滤波器进行多元时间序列预测集构建",
+      "canonical_evidence": "使用冻结石英空间滤波器进行多元时间序列预测集构建",
+      "llm_tldr_en": "Proposes filtered conformal ellipsoids for graph-native time series, leveraging a frozen state-space filter for shape and conformal radius calibration, achieving coverage without Gaussian assumptions.",
+      "llm_tldr_cn": "针对多元时间序列联合预测集问题，提出滤波共形椭球方法，使用冻结石英空间滤波器确定椭球形状，并通过分裂共形校准确定半径，避免依赖高斯尾概率。该方法在非高斯时间序列数据上实现了有效的覆盖控制，为时间序列不确定性量化提供了新工具。",
+      "llm_tldr": "针对多元时间序列联合预测集问题，提出滤波共形椭球方法，使用冻结石英空间滤波器确定椭球形状，并通过分裂共形校准确定半径，避免依赖高斯尾概率。该方法在非高斯时间序列数据上实现了有效的覆盖控制，为时间序列不确定性量化提供了新工具。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder for time series",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.20001v1",
+      "source": "arxiv",
+      "title": "Time-Unconditional Generative Speech Enhancement via Autonomous Rectified Flow",
+      "abstract": "Most generative speech enhancement methods rely on explicit time-step embeddings for temporal conditioning. In this paper, we propose the Autonomous Rectified Flow framework, which challenges the necessity of such conditioning. Using a linear interpolation path, we show that the target vector field is inherently time-invariant. We further introduce a time-unconditional network that eliminates explicit time-step information and infers the denoising direction solely from the spatial relationship between the current state and the noisy observation. Predicting this target vector field is equivalent to modeling the noise distribution. By avoiding overfitting to temporal trajectories, the proposed autonomous design significantly improves generation quality, robustness, and inference efficiency.",
+      "authors": [
+        "Wen Zhang",
+        "Wenbin Jiang",
+        "Yang Zhang",
+        "Xiaofei Zhou"
+      ],
+      "primary_category": "eess.AS",
+      "categories": [
+        "eess.AS"
+      ],
+      "published": "2026-06-18T09:38:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.20001v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative speech enhancement using time-unconditional rectified flow, applicable to time series generation",
+      "llm_evidence_cn": "使用时间无条件的整流流进行生成式语音增强，其方法可迁移至时间序列生成",
+      "llm_evidence": "使用时间无条件的整流流进行生成式语音增强，其方法可迁移至时间序列生成",
+      "canonical_evidence": "使用时间无条件的整流流进行生成式语音增强，其方法可迁移至时间序列生成",
+      "llm_tldr_en": "Proposes Autonomous Rectified Flow that eliminates explicit time-step conditioning for generative speech enhancement; the time-unconditional design improves generation quality and can inspire time series generative models.",
+      "llm_tldr_cn": "针对现有生成式语音增强方法过度依赖显式时间步长条件导致过拟合的问题，本文提出自主整流流（Autonomous Rectified Flow）框架。该框架通过线性插值路径证明目标向量场具有时间不变性，并设计了一个时间无条件的去噪网络，仅利用当前状态与观测的空间关系推断去噪方向。在多个语音增强数据集上，该方法有效避免了时间轨迹过拟合，显著提升了生成质量和泛化性。虽然以语音增强为例，其时间无条件的生成范式可直接启发时间序列生成模型的设计，为生成模型对时间建模的简化提供了新思路。",
+      "llm_tldr": "针对现有生成式语音增强方法过度依赖显式时间步长条件导致过拟合的问题，本文提出自主整流流（Autonomous Rectified Flow）框架。该框架通过线性插值路径证明目标向量场具有时间不变性，并设计了一个时间无条件的去噪网络，仅利用当前状态与观测的空间关系推断去噪方向。在多个语音增强数据集上，该方法有效避免了时间轨迹过拟合，显著提升了生成质量和泛化性。虽然以语音增强为例，其时间无条件的生成范式可直接启发时间序列生成模型的设计，为生成模型对时间建模的简化提供了新思路。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.17996v1",
+      "source": "arxiv",
+      "title": "Multiple cyclicity and Wavelet Decomposition with Channel Correlation for Long-term Time Series Forecasting",
+      "abstract": "Cyclicity and trend are important components of time series data and many studies based on cyclicity and trend have achieved good results in long-term time series forecasting. However, we believe that current work neglects the influence of real-world inter-channel correlations in time series data which leads to suboptimal predictions. Furthermore, these models rely on complex designs to capture diverse information so that resulting in low computational efficiency. To address this challenge, we propose McWC, a long-term time series forecasting model that separately models the cyclicity, trend, and inter-channel correlations. Specifically, McWC first decouples cyclical information from data using a multi-layer cyclicity construction module. Then, it extracts inter-channel correlations using multi-layer perceptron. Next, it models and fuses the multi-layer high-frequency and low-frequency information from data using a multi-level wavelet decomposition module. Finally, it aggregates the results of different components to obtain the output. Simultaneously, we decouple intra-channel autocorrelations by calculating a loss function in the frequency domain. Experiments on six real-world datasets demonstrate that McWC achieves state-of-the-art performance, exhibiting excellent computational efficiency and historical information extraction capabilities.",
+      "authors": [
+        "Bin Wang",
+        "Heming Yang",
+        "Jinfang Sheng"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-16T14:44:23+00:00",
+      "link": "https://arxiv.org/pdf/2606.17996v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Wavelet decomposition and cyclic component extraction for time series feature extraction",
+      "llm_evidence_cn": "小波分解和周期性成分提取用于时间序列特征提取",
+      "llm_evidence": "小波分解和周期性成分提取用于时间序列特征提取",
+      "canonical_evidence": "小波分解和周期性成分提取用于时间序列特征提取",
+      "llm_tldr_en": "Proposes McWC model that decouples cyclicity, trend, and inter-channel correlations using wavelet decomposition for long-term time series forecasting, enhancing feature extraction.",
+      "llm_tldr_cn": "针对现有长期时间序列预测模型忽略通道间相关性且计算效率低的问题，本文提出McWC模型，通过多层周期性分解和小波变换分别建模周期、趋势和通道相关性，在多个基准上提升了预测精度和效率，为时间序列特征提取提供了有效方法。",
+      "llm_tldr": "针对现有长期时间序列预测模型忽略通道间相关性且计算效率低的问题，本文提出McWC模型，通过多层周期性分解和小波变换分别建模周期、趋势和通道相关性，在多个基准上提升了预测精度和效率，为时间序列特征提取提供了有效方法。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.19255v1",
+      "source": "arxiv",
+      "title": "SCAN: Enhance Time Series Anomaly Detection via Multi-Scale Neighborhood-Centered Clustering",
+      "abstract": "Time series anomaly detection plays a crucial role in a wide range of real-world applications. Reconstruction-based methods have become the mainstream paradigm, but they suffer from over-generalization and under-generalization problems, which are challenging to balance. To address this, we introduce multi-scale clustering to enhance reconstruction-based methods. At the representation level, we integrate the cluster center representations of normal patterns to constrain the model to target representative normal patterns for reconstruction, preventing dominance of powerful capacity and representation capability. At the anomaly criterion level, we derive anomaly confidence score based on cluster membership probability and combine it with reconstruction error, providing dual criteria for detection. Furthermore, the effectiveness of the cluster center representations and anomaly confidence score depends on the clustering performance. Accordingly, we extract neighborhood-centered representations for multi-view clustering to improve clustering performance. Extensive experiments on multiple real-world datasets from diverse application domains demonstrate the state-of-the-art performance of SCAN.",
+      "authors": [
+        "Xingze Zheng",
+        "Hanyin Cheng",
+        "Siyuan Wang",
+        "Yiting Hao",
+        "Peng Chen",
+        "Yuan Jun",
+        "Yang Shu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-17T16:30:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.19255v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time series anomaly detection via multi-scale clustering to mine normal patterns, directly mining time series properties",
+      "llm_evidence_cn": "通过多尺度聚类进行时间序列异常检测以挖掘正常模式，直接属于时间序列性质挖掘",
+      "llm_evidence": "通过多尺度聚类进行时间序列异常检测以挖掘正常模式，直接属于时间序列性质挖掘",
+      "canonical_evidence": "通过多尺度聚类进行时间序列异常检测以挖掘正常模式，直接属于时间序列性质挖掘",
+      "llm_tldr_en": "Introduces multi-scale neighborhood-centered clustering to enhance reconstruction-based time series anomaly detection, integrating cluster centers of normal patterns to balance over/under-generalization.",
+      "llm_tldr_cn": "针对基于重构的时间序列异常检测方法中存在的过泛化和欠泛化平衡难题，本文提出了SCAN框架。该方法在表示层面引入多尺度聚类，整合正常模式的聚类中心表示来约束重构模型，避免模型依赖过强的表示能力；在异常判据层面，基于聚类隶属概率推导异常置信度。在多个真实时间序列数据集上，SCAN在异常检测精度和鲁棒性上均取得显著提升，为时间序列性质挖掘提供了有效的特征分析与异常定位手段。",
+      "llm_tldr": "针对基于重构的时间序列异常检测方法中存在的过泛化和欠泛化平衡难题，本文提出了SCAN框架。该方法在表示层面引入多尺度聚类，整合正常模式的聚类中心表示来约束重构模型，避免模型依赖过强的表示能力；在异常判据层面，基于聚类隶属概率推导异常置信度。在多个真实时间序列数据集上，SCAN在异常检测精度和鲁棒性上均取得显著提升，为时间序列性质挖掘提供了有效的特征分析与异常定位手段。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

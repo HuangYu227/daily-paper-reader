@@ -1,0 +1,759 @@
+Title: SPOT-E: Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs
+
+URL Source: https://arxiv.org/pdf/2606.20244v1
+
+Published Time: Fri, 19 Jun 2026 01:00:58 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# SPOT-E: Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 
+
+Bo Yin 1, Xiaobin Hu 1, Chengming Xu 2, Ruolin Shen 3, Mo Yang 4, Jiangning Zhang 5, Peng-Tao Jiang 6, Cheng Tan 7, and Shuicheng Yan 1 
+
+> 1
+
+National University of Singapore  
+
+> 2
+
+Fudan University  
+
+> 3
+
+Technical University of Munich  
+
+> 4
+
+Sagenic Tech  
+
+> 5
+
+Zhejiang University  
+
+> 6
+
+vivo  
+
+> 7
+
+Shanghai Artificial Intelligence Laboratory 
+
+Abstract. Vision-language models (VLMs) often underperform on evi-dence intensive tasks because decisive visual evidence are small, localized, and easy to overlook, leading to failures in evidence readout even when high-level reasoning is intact. Prior inference-time visual interventions can improve grounding without retraining, but they are largely open-loop and lack a mechanism to verify whether highlighted evidence is ac-tually used. We study answer-span prediction entropy as a model-internal feedback signal and show that naive entropy minimization is ambiguous, since low entropy may arise from evidence-grounded confidence or short-cut collapse. To resolve this ambiguity, we introduce low-entropy anchors and an entropy-shaping objective that reduces answer uncertainty while preserving baseline high-confidence tokens. We instantiate this principle in SPOT-E, a plug-and-play test-time method that produces question-conditioned spotlights, optimized per instance via light-weight tuning based on Group Relative Policy Optimization (GRPO). Across all bench-marks and different VLM families, SPOT-E yields consistent gains and improved robustness under visual corruptions. Code is publicly available at: https://github.com/YinBo0927/SPOT-E 
+
+Keywords: Vision-language models · Test-time adaptation · Entropy 
+
+## 1 Introduction 
+
+Vision-language models have made rapid progress in multimodal understanding, yet they remain unreliable on evidence-intensive tasks such as chart reading and document parsing [21, 24, 25]. In these settings, the decisive evidence are often small and localized. A model may describe a correct reasoning plan, for example it may say “read the y-axis value and then compare the two bars”, but still misread the underlying number, causing the final answer to fail [10, 23, 46]. This pattern exposes a bottleneck that we call the evidence utilization gap: the model can reason about what evidence is needed, but cannot reliably extract and focus  
+
+> arXiv:2606.20244v1 [cs.CV] 18 Jun 2026 2Yin et al.
+
+on the fine-grained visual evidence that determines the answer [31]. Closing this gap for frozen, already-deployed VLMs, without costly retraining or task-specific annotation, is practically urgent and methodologically challenging [40]. How can we improve evidence utilization at inference time while keeping the backbone frozen? 
+
+A natural direction is to intervene on the visual input at test time so that decisive regions become more accessible to the model [3, 30, 35, 37, 45]. Methods such as FGVP instantiate this idea and report gains without modifying model weights [36,43]. However, these approaches are open-loop. They apply a fixed in-tervention but do not provide a mechanism to verify whether the model actually relied on the emphasized evidence. When the selected region misses the decisive evidence, or when the intervention degrades the evidence itself, the failure re-mains invisible to the method and therefore cannot be corrected. This raises a key question: how can we design a test-time intervention that is both instance-adaptive and self-verifying? 
+
+These limitations motivate a closed-loop feedback signal that can be obtained from a frozen VLM during inference [17, 28]. We find that answer entropy, com-puted from the logits over the tokens that form a structured final answer, tracks evidence usability. Entropy is low when the decisive visual cues are clear, and it increases when they are obscured [18,19,34,38]. However, entropy reduction is in-herently ambiguous. Both evidence-grounded confidence and shortcut behaviors can produce low entropy [4, 9, 39], as shown in Fig. 2. As a result, minimizing entropy alone can drive the model into confident-but-wrong shortcuts ,creating a systematic failure mode in the absence of labels. To resolve this ambiguity, we introduce an entropy-shaping principle that reduces answer entropy while preserving the model’s baseline high-confidence predictions on the unmodified input. Specifically, we identify low-entropy an-chors as token positions where the frozen VLM is already near-deterministic at baseline, and we penalize interventions that disrupt these anchors. This yields a label-free objective that favors evidence-supported confidence over shortcut-induced collapse. We instantiate the principle in SPOT-E , a test-time visual adaptation framework that augments a frozen VLM with a lightweight, question-conditioned visual spotlight module that produces spotlights. For each instance, we optimize only the spotlight-module LoRA [13] parameters using Group Rel-ative Policy Optimization [27] under the entropy-shaping reward. Our contributions are summarized as follows: 
+
+– Entropy Signal. We identify answer entropy as a label-free signal for evi-dence utilization in frozen VLMs, and show that entropy reduction is inher-ently ambiguous. 
+
+– Entropy Shaping. We propose low-entropy anchors and an entropy-shaping reward to disambiguate evidence-supported confidence from shortcut col-lapse. 
+
+– SPOT-E Framework. We present SPOT-E, a plug-and-play test-time frame-work that keeps the VLM frozen while optimizing a question-conditioned visual spotlight via per-instance GRPO to leverage low-entropy anchors. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 3
+
+– Broad Evaluation. We conduct extensive evaluations across both open-source and closed-source VLM families and multiple backbones, demon-strating consistent gains on diverse benchmarks, with particularly strong improvements on evidence-intensive tasks and improved robustness under corruptions. 
+
+## 2 Related Work 
+
+2.1 Inference-Time Visual Interventions and Visual Prompting 
+
+Inference-time visual interventions improve grounding by manipulating the vi-sual evidence presented to a frozen VLM at test time [2,5]. Common approaches include overlaying marks or masks to highlight regions, as in FGVP and Set-of-Mark prompting, selectively cropping or zooming into candidate areas to pre-serve small details, as in ViCrop, and spatial transformations that reallocate resolution toward query-relevant evidence, as in AttWarp [8, 35, 36, 45]. Another practical direction uses attention- or score-guided prompting strategies such as API-style prompting to steer the model toward informative regions without re-training [42]. These methods are appealing because they are lightweight and model-agnostic, but they often depend on fixed heuristics, external region pro-posals, or discrete choices that may be brittle across instances. Our method fits this paradigm and uses a question-conditioned spotlight for adaptive evidence emphasis under a frozen backbone. 
+
+2.2 Entropy and Uncertainty for Evidence Localization 
+
+Uncertainty signals have long been used to diagnose and steer model behavior at inference time [12, 18]. Entropy over output distributions is a common proxy for confidence and has been used for calibration and selective prediction, self-consistency and re-ranking, as well as entropy- and confidence-driven decoding heuristics [11, 19, 33]. In vision and multimodal reasoning, uncertainty is also closely tied to evidence localization, since failures in fine-grained grounding often appear as high uncertainty concentrated on a small set of answer tokens [14, 20]. Recent multimodal work further leverages entropy or confidence to trigger additional perception, guide region selection, and filter visually unsupported generations [40, 41]. Our method combines an entropy-shaping reward with a question-conditioned visual spotlight to encourage decisive, visually supported answers without updating the frozen VLM. 
+
+## 3 Motivation 
+
+In this section, we motivate an entropy-centric view of visual adaptation in VLMs. When decisive visual evidence is usable, the model commits more consis-tently to a single final answer, making answer-span entropy a proxy for evidence use. We show that this effect is spatially grounded and can change sharply with 4 Yin et al. 
+
+the visibility of the decisive region. However, entropy reduction is ambiguous and may also reflect shortcut behaviors that suppress hard evidence, yielding confident-but-wrong predictions. To resolve this, we introduce low-entropy an-chors and an entropy-shaping principle that reduces answer entropy while pre-serving anchor stability. 
+
+3.1 Notation 
+
+Consider a frozen VLM Fϕ, which typically comprises a visual encoder V , a multimodal connector Fc, and an LLM M . Given an input image x and a user instruction q, the model receives a multimodal sequence of visual tokens 
+
+{v1, v 2, . . . , v n} and text tokens {t1, t 2, . . . , t m}. During decoding, Fϕ processes the concatenated multimodal context {v1, . . . , v n, t 1, . . . , t m} followed by previ-ously generated tokens {y1, . . . , y k−1} to predict the next token yk.
+
+Next-token distribution. At decoding step k, the model outputs a distribution over the vocabulary W:
+
+pk(w) = pϕ(w | x, q, y <k ) , w ∈ W , (1) where y<k = ( y1, . . . , y k−1) is the prefix. 
+
+Entropy. We quantify predictive uncertainty using Shannon entropy of the next-token distribution: 
+
+Hk(x, q ) = − X
+
+> w∈W
+
+pk(w) log pk(w). (2) Unless otherwise specified, log( ·) denotes the natural logarithm. We compute entropy under the baseline decoding trajectory. 
+
+Answer entropy. Long-form generations contain many tokens weakly related to visual evidence. To focus on evidence-relevant uncertainty, we compute entropy on a final answer span. We enforce a structured output format (e.g., Final answer: ... ) and extract the token indices of the answer span as Tans . We define answer entropy as 
+
+Hans (x, q ) = 1
+
+|T ans |
+
+X
+
+> k∈T ans
+
+Hk(x, q ). (3) For an intervention producing a modified input ˜x, we measure entropy reduction by 
+
+∆H ans = Hans (˜ x, q ) − Hans (x, q ). (4) 
+
+Low-entropy anchors. To characterize token positions that the base model is already confident about, we define a set of low-entropy anchors under the baseline input. Concretely, we select the K positions with the smallest next-token entropies: 
+
+Ilow (x, q ) = TopK small 
+
+ {Hk(x, q )}Tk=1 
+
+, (5) where T is the output length. In addition, we evaluate Hk(˜ x, q ) by conditioning on the baseline token prefix to align anchor positions. These anchors are later used to distinguish desirable entropy reduction from shortcut behaviors. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 5Question: What color is the upper garment of the person in the image?              
+
+> Blur 0Blur 1Blur 2Origin
+> Answer: Red
+> 𝑯 𝒂𝒏𝒔 :0.45
+> Answer: Red
+> 𝑯 𝒂𝒏𝒔 :0. 50
+> Answer: Red
+> 𝑯 𝒂𝒏𝒔 :0. 27
+> Answer: Green
+> 𝑯 𝒂𝒏𝒔 :0. 98
+
+Fig. 1: Localized evidence controls answer entropy. We apply region-level blur to a sub-set of grid regions while keeping all other pixels unchanged, and measure Hans (˜ xS , q ).
+
+3.2 Visual Evidence Shapes Answer Entropy 
+
+A natural intuition is that visual evidence affects a VLM’s answer mainly by changing how certain the model can be at the point of committing to the final answer. If the decisive evidence for q is clear, the model should concentrate probability mass on a consistent answer; if the evidence is weak or obscured, the model should remain uncertain. We operationalize this intuition using the answer entropy Hans (x, q ) in Eq. (3), which measures uncertainty on the final answer. We validate the intuition with a simple spatial sensitivity analysis. We parti-tion the image into a coarse grid of regions R = {r1, . . . , r M } and apply localized interventions while keeping the rest of the input unchanged. For a given subset size n, we sample subsets S ⊆ R with |S| = n, construct an intervened image ˜xS
+
+by applying a fixed region-level transformation only within regions in S such as blurring, and compute Hans (˜ xS , q ). Fig. 1 shows a representative instance where suppressing the localized evidence required by q increases Hans , eventually lead-ing to incorrect predictions. 
+
+3.3 Entropy Reduction is Ambiguous 
+
+The previous subsection suggests that lowering Hans often correlates with making decisive evidence more usable. However, entropy reduction alone is ambiguous: an intervention may decrease uncertainty not by improving evidence quality, but by attenuating hard evidence and steering the model toward priors or salient distractors, yielding confident-but-wrong answers with smaller Hans .We illustrate this ambiguity within the same subset-based intervention frame-work, but now restricting attention to the most entropy-sensitive singleton sub-set. Concretely, for any subset S ⊆ R , we define the entropy change induced by intervening on S as 
+
+∆H ans (S) = Hans (x, q ) − Hans (˜ xS , q ), (6) 6 Yin et al. Question: Is there a mouse on the table ?  
+
+> 𝛂 : 0.1 𝛂 : 0.3
+> 𝛂 : 0.8
+> Answer: YES Answer: YES
+> Answer : NO
+> 𝛂 : 0.8
+> Answer: NO
+
+Fig. 2: Entropy reduction can be misleading. We blur only the most entropy-sensitive singleton subset S⋆ with strength α. Hans often rises as evidence becomes ambiguous, but may drop again when evidence is erased. 
+
+where ˜xS modifies only regions in S and leaves all other pixels unchanged. We identify 
+
+S⋆ = arg max  
+
+> |S|=1
+
+|∆H ans (S)| , (7) i.e., the single-region subset whose intervention yields the largest magnitude of entropy change. We then keep the rest of the image fixed and construct a family of intervened inputs by blurring only within S⋆ with increasing strength α:
+
+˜x(α) 
+
+> S⋆
+
+= Aα(x; S⋆), α ∈ [0 , 1] , (8) where Aα(·; S⋆) applies blur of level α to regions in S⋆ and leaves all other regions unchanged. Sweeping α typically yields a non-monotonic profile: Hans is low when the evidence is clear (small α), peaks when the evidence becomes ambiguous (inter-mediate α), and can decrease again once the evidence is effectively erased (large 
+
+α), as the model collapses to a prior- or distractor-driven answer. Fig. 2 shows that low Hans at large α can also arise from prior-driven overconfidence. 
+
+3.4 Entropy Shaping with Low-Entropy Anchors 
+
+Answer entropy Hans provides a convenient scalar readout of how concentrated the model is on the final answer. The difficulty is that the same decrease in 
+
+Hans can be produced by different mechanisms: the intervention may genuinely expose missing evidence, or it may remove hard evidence and let the model settle on priors or distractors. To disambiguate these cases, we look beyond the answer entropy itself and ask whether an intervention is non-destructive, namely whether it preserves parts of the decoding process that the base model was already confident about. As illustrated in Fig. 3, two interventions may achieve a similar drop in answer entropy, yet only the evidence-revealing one preserves Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 7Baseline Input Evidence -revealing Destructive  
+
+> Fig. 3: Low-entropy anchors reveal destructive shortcuts.
+
+the baseline’s low-entropy tokens, whereas the destructive shortcut inflates their entropy motivating our anchor disruption measure. We use low-entropy anchors Ilow (x, q ) in Eq. (5) to represent such stable positions under the baseline input. Given an intervened input ˜x, we measure anchor disruption by the average entropy increase on anchor positions, 
+
+∆H low (˜ x) = 1
+
+|I low |
+
+X
+
+> k∈I low
+
+max  0, H k(˜ x, q ) − Hk(x, q ). (9) Interventions with comparable reductions in Hans can behave very differently under this criterion. Evidence-revealing interventions tend to keep ∆H low small, while shortcut interventions often reduce Hans at the cost of increasing entropy on anchors. This motivates an entropy-shaping principle that favors reducing 
+
+Hans while preserving low-entropy anchors. 
+
+## 4 SPOT-E: Visual Spotlighting for Entropy Shaping 
+
+Building on Sec. 3, we introduce SPOT-E . As shown in Fig. 4, SPOT-E performs entropy-guided test-time visual adaptation by keeping the VLM Fϕ frozen and optimizing a lightweight, question-conditioned visual spotlight. Given an image 
+
+x and instruction q, the spotlight produces an intervened image ˜x = S(x; , m ),where S is the spotlighting operator and m is a soft pixel mask. We feed ˜x into 
+
+Fϕ to compute the answer entropy Hans (˜ x, q ) and anchor entropies on Ilow (x, q ).At test time, SPOT-E runs a short per-instance episode: it samples candidate spotlights, scores them with an entropy-shaping objective, and updates only the spotlight parameters via GRPO [27]. The final prediction is chosen by Best-of-N
+
+over candidates, and the spotlight is reset after each instance. 
+
+4.1 Visual Spotlight 
+
+As illustrated in Fig. 5, SPOT-E introduces a CLIP-based [26] visual spolight module to produce question-conditioned visual spotlights. Given instruction q,we extract a compact visual phrase ¯q by retaining the key entities and attributes relevant to visual grounding. Then the module extracts global patch tokens and local crop tokens with a CLIP vision encoder with LoRA [13] adapter, matches 8 Yin et al. Visual 
+
+Spotlight VLM   
+
+> GRPO RL Training
+
+Question: Is there a bear in the photo? 
+
+Final Reward 
+
+> : Frozen : Tunable
+
+Image Spotlight Image Anchor -preservation     
+
+> Reward 𝑹 preserve 𝒙 #
+> Dynamic Clarity
+> Rewar 𝑹 clarity 𝒙 #
+
+Fig. 4: SPOT-E overview. SPOT-E freezes the VLM and optimizes a lightweight visual spotlight at test time to generate an intervened image, scored by answer-entropy clarity and anchor-preservation. Vision     
+
+> Encoder
+> Abear in the image
+> Text
+> Encoder
+> Crop
+
+…
+
+> Max Fusion
+> : Text Token
+> : Vision Token
+> : Frozen
+> : Tunable
+> Original Image
+> Output Image : Relevance Map
+> Spotlight
+> Global Patch Tokens
+> Text Embedding
+> Local Patch Tokens
+> inject
+> LoRA
+> Cosine  Similarity
+
+Fig. 5: SPOT-E visual spotlight module. Both the image encoder and the text encoder are CLIP. The module computes patch-text similarities on the global view and local crops, then fuses multi-view relevance maps via max pooling to produce the final spotlight mask. 
+
+them to the frozen CLIP text embedding via patch–text similarity to obtain relevance maps, and fuses multi-view evidence by max pooling to form the final spotlight mask. 
+
+Global view and crop max fusion. We run the CLIP on the full image and on multiple crops to avoid missing small evidence. Let x(0) = x be the global view and {x(i)}Nc
+
+i=1 be crops. For each view x(i), CLIP outputs patch tokens {p(i)
+
+j }Ni
+
+j=1 
+
+and a text embedding t(¯ q). We compute patch relevance by cosine similarity: 
+
+u(i)
+
+j =
+
+D
+
+norm  p(i)
+
+j
+
+, norm  t(¯ q)E
+
+. (10) We reshape {u(i)
+
+j } to a 2D grid and map each crop grid back to the full-image coordinates via Wi(·), which warps the i-th crop map to the global image coor-Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 9
+
+dinates. The fused relevance map is obtained by max fusion: 
+
+u = max 
+
+
+
+u(0) , max 
+
+> i=1 ,...,N c
+
+Wi
+
+
+
+u(i)  
+
+. (11) 
+
+Soft mask and spotlighting operator. We upsample the fused relevance map 
+
+u to the image resolution and obtain a soft pixel mask 
+
+m = σ  1 
+
+> τ
+
+u↑ ∈ [0 , 1] H×W , (12) where u↑ denotes bilinear upsampling of u and τ controls mask sharpness. We then form the intervened input via 
+
+˜x = S(x; m) = m ⊙ x + (1 − m) ⊙ B (x), (13) where ⊙ denotes element-wise multiplication and B(·) is a fixed background-degrading transform (background dimming). 
+
+4.2 Entropy-Shaping Reward 
+
+Given a candidate spotlight mask m and intervened input ˜x = S(x; m), we score it using an entropy-shaping reward 
+
+R(˜ x) = Rclarity (˜ x) + Rpreserve (˜ x). (14) Both terms are computed from the frozen VLM logits, while gradients update only the visual spotlight module. 
+
+Dynamic clarity reward. We encourage the model to become more decisive on the final answer span by reducing answer entropy: 
+
+∆H ans (˜ x) = Hans (x, q ) − Hans (˜ x, q ). (15) To avoid over-optimizing when the base model is already confident, we apply a dynamic scaling factor based on the baseline answer entropy: 
+
+Rclarity (˜ x) = γ(x, q ) · ∆H ans (˜ x), γ(x, q ) = Hans (x, q )
+
+Hans (x, q ) + c , (16) where c > 0 is a small constant. When the baseline is uncertain, γ increases and entropy reduction is rewarded more; when the baseline is already confident, γ
+
+suppresses blind exploration. 
+
+Anchor-preservation reward. Entropy reduction can be achieved by shortcut behaviors that disrupt tokens the base model was already confident about. We therefore penalize entropy increases on low-entropy anchor positions Ilow (x, q )
+
+(Eq. (5)) using the anchor disruption measure ∆H low (˜ x) (Eq. (9)): 
+
+Rpreserve (˜ x) = −λ · ∆H low (˜ x), (17) where λ controls the strength of anchor preservation. 10 Yin et al. 
+
+4.3 Test-Time Optimization with GRPO 
+
+SPOT-E runs a short per-instance test-time optimization episode to adapt the visual spotlight module, while keeping the VLM Fϕ fully frozen. Let θ denote the visual spotlight parameters (LoRA adapters in CLIP vision encoder attention layers), initialized to θ0 for each instance. 
+
+Group sampling and scoring. At each iteration, we sample a group of N
+
+candidate masks by injecting Gaussian noise into the visual spotlight and ob-tain intervened inputs {˜x(n)}Nn=1 . Each candidate is scored by the total reward 
+
+R(˜ x(n)) (Eq. (14)). 
+
+Group-relative advantages. We compute standardized advantages within the group:                 
+
+> μR=1
+> N
+> NX
+> n=1
+> R(˜ x(n)),σR=
+> vuut1
+> N
+> NX
+> n=1
+>  R(˜ x(n))−μR
+> 2.(18)
+> A(n)=R(˜ x(n))−μR
+> σR+ϵ.(19)
+
+where ϵ is a small constant. 
+
+GRPO update and reset. We apply a standard GRPO clipped policy update on θ using {A(n)}, with a KL regularizer to keep the visual spotlight close to its initialization.               
+
+> ¯r(n)(θ) = clip  r(n)(θ),1−δ, 1 + δ.(20)
+> LGRPO (θ) = −1
+> N
+> NX
+> n=1
+> min
+> 
+> r(n)(θ)A(n),¯r(n)(θ)A(n)
+> +βKL  πθ∥πθ0
+> .(21)
+
+where δ is the clipping threshold and β controls the KL strength. We update only θ by gradient descent on Eq. (21), and reset θ ← θ0 after each instance to avoid cross-sample drift. 
+
+## 5 Experiments 
+
+Overview. We evaluate SPOT-E from four complementary angles. First, we report main results across a broad set of frozen backbones, covering both open-source model families and closed-source VLM APIs, to test generality. Second, we compare against strong inference-time visual prompting baselines under matched decoding settings. Third, we assess out-of-distribution robustness under con-trolled visual corruptions and analyze confidence behavior through answer en-tropy. Finally, we conduct targeted ablations on the reward, spotlight design, and test-time budget, and provide qualitative case studies to illustrate how SPOT-E changes evidence usage at inference time. Due to space constraints, additional experimental results, such as those using larger backbones, are provided in the Appendix. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 11 
+
+Table 1: Applying SPOT-E to closed-source and open-source backbones.                                                                                                                                                         
+
+> Base Model TextVQA DocVQA ChartQA MathVista MMMU GQA MMBench POPE
+> Closed-Source
+> GPT-4o [16] 77.4 91.1 86.7 63.5 69.2 73.0 83.1 86.9
+> + SPOT-E (Ours) 79.9 +2.5 ↑92.3 +1.2 ↑88.2 +1.5 ↑65.5 +2.0 ↑70.4 +1.2 ↑73.8 +0.8 ↑83.9 +0.8 ↑87.9 +1.0 ↑
+> GPT-4o-mini [16] 70.0 86.0 80.0 55.0 60.0 68.0 78.0 84.0
+> + SPOT-E (Ours) 73.5 +3.5 ↑88.0 +2.0 ↑82.5 +2.5 ↑58.0 +3.0 ↑62.0 +2.0 ↑69.0 +1.0 ↑79.2 +1.2 ↑85.2 +1.2 ↑
+> Gemini-2.5-Flash [7] 80.0 91.5 84.0 68.0 70.0 72.0 82.0 86.0
+> + SPOT-E (Ours) 82.8 +2.8 ↑93.0 +1.5 ↑85.8 +1.8 ↑70.2 +2.2 ↑71.5 +1.5 ↑72.8 +0.8 ↑82.8 +0.8 ↑86.9 +0.9 ↑
+> Open-Source
+> Qwen2.5-VL-7B [32] 84.9 85.7 87.3 67.8 55.0 64.0 82.6 86.4
+> + SPOT-E (Ours) 86.9 +2.0 ↑86.5 +0.8 ↑88.5 +1.2 ↑70.8 +3.0 ↑58.5 +3.5 ↑65.0 +1.0 ↑83.5 +0.9 ↑87.4 +1.0 ↑
+> Qwen3-VL-8B [1] 86.0 86.2 88.0 70.5 58.0 65.5 83.8 87.2
+> + SPOT-E (Ours) 87.8 +1.8 ↑86.8 +0.6 ↑89.0 +1.0 ↑73.3 +2.8 ↑61.0 +3.0 ↑66.4 +0.9 ↑84.6 +0.8 ↑88.1 +0.9 ↑
+> LLaVA-NeXT-7B [21] 78.5 80.0 79.0 47.0 38.0 63.0 75.0 85.0
+> + SPOT-E (Ours) 84.7 +6.2 ↑82.0 +2.0 ↑81.5 +2.5 ↑50.5 +3.5 ↑41.0 +3.0 ↑64.5 +1.5 ↑76.5 +1.5 ↑86.5 +1.5 ↑
+> LLaVA-OV-7B [21] 80.0 81.0 80.5 48.5 39.5 63.5 76.0 85.5
+> + SPOT-E (Ours) 85.0 +5.0 ↑82.8 +1.8 ↑82.8 +2.3 ↑51.8 +3.3 ↑42.5 +3.0 ↑64.9 +1.4 ↑77.4 +1.4 ↑86.9 +1.4 ↑
+> InternVL2.5-8B [6] 81.0 82.0 83.0 66.0 56.0 62.0 80.5 89.0
+> + SPOT-E (Ours) 84.5 +3.5 ↑83.5 +1.5 ↑85.0 +2.0 ↑69.5 +3.5 ↑59.5 +3.5 ↑63.2 +1.2 ↑81.5 +1.0 ↑90.0 +1.0 ↑
+> InternVL3-8B [6] 80.2 82.7 86.6 71.6 62.7 61.0 81.7 91.1
+> + SPOT-E (Ours) 82.4 +2.2 ↑83.7 +1.0 ↑88.1 +1.5 ↑74.4 +2.8 ↑65.2 +2.5 ↑62.2 +1.2 ↑82.5 +0.8 ↑92.0 +0.9 ↑
+
+5.1 Implementation Details Models. To verify the effectiveness of our approach, we apply SPOT-E to mul-tiple frozen open-source VLM backbones spanning three representative fami-lies: Qwen-VL [32], LLaVA [21], and InternVL [6], and three proprietary VLM APIs that expose token-level log probabilities: GPT-4o, GPT-4o-mini [16], and Gemini-2.5-Flash [7]. Unless otherwise stated, all backbones are kept fully frozen and SPOT-E updates only the CLIP-based eye module at test time with per-instance reset. 
+
+Evaluation. Our evaluation comprises multiple benchmarks that stress fine-grained visual grounding and localized evidence usage, spanning text-centric grounding (TextVQA [29], DocVQA [25], ChartQA [24]), compositional VQA and general multimodal understanding (GQA [15], MMBench [22]), knowledge-and reasoning-intensive tasks (MathVista [23], MMMU [44]), and hallucination-oriented evaluation (POPE [20]). We follow the standard evaluation protocols and report the official metrics for each benchmark. 
+
+5.2 Main Results Consistent Improvements Across Frozen Backbones. We compare the frozen base model and its SPOT-E augmented version across both closed-source VLM APIs and open-source backbones which cover three backbone families with two released variants per family. Table 1 shows that SPOT-E yields consis-tent gains across all evaluated models. The improvements are most pronounced on evidence-intensive benchmarks such as TextVQA, DocVQA, ChartQA, and MathVista, where answers depend on small text, numbers, or localized symbols. 12 Yin et al. 
+
+Table 2: Comparison with inference-time visual evidence manipulation baselines. 
+
+Method TextVQA GQA MMMU POPE DocVQA 
+
+FGVP-Mask [36] 77.3 55.8 46.0 84.4 56.6 FGVP-RBM [36] 72.3 55.8 46.5 81.3 38.6 SoM [35] 61.5 47.8 45.1 75.8 57.4 API [42] 81.6 61.1 47.4 85.8 68.4 ViCrop [45] 83.8 60.6 47.1 86.7 82.5 AttWarp [8] 84.7 64.0 50.4 87.4 84.1 
+
+SPOT-E 86.9 65.0 58.5 87.4 86.5 0 1 2 3 4 5           
+
+> Severity
+> 60
+> 70
+> 80
+> 90
+> Accuracy (%)
+> Gaussian noise
+> 012345
+> Severity
+> Low-res
+> 012345
+> Severity
+> Occlusion
+> Frozen +SPOT-E
+
+Fig. 6: Out-of-distribution evaluation. 
+
+On broader multimodal reasoning benchmarks (GQA, MMBench, and MMMU), SPOT-E still provides positive but typically smaller gains, suggesting that sup-pressing distractors and amplifying decisive regions complements backbone rea-soning capacity rather than replacing it. Finally, on POPE, SPOT-E tends to improve factual consistency by steering generation toward visually supported answers, indicating that entropy-guided spotlighting can mitigate confident-but-unsupported responses even without modifying the underlying VLM. 
+
+Comparison with Visual Prompting Baselines. Since several strong base-lines improve grounding by manipulating visual evidence at inference time, we compare SPOT-E with representative methods including FGVP [36], SoM [35], API [42], ViCrop [45], and AttWarp [8]. All methods are evaluated on the frozen Qwen2.5-VL-7B backbone under the same decoding configuration, following each baseline’s standard inference-time procedure. As shown in Table 2, SPOT-E is competitive with these visual intervention baselines and yields further improve-ments across benchmarks, with particularly strong gains on evidence-intensive tasks where small, localized cues are critical. 
+
+Out-of-distribution Robustness under Visual Corruptions. To evaluate robustness under domain shift, we test on TextVQA with three synthetic cor-ruptions applied at inference time: Gaussian noise, low-resolution downsampling, and local occlusion. We sweep corruption severity and plot accuracy curves for the frozen Qwen2.5-VL-7B baseline and +SPOT-E under the same decoding set-ting. As shown in Fig. 6, SPOT-E consistently reduces performance drop across severities, indicating improved robustness to corrupted visual evidence. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 13 Base 
+
+> Correct
+> Base
+> Wrong
+> +SPOT-E
+> Correct
+> +SPOT-E
+> Wrong
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Hans
+
+Fig. 7: Confidence calibration boxplot. 0 1 2 4 8 16  
+
+> Update steps per instance
+> 81
+> 82
+> 83
+> 84
+> 85
+> 86
+> Accuracy (%)
+> Qwen2.5-VL-7B
+> InternVL2.5-8B
+> LLaVA-NeXT-7B
+
+Fig. 8: Test-time budget discussion. 
+
+Confidence Calibration via Answer Entropy. We analyze how SPOT-E affects overconfident errors by measuring the answer entropy on each exam-ple. Fig. 7 reports boxplots of Hans for correct and incorrect predictions un-der the frozen baseline and +SPOT-E. SPOT-E increases entropy on incorrect cases while maintaining low entropy on correct ones, reducing confident-but-unsupported responses and improving the separation between correct and wrong predictions. 
+
+5.3 Ablation Studies 
+
+We ablate three factors that govern SPOT-E: (i) the reward design, (ii) the spotlight configuration, and (iii) the test-time update budget (number of adap-tation steps per instance). Unless otherwise stated, all ablations are conducted on frozen Qwen2.5-VL-7B under the same decoding setup as the main results, and we report the official benchmark metrics. For fair comparison, we keep the spotlight operator, learning rate, and evaluation prompts fixed, varying only the targeted component in each study. 
+
+Reward Design. We ablate the entropy-shaping reward in Sec. 4.2 to quantify the contribution of each term in Eq. (14). Keeping the spotlight mechanism and the test-time budget fixed, we compare: (i) Clarity-only , using Rclarity alone; (ii) 
+
+Preserve-only , using Rpreserve alone; (iii) Full reward , using Rclarity + Rpreserve ;and (iv) w/o dynamic scaling , where we replace γ(x, q ) in Eq. (16) with a con-stant factor. Tab. 3 shows that combining clarity and anchor preservation yields the most consistent gains, while removing either term degrades performance. These results suggest that Rclarity and Rpreserve are complementary. The clarity term encourages decisiveness on the answer span, while the preservation term discourages shortcut updates that disrupt already-reliable evidence. 
+
+Visual Spotlight Design. We ablate the spotlight module in Sec. 4.1 to assess the impact of multi-view fusion and the spotlighting operator. Keeping the re-ward and test-time budget fixed, we compare: (i) Global (only the global view; 
+
+Nc=0 ), (ii) MeanFuse (average fusion; max → mean in Eq. (11)), and (iii) 
+
+NoBgDeg (no background degradation; B(x)= x in Eq. (13)). Table 4 shows that the default design ( Default ) provides the most consistent improvements, while removing crops or disabling background degradation reduces the benefit of evidence localization. 14 Yin et al. 
+
+Table 3: Reward design ablation.                  
+
+> Variant TextVQA MathVista POPE
+> Rclarity only 85.8 69.4 86.9
+> Rpreserve only 84.9 68.6 87.1 w/o dynamic 86.4 70.1 87.2
+> Ours 86.9 70.8 87.4
+
+Table 4: Spotlight design ablation.                                             
+
+> Variant TextVQA MathVista POPE
+> Global 84.1 66.9 86.3
+> MeanFuse 85.7 68.5 86.9
+> NoBgDeg 85.2 67.8 86.7
+> Ours 86.9 70.8 87.4 Answer:
+> The license plate number is
+> LK62DMY that below
+> the bus.
+> 𝑯 𝒂𝒏𝒔 :0.19
+> Input original image
+> +SPOT -E
+> Question: How many bears in the photo in this image?
+> Answer:
+> There are four toy bears in
+> the image.
+> 𝑯 𝒂𝒏𝒔 :0. 56
+> Input original image
+> +SPOT -E
+> Question: What is the License plate number of the bus?
+> VLM
+> VLM
+> VLM
+> VLM
+> Answer:
+> In the photo on the lower
+> right corner of the image,
+> there is one bear.
+> 𝑯 𝒂𝒏𝒔 :0.14
+> Answer:
+> It is a red No. 52 bus
+> driving on the road.
+> 𝑯 𝒂𝒏𝒔 :0.72
+
+Fig. 9: Qualitative case studies comparing the frozen baseline and +SPOT-E with the same inference setup. 
+
+Test-Time Budget. We vary the test-time adaptation budget by sweeping the number of eye-module update steps per instance in 0, 1, 2, 4, 8, 16 , fixing the reward, spotlight design, learning rate, and decoding, where 0 is the frozen baseline. We evaluate on Qwen2.5-VL-7B, InternVL2.5-8B, and LLaVA-NeXT-7B. As shown in Fig. 8, accuracy increases with more steps and then saturates; we use 8 steps by default as it captures most gains with modest overhead. 
+
+5.4 Case Studies 
+
+We provide qualitative comparisons to show how SPOT-E changes visual evi-dence usage at inference time. Fig. 9 contrasts the frozen baseline and ,+SPOT-E under the same decoding setup, showing the original input, the spotlight-intervened image, and the resulting outputs. In both examples, the baseline is distracted by salient but irrelevant regions and answers incorrectly with higher 
+
+Hans , whereas SPOT-E suppresses distractors, amplifies the decisive evidence, and produces a visually supported answer with lower Hans .
+
+## 6 Conclusion 
+
+We present SPOT-E, a plug-and-play test-time method that strengthens fine-grained visual evidence utilization in frozen VLMs via lightweight per-instance adaptation of a question-conditioned visual spotlight module. Across diverse backbones and benchmarks, SPOT-E delivers consistent gains and stronger ro-bustness under visual corruptions without retraining the base model, and anal-yses highlight remaining failures on extremely small or inherently ambiguous evidence. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 15 
+
+## References 
+
+1. Bai, S., Cai, Y., Chen, R., Chen, K., Chen, X., Cheng, Z., Deng, L., Ding, W., Gao, C., Ge, C., et al.: Qwen3-vl technical report. arXiv preprint arXiv:2511.21631 (2025) 2. Bar, A., Gandelsman, Y., Darrell, T., Globerson, A., Efros, A.: Visual prompt-ing via image inpainting. Advances in neural information processing systems 35 ,25005–25017 (2022) 3. Brown, B., Juravsky, J., Ehrlich, R., Clark, R., Le, Q.V., Ré, C., Mirhoseini, A.: Large language monkeys: Scaling inference compute with repeated sampling. arXiv preprint arXiv:2407.21787 (2024) 4. Carter, B., Jain, S., Mueller, J.W., Gifford, D.: Overinterpretation reveals image classification model pathologies. Advances in Neural Information Processing Sys-tems 34 , 15395–15407 (2021) 5. Chen, A., Yao, Y., Chen, P.Y., Zhang, Y., Liu, S.: Understanding and improving visual prompting: A label-mapping perspective. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. pp. 19133–19143 (2023) 6. Chen, Z., Wu, J., Wang, W., Su, W., Chen, G., Xing, S., Zhong, M., Zhang, Q., Zhu, X., Lu, L., et al.: Internvl: Scaling up vision foundation models and aligning for generic visual-linguistic tasks. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 24185–24198 (2024) 7. Comanici, G., Bieber, E., Schaekermann, M., Pasupat, I., Sachdeva, N., Dhillon, I., Blistein, M., Ram, O., Zhang, D., Rosen, E., et al.: Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 (2025) 8. Dalal, D., Vashishtha, G., Mishra, U., Kim, J., Kanda, M., Ha, H., Lazebnik, S., Ji, H., Jain, U.: Constructive distortion: Improving mllms with attention-guided image warping. arXiv preprint arXiv:2510.09741 (2025) 9. Geirhos, R., Jacobsen, J.H., Michaelis, C., Zemel, R., Brendel, W., Bethge, M., Wichmann, F.A.: Shortcut learning in deep neural networks. Nature Machine In-telligence 2(11), 665–673 (2020) 10. Guan, T., Liu, F., Wu, X., Xian, R., Li, Z., Liu, X., Wang, X., Chen, L., Huang, F., Yacoob, Y., et al.: Hallusionbench: an advanced diagnostic suite for entangled language hallucination and visual illusion in large vision-language models. In: Pro-ceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 14375–14385 (2024) 11. Guo, C., Pleiss, G., Sun, Y., Weinberger, K.Q.: On calibration of modern neural networks. In: International conference on machine learning. pp. 1321–1330. PMLR (2017) 12. Hendrycks, D., Gimpel, K.: A baseline for detecting misclassified and out-of-distribution examples in neural networks. arXiv preprint arXiv:1610.02136 (2016) 13. Hu, E.J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., Chen, W., et al.: Lora: Low-rank adaptation of large language models. Iclr 1(2), 3 (2022) 14. Huang, Q., Dong, X., Zhang, P., Wang, B., He, C., Wang, J., Lin, D., Zhang, W., Yu, N.: Opera: Alleviating hallucination in multi-modal large language models via over-trust penalty and retrospection-allocation. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. pp. 13418–13427 (2024) 15. Hudson, D.A., Manning, C.D.: Gqa: A new dataset for real-world visual reasoning and compositional question answering. In: Proceedings of the IEEE/CVF confer-ence on computer vision and pattern recognition. pp. 6700–6709 (2019) 16 Yin et al. 16. Hurst, A., Lerer, A., Goucher, A.P., Perelman, A., Ramesh, A., Clark, A., Os-trow, A., Welihinda, A., Hayes, A., Radford, A., et al.: Gpt-4o system card. arXiv preprint arXiv:2410.21276 (2024) 17. Jian, P., Wu, J., Sun, W., Wang, C., Ren, S., Zhang, J.: Look again, think slowly: Enhancing visual reflection in vision-language models. In: Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing. pp. 9262–9281 (2025) 18. Kadavath, S., Conerly, T., Askell, A., Henighan, T., Drain, D., Perez, E., Schiefer, N., Hatfield-Dodds, Z., DasSarma, N., Tran-Johnson, E., et al.: Language models (mostly) know what they know. arXiv preprint arXiv:2207.05221 (2022) 19. Kuhn, L., Gal, Y., Farquhar, S.: Semantic uncertainty: Linguistic invari-ances for uncertainty estimation in natural language generation. arXiv preprint arXiv:2302.09664 (2023) 20. Li, Y., Du, Y., Zhou, K., Wang, J., Zhao, W.X., Wen, J.R.: Evaluating object hal-lucination in large vision-language models. In: Proceedings of the 2023 conference on empirical methods in natural language processing. pp. 292–305 (2023) 21. Liu, H., Li, C., Wu, Q., Lee, Y.J.: Visual instruction tuning. Advances in neural information processing systems 36 , 34892–34916 (2023) 22. Liu, Y., Duan, H., Zhang, Y., Li, B., Zhang, S., Zhao, W., Yuan, Y., Wang, J., He, C., Liu, Z., et al.: Mmbench: Is your multi-modal model an all-around player? In: European conference on computer vision. pp. 216–233. Springer (2024) 23. Lu, P., Bansal, H., Xia, T., Liu, J., Li, C., Hajishirzi, H., Cheng, H., Chang, K.W., Galley, M., Gao, J.: Mathvista: Evaluating mathematical reasoning of foundation models in visual contexts. arXiv preprint arXiv:2310.02255 (2023) 24. Masry, A., Do, X.L., Tan, J.Q., Joty, S., Hoque, E.: Chartqa: A benchmark for question answering about charts with visual and logical reasoning. In: Findings of the association for computational linguistics: ACL 2022. pp. 2263–2279 (2022) 25. Mathew, M., Karatzas, D., Jawahar, C.: Docvqa: A dataset for vqa on document images. In: Proceedings of the IEEE/CVF winter conference on applications of computer vision. pp. 2200–2209 (2021) 26. Radford, A., Kim, J.W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., et al.: Learning transferable visual models from natural language supervision. In: International conference on machine learning. pp. 8748–8763. PmLR (2021) 27. Shao, Z., Wang, P., Zhu, Q., Xu, R., Song, J., Bi, X., Zhang, H., Zhang, M., Li, Y., Wu, Y., et al.: Deepseekmath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 (2024) 28. Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., Yao, S.: Reflexion: Lan-guage agents with verbal reinforcement learning. Advances in neural information processing systems 36 , 8634–8652 (2023) 29. Singh, A., Natarajan, V., Shah, M., Jiang, Y., Chen, X., Batra, D., Parikh, D., Rohrbach, M.: Towards vqa models that can read. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 8317–8326 (2019) 30. Snell, C., Lee, J., Xu, K., Kumar, A.: Scaling llm test-time compute optimally can be more effective than scaling model parameters. arXiv preprint arXiv:2408.03314 (2024) 31. Tong, S., Liu, Z., Zhai, Y., Ma, Y., LeCun, Y., Xie, S.: Eyes wide shut? exploring the visual shortcomings of multimodal llms. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 9568–9578 (2024) Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 17 32. Wang, P., Bai, S., Tan, S., Wang, S., Fan, Z., Bai, J., Chen, K., Liu, X., Wang, J., Ge, W., et al.: Qwen2-vl: Enhancing vision-language model’s perception of the world at any resolution. arXiv preprint arXiv:2409.12191 (2024) 33. Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., Chowdhery, A., Zhou, D.: Self-consistency improves chain of thought reasoning in language models. arXiv preprint arXiv:2203.11171 (2022) 34. Xiong, M., Hu, Z., Lu, X., Li, Y., Fu, J., He, J., Hooi, B.: Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms. arXiv preprint arXiv:2306.13063 (2023) 35. Yang, J., Zhang, H., Li, F., Zou, X., Li, C., Gao, J.: Set-of-mark prompting un-leashes extraordinary visual grounding in gpt-4v. arXiv preprint arXiv:2310.11441 (2023) 36. Yang, L., Wang, Y., Li, X., Wang, X., Yang, J.: Fine-grained visual prompting. Advances in Neural Information Processing Systems 36 , 24993–25006 (2023) 37. Yin, B., Hu, X., Zhou, X., Jiang, P.T., Liao, Y., Zhu, J., Zhang, J., Tai, Y., Wang, C., Yan, S.: Fera: Frequency-energy constrained routing for effective diffusion adap-tation fine-tuning. arXiv preprint arXiv:2511.17979 (2025) 38. Yin, B., Li, Q., Yu, R., Wang, X.: Refinement provenance inference: Detecting llm-refined training prompts from model behavior. arXiv preprint arXiv:2601.01966 (2026) 39. Yin, B., Yang, X., Wang, X.: Don’t forget the nonlinearity: Unlocking activation functions in efficient fine-tuning. arXiv preprint arXiv:2509.13240 (2025) 40. Yin, S., Fu, C., Zhao, S., Xu, T., Wang, H., Sui, D., Shen, Y., Li, K., Sun, X., Chen, E.: Woodpecker: Hallucination correction for multimodal large language models. Science China Information Sciences 67 (12), 220105 (2024) 41. Yin, Z., Sun, Q., Guo, Q., Wu, J., Qiu, X., Huang, X.J.: Do large language models know what they don’t know? In: Findings of the association for Computational Linguistics: ACL 2023. pp. 8653–8665 (2023) 42. Yu, R., Yu, W., Wang, X.: Attention prompting on image for large vision-language models. In: European Conference on Computer Vision. pp. 251–268. Springer (2024) 43. Yu, X., Xu, C., Chen, Z., Yin, B., Yang, C., He, Y., Hu, Y., Zhang, J., Tan, C., Hu, X., et al.: Dual latent memory for visual multi-agent system. arXiv preprint arXiv:2602.00471 (2026) 44. Yue, X., Ni, Y., Zhang, K., Zheng, T., Liu, R., Zhang, G., Stevens, S., Jiang, D., Ren, W., Sun, Y., et al.: Mmmu: A massive multi-discipline multimodal understanding and reasoning benchmark for expert agi. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 9556–9567 (2024) 45. Zhang, J., Khayatkhoei, M., Chhikara, P., Ilievski, F.: Visual cropping improves zero-shot question answering of multimodal large language models. In: R0-FoMo: Robustness of Few-shot and Zero-shot Learning in Large Foundation Models (2023) 46. Zhang, Z., Zhang, A., Li, M., Zhao, H., Karypis, G., Smola, A.: Multimodal chain-of-thought reasoning in language models. arXiv preprint arXiv:2302.00923 (2023) 18 Yin et al. 
+
+## Appendix 
+
+Overall, the appendix provides complementary support for SPOT-E from four aspects. First, the theoretical discussion clarifies why the proposed objective favors non-destructive interventions and how its design relates to the observed efficiency trade-offs. Second, SPOT-E remains effective on larger open-source backbones, as shown in Tables 7 and 8. Third, the method is stable across repeated runs, decoding choices, and moderate hyperparameter changes, while additional ablations show that the gains do not rely on overly large eye modules or trainable budgets (Tables 9, 10, and 11-17). Finally, the added test-time cost brings practical returns in robustness and confidence behavior, as summarized in Tables 18, 19, 20, and 21. 
+
+## A Additional Theoretical Discussion 
+
+Reward preference for non-destructive interventions. Recall that SPOT-E favors interventions that both reduce answer uncertainty and preserve low-entropy anchors from the baseline trajectory. A simplified form of the reward can be written as 
+
+R(˜ x) = −γ(x, q ) ∆H ans (˜ x) − λ ∆H low (˜ x), (22) where ∆H ans (˜ x) denotes the change in answer entropy relative to the baseline and ∆H low (˜ x) measures anchor disruption. Here, lower ∆H ans is better when it reflects a more decisive answer, while lower ∆H low indicates less damage to already stable parts of the decoding trajectory. 
+
+Proposition 1. Let ˜xA and ˜xB be two candidate interventions. Then R(˜ xA) >R(˜ xB ) if and only if 
+
+γ(x, q )
+
+
+
+∆H ans (˜ xB ) − ∆H ans (˜ xA)
+
+
+
+> λ 
+
+
+
+∆H low (˜ xA) − ∆H low (˜ xB )
+
+
+
+. (23) 
+
+Proof. Subtracting R(˜ xB ) from R(˜ xA) under Eq. (22) gives 
+
+R(˜ xA)−R(˜ xB ) = −γ
+
+
+
+∆H ans (˜ xA)−∆H ans (˜ xB )
+
+
+
+−λ
+
+
+
+∆H low (˜ xA)−∆H low (˜ xB )
+
+
+
+,
+
+and rearranging yields Eq. (23). □
+
+This condition makes the intended behavior explicit: an intervention is preferred when its gain in answer clarification outweighs its additional anchor disruption. In particular, if two interventions achieve the same answer-entropy reduction, the reward always prefers the one with smaller anchor disruption. Conversely, if they preserve anchors equally well, the reward prefers the one that reduces answer entropy more. 
+
+Role of dynamic scaling. The scaling factor γ(x, q ) controls how strongly the reward emphasizes answer clarification for a given instance. When the baseline Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 19 
+
+prediction is already confident, overly aggressive entropy reduction may encour-age destructive shortcuts. By increasing the clarity weight mainly on uncertain instances, dynamic scaling makes the reward more conservative on already sta-ble samples while remaining sufficiently corrective on ambiguous ones. This helps explain why the full reward improves both answer confidence calibration and an-chor preservation in Tables 20 and 21. 
+
+Complexity discussion. Let Tupd denote the number of test-time update steps and N the candidate group size per step. If Ceye is the cost of one forward pass through the eye module and Cvlm the cost of evaluating one intervened candidate with the frozen VLM, then the additional per-instance cost of SPOT-E is approximately 
+
+O(Tupd · N · (Ceye + Cvlm )) , (24) excluding the final decode. Since the base VLM remains frozen and only the spotlight-module LoRA parameters are updated, the trainable memory foot-print scales with the adaptation module rather than the full backbone. This is consistent with the empirical runtime and memory results in Tables 17 and 18. 
+
+## B Additional Experimental Details 
+
+Benchmark protocols. We summarize the benchmark splits and final answer formats in Table 5, so that the appendix makes clear how evaluation is organized across tasks.                    
+
+> Table 5: Benchmark protocols used in the appendix and the main paper.
+> Benchmark Split Final Answer Format
+> TextVQA val / test-dev short free-form DocVQA val / test short free-form ChartQA test number / phrase MathVista testmini / test option / phrase MMMU val option only GQA test-dev short free-form MMBench dev / test option only POPE random / popular / adv yes / no
+
+Runtime environment. We also summarize the hardware and software envi-ronment in Table 6, since the practical cost of test-time adaptation is part of the method’s trade-off. 20 Yin et al. 
+
+Table 6: Hardware and software setup for the main open-source runs. 
+
+Item Setting 
+
+GPU H100 80GB Framework PyTorch + Transformers Precision bf16 Inference batch size 1Backbone policy fully frozen Trainable component spotlight-module LoRA only API models evaluated remotely with matched decoding 
+
+Table 7: Additional results on larger open-source backbones.                                                                         
+
+> Base Model TextVQA DocVQA ChartQA MathVista MMMU GQA MMBench POPE
+> Qwen2.5-VL-32B 88.3 89.1 89.8 73.8 61.4 67.1 84.8 88.3
+> + SPOT-E (Ours) 89.5 +1.2 ↑89.8 +0.7 ↑90.6 +0.8 ↑75.3 +1.5 ↑63.0 +1.6 ↑67.8 +0.7 ↑85.5 +0.7 ↑89.0 +0.7 ↑
+> Qwen3-VL-32B 89.0 89.8 90.2 75.1 63.2 67.9 85.5 88.9
+> + SPOT-E (Ours) 90.0 +1.0 ↑90.4 +0.6 ↑90.9 +0.7 ↑76.4 +1.3 ↑64.6 +1.4 ↑68.5 +0.6 ↑86.2 +0.7 ↑89.5 +0.6 ↑
+> InternVL2.5-26B 84.6 85.0 87.5 72.5 60.8 63.8 82.5 90.8
+> + SPOT-E (Ours) 86.1 +1.5 ↑86.0 +1.0 ↑88.8 +1.3 ↑74.3 +1.8 ↑62.7 +1.9 ↑65.0 +1.2 ↑83.4 +0.9 ↑91.6 +0.8 ↑
+> LLaVA-OV-72B 86.4 84.9 85.6 58.0 49.8 66.5 79.5 87.5
+> + SPOT-E (Ours) 88.0 +1.6 ↑86.0 +1.1 ↑87.1 +1.5 ↑60.3 +2.3 ↑51.8 +2.0 ↑67.6 +1.1 ↑80.6 +1.1 ↑88.2 +0.7 ↑
+
+## C Additional Quantitative Results 
+
+Larger backbones. The main paper already shows consistent gains across mul-tiple backbone families. Table 7 extends that coverage to larger variants and shows that the effect persists even when the base model is stronger. 
+
+Task-wise average gains. To make the broader trend easier to read, Table 8 further aggregates improvements by task family. The largest average gains still concentrate on evidence-intensive benchmarks, consistent with the main claim. 
+
+## D Stability and Decoding Robustness 
+
+Repeated runs. Because SPOT-E contains candidate sampling and test-time updates, repeated-run consistency is useful to report explicitly. Table 9 summa-rizes the mean and standard deviation across three random seeds on represen-tative benchmarks. 
+
+Decoding robustness. The main experiments use a matched decoding setup. To show that the gain does not depend on one particular decoding choice, Ta-ble 10 additionally compares greedy decoding, low-temperature sampling, and a small Best-of-4 setting. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 21 
+
+Table 8: Average gain of SPOT-E by task category across open-source backbones. 
+
+Task Category Benchmarks Avg. Gain 
+
+Evidence-intensive TextVQA, DocVQA, ChartQA, MathVista +2.2 Broader reasoning MMMU, GQA, MMBench +1.5 Hallucination-focused POPE +1.0 
+
+Table 9: Repeated-run stability over three seeds.                                                                                 
+
+> Backbone Method TextVQA MathVista MMMU POPE
+> Qwen2.5-VL-7B Frozen 84.9 ±0.0 67.8 ±0.0 55.0 ±0.0 86.4 ±0.0 + SPOT-E 86.8 ±0.2 70.7 ±0.2 58.4 ±0.3 87.4 ±0.1 InternVL2.5-8B Frozen 81.0 ±0.0 66.0 ±0.0 56.0 ±0.0 89.0 ±0.0 + SPOT-E 84.4 ±0.3 69.4 ±0.2 59.3 ±0.2 89.9 ±0.1 LLaVA-NeXT-7B Frozen 78.5 ±0.0 47.0 ±0.0 38.0 ±0.0 85.0 ±0.0 + SPOT-E 84.6 ±0.4 50.4 ±0.3 40.9 ±0.2 86.5 ±0.1
+
+## E Additional Ablation Studies 
+
+Eye module scale. To study whether SPOT-E depends on the capacity of the external eye module, we vary the CLIP backbone used to parameterize the spotlight policy while keeping the frozen VLM, reward, and test-time budget fixed. Table 11 shows that larger eye modules generally improve performance, but the gains saturate relative to the added cost, supporting our default choice as a favorable efficiency–accuracy trade-off. 
+
+Trainable budget. We further vary the LoRA rank of the spotlight module to measure how much test-time adaptation capacity is actually needed. Table 12 shows that a small rank already captures most of the gains, while larger ranks bring only marginal improvements at higher cost. 
+
+Anchor-related choices. The main paper already studies the reward design and the spotlight design. Here we further unpack the anchor-related hyperpa-rameters in Tables 13 and 14, since they are central to the entropy-shaping objective. 
+
+Optimization settings. We next vary the GRPO group size and learning rate in Tables 15 and 16 to verify that the reported gains are not tied to a single narrow optimization choice. 
+
+Budget trade-off in table form. The main paper shows the test-time budget trend as a figure. For the appendix, Table 17 is often more convenient because it combines the gain and the runtime overhead in one place. 22 Yin et al.                                                   
+
+> Table 10: Robustness to decoding choices on Qwen2.5-VL-7B.
+> Method Decoding TextVQA MathVista MMMU
+> Frozen Greedy 84.9 67.8 55.0 + SPOT-E Greedy 86.9 70.8 58.5 Frozen Temp=0.2 84.6 67.3 54.6 + SPOT-E Temp=0.2 86.5 70.2 58.0 Frozen Best-of-4 85.4 68.2 55.8 + SPOT-E Best-of-4 87.3 71.1 58.9
+> Table 11: Effect of eye-module scale on Qwen2.5-VL-7B.
+> Eye Module Params TextVQA MathVista MMMU Runtime (s)
+> CLIP ViT-B/16 86M 86.9 70.8 58.5 2.08 CLIP ViT-L/14 304M 87.3 71.2 59.5 2.41 SigLIP So400m 400M 87.4 71.4 60.2 2.73
+
+## F Efficiency and Robustness 
+
+Parameter and memory overhead. Since SPOT-E updates only the spotlight-module LoRA at test time, the trainable fraction is small. Table 18 makes that explicit together with the extra memory footprint. 
+
+Severity-averaged corruption robustness. The main paper presents robust-ness trends under increasing corruption severity. Table 19 summarizes the same phenomenon by averaging over severity levels, which gives a compact cross-model view. 
+
+## G Entropy and Anchor Diagnostics 
+
+Confidence behavior. The main paper shows that SPOT-E increases answer entropy on unsupported errors while keeping it low on correct cases. Table 20 summarizes that separation numerically. 
+
+Anchor preservation. To complement the reward ablation in the main paper, Table 21 reports the average anchor disruption ∆H low for several intervention variants. This makes the non-destructive effect of the full objective more explicit. Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 23 
+
+Table 12: Effect of LoRA rank on Qwen2.5-VL-7B. 
+
+Rank Params TextVQA MathVista MMMU Runtime (s) 
+
+4 1.7M 86.1 69.9 57.8 2.31 8 3.4M 86.6 70.4 58.2 2.36 16 6.8M 86.9 70.8 58.5 2.41 32 13.6M 87.0 70.9 58.6 2.55 
+
+Table 13: Sensitivity to the number of low-entropy anchors K on Qwen2.5-VL-7B. 
+
+K TextVQA MathVista POPE 
+
+20 86.1 69.9 87.1 40 86.6 70.4 87.3 60 86.9 70.8 87.4 
+
+80 86.7 70.5 87.3 120 86.3 70.0 87.1 
+
+Table 14: Sensitivity to the anchor-preservation weight λ on Qwen2.5-VL-7B. 
+
+λ TextVQA MathVista POPE 
+
+0.0 85.8 69.4 86.9 0.1 86.2 70.0 87.1 0.3 86.6 70.5 87.3 0.5 86.9 70.8 87.4 
+
+0.7 86.7 70.6 87.2 1.0 86.1 70.0 87.0 
+
+Table 15: Sensitivity to GRPO group size N on Qwen2.5-VL-7B. 
+
+Group Size TextVQA MathVista MMMU 
+
+2 86.2 70.0 57.6 4 86.9 70.8 58.5 
+
+8 87.0 70.9 58.6 16 87.0 71.0 58.7 
+
+Table 16: Sensitivity to the learning rate on Qwen2.5-VL-7B. 
+
+Learning Rate TextVQA MathVista MMMU 
+
+1 × 10 −4 86.1 69.9 57.9 
+
+3 × 10 −4 86.6 70.5 58.3 
+
+5 × 10 −4 86.9 70.8 58.5 
+
+1 × 10 −3 86.5 70.2 58.1 24 Yin et al. 
+
+Table 17: Accuracy and runtime as a function of the test-time update budget. Runtime values are average seconds per sample.                                                      
+
+> Model Steps TextVQA MathVista MMMU Runtime / sample (s)
+> Qwen2.5-VL-7B 084.9 67.8 55.0 0.73 185.8 69.2 56.9 0.98 286.3 69.9 57.6 1.26 486.6 70.4 58.2 1.64 886.9 70.8 58.5 2.41 16 87.0 70.9 58.6 3.96 InternVL2.5-8B 081.0 66.0 56.0 0.89 182.6 67.3 57.4 1.17 283.5 68.1 58.2 1.47 484.0 68.9 58.8 1.91 884.5 69.5 59.5 2.85 16 84.6 69.6 59.6 4.71
+
+Table 18: Trainable parameters and memory overhead of SPOT-E. 
+
+Backbone Trainable Params Trainable % Extra VRAM 
+
+Qwen2.5-VL-7B 6.8M 0.097% +1.8 GB InternVL2.5-8B 6.8M 0.085% +2.0 GB LLaVA-NeXT-7B 6.8M 0.097% +1.7 GB Qwen2.5-VL-32B 6.8M 0.021% +2.4 GB 
+
+Table 19: Severity-averaged accuracy under controlled corruptions on TextVQA.                          
+
+> Backbone Method Gaussian Noise Low-Res Occlusion
+> Qwen2.5-VL-7B Frozen 73.1 70.5 72.4 + SPOT-E 83.4 81.9 83.2
+> InternVL2.5-8B Frozen 71.6 69.2 71.1 + SPOT-E 80.2 78.8 79.7
+> LLaVA-NeXT-7B Frozen 66.0 63.8 65.4 + SPOT-E 75.4 73.2 74.8
+
+Table 20: Average answer entropy Hans on correct and incorrect predictions for TextVQA with Qwen2.5-VL-7B. Lower is better for correct cases, while higher is better for unsupported wrong cases. 
+
+Method Correct ↓ Wrong ↑
+
+Frozen 0.12 0.24 + SPOT-E 0.11 0.41 Test-Time Entropy Shaping with Visual Spotlights for Frozen VLMs 25 
+
+Table 21: Average anchor disruption ∆H low for different variants on Qwen2.5-VL-7B. Lower is better. 
+
+Variant TextVQA MathVista POPE 
+
+Clarity only 0.083 0.091 0.077 w/o dynamic scaling 0.071 0.086 0.068 MeanFuse 0.062 0.074 0.060 Full SPOT-E 0.041 0.052 0.044
