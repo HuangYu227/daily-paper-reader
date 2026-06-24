@@ -1,0 +1,409 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-24T22:09:53.427187+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 7,
+    "deep_cap": 7,
+    "deep_selected": 7,
+    "quick_candidates": 3,
+    "quick_skim_target": 12,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2606.18074v2",
+      "source": "arxiv",
+      "title": "Tensor-based second-order causal discovery",
+      "abstract": "Causal discovery seeks to uncover the causal dependencies among variables. For this purpose, we propose an algorithm called Tensor-based Second-order Causal Discovery (TSCD). Its input is a tensor obtained from the covariance matrices of observational and interventional data. Assuming the causal dependencies follow a linear structural equation model on a directed acyclic graph (DAG), TSCD outputs the DAG and the functions on its edges, requiring only that the noise variables are uncorrelated. We also implement a version of the approach for nonlinear models. Our focus on second-order statistics (via the covariance matrices) is motivated by their statistical and computational efficiency relative to higher-order moments, their identifiability relative to first-order statistics, and that they work regardless of whether the variables are Gaussian. We show that TSCD has identifiable causal order and parameters from a number of interventions that is logarithmic in the number of variables. Experiments show that TSCD is robust to noise, competitive with existing methods, and scales to hundreds of variables.",
+      "authors": [
+        "Nathan Ouyang",
+        "Kexin Wang",
+        "Anna Seigal"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-06-16T15:43:44+00:00",
+      "link": "https://arxiv.org/pdf/2606.18074v2",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal discovery algorithm using covariance matrices",
+      "llm_evidence_cn": "使用协方差矩阵的因果发现算法",
+      "llm_evidence": "使用协方差矩阵的因果发现算法",
+      "canonical_evidence": "使用协方差矩阵的因果发现算法",
+      "llm_tldr_en": "Proposes Tensor-based Second-order Causal Discovery (TSCD) using covariance matrices from observational and interventional data to learn DAG structure.",
+      "llm_tldr_cn": "该论文提出基于张量的二阶因果发现算法TSCD，输入观测和干预数据的协方差矩阵张量，输出线性结构方程模型下的DAG及边函数，仅要求噪声不相关。该方法利用二阶统计量的统计和计算效率，并扩展至非线性模型，为因果发现提供了高效的新工具。",
+      "llm_tldr": "该论文提出基于张量的二阶因果发现算法TSCD，输入观测和干预数据的协方差矩阵张量，输出线性结构方程模型下的DAG及边函数，仅要求噪声不相关。该方法利用二阶统计量的统计和计算效率，并扩展至非线性模型，为因果发现提供了高效的新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.21036v1",
+      "source": "arxiv",
+      "title": "Diffusion-Driven State Space Models",
+      "abstract": "In many domains, practitioners seek models that produce accurate forecasts while faithfully capturing latent system dynamics. Existing approaches typically sacrifice one of these goals: deep state space models often assume Gaussian latent transitions, limiting fit and forecasting, while diffusion models are highly expressive but lack principled inference for the underlying dynamics. To combine the strengths of both, we introduce the Diffusion-Driven State Space Model (DDSSM), which replaces the conventional Gaussian transition distribution with a diffusion model. Our DDSSM resolves the open problem of how to jointly train an autoencoder and a diffusion model on sequential data, thereby extending the literature on latent diffusion models for time series. Moreover, we find that the DDSSM empirically outperforms a state-of-the-art deep SSM at fitting and forecasting a simulated time series with multimodal transitions.",
+      "authors": [
+        "Jack Ruder",
+        "Michael Wojnowicz"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-06-19T02:00:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.21036v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "diffusion model for time series generation and forecasting",
+      "llm_evidence_cn": "扩散模型用于时间序列生成和预测",
+      "llm_evidence": "扩散模型用于时间序列生成和预测",
+      "canonical_evidence": "扩散模型用于时间序列生成和预测",
+      "llm_tldr_en": "DDSSM replaces Gaussian latent transitions with a diffusion model in state space models, enabling accurate forecasting and faithful latent dynamics inference for time series.",
+      "llm_tldr_cn": "针对深度状态空间模型假设高斯隐变量导致拟合有限，而扩散模型缺乏动态推断的问题，DDSSM将状态空间模型的隐变量转移分布替换为扩散模型，解决了自编码器与扩散模型在序列数据上的联合训练难题，为时间序列的生成和预测提供了兼具表达力和推断原理性的新框架。",
+      "llm_tldr": "针对深度状态空间模型假设高斯隐变量导致拟合有限，而扩散模型缺乏动态推断的问题，DDSSM将状态空间模型的隐变量转移分布替换为扩散模型，解决了自编码器与扩散模型在序列数据上的联合训练难题，为时间序列的生成和预测提供了兼具表达力和推断原理性的新框架。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.21776v1",
+      "source": "arxiv",
+      "title": "A Causal DAG Prior for Synthetic Time-Series Classification Datasets",
+      "abstract": "A Prior-data fitted Network learns the posterior predictive induced by its training prior; bringing this paradigm to multivariate time-series classification therefore calls for a synthetic generator that produces complete labelled datasets with temporal structure. We introduce a causal prior that synthesizes each dataset from a randomly sampled DAG over typed nodes across two modalities (tabular attributes and time series), natively producing multivariate, multi-class TSC datasets with cross-modal causal structure across channels, timesteps and labels, a regime not addressed by existing synthetic priors. To validate the prior, we finetune TabPFN v2.5 with minimal adaptations and evaluate on 75 UCR/UEA datasets within TabPFN's operating regime. Finetuning on our generator significantly outperforms both the unmodified upstream model and a tabular-only ablation of the same prior (Wilcoxon signed-rank $p=3.0\\times 10^{-8}$ on ROC-AUC), isolating the contribution of the cross-modal temporal structure.",
+      "authors": [
+        "Franco Martino O'Rourke",
+        "Ana Trisovic",
+        "Dimitris Bertsimas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-19T21:50:33+00:00",
+      "link": "https://arxiv.org/pdf/2606.21776v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal DAG prior for synthetic time series",
+      "llm_evidence_cn": "用于合成时间序列的因果DAG先验",
+      "llm_evidence": "用于合成时间序列的因果DAG先验",
+      "canonical_evidence": "用于合成时间序列的因果DAG先验",
+      "llm_tldr_en": "Introduces a causal DAG prior for generating synthetic multivariate time-series classification datasets with cross-modal causal structure.",
+      "llm_tldr_cn": "该论文针对合成时间序列分类数据集缺乏跨模态因果结构的问题，提出一种因果DAG先验，从随机采样的有向无环图生成完整标注数据集，天然包含跨通道、时间步和标签的因果结构。通过在75个UCR/UEA数据集上微调TabPFN验证了先验的有效性，为时间序列分类的贝叶斯推断提供了新的合成数据生成范式。",
+      "llm_tldr": "该论文针对合成时间序列分类数据集缺乏跨模态因果结构的问题，提出一种因果DAG先验，从随机采样的有向无环图生成完整标注数据集，天然包含跨通道、时间步和标签的因果结构。通过在75个UCR/UEA数据集上微调TabPFN验证了先验的有效性，为时间序列分类的贝叶斯推断提供了新的合成数据生成范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-17-732832-v1",
+      "source": "biorxiv",
+      "title": "Beyond Accuracy: Reliability-Aware Cross-Farm Evaluation of Dairy Cow Vocalization Models",
+      "abstract": "Automated analysis of dairy cow vocalizations has largely relied on supervised classifiers evaluated within a single farm, a setting that inflates apparent performance and gives no measure of how far predictions can be trusted. We address this with a three-layer framework that separates acoustic structure discovery, proxy-state inference, and reliability assessment, evaluated on 569 annotated clips from three commercial dairy farms. A frozen self-supervised speech encoder, latent-space segmentation, and stability-guided clustering convert continuous recordings into discrete acoustic units without behavioral labels. Proxy-state signal is then tested under audio-only, audio-plus-context, and leave-one-farm-out (LOFO) protocols designed to separate transferable acoustic structure from farm-specific shortcuts. The results suggest that cross-farm generalizability differs substantially across biologically distinct vocalization categories. Non-vocal physiological sounds transfer across farms (LOFO macro-F1 = 0.763) and calibrate well (expected calibration error reduced from 0.087 to 0.023), whereas resource-related calls collapse to a majority-class baseline (macro-F1 = 0.500) and distress-related calls degrade under farm holdout. Selective prediction improves the retained-set score of the multiclass functional proxy (0.407 to 0.430), and an end-to-end convolutional baseline matches or exceeds the framework on raw accuracy for the easier targets yet yields a roughly two- to six-fold larger calibration error and offers no abstention. Random cross-validation consistently overstates cross-farm utility. These findings show that acoustic models for livestock monitoring require reliability-aware evaluation rather than flat classification.",
+      "authors": [
+        "Kate, M.",
+        "Neethirajan, S."
+      ],
+      "primary_category": "animal behavior and cognition",
+      "categories": [
+        "animal behavior and cognition"
+      ],
+      "published": "2026-06-22T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.17.732832v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "frozen self-supervised speech encoder for acoustic unit discovery",
+      "llm_evidence_cn": "使用冻结的自监督语音编码器进行声学单元发现",
+      "llm_evidence": "使用冻结的自监督语音编码器进行声学单元发现",
+      "canonical_evidence": "使用冻结的自监督语音编码器进行声学单元发现",
+      "llm_tldr_en": "This work presents a reliability-aware framework for dairy cow vocalization analysis using a frozen self-supervised speech encoder to extract acoustic features, enabling cross-farm generalization and trust assessment.",
+      "llm_tldr_cn": "该工作针对奶牛声音分析中单一农场评估导致性能膨胀的问题，提出了一种三层框架。核心是使用冻结的自监督语音编码器，结合潜在空间分割和稳定性引导聚类，无需行为标签即可将连续录音转化为离散声学单元。在三个农场的569个标注片段上，通过音频、上下文及留一农场协议进行测试，证明了跨农场泛化能力。该框架不仅提升了评估可靠性，还提供了预测可信度的量化指标。",
+      "llm_tldr": "该工作针对奶牛声音分析中单一农场评估导致性能膨胀的问题，提出了一种三层框架。核心是使用冻结的自监督语音编码器，结合潜在空间分割和稳定性引导聚类，无需行为标签即可将连续录音转化为离散声学单元。在三个农场的569个标注片段上，通过音频、上下文及留一农场协议进行测试，证明了跨农场泛化能力。该框架不仅提升了评估可靠性，还提供了预测可信度的量化指标。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.20961v1",
+      "source": "arxiv",
+      "title": "Is Our Benchmark Enough? An Analysis of Continual Learning for MLLMs",
+      "abstract": "Continual adaptation is essential for multimodal large language models (MLLMs) deployed across evolving domains, but the state-of-the-art MR-LoRA method highly relies on the assumption that a MLLM-based router is necessary to process complex multimodal inputs. This paper revisits this claim on the MLLM-CL benchmark and argues for two claims. \\textbf{First}, routing does not require an MLLM: a simple training-free, replay-free ptotypical routing method (\\textsc{RePRo}), uses frozen pretrained features and task prototypes to match the MLLM-based router of MR-LoRA at far lower computational cost. \\textbf{Second}, shared experts do not improve continual learning for MLLMs, despite their theoretical appeal. We show that these findings arise from two structural limitations of MLLM-CL: (1) its tasks are \\textbf{highly separable} in representation space, and (2) its fixed task order makes conclusions \\textbf{sensitive to a single curriculum} rather than robust across diverse continual-learning trajectories. As a result, the benchmark primarily rewards learning in isolation rather than genuine continual transfer. This motivates a new design for future benchmarks of continual MLLM learning, with overlapping task manifolds, multiple task orders, fine-grained domain shifts, and evaluation protocols that reward forward transfer as well as retention.",
+      "authors": [
+        "Van-Tuan Tran",
+        "Shruthi Gowda",
+        "Merim Dzaferagic",
+        "Marco Ruffini"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-18T21:58:05+00:00",
+      "link": "https://arxiv.org/pdf/2606.20961v1",
+      "tags": [
+        "keyword:fe",
+        "query:fe"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Uses frozen pretrained features in a routing method for MLLM continual learning",
+      "llm_evidence_cn": "在多模态大语言模型持续学习中使用冻结预训练特征的路径选择方法",
+      "llm_evidence": "在多模态大语言模型持续学习中使用冻结预训练特征的路径选择方法",
+      "canonical_evidence": "在多模态大语言模型持续学习中使用冻结预训练特征的路径选择方法",
+      "llm_tldr_en": "Proposes RePRo, a training-free replay-free routing method using frozen pretrained features and task prototypes for MLLM continual learning, matching MLLM-based router performance at lower cost.",
+      "llm_tldr_cn": "该论文针对多模态大语言模型（MLLM）的持续学习问题，提出RePRo方法，利用冻结的预训练特征和任务原型进行路径选择，无需训练或重放。实验表明，RePRo在MLLM-CL基准上以更低计算成本达到了与基于MLLM的路径选择器相当的性能。该方法验证了冻结编码器在MLLM持续学习中的有效性。",
+      "llm_tldr": "该论文针对多模态大语言模型（MLLM）的持续学习问题，提出RePRo方法，利用冻结的预训练特征和任务原型进行路径选择，无需训练或重放。实验表明，RePRo在MLLM-CL基准上以更低计算成本达到了与基于MLLM的路径选择器相当的性能。该方法验证了冻结编码器在MLLM持续学习中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model with frozen encoder",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.21212v1",
+      "source": "arxiv",
+      "title": "DCD-PFN: A Decoupling-Aware Foundation Model for Causal Discovery",
+      "abstract": "Causal discovery is critical for understanding complex data-generating mechanisms, yet traditional algorithms often struggle with highly non-linear and noisy systems, or suffer from severe computational bottlenecks. Recent tabular foundation models based on Prior-Data Fitted Networks (PFNs) have demonstrated remarkable zero-shot inference capabilities, but their potential for explicit structural causal discovery remains underexplored. To bridge this gap, we propose DCD-PFN, a decoupling-aware foundation model for causal discovery. Instead of directly amortizing global graph reconstruction, DCD-PFN focuses on local causal discovery through a decoupling-based paradigm. Through pre-training on diverse synthetic Structural Causal Models (SCMs), the model learns sample-wise decoupling weights that enable Markov boundary (MB) identification. Furthermore, by leveraging parallelized local discovery, DCD-PFN efficiently reconstructs global causal graphs while remaining grounded in the theoretical foundations of decoupling-based causal discovery. Experiments demonstrate that our foundation model achieves robust zero-shot generalization.",
+      "authors": [
+        "Zhengkang Guan",
+        "Yikang Chen",
+        "Yi He",
+        "Yunze Tong",
+        "Zijing Hu",
+        "Haoyuan Qian",
+        "Fei Wu",
+        "Kun Kuang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-19T08:30:38+00:00",
+      "link": "https://arxiv.org/pdf/2606.21212v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "proposes foundation model for causal discovery, relevant to temporal causal structure learning",
+      "llm_evidence_cn": "提出用于因果发现的基础模型，与时间因果结构学习相关",
+      "llm_evidence": "提出用于因果发现的基础模型，与时间因果结构学习相关",
+      "canonical_evidence": "提出用于因果发现的基础模型，与时间因果结构学习相关",
+      "llm_tldr_en": "DCD-PFN is a decoupling-aware foundation model for causal discovery using Prior-Data Fitted Networks, pre-trained on synthetic SCMs for zero-shot inference.",
+      "llm_tldr_cn": "传统因果发现算法在非线性、高噪声系统中表现不佳且计算瓶颈严重。本文提出DCD-PFN，基于先验数据拟合网络（PFN）的解耦感知基础模型，学习局部因果结构。在合成SCM上预训练后，模型可在未见任务上实现零样本因果发现，显著提升效率和准确性。",
+      "llm_tldr": "传统因果发现算法在非线性、高噪声系统中表现不佳且计算瓶颈严重。本文提出DCD-PFN，基于先验数据拟合网络（PFN）的解耦感知基础模型，学习局部因果结构。在合成SCM上预训练后，模型可在未见任务上实现零样本因果发现，显著提升效率和准确性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.23391v1",
+      "source": "arxiv",
+      "title": "Distribution-Aware Diffusion-LLM for Robust Ultra-Long-Term Time Series Forecasting",
+      "abstract": "Time series forecasting is a fundamental machine learning task. Recent work has explored Large Language Models (LLMs) for this purpose due to their strong generalization, pattern recognition, and zero-shot or few-shot capabilities. Despite their suitability for long-context learning, LLMs face challenges in multimodal settings: they lack calibrated probabilistic modeling for non-text data and struggle to align heterogeneous representations. To address these issues, we propose a new framework Diffusion-LLM that integrates a conditional diffusion model into an LLM-based forecasting pipeline. This joint design enables learning the conditional distribution of future data while improving semantic alignment in a shared latent space. We evaluate Diffusion-LLM on six long-term forecasting benchmarks, including ETT, Weather, and ECL. Our method consistently outperforms existing LLM-based baseline, achieving notable gains in ultra-long-term and few-shot forecasting and demonstrating the value of distribution-aware regularization for enhancing robustness and generalization in time series LLMs.",
+      "authors": [
+        "Falguni Ghosh",
+        "Vahid Hashemi",
+        "Bernhard Kainz"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-22T14:18:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.23391v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diffusion model for time series generation",
+      "llm_evidence_cn": "用于时间序列生成的扩散模型",
+      "llm_evidence": "用于时间序列生成的扩散模型",
+      "canonical_evidence": "用于时间序列生成的扩散模型",
+      "llm_tldr_en": "Proposes Diffusion-LLM integrating conditional diffusion model into LLM for ultra-long-term time series forecasting, achieving robust distribution modeling.",
+      "llm_tldr_cn": "该论文针对大型语言模型在时间序列预测中缺乏校准概率建模和多模态对齐的挑战，提出Diffusion-LLM框架，将条件扩散模型集成到基于LLM的预测管道中。通过联合设计学习未来数据的条件分布并提升语义对齐，实现了鲁棒的超长期时间序列预测。实验表明该方法在长期预测任务上表现优越。",
+      "llm_tldr": "该论文针对大型语言模型在时间序列预测中缺乏校准概率建模和多模态对齐的挑战，提出Diffusion-LLM框架，将条件扩散模型集成到基于LLM的预测管道中。通过联合设计学习未来数据的条件分布并提升语义对齐，实现了鲁棒的超长期时间序列预测。实验表明该方法在长期预测任务上表现优越。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.21957v1",
+      "source": "arxiv",
+      "title": "Learning by Shifting: Temporal View Construction for Time Series Contrastive Learning",
+      "abstract": "Supervised learning demands large quantities of labeled data, a bottleneck that is expensive and reliant on domain-specific expertise. Self-supervised learning, particularly contrastive learning, has emerged as a compelling alternative, enabling rich representation learning directly from unlabeled data. Yet its success hinges critically on the design of positive and negative sample pairs. Existing approaches for time series rely on hand-crafted augmentations and masking heuristics that embed strong domain assumptions, often limiting generalization across diverse temporal patterns and potentially introducing spurious correlations. In this work, we challenge this paradigm by demonstrating that explicitly encoding temporal shift invariance through a simple, deterministic view construction is sufficient to learn strong representations for time series classification. By exploiting temporal structure, our method, Shift Invariant Feature Training (ShiFT), achieves state-of-the-art performance on six diverse real-world time series benchmark datasets, as well as the UCR and UEA archives, while reducing training time. Beyond empirical performance, we present a systematic analysis of contrastive learning dynamics in time series settings, examining the effects of batch size and the number of negatives on downstream performance. Our findings provide practical insights for designing efficient contrastive learning frameworks for time series representation learning. The source code is publicly available at https://github.com/sfi-norwai/ShiFT.",
+      "authors": [
+        "Abdul-Kazeem Shamba",
+        "Kerstin Bach",
+        "Gavin Taylor"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-20T09:07:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.21957v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "proposes temporal shift augmentation for contrastive learning, improving feature extraction",
+      "llm_evidence_cn": "提出基于时间移位的对比学习增广方法，提升时间序列特征提取",
+      "llm_evidence": "提出基于时间移位的对比学习增广方法，提升时间序列特征提取",
+      "canonical_evidence": "提出基于时间移位的对比学习增广方法，提升时间序列特征提取",
+      "llm_tldr_en": "Learning by Shifting constructs temporal views via explicit temporal shift invariance for time series contrastive learning, outperforming hand-crafted augmentations.",
+      "llm_tldr_cn": "现有时间序列对比学习依赖手工增广和掩码启发式，泛化性有限。本文提出通过编码时间平移不变性来构建正负样本对，无需领域假设。在多个时间序列分类和预测任务上，该方法学习到的表示在下游任务中显著优于现有对比学习基线。",
+      "llm_tldr": "现有时间序列对比学习依赖手工增广和掩码启发式，泛化性有限。本文提出通过编码时间平移不变性来构建正负样本对，无需领域假设。在多个时间序列分类和预测任务上，该方法学习到的表示在下游任务中显著优于现有对比学习基线。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.21356v1",
+      "source": "arxiv",
+      "title": "SOHET: Sequence Of Heterogeneous Events Transformer with Self-Supervised Pre-Training",
+      "abstract": "Many machine learning applications rely on heterogeneous event streams to make predictions, either causally as events arrive or bidirectionally over complete sequences. We propose SOHET (Sequence Of Heterogeneous Events Transformer), a hierarchical architecture combining event-type-specific tabular encoders with temporal and type embeddings, processed by a causal or bidirectional transformer. We introduce three self-supervised pre-training objectives for the causal setting. On a proprietary large-scale real-world Booking.com fraud detection task with 17 event types, SOHET outperforms FlexTPP, NAPPT, and CIPPT by 5.8%. Pre-training yields an additional 2.6% gain and 2.4% faster convergence. On the EBES benchmark, bidirectional SOHET matches or exceeds the published best on 6 out of 8 tasks.",
+      "authors": [
+        "Kees Jan de Vries",
+        "Mustafa Radha",
+        "Mathijs de Jong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-19T11:56:46+00:00",
+      "link": "https://arxiv.org/pdf/2606.21356v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Causal transformer for heterogeneous event sequences",
+      "llm_evidence_cn": "用于异构事件序列的因果变换器",
+      "llm_evidence": "用于异构事件序列的因果变换器",
+      "canonical_evidence": "用于异构事件序列的因果变换器",
+      "llm_tldr_en": "Proposes SOHET, a transformer for heterogeneous event streams with causal or bidirectional processing and self-supervised pre-training for causal prediction.",
+      "llm_tldr_cn": "针对异构事件流的预测问题，本文提出SOHET模型，采用层次化架构结合事件类型编码和时间嵌入，通过因果或双向变换器处理序列。引入三种自监督预训练目标用于因果场景，在Booking.com欺诈检测任务上相比基线模型提升5.8%，预训练额外带来2.6%的性能增益和2.4%的收敛加速。该方法为事件序列的因果建模提供了有效框架。",
+      "llm_tldr": "针对异构事件流的预测问题，本文提出SOHET模型，采用层次化架构结合事件类型编码和时间嵌入，通过因果或双向变换器处理序列。引入三种自监督预训练目标用于因果场景，在Booking.com欺诈检测任务上相比基线模型提升5.8%，预训练额外带来2.6%的性能增益和2.4%的收敛加速。该方法为事件序列的因果建模提供了有效框架。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal sequence generation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-16-732574-v1",
+      "source": "biorxiv",
+      "title": "Complex-valued representations of time-series gene expression profiles for network analysis",
+      "abstract": "Time-series RNA sequencing provides a powerful framework for studying dynamic gene regulation, yet conventional analyses usually represent gene expression profiles as real-valued vectors in Euclidean space and quantify similarity using correlation or distance. Inspired by quantum information theory, we present a framework for encoding time-series gene expression profiles as complex-valued vectors comprising amplitude and phase components in Hilbert space. We designed multiple encoding models to represent gene expression in the amplitude of complex-valued vectors, encode temporal differences in the phase, and extend the phase representation to incorporate the direction of local expression changes. Gene-gene similarity was then quantified using fidelity, which measures the overlap between two encoded vectors. Evaluation using time-series RNA-seq datasets across diverse species and biological contexts showed that different encoding models produced distinct fidelity distributions that were related to, but distinct from, conventional correlation measures. We then constructed gene-gene networks using pairwise fidelity values and detected communities containing genes with similar temporal profiles. Although fidelity distributions differed across encoding models, the resulting communities captured major temporal expression programs, and functional annotations based on gene ontology and Kyoto encyclopedia of genes and genomes pathway analyses provided exploratory biological context. The detected communities were comparable to those obtained using conventional methods, including weighted correlation network analysis and fuzzy c-means clustering. Furthermore, as a proof-of-concept, we performed SWAP-test circuit simulations to mimic fidelity computation on a quantum computer; under noise-aware conditions, these simulations produced less accurate fidelity estimates with higher computational cost than classical computation. As a proof-of-concept, this study provides a complementary view of temporal transcriptome organization, rather than a uniformly superior alternative to conventional methods.",
+      "authors": [
+        "Sun, J.",
+        "Cao, W.",
+        "Ikumi, K.",
+        "Shimizu, K. K.",
+        "Sese, J."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-22T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.16.732574v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "complex-valued feature extraction for time-series gene expression",
+      "llm_evidence_cn": "时间序列基因表达的复值特征提取",
+      "llm_evidence": "时间序列基因表达的复值特征提取",
+      "canonical_evidence": "时间序列基因表达的复值特征提取",
+      "llm_tldr_en": "A framework encodes time-series gene expression as complex-valued vectors for network analysis, capturing both amplitude and phase information.",
+      "llm_tldr_cn": "针对传统时间序列基因表达分析仅使用实值向量和相关性度量的局限性，该工作提出将表达谱编码为复值向量，通过幅度和相位分别表征表达水平和时变差异，从而更丰富地提取动态特征，为网络分析提供新工具。",
+      "llm_tldr": "针对传统时间序列基因表达分析仅使用实值向量和相关性度量的局限性，该工作提出将表达谱编码为复值向量，通过幅度和相位分别表征表达水平和时变差异，从而更丰富地提取动态特征，为网络分析提供新工具。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
