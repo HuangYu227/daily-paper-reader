@@ -1,0 +1,214 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-25T21:54:07.249628+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.22230v1",
+      "source": "arxiv",
+      "title": "Distributional Granger Causality: Identification, Sequential Inference, and Adaptive Testing",
+      "abstract": "Predictive dependence in time series need not be confined to the conditional mean. Outside the Gaussian setting, causal content may arise through conditional scale, tail behavior, asymmetry, or other distributional features, implying that no single Granger-type test provides a complete characterization of predictive dependence. This paper develops a framework for distributional Granger causality based on a finite collection of channel-specific restrictions. Under suitable determinacy conditions, the channel menu is shown to be complete, yielding an identification result that links distributional Granger non-causality to a finite set of testable hypotheses. Building on this representation, we develop an adaptive sequential testing procedure that allocates inferential resources across channels while maintaining familywise error control through an alpha-investing mechanism. A policy-invariant validity theorem establishes finite-sample size control under arbitrary admissible selection rules, while an asymptotic efficiency theorem shows that a confidence-bound allocation rule achieves power equivalent to that of an infeasible oracle benchmark. The theoretical guarantees are derived from primitive mixing and moment conditions together with a circular-block permutation scheme.",
+      "authors": [
+        "Ayush Jha"
+      ],
+      "primary_category": "econ.EM",
+      "categories": [
+        "econ.EM",
+        "stat.ML"
+      ],
+      "published": "2026-06-20T21:18:02+00:00",
+      "link": "https://arxiv.org/pdf/2606.22230v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Distributional Granger causality for time series causal discovery",
+      "llm_evidence_cn": "分布格兰杰因果用于时间序列因果发现",
+      "llm_evidence": "分布格兰杰因果用于时间序列因果发现",
+      "canonical_evidence": "分布格兰杰因果用于时间序列因果发现",
+      "llm_tldr_en": "Proposes a distributional Granger causality framework identifying causal content beyond conditional mean in time series, with sequential inference and adaptive testing.",
+      "llm_tldr_cn": "传统Granger因果检验仅关注条件均值，忽视了分布层面的因果信息，如尺度、尾部等。本文提出分布格兰杰因果框架，通过一组通道特定的约束实现完整的因果识别，并开发自适应序贯检验方法。该方法能有效捕捉非高斯时间序列中的尺度、尾部等因果结构，为时间序列因果发现提供了更全面的理论工具和推断策略。",
+      "llm_tldr": "传统Granger因果检验仅关注条件均值，忽视了分布层面的因果信息，如尺度、尾部等。本文提出分布格兰杰因果框架，通过一组通道特定的约束实现完整的因果识别，并开发自适应序贯检验方法。该方法能有效捕捉非高斯时间序列中的尺度、尾部等因果结构，为时间序列因果发现提供了更全面的理论工具和推断策略。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.24982v1",
+      "source": "arxiv",
+      "title": "Latent Block-Diffusion Temporal Point Processes: A Semi-Autoregressive Framework for Asynchronous Event Sequence Generation",
+      "abstract": "Modeling and sampling from the underlying distribution of asynchronous event sequences are crucial in various real-world applications, including social networks, medical diagnosis, and financial transactions. Existing autoregressive methods suffer from error accumulation during multi-step generation, while non-autoregressive diffusion methods are typically limited to fixed-length output sequences. In this paper, we propose Latent Block-Diffusion Temporal Point Processes (LBDTPP), a novel semi-autoregressive TPP framework that introduces a latent block diffusion mechanism for high-quality and variable-length event sequence generation. The core idea is to define an autoregressive probability distribution over event blocks in latent space and perform Gaussian diffusion within each block. By sequentially generating blocks while simultaneously sampling events in each block, LBDTPP preserves the length flexibility of autoregressive TPPs and inherits the parallel high-quality generation capability of diffusion models. Theoretically, we derive Wasserstein error bounds showing that, under suitable local approximation and prefix-stability assumptions, block-wise generation can reduce error accumulation compared with event-wise autoregressive generation. Extensive experiments on six real-world benchmark datasets demonstrate that LBDTPP outperforms state-of-the-art TPP baselines in both unconditional and conditional generation tasks. Further empirical analyses verify the benefits of latent-space diffusion and block-wise generation, and reveal the trade-off between generation quality and block size. Our code is available at https://github.com/Zh-Shuai/LBDTPP.",
+      "authors": [
+        "Shuai Zhang",
+        "Yancheng Chen",
+        "Chuan Zhou",
+        "Yang Liu",
+        "Xixun Lin",
+        "Xiangyu Zhao",
+        "Jun Zhu",
+        "Zhi-Ming Ma"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-23T13:45:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.24982v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "asynchronous event sequence generation using latent block-diffusion",
+      "llm_evidence_cn": "利用潜在块扩散生成异步事件序列",
+      "llm_evidence": "利用潜在块扩散生成异步事件序列",
+      "canonical_evidence": "利用潜在块扩散生成异步事件序列",
+      "llm_tldr_en": "Proposes LBDTPP, a semi-autoregressive framework for variable-length asynchronous event sequence generation using latent block diffusion.",
+      "llm_tldr_cn": "本文针对异步事件序列生成中自回归方法误差累积和非自回归方法输出长度固定的问题，提出LBDTPP。该框架在半自回归的潜在块扩散机制下，实现了高质量且长度可变的序列生成。实验在多个真实事件序列数据集上展示了其优越的生成性能和分布拟合能力。这项工作为时间序列生成提供了新的高效方案，尤其适用于事件序列数据。",
+      "llm_tldr": "本文针对异步事件序列生成中自回归方法误差累积和非自回归方法输出长度固定的问题，提出LBDTPP。该框架在半自回归的潜在块扩散机制下，实现了高质量且长度可变的序列生成。实验在多个真实事件序列数据集上展示了其优越的生成性能和分布拟合能力。这项工作为时间序列生成提供了新的高效方案，尤其适用于事件序列数据。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-02-12-705535-v2",
+      "source": "biorxiv",
+      "title": "Dynamic Compression Flows for Neuroscience Data",
+      "abstract": "While neuroscience experiments have repeatedly demonstrated the involvement of large populations of neurons in even simple behaviors, these studies have just as often reported that the collective dynamics of neural activity are approximately low-dimensional. As a result, methods for identifying low-dimensional latent representations of time series data have become increasingly prominent in neuroscience. However, most existing methods either ignore temporal structure or model time evolution using latent dynamical systems approaches. In the first case, dynamics may be distorted or even scrambled in the latent space, while in the second, many possible latent dynamics may give rise to the same data. Here, we address these challenges using a novel flow-matching approach in which data are generated by a pair of flow fields, one governing time evolution, the other a mapping between data and a low-dimensional latent space. Importantly, the dimension-reducing flow is trained to minimize distortions of the temporal dynamics, learning an identifiable low-dimensional representation that preserves temporal relations in the original data. Additionally, we constrain our latent spaces to have low-dimensional support in a soft, parameterized manner, taking inspiration from ideas on nested dropout. Across both neural and behavioral data, we show that this dual flow approach produces both more interpretable dynamics and higher-quality reconstructions than competing models, including in noise-dominated data sets where conventional approaches fail.",
+      "authors": [
+        "Wei, G.",
+        "Albuquerque, D. d.",
+        "Martinez, M.",
+        "Pan, S.",
+        "Pearson, J."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-23T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.02.12.705535v2.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "generative flow-matching model for time series latent representations",
+      "llm_evidence_cn": "用于时间序列潜在表示的生成流匹配模型",
+      "llm_evidence": "用于时间序列潜在表示的生成流匹配模型",
+      "canonical_evidence": "用于时间序列潜在表示的生成流匹配模型",
+      "llm_tldr_en": "Dynamic Compression Flows uses flow-matching to learn low-dimensional latent dynamics from neural time series, preserving temporal structure.",
+      "llm_tldr_cn": "本文针对神经科学中时间序列数据的低维潜在表示学习问题，提出一种基于流匹配（flow-matching）的动态压缩方法。现有方法要么忽略时间结构导致动态失真，要么使用潜在动态系统模型可能产生非唯一解。该方法通过流匹配直接学习数据生成过程，在保持时间动态的同时得到唯一的潜在表示。实验表明该方法能有效捕捉神经群体的集体动态，为理解神经编码提供了新工具。",
+      "llm_tldr": "本文针对神经科学中时间序列数据的低维潜在表示学习问题，提出一种基于流匹配（flow-matching）的动态压缩方法。现有方法要么忽略时间结构导致动态失真，要么使用潜在动态系统模型可能产生非唯一解。该方法通过流匹配直接学习数据生成过程，在保持时间动态的同时得到唯一的潜在表示。实验表明该方法能有效捕捉神经群体的集体动态，为理解神经编码提供了新工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.22330v1",
+      "source": "arxiv",
+      "title": "Hypothesis-Driven Skill Optimization for LLM Agents",
+      "abstract": "External skills can improve action-oriented LLM agents without changing model weights, but persistent skill updates are risky when they are distilled from sparse or noisy trajectories. A plausible reflection may encode a useful procedure, a spurious shortcut, or a rule that the target executor cannot reliably follow. We propose Hypothesis-Driven Skill Optimization (HDSO), a train-free framework in which both the skill curator and the agent executor are frozen inference endpoints. The curator observes executor traces, proposes a falsifiable hypothesis with an explicit validation plan, instantiates the hypothesis as a candidate skill package, validates the package through paired control/treatment executions, reviews behavior differences, and consolidates only supported candidates into an approved repository. The executor consumes approved skills through progressive disclosure, preserving the executor-only path when no skill is selected. On ALFWorld, HDSO improves executor-only baselines by +6.9 Avg. SR points for Qwen3-8B and +4.0 points for Qwen3.6-27B. Under 20% randomly flipped success/failure feedback during skill discovery and validation, HDSO preserves a +7.1-point gain for Qwen3-8B. Transfer and heterogeneous-pair diagnostics further show that validated repositories can be useful beyond the run that produced them, but cross-model curation succeeds only when curator diagnosis, executor capability, and validation evidence align. HDSO provides an auditable skill lifecycle for frozen action agents rather than an unconstrained memory accumulation procedure.",
+      "authors": [
+        "Fangxin Shang",
+        "Yehui Yang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.SE"
+      ],
+      "published": "2026-06-21T04:43:20+00:00",
+      "link": "https://arxiv.org/pdf/2606.22330v1",
+      "tags": [
+        "keyword:fe"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "frozen inference endpoints for LLM agents",
+      "llm_evidence_cn": "LLM智能体的冻结推理端点",
+      "llm_evidence": "LLM智能体的冻结推理端点",
+      "canonical_evidence": "LLM智能体的冻结推理端点",
+      "llm_tldr_en": "Proposes Hypothesis-Driven Skill Optimization (HDSO) using frozen LLM agents for skill curation and execution, without training.",
+      "llm_tldr_cn": "该论文提出假设驱动的技能优化框架(HDSO)，将技能策展者和执行者都作为冻结的推理端点，通过验证假设来更新技能。方法无需训练，利用冻结的LLM智能体，有效避免了从稀疏或噪声轨迹中蒸馏技能的风险。相关工作展示了在LLM智能体中使用冻结编码器的思路。",
+      "llm_tldr": "该论文提出假设驱动的技能优化框架(HDSO)，将技能策展者和执行者都作为冻结的推理端点，通过验证假设来更新技能。方法无需训练，利用冻结的LLM智能体，有效避免了从稀疏或噪声轨迹中蒸馏技能的风险。相关工作展示了在LLM智能体中使用冻结编码器的思路。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model with frozen encoder",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.21786v1",
+      "source": "arxiv",
+      "title": "RocketPFN: Accurate Time Series Classification via In-Context Learning",
+      "abstract": "We introduce RocketPFN, a training-free pipeline for time series classification that combines random convolutional feature extraction (Rocket) with in-context classification via a pretrained tabular foundation model (TabPFN v2.5). On 92 UCR datasets (30-resample protocol), RocketPFN matches HC2, the strongest published method on the archive, in mean accuracy (both 0.900, Wilcoxon p=0.50), with no training on the target data and a median inference time of 30 seconds per fold. It also significantly outperforms every individual classifier in the HC2 ensemble. On UEA (20 datasets) the difference is likewise not statistically significant. A separate comparison concerns TSC foundation models: when paired with the same downstream classifier, MOMENT, Mantis, and MantisV2 are all significantly outperformed by RocketPFN using fewer extracted features and no learned parameters (p<0.001 in each case). This holds even when the encoders were pretrained on corpora that include the UCR training samples. We propose this two-stage pipeline as a reference point for evaluating zero-shot TSC foundation models.",
+      "authors": [
+        "Franco Martino O'Rourke",
+        "Ana Trisovic",
+        "Dimitris Bertsimas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-19T22:27:34+00:00",
+      "link": "https://arxiv.org/pdf/2606.21786v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series feature extraction using random convolutional features",
+      "llm_evidence_cn": "使用随机卷积特征进行时间序列特征提取",
+      "llm_evidence": "使用随机卷积特征进行时间序列特征提取",
+      "canonical_evidence": "使用随机卷积特征进行时间序列特征提取",
+      "llm_tldr_en": "RocketPFN combines random convolutional feature extraction with in-context classification using a pretrained tabular model, achieving high accuracy on time series classification without training.",
+      "llm_tldr_cn": "本文提出RocketPFN，一种无需训练的时间序列分类管道，将随机卷积特征提取（Rocket）与预训练表格基础模型（TabPFN v2.5）的上下文分类相结合。在92个UCR数据集上，RocketPFN的平均准确率达到0.900，与最强方法HC2持平，且推理时间中位数仅30秒。该方法证明了固定特征提取器结合预训练模型在时间序列分类中的有效性。",
+      "llm_tldr": "本文提出RocketPFN，一种无需训练的时间序列分类管道，将随机卷积特征提取（Rocket）与预训练表格基础模型（TabPFN v2.5）的上下文分类相结合。在92个UCR数据集上，RocketPFN的平均准确率达到0.900，与最强方法HC2持平，且推理时间中位数仅30秒。该方法证明了固定特征提取器结合预训练模型在时间序列分类中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
