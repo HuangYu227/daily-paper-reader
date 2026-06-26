@@ -1,0 +1,849 @@
+Title: A Survey on Federated Causal Discovery and Inference
+
+URL Source: https://arxiv.org/pdf/2606.23741v1
+
+Published Time: Wed, 24 Jun 2026 00:02:13 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# SCIENCE CHINA 
+
+# Information Sciences 
+
+# . REVIEW .A Survey on Federated Causal Discovery and Inference 
+
+## Xianjie GUO 1, Yuwei WANG 2, Guodu XIANG 2, Xiaoli TANG 3,Kui YU 2* , Han YU 3* & Qiang YANG 4
+
+> 1
+
+School of Computer Science, Nanjing University of Posts and Telecommunications, Nanjing 210023, China 
+
+> 2
+
+School of Computer Science and Information Engineering, Hefei University of Technology, Hefei 230601, China 
+
+> 3
+
+College of Computing and Data Science, Nanyang Technological University, Singapore 639798 
+
+> 4
+
+Department of Data Science and Artificial Intelligence, The Hong Kong Polytechnic University, Hong Kong 999077, China 
+
+Abstract Causal reasoning, which encompasses the discovery of causal structures and the inference of causal effects, is fundamental to data-driven decision making. In practice, data for reliable causal analysis are often distributed across institutions and cannot be centralized due to privacy regulations or communication constraints. Federated learning (FL) addresses this by enabling collaborative analysis without raw data sharing, giving rise to the rapidly growing field of federated causal discovery (FCD) and inference (FCI) . However, the interdisciplinary nature of this field and the absence of a comprehensive survey present barriers to entry for researchers. This paper bridges that gap by providing a systematic review through multi-dimensional taxonomies. Grounded in the three core design decisions underlying any FCD solution, namely how structures are learned, how data are partitioned, and what structural knowledge each party obtains, we organize FCD along three axes: methodological paradigm (constraint-based, score-based, continuous-optimization, and hybrid), federation topology (horizontal, vertical, and hybrid), and structural scope (global versus local). We further examine key practical dimensions, including temporal dynamics, data heterogeneity, missing data, and non-identical variable sets. For 
+
+FCI , we categorize methods by target estimand (average versus individualized/conditional treatment effects) and by estimation strategy ,from classical weighting methods to modern deep generative architectures. Unlike prior works that treat FCD and FCI separately, we formalize their connection as complementary stages of a unified federated causal reasoning pipeline, where FCD supplies the structural knowledge required for valid effect estimation in FCI. Finally, we highlight their shared concerns regarding privacy, communication efficiency, theoretical guarantees, and application domains, and conclude by identifying open challenges for future research. 
+
+Keywords Causal Discovery, Causal Inference, Federated Learning, Bayesian Networks, Causal Structure Learning, Treatment Effect Estimation, Privacy-Preserving Learning 
+
+Citation Title for citation. Sci China Inf Sci, for review 
+
+## 1 Introduction 
+
+Causal reasoning lies at the heart of scientific inquiry: understanding why things happen enables prediction under intervention and robust decision making. Two complementary tasks form the backbone of computational causal analysis. Causal discovery aims to recover the directed acyclic graph (DAG) that encodes cause-effect relationships among a set of variables from observational (and sometimes interventional) data [1–3]. In contrast, causal inference 
+
+seeks to quantify the magnitude of causal effects, typically treatment effects, from data that may be confounded by non-random treatment assignment [4, 5]. In many real-world settings, the data needed for these tasks resides across multiple institutions, such as hospitals, banks, IoT devices, or research centers, that are unable or unwilling to share raw records. Privacy legislation (e.g., GDPR, HIPAA), commercial sensitivity, and sheer data volume all conspire to prevent centralization. Federated learning (FL) [6, 7] offers a principled solution: participants collaboratively train a shared model by exchanging only intermediate statistics or model parameters, while keeping raw data local. When bridging causal frameworks with FL, the focus shifts based on the specific analytical objective, resulting in two entirely new paradigms as illustrated in Figure 1: 
+
+• Federated Causal Discovery (FCD) focuses on “recovering the structure”. As shown in Figure 1(a), instead of pooling raw data to find cause-effect links, individual clients compute local structural properties (such as conditional independencies or graph gradients) and securely aggregate them at a central server to piece together a unified global directed acyclic graph (DAG). 
+
+* Corresponding author (email: yukui@hfut.edu.cn, han.yu@ntu.edu.sg)  
+
+> arXiv:2606.23741v1 [cs.LG] 21 Jun 2026 Sci China Inf Sci 2
+
+## Objective: recover causal structure 
+
+## Federated Causal Discovery (FCD) 
+
+> Global DAG
+> Local DAG
+> Local DAG
+> Local DAG
+
+Central server Hospital 
+
+Node  1
+
+Federa ted 
+
+Aggregation 
+
+Local Causal Graph Computation 
+
+> Local Structure Updates
+
+Hospital 
+
+Node  3
+
+Hospital 
+
+Node  2
+
+## Objective: quantify treatment effect 
+
+## Federated Causal Inference (FCI) 
+
+Central server Hospital 
+
+Node  1
+
+Final Treatment Effect Estimate 
+
+Local Parameter Estimation 
+
+> Local Parameter Updates
+
+Hospital 
+
+Node  3
+
+Hospital 
+
+Node  2    
+
+> Treated
+> Control
+> Treatment effect
+> bar chart
+> Figure 1 An intuitive illustration of federated causal learning frameworks. (a) Federated Causal Discovery (FCD) : Distributed clients collaboratively recover the global causal graph topology ( i.e. , skeleton and edge orientations) via decentralized statistics or gradients without sharing raw data. (b) Federated Causal Inference (FCI) : Distributed clients collaboratively quantify the specific causal effect ( e.g. , Average Treatment Effect, ATE) of a treatment variable on an outcome by jointly adjusting for confounders and aligning propensity scores across sites.
+
+• Federated Causal Inference (FCI) focuses on “quantifying the effect”. As shown in Figure 1(b), assuming a target treatment and outcome are specified, clients collaboratively model treatment assignments and outcomes across shifting populations to accurately estimate a global effect metric ( e.g. , the Average Treatment Effect, ATE) without exposing private patient covariates. While FL has achieved remarkable success in supervised prediction tasks (image classification, next-word predic-tion, and clinical risk scoring), its integration with causal methods introduces distinctive challenges: 1. Structural constraints. Unlike regression, causal discovery must produce a DAG satisfying acyclicity, which is a global, combinatorial constraint that is non-trivial to enforce in a distributed setting. 2. Heterogeneity in causal mechanisms and distributions. A defining challenge across federated causal tasks is that clients do not merely differ in marginal data distributions, as label-shift or covariate-shift models in standard FL assume, but exhibit heterogeneous causal mechanisms : the conditional distributions P (Xi | Pa( Xi)) governing local data-generating processes vary across sites, and clients may even observe different sets of variables. This structural heterogeneity manifests in two interrelated ways: in federated causal discovery, it means that no single causal graph faithfully represents all clients; in federated causal inference, it means that treatment assignment mechanisms and covariate distributions may differ drastically across sites, invalidating naive pooling or meta-analysis. 3. Identifiability. Causal conclusions are sensitive to the sufficiency of conditioning sets, the availability of in-terventional data, and functional-form assumptions. Distributing these requirements across clients raises new questions about identifiability. The field has grown rapidly: from early work on privacy-preserving Bayesian network structure learning in the mid-2000s [8, 9] to recent methods published at venues. Despite this momentum, no existing survey provides a unified, systematic treatment of both federated causal discovery and federated causal inference with fine-grained methodological taxonomies. Rocchi et al. [10] offer a medical-domain perspective on federated causal discovery, but do not cover causal inference or provide a fine-grained methodological taxonomy. Several federated learning surveys [7, 11] touch upon privacy-preserving analytics but do not specifically address causal reasoning. Most recently, Deng et al. [12] present a broad survey of the interplay between causality and federated learning, covering both how FL enables decentralized causal analysis and how causality enhances FL systems in dimensions such as interpretability, generalizability, and adversarial robustness. Although their work provides a valuable high-level overview of this emerging landscape, our survey differs fundamentally in scope , taxonomy , and depth :1. Focused scope. We concentrate exclusively on the core algorithmic challenges of federated causal discovery and Sci China Inf Sci 3Federated Causal Discovery & Inference 
+
+Preliminaries  Federated Causal Discovery  Federated Causal Inference  
+
+> Causal Discovery
+> ATE Estimation By Methodology
+> Causal Inference
+> Federated Learning
+> Constraint
+> Score
+> Continuous Optimization
+> Hybrid
+> By Federation
+> By Scope
+> Special Topics
+> Horizontal
+> Vertical
+> Hybrid
+> Global
+> Local
+> Temporal
+> Missing Data
+> Non-identical Variables
+> Heterogeneity
+> IPW
+> ITE/CATE Estimation
+> Special Topics
+> AIPW
+> Matching
+> Meta-analysis
+> Deep Learning
+> Bayesian
+> Kernel
+> Survival Analysis
+> IV
+> DID
+> Figure 2 Organization and scope of this survey.
+
+federated causal inference, rather than adopting the broader “Causality for FL” perspective ( e.g. , using causality to improve FL robustness or fairness). 2. Multi-dimensional taxonomies. We propose the first three-axis taxonomy for FCD (methodology × federa-tion topology × structural scope) and a two-axis taxonomy for FCI (estimand × estimation strategy), enabling principled, fine-grained comparison of existing methods along dimensions not previously synthesized. 3. Technical depth. We provide detailed algorithmic analyses, formal problem formulations, privacy-theoretic discussions, and systematic comparisons of theoretical guarantees across methods. In addition, we are the first to explicitly formalize and analyze the connection between FCD and FCI as comple-mentary stages of a unified federated causal reasoning pipeline. The main contributions of this survey are: 1. We present a comprehensive, focused survey of federated causal discovery and inference within a unified frame-work. Unlike the broader “Causal-FL” perspective in [12], which spans both “FL for Causality” and “Causality for FL” (including interpretability, generalizability, and robustness enhancement), our work provides an in-depth algorithmic and theoretical treatment dedicated to the core problems of distributed structure learning and effect estimation. To our knowledge, this level of dedicated, fine-grained methodological analysis for both FCD and FCI has not been previously offered. 2. We propose novel multi-dimensional taxonomies, namely a three-axis framework for FCD (by methodology, federation topology, and structural scope) and a two-axis framework for FCI (by estimand and estimation strategy), that enable principled, granular comparison of existing work beyond single-dimensional categorizations. 3. We provide detailed summary tables, systematic comparison along privacy mechanisms, communication efficiency, theoretical guarantees, and practical considerations, together with a curated bibliography to serve as a reference for researchers and practitioners. 4. We explicitly formalize and analyze the connection between FCD and FCI as complementary stages of a unified federated causal reasoning pipeline, and identify open problems and promising directions for future research. 
+
+Organization. The overall structure of this survey is depicted in Figure 2. Following the preliminaries in Section 2, we systematically survey the methodologies of federated causal discovery (Section 3) and federated causal inference (Section 4). Section 5 elaborates on the intrinsic connections between these two tasks. Furthermore, Section 6 highlights practical applications, while Section 7 outlines potential future avenues. Section 8 concludes this work. Sci China Inf Sci 4
+
+## 2 Preliminaries 
+
+2.1 Causal Discovery 
+
+Causal discovery aims to learn a DAG G = ( V, E) over a set of variables V = {X1, . . . , X d} from data. The edges in E encode direct causal relationships: Xi → Xj means Xi is a direct cause of Xj . Under a structural equation model (SEM), each variable is generated as: 
+
+Xj = fj (Pa( Xj ), ϵ j ), j = 1 , . . . , d, (1) where Pa( Xj ) denotes the parent set of Xj in G, fj is a (possibly nonlinear) function, and ϵj are jointly independent noise variables. 
+
+Assumptions and identifiability. Recovering G from data is possible only under a set of standard assumptions that link the graph G to the observed joint distribution P . The causal Markov condition requires that each variable be independent of its non-descendants given its parents, so that G entails a collection of conditional independencies in P . The faithfulness assumption imposes the converse, requiring that every conditional independence present in P
+
+is entailed by G through d-separation, thereby ruling out independencies that arise from the accidental cancellation of causal effects. Taken together, the Markov and faithfulness assumptions yield the equivalence that Xi ⊥⊥ Xj | S
+
+holds in P if and only if S d-separates Xi and Xj in G [1, 4], which is precisely what allows structural information to be inferred from observed statistical (in)dependencies. Two further assumptions are routinely adopted: causal sufficiency , namely that all common causes of the measured variables are themselves measured so that there are no latent confounders, and acyclicity , which restricts the hypothesis space to DAGs. Even when all of these conditions hold, observational data alone identify G only up to its Markov equivalence class (MEC), the set of DAGs encoding the same conditional independencies, which is represented by a completed partially directed acyclic graph (CPDAG) [1, 2]. Resolving the remaining orientation ambiguity requires additional leverage, such as restrictions on the functional form fj or the noise distribution ϵj in the SEM of Eq. (1) [13, 14], or access to interventional data [15, 16]. Building on these assumptions, classical approaches to causal discovery fall into three broad paradigms, with a fourth category addressing more specialized settings. 
+
+Constraint-based methods (e.g., PC [1], FCI [17,18]) test conditional independence (CI) relations to first learn a skeleton and then orient edges via orientation rules. They are assumption-light but sensitive to the reliability of CI tests, especially with limited samples. The PC algorithm operates in a layer-wise fashion: at depth ℓ, it tests 
+
+Xi ⊥⊥ Xj | S for all conditioning sets S of size ℓ drawn from the adjacency set, removing edges upon conditional independence [1, 19]. 
+
+Score-based methods (e.g., GES [2], K2 [20]) search the space of DAGs (or equivalence classes) by optimizing a scoring criterion such as BIC: BIC( G; D) = −2
+
+> d
+
+X
+
+> j=1
+
+ˆℓj (Pa G (Xj ); D) + |G| · log n, (2) where ˆℓj is the maximized local log-likelihood for variable Xj given its parents, |G| is the number of free parameters, and n is the sample size. The search is typically greedy or uses heuristics to navigate the super-exponential DAG space [2, 21]. 
+
+Continuous optimization methods reformulate the combinatorial DAG learning problem as a continuous program. The seminal NOTEARS [3] formulation introduces a smooth acyclicity constraint h(W) = tr( eW◦W) −
+
+d = 0 on the weighted adjacency matrix W, enabling gradient-based optimization. Extensions handle nonlinear models [22, 23], non-Gaussian noise [13, 14], and time-series data [24, 25]. 
+
+Hybrid methods combine constraint-based and score-based ideas, using CI tests to prune the search space before a score-based procedure refines the structure. Representative examples include MMHC [26], which builds a skeleton via the MMPC test and then runs greedy hill-climbing over it, and ARGES [27], which confines the GES search to a conditional-independence graph while providing high-dimensional consistency guarantees. 
+
+2.2 Causal Inference 
+
+Causal inference focuses on estimating the effect of a treatment A on an outcome Y in the presence of confounders 
+
+X. Under the potential outcomes framework [28], each unit i has two potential outcomes, Yi(1) and Yi(0), where 
+
+Yi(a) denotes the outcome that would be observed under treatment A = a. The individual treatment effect (ITE) is Sci China Inf Sci 5
+
+defined as the unit-level contrast τi = Yi(1) − Yi(0). Since at most one potential outcome is observed for any unit, the ITE is not identifiable in general, so attention turns to its population average. The average treatment effect 
+
+(ATE) is the expectation of the ITE over the population, τ = E[Y (1) − Y (0)]. Key identification assumptions include: (i) unconfoundedness (ignorability): Y (0) , Y (1) ⊥⊥ A | X; (ii) positivity 
+
+(overlap): 0 < P (A = 1 | X = x) < 1 for all x in the support; and (iii) consistency : Y = Y (A) [5]. Under these, the ATE is identifiable from observational data via the adjustment formula: 
+
+τ = EX [E[Y | A = 1 , X] − E[Y | A = 0 , X]] . (3) Standard estimators include: Inverse Probability Weighting (IPW) [29], which reweights observations by the inverse of the propensity score e(X) = P (A = 1 | X): ˆτIPW = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ AiYi
+
+ˆe(Xi) − (1 − Ai)Yi
+
+1 − ˆe(Xi)
+
+
+
+; (4) 
+
+Outcome Regression (G-computation) [30], which models μa(X) = E[Y | A = a, X] directly; Augmented IPW 
+
+(AIPW) [31], which combines both and enjoys double robustness, remaining consistent if either the propensity or outcome model is correctly specified: ˆτAIPW = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+
+
+ˆμ1(Xi) − ˆμ0(Xi) + Ai(Yi − ˆμ1(Xi)) ˆe(Xi) − (1 − Ai)( Yi − ˆμ0(Xi)) 1 − ˆe(Xi)
+
+
+
+; (5) and Matching methods [32], which pair treated and control units with similar covariates. The conditional average treatment effect (CATE), τ (x) = E[Y (1) − Y (0) | X = x], captures heterogeneity and is a central target in personalized decision making [33, 34]. 
+
+2.3 Federated Learning 
+
+Federated learning enables K clients, each holding a private dataset Dk, to collaboratively train a model without sharing raw data [6, 7]. A central server coordinates the process by aggregating local updates. As illustrated in Figure 3, federated learning settings can be categorized by how data is partitioned across clients. The canonical federated optimization objective is: min  
+
+> θ
+
+F (θ) = 
+
+> K
+
+X
+
+> k=1
+
+nk
+
+n Fk(θ), where Fk(θ) = 1
+
+nknkX
+
+> i=1
+
+L(θ; z(k) 
+
+> i
+
+), (6) X1 X2 X3 X4 X5
+
+> Client 1 Client 2 Client 3
+
+Columns (variables/features) 
+
+> Samples
+
+Client 1 
+
+X1 X2
+
+Client 2 
+
+X3
+
+Client 3 
+
+X4 X5
+
+Columns (variables/features) 
+
+> Samples
+
+X1 X2 X3 X4 X5
+
+Columns (variables/features) 
+
+> Samples
+
+Client 1  Client 2 
+
+Client 3 
+
+Not available May not be observable 
+
+Central Server 
+
+(a) Horizontal FL  (b) Vertical FL  (c) Hybrid FL   
+
+> Figure 3 Three federated data partitioning paradigms: (a) horizontal, (b) vertical, and (c) hybrid. Sci China Inf Sci 6
+
+with n = PKk=1 nk denoting the total sample size, L the loss function, and z(k) 
+
+> i
+
+the i-th data point at client k.
+
+Horizontal FL (sample partitioning): clients share the same feature space but hold different samples. The canonical algorithm FedAvg [6] averages locally trained model parameters: θ(t+1) = PKk=1  
+
+> nk
+> n
+
+θ(t+1)  
+
+> k
+
+. Variants such as FedProx [35], SCAFFOLD [36], and FedNova [37] address challenges arising from non-IID data and heterogeneous local computation. 
+
+Vertical FL (feature partitioning): clients observe different features of the same set of entities, linked by a shared identifier [38, 39]. Formally, X(k) ∈ Rn×dk with P 
+
+> k
+
+dk = d and shared row indices. 
+
+Hybrid FL : both sample and feature spaces differ across clients, representing the most general and challenging setting [38]. Key challenges in FL include statistical heterogeneity (non-IID data) [40, 41], communication efficiency [42, 43], and privacy. Privacy-enhancing techniques include differential privacy (DP) [44,45], secure multi-party computation (SMPC) [46, 47], and homomorphic encryption [48, 49]. 
+
+## 3 Federated Causal Discovery 
+
+Federated causal discovery (FCD) aims to learn a causal structure from data distributed across multiple clients without centralizing raw data. We organize the literature along three complementary taxonomic dimensions, as presented in Table 1: methodological paradigm (§3.1), federation topology (§3.2), and structural scope (§3.3). To our knowledge, this three-axis taxonomic framework, jointly considering methodological paradigm, federation topology, and structural scope, provides the most fine-grained and systematic organization of federated causal discovery methods to date, enabling a more nuanced comparison than the single-dimensional categorizations used in prior discussions [10, 12]. We then discuss important cross-cutting themes ( §3.4). 
+
+3.1 Taxonomy by Methodological Paradigm 
+
+3.1.1 Constraint-Based Methods 
+
+Constraint-based FCD methods adapt the skeleton-discovery-then-orientation pipeline of classical algorithms (PC, FCI) to federated settings. The core technical challenge is to perform federated conditional independence (CI) testing without centralizing data. 
+
+FedPC [50] is the first method to systematically adapt the PC algorithm to horizontal FL. It introduces a layer-wise aggregation strategy : at each conditioning depth, clients independently compute local CI statistics and share them with the server, which aggregates them into global CI decisions. The FedSkele subroutine handles skeleton learning, while FedOrien resolves the consistent separation set problem to accurately orient v-structures without centralizing data. The layer-wise design ensures natural convergence without additional hyperparameters. 
+
+FedC 2SL [51] proposes a federated CI test protocol where each client computes local test statistics that are securely aggregated into an unbiased estimate of the global statistic. This enables any constraint-based algorithm to operate on the resulting global CI relations, and the authors demonstrate this with a federated adaptation achieving strong empirical performance. 
+
+FedCDH [52] tackles the particularly challenging setting of heterogeneous data distributions across clients. It introduces a surrogate variable indexed by client identity to model distribution shifts, and develops two key primitives: a federated CI test (FCIT) using random feature approximations of kernel matrices, and a federated independent change principle (FICP) that exploits causal asymmetry across heterogeneous domains. Both are non-parametric, making no functional-form assumptions. 
+
+fedCI-IOD [53] addresses the most complex setting to date: non-identical variable sets, mixed data types, site-specific effects, and latent confounding. It provides the first federated CI testing framework (fedCI) with a privacy-preserving client-server architecture, paired with a federated implementation of the IOD algorithm that supports both meta-analytic p-value aggregation and direct integration with federated CI tests, retaining all theoretical guarantees. 
+
+FedCSL [54] addresses scalability and accuracy simultaneously. It introduces a local-to-global learning strategy 
+
+consisting of federated causal neighbor learning, global skeleton construction, and skeleton orientation, enabling scaling to high-dimensional data. To handle uneven sample allocation across clients, it devises a novel weight-inference strategy that determines relative sample sizes without encryption, enabling weighted aggregation. 
+
+FedCSL-HD [55] further tackles high-dimensional settings via a divide-and-conquer strategy: it builds feder-ated unified clusters to partition the variable space consistently across clients, learns cluster-level skeletons, and aggregates them through boundary-node-based fusion with a conflict-edge repair mechanism. Sci China Inf Sci 7
+
+Several early works laid the groundwork. P-TPDA [9] learns local BN structures independently and combines them through CI testing. DBNSL [56] proposes aggregation based on frequently occurring substructures. PP-BN(H) [57] uses secure multi-party computation protocols (secure exponentiation, factorial, and comparison) within the K2 algorithm. 
+
+Limitations. Constraint-based methods inherit the well-known fragility of conditional independence (CI) testing: a single erroneous CI decision can propagate through the skeleton-discovery and orientation phases, producing cascading structural errors [1]. This fragility is amplified in the federated setting, where each global CI decision is an aggregate of noisy local statistics and where small local sample sizes render high-order CI tests (those conditioning on large sets) particularly unreliable. Like their centralized counterparts, these methods typically rest on the faithfulness assumption and recover the structure only up to its Markov equivalence class, leaving a CPDAG with unoriented edges. Most also assume causal sufficiency and statistical homogeneity across clients; FedCDH [52] and fedCI-IOD [53] are notable exceptions, but relax these assumptions at the cost of greater statistical or computational complexity ( e.g. , kernel-based federated CI tests introduce additional hyperparameters and heavier computation). Finally, the layer-wise aggregation common to FedPC [50] and FedCSL [54] incurs one communication round per conditioning depth, so communication cost grows with graph density and conditioning-set size. 3.1.2 Score-Based Methods 
+
+Score-based FCD methods adapt classical score-and-search paradigms to distributed settings, where the key chal-lenge is evaluating and optimizing a global score function without data centralization. 
+
+DARLS [58] is a theoretically grounded approach that searches over the space of orderings π using simulated annealing. For each candidate ordering, a regularized log-likelihood score is evaluated via distributed optimization over DAGs compatible with π. Crucially, since every DAG admits at least one topological ordering, searching over orderings inherently satisfies the acyclicity constraint. The authors prove that the federated estimate converges to the oracle (centralized) solution at rate O(log( n)/√m), where n is the total sample size and m is the minimum local sample size – the first such guarantee for federated causal discovery. 
+
+RFCD [61] introduces a novel privacy-preserving framework based on regret . Each client first discovers its best local model, then, given a server-proposed candidate DAG, reports only the regret – the gap between its local score under the candidate and its best local score. The server minimizes worst-case regret to find a global DAG. Clients share neither data, parameters, nor local structures. PERI [63] extends this by proving consistency of the regret-based score and employing the Laplace mechanism for ϵ-differential privacy. I-PERI [81] further extends the regret framework to unknown interventions at the client level, introducing the Φ-Markov equivalence class and a two-phase approach that first learns the CPDAG and then refines it by exploiting structural differences across clients. 
+
+FedGES [84] adapts the classical Greedy Equivalence Search (GES) to horizontal FL. Clients learn local BNs, which are iteratively fused into a global structure. The method preserves key theoretical properties of GES while introducing novel convergence criteria and fusion mechanisms to handle client heterogeneity. Privacy is maintained by sharing only structural information. 
+
+Fed-HC-aIPW [79] is among the first to address missing data in federated causal discovery. It proposes a score-based algorithm that handles different missingness mechanisms across sources, evaluates the interaction between aggregation techniques and scoring criteria, and assesses violations of global missingness assumptions. 
+
+PP-BN(V) [8] is an early vertical FL approach that uses secret sharing to privately compute an approximation of the K2 score function across two parties holding different features. 
+
+Limitations. Score-based methods must search a DAG (or ordering) space that grows super-exponentially with the number of variables, so scalability to high-dimensional problems remains their principal bottleneck, and greedy score-and-search procedures such as FedGES [84] can settle into suboptimal structures in the finite-sample regime, with their fusion heuristics offering no global-optimality guarantee. Their accuracy hinges on the chosen score, which generally encodes parametric or distributional assumptions ( e.g. , linear-Gaussian or multinomial likelihoods), making them vulnerable to model misspecification, and like constraint-based methods, they typically identify the structure only up to its Markov equivalence class. The federated guarantees also come with caveats: DARLS [58] relies on computationally intensive simulated annealing, and its O(log( n)/√m) rate is governed by the minimum 
+
+local sample size m, so a single small or low-quality client can dominate the error. Regret-based methods [61,63,81], while attractive for privacy, require an expensive server-side combinatorial optimization and can be conservative; PERI, in particular, further trades structural accuracy for protection through differential-privacy noise. Finally, iterative local-model fusion entails multiple communication rounds to reach consensus. Sci China Inf Sci 8 
+
+> Table 1  Comprehensive comparison of federated causal discovery methods.  Method paradigm : CB = Constraint-Based, SB = Score-Based, CO = Continuous Optimization, HY = Hybrid.
+> Federation : H = Horizontal, V = Vertical, H+V = Both.  Scope : G = Global, L = Local.  Privacy : DP = Differential Privacy, SMPC = Secure Multi-Party Computation, SS = Summary Statistics only.  Heterogeneity : Homo.  = Homogeneous data assumed, Hetero.  = Heterogeneous data supported.  Missing : whether the method explicitly handles missing data ( ✓ =supported).  Time : whether the method supports temporal/time-series causal discovery ( ✓ = supported).  Non-id. Vars : whether the method handles non-identical (overlapping but different) variable sets across clients ( ✓ = supported).
+> Method  Venue  Paradigm  Fed.  Scope  Privacy  Hetero.  Missing  Time  Non-id. Vars
+> DARLS [58]  TPAMI’24  SB  H G SS  Hetero. P-TPDA [9]  SNPD’07  CB  H G SS  Homo. PP-BN(H) [57]  ICCSE’09  SB  H G SMPC  Homo. PP-BN(V) [8]  KDD’04  SB  V G SMPC  –DBNSL [56]  ISIE’10  SB  H G SS  Homo. BNSL-DD [59]  ICDM’03  HY  V G SS  –NOTEARS-ADMM [60]  AISTATS’22  CO  H G SS  Homo. RFCD [61]  KDD-W’22  SB  H G SS  Homo. FedDAG [62]  TMLR’23  CO  H G SS  Hetero. FedPC [50]  TBD’23  CB  H G SS  Homo. PERI [63]  AISTATS’23  SB  H G DP  Homo. FedC 2SL [51]  ECML-PKDD’23  CB  H G SS  Homo. FedCDH [52]  ICLR’24  CB  H G SS  Hetero. FedCausal [64]  AAAI’24  CO  H G SS  Hetero. FedCSL [54]  AAAI’24  CB  H G SS  Homo. FedACD [65]  IJCAI’24  CO  H G SS  Hetero. FedCASL [66]  CYBER’24  CO  H G SS  Homo. CCaT [67]  SCBM’24  HY  H G SS  Hetero. Bloom [68]  TNSE’25  CO  H G SS  Homo. VertiBayes [69]  CIS’24  SB  V G SMPC  – ✓
+> FedECD [70]  NeurIPS-W’24  CB  H G SS  Homo. FedLCS [71]  SCIS’25  CB  H L SS  Homo. eFedLCS [72]  IJCRS’25  CB  H L SS  Homo. FedCSL-HD [55]  NNICE’25  CB  H G SS  Homo. FedImpCSL [73]  KBS’25  CB  H G SS  Homo.  ✓
+> FDBNL/PFDBNL [74]  TAI’25  CO  H G SS  Hetero.  ✓
+> FedGCL [75]  ICLR’25  HY  V G SS  Hetero.  ✓
+> FedPuzzle [76]  INS’25  CB  H G SS  Hetero.  ✓
+> FedCDnv [77]  ICML’25  CB  H G SS  Homo.  ✓
+> FMT-NBN [78]  IISE-T’25  CO  H G SS  Hetero.  ✓
+> Fed-HC-aIPW [79]  JBI’25  SB  H G SS  Hetero.  ✓
+> NOTEARS-PFL [80]  JBI’25  CO  H G SS  Hetero. I-PERI [81]  ICML’26  SB  H G DP  Hetero. FedISHC [82]  AAAI’26  HY  H+V  G SS  Homo. Fed-Sparse-BNSL [83]  AISTATS’26  CO  H G DP  Hetero. FedGES [84]  ML’26  SB  H G SS  Hetero. fedCI-IOD [53]  arXiv’26  CB  H+V  G SS  Hetero.  ✓ ✓
+> FedGC [85]  arXiv’26  HY  V G SS  Hetero.  ✓
+> FedCDI [86]  arXiv’22  HY  H G SS  Homo. FedECE [87]  TAI’25  CB  H G SS  Homo. Sci China Inf Sci 9
+
+3.1.3 Continuous Optimization Methods 
+
+Continuous optimization FCD methods build on the NOTEARS paradigm, reformulating DAG learning as a con-tinuous program amenable to gradient-based distributed optimization. 
+
+NOTEARS-ADMM [60] is the seminal work in this category. It applies the Alternating Direction Method of Multipliers (ADMM) to decompose the NOTEARS objective across clients, requiring only the exchange of model parameters during optimization. The approach is demonstrated for both linear and nonlinear structural equation models (by employing multilayer perceptrons (MLP)). 
+
+FedDAG [62] proposes a two-level local model architecture separating graph structure learning (GSL) from 
+
+mechanism approximation (MA). During federated training, only the GSL components are shared, while MA parts are updated locally to accommodate data heterogeneity – a design insight that neatly addresses the unique challenge of federated structural learning compared to standard FL. 
+
+FedCausal [64] develops a global optimization process on the server that replaces traditional weighted averaging. This design naturally enforces sparsity and acyclicity of the global graph. The local and global optimization form a unified, explainable adaptive objective that reduces to the centralized objective under statistical homogeneity, and gracefully handles heterogeneity. 
+
+FedCASL [66] formulates the problem as a bi-level optimization on top of NOTEARS with a carefully designed sparse penalty to remove spurious edges under acyclicity constraints. 
+
+FedACD [65] is the first to address sample quality heterogeneity : the insight that different variable subspaces may have different data quality across clients. It adaptively selects causal relationships learned under “good” variable spaces at each client and masks those from “bad” spaces, ensuring only high-quality learning results are communicated. 
+
+Bloom [68] integrates both observational and interventional data through bilevel polynomial optimization with SDP relaxations, offering convergence and optimality guarantees, and extends to distributed settings. 
+
+Fed-Sparse-BNSL [83] combines differential privacy with a proximal greedy coordinate descent that transmits only sparse edge updates per iteration rather than dense d × d matrices, drastically reducing both communication cost and privacy budget consumption. 
+
+NOTEARS-PFL [80] introduces a personalized federated BN learning method using sparse group LASSO to capture both shared structure and site-specific edges, motivated by multi-site neuroimaging analysis of major depressive disorder. 
+
+FMT-NBN [78] proposes a federated multi-task framework for clients with overlapping and distinct variables ,using a nonparametric additive structural causal model with sparse group LASSO and a two-step FL framework that learns client similarities on the server. 
+
+Limitations. As continuations of the NOTEARS paradigm, these methods cast DAG learning as a non-convex program and therefore converge only to stationary points, with no guarantee of recovering the global optimum. The smooth acyclicity penalty (based on a matrix exponential or trace) costs O(d3) per evaluation, and the gradient-based formulation has a documented sensitivity to the scaling and standardization of variables, a vulnerability that is especially delicate in federated settings where preprocessing may differ across clients. Most variants further commit to a specific functional form (linear SEMs or MLP-based mechanisms), limiting robustness under misspecification. Communication is the dominant practical cost: exchanging d × d adjacency matrices or their gradients incurs 
+
+O(d2) per round, and ADMM-style schemes such as NOTEARS-ADMM [60] require many rounds to converge; the sparse-update scheme of Fed-Sparse-BNSL [83] is a notable exception that mitigates this overhead. 3.1.4 Hybrid and Other Methods 
+
+Several methods combine multiple paradigms or introduce entirely novel mechanisms. 
+
+FedCDI [86] uniquely targets interventional data in federated settings. Clients use neural causal discovery to form local beliefs about causal structure, which are aggregated on the server with quality-weighted contributions: clients with higher-quality interventional samples exert greater influence. 
+
+CCaT [67] takes a collaborative, human-in-the-loop approach: sites evaluate and refine a shared causal model using private datasets, sharing only summary statistics or suggested causal relations while maintaining distinct local models. 
+
+FedISHC [82] exploits higher-order cumulants for both horizontal and vertical federated settings. In linear non-Gaussian models, higher-order cumulants capture information about absent variables from the existing ones within each client, enabling identifiability in vertical FL without variable completeness. 
+
+FedImpCSL [73] and Fed-HC-aIPW [79] both address missing data. FedImpCSL proposes a local-to-global Sci China Inf Sci 10 
+
+imputation strategy (FedLocalImp and FedGlobalImp) and a Federated Contribution Assessment Method (Fed-CAM) that jointly considers sample size and missing data rate for weighted aggregation. 
+
+Limitations. Because this group combines disparate mechanisms, its members trade generality for specialized assumptions. FedCDI [86] presupposes access to interventional data, which is costly or simply unavailable in many federated applications; CCaT [67] relies on human-in-the-loop refinement, limiting automation and scalability; and FedISHC [82] depends on higher-order cumulants that require large samples for stable estimation together with a linear non-Gaussian model assumption. Imputation-based approaches such as FedImpCSL [73] are only as reliable as their imputations and may introduce bias when missingness is non-ignorable. As a heterogeneous collection, these methods also lack the shared theoretical framework and cross-method comparability that the more established paradigms enjoy. 
+
+3.2 Taxonomy by Federation Topology 
+
+3.2.1 Horizontal Federated Causal Discovery 
+
+The vast majority of FCD methods operate under horizontal partitioning, where clients share the same variable set but hold different samples. This setting is natural when institutions collect the same types of measurements ( e.g. ,hospitals recording the same clinical variables) but serve different populations. The main technical challenge is aggregating local structural information (CI test results, scores, or gradient updates) into a consistent global DAG. Under statistical homogeneity (all clients share the same data-generating process), methods like FedPC [50] and NOTEARS-ADMM [60] can leverage the increased total sample size to improve over single-site discovery. Under heterogeneity, methods like FedDAG [62], FedCDH [52], and FedCausal [64] must carefully disentangle shared causal structure from client-specific mechanisms. 3.2.2 Vertical Federated Causal Discovery 
+
+In vertical FL, each client observes a different subset of variables for the same set of entities. This creates a fundamentally different challenge: no single client can assess relationships between its variables and those of other clients without some form of cross-client communication. PP-BN(V) [8] and BNSL-DD [59] are early exemplars, using secret sharing and selective data transmission for cross-site structure learning. VertiBayes [69] handles an arbitrary number of parties and missing values. FedGCL [75] applies vertical FL to Granger causality in time-series settings, where clients share low-dimensional state represen-tations rather than raw high-dimensional measurements. 3.2.3 Hybrid Federated Causal Discovery 
+
+Some recent methods address the more realistic setting where both sample and feature spaces differ across clients. FedISHC [82] provides a unified framework for both horizontal and vertical settings using higher-order cumulants, which are robust to absent variables. fedCI-IOD [53] handles non-identical variable sets with mixed data types and site-specific effects, supporting partial horizontal and vertical overlap. 
+
+3.3 Taxonomy by Structural Scope 
+
+3.3.1 Global Causal Structure Learning 
+
+Most FCD methods target the global causal structure, namely the full DAG over all variables, which is the default and most studied setting. The computational complexity of learning a global DAG grows super-exponentially with the number of variables, and the federated communication overhead compounds this challenge. 3.3.2 Local Causal Structure Learning 
+
+Local causal structure learning (LCS) focuses on identifying the direct causes (parents) and effects (children) of a specific target variable, without learning the entire DAG. This is particularly valuable in high-dimensional settings and for targeted applications such as finding risk factors for a specific disease. 
+
+FedLCS [71] is the first federated LCS method, comprising three subroutines: federated local skeleton learning (FLSke ), federated local skeleton orientation ( FLSori ), and federated local extension-and-backtracking orientation (FLEori ). eFedLCS [72] accelerates FedLCS through GPU-parallel CI testing and separation set optimization, addressing the computational bottleneck of repeated skeleton learning. Sci China Inf Sci 11 
+
+3.4 Cross-Cutting Themes 
+
+3.4.1 Temporal and Dynamic Causal Discovery 
+
+Time-series data presents additional challenges: the causal graph may have temporal edges, and Granger causality provides an alternative framework. 
+
+FDBNL/PFDBNL [74] are the first methods for federated Dynamic Bayesian Network (DBN) learning from time-series data. FDBNL handles homogeneous settings, whereas PFDBNL incorporates a proximal operator for heterogeneous time-series and provides the first convergence analysis for continuous-optimization-based structure learning in FL. 
+
+FedGCL [75] proposes federated Granger causality learning for interdependent clients using state-space repre-sentations, enabling causal analysis of high-dimensional time-series without aggregating raw data. FedGC [85] provides a systematic taxonomy of uncertainty sources (aleatoric vs. epistemic) in federated Granger causality and derives closed-form steady-state variance expressions. 3.4.2 Data Heterogeneity 
+
+Data heterogeneity is a critical challenge across all FCD paradigms, as clients may have different sample sizes, data quality, or even different underlying distributions. Methods addressing heterogeneity include: FedDAG’s separated GSL/MA architecture [62], FedCDH’s surrogate variable approach [52], FedCausal’s explainable adaptive optimization [64], FedACD’s variable-space-level quality assessment [65], and NOTEARS-PFL’s sparse group LASSO for shared vs. site-specific structures [80]. 3.4.3 Non-Identical Variable Sets 
+
+In practice, clients often observe overlapping but non-identical variable sets, creating both absolute latent variables (unobserved by all) and relative latent variables (observed by some but not others). 
+
+FedCDnv [77] develops theories to detect whether relationships involving non-overlapping variable pairs are definitively non-causal, and introduces a two-level priority selection strategy that identifies “correct” and “good” relationships. FedPuzzle [76] decomposes local causal graphs into star graph pieces for reliable local discovery, then aggregates through edge-probability and star-graph weighting. FMT-NBN [78] treats this as a multi-task learning problem, fitting related but distinct DAGs for each client. 3.4.4 Missing Data 
+
+Missing data compounds the challenges of federated causal discovery, as missingness mechanisms may differ across clients. 
+
+FedImpCSL [73] proposes local-to-global imputation with federated contribution assessment considering both sample size and missing data rate. Fed-HC-aIPW [79] handles different missingness mechanisms across sources in a clinical endometrial cancer study. VertiBayes [69] is the first vertical FL method to handle missing values with arbitrary numbers of parties. 3.4.5 Limited Samples and Bootstrapping 
+
+FedECD [70] addresses the performance degradation when each client holds very limited samples by employing a two-layer bootstrapping aggregation strategy at both client and server levels, improving skeleton and structure estimation under data scarcity. 
+
+## 4 Federated Causal Inference 
+
+Federated causal inference (FCI) aims to estimate causal effects, typically the average treatment effect (ATE) or individualized/conditional average treatment effects (ITE/CATE), from data distributed across multiple sites. Unlike FCD, which produces a structural graph, FCI quantifies the effect between treatment and outcome. Although individual federated causal inference methods have appeared at leading venues, and Deng et al. provide a high-level discussion of federated causal inference within a broader Causal-FL framework [12], no prior work has offered a dedicated, fine-grained survey that systematically categorizes the federated causal inference literature by estimand type and estimation strategy with detailed algorithmic analysis. This section fills that gap by organizing existing methods along the dimensions of target estimand and estimation strategy. We organize FCI methods by target estimand and estimation strategy , as presented in Table 2. Sci China Inf Sci 12 
+
+4.1 ATE Estimation 
+
+4.1.1 IPW-Based Methods 
+
+Inverse probability weighting (IPW) is a cornerstone of causal inference, and several federated methods extend it to distributed settings. 
+
+FedMLE and FedIPW-MLE [90] develop federated methods for heterogeneous observational data. Locally computed propensity-score-based summary statistics are aggregated across sites to obtain point and variance esti-mators. The authors identify that aggregation schemes must account for heterogeneity in both treatment assign-ments and outcomes across sites, and prove consistency and asymptotic normality. The federated estimators are communication-efficient, requiring only one-way, one-time sharing of summary statistics. 
+
+COLA [95] introduces a decentralized framework using sequential updating machinery for cross-site communi-cation. Unlike standard FL with a central coordinator, COLA operates peer-to-peer: the first site initializes, and subsequent sites refine the estimate. Four algorithms (1r-cola through 4r-cola) trade off communication cost against statistical efficiency. The authors prove that COLA achieves the same convergence rate as centralized analysis with the full cumulative sample size, a property not shared by standard meta-analysis. 
+
+Fed-IPW and Fed-AIPW [106] propose a novel propensity score federation strategy using membership weights 
+
+(probabilities of site membership conditional on covariates) to construct a global propensity score as a mixture of local scores. This allows sites to use different estimation methods locally and is particularly advantageous when overlap between treatment groups is poor or absent within individual sites. 
+
+FedECA [103] develops a federated external control arm method for time-to-event outcomes using federated IPTW and Cox models. Applied to metastatic pancreatic cancer data across three countries, it replicates pooled IPTW results up to machine precision while maintaining patient privacy. 
+
+Limitations. Inverse probability weighting is only as good as the propensity-score model it relies on: mis-specification of that model biases the estimate, and poor covariate overlap (near-violations of positivity) produces extreme weights that inflate variance. These classical weaknesses persist in the federated setting and interact with it: one-shot schemes such as FedMLE and FedIPW-MLE [90] require each site to hold enough samples for its local propensity estimate to be reliable, and aggregating propensity models across sites with heterogeneous treatment-assignment mechanisms is delicate. Strategies that explicitly model site membership, such as Fed-IPW and Fed-AIPW [106], alleviate poor within-site overlap but introduce an additional membership model that must itself be estimated and can be misspecified. 4.1.2 Doubly Robust and Augmented Methods 
+
+This family of methods brings augmented and doubly robust estimators, most notably AIPW, into the feder-ated paradigm, inheriting their celebrated resilience to partial model misspecification while tackling the additional complexities that distributed healthcare networks introduce: covariate shift across sites, heterogeneous data distri-butions, communication bottlenecks, and stringent privacy requirements. 
+
+FedAIPW [90] extends the AIPW estimator to federated settings, enjoying double robustness. 
+
+CLB-AIPW [94] proposes a collaborative inverse propensity score weighting estimator that directly takes weighted means of nuisance models across sites rather than performing meta-analysis post-hoc. This is the first method that allows collaboration across disjoint domains without additional assumptions, and remains stable as heterogeneity increases. 
+
+FACE [99] develops a federated adaptive causal estimation framework with density ratio weighting to account for covariate shifts. An adaptive penalized regression procedure guards against negative transfer, achieving both consistency and optimal efficiency. Applied to comparing Pfizer and Moderna COVID-19 vaccines across five VA regional sites, it reduced standard errors by 26–67% compared to traditional methods. 
+
+MR L1 [91] offers a multiply-robust, privacy-preserving estimator that accommodates covariate mismatch (dif-ferent covariates across sites) using transfer learning for ensemble weights. 
+
+RIFL [100] provides robust inference for the prevailing model (matching the majority of sites) using a novel resampling method that accounts for site selection uncertainty. Applied to mortality risk prediction across 274 hospitals in four countries using COVID-19 EHR data. 
+
+ECO-ATE [109] achieves the semiparametric efficiency bound under data-sharing constraints with only two rounds of communication, allowing distributional shifts across sites. 
+
+FedCI-MSAE [112] systematically compares three classes of federated ATE estimators derived from the Plug-in G-Formula for randomized controlled trials: (i) meta-analysis estimators that aggregate independently computed per-study ATE estimates, (ii) one-shot federated estimators that aggregate outcome model parameters in a single Sci China Inf Sci 13  
+
+> Table 2  Comprehensive comparison of federated causal inference methods.  Estimand : ATE, CATE/ITE, ATT/ATC, DATE, HTE.  Strategy : IPW, AIPW, Match., Bayes., DML, DL = Deep Learning, Meta = Meta-analysis variant, IV = Instrumental Variable, DR = Doubly Robust, CB/IDA = Constraint-Based structure learning followed by IDA-based effect estimation, M-est. = M-estimator, G-formula = Plug-in G-Formula.  Comm. : number of communication rounds (1-shot means a single round).  Privacy : SS = Summary Statistics only, DP = Differential Privacy, Param. = Model Parameters shared, Repr. = Dimensionality-reduced Representations shared.  Outcome : the type of outcome variable supported (Continuous, Binary, Binary/Cont., Time-to-event).
+> Method  Venue  Estimand  Strategy  Fed. Type  Hetero.  Comm.  Privacy  Outcome
+> FedCI [88]  UAI’22  ATE/ITE  Bayes./GP  H ✓ Iterative  SS  Continuous CausalRFF [89]  NeurIPS’22  ATE/CATE  Kernel  H ✓ Iterative  SS  Continuous FedMLE [90]  SiM’23  ATE  IPW-MLE  H ✓ 1-shot  SS  Binary/Cont. FedIPW-MLE [90]  SiM’23  ATE  IPW-MLE  H ✓ 1-shot  SS  Binary/Cont. FedAIPW [90]  SiM’23  ATE  AIPW  H ✓ 1-shot  SS  Binary/Cont. MR L1 [91]  NeurIPS’23  ATE  DR  H ✓ 1-shot  SS  Continuous FedTEDVAE [92]  NeurIPS-W’23  ITE  DL/VAE  H ✓ Iterative  Param.  Continuous FPSM [93]  AOR’25  ATE  Match.  H – Iterative  SS  Binary/Cont. CLB-AIPW [94]  ICML’24  ATE  IPW/DR  H ✓ 1-shot  SS  Continuous COLA [95]  SiM’24  ATE/DATE  IPW  H – 2–4 rounds  SS  Binary/Cont. DC-QE [96]  ESWA’24  ATE  Match./IPW  H+V  – 1-shot  Repr.  Continuous FedTransTEE [97]  arXiv’24  ITE  DL/Trans.  H ✓ Iterative  Param.  Continuous Fed-IPTW [98]  TIST’26  ITE  IPW/DL  H ✓ Iterative  Param.  Continuous FACE [99]  JASA’25  ATE  DR  H ✓ 1-shot  SS  Binary/Cont. RIFL [100]  JASA’25  ATE  Meta/DR  H ✓ 1-shot  SS  Continuous FDML [101]  Biometrics’25  ATE  DML  H ✓ 1-shot  SS  Continuous CausalFI [102]  ML’25  ATE/ITE  Bayes.  H ✓ Iterative  SS  Continuous FedECA [103]  NC’25  ATE  IPW/Cox  H ✓ Iterative  Param.  Time-to-event FL-TTE [104]  NPJ-DM’25  ATE  IPW/Cox  H ✓ Iterative  Param.  Time-to-event xFBCI [105]  JIM’25  ATE  Bayes./Match.  H ✓ Iterative  SS  Continuous Fed-IPW [106]  ICML’26  ATE  IPW  H ✓ Iterative  SS  Binary/Cont. Fed-AIPW [106]  ICML’26  ATE  AIPW  H ✓ Iterative  SS  Binary/Cont. FedIV [107]  arXiv’25  ATE  IV/GMM  H ✓ Iterative  Param.  Continuous Targeted DF [108]  arXiv’25  ATE  DR/Surv.  H ✓ Iterative  SS  Time-to-event ECO-ATE [109]  Biometrics’26  ATE  DR  H ✓ 2 rounds  SS  Continuous DC-DML [110]  ESWA’26  CATE  DML  H – 1-shot  Repr.  Continuous PW-FedAvg [92]  NeurIPS-W’23  ITE  DL/VAE  H ✓ Iterative  Param.  Continuous FedECE [87]  TAI’25  ATE  CB/IDA  H ✓ Iterative  SS  Continuous FedSIM [111]  arXiv’25  ATE  M-est./MCMC  H ✓ 1-shot  SS  Continuous FedCI-MSAE [112]  AISTATS’25  ATE  G-formula/Meta  H ✓ 1-shot/Iter.  SS  Continuous MVAgg [113]  SaTML’24  ATE  Match./DP  H ✓ 1-shot  DP  Binary PFWS [114]  arXiv’25  ATE/HTE  DR/EIF  H ✓ 1-shot  SS  Binary/Cont. PW FedAvg [115]  CBM’24  ITE  DL/VAE  H ✓ Iterative  Param.  Continuous TFLF [116]  arXiv’25  ATE/HTE  DR/EIF  H ✓ 1-shot  SS  Binary/Cont. Sci China Inf Sci 14
+
+round, and (iii) gradient-based federated estimators that learn the outcome model on joint data via federated gradient descent. The authors derive asymptotic variances under linear outcome models and show that meta-analysis estimators can achieve statistical efficiency comparable to pooled analysis when local samples are sufficient, while gradient-based estimators are necessary when local datasets are small. One-shot estimators offer an intermediate trade-off, recovering pooled ATE estimates under distributional shifts but suffering from increased variance under study-effects. 
+
+PFWS [114] develops semiparametrically efficient estimators for a broad class of causal measures (including risk ratios) across multiple federated sources under two transportability assumptions with different efficiency-robustness trade-offs. The estimators support flexible machine learning for nuisance functions while maintaining parametric convergence rates. To handle scenarios where some source sites violate transportability, a Post-Federated Weight-ing Selection (PFWS) framework adaptively identifies compatible sites via a two-step procedure, asymptotically achieving the semiparametric efficiency bound while mitigating negative transfer. 
+
+TFLF [116] introduces a targeted-federated learning framework for estimating heterogeneous treatment effects (HTEs) for a prespecified target population. It defines HTEs via a projection-based estimand applicable to both continuous and binary outcomes, and develops a doubly robust estimator that integrates information from multiple data sources while accounting for covariate distribution shifts through density ratio modeling. A communication-efficient bootstrap-based selection procedure detects and excludes non-transportable data sources, requiring only a single round of information exchange. Applied to nationwide Medicare-linked data for comparing hip fracture surgical treatments. 
+
+Limitations. Double robustness guarantees consistency only when at least one of the two nuisance models (outcome regression or propensity score) is correctly specified; if both are misspecified the estimator is biased, and through its weighting component it remains sensitive to poor overlap. These methods are also more involved to deploy, since both nuisance models must be estimated at every site. Moreover, the transfer-learning and site-selection mechanisms that several of them use to guard against negative transfer ( e.g. , FACE [99], RIFL [100], PFWS [114], and TFLF [116]) rest on transportability assumptions that may not hold in practice, and the data-driven selection step introduces additional uncertainty that is not always reflected in the reported confidence intervals. 4.1.3 Matching-Based Methods 
+
+Rather than modeling outcomes or reweighting observations, these methods extend classical matching techniques to federated environments, pairing treated and control units across distributed sites on the basis of estimated propensity scores while incorporating privacy mechanisms such as differential privacy and leveraging federated model training for score estimation. 
+
+FPSM [93] extends propensity score matching to FL using a Federated Random Forest (FRF) for propensity estimation, federated nearest-neighbor matching, and federated ATE estimation. It further combines with DID analysis (FPSM-DID) for dynamic panel data. 
+
+xFBCI [105] integrates Bayesian federated learning with propensity score matching for manufacturing appli-cations (EHD printing), using Expectation Propagation and Stochastic Gradient Langevin Dynamics for scalable posterior estimation. 
+
+MVAgg [113] addresses multi-site ATE estimation with per-site differential privacy guarantees. For observational studies, it proposes SmoothDPMatching , a smooth-sensitivity-based DP matching algorithm that adds significantly less noise than naive global sensitivity baselines. Each site reports both its private ATE estimate and a private variance estimate as a quality measure. On the server side, the minimum-variance aggregation (MVAgg) algorithm selects an optimal subset of sites to aggregate, minimizing the overall variance of the final ATE estimate. This three-component design (per-site DP estimation, quality reporting, and optimal aggregation) effectively handles site heterogeneity in sample sizes and privacy budgets. 
+
+Limitations. Matching estimators discard units that cannot be paired, reducing the effective sample size and statistical efficiency, and their quality degrades sharply when covariate overlap between treated and control groups is limited. The federated setting compounds this, because units at different sites cannot be matched directly without exposing individual records, forcing reliance on propensity-score summaries or reduced-dimension representations that may match only coarsely. Privacy mechanisms add a further tension: the differential-privacy noise injected by MVAgg [113], although minimized through smooth sensitivity, still trades estimation accuracy for protection. 4.1.4 Data Collaboration Methods 
+
+These methods permit sites to share carefully constructed intermediate representations, summary statistics, or synthetic data, balancing the statistical benefits of pooled information against the privacy constraints that preclude Sci China Inf Sci 15 
+
+direct data exchange. 
+
+DC-QE [96] proposes a one-shot method using dimensionality-reduced intermediate representations shared across parties. It uniquely addresses the lack of both subjects and covariates across parties, supporting both IPW and matching estimation. 
+
+DC-DML [110] extends this to semi-parametric CATE estimation via double machine learning on privacy-preserving fusion data, enabling collaborative estimation across time points and parties. 
+
+Limitations. By sharing dimensionality-reduced representations rather than raw data, these methods reduce communication and exposure, but the reduction is lossy: information discarded during compression cannot be recovered, and the validity of the downstream estimate hinges on the assumption that the shared representations preserve the confounding structure relevant to the target effect. The privacy they afford is also informal, since reduced-dimension features can still leak information under reconstruction or membership-inference attacks unless paired with formal guarantees. 
+
+4.2 ITE and CATE Estimation 
+
+4.2.1 Bayesian, Gaussian Process, and Kernel Methods 
+
+This family adopts a probabilistic or nonparametric view of treatment effect estimation. Bayesian and Gaussian-process approaches place prior distributions over potential outcomes or model parameters and update them through site-level likelihoods, achieving principled uncertainty quantification and natural aggregation of heterogeneous beliefs without direct data sharing; kernel and random-feature approaches instead ground estimation in reproducing kernel Hilbert spaces, or their finite-dimensional random-feature approximations, offering flexible nonparametric modeling of treatment effect functions while keeping communication overhead tractable. What unites them is that per-site contributions enter the global objective additively, making them naturally amenable to federated decomposition. 
+
+FedCI [88] proposes a Bayesian framework using Gaussian processes to model potential outcomes, with a varia-tional approximation whose evidence lower bound decomposes additively across sources, enabling federated gradient averaging and posterior uncertainty quantification. 
+
+CausalFI [102] extends this to handle dissimilar distributions across sources and missing data under MAR/MCAR assumptions by recovering conditional distributions of missing confounders. 
+
+CausalRFF [89] leverages Random Fourier Features (RFF) to approximate kernel functions, naturally induc-ing decomposition of the loss function into per-source components. Adaptive kernel functions handle dissimilar distributions, and the authors provide minimax lower bounds. 
+
+Limitations. These estimators provide principled uncertainty quantification but inherit the scalability burden of their building blocks: exact Gaussian-process inference scales cubically with sample size, so FedCI [88] and CausalFI [102] rely on variational approximations whose error is hard to quantify, while CausalRFF [89] attains tractability only by approximating the kernel with random features. Their conclusions are further sensitive to the choice of prior and kernel, and the additive cross-site decomposition that enables federation rests on a conditional-independence assumption across sites that can be violated when sites share unobserved common causes. 4.2.2 Deep Generative and Transformer Methods 
+
+Leveraging the expressive capacity of generative models and attention-based architectures, these approaches learn rich confounder and treatment effect representations across federated sites through privacy-preserving training and cross-site alignment strategies. 
+
+FedTEDVAE [92] applies FedAvg to TEDVAE (Treatment Effect with Disentangled VAE) for federated ITE estimation, demonstrating the feasibility of combining federated learning with advanced deep generative causal models. PW FedAvg [115] extends this by addressing the propensity score shift problem – the phenomenon where treatment assignment criteria differ across hospitals (e.g., due to varying drug availability). It adapts the FedAvg aggregation process by weighting each client’s contribution proportionally to the number of samples trained on, mitigating biases from imbalanced treatment assignment distributions. Experiments on semi-synthetic causal infer-ence benchmarks show that PW FedAvg bridges the gap between centralized and isolated training, outperforming vanilla FedAvg and other distributed causal inference baselines (linear models, Gaussian Processes, Random Fourier Features) as treatment imbalance increases across nodes. 
+
+FedTransTEE [97] is the first transformer-based federated ITE estimation framework, handling heterogeneous covariates, treatments, and outcome spaces across sites through cross-attention mechanisms and intervention em-beddings that enable zero-shot estimation for unseen treatments. Sci China Inf Sci 16 
+
+Fed-IPTW [98] addresses treatment assignment strategy variation across hospitals via two-step FedAvg: first learning patient-specific propensity weights for local decorrelation, then learning unbiased factual predictions with hospital-specific weights for global decorrelation. 
+
+Limitations. Deep generative and attention-based estimators are data-hungry, so the limited per-site sample sizes typical of federated deployments can undermine the very representational flexibility that motivates them. Unlike summary-statistic methods, they generally exchange model parameters or gradients across rounds, which raises communication cost and exposes a larger attack surface to inference attacks unless paired with explicit privacy mechanisms. They also offer weaker theoretical guarantees, with formal identifiability and consistency results largely absent, and their black-box nature makes the effect estimates harder to interpret and audit than those of semiparametric estimators. 4.2.3 Semiparametric and Specialized Estimators 
+
+Beyond the probabilistic and deep-learning families above, several methods bring specialized semiparametric esti-mators into the federated setting, each addressing a distinct source of difficulty. What they share is a reliance on estimating equations or orthogonalized scores whose per-site components can be aggregated without pooling raw data; they differ in the estimand and nuisance structure they target: high-dimensional confounding via double machine learning, time-to-event outcomes via survival models, unmeasured confounding via instrumental variables, and non-smooth objectives via sampling-based inference. 
+
+Double machine learning. The Neyman orthogonality principle anchors this line of work: cross-fitted nuisance estimators partial out high-dimensional confounders, isolating the target causal parameter in a way that is both robust to nuisance estimation error and naturally suited to federated decomposition. FDML [101] extends double machine learning to FL for high-dimensional semiparametric models, using surrogate Neyman-orthogonal scores and density ratio tilting, and is applied to multi-phase ADNI data for Alzheimer’s disease research. 
+
+Survival analysis. Targeting time-to-event outcomes, these methods adapt classical survival models such as the Cox proportional hazards framework to federated settings, carefully handling censoring, site-level heterogeneity, and the privacy-sensitive aggregation of risk sets. FL-TTE [104] proposes federated target trial emulation for time-to-event outcomes, combining federated propensity scoring with federated Cox proportional hazards models, validated on sepsis (192 hospitals) and Alzheimer’s trials (5 health systems). Targeted Data Fusion [108] develops both a semiparametric efficient estimator (when data can be shared) and a federated learning framework (under privacy constraints) for survival analysis, dynamically reweighting source contributions. 
+
+Instrumental variables. When unmeasured confounding renders standard estimators inconsistent, these methods restore identifiability by exploiting exogenous instruments, extending two-stage procedures to federated configu-rations where instruments and outcomes may reside at non-overlapping sites. FedIV [107] introduces federated instrumental variable analysis via federated GMM, formulated as a federated zero-sum game, and establishes that equilibrium solutions consistently estimate local moment conditions of every client, even under heterogeneity. 
+
+Sampling-based inference. Intractable posteriors over causal quantities are approximated through Monte Carlo or variational sampling schemes distributed across sites, with privacy preserved via message-passing or likelihood-sharing protocols that avoid direct exposure of local data. FedSIM [111] develops a sampling-based federated learning framework for statistical inference on M-estimators with non-smooth objective functions, which arise in applications such as quantile regression and AUC maximization. The method uses Markov Chain Monte Carlo (MCMC) sampling with a second-stage perturbation scheme to efficiently estimate both parameters and their variances, circumventing the need for nonparametric estimation of nuisance quantities. For multi-site settings, an adaptive strategy borrows information from potentially heterogeneous source sites via a dissimilarity-based selection mechanism and a lasso-regularized weighting scheme. The resulting estimator possesses an oracle property: it achieves optimal asymptotic efficiency by leveraging eligible sites while guarding against negative transfer, requiring only one round of communication without sharing individual-level data. 
+
+Limitations. Each specialized estimator inherits the assumptions of the classical machinery it federates. Double machine learning (FDML [101]) needs high-quality cross-fitted nuisance estimates and hence adequate local samples; survival methods (FL-TTE [104], Targeted Data Fusion [108]) lean on modeling choices such as proportional hazards and on the privacy-sensitive aggregation of risk sets; and instrumental-variable analysis (FedIV [107]) restores identifiability only under the strong, largely untestable assumptions of instrument validity, with weak instruments inflating variance. Sampling-based inference (FedSIM [111]) avoids nuisance estimation but at the price of the computational and convergence-diagnostic burden of MCMC. Across this group, theoretical guarantees are typically established under specific heterogeneity and overlap conditions that may not hold at every site. Sci China Inf Sci 17 
+
+## 5 Connections Between FCD and FCI 
+
+Federated causal discovery and federated causal inference, while often studied separately, are deeply interconnected, as illustrated in the unified pipeline shown in Figure 4. The two tasks answer complementary questions over the same distributed data: FCD asks which variables cause which , recovering the structure G, whereas FCI asks how much a designated treatment changes a designated outcome, quantifying an effect such as the ATE τ . Crucially, the validity of any FCI estimate hinges on structural assumptions, that is, which variables must be adjusted for, which may serve as instruments, and which lie on mediating pathways, that are precisely the objects FCD is designed to recover. This makes FCD and FCI not merely related but sequentially dependent: structure is the input to identification, and identification is the prerequisite for unbiased estimation. While prior work [12] discusses FL for causality in general, to the best of our knowledge, this is the first work to explicitly formalize and analyze the interplay between federated causal discovery and federated causal inference as complementary stages of a unified federated causal reasoning pipeline, with formal problem definitions linking the two. In the remainder of this section, we make this connection precise, surveying how the two stages compose, where their machinery is shared, and what new difficulties arise specifically at their interface. 
+
+5.1 A Unified Problem Formulation 
+
+Consider K clients, where client k holds a private dataset Dk over a common (or partially overlapping) variable set V that includes a designated treatment A and outcome Y . We formalize federated causal reasoning as the composition of two privacy-preserving stages. 
+
+Stage 1 (Federated structure learning). The clients collaboratively recover a global causal structure by exchanging only privacy-preserving statistics (CI-test summaries, scores, or gradients) rather than raw records, ˆG = AFCD 
+
+ {D k}Kk=1 
+
+, (7) where ˆG is a DAG or, more commonly, a CPDAG representing its Markov equivalence class (MEC). 
+
+Stage 2 (Federated effect estimation). Given the learned structure ˆG and the target pair ( A, Y ), the clients first identify a valid adjustment set ˆZ ⊆ V \ { A, Y } from ˆG, for example via the back-door criterion [4], and then collaboratively estimate the effect, ˆτ = AFCI 
+
+ {D k}Kk=1 ; A, Y, ˆZ. (8) The composition ˆ τ =  AFCI ◦A FCD 
+
+({D k}) defines the federated causal reasoning pipeline . This formulation exposes two facts that motivate the rest of the section: the unconfoundedness assumption underlying Eq. (3) is not given a priori but must be supplied by Stage 1, and any error or ambiguity in ˆG propagates into ˆ τ .
+
+5.2 FCD as an Upstream Step for FCI 
+
+The most direct use of the pipeline is to let FCD furnish the structural knowledge that FCI requires. A learned DAG identifies valid adjustment sets via the back-door criterion, exposes candidate instrumental variables, and reveals mediating pathways, each of which improves the reliability and interpretability of the downstream effect estimate. This data-driven identification is especially valuable in the federated setting, where no single analyst has global visibility into the joint distribution and where hand-specifying a confounder set across heterogeneous sites is error-prone. 
+
+FedECE [87] is the most explicit realization of this pipeline: it proposes a unified framework comprising a federated causal structure learning (FedCSL) module and a federated causal effect (FedCE) module. The FedCSL module uses a layer-wise cooperative optimization strategy to learn a global skeleton and a distributed optimal consensus strategy for V-structure identification, all without sharing raw data. The FedCE module then computes causal effects based on the learned CPDAG using a progressively integrated multiset strategy that handles the inherent ambiguity of undirected edges. Three instantiations are proposed and validated on synthetic, benchmark, and real datasets, including the IHDP dataset: FedECE-B (basic), FedECE-L (computationally efficient), and FedECE-O (accuracy-optimized). Beyond FedECE, xFBCI [105] also explicitly uses a Bayesian network structure to derive propensity scores for matching, while several other FCI methods implicitly assume a known or partially known causal graph and therefore depend, often silently, on an upstream discovery step that an FCD method could supply. Sci China Inf Sci 18 
+
+5.3 Sequential versus Joint Integration 
+
+Two paradigms can realize the composition in Eqs. (7)–(8). The sequential (two-stage) paradigm runs FCD to completion, fixes ˆG, and then runs FCI conditioned on it; FedECE exemplifies this modular design. Its advantages are practical: the two stages can reuse existing federated primitives, be audited independently, and respect separate privacy budgets. Its drawback is that errors in ˆG are treated as ground truth downstream, so structural mistakes translate directly into biased effects. The joint (end-to-end) paradigm instead optimizes a single objective that couples structure learning and effect estimation, for instance by sharing nuisance representations between the two stages or by regularizing the discovery loss with downstream estimation accuracy. Joint optimization can, in princi-ple, achieve better statistical efficiency by allowing the target estimand to inform which structural ambiguities are worth resolving, but it complicates privacy accounting and federated optimization and remains largely unexplored. Characterizing when the modular and joint paradigms differ, and by how much, is an open theoretical question at the heart of this connection. 
+
+5.4 Propagating Structural Uncertainty 
+
+A defining feature of the pipeline is that Stage 1 typically identifies the structure only up to a Markov equivalence class: from observational data alone, ˆG is a CPDAG with undirected edges whose orientation is not determined. Consequently, a single dataset is consistent with multiple adjustment sets and hence multiple possible effect values. Classical centralized treatments such as IDA [117] address this by enumerating the DAGs in the MEC and returning the set of possible causal effects rather than a single number; FedECE’s progressively integrated multiset strategy is the federated analogue, propagating CPDAG ambiguity through to a multiset of effect estimates. Naively reporting a point estimate from one arbitrarily chosen member of the equivalence class can yield overconfident conclusions. Two challenges are therefore specific to the federated interface: (i) propagating the equivalence-class ambiguity of ˆG into a calibrated uncertainty band on ˆ τ , and (ii) accounting for the additional finite-sample uncertainty in ˆG that arises because each CI decision or score is itself an aggregate over noisy, heterogeneous local statistics. Federated sensitivity analysis [118], quantifying how robust ˆ τ is to residual structural uncertainty and to possible violations of causal sufficiency, is a natural but underdeveloped tool here. 
+
+5.5 From Inference Back to Discovery 
+
+The dependency is not one-directional. Federated discovery methods that can reliably orient edges, especially those that exploit interventional data such as FedCDI [86] or unknown client-level interventions such as I-PERI [81], shrink the equivalence class and thereby narrow the space of possible effect estimands, making downstream inference both more targeted and more efficient. Conversely, the inference stage can feed back into discovery: a designated treatment–outcome pair imposes constraints (e.g., a known causal direction A → Y , or background knowledge that certain variables are pre-treatment) that can orient otherwise-undirected edges in ˆG, and effect-based criteria can prioritize which structural ambiguities are worth the communication cost of resolving. Treating the pipeline as a loop rather than a chain, in which preliminary effect estimates guide subsequent rounds of targeted structure refinement, is a promising direction that no existing federated method fully realizes. 
+
+5.6 Shared Machinery and Open Challenges 
+
+Beyond their logical dependency, FCD and FCI confront the same federated difficulties and can reuse one an-other’s solutions. Both must handle data heterogeneity across sites, preserve privacy while retaining statistical utility, control communication cost, and cope with non-identical variable sets. The technical primitives also trans-fer: membership-weight-based propensity-score aggregation from Fed-IPW [106] suggests how to aggregate CI-test statistics across heterogeneous sites in federated discovery, while the secure federated CI tests developed for FCD [50, 52] can supply the conditional-independence checks that identification in FCI relies upon. A distinctive challenge emerges only when the stages are composed: privacy budgets must be accounted for jointly . Under dif-ferential privacy, the sequential composition of a discovery mechanism and an estimation mechanism degrades the overall guarantee [44], so a naive concatenation of two separately calibrated methods may exceed the intended budget; designing end-to-end pipelines whose total privacy loss is controlled, while preserving both structural and estimation accuracy, is a central open problem. Together, these observations show that the connection between FCD and FCI is not a convenience of presentation but a source of concrete research questions, spanning identification, uncertainty quantification, optimization, and privacy, that are invisible when the two tasks are studied in isolation. Sci China Inf Sci 19 Communication Channel 
+
+## Local Data 
+
+Federated Causal Discovery 
+
+Federated Causal Inference 
+
+Propensity estimation 
+
+Effect estimation 
+
+Aggregation 
+
+CI testing 
+
+Score optimization 
+
+Gradient exchange 
+
+Server 
+
+Learned DAG     
+
+> Treatment Effect  0.2
+> -0.2
+> -0.1
+> 0.0
+> 0.1
+> -0.2 -0.1 0.0 0.1 0.2
+
+Causal Effect Estimates 
+
+Client 
+
+Client 
+
+Client 
+
+## Privacy Layer  Differential privacy  Secure computation  Summary statistics   
+
+> 0.05
+> 0.02
+> 0.12
+> 0.1
+> 0.18 0.1
+> Figure 4 The pipeline connecting federated causal discovery and federated causal inference.
+
+## 6 Applications 
+
+The integration of federated learning with causal reasoning has found impactful applications across diverse domains where data privacy, institutional boundaries, and heterogeneous data distributions pose fundamental challenges. In this section, we provide a detailed discussion of representative application domains, highlighting how FCD and FCI methods address domain-specific requirements. 
+
+6.1 Healthcare and Medicine 
+
+Healthcare is the dominant application domain, driven by strict privacy regulations (e.g., HIPAA in the United States, GDPR in Europe) and the natural distribution of patient data across hospitals and health systems. 
+
+Problem formulation. Consider K hospitals, where hospital k holds patient records Dk = {(X(k) 
+
+> i
+
+, A (k) 
+
+> i
+
+, Y (k) 
+
+> i
+
+)}nk
+
+> i=1
+
+,with covariates X (demographics, comorbidities, lab values), treatment A (e.g., surgical procedure, drug assign-ment), and outcome Y (e.g., survival time, recovery status). The goal is to estimate the causal effect τ =
+
+E[Y (1) − Y (0)] or the heterogeneous treatment effect τ (x) = E[Y (1) − Y (0) | X = x] without sharing individ-ual patient records. A key challenge is that treatment assignment policies may differ across hospitals, inducing heterogeneous propensity scores ek(x) = P (A = 1 | X = x, S = k) where S denotes the site indicator. 
+
+Federated causal discovery applications. Federated causal discovery enables the recovery of disease mecha-nisms and gene regulatory networks across medical institutions. NOTEARS-PFL [80] applies personalized federated BN learning to multi-site neuroimaging data for major depressive disorder, recovering both shared and site-specific functional connectivity patterns. Fed-HC-aIPW [79] addresses causal structure learning in endometrial cancer studies across medical centers, handling heterogeneous missing data mechanisms. 
+
+Federated causal inference applications. RIFL [100] applies robust federated inference to COVID-19 mortal-ity risk prediction across 274 hospitals in four countries, using electronic health record (EHR) data with substantial cross-site heterogeneity. FACE [99] compares Pfizer and Moderna COVID-19 vaccine effectiveness across five Vet-erans Affairs regional sites, achieving 26–67% reductions in standard errors compared to traditional meta-analytic approaches. FDML [101] and FL-TTE [104] apply federated causal inference to Alzheimer’s disease treatment effect estimation using multi-phase ADNI data and time-to-event outcomes, respectively. FedECA [103] develops feder-ated external control arms for metastatic pancreatic cancer treatment comparison across three countries. Additional applications include sepsis management [104], post-transplantation diabetes prevention [95], hip fracture surgery outcomes [108], and acute myocardial infarction treatment [91]. Rocchi et al. provide a comprehensive perspective on the trends, opportunities, and challenges of FCD, specifically in medicine [10]. Sci China Inf Sci 20 
+
+6.2 Manufacturing and Engineering 
+
+In smart manufacturing and distributed engineering systems, production data is often siloed across factories, pro-duction lines, or equipment vendors due to proprietary concerns. 
+
+Problem formulation. Let X(k) ∈ Rnk ×dk denote the process parameter measurements at facility k, and let Y (k) denote the quality outcome. The federated causal discovery task aims to learn the causal DAG G∗ over process parameters to identify root causes of quality defects, while the federated causal inference task estimates the interventional distribution P (Y | do (Xj = x)) to optimize process settings. xFBCI [105] applies federated Bayesian causal inference to electrohydrodynamic (EHD) printing optimization and smart manufacturing maintenance, using Expectation Propagation and Stochastic Gradient Langevin Dynamics for scalable posterior estimation across distributed production data. FedGCL [75] and FedGC [85] target distributed infrastructure such as smart grids and cyber-physical systems, where federated Granger causality learning enables anomaly root-cause analysis without centralizing sensitive operational data. The uncertainty quantification frame-work in FedGC is particularly valuable for safety-critical engineering applications [4]. 
+
+6.3 Social Media and Digital Platforms 
+
+Social media platforms generate vast amounts of distributed, privacy-sensitive user interaction data across content moderation systems, recommendation engines, and advertising platforms. CCaT [67] demonstrates collaborative causal discovery for social media content moderation, where multiple platform divisions jointly learn how content features causally affect user engagement and policy violations, sharing only summary causal relations rather than user-level data. 
+
+Recommendation systems. Causal reasoning in federated recommendation systems addresses the confounding between user preferences and exposure mechanisms [119, 120]. Formally, let U denote user features, I denote item features, and Y denote the outcome (e.g., click, purchase). The exposure mechanism P (exposed | U, I) confounds the observed association between user-item features and outcomes. Federated causal methods can deconfound this relationship across distributed platforms by estimating the causal effect E[Y | do (I), U] without pooling user data, leveraging techniques from federated propensity estimation [90] and causal representation learning [121]. 
+
+6.4 Economics and Policy Evaluation 
+
+Causal effect estimation is central to economic research and policy evaluation, where data is often distributed across government agencies, financial institutions, or regional statistical offices [5, 122]. 
+
+Problem formulation. Consider the evaluation of a policy intervention across K administrative regions. Region 
+
+k holds data Dk = {(X(k) 
+
+> i
+
+, A (k) 
+
+> i
+
+, Y (k) 
+
+> i
+
+)}nk
+
+> i=1
+
+, where A indicates policy exposure and Y is the economic outcome ( e.g. ,employment, income, firm productivity). Under a difference-in-differences (DID) framework, the target estimand is 
+
+τDID = E[Yt=1 (1) − Yt=1 (0)] − E[Yt=0 (1) − Yt=0 (0)], which requires parallel trends across pre- and post-intervention periods. FPSM-DID [93] addresses dynamic panel data in economic and policy evaluation settings by combining federated propensity score matching with DID analysis, enabling cross-site causal evaluation without data pooling. FedIV [107] introduces federated instrumental variable analysis for consumer economics applications, handling settings where unobserved confounding invalidates standard adjustment strategies but valid instruments are available at distributed sites. DC-DML [110] enables semi-parametric CATE estimation across multiple time points and parties via double machine learning on privacy-preserving fusion data, offering a flexible framework for heterogeneous policy effect estimation [123]. 
+
+6.5 Social Equity and Fairness 
+
+Federated causal methods are increasingly relevant for auditing and promoting fairness across distributed decision-making systems ( e.g. , lending, hiring, criminal justice), where sensitive individual data cannot be centralized [124, 125]. 
+
+Problem formulation. Let S denote a sensitive attribute ( e.g. , race, gender), X denote legitimate covariates, and Y denote the decision outcome. Causal fairness notions [126, 127] require estimating path-specific effects: NDE S→Y = E[Y (s, M(s′)) − Y (s′, M(s′))] , (9) where M denotes mediating variables and NDE is the natural direct effect. In a federated setting, the challenge is to audit whether NDE S→Y = 0 (no direct discrimination) across institutions without revealing individual-level Sci China Inf Sci 21 
+
+sensitive attributes. Federated causal discovery can identify the pathways through which sensitive attributes affect outcomes [12, 52], while federated causal inference methods can quantify these effects under privacy constraints. 
+
+## 7 Challenges and Future Directions 
+
+Despite significant progress, numerous open challenges remain at the intersection of federated learning and causal reasoning. In this section, we discuss these challenges in depth, highlighting formal problem formulations and promising research directions. 
+
+7.1 Formal Privacy Guarantees 
+
+While many FCD methods claim to be “privacy-preserving” by not sharing raw data, the exchange of summary statistics, model parameters, or even graph structures can leak information through inference attacks [128]. Only a few methods provide formal privacy guarantees: PERI and I-PERI offer ϵ-differential privacy (DP) [63, 81], and Fed-Sparse-BNSL provides ( ϵ, δ )-DP [83]. 
+
+Open problems. A fundamental tension exists between privacy and causal identifiability. Formally, let M
+
+denote a privacy mechanism that perturbs shared statistics. The privacy-utility trade-off can be expressed as: min  
+
+> M
+
+E
+
+h
+
+∆( ˆGM, G∗)
+
+i
+
+s.t. M satisfies ( ϵ, δ )-DP , (10) where ∆( ·, ·) is a structural distance metric (e.g., structural Hamming distance) and G∗ is the true causal graph. Characterizing the minimax rate of this trade-off – i.e., the fundamental limits of structure learning accuracy un-der privacy constraints [44] – remains an open problem. Extending rigorous privacy analysis to constraint-based methods (where CI test statistics are shared) and continuous-optimization methods (where gradient information is exchanged), and developing tight composition theorems for multi-round causal protocols, are important direc-tions. Additionally, integrating secure multi-party computation [46] with differential privacy for stronger protection deserves further investigation. 
+
+7.2 Communication Efficiency 
+
+Most continuous-optimization-based FCD methods require exchanging d × d adjacency matrices (or gradients thereof) per iteration, leading to O(d2) communication cost per round, which scales poorly with dimensional-ity. Fed-Sparse-BNSL’s sparse-update approach [83] is a promising exception, transmitting only O(s) non-zero entries where s ≪ d2 is the sparsity level. 
+
+Open problems. Developing communication-efficient protocols is critical for large-scale deployment. Promising approaches include: (i) gradient compression and quantization techniques [129] adapted to the structural con-straints of DAG learning; (ii) sketching methods that preserve CI test statistics or score functions within bounded communication budgets; (iii) one-shot aggregation strategies inspired by communication-efficient federated opti-mization [130]; and (iv) event-triggered communication that exchanges updates only when local structural changes exceed a significance threshold. For FCI, the communication cost is generally lower (many methods require only one-shot summary statistic exchange), but as methods grow more sophisticated ( e.g. , iterative doubly robust esti-mation), communication-accuracy trade-offs need formal analysis. 
+
+7.3 Theoretical Foundations 
+
+Convergence guarantees exist for only a few FCD methods: DARLS [58] proves convergence at rate O(log( n)/√m), Fed-Sparse-BNSL provides convergence under DP constraints, and FDBNL [74] offers the first convergence analysis for continuous-optimization-based structure learning in FL. 
+
+Open problems. Fundamental theoretical questions remain open: (i) Finite-sample identifiability : Under what conditions on local sample sizes {nk}Kk=1 and data heterogeneity is the global causal structure identifiable? How does federation affect the well-known identifiability-up-to-MEC result of [1, 2]? (ii) Minimax rates : What are the minimax optimal rates for federated causal discovery under various heterogeneity models? That is, what is inf ˆG sup G∗∈G E[∆( ˆG, G∗)] over the class G of DAGs under federated data partition constraints? (iii) Semiparametric efficiency for FCI : Extending the semiparametric efficiency bound theory [131] to arbitrary federated topologies and heterogeneity patterns, determining whether and when federated estimators can achieve the same efficiency as centralized ones. (iv) Consistency under model misspecification : How robust are federated causal methods when structural or parametric assumptions are violated at a subset of sites? Sci China Inf Sci 22 
+
+7.4 Vertical and Hybrid Federation 
+
+The literature is overwhelmingly focused on horizontal FL. Vertical and hybrid settings, which are arguably more common in practice (different institutions collect different variables about overlapping entities), remain underex-plored. 
+
+Open problems. In vertical FL, the fundamental challenge is that causal relationships between variables held by different clients cannot be assessed locally. Formally, if client k holds variables Vk and Vj ∩ Vk = ∅ for 
+
+j̸ = k (with shared entity identifiers), then any edge Xi → Xj where Xi ∈ Vk and Xj ∈ Vℓ (k̸ = ℓ) requires cross-client information exchange. Designing protocols that can test Xi ⊥⊥ Xj | S when Xi, Xj , and elements of S are distributed across clients, while preserving privacy and minimizing communication, is an open challenge. FedISHC [82] and fedCI-IOD [53] are initial steps, but principled solutions for arbitrary overlapping variable sets, handling latent confounders in the vertical setting [17,18], and scalable protocols for many-party vertical FL remain lacking. 
+
+7.5 Bridging Discovery and Inference 
+
+Currently, FCD and FCI are largely studied in isolation, despite their natural complementarity. 
+
+Open problems. End-to-end federated pipelines that seamlessly transition from structure learning to effect estimation – sharing structural information to improve downstream inference while maintaining privacy – represent a promising but largely unexplored direction. Key challenges include: (i) propagating uncertainty from the estimated DAG ˆG into the downstream effect estimate ˆ τ , since ignoring structural uncertainty can lead to over-confident causal conclusions [117]; (ii) designing joint optimization objectives that simultaneously learn structure and estimate effects, potentially achieving better statistical efficiency than a two-stage approach; and (iii) developing federated sensitivity analysis methods [118] that quantify the robustness of causal conclusions to unmeasured confounding across sites. FedECE [87] provides an initial realization, but much more work is needed. 
+
+7.6 Causal Reasoning Under Complex Settings 
+
+Several practically important causal settings lack federated solutions: 
+
+(i) Latent confounders and selection bias. Most FCD methods assume causal sufficiency (no unmeasured confounders), yet in practice, unmeasured confounders are ubiquitous. Extending federated methods to learn partial ancestral graphs (PAGs) [17, 18], which represent equivalence classes under latent confounding, is an important direction. 
+
+(ii) Time-varying treatments. In longitudinal settings, treatments are applied sequentially over time, with time-varying confounding. Extending federated methods to handle dynamic treatment regimes [132], including the federated estimation of marginal structural models (MSMs) with time-varying inverse probability weights 
+
+QTt=1 wt( ¯At, ¯Lt), is a challenging open problem. 
+
+(iii) Mediation analysis. Decomposing the total causal effect into direct and indirect (mediated) pathways requires estimating natural direct and indirect effects [133]. In federated settings, the mediator M and outcome Y
+
+may reside at different sites, complicating cross-site identification. 
+
+(iv) Counterfactual reasoning. Moving beyond interventional queries ( P (Y | do (X))) to counterfactual queries ( P (YX=x′ | X = x, Y = y)) [4] in federated settings requires reasoning about individual-level potential outcomes across sites, which poses unique privacy and statistical challenges. 
+
+(v) Causal reinforcement learning. Integrating causal reasoning into federated reinforcement learning [134] could enable distributed agents to learn optimal policies while accounting for confounding in observational data. 
+
+7.7 Large Language Models and Foundation Models 
+
+The rapid development of large language models (LLMs) and foundation models opens new avenues for federated causal reasoning [135–137]. 
+
+Open problems. LLMs can serve as sources of prior causal knowledge ( e.g. , suggesting plausible causal directions between variables based on domain knowledge encoded in their training data [135]), which could constrain the search space in federated causal discovery and reduce communication overhead. Conversely, federated causal methods could improve the reliability and factual grounding of LLM outputs by enabling privacy-preserving validation of LLM-generated causal claims against distributed observational data. Key challenges include: (i) formalizing how to integrate LLM-based causal priors as informative constraints in federated structure learning algorithms; (ii) developing federated fine-tuning pipelines that improve LLM causal reasoning capabilities without centralizing Sci China Inf Sci 23 
+
+domain-specific data; and (iii) ensuring that LLM-assisted causal conclusions maintain formal statistical guarantees despite the informal nature of LLM priors. 
+
+7.8 Benchmarks and Reproducibility 
+
+The field lacks standardized benchmarks for comparing FCD and FCI methods. Most papers use different synthetic data generators, real datasets, and discrete BN datasets, making cross-paper comparisons difficult. 
+
+Open problems. Establishing community benchmarks with realistic federated settings is essential. Such bench-marks should encompass: (i) data heterogeneity models with controlled degrees of distributional shift; (ii) varying numbers of clients, sample sizes, and variable dimensions; (iii) standardized missing data scenarios with specified missingness mechanisms (MCAR, MAR, MNAR) [138]; (iv) known ground-truth causal structures and treatment effects for rigorous evaluation; and (v) realistic privacy constraints and communication budgets. Metrics should go beyond structural accuracy (SHD, F1 score) to include causal effect estimation error ( |ˆτ − τ |, RMSE of CATE), privacy leakage measures, and communication cost. 
+
+7.9 Scalability to Large Variable Sets 
+
+While FedCSL-HD [55] and FedCSL [54] begin to address high dimensionality, scaling FCD to hundreds or thousands of variables in federated settings remains challenging, as the DAG space grows super-exponentially with d (the number of possible DAGs over d nodes grows as O(d! · 2(d
+
+> 2
+
+)) [139]). 
+
+Open problems. Divide-and-conquer strategies [55], federated variable selection, and causal feature screening (e.g. , identifying the Markov blanket of the target variable [140, 141]) deserve further attention. Additionally, leveraging distributed computing paradigms beyond the standard client-server architecture (such as hierarchical or peer-to-peer federation [142]) could enable more scalable federated causal discovery. 
+
+## 8 Conclusion 
+
+This survey has provided a comprehensive and focused review of federated causal discovery and inference, offering what we believe to be the most in-depth and systematically organized treatment of both subfields to date. We organized the FCD literature along three taxonomic axes (methodology: constraint-based, score-based, con-tinuous optimization, and hybrid; federation topology: horizontal, vertical, and hybrid; and structural scope: global vs. local) and the FCI literature by target estimand (ATE vs. ITE/CATE) and estimation strategy (IPW, AIPW, matching, Bayesian, deep generative, DML, IV, and survival analysis methods). Our analysis reveals several im-portant trends and gaps: (i) the dominance of horizontal FL settings, with vertical and hybrid federation remaining significantly underexplored despite their practical prevalence; (ii) the growing attention to data heterogeneity and non-identical variable sets, moving beyond the initial assumption of homogeneous data-generating processes; (iii) the scarcity of formal privacy guarantees, with the majority of methods relying on the implicit assumption that not sharing raw data suffices; (iv) the underexplored connection between discovery and inference, despite their natural complementarity as stages of a unified causal reasoning pipeline; and (v) the need for standardized benchmarks, the-oretical foundations (especially minimax rates and semiparametric efficiency bounds under federated constraints), and scalable solutions for high-dimensional settings. Compared with the broader Causal-FL perspective surveyed in [12], which encompasses how causality enhances FL systems in dimensions such as interpretability, generalizability, and robustness, our work provides a dedicated, algorithm-level treatment of the core problems of federated structure learning and effect estimation. We believe these two complementary perspectives together paint a comprehensive picture of the rapidly evolving landscape at the intersection of causality and federated learning. We hope this survey serves as both a reference for current work and a roadmap for future research, ultimately helping to realize the full potential of federated causal reasoning in domains ranging from healthcare to manufacturing, economics, and beyond.       
+
+> Acknowledgements This work was supported by the National Natural Science Foundation of China (Grant Nos. 62506174, 62376087), the Basic Research Program of Jiangsu (Grant No. BK20250656), and the Natural Science Research Start-up Foundation of Recruiting Talents of Nanjing University of Posts and Telecommunications (Grant No. NY225023).
+> References
+> 1Spirtes P, Glymour C N, Scheines R. Causation, Prediction, and Search. MIT Press, 2000 2Chickering D M. Optimal structure identification with greedy search. Journal of Machine Learning Research, 2002, 3: 507–554 3Zheng X, Aragam B, Ravikumar P K, et al. DAGs with NO TEARS: Continuous optimization for structure learning. Advances in Neural Information Processing Systems, 2018, 31
+
+Sci China Inf Sci 24 4 Pearl J. Causality. Cambridge University Press, 2009 5 Imbens G W, Rubin D B. Causal Inference for Statistics, Social, and Biomedical Sciences. Cambridge University Press, 2015 6 McMahan B, Moore E, Ramage D, et al. Communication-efficient learning of deep networks from decentralized data. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. PMLR, 2017. 1273–1282 7 Kairouz P, McMahan H B. Advances and open problems in federated learning. Foundations and Trends in Machine Learning, 2021, 14: 1–210 8 Wright R, Yang Z. Privacy-preserving Bayesian network structure computation on distributed heterogeneous data. In: Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2004. 713–718 9 Gou K X, Jun G X, Zhao Z. Learning Bayesian network structure from distributed homogeneous data. In: Proceedings of the Acis International Conference on Software Engineering, Artificial Intelligence, Networking, and Parallel/Distributed Computing (SNPD 2007). IEEE, 2007. 250–254 10 Rocchi N, Scutari M, Zanga A, et al. Federated causal discovery in medicine: Trends, opportunities, and challenges. working paper or preprint, November 2025 11 Li Q, Wen Z, Wu Z, et al. A survey on federated learning systems: Vision, hype and reality for data privacy and protection. IEEE Transactions on Knowledge and Data Engineering, 2021, 35: 3347–3366 12 Deng J, Chen H, Jiang Z, et al. A survey on causality with federated learning: Challenges, techniques, and applications. ACM Transactions on Knowledge Discovery from Data, 2026 13 Shimizu S, Hoyer P O, Hyv¨ arinen A, et al. A linear non-Gaussian acyclic model for causal discovery. Journal of Machine Learning Research, 2006, 7 14 Shimizu S, Inazumi T, Sogawa Y, et al. DirectLiNGAM: A direct method for learning a linear non-Gaussian structural equation model. Journal of Machine Learning Research, 2011, 12: 1225–1248 15 Hauser A, B¨ uhlmann P. Characterization and greedy learning of interventional Markov equivalence classes of directed acyclic graphs. Journal of Machine Learning Research, 2012, 13: 2409–2464 16 Eberhardt F, Glymour C, Scheines R. On the number of experiments sufficient and in the worst case necessary to identify all causal relations among N variables. In: Proceedings of the Conference on Uncertainty in Artificial Intelligence, 2005. 178–184 17 Colombo D, Maathuis M H, Kalisch M, et al. Learning high-dimensional directed acyclic graphs with latent and selection variables. The Annals of Statistics, 2012, 40: 294–321 18 Zhang J. On the completeness of orientation rules for causal discovery in the presence of latent confounders and selection bias. Artificial Intelligence, 2008, 172: 1873–1896 19 Colombo D, Maathuis M H. Order-independent constraint-based causal structure learning. Journal of Machine Learning Research, 2014, 15: 3741–3782 20 Cooper G F, Herskovits E. A Bayesian method for the induction of probabilistic networks from data. Machine Learning, 1992, 9: 309–347 21 Heckerman D, Geiger D, Chickering D M. Learning Bayesian networks: The combination of knowledge and statistical data. Machine Learning, 1995, 20: 197–243 22 Zheng X, Dan C, Aragam B, et al. Learning sparse nonparametric DAGs. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. Pmlr, 2020. 3414–3425 23 Lachapelle S, Brouillard P, Deleu T, et al. Gradient-based neural DAG learning. In: Proceedings of the International Conference on Learning Representations, 2020 24 Pamfil R, Sriwattanaworachai N, Desai S, et al. DYNOTEARS: Structure learning from time-series data. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. Pmlr, 2020. 1595–1605 25 Tank A, Covert I, Foti N, et al. Neural Granger causality. IEEE Transactions on Pattern Analysis and Machine Intelligence, 2021, 44: 4267–4279 26 Tsamardinos I, Brown L E, Aliferis C F. The max-min hill-climbing Bayesian network structure learning algorithm. Machine Learning, 2006, 65: 31–78 27 Nandy P, Hauser A, Maathuis M H. High-dimensional consistency in score-based and hybrid structure learning. The Annals of Statistics, 2018, 46: 3151–3183 28 Splawa-Neyman J, Dabrowska D M, Speed T P. On the application of probability theory to agricultural experiments. Essay on principles. section 9. Statistical Science, 1990, pages 465–472 29 Horvitz D G, Thompson D J. A generalization of sampling without replacement from a finite universe. Journal of the American Statistical Association, 1952, 47: 663–685 30 Robins J. A new approach to causal inference in mortality studies with a sustained exposure period—application to control of the healthy worker survivor effect. Mathematical Modelling, 1986, 7: 1393–1512 31 Bang H, Robins J M. Doubly robust estimation in missing data and causal inference models. Biometrics, 2005, 61: 962–973 32 Stuart E A. Matching methods for causal inference: A review and a look forward. Statistical Science, 2010, 25: 1–21 33 K¨ unzel S R, Sekhon J S, Bickel P J, et al. Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences, 2019, 116: 4156–4165 34 Kennedy E H. Towards optimal doubly robust estimation of heterogeneous causal effects. Electronic Journal of Statistics, 2023, 17: 3008–3049 35 Li T, Sahu A K, Zaheer M, et al. Federated optimization in heterogeneous networks. Proceedings of Machine Learning and Systems, 2020, 2: 429–450 36 Karimireddy S P, Kale S, Mohri M, et al. Scaffold: Stochastic controlled averaging for federated learning. In: Proceedings of the International Conference on Machine Learning. PMLR, 2020. 5132–5143 37 Wang J, Liu Q, Liang H, et al. Tackling the objective inconsistency problem in heterogeneous federated optimization. Advances in Neural Information Processing Systems, 2020, 33: 7611–7623 38 Yang Q, Liu Y, Chen T, et al. Federated machine learning: Concept and applications. ACM Transactions on Intelligent Systems and Technology, 2019, 10: 1–19 39 Liu Y, Kang Y, Zou T, et al. Vertical federated learning: Concepts, advances, and challenges. IEEE Transactions on Knowledge and Data Engineering, 2024, 36: 3615–3634 40 Sattler F, Wiedemann S, M¨ uller K R, et al. Robust and communication-efficient federated learning from non-IID data. IEEE Transactions on Neural Networks and Learning Systems, 2019, 31: 3400–3413 41 Li Q, Diao Y, Chen Q, et al. Federated learning on non-IID data silos: An experimental study. In: Proceedings of the IEEE International Conference on Data Engineering. IEEE, 2022. 965–978 42 Wang Y, Lin L, Chen J. Communication-efficient adaptive federated learning. In: Proceedings of the International Conference on Machine Learning. PMLR, 2022. 22802–22838 43 Wu C, Wu F, Lyu L, et al. Communication-efficient federated learning via knowledge distillation. Nature Communications, 2022, 13: 2032 44 Dwork C, Roth A. The algorithmic foundations of differential privacy. Foundations and Trends ® in Theoretical Computer Science, 2014, 9: 211–487 45 Abadi M, Chu A, Goodfellow I, et al. Deep learning with differential privacy. In: Proceedings of the ACM SIGSAC Conference on Computer and Communications Security, 2016. 308–318 46 Knott B, Venkataraman S, Hannun A, et al. Crypten: Secure multi-party computation meets machine learning. Advances in Neural Sci China Inf Sci 25 Information Processing Systems, 2021, 34: 4961–4973 47 Bonawitz K, Ivanov V, Kreuter B, et al. Practical secure aggregation for privacy-preserving machine learning. In: Proceedings of the ACM SIGSAC Conference on Computer and Communications Security, 2017. 1175–1191 48 Gentry C. A fully homomorphic encryption scheme. Stanford university, 2009 49 Acar A, Aksu H, Uluagac A S, et al. A survey on homomorphic encryption schemes: Theory and implementation. ACM Computing Surveys, 2018, 51: 1–35 50 Huang J, Guo X, Yu K, et al. Towards privacy-aware causal structure learning in federated setting. IEEE Transactions on Big Data, 2023, 9: 1525–1535 51 Wang Z, Ma P, Wang S. Towards practical federated causal structure learning. In: Proceedings of the Joint European Conference on Machine Learning and Knowledge Discovery in Databases. Springer, 2023. 351–367 52 Li L, Ng I, Luo G, et al. Federated causal discovery from heterogeneous data. In: Proceedings of the International Conference on Learning Representations, 2024 53 Hahn M, Zajak A, Heider D, et al. Federated causal discovery across heterogeneous datasets under latent confounding. arXiv preprint arXiv:2603.05149, 2026 54 Guo X, Yu K, Liu L, et al. FedCSL: A scalable and accurate approach to federated causal structure learning. In: Proceedings of the AAAI Conference on Artificial Intelligence, 2024. 12235–12243 55 Ding Z, Huang X, Hu C. Federated causal structure learning with high-dimensional data. In: Proceedings of the International Conference on Neural Networks, Information and Communication Engineering (NNICE). IEEE, 2025. 1998–2003 56 Na Y, Yang J. Distributed Bayesian network structure learning. In: Proceedings of the IEEE International Symposium on Industrial Electronics. IEEE, 2010. 1607–1611 57 Samet S, Miri A. Privacy-preserving Bayesian network for horizontally partitioned data. In: Proceedings of the International Conference on Computational Science and Engineering. IEEE, 2009. 9–16 58 Ye Q, Amini A A, Zhou Q. Federated learning of generalized linear causal networks. IEEE Transactions on Pattern Analysis and Machine Intelligence, 2024, 46: 6623–6636 59 Chen R, Sivakumar K, Kargupta H. Learning Bayesian network structure from distributed data. In: Proceedings of the SIAM International Conference on Data Mining. SIAM, 2003. 284–288 60 Ng I, Zhang K. Towards federated Bayesian network structure learning with continuous optimization. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. PMLR, 2022. 8095–8111 61 Mian O, Kaltenpoth D, Kamp M. Regret-based federated causal discovery. In: Proceedings of the KDD’22 Workshop on Causal Discovery. PMLR, 2022. 61–69 62 Gao E, Chen J, Shen L, et al. FedDAG: Federated DAG structure learning. Transactions on Machine Learning Research, 2023 63 Mian O, Kaltenpoth D, Kamp M, et al. Nothing but regrets—privacy-preserving federated causal discovery. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. PMLR, 2023. 8263–8278 64 Yang D, He X, Wang J, et al. Federated causality learning with explainable adaptive optimization. In: Proceedings of the AAAI Conference on Artificial Intelligence, 2024. 16308–16315 65 Guo X, Yu K, Wang H, et al. Sample quality heterogeneity-aware federated causal discovery through adaptive variable space selection. In: Proceedings of the International Joint Conference on Artificial Intelligence, 2024. 4071–4079 66 Liu C, Wang S, Wang Z, et al. Federated causal structure learning with a bi-level optimization model. In: Proceedings of the IEEE International Conference on CYBER Technology in Automation, Control, and Intelligent Systems (CYBER). IEEE, 2024. 708–713 67 Tregubov A, Abramson J, Schwab S, et al. A tool for distributed collaborative causal discovery. In: Proceedings of the International Conference on Social Computing, Behavioral-Cultural Modeling and Prediction and Behavior Representation in Modeling and Simulation. Springer, 2024. 100–109 68 Qiu C, Yang K. Interventional causal structure discovery over graphical models with convergence and optimality guarantees. IEEE Transactions on Network Science and Engineering, 2024, 12: 156–172 69 Van Daalen F, Ippel L, Dekker A, et al. VertiBayes: learning Bayesian network parameters from vertically partitioned data with missing values. Complex & Intelligent Systems, 2024, 10: 5317–5329 70 Guo X, Yi L, Wu X, et al. Enhancing causal discovery in federated settings with limited local samples. In: Proceedings of the International Workshop on Trustworthy Federated Learning. Springer, 2024. 164–179 71 Yu K, Rong C, Wang H, et al. Federated local causal structure learning. Science China Information Sciences, 2025, 68: 132105 72 Rong C, Cao D, Yu K. Efficient local causal structure learning with privacy preservation. In: Proceedings of the International Joint Conference on Rough Sets. Springer, 2025. 378–392 73 Shi J, Huang X, Guo X, et al. Federated causal structure learning with missing data. Knowledge-Based Systems, 2025, 330: 114601 74 Chen J, Ma Y, Yue X. Federated learning of dynamic Bayesian network via continuous optimization from time series data. IEEE Transactions on Artificial Intelligence, 2025 75 Mohanty A, Mohamed N, Ramanan P, et al. Federated Granger causality learning for interdependent clients with state space represen-tation. In: Proceedings of the International Conference on Learning Representations, 2025 76 Li Y, Guo Y, Cao L, et al. FedPuzzle: Federated causal discovery from distributed heterogeneous variable sets. Information Sciences, 2025, page 123021 77 Wang Y, Cao F, Yu K, et al. Federated causal structure learning with non-identical variable sets. In: Proceedings of the International Conference on Machine Learning. PMLR, 2025. 62445–62466 78 Yang X, Niu B, Lan T, et al. Federated multi-task Bayesian network learning in the presence of overlapping and distinct variables. IISE Transactions, 2025, 57: 773–787 79 Zanga A, Bernasconi A, Lucas P J, et al. Federated causal discovery with missing data in a multicentric study on endometrial cancer. Journal of Biomedical Informatics, 2025, 169: 104877–104877 80 Liu S, Yan X, Guo X, et al. Federated Bayesian network learning from multi-site data. Journal of Biomedical Informatics, 2025, 163: 104784 81 Baldo F, Assaad C K. Regret-based federated causal discovery with unknown interventions. In: Proceedings of the International Conference on Machine Learning, 2026 82 Chen W, Gu W, Peng L, et al. Horizontal and vertical federated causal structure learning via higher-order cumulants. In: Proceedings of the AAAI Conference on Artificial Intelligence, 2026. 20280–20288 83 Fehri G F E, Bellet A, Bastien P. Differentially private and federated structure learning in Bayesian networks. In: Proceedings of the International Conference on Artificial Intelligence and Statistics, 2026 84 Torrijos P, G´ amez J A, Puerta J M. FedGES: A federated learning approach for Bayesian network structure learning. Machine Learning, 2026, 115: 9 85 Mohanty A, Mohamed N, Gebraeel N. Uncertainty in federated Granger causality: From origins to systemic consequences. arXiv preprint arXiv:2602.13004, 2026 86 Abyaneh A, Scherrer N, Schwab P, et al. Federated causal discovery from interventions. arXiv preprint arXiv:2211.03846, 2022 87 Zhao Y, Yu K, Xiang G, et al. FedECE: Federated estimation of causal effect based on causal graphical modeling. IEEE Transactions on Artificial Intelligence, 2025, 6: 2327–2341 88 Vo T V, Lee Y, Hoang T N, et al. Bayesian federated estimation of causal effects from observational data. In: Proceedings of the Conference on Uncertainty in Artificial Intelligence, 2022. 2024–2034 Sci China Inf Sci 26 89 Vo T V, Wei P, Gkoulalas-Divanis A, et al. An adaptive kernel approach to federated learning of heterogeneous causal effects. In: Proceedings of the Advances in Neural Information Processing Systems, 2022. 25540–25553 90 Xiong R, Koenecke A, Powell M, et al. Federated causal inference in heterogeneous observational data. Statistics in Medicine, 2023, 42: 4418–4439 91 Han L, Shen Z, Zubizarreta J. Multiply robust federated estimation of targeted average treatment effects. Advances in Neural Information Processing Systems, 2023, 36: 70453–70482 92 Almod´ ovar A, Parras J, Zazo S. Federated learning for causal inference using deep generative disentangled models. In: Proceedings of the Deep Generative Models for Health Workshop NeurIPS 2023, 2023 93 Liu Y, Wang N, Ye X. Federated propensity score matching: a method for estimating average treatment effect based on data in islands. Annals of Operations Research, 2025, pages 1–43 94 Guo T, Karimireddy S P, Jordan M. Collaborative heterogeneous causal inference beyond meta-analysis. In: Proceedings of the International Conference on Machine Learning, 2024. 16849–16868 95 Hu M, Shi X, Song P X K. Collaborative inference for treatment effect with distributed data-sharing management in multicenter studies. Statistics in Medicine, 2024, 43: 2263–2279 96 Kawamata Y, Motai R, Okada Y, et al. Collaborative causal inference on distributed data. Expert Systems with Applications, 2024, 244: 123024 97 Makhija D, Ghosh J, Kim Y. Federated learning for estimating heterogeneous treatment effects. arXiv preprint arXiv:2402.17705, 2024 98 Yin C, Chen H Y, Chao W L, et al. Federated inverse probability treatment weighting for individual treatment effect estimation. ACM Transactions on Intelligent Systems and Technology, 2026, 17: 1–26 99 Han L, Hou J, Cho K, et al. Federated adaptive causal estimation (FACE) of target treatment effects. Journal of the American Statistical Association, 2025, 120: 1503–1516 100 Guo Z, Li X, Han L, et al. Robust inference for federated meta-learning. Journal of the American Statistical Association, 2025, 120: 1695–1710 101 Kang K, Wu Z, Qian X, et al. Federated double machine learning for high-dimensional semiparametric models. Biometrics, 2025, 81: ujaf150 102 Vo T V, Lee Y, Leong T Y. Federated causal inference from observational data. Machine Learning, 2025, 114: 194 103 Ogier du Terrail J, Klopfenstein Q, Li H, et al. FedECA: federated external control arms for causal inference with time-to-event data in distributed settings. Nature Communications, 2025, 16: 7496 104 Li H, Zang C, Xu Z, et al. Federated target trial emulation using distributed observational data for treatment effect estimation. NPJ Digital Medicine, 2025, 8: 387 105 Xiao X, Alharbi K, Zhang P, et al. Bayesian federated causal inference and its application in manufacturing. Journal of Intelligent Manufacturing, 2025, pages 1–25 106 Khellaf R, Bellet A, Josse J. Federated causal inference from multi-site observational data via propensity score aggregation. In: Proceedings of the International Conference on Machine Learning, 2026 107 Tyagi S, Chatterjee B, et al. Federated instrumental variable analysis via federated generalized method of moments. arXiv preprint arXiv:2505.21012, 2025 108 Liu Y, Levis A W, Zhu K, et al. Targeted data fusion for causal survival analysis under distribution shift. arXiv preprint arXiv:2501.18798, 2025 109 Li S, Duan R. Efficient collaborative learning of the average treatment effect. Biometrics, 2026, 82: ujag076 110 Kawamata Y, Motai R, Okada Y, et al. Estimation of conditional average treatment effects on distributed confidential data. Expert Systems with Applications, 2026, 296: 129066 111 Li X, Tian L, Cai T. Sampling-based federated inference for M-estimators with non-smooth objective functions. arXiv preprint arXiv:2505.02356, 2025 112 Khellaf R, Bellet A, Josse J. Federated causal inference: Multi-study ATE estimation beyond Meta-analysis. In: Proceedings of the International Conference on Artificial Intelligence and Statistics. PMLR, 2025. 3448–3456 113 Koga T, Chaudhuri K, Page D. Differentially private multi-site treatment effect estimation. In: Proceedings of the IEEE Conference on Secure and Trustworthy Machine Learning (SaTML). IEEE, 2024. 472–489 114 Cao S, Yang S. Heterogeneity-aware federated causal inference leveraging effect-measure transportability. arXiv preprint arXiv:2510.16317, 2025 115 Almod´ ovar A, Parras J, Zazo S. Propensity weighted federated learning for treatment effect estimation in distributed imbalanced envi-ronments. Computers in Biology and Medicine, 2024, 178: 108779 116 Zhao R, Falvey J, Shi X, et al. A new targeted-federated learning framework for estimating heterogeneity of treatment effects: A robust framework with applications in aging cohorts. arXiv preprint arXiv:2510.19243, 2025 117 Maathuis M H, Kalisch M, B¨ uhlmann P. Estimating high-dimensional intervention effects from observational data. The Annals of Statistics, 2009, 37: 3133–3164 118 Ding P, VanderWeele T J. Sensitivity analysis without assumptions. Epidemiology, 2016, 27: 368–377 119 Wang W, Feng F, He X, et al. Deconfounded recommendation for alleviating bias amplification. In: Proceedings of the ACM SIGKDD Conference on Knowledge Discovery & Data Mining, 2021. 1717–1725 120 Zhang Y, Feng F, He X, et al. Causal intervention for leveraging popularity bias in recommendation. In: Proceedings of the International ACM SIGIR Conference on Research and Development in Information Retrieval, 2021. 11–20 121 Sch¨ olkopf B, Locatello F, Bauer S, et al. Toward causal representation learning. Proceedings of the IEEE, 2021, 109: 612–634 122 Athey S, Imbens G W. The state of applied econometrics: Causality and policy evaluation. Journal of Economic Perspectives, 2017, 31: 3–32 123 Chernozhukov V, Chetverikov D, Demirer M, et al. Double/debiased machine learning for treatment and structural parameters. The Econometrics Journal, 2018, 21: C1–C68 124 Mehrabi N, Morstatter F, Saxena N, et al. A survey on bias and fairness in machine learning. ACM Computing Surveys, 2021, 54: 1–35 125 Kusner M J, Loftus J, Russell C, et al. Counterfactual fairness. Advances in Neural Information Processing Systems, 2017, 30 126 Kilbertus N, Rojas Carulla M, Parascandolo G, et al. Avoiding discrimination through causal reasoning. Advances in Neural Information Processing Systems, 2017, 30 127 Nabi R, Shpitser I. Fair inference on outcomes. In: Proceedings of the AAAI Conference on Artificial Intelligence, 2018 128 Zhu L, Liu Z, Han S. Deep leakage from gradients. Advances in Neural Information Processing Systems, 2019, 32 129 Bernstein J, Wang Y X, Azizzadenesheli K, et al. signSGD: Compressed optimisation for non-convex problems. In: Proceedings of the International Conference on Machine Learning. PMLR, 2018. 560–569 130 Zhang J, Chen C, Li B, et al. Dense: Data-free one-shot federated learning. Advances in Neural Information Processing Systems, 2022, 35: 21414–21428 131 Tsiatis A A. Semiparametric theory and missing data. Springer, 2006 132 Murphy S A. Optimal dynamic treatment regimes. Journal of the Royal Statistical Society Series B: Statistical Methodology, 2003, 65: 331–355 133 VanderWeele T. Explanation in causal inference: methods for mediation and interaction. Oxford University Press, 2015 134 Zhang J. Designing optimal dynamic treatment regimes: A causal reinforcement learning approach. In: Proceedings of the International Conference on Machine Learning. PMLR, 2020. 11012–11022 Sci China Inf Sci 27 135 Kiciman E, Ness R, Sharma A, et al. Causal reasoning and large language models: Opening a new frontier for causality. Transactions on Machine Learning Research, 2024 136 Ban T, Chen L, Wang X, et al. From query tools to causal architects: Harnessing large language models for advanced causal discovery from data. arXiv preprint arXiv:2306.16902, 2023 137 Jin Z, Chen Y, Leeb F, et al. Cladder: Assessing causal reasoning in language models. Advances in Neural Information Processing Systems, 2023, 36: 31038–31065 138 Mohan K, Pearl J, Tian J. Graphical models for inference with missing data. Advances in Neural Information Processing Systems, 2013, 26 139 Robinson R W. Counting unlabeled acyclic digraphs. In: Proceedings of the Combinatorial Mathematics V: Proceedings of the Australian Conference, Held at the Royal Melbourne Institute of Technology, August 24–26, 1976. Springer, 2006. 28–43 140 Tsamardinos I, Aliferis C F, Statnikov A. Time and sample efficient discovery of Markov blankets and direct causal relations. In: Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2003. 673–678 141 Yu K, Guo X, Liu L, et al. Causality-based feature selection: Methods and evaluations. ACM Computing Surveys, 2020, 53: 1–36 142 Gupta V, Luqman A, Chattopadhyay N, et al. TravellingFL: Communication efficient peer-to-peer federated learning. IEEE Transactions on Vehicular Technology, 2023, 73: 5005–5019

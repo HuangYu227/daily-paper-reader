@@ -1,0 +1,990 @@
+Title: A Causal Foundation Model for Structure and Outcome Prediction
+
+URL Source: https://arxiv.org/pdf/2606.26467v1
+
+Published Time: Fri, 26 Jun 2026 00:19:28 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# A Causal Foundation Model for Structure and Outcome Prediction 
+
+Max Zhu 1 Martino Mansoldo 2 Ching-Hao Wang 2 Stefan Groha 2
+
+## Abstract 
+
+We introduce TabPFN-CFM, a causal founda-tion model that can handle multiple causal prob-lems. TabPFN-CFM predicts both causal struc-ture and outcomes from observational data, sup-ports queries on all three levels of Pearl’s Causal Hierarchy and uses known graph structure when available to improve predictions. TabPFN-CFM is trained on synthetic datasets, and generalises to real datasets, demonstrating improved perfor-mance over both structural and outcome predic-tion baselines. 
+
+## 1. Introduction 
+
+Causal relationships between processes determine how inter-vening on a system impacts its behaviour. However, deter-mining the causal structure and causal outcomes from obser-vational data is a challenging problem (Pearl, 2000; Imbens & Rubin, 2015). Recently, machine learning models have been developed to make causal predictions on the outcome of interventions efficiently with minimal data (K ¨unzel et al., 2019; Hollmann et al., 2023; Robertson et al., 2025; Bal-azadeh et al., 2025), as well as structural predictions (Lorch et al., 2022; Ke et al., 2023). We train a causal foundation model that predicts both causal structure and outcomes from observational data. Compared to existing methods, TabPFN-Causal Foundation Model (TabPFN-CFM) improves accu-racy, supports all three levels of Pearl’s Causal Hierarchy (Pearl, 2000), and leverages known graph structure when available. This is further accompanied by a refined training procedure that improves training efficiency almost 4 times. 
+
+1.1. Problem Setup 
+
+We assume the underlying system follows an SCM ψ =
+
+{U, V, F }, consisting of unobserved variables U , observed variables V , and unknown structural equations F . Un-known variables include unobserved covariates and sources 
+
+> 1
+
+University of Cambridge, United Kingdom 2GSK.ai. Corre-spondence to: Max Zhu <mz406@cam.ac.uk >.
+
+Proceedings of the 43 rd ICML Workshop on Foundation Mod-els for Structured Data , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s). 
+
+of noise. The observed variables V are split into covariates 
+
+X, a binary treatment T and an outcome Y . The struc-tural equations F define each variable’s parents and form a graph G. We have access to an observational dataset 
+
+Dobs = {xi, y i, t i}ni=1 , consisting of n i.i.d. samples drawn from ψ, and optionally, prior knowledge of the causal graph 
+
+Gest . If there is no prior then Gest = ∅.Our model targets two objectives. Firstly, if the true causal graph is unknown, our model can make an estimate of the underlying causal graph structure. Second is outcome pre-dictiton under three types of causal queries. Given a sam-ples covariates x∗, natural treatment t∗ and outcome y∗,the Observational Query, P (y∗|x∗, T = t∗, Dobs , Gest ),predicts the outcome when the treatment takes its ob-served value. The Interventional Query, P (y∗|x∗, do( T =1 − t∗), Dobs , Gest ), predicts the outcome under an exter-nally assigned treatment which differs from the observed treatment. The Counterfactual Query, P (y∗|x∗, do( T =1 − t∗), y = yt∗ , Dobs , Gest ), predicts the what-if outcome under a different treatment, conditional on the outcome ob-served under the original treatment. By training a single model jointly on all tasks, the model gains a broader un-derstanding of causal processes and learns more efficiently than models trained on a single task. oTo approach this problem, we follow the Bayesian PFN framework (Robertson et al., 2025; Balazadeh et al., 2025). A prior over SCMs, p(ψ), generates a true SCM, 
+
+ψtrue ∼ p(ψ). Observational data yields the posterior, 
+
+P (ψ|D obs , Gest ). Given an SCM, the outcome can be esti-mated as P (y|x∗, do( T = t∗), ψ ). The target distribution for a causal query, say an Interventional Query, is 
+
+P (y∗|x∗, do( T = 1 − t∗), Dobs , Gest ) = (1) 
+
+Z
+
+P (y∗|x∗, do( T = 1 − t∗), ψ )P (ψ|D obs , Gest )dψ. (2) If the graph structure G is unknown, its posterior is 
+
+P (G∗|D obs ) = 
+
+Z
+
+P (G∗|ψ)P (ψ|D obs )dψ. (3) The optional graph allows the posterior to be estimated more accurately, by providing information about the causal relationships between variables. In Appendix A, we prove that including the graph as input can only improve posterior 1
+
+> arXiv:2606.26467v1 [cs.LG] 25 Jun 2026 TabPFN-CFM
+
+accuracy, with no improvement occurring if the graph does not change the posterior distribution of ψ (where y has support). In practice, instead of explicitly estimating P (ψ|D obs ),we train a model to directly estimate P (y∗|x∗, do( T =
+
+t∗), Dobs ) and P (G|D obs ), by drawing samples from the prior p(ψ) and optimising log likelihoods conditioned on observations, L = −E[log ˆ pθ (y∗|x∗, do( T = 1 −
+
+t∗), Dobs , G)] . We show this loss is equivalent to optimising the KL divergence between the model’s estimated distribu-tion and the true posterior distribution in Appendix B. Existing deep learning methods for causal structure learn-ing do not predict confounding variables caused by unob-served factors. Our method addresses this by using Acyclic Directed Mixed Graphs (ADMGs), which represent unob-served confounding via bidirected edges; details are pro-vided in Appendix C. Confounding may lead to uniden-tifiable graphs, so P (ψ|D obs , Gest ) is uncertain, which is reflected in the estimated distributions. By predicting con-founding, our model not only sheds light on the underlying causal structure, but also allows the user to account for confounding when interpreting results. 
+
+## 2. Data generation 
+
+Our model is trained on synthetic data generated from a prior distribution of SCMs to approximate Bayesian inference on this prior. First, we sample SCMs with random graph structures, missing nodes, noise distributions, and structural equations. Random functions are generated using neural networks with random weights and nonlinearities, along with random noise distributions. To generate a single training sample, for each SCM, we sample observational data Dobs from the SCM and gener-ate another observational datapoint for prediction, Dpred =
+
+{x∗, t ∗, y ∗}. Since the true causal graph is known, we gener-ate a counterfactual (with fixed noise), Dcausal = {x∗ 
+
+> t
+
+, t =do(1 − t∗), y ∗ 
+
+> t
+
+}. Finally, we have the ADMG corresponding to the SCM structure, Gest = {A, C }, with adjacency matrix 
+
+A and bidirected confounding matrix C.Our setup extends the priors used in Robertson et al. (2025). This diversity in the prior ensures our model learns to per-form inference on a wide variety of causal systems, improv-ing its generalization to real data. A full description of the data generation process is given in Appendix D. 
+
+## 3. Model architecture 
+
+3.1. Architecture overview 
+
+Our model extends the Do-PFN architecture to support inter-ventional and counterfactual prediction with explicit graph conditioning. Details are given in Appendix E. The encoder embeds the fit set Dfit , the prediction query 
+
+Dpred , and the prior ADMG structure. Covariates, outcomes and treatments are embedded with randomized column po-sitional embeddings as in TabPFNv2, along with the query type. The ADMG is encoded through the adjacency A and bidirected matrix C as well as the derived ancestral matrix, giving the model direct access to parent, child, ancestor, and descendant relationship (Ke et al., 2023). The main transformer consists of row-wise attention, column-wise attention and feed-forward layers. The predic-tions additionally attend to the graph embeddings, enabling model predictions to incorporate the graph prior. The outputs are computed from the final hidden state. The final hidden state corresponding to the outcome variable is passed through an MLP head to produce logits over dis-cretized outcome buckets, yielding the predictive distribu-tion ˆpθ (y). The graph structure predictions are generated using the final hidden states corresponding to each feature variable. A decoder computes elementwise predictions for every possible edge in the graph. Predictions are made for the directed adjacency matrix ˆA, the bidirected correlation matrix ˆC and the ancestral matrix ˆR.In our architecture, attention flows from Dfit and the graph to Dpred , but not the other way around. In addition to allow-ing efficient inference from the KV cache, as in TabPFN, this makes the predicted graph structure independent of the prediction query, including the input graph prior. Compared with TabPFNv2 and Do-PFN, we omit feature grouping, ensembling, random augmentations, and random feature products because the graph explicitly indexes the variables and would be difficult to preserve under feature mixing. Furthermore, we also introduce several training and backbone improvements for stability and efficiency which together improve training speed 3-4x, with significantly lower final loss. These changes are evaluated in the ablation study in Appendix F. 
+
+3.2. Training procedure 
+
+Each training datapoint consists of datasets Dfit , Dpred =
+
+{x∗, t ∗, y ∗}, Dcausal = {x∗ 
+
+> t
+
+, t = do (1 − t∗), y ∗ 
+
+> t
+
+}, and Gest .Each datapoint is used to generate samples for all three query types. In the observational query the model is given 
+
+x∗ and t∗, and the target is y∗. In the interventional query the model is given x∗ and do (1 − t∗), and the target is y∗ 
+
+> t
+
+. In the counterfactual query, the model is given x∗ 
+
+> t
+
+, do (1 − t∗)
+
+and y∗, and the target is y∗ 
+
+> t
+
+. In each case, let ytarg and ˆpθ (y)
+
+be the target and predicted distribution, respectively. The prediction loss is 
+
+Lpred = CE (ytarg , ˆpθ (y)) . (4) 2TabPFN-CFM         
+
+> Fit GPred
+> Row Attn
+> Col Attn
+> MHA
+> MLP
+> Row Attn
+> Col Attn
+> MLP
+> G-Emb
+> KV
+> KV
+> KV
+> Row MHA
+> Col MHA
+> Graph
+> MLP
+> ×nblocks
+> Matrix Decoder ˆyDecoder
+> context graph target
+> Figure 1. Model architecture diagram.
+
+This is the standard prediction loss for PFNs (Hollmann et al., 2023; Balazadeh et al., 2025; Robertson et al., 2025). The model is always given Dfit . In order to allow the model to learn to make predictions with and without the true causal graph, Gest is set to zero half the time. The structural prediction losses between predictions ˆA, ˆR, ˆC
+
+and true matrices are the elementwise binary cross entropy, 
+
+Lgraph = 1(k + 2) 2
+
+> k+2
+
+X
+
+> i=1
+> k+2
+
+X
+
+> j=1
+
+BCE (Mi,j , ˆMi,j ), (5) 
+
+M ∈ { A, R, C }, ˆM ∈ { ˆA, ˆR, ˆC}. (6) Since the structural predictions are independent of the query, this loss is computed only once per datapoint. The overall loss is 
+
+L = Lpred + λ · L graph . (7) Finally, the model is trained with dummy features from batch padding. Although samples are processed indepen-dently, the model can attend to these dummy features; em-pirically, adding them at inference improves performance, suggesting they may support intermediate computations. 
+
+## 4. Evaluations 
+
+4.1. Synthetic toy examples 
+
+First, we showcase TabPFN-CFM on the Instrumental Vari-able (IV) problem with SEM: Z → T → Y, U → T, U →
+
+Y . A linear IV SEM is generated with known parameters and noise distributions, which allows the exact observa-tional, interventional and counterfactual distributions to be computed. A sample is drawn from this SEM, and we eval-uate the model predictions on this sample, both with and without the graph structure as input. See Appendix G.1 for details. Figures 2 and 5 show the predicted and exact distri-butions for the three query types, without and with the prior structure respectively. The model predictions align well in all cases. Table 3 shows the predicted adjacency matrix. The pre-dicted adjacency matrix closely matches the true adjacency matrix, indicating that the model has effectively learned the underlying causal structure of the SEM. A more complex nonlinear SEM is investigated in Appendix G.2 and Figure 7 shows how predictions improve as the number of fit samples increases. 
+
+4.2. Synthetic SEMs 
+
+Our model is evaluated on a large number of synthetic SEMs drawn from our prior dataset distribution as well as out of distribution (OOD) priors. For consistency, 500 datasets are drawn and saved for each setting used for evaluation. The OOD dataset is generated with random Fourier functions as nonlinearities instead of neural networks, see Appendix H. This tests our model’s ability to generalise to unseen functional forms. The model is compared both with and without the true graph structure as input. We evaluate the model’s prediction mean squared error (MSE) for observational, interventional and counterfactual queries, and accuracy and area under the receiver operating characteristic curve (AUC) of the graph structure prediction. For outcome prediction, we compare against Do-PFN and established meta-learners, the S-learner, T-learner, X-learner and Doubly Robust (DR) learner, all using TabPFNv2.5 as the base model (K ¨unzel et al., 2019; Battocchi et al., 2019). The baseline learners are unable to make counterfactual pre-dictions. For graph prediction, we compare against AVICI (Lorch et al., 2022), a strong deep-learning graph prediction 3TabPFN-CFM 2 1 0 1 2        
+
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> Probability Density
+> Observational predictions
+> Exact
+> Fully observed
+> Hidden U 21012
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Probability Density
+> Interventional predictions
+> Exact
+> Fully observed
+> Hidden U 21012
+> y
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Probability Density
+> Counterfactual predictions
+> Exact
+> Fully observed
+> Hidden U
+
+Figure 2. Observational (left), Interventional (center), and Counterfactual (right) distributions for the IV example. Exact solutions are in blue, model predictions in orange for when U is observed, and in green when U is unobserved. Model is not given the graph structure. 
+
+Table 1. Predictions on OOD SEMs with n = 1024 fit samples, compared by mean squared error ( ↓). The baseline methods are unable to make counterfactual predictions. 
+
+Model Obs. Int. Count. S-learner 0.565 0.888 -T-learner 0.574 0.909 -X-learner 0.574 0.909 -DR-Learner 0.577 0.885 -Do-PFN 0.782 0.966 -TabPFN-CFM 0.537 0.765 0.607 TabPFN-CFM W/Graph 0.538 0.739 0.572 
+
+model as well as established methods FCI (Spirtes et al., 1995), GES (Chickering, 2002), LiNGAM (Shimizu et al., 2006), and PC (Spirtes et al., 2000). Only FCI can predict confounding. Tables 12 and 1 summarise outcome prediction results for in-distribution and out-of-distribution SEMs, respectively. Our model generalises well to out of distribution SEMs, indicating it is not overfit to our prior. In the observational setting, TabPFN-CFM is comparable to the baselines, likely due to the strong TabPFNv2.5 base model used by the Meta-Learners. Our model outperforms all the baselines on the interventional setting, even without the graph structure. Giv-ing the model the true graph structure improves predictions in the causal interventional and counterfactual settings but not the observational setting, as causal direction does not affect the observational distribution. Tables 13 and 2 summarise the structure prediction results where our model outperforms the baselines. As well as directly comparing the predicted graphs, we also use the predicted adjacency matrix to generate an ancestral matrix using monte-carlo sampling in Table 8. This is significantly less accurate than directly using the predicted ancestral ma-trix, showing the advantage of directly predicting the ances-
+
+Table 2. Structural predictions on synthetic OOD SEMs with 
+
+n = 1024 fit samples, evaluated on predicted adjacency, ancestral and confounding matrices, averaged over the dataset. Main values tracks the average AUROC ( ↑), with accuracy (%)( ↑) in brackets. 
+
+Model Adjacency Ancestral Confounding FCI 0.533 (88) 0.523 (81) 0.563 (87) GES 0.654 (81) 0.654 (60) -LiNGAM 0.558 (78) 0.524 (70) -PC 0.685 (86) 0.639 (55) -AVICI 0.623 (89) 0.596 (82) -TabPFN-CFM 0.889 (91) 0.902 (88) 0.828 (93) 
+
+tral structure rather than relying on the adjacency matrix. Full results with varying fit samples are shown in Table 14, 15, 16 and 17. 
+
+4.3. Real Data 
+
+Our model is evaluated on two real datasets, the Amazon Sales dataset (Bl ¨obaum et al., 2024) and the Law School Ad-missions dataset (Wightman, 1998). These datasets have es-tablished causal graphs and counterfactuals generated with the DoWhy framework, taken from Robertson et al. (2025). The results are shown in Table 4 and Table 5. While all mod-els are similar in their observational performance, our model excels in the interventional settings. In the Law School Ad-missions dataset, our model is able to use the counterfactual information to significantly improve its accuracy. 
+
+## 5. Discussion 
+
+We have introduced TabPFN-CFM, a causal foundation model that handles multiple causal tasks, including both causal structure and outcome prediction. We believe causal PFNs can continue to be extended to more complex settings, such as time series and cyclic causal settings. 4TabPFN-CFM 
+
+## References 
+
+Balazadeh, V., Kamkari, H., Thomas, V., Li, B., Ma, J., Cresswell, J. C., and Krishnan, R. G. Causalpfn: Amor-tized causal effect estimation via in-context learning. In Advances in Neural Information Processing Systems ,2025. Battocchi, K., Dillon, E., Hei, M., Lewis, G., Oka, P., Oprescu, M., and Syrgkanis, V. Econml a python pack-age for ml-based heterogeneous treatment effects estima-tion, 2019. URL https://github.com/py-why/ EconML .Bl ¨obaum, P., G ¨otz, P., Budhathoki, K., Mastakouri, A. A., and Janzing, D. Dowhy-gcm: An extension of dowhy for causal inference in graphical causal models, 2024. Chickering, D. Optimal structure identification with greedy search. journal of machine learning research, 2002. Glorot, X. and Bengio, Y. Understanding the difficulty of training deep feedforward neural networks. In Interna-tional Conference on Artificial Intelligence , 2010. Henry, A., Dachapally, P. R., Pawar, S. S., and Chen, Y. Query-key normalization for transformers. In Findings of the Association for Computational Linguistics: EMNLP 2020 , 2020. Hollmann, N., M ¨uller, S., Eggensperger, K., and Hutter, F. TabPFN: A transformer that solves small tabular classifi-cation problems in a second. In International Conference on Artificial Intelligence , 2023. Imbens, G. W. and Rubin, D. B. Causal Inference for Statis-tics, Social, and Biomedical Sciences: An Introduction .Cambridge University Press, 2015. Jordan, K., Bernstein, J., Rappazzo, B., @fern-bear.bsky.social, Vlado, B., Jiacheng, Y., Cesista, F., Koszarsky, B., and @Grad62304977. modded-nanogpt: Speedrunning the nanogpt baseline, 2024a. Jordan, K., Jin, Y., Boza, V., Jiacheng, Y., Cesista, F., New-house, L., and Bernstein, J. Muon: An optimizer for hidden layers in neural networks, 2024b. Ke, N. R., Chiappa, S., Wang, J. X., Bornschein, J., Goyal, A., Rey, M., Weber, T., Botvinick, M., Mozer, M. C., and Rezende, D. J. Learning to induce causal structure. In 
+
+International Conference on Learning Representations ,2023. K ¨unzel, S. R., Sekhon, J. S., Bickel, P. J., and Yu, B. Met-alearners for estimating heterogeneous treatment effects using machine learning, 2019. Liu, J., Su, J., Yao, X., Jiang, Z., Lai, G., Du, Y., Qin, Y., Xu, W., Lu, E., Yan, J., Chen, Y., Zheng, H., Liu, Y., Liu, S., Yin, B., He, W., Zhu, H., Wang, Y., Wang, J., Dong, M., Zhang, Z., Kang, Y., Zhang, H., Xu, X., Zhang, Y., Wu, Y., Zhou, X., and Yang, Z. Muon is scalable for llm training, 2025. Lorch, L., Sussex, S., Rothfuss, J., Krause, A., and Sch ¨olkopf, B. Amortized inference for causal structure learning. In Advances in Neural Information Processing Systems , 2022. Pearl, J. Causality : models, reasoning, and inference .Cambridge University Press, 2000. Richardson, T. Markov properties for acyclic directed mixed graphs, 2003. Robertson, J., Reuter, A., Guo, S., Hollmann, N., Hutter, F., and Sch ¨olkopf, B. Do-PFN: In-context learning for causal effect estimation. In Advances in Neural Information Processing Systems , 2025. Shimizu, S., Hoyer, P. O., Hyv ¨arinen, A., and Kerminen, A. A linear non-gaussian acyclic model for causal discovery, 2006. Spirtes, P., Meek, C., and Richardson, T. Causal inference in the presence of latent variables and selection bias, 1995. Spirtes, P., Glymour, C. N., Scheines, R., and Heckerman, D. Causation, prediction, and search, 2000. Wightman, L. F. Lsac national longitudinal bar passage study, 1998. Xiong, R., Yang, Y., He, D., Zheng, K., Zheng, S., Zhang, H., Lan, Y., Wang, L., and Liu, T.-Y. On layer normaliza-tion in the transformer architecture, 2020. Zhang, Z., Song, Y., Yu, G., Han, X., Lin, Y., Xiao, C., Song, C., Liu, Z., Mi, Z., and Sun, M. Relu 2 wins: Discovering efficient activation functions for sparse llms, 2024. Zhao, Q. On statistical and causal models associated with acyclic directed mixed graphs, 2025. 5TabPFN-CFM 
+
+Table 3. Predicted adjacency matrices for the linear SEM experiment on the IV graph. Values represent predicted edge probabilities. The true edges are Z → T , T → Y , U → T and U → Y .
+
+T Z U YT - 0.078 0.010 0.997 Z 0.873 - 0.208 0.129 U 0.780 0.460 - 0.978 Y 0.000 0.006 0.002 -
+
+Table 4. Comparison of our model with baselines on the Amazon Sales dataset, compared by mean squared error ( ↓). The baseline methods are unable to use the true causal graph or make counterfactual predictions. 
+
+Model Obs. Int. Count. S-learner 0.002 7.269 -T-learner 0.001 0.964 -X-learner 0.001 0.964 -DR-Learner 0.011 8.716 -Do-PFN 0.006 0.593 -TabPFN-CFM 0.013 0.455 0.505 TabPFN-CFM W/Graph 0.012 0.463 0.502 
+
+Table 5. Comparison of our model with baselines on the Law School Admissions dataset, compared by mean squared error ( ↓). The baseline methods are unable to make counterfactual predictions. 
+
+Model Obs. Int. Count. S-learner 0.871 0.931 -T-learner 0.870 0.928 -X-learner 0.870 0.928 -DR-Learner 0.872 0.934 -Do-PFN 0.893 0.900 -TabPFN-CFM 0.873 0.904 0.124 
+
+TabPFN-CFM W/Graph 0.872 0.896 0.145 
+
+## A. Comparing estimation with and without graph input 
+
+Including the graph input can improve model predictions. For simplicity, ignore c here. With and without G, the target distributions are 
+
+p0(y|Dobs ) = 
+
+Z
+
+p(y|ψ)p(ψ|Dobs ) dψ (8) 
+
+pG(y|Dobs , G) = 
+
+Z
+
+p(y|ψ)p(ψ|Dobs , G) dψ (9) (10) Comparing their losses, we have: 
+
+Ey|Dobs ,G
+
+− log pG(y|Dobs , G) − (− log p0(y|Dobs ))  =
+
+Z
+
+−pG(y|Dobs , G) log pG(y|Dobs , G)
+
+p0(y|Dobs ) dy (11) 
+
+= −KL (pG(y|Dobs , G)|| p0(y|Dobs )) ≤ 0 (12) 6TabPFN-CFM 
+
+Table 6. Structural predictions on the Amazon Sales dataset, evaluated on predicted adjacency matrix and ancestral matrix. Main values tracks the AUROC ( ↑), with accuracy ( ↑)in brackets. 
+
+Model Adjacency Ancestral FCI 0.523 (0.79) 0.532 (0.63) GES 0.527 (0.53) 0.603 (0.60) LiNGAM 0.464 (0.59) 0.600 (0.62) PC 0.573 (0.72) 0.555 (0.57) AVICI 0.698 (0.78) 0.872 (0.81) 
+
+TabPFN-CFM 0.708 (0.84) 0.701 (0.72) 
+
+Table 7. Structural predictions on the Law School Admissions dataset, evaluated on predicted adjacency matrix and ancestral matrix. Main values tracks the AUROC ( ↑), with accuracy ( ↑)in brackets. 
+
+Model Adjacency Ancestral FCI 0.500 (0.56) 0.500 (0.63) GES 0.627 (0.56) 0.700 (0.63) LiNGAM 0.353 (0.43) 0.440 (0.48) PC 0.671 (0.56) 0.700 (0.63) AVICI 0.545 (0.69) 0.517 (0.63) TabPFN-CFM 0.886 (0.93) 0.912 (0.88) 
+
+Table 8. Comparison of direct ancestral matrix prediction and ancestral matrix generated from the predicted adjacency matrix using Monte-Carlo sampling for out-of-distribution SEMs, across different numbers of fit data points (n-fit). Values represent AUC ( ↑). 
+
+n-fit Direct ancestral Ancestral from adjacency 32 0.712 0.530 256 0.848 0.616 1024 0.902 0.693 7TabPFN-CFM 
+
+Now, taking expectation over Dobs and G, we have 
+
+LG − L0 = Ey,D obs ,G
+
+− log pG(y|Dobs , G) − (− log p0(y|Dobs ))  (13) 
+
+= −Ey,D obs ,G
+
+KL (pG(y|Dobs , G)|| p0(y|Dobs ))  ≤ 0 (14) Therefore, including the graph input can only improve the model predictions, with no improvement occurring if 
+
+pG(y|Dobs , G) = p0(y|Dobs ). Equivalently, in terms of the posterior of ψ, there is an improvement if 
+
+Z
+
+p(y|ψ)p(ψ|Dobs , G) dψ ̸ =
+
+Z
+
+p(y|ψ)p(ψ|Dobs ) dψ (15) 
+
+Z
+
+p(y|ψ) p(ψ|Dobs , G) − p(ψ|Dobs ) dψ ̸ = 0 (16) 
+
+p(ψ|Dobs , G)̸ = p(ψ|Dobs ) (17) (18) So an improvement occurs if including G changes the posterior distribution of ψ (where y has support). The notable case where this does not occur is when the graph structure is uniquely identified by the observational data, p(ψ|Dobs ) is a delta distribution on the true SCM, and p(ψ|Dobs , G) is the same delta distribution, the SEM is identifiable. In the finite data regime, even if the SEM is identifiable, the posterior may not be perfect, so including the graph input can still improve the model predictions. 
+
+## B. Appendix: Proof of equivalence between log probability and KL divergence 
+
+Proof minimising log probability (and cross-entropy) equals minimising KL divergence. This proof extends the proof given in TabPFN (Hollmann et al., 2023) and Do-PFN (Robertson et al., 2025) by including the conditioning on the graph input. We have the following definitions and properties: 
+
+ψ ∼ p(ψ) (19) 
+
+Dobs ∼ p(Dobs |ψ) (20) 
+
+G ∼ p(G| ψ) (21) 
+
+c ∼ p(c|ψ) (22) 
+
+y ∼ p(y|c, ψ ) (23) 
+
+L = −E[log ˆ pθ (y|c, D obs , G)] (24) 
+
+{c, y } ⊥ ⊥ Dobs |ψ (25) 
+
+{c, y } ⊥ ⊥ G| ψ (26) (27) Optimising the loss function L is equivalent to optimising the KL divergence between the true distribution and the model distribution. We have, 
+
+L = −E[log ˆ pθ (y|c, D obs , G)] (28) 
+
+= −
+
+Z Z Z
+
+log ˆ pθ (y|c, D obs , G)p(y, c, D obs , G) dy dc dD obs dG (29) 
+
+= −
+
+Z Z Z
+
+log ˆ pθ (y|c, D obs , G)p(y|c, D obs , G)p(c, D obs , G) dy dc dD obs dG (30) 
+
+= −Ec,D obs ,G
+
+Z 
+
+p(y|c, D obs , G) log ˆ pθ (y|c, D obs , G) dy 
+
+
+
+(31) 
+
+= −Ec,D obs ,G
+
+Z 
+
+p(y|c, D obs , G)
+
+
+
+log ˆpθ (y|c, D obs , G)
+
+p(y|c, D obs , G) + log p(y|c, D obs , G)
+
+
+
+dy 
+
+
+
+(32) 
+
+= Ec,D obs ,G
+
+KL (p(y|c, D obs , G)|| ˆpθ (y|c, D obs , G)) + C) (33) (34) 8TabPFN-CFM 
+
+hence minimising the log probability is equivalent to minimising the KL divergence between the true distribution and the model distribution. This can also be written with ψ more explicitly. Using the independence property, we have 
+
+p(y|c, D obs , G) = 
+
+Z
+
+p(y|c, D obs , G, ψ )p(ψ|c, D obs , G) dψ (35) 
+
+=
+
+Z
+
+p(y|c, ψ )p(ψ|c, D obs , G) dψ. (36) (37) Hence, 
+
+L = −Ec,D obs ,G
+
+Z 
+
+p(y|c, D obs , G) log ˆ pθ (y|c, D obs , G) dy 
+
+
+
+(38) 
+
+= −Ec,D obs ,G
+
+Z Z
+
+p(y|c, ψ )p(ψ|c, D obs , G) log ˆ pθ (y|c, D obs , G) dy dψ 
+
+
+
+(39) 
+
+= −Ec,D obs ,G,ψ 
+
+Z 
+
+p(y|c, ψ ) log ˆ pθ (y|c, D obs , G) dy 
+
+
+
+(40) 
+
+= Ec,D obs ,G,ψ 
+
+KL (p(y|c, ψ )|| ˆpθ (y|c, D obs , G)) + C) (41) (42) 
+
+## C. Causal Graphs and Structural Causal Models 
+
+A nonparametric structural equation model with independent errors (NPSEM-IE) satisfies the following conditions (Pearl, 2000): 1. For each i = 1 , . . . , d , there exists a set of parent variables Pa i ⊆ V \ { Vi} such that 
+
+Vi = fi
+
+ Pa i, U i
+
+.
+
+2. The graph with vertex set V and directed edges Vj → Vi whenever Vj ∈ Pa i is acyclic. 3. The unobserved variables are mutually independent and exogenous: 
+
+Ui ⊥⊥ Uj for i̸ = j. 
+
+If our causal system satisfies an NPSEM-IE (or can be trivially reduced to one), corresponding to only ”noise” variables being unobserved, then the causal graph corresponding to observed variables V will be a DAG structure. Each variable is independent of its non-descendants given its parents (the local Markov property), with the direction of edges indicating the direction of causality. However, in the more general case of a DAG over variables (U, V ), the NPSEM-IE assumptions need not hold. The unobserved variables in U may be endogenous (i.e., have parents in V or in U ), a single unobserved variable may have multiple children in V , and the unobserved variables may be statistically dependent. After marginalizing out U , the causal relationships among the observed variables V can be represented by an acyclic directed mixed graph (ADMG) (Richardson, 2003), which contains both directed edges (indicating directed causal influence) and bidirected edges (indicating the presence of unobserved common causes, i.e. unobserved confounding). Such cases are common in real-world scenarios, where not all relevant variables can be observed or measured. There are many models referred to as ADMGs in the literature (Zhao, 2025); here we will refer to ADMGs as DAGs with unobserved variables marginalized out. An ADMG graph consists of an adjacency matrix, A, and correlation matrix, C.The adjacency matrix contains directed causal relationships, while the symmetric correlation matrix contains bidirected non-causal correlations caused by unobserved confounding. Finally, we note there is a more general case, where the underlying structure is not a DAG and instead contains cycles. Such structures can arise in systems with temporal feedback loops or cyclic causality. However, in this work we focus on the acyclic case (DAGs and ADMGs) and leave cyclic structures for future work. 9TabPFN-CFM 
+
+## D. Dataset generation 
+
+D.1. Generating random SCMs 
+
+Firstly, the DAG structure is generated. The DAG size, average connectivity degree and type of DAG are sampled. The type of DAG is either Erdos-Renyi or Scale-Free. For Scale-Free graphs, the attractiveness parameter is also sampled. Given these parameters, a random DAG is generated. A treatment node and target node are sampled, with bias towards selecting the treatment as a causal ancestor of the target to ensure meaningful interventions. The structural equations are sampled for every node in the DAG. First, the nonlinearity is sampled from a set of possible functions, including whether to use an MLP (Table 9). Then, the type of noise, position of noise and noise distribution are sampled (Table 10). Relevant distribution parameters (e.g. variance) are also sampled randomly. Finally, the node’s weight vector W and bias scalar b are drawn from the Xavier Normal distribution (Glorot & Bengio, 2010). The node’s structural equation takes as input the concatenation of its parent values, xpa , and computes the node’s value in the most general form as: 
+
+xout = g(W2fnonlinear (W1 · g(xpa , ϵ pre ) + b), ϵ post ) (43) Where f is the elementwise nonlinearity, g is the noise composition function (either elementwise additive or multiplicative), 
+
+ϵpre and ϵpost are noise variables sampled from the pre and post noise distribution. If the node has no parents, xpa is empty and only noise is used as input to the node. The treatment node is generated differently, since it is a binary variable. The treatment node’s structural equation is: 
+
+˜xout = W · (xpa + ϵpre ) (44) 
+
+xout = a · 1[˜ xout > x thresh ] + b (45) where a, b are random scalars and xthresh is set so the observational distribution of ˜xout has a randomly sampled class balance. This ensures the treatment always contains positive and negative samples. Finally, a subset of nodes in the DAG are selected as observed variables V , with the remaining nodes treated as unobserved variables U . The selection is random, with the constraint that the treatment and target nodes are always observed. Unobserved variables are marginalized out when generating datasets, creating an observed acyclic adjacency matrix, A, and bidirected confounding matrix, C, between observed nodes together forming the ADMG structure. If the sample is trivial (e.g. all treatments the same or no causal relations), the sample is discarded. This completes the specification of a single SCM, 
+
+ψ. Our synthetic prior distribution of SCMs, P (ψ), is the distribution induced by the above generative process with all parameters sampled randomly. 
+
+D.2. Sampling causal datasets from SCMs 
+
+Now, we describe how each sample dataset is generated. A SCM ψ is sampled from the prior P (ψ). Then, for each sample i
+
+in the dataset, the exogenous noise variables U are sampled from their respective distributions. The observed variables V
+
+are generated by evaluating the structural equations in topological order. This process is repeated n times to generate the observational dataset with n entries, Dfit = {xi, t i, y i}ni=1 . The underlying graph is stored in Gest = {A, C }.Then, we generate the prediction dataset. Another sample is drawn from the observational dataset as above, Dpred =
+
+{x∗, t ∗, y ∗}. Since we know the true SCM, the counterfactual sample can also be generated. However, we must be careful to correctly simulate the counterfactual since nodes between T and Y (observed or unobserved) may be descendants of T ;these nodes should not be fixed. To account for this, we fix every node and noise variable that may be topologically ordered before T . That is, we split the nodes into descendants of T , Ndesc , and non-descendants, Nnd . All of the noise variables and nodes in Nnd are kept fixed to their sampled values from the observational sample. The treatment node is set to its interventional value T = do(1 − t∗). Nodes in Ndesc are recomputed with interventional T . This procedure generates the ”what-if” counterfactual outcome. Nodes in V between T and Y will change under intervention, but their counterfactual values will depend on their observed value through fixed parent noise variables, allowing the model to use this information to make more accurate predictions. We denote this new sample as Dcausal = {x∗ 
+
+> t
+
+, t = do(1 − t∗), y ∗ 
+
+> t
+
+}. We note there are alternative methods of generating causal queries, such as fixing only ancestors of T corresponding to interventional rather than counterfactual distribution. These are not used in this paper, but we allow users to easily generate and train new models on these alternative distributions with our codebase by changing a configuration flag. Our model is trained with up to n = 1600 fit samples and k = 33 covariates (35 nodes in total). 10 TabPFN-CFM  
+
+> Table 9. Nonliearities. Outputs are scaled to be approxmately standardized. Quantize and Square nonlinearities modified for stability.
+
+Name Function Identity x
+
+Relu 1.67 · relu (0 , x ) − 0.688 
+
+Tanh 1.43 · tanh( x)
+
+Sine 1.43 · sin( πx )
+
+Quantize (stabilized) ⌈x + ϵ · rand(0, 1) ⌉
+
+Square (stabilized) 5.7 ∗ log(1 + 1 /5.7 ∗ x2) − 0.83  
+
+> Table 10. Noise generation parameters
+
+Distribution Position Composition Normal Pre-nonlinearity Multiplicative Uniform Post-nonlinearity Additive Bernoulli Both Laplace Gamma 
+
+## E. Model architecture 
+
+Our architecture is based on TabPFNv2 and Do-PFN, with several upgrades to handle the additional objectives and improve training efficiency. The model consists of four components, the encoder module, the observation module, the graph module and the prediction module. 
+
+E.1. Encoder module 
+
+The encoder module embeds the inputs. For notational simplicity, we define / describe the shapes as follows, xfit ∈ Rn×k,
+
+x∗ ∈ R1×k, tfit ∈ { 0, 1}n, t∗ ∈ { 0, 1} × { 0, 1}, yfit ∈ Rn, G ∈ { 0, 1}(k+2) ×(k+2) , where k is the number of covariates, and n is the number of observations. The hidden dimension of the transformer is h. Both xfit and x∗ are encoded with the same linear transform, followed by a column-wise positional embedding: 
+
+hxa = Linear x(x|| CDF (x)) ∈ Rn×k×h (46) 
+
+hx = hxa + PosEmb col ∈ Rn×k×h. (47) Each covariate is concatenated with its CDF transform, which helps embedding extreme outliers. Each of the k feature columns of the dataset is given a positional embedding generated by the subspace method from TabPFNv2. For each column 
+
+j
+
+PosEmb col j = Wcol ϵ (48) 
+
+ϵ ∼ N (0 , I h/ 4) (49) 
+
+Wcol ∈ Rh×h/ 4. (50) One embedding is generated for each of the k columns and concatenated together. A new positional embedding is generated for each forward pass, meaning the positional embeddings are randomised, for both training and inference. The targets yfit 
+
+and y∗ are embedded with a linear transform, 
+
+hy = Linear y (y|| CDF( y)|| Itype ) ∈ Rn×h y ∈ { yfit , y ∗} (51) where Itype ∈ { 0, 1, 2} is an indicator for the type of y, with value 0 for yfit , 1 for counterfactual queries where y∗ is observed, and 2 for counterfactual queries where y∗ is unobserved. The CDF embedding is used here again. Next, we embed the treatment variables, 
+
+ht = emb t(tfit ) ∈ Rn×1×h (52) 
+
+ht∗ = emb t∗(t∗) ∈ R1×1×h. (53) 11 TabPFN-CFM 
+
+Note the embedding for t∗ has 4 values corresponding to if the query is interventional or observational. These are concatenated to generate the full input embeddings, 
+
+hfit 0 = Concat (ht, h x, h y , dim = 1) ∈ Rn×(k+2) ×h (54) 
+
+hpred 0 = Concat (ht∗, h x∗, 0, dim = 1) ∈ R1×(k+2) ×h. (55) Finally, the prior ADMG graph structure is embedded. The ADMG is represented as a directed adjacency matrix, A, and bidirected correlation matrix C. Both matrices are binary. If the matrices are unknown, they are filled with zeros. From A,we create the ancestral matrix R, the matrix consisting of all ancestors for each node (reachability or transitive closure). The graph embedding is 
+
+hG = emb A(A) + emb R(R) + emb C (C) + emb AT (AT ) + emb RT (RT ) + emb CT (CT ). (56) where emb () is an elementwise learned binary embedding. This representation is heavily redundant since the transpose matrices and ancestral matrices are constructed from A and C. This approach allows the model to easily identify every node’s parents and children as well as ancestors and descendants without multiple hops. Unlike TabPFNv2 (and Do-PFN), we omit input augmentations: grouping features, ensembling, random augmentations and random feature products. As well as simplifying the model, this is also required since the structure is explicitly represented in the input, so mixing features would not easily work. However, the CDF augmentation is kept in our model, as a fixed part of the encoder. 
+
+E.2. Observation module 
+
+The observation module processes hfit 0 . The embeddings are passed through L tabular transformer layers with self attention. Each transformer block consists of a row-wise attention, column-wise attention and a feed forward layer. 
+
+hrow = MultiHeadAttention( h, dim = 1) (57) 
+
+hcol = MultiHeadAttention( h, dim = 0) (58) 
+
+hmlp = FFN( h) (59) 
+
+hfit  
+
+> l
+
+= Block( hfit 
+
+> l−1
+
+) (60) where Block denotes a pre-layer-normalized transformer block with residual sublayers values using hrow , hcol , and hmlp 
+
+and h is the post layer normalised residual input for each block. Let hfit  
+
+> l,i
+
+be the output of layer l, feature i. The matrix decoder module uses the final embeddings hfit  
+
+> L,i
+
+to generate predicted graph structure matrices. The embeddings are averaged over fit rows and projected using two linear layers with RMS normalisation to map each output to embeddings ui, v i ∈ R h. The logit for each edge is 
+
+ˆMi,j = α · gelu (uTi · W ) · vj + β, ˆM ∈ { ˆA, ˆR, ˆC} (61) with learned parameters W ∈ R d×d and scalar α and β. Separate decoder parameters are used for each output matrix, 
+
+ˆA, ˆR, ˆC. Entries in ˆM ∈ R n×n are logits representing the probability of each edge occurring. Empirically, we found this nonlinear decoder worked better than a direct dot product used in AVICI (Lorch et al., 2022). The matrix decoder’s predicted graph depends only on Dfit , and not on Dpred or the input graph structure. 
+
+E.3. Graph module 
+
+The graph module takes the graph embeddings and the intermediate hidden states from the observation module to generate graph hidden states. These hidden states use feature observation hidden states for both positional embeddings and to pass information. The intermediate embeddings hcol  
+
+> l
+
+are averaged over the column dimension to create feature embeddings, 
+
+¯hcol  
+
+> l
+
+∈ R (k+2) ×h. These embeddings are then transformed into source and destination embeddings using two separate linear layers. The resulting representations are combined via an outer product to produce the feature matrix Hfeat  
+
+> l
+
+∈R(k+2) ×(k+2) ×h. The graph hidden states is computed as 
+
+HGl = LN( hG + Hfeat  
+
+> l
+
+). (62) Note that this module only depends on Dfit and G, not on x∗. Also, hG is not updated, we always use the initial hG from the encoder module. Empirical testing found no improvements from updating these weights between each layer. 12 TabPFN-CFM 
+
+E.4. Prediction module 
+
+The prediction module generates the distribution ˆpθ (y), using the previous embeddings and encoded prediction inputs. This module follows the same architecture and parameterization as the observation module, with the addition of a cross-attention layer over the graph module embeddings: 
+
+h∗ 
+
+> row
+
+= MultiHeadAttention( h∗, dim = 1) , (63) 
+
+h∗ 
+
+> col
+
+= MultiHeadAttention(KV = hrow , Q = h∗, dim = 0) , (64) 
+
+h∗ 
+
+> G
+
+= MultiHeadAttention(KV = HG, Q = h∗, dim = 0) , (65) 
+
+hmlp = FFN( h∗
+
+> G
+
+), (66) 
+
+h∗ 
+
+> l
+
+= Block( h∗
+
+> l−1
+
+). (67) 
+
+Block is a pre-layer norm residual block using h∗
+
+> row
+
+, h ∗
+
+> col
+
+, h mlp residual sublayers, with residual stream h∗. Cross attention to the observation embeddings hrow and HG allows the prediction module to access the observational data and graph structure. Finally, the predicted outcome is generated from the final embedding corresponding to the outcome feature, 
+
+h∗ 
+
+> L,y
+
+∈ R h using a MLP head, mapping to prediction bucket logits, 
+
+z = MLP( h∗ 
+
+> L,y
+
+) ∈ Rb (68) 
+
+ˆpθ (y) = softmax( z) ∈ Rb (69) where z are output logits, b is the number of buckets in the discretized output distribution and ˆpθ (y) is the predicted probability distribution over these buckets. 
+
+E.5. Architecture changes 
+
+Several additional architecture optimisations and training improvements were made compared to the transformer backbone used in TabPFNv2. These improvements are aimed at improving training stability and efficiency, rather than adding specific model features. Changes are largely inspired by the ”Modded NanoGPT” project (Jordan et al., 2024a). The main changes found to work are: • Full attention to hrow in the prediction module. • Cosine learning rate schedule with 1000 linear warmup steps. • relu 2 activation instead of relu/gelu (Zhang et al., 2024). • Reduce positional embedding initialisation weight scale. • Pre layer norm instead of post layer norm (Xiong et al., 2020). • Apply layer norm before prediction decoder MLP head. • Muon optimizer for matrices instead of AdamW (Jordan et al., 2024b), using the Kimi variant (Liu et al., 2025). • QK norm with learnable temp for attention heads (Henry et al., 2020). • Increased width from 192 to 288. Total parameters increase from 10.28M to 22.97M. We test the effect of these changes in the ablation section F, and find they significantly improve training stability and efficiency. 
+
+## F. Architecture Ablations 
+
+This section conducts an ablation of the architecture changes described in Section E.5. The TabPFN-CFM architecture con-sists of a modified Do-PFN architecture to handle the additional structural and outcome prediction objectives. Independently, we introduce multiple updates to the transformer backbone and training procedure to improve training efficiency and final performance. No new functionality is added from these changes. 13 TabPFN-CFM 
+
+To evaluate the impact of each of the changes, we conduct an ablation study on on smaller datasets with models trained for 30k steps. The training and validation datasets are identical on all setups to isolate the effect of architecture changes. The learning rate is 3e-4 for Muon and 1e-4 for AdamW, as AdamW required a lower learning rate for stability. Results are shown in Figure 3. We sequentially apply each of the architectural changes on top of previous changes and record the prediction and adjacency losses. Both prediction and adjacency losses decrease with the changes. Note changes interact with each other in nonlinear ways and some changes only show in longer training runs, so the impact of each change in the final model is more complex than shown in the plots here. Base  
+
+> Scale up
+> Muon
+> ReLU^2
+> Full Attention
+> Init emb. scale
+> Pre-LN
+> Out-LN
+> QK Norm
+> CDF embed
+> Gated Attention
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Prediction Loss  Prediction Loss (L)
+> Adjacency Loss (R)
+> 0.30
+> 0.31
+> 0.32
+> Adjacency Loss
+> Figure 3. Ablation results with 30k training steps for prediction loss and adjacency matrix loss. Changes are applied sequentially from left to right.
+
+Next, we compare our model with longer training runs with and without the changes, but with the base version scaled up to the same 23.2M parameter count for fairness. Models are trained for a much longer 150k steps. Figure 4 shows validation loss curves for both models. Our optimised model reaches the same prediction loss 4 times faster (37K vs 150K steps to reach -0.195 loss) and 3 times faster adjacency loss (50K vs 150K steps to reach 0.283 loss) compared to the unoptimised version, with significantly lower final loss. The base model trained in 8.52 hours while the final model trained in 10.24 hours, a 20% increase in training time largely from Muon and the additional norm layers. Despite a small increase in per step time, the final model is significantly more efficient. 
+
+## G. Synthetic toy examples 
+
+G.1. Linear Instrumental Variable example 
+
+Showcase experiment on the Instrumental Variable (IV) problem, with SEM: Z → T → Y, U → T, U → Y . To demonstrate, we examine predictions from a simple random synthetic linear SEM. The SEM equations (after normalizing with the observational sample statistics) are: 
+
+ϵ{u,z,t,y } ∼ U (−0.4, 0.4) 
+
+U = 4 .303 ϵy − 0.031 
+
+Z = 4 .380 ϵz − 0.007 
+
+T = binarize 0.5(−0.105 z + 0 .104 u + ϵt)
+
+Y = −1.818 ∗ T − 0.108 ∗ U + 1 .047 ∗ ϵy + 0 .906 
+
+14 TabPFN-CFM 0
+
+> 25
+> 50
+> 75
+> 100
+> 125
+> 150
+> Step (Thousands)
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Prediction Loss
+
+Prediction validation loss 
+
+> Our model
+> Base model 0
+> 25
+> 50
+> 75
+> 100
+> 125
+> 150
+> Step (Thousands)
+> 0.26
+> 0.28
+> 0.30
+> 0.32
+> 0.34
+> 0.36
+> Adjacency Loss
+
+Adjacency validation loss 
+
+> Our model
+> Base model
+
+Figure 4. Loss curves comparing our and baseline architecture for 150k training steps, prediction loss (left), adjacency matrix loss (right). 
+
+where the binarize function returns 1 if the input is in the top 50 percent of the overall distribution and 0 otherwise. We draw a single sample from this SEM: 
+
+z = −0.187 
+
+u = 0 .421 
+
+t = 1 
+
+y = −0.568 
+
+Now, we identify the exact distribution assuming everything is observed, for observational, interventional, and counterfactual queries. The observational distribution of y is 
+
+Y = −0.957 + 1 .047 ∗ ϵy ,
+
+the interventional distribution with do (T = 0) is 
+
+Y = 0 .861 + 1 .047 ∗ ϵy
+
+and the counterfactual distribution, which assumes y is observed, is 
+
+Y = 1 .250 
+
+since ϵy = 0 .372 can be determined by the observation of y, which allows for the exact counterfactual value to be computed with no uncertainty. 
+
+G.2. Nonlinear SEM 
+
+A more complex nonlinear SEM is used to test the model. The graph structure is fixed as Z → T → V → Y, U → V, U →
+
+W → Y where U is unobserved. The graph contains latent variables and covariates that are descendants of T . The SEM equations are drawn from our nonlinear prior distribution. Since the exact posterior for interventional and observational distributions is intractable, we compare the model predictions to a single sample drawn from the true distribution. Results are shown for n = 512 . Figure 6 shows the model predictions align well with the samples, even without the graph structure. Giving the graph structure improves predictions. Table 11 shows the true and predicted adjacency matrices. The predicted 15 TabPFN-CFM 2 1 0 1 2        
+
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> Probability Density
+> Observational predictions
+> Exact
+> Fully observed
+> Hidden U 21012
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Probability Density
+> Interventional predictions
+> Exact
+> Fully observed
+> Hidden U 21012
+> y
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> Probability Density
+> Counterfactual predictions
+> Exact
+> Fully observed
+> Hidden U
+
+Figure 5. Interventional (left), Observational (center), and Counterfactual (right) distributions. Exact solutions are in blue, model predictions in orange for when U is observed, and in green when U is unobserved. Model is given the graph structure. 
+
+adjacency matrix generally matches the true adjacency matrix, though there is some uncertainty in the children of T
+
+likely due to V, W, Y all being correlated. In Figure 7, we show the predicted distribution shifts closer towards the true counterfactual as n increases (without G). For small n, the counterfactual is biased towards the observed y∗, which vanishes as n increases and the model is able to learn the underlying SEM better. 2 1 0 1 2        
+
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Probability Density
+> Observational predictions
+> Sample
+> With G
+> Without G 21012
+> y
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Probability Density
+> Interventional predictions
+> Sample
+> With G
+> Without G 21012
+> y
+> 0.0
+> 0.6
+> 1.2
+> 1.8
+> 2.4
+> 3.0
+> Probability Density
+> Counterfactual predictions
+> Exact
+> With G
+> Without G
+
+Figure 6. Interventional (left), Observational (center), and Counterfactual (right) distributions. Predictions are compared with and without the true graph structure G. The Observational and Interventional predictions are compared to a single sample drawn from the true distribution, while the Counterfactual predictions are compared to the true counterfactual value. 
+
+## H. OOD data generation 
+
+We test our model on datasets drawn using random Fourier functions as nonlinearities. This has been used as part of the prior in other works, but our models are not trained on these functions, so they are OOD. The distribution of SEM functions is constructed as follows. First, parameters are sampled, 
+
+w ∼ U [0 .1, 0.5] (70) 
+
+c ∼ U [1 .41 , 5.65] (71) 
+
+b ∼ U [−0.5, 0.5] (72) 
+
+Wi,j ∼ Cauchy (0 , w ) (73) 
+
+ϕi ∼ N (0 , 2π) (74) 
+
+ki ∼ N (0 , c (nin )−0.5). (75) 16 TabPFN-CFM 2 1 0 1 2
+
+# y
+
+# 0.0 
+
+# 0.4 
+
+# 0.8 
+
+# 1.2 
+
+# 1.6 
+
+# 2.0 
+
+> Probability Density
+
+# Counterfactual predictions 
+
+# Exact 
+
+# n_fit=32 
+
+# n_fit=128 
+
+# n_fit=512 
+
+# n_fit=1024 
+
+Figure 7. Counterfactual distribution predictions for the nonlinear SEM with different Dfit sample sizes. 
+
+17 TabPFN-CFM  
+
+> Table 11. True and predicted adjacency matrices for the nonlinear SEM experiment. Left: True adjacency matrix. Right: Predicted adjacency matrix (values represent predicted edge probabilities).
+
+T Z V W YT 0 0 1 0 0
+
+Z 1 0 0 0 0
+
+V 0 0 0 0 1
+
+W 0 0 0 0 1
+
+Y 0 0 0 0 0
+
+T Z V W YT 0.000 0.002 0.992 0.938 0.552 
+
+Z 0.982 0.000 0.318 0.522 0.391 
+
+V 0.000 0.000 0.000 0.597 0.758 
+
+W 0.006 0.005 0.573 0.000 0.871 
+
+Y 0.000 0.000 0.001 0.005 0.000     
+
+> Table 12. Predictions on in distribution SEMs with n= 1024 fit samples, compared by mean squared error ( ↓). The baseline methods are unable to make counterfactual predictions.
+
+Model Obs. Int. Count. S-learner 0.430 0.797 -T-learner 0.434 0.846 -X-learner 0.434 0.846 -DR-learner 0.431 0.825 -Do-PFN 0.670 0.941 -TabPFN-CFM 0.433 0.578 0.247 TabPFN-CFM W/Graph 0.433 0.551 0.215 The output of each node is 
+
+y = b +
+
+> 32
+
+X
+
+> i=1
+
+ki cos  (xW ⊤)i + ϕi
+
+ (76) where x is a concatenation of the node’s parent values and noise variables, and parameters W, k, ϕ are randomly sampled frequency, magnitude and phase for each of the 32 coefficients. This process generates random functions that exhibit non-trivial nonlinear behaviors over a range of frequencies.     
+
+> Table 13. Structural predictions on in distribution SEMs with n= 1024 fit samples, evaluated on predicted adjacency matrix, ancestral matrix and confounding matrix. Main values tracks the AUROC ( ↑), with accuracy ( ↑)in brackets.
+
+Model Adjacency Ancestral Confounding FCI 0.533 (0.89) 0.536 (0.81) 0.54 (0.90) GES 0.672 (0.81) 0.657 (0.60) -LiNGAM 0.568 (0.78) 0.540 (0.70) -PC 0.651 (0.84) 0.632 (0.46) -AVICI 0.703 (0.89) 0.682 (0.82) -TabPFN-CFM 0.902 (0.91) 0.922 (0.88) 0.877 (0.94) 18 TabPFN-CFM  
+
+> Table 14. Predictions on in distribution SEMs with varying fit samples (second header), compared by mean squared error ( ↓). The baseline methods are unable to make counterfactual predictions.
+
+Observational Interventional Counterfactual Model 32 256 1024 32 256 1024 32 256 1024 S-learner 0.591 0.457 0.430 0.942 0.797 0.797 - - -T-learner 0.645 0.466 0.434 1.209 0.852 0.846 - - -X-learner 0.645 0.466 0.434 1.209 0.852 0.846 - - -DR-Learner 0.645 0.461 0.431 0.987 0.807 0.825 - - -Do-PFN 1.508 0.796 0.670 2.322 1.080 0.941 - - -TabPFN-CFM 0.616 0.460 0.433 0.804 0.619 0.578 0.400 0.276 0.247 TabPFN-CFM With Graph 0.616 0.460 0.433 0.769 0.583 0.551 0.355 0.239 0.215  
+
+> Table 15. Structural predictions on in distribution SEMs with varying fit samples. Main values track AUROC ( ↑), with accuracy ( ↑) in brackets.
+
+Adjacency Matrix Ancestral Matrix Model 32 256 1024 32 256 1024 FCI 0.523 (0.89) 0.532 (0.89) 0.533 (0.89) 0.516 (0.82) 0.521 (0.81) 0.536 (0.81) GES 0.585 (0.82) 0.637 (0.82) 0.672 (0.81) 0.616 (0.67) 0.651 (0.63) 0.657 (0.60) LiNGAM 0.530 (0.80) 0.556 (0.79) 0.568 (0.78) 0.506 (0.72) 0.524 (0.71) 0.540 (0.70) PC 0.587 (0.87) 0.632 (0.86) 0.651 (0.84) 0.580 (0.78) 0.637 (0.56) 0.632 (0.46) AVICI 0.611 (0.88) 0.701 (0.89) 0.703 (0.89) 0.572 (0.80) 0.683 (0.81) 0.682 (0.82) TabPFN-CFM 0.774 (0.89) 0.870 (0.90) 0.902 (0.91) 0.783 (0.82) 0.887 (0.86) 0.922 (0.88) Confounding Matrix Model 32 256 1024 FCI 0.533 (0.92) 0.546 (0.91) 0.540 (0.90) GES - - -LiNGAM - - -PC - - -AVICI - - -TabPFN-CFM 0.806 (0.94) 0.858 (0.94) 0.877 (0.94)  
+
+> Table 16. Predictions on out of distribution SEMs with varying fit samples (second header), compared by mean squared error ( ↓). The baseline methods are unable to make counterfactual predictions.
+
+Observational Interventional Counterfactual Model 32 256 1024 32 256 1024 32 256 1024 S-learner 0.811 0.623 0.565 1.084 0.896 0.888 - - -T-learner 0.864 0.642 0.574 1.283 0.949 0.909 - - -X-learner 0.863 0.462 0.574 1.283 0.949 0.909 - - -DR-Learner 0.850 0.648 0.577 1.104 0.896 0.885 - - -Do-PFN 1.336 0.814 0.782 2.599 1.006 0.966 - - -TabPFN-CFM 0.803 0.600 0.537 1.010 0.802 0.765 0.809 0.654 0.607 TabPFN-CFM With Graph 0.803 0.600 0.538 0.991 0.778 0.739 0.766 0.616 0.572 19 TabPFN-CFM  
+
+> Table 17. Structural predictions on synthetic OOD SEMs with varying fit samples. Main values track AUROC ( ↑), with accuracy ( ↑) in brackets.
+
+Adjacency Matrix Ancestral Matrix Model 32 256 1024 32 256 1024 FCI 0.517 (0.88) 0.524 (0.88) 0.533 (0.88) 0.512 (0.82) 0.515 (0.81) 0.523 (0.81) GES 0.550 (0.83) 0.609 (0.83) 0.654 (0.81) 0.554 (0.73) 0.616 (0.67) 0.654 (0.60) LiNGAMICA 0.516 (0.81) 0.544 (0.81) 0.558 (0.78) 0.501 (0.74) 0.520 (0.73) 0.524 (0.70) PC 0.587 (0.87) 0.656 (0.87) 0.685 (0.86) 0.578 (0.78) 0.628 (0.62) 0.639 (0.55) AVICI 0.618 (0.88) 0.637 (0.89) 0.623 (0.89) 0.593 (0.81) 0.619 (0.82) 0.596 (0.82) TabPFN-CFM 0.716 (0.89) 0.837 (0.90) 0.889 (0.91) 0.712 (0.83) 0.848 (0.85) 0.902 (0.88) Confounding Matrix Model 32 256 1024 FCI 0.532 (0.90) 0.552 (0.89) 0.563 (0.87) GES - - -LiNGAMICA - - -PC - - -AVICI - - -TabPFN-CFM 0.757 (0.92) 0.807 (0.93) 0.828 (0.93) 20
