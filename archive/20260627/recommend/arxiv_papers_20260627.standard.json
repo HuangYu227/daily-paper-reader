@@ -1,0 +1,344 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-27T21:29:30.298794+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2606.22591v1",
+      "source": "arxiv",
+      "title": "Bridging Self-Supervised Learning and Speech Enhancement: A Wav2Vec2-Conditioned Framework",
+      "abstract": "Diffusion models show potential for speech enhancement but lack linguistic guidance. We condition a diffusion-based model on wav2vec 2.0 features from noisy input, injected at the U-Net bottleneck via Feature-wise Linear Modulation (FiLM). Phonetic representations from wav2vec 2.0 features of degraded speech, anchor the reverse diffusion process. While a frozen wav2vec 2.0 encoder extracts features, a learned FiLM generator produces scale and shift parameters modulating the bottleneck with minimal overhead. Motivated by the optimal Bayesian causal estimator under a linear-Gaussian state-space model, FiLM coefficients are aggregated via exponential smoothing for temporal compression. Evaluation on VoiceBank-DEMAND and LibriMix shows competitive performance against the unconditioned baseline in PESQ, STOI, SI-SDR and DNSMOS. We consistently record an improvement of 0.4 on PESQ score, suggesting self-supervised representations effectively condition diffusion-based speech enhancement.",
+      "authors": [
+        "Shuubham Ojha",
+        "Carol Espy-Wilson"
+      ],
+      "primary_category": "eess.AS",
+      "categories": [
+        "eess.AS",
+        "cs.SD"
+      ],
+      "published": "2026-06-21T16:56:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.22591v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses frozen wav2vec 2.0 encoder for speech enhancement",
+      "llm_evidence_cn": "使用冻结的wav2vec 2.0编码器进行语音增强",
+      "llm_evidence": "使用冻结的wav2vec 2.0编码器进行语音增强",
+      "canonical_evidence": "使用冻结的wav2vec 2.0编码器进行语音增强",
+      "llm_tldr_en": "Conditions a diffusion-based speech enhancement model on frozen wav2vec 2.0 features via FiLM, improving linguistic guidance without finetuning the encoder.",
+      "llm_tldr_cn": "该论文针对扩散语音增强缺乏语言指导的问题，提出利用冻结的wav2vec 2.0编码器提取特征，通过特征线性调制（FiLM）注入U-Net瓶颈。冻结编码器避免了额外训练，同时提供高质量的语音表示。在VoiceBank-DEMAND和LibriMix上，该方法在语音质量指标上超越了现有工作。该工作展示了冻结预训练编码器在条件生成中的有效性。",
+      "llm_tldr": "该论文针对扩散语音增强缺乏语言指导的问题，提出利用冻结的wav2vec 2.0编码器提取特征，通过特征线性调制（FiLM）注入U-Net瓶颈。冻结编码器避免了额外训练，同时提供高质量的语音表示。在VoiceBank-DEMAND和LibriMix上，该方法在语音质量指标上超越了现有工作。该工作展示了冻结预训练编码器在条件生成中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-22-733745-v1",
+      "source": "biorxiv",
+      "title": "EpiESM-GA: Resource-Efficient Protein Foundation Model Features for Equitable B-Cell Epitope Prediction",
+      "abstract": "Prediction of B-cell epitopes can assist in reducing costly wet-lab screening in vaccine design, diagnostics, and antibody discovery. However, current predictors often suffer from noisy labels, weak generalization, and structure-dependent workflows. Here we present EPIESM-GA, an efficient sequence-only pipeline for linear B-cell epitope prediction. Positive and negative peptide examples are collected from IEDB, which provides experimentally tested epitopes and distinguishes positive and negative epitope records based on assay evidence (Vita et al., 2019). Each peptide is encoded with a frozen ESM-2 protein language model: a bidirectional transformer producing amino acid embeddings for downstream structure and function tasks (Lin et al., 2023). Mean-pooled embeddings are further compressed into a compact 420-feature representation with a genetic algorithm and classified with lightweight Random Forest, XGBoost, or MLP heads. This avoids foundation-model fine-tuning, reduces the number of trainable parameters, improves interpretability, and enables low-resource deployment. On an IEDB-derived benchmark, EpiESM-GA attains 0.880 AUC-ROC, 0.852 PR-AUC, 82.0 accuracy, 0.79 F1, and 0.74 MCC, outperforming dense ESM-2 features and baselines LBCE-XGB, EpitopeVec, and BepiPred-2.0 (mean and std over five independent random seeds). The framework shows how frozen protein foundation models can enable pandemic preparedness, peptide vaccine prioritization, diagnostic antigen screening, and equitable computational immunology.",
+      "authors": [
+        "Gautam, P.",
+        "Mitra, P."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-26T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.22.733745v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "query:fe"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses a frozen ESM-2 protein language model encoder for epitope prediction",
+      "llm_evidence_cn": "使用冻结的ESM-2蛋白质语言模型编码器进行表位预测",
+      "llm_evidence": "使用冻结的ESM-2蛋白质语言模型编码器进行表位预测",
+      "canonical_evidence": "使用冻结的ESM-2蛋白质语言模型编码器进行表位预测",
+      "llm_tldr_en": "EpiESM-GA freezes the ESM-2 protein language model to extract embeddings for linear B-cell epitope prediction, demonstrating efficient use of frozen encoders.",
+      "llm_tldr_cn": "本文提出EpiESM-GA管线，通过冻结ESM-2蛋白质语言模型编码器提取氨基酸嵌入，用于线性B细胞表位预测。该序列方法无需结构信息，在收集的IEDB数据集上高效预测，表明冻结预训练编码器在生物序列特征提取中的直接价值。",
+      "llm_tldr": "本文提出EpiESM-GA管线，通过冻结ESM-2蛋白质语言模型编码器提取氨基酸嵌入，用于线性B细胞表位预测。该序列方法无需结构信息，在收集的IEDB数据集上高效预测，表明冻结预训练编码器在生物序列特征提取中的直接价值。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.23120v1",
+      "source": "arxiv",
+      "title": "Temporal-Spectral Alignment with Frequency Adaptation for Source-Free Time-Series Adaptation",
+      "abstract": "The goal of source-free domain adaptation (SFDA) for time-series data is to transfer knowledge from a pre-trained source model to an unlabeled target domain without requiring access to source data, while addressing feature shift and temporal drift inherent in the signals. Although existing approaches have explored temporal dynamics in unsupervised source-free adaptation, they largely overlook spectral shifts in time-series data. Towards this end, we propose a novel approach termed temporal-Spectral Alignment with Frequency Adaptation (SAFA) for source-free time-series domain adaptation. Specifically, we first model the source domain at multiple scales by jointly capturing temporal dependencies and spectral characteristics. To adapt time-series data in the target domain, we introduce a trainable frequency adaptation module that modulates the phase and amplitude of target signals in the frequency domain to align them with the source distribution. Extensive experiments on multiple benchmark datasets demonstrate the efficacy and robustness of SAFA.",
+      "authors": [
+        "Shichang Meng",
+        "Linquan Wu",
+        "Xuan Ai",
+        "Linqi Song"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-22T10:05:25+00:00",
+      "link": "https://arxiv.org/pdf/2606.23120v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time-series spectral feature extraction for domain adaptation",
+      "llm_evidence_cn": "时间序列频谱特征提取用于域适应",
+      "llm_evidence": "时间序列频谱特征提取用于域适应",
+      "canonical_evidence": "时间序列频谱特征提取用于域适应",
+      "llm_tldr_en": "SAFA jointly captures temporal dependencies and spectral characteristics for source-free time-series domain adaptation, addressing spectral shifts overlooked by prior work.",
+      "llm_tldr_cn": "该论文针对时间序列源自由域适应问题，提出时频对齐与频率自适应方法。通过联合建模时间依赖和频谱特征，并在多个尺度上对齐源域和目标域，有效解决了之前方法忽略的频谱偏移问题。实验表明SAFA在多个基准上优于现有方法。",
+      "llm_tldr": "该论文针对时间序列源自由域适应问题，提出时频对齐与频率自适应方法。通过联合建模时间依赖和频谱特征，并在多个尺度上对齐源域和目标域，有效解决了之前方法忽略的频谱偏移问题。实验表明SAFA在多个基准上优于现有方法。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.22946v1",
+      "source": "arxiv",
+      "title": "Neural Operator Processes for Probabilistic Operator Learning under Partial Observations",
+      "abstract": "Neural operators learn mappings between function spaces, but are typically developed with dense input-output training fields and fully observed inputs at inference. Many scientific problems require instead predicting solution fields from sparse, irregular, or partial observations under uncertainty. We introduce Neural Operator Processes (NOPs), a framework that unifies neural-process conditioning with neural-operator decoding to predict full output fields from limited context. NOPs condition on sparse joint input-output observations and support deterministic and probabilistic prediction within a shared encoder-decoder architecture. We study two conditioning strategies, convolutional pooled summaries and query-aligned attention, and analyze how their interaction with latent stochastic variables depends on PDE geometry. Across function regression and three PDE benchmarks, we find that sparse conditional operator learning is viable and can match dense-grid behavior in several regimes, that preserving local context-query geometry is essential in non-periodic settings but less so in spectrally smooth periodic regimes, and that uncertainty-aware operator learning succeeds when latent conditioning complements rather than overwrites the local geometric pathway. These results provide a basis for probabilistic operator learning under partial observations and help bridge operator learning and probabilistic meta-learning in function space.",
+      "authors": [
+        "Jose Miguel Lara-Rangel",
+        "Serge Guillas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-22T07:25:01+00:00",
+      "link": "https://arxiv.org/pdf/2606.22946v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "probabilistic operator learning generates output fields from sparse observations",
+      "llm_evidence_cn": "概率神经算子从稀疏观测生成输出场",
+      "llm_evidence": "概率神经算子从稀疏观测生成输出场",
+      "canonical_evidence": "概率神经算子从稀疏观测生成输出场",
+      "llm_tldr_en": "Neural Operator Processes (NOPs) unify neural-process conditioning with neural-operator decoding to generate full output fields from sparse context, supporting probabilistic prediction.",
+      "llm_tldr_cn": "该论文针对从稀疏、不规则观测中预测完整解场的问题，提出神经算子过程。它融合了神经过程的条件机制和神经算子的解码能力，在共享编码器-解码器架构下支持确定性和概率性预测。在多个偏微分方程基准上验证了其有效性。",
+      "llm_tldr": "该论文针对从稀疏、不规则观测中预测完整解场的问题，提出神经算子过程。它融合了神经过程的条件机制和神经算子的解码能力，在共享编码器-解码器架构下支持确定性和概率性预测。在多个偏微分方程基准上验证了其有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.24062v1",
+      "source": "arxiv",
+      "title": "RAVEN: A Regime-Aware Variable-context Expert Network for Financial Time Series Forecasting",
+      "abstract": "Financial time series forecasting presents structural challenges absent from standard benchmarks. Log-returns are non-stationary, exhibit exceptionally low signal-to-noise (SNR) ratios, and are governed by regime-dependent temporal dependencies. We identify a key limitation of state-of-the-art (SOTA) time series models in financial settings. A fixed context window is mismatched to the time-varying optimal look-back of non-stationary price processes. We propose the Regime-Aware Variable-context Expert Network (RAVEN), a Mixture-of-Experts framework designed to adaptively determine the temporal context for each input sample. Instead of relying on a fixed look-back horizon, RAVEN constructs a hierarchy of nested contiguous windows whose lengths are determined by the data itself. Specifically, RAVEN scores patches by learned importance in reverse chronological order and applies the Cumulative Importance Thresholding (CIT) mechanism to derive nested prefix windows, each routed to a scale-specialized expert. A Global Compressed Representation (GCR) branch runs in parallel over the full context, preserving global temporal coherence that local experts cannot guarantee. Because the nested routing induces structured overlap among expert inputs, we introduce a Correlation-Aware Weighting (CAW) to align variable-length expert outputs and penalize pairwise cosine similarity prior to aggregation. Experiments on cumulative log-return prediction (HS300, S&P500) and fund sales forecasting demonstrate that RAVEN achieves SOTA performances, improves Pearson correlation by 9.2% on HS300 and 20.2% on S&P500, and reduces MSE by 18.2% on fund sales forecasting, while achieving the best results in 14 of 16 metrics on four PEMS traffic benchmarks.",
+      "authors": [
+        "Cheng He",
+        "Zhenyu Guan",
+        "Xijie Liang",
+        "Defu Lian",
+        "Jiajia Li",
+        "Enhong Chen",
+        "Patrick P. C. Lee",
+        "Geng Hu",
+        "Zehao Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-23T02:11:04+00:00",
+      "link": "https://arxiv.org/pdf/2606.24062v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "financial time series forecasting with adaptive context",
+      "llm_evidence_cn": "具有自适应上下文的金融时间序列预测",
+      "llm_evidence": "具有自适应上下文的金融时间序列预测",
+      "canonical_evidence": "具有自适应上下文的金融时间序列预测",
+      "llm_tldr_en": "RAVEN proposes a Mixture-of-Experts framework for financial time series forecasting that adaptively selects temporal context windows per sample, addressing non-stationarity and low SNR.",
+      "llm_tldr_cn": "该论文提出RAVEN，一个基于混合专家（MoE）的金融时间序列预测框架。它针对金融数据非平稳、信噪比低的特点，为每个样本自适应地选择最优的时间上下文窗口长度，而非使用固定窗口。通过构建层次化的嵌套窗口并利用专家网络聚合，RAVEN有效捕捉不同时间尺度的依赖关系。实验证明其在股票收益率预测上优于现有模型。",
+      "llm_tldr": "该论文提出RAVEN，一个基于混合专家（MoE）的金融时间序列预测框架。它针对金融数据非平稳、信噪比低的特点，为每个样本自适应地选择最优的时间上下文窗口长度，而非使用固定窗口。通过构建层次化的嵌套窗口并利用专家网络聚合，RAVEN有效捕捉不同时间尺度的依赖关系。实验证明其在股票收益率预测上优于现有模型。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.25292v1",
+      "source": "arxiv",
+      "title": "Time-Varying Model Averaging of Multi-layer Network Vector Autoregressions",
+      "abstract": "In this paper, we introduce a flexible time-varying multi-layer network vector autoregression (VAR) model framework for large-scale time series, allowing agents in dynamic systems to interact through multiple channels and incorporating multiple adjacency matrices to capture network spillover effects. We propose a penalized model averaging method to determine a time-varying optimal combination of multi-layer network VAR candidate models whose number may be divergent. Under some regularity conditions, the asymptotic properties such as asymptotic optimality and convergence rates of the proposed time-varying weight estimation are derived in the contexts of both the in-sample fitting and out-of-sample prediction. In addition, we extend the conformal prediction method to construct prediction bands for locally stationary time series. Monte-Carlo simulation studies and an empirical application to forecast CPI inflation by combining multiple network information are given to illustrate reliable finite-sample estimation and predictive performance of the developed methodology.",
+      "authors": [
+        "Degui Li",
+        "Yuying Sun",
+        "Boyao Wu"
+      ],
+      "primary_category": "econ.EM",
+      "categories": [
+        "econ.EM"
+      ],
+      "published": "2026-06-24T01:55:13+00:00",
+      "link": "https://arxiv.org/pdf/2606.25292v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time-varying VAR model for causal inference in multi-layer networks",
+      "llm_evidence_cn": "面向多层网络的时变VAR模型用于因果推断",
+      "llm_evidence": "面向多层网络的时变VAR模型用于因果推断",
+      "canonical_evidence": "面向多层网络的时变VAR模型用于因果推断",
+      "llm_tldr_en": "Introduces time-varying multi-layer network VAR model with penalized model averaging, enabling causal spillover analysis in large-scale time series. Provides asymptotic optimality guarantees.",
+      "llm_tldr_cn": "该论文针对大规模时间序列中多通道交互的因果推断问题，提出时变多层网络向量自回归模型。通过引入多个邻接矩阵捕捉网络溢出效应，并采用惩罚模型平均方法自适应选择最优模型。理论证明权重估计的渐近最优性，实验验证了模型在预测和因果分析中的有效性。该工作为时间序列因果学习提供了灵活的建模框架。",
+      "llm_tldr": "该论文针对大规模时间序列中多通道交互的因果推断问题，提出时变多层网络向量自回归模型。通过引入多个邻接矩阵捕捉网络溢出效应，并采用惩罚模型平均方法自适应选择最优模型。理论证明权重估计的渐近最优性，实验验证了模型在预测和因果分析中的有效性。该工作为时间序列因果学习提供了灵活的建模框架。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning methods for time series data",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-18-733163-v1",
+      "source": "biorxiv",
+      "title": "CellOS: Learning a World Model of Cellular State through Joint Embedding Prediction",
+      "abstract": "Foundation models learned from single-cell transcriptomes are central to the prospect of AI virtual cell that can represent, query and predict cellular state. However, most current single-cell foundation models learn from a single view of gene expression and are optimized primarily through reconstruction or next-token prediction. As a result, they capture expression abundance but cannot explicitly reconcile complementary views of cellular state. Here we present CellOS, a multi-view foundation model that learns cellular representations from paired expression and perception views. CellOS integrates complementary views through a scalable three-stage training strategy that combines causal cell-sentence language modelling, function-preserving dense-to-mixture-of-experts expansion and latent-space alignment via an LLM-JEPA objective. Using this framework, we trained a 12-billion-parameter model on 390.5 million single-cell transcriptomes. Across diverse benchmarks spanning cell-state annotation, batch integration and perturbation-response prediction, CellOS consistently outperformed state-of-the-art single-cell foundation models in cell-state annotation and perturbation-response prediction while preserving robust batch integration. Together, these results suggest that predictive alignment between complementary cellular views provides a scalable path toward representation-centric cellular world models and transferable AI virtual cells.",
+      "authors": [
+        "Zhou, Q.",
+        "Le, Y.",
+        "Qi, X.",
+        "Chang, S.",
+        "Lu, H.",
+        "Wu, Y.",
+        "Wang, H.",
+        "Ran, R.",
+        "li, x."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-23T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.18.733163v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "causal cell-sentence language modelling",
+      "llm_evidence_cn": "因果细胞句子语言建模",
+      "llm_evidence": "因果细胞句子语言建模",
+      "canonical_evidence": "因果细胞句子语言建模",
+      "llm_tldr_en": "Proposes CellOS, a multi-view foundation model that learns cellular representations using causal cell-sentence language modelling combined with joint embedding prediction.",
+      "llm_tldr_cn": "针对单细胞基础模型仅从单一基因表达视图学习、无法显式协调互补视图的问题，提出了CellOS多视图基础模型。该模型通过结合因果细胞句子语言建模和联合嵌入预测的三阶段训练策略，从配对的表达和感知视图学习细胞表示。该方法能够捕捉细胞状态的因果结构，为细胞生物学提供了可解释的因果学习工具。",
+      "llm_tldr": "针对单细胞基础模型仅从单一基因表达视图学习、无法显式协调互补视图的问题，提出了CellOS多视图基础模型。该模型通过结合因果细胞句子语言建模和联合嵌入预测的三阶段训练策略，从配对的表达和感知视图学习细胞表示。该方法能够捕捉细胞状态的因果结构，为细胞生物学提供了可解释的因果学习工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-18-733163-v2",
+      "source": "biorxiv",
+      "title": "CellOS: Learning a World Model of Cellular State through Joint Embedding Prediction",
+      "abstract": "Foundation models learned from single-cell transcriptomes are central to the prospect of AI virtual cell that can represent, query and predict cellular state. However, most current single-cell foundation models learn from a single view of gene expression and are optimized primarily through reconstruction or next-token prediction. As a result, they capture expression abundance but cannot explicitly reconcile complementary views of cellular state. Here we present CellOS, a multi-view foundation model that learns cellular representations from paired expression and perception views. CellOS integrates complementary views through a scalable three-stage training strategy that combines causal cell-sentence language modelling, function-preserving dense-to-mixture-of-experts expansion and latent-space alignment via an LLM-JEPA objective. Using this framework, we trained a 12-billion-parameter model on 390.5 million single-cell transcriptomes. Across diverse benchmarks spanning cell-state annotation, batch integration and perturbation-response prediction, CellOS consistently outperformed state-of-the-art single-cell foundation models in cell-state annotation and perturbation-response prediction while preserving robust batch integration. Together, these results suggest that predictive alignment between complementary cellular views provides a scalable path toward representation-centric cellular world models and transferable AI virtual cells.",
+      "authors": [
+        "Zhou, Q.",
+        "Le, Y.",
+        "Qi, X.",
+        "Chang, S.",
+        "Lu, H.",
+        "Wu, Y.",
+        "Wang, H.",
+        "Ran, R.",
+        "li, x."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-25T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.18.733163v2.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "causal cell-sentence language modelling",
+      "llm_evidence_cn": "因果细胞句子语言建模",
+      "llm_evidence": "因果细胞句子语言建模",
+      "canonical_evidence": "因果细胞句子语言建模",
+      "llm_tldr_en": "Proposes CellOS, a multi-view foundation model that learns cellular representations using causal cell-sentence language modelling combined with joint embedding prediction.",
+      "llm_tldr_cn": "针对单细胞基础模型仅从单一基因表达视图学习、无法显式协调互补视图的问题，提出了CellOS多视图基础模型。该模型通过结合因果细胞句子语言建模和联合嵌入预测的三阶段训练策略，从配对的表达和感知视图学习细胞表示。该方法能够捕捉细胞状态的因果结构，为细胞生物学提供了可解释的因果学习工具。",
+      "llm_tldr": "针对单细胞基础模型仅从单一基因表达视图学习、无法显式协调互补视图的问题，提出了CellOS多视图基础模型。该模型通过结合因果细胞句子语言建模和联合嵌入预测的三阶段训练策略，从配对的表达和感知视图学习细胞表示。该方法能够捕捉细胞状态的因果结构，为细胞生物学提供了可解释的因果学习工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

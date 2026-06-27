@@ -1,0 +1,504 @@
+Title: RAVEN: A Regime-Aware Variable-context Expert Network for Financial Time Series Forecasting
+
+URL Source: https://arxiv.org/pdf/2606.24062v1
+
+Published Time: Wed, 24 Jun 2026 00:27:05 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# RAVEN: A Regime-Aware Variable-context Expert Network for Financial Time Series Forecasting 
+
+Cheng He 1,2, Zhenyu Guan 2, Xijie Liang 2, Defu Lian 1∗, Jiajia Li 3∗, Enhong Chen 1,Patrick P. C. Lee 4, Geng Hu 5, Zehao Chen 2
+
+> 1
+
+University of Science and Technology of China, China 2Shanghai Black Wing Asset Management Co., Ltd., China 
+
+> 3
+
+College of Sciences, Shanghai University, China 4The Chinese University of Hong Kong, China 
+
+> 5
+
+Qitan Technology Co., Ltd., China 
+
+Abstract —Financial time series forecasting presents structural challenges absent from standard benchmarks. Log-returns are non-stationary, exhibit exceptionally low signal-to-noise (SNR) ratios, and are governed by regime-dependent temporal dependencies. We identify a key limitation of state-of-the-art (SOTA) time series models in financial settings. A fixed context window is mismatched to the time-varying optimal look-back of non-stationary price processes. We propose the Regime-Aware Variable-context Expert Network (RAVEN), a Mixture-of-Experts framework designed to adaptively determine the temporal context for each input sample. Instead of relying on a fixed look-back horizon, RAVEN constructs a hierarchy of nested contiguous windows whose lengths are determined by the data itself. Specifically, RAVEN scores patches by learned importance in reverse chronological order and applies the Cumulative Importance Thresholding (CIT) mechanism to derive nested prefix windows, each routed to a scale-specialized expert. A Global Compressed Representation (GCR) branch runs in parallel over the full context, preserving global temporal coherence that local experts cannot guarantee. Because the nested routing induces structured overlap among expert inputs, we introduce a Correlation-Aware Weighting (CAW) to align variable-length expert outputs and penalize pairwise cosine similarity prior to aggregation. Experiments on cumulative log-return prediction (HS300, S&P500) and fund sales forecasting demonstrate that RAVEN achieves SOTA performances, improves Pearson correlation by 9.2% on HS300 and 20.2% on S&P500, and reduces MSE by 18.2% on fund sales forecasting, while achieving the best results in 14 of 16 metrics on four PEMS traffic benchmarks. 
+
+Index Terms —Financial Time Series Forecasting, Mixture-of-Experts, Adaptive Context Selection, Non-stationary Financial Data 
+
+I. I NTRODUCTION 
+
+Financial time series forecasting is a cornerstone of quanti-tative investment, supporting tasks from risk management to automated trading. Unlike well-known benchmark datasets in the general time series domain, such as ETTh, ETTm, Weather, Electricity, or Traffic [37], which often exhibit clear periodic patterns and deterministic trends, financial data is noisy and non-stationary [23]. In this adversarial environment, predicting raw price levels Ct at time t is impractical: prices are not scale-invariant and cross-asset comparable, typically follow a random walk, and exhibit extremely high autocorrelation, leading to spurious regression and inflated in-sample performance. To capture meaningful predictive signals, existing approaches 
+
+*Corresponding authors 
+
+reformulate the problem as the regression of log-returns: 
+
+rt = ln (Ct /Ct−1) [13], [15]. This transformation shifts the modeling objective from tracking absolute values to capturing price innovations [15], the unpredictable stochastic components driven by the arrival of new market information. While log-returns are statistically more stable than raw prices, they still exhibit exceptionally low SNR and heavy-tailed distributions, making accurate regression a challenging task [13]. Historically, financial time-series analysis has been domi-nated by tree-based ensembles such as XGBoost [6] and Light-GBM [17], descendants of the gradient boosting framework [12]. They excel at modeling non-linear interactions over handcrafted technical features, but treat each forecast as a static tabular problem and ignore the inherent temporal topology of market regimes. Subsequent deep-learning architectures, from Multi-Layer Perceptron through Recurrent Neural Networks [10] to Long Short-Term Memory networks [16] and Gated Recurrent Unit [7], restore a notion of temporal memory through recur-rence and gating, yet remain biased toward recent observations and often fail to distinguish transient market noise from long-term structural regime shifts. Recently, Transformer-based models, from Informer [45], PatchTST [26], TimesNet [36], and iTransformer [22] to frequency-domain variants such as FredFormer [27], and WPMixer [25], have enhanced general time-series forecasting by leveraging attention to capture long-range dependencies. However, when applied to financial markets, these models inherit a structural bottleneck that is rarely examined: the reliance on a fixed-length historical context window L. In non-stationary financial environments, a static L creates an irreconcilable conflict: a short window lacks memory to span structural regime shifts, while a long window unavoidably mixes stale information from a prior regime into the current prediction as additive noise. Classical econometric models already hinted at the value of adaptive multi-horizon reasoning. The Heterogeneous Autoregressive model of realized volatility (HAR-RV) [8], originally introduced for volatility forecasting, captures long-memory structure by linearly aggregating daily, weekly, and monthly rolling averages, demonstrating that multiple fixed look-back horizons carry complementary temporal information that no single-horizon model can subsume. HAR-RV and its descendants, however, commit to a designer-fixed set of    
+
+> arXiv:2606.24062v1 [cs.LG] 23 Jun 2026 (a) HS300 constituent 600176.SS (daily log-returns, 2020–2024)
+> (b) PEMS03 traffic flow (5-min)
+> Figure 1: CWT scalograms for multi-scale analysis. Financial data (a) exhibits non-stationary energy distribution with no fixed periodicity, while traffic data (b) shows stable, periodic patterns.
+
+horizons and to a linear functional form; the complementary horizons themselves, and the optimal way to combine them, remain hand-crafted. More recent deep-learning multi-period research, e.g. MLF [42], extend this multi-period intuition with sophisticated attention mechanisms and serves as our most competitive alternative. Nevertheless, MLF still relies on pre-defined periods and equally distributed patches. Such static designs prevent it from adaptively perceiving the optimal context in dynamic markets. To empirically verify this claim, we apply the Continuous Wavelet Transform (CWT) as a multi-scale diagnostic: 
+
+Wf (a, b) = 1
+
+p|a| 
+
+> Z+∞
+> −∞
+
+f (t) ψ∗
+
+t − ba
+
+
+
+dt ,
+
+where scale a is inversely proportional to frequency and b
+
+denotes temporal position. Figure 1 visualizes the scalograms of two representative series. For the HS300 constituent 600176.SS (Figure 1a), energy concentration migrates unpredictably across scales within the five-year horizon. High-frequency components dominate in 2020, shift toward lower-frequency bands from 2021 to 2022, and return to high-frequency dominance by late 2023. No stable periodic structure persists at any scale. In contrast, the PEMS03 traffic series (Figure 1b) exhibits time-invariant energy bands at scales ranging from 200 to 260, reflecting a fixed daily periodicity that holds uniformly across the entire observation period. This divergence reveals that the dominant temporal scale governing predictive information in financial data is itself non-stationary. Thus, a fixed context win-dow mechanism introduces an inductive bias that is mismatched to the underlying data-generating process. To bridge this gap, we propose RAVEN (Regime-Aware Variable-context Expert Network), a novel MoE-based frame-work designed for adaptive context modeling in financial time series forecasting. The core of RAVEN lies in its learnable patch weighting and selection mechanism. Unlike static methods that adopt a single fixed context length, RAVEN dynamically evaluates the importance of each historical patch. It accumulates these scores in reverse chronological order against Cumulative Importance Thresholding (CIT) based thresholds, and generates a nested sequence of consecutive look-back windows. Each window is routed to a dedicated expert working at its corresponding temporal scale. All windows are anchored at the most recent patch, ensuring temporal coherence of positional attention within each expert. To ensure that local specialization does not come at the cost of global coherence, we introduce a Global Compressed Representation (GCR) branch that runs in parallel over the full context. It distills a holistic global view that complements the local experts’ selective, scale-specific processing. Furthermore, the nested routing topology creates structured overlap across expert inputs. To address this issue, we propose the shape-aligned fusion with Correlation-Aware Weighting (CAW) strategy. It decorrelates expert representations prior to aggregation and eliminates redundant noise, yielding reliable multi-resolution forecasts. Our main contributions are summarized as follows:  
+
+> •
+
+Dynamic Context Paradigm: We identify the critical limitations of static, fixed-length context windows in non-stationary financial environments and propose RAVEN. This framework adaptively adjusts the receptive field to time-varying market dynamics. It learns data-dependent look-back windows by accumulating patch importance in reverse order under CIT-based thresholds.  
+
+> •
+
+Dual-View Architecture: We design a dynamic MoE backbone augmented with a GCR branch. The architecture balances local specialization and global context modeling. Experts with distinct scales handle variable-length patches for fine-grained local perception. Meanwhile, the GCR branch captures holistic historical information to preserve global coherence.  
+
+> •
+
+Redundancy Mitigation Strategy: We introduce Shape-Aligned Fusion and CAW. By dynamically compress-ing and decorrelating heterogeneous expert outputs, this strategy explicitly filters noise from overlapping input segments, enabling efficient utilization of MoE parameters under the low SNR of financial time series.  
+
+> •
+
+Extensive Evaluation and Deployment progress: We conduct extensive evaluations on cross-market cumulative log-return prediction. Compared with SOTA baselines, RAVEN improves the Pearson correlation by 9.2% on HS300 and 20.2% on S&P500, and reduces MSE by 18.2% in fund sales forecasting. Cross-domain tests on four PEMS traffic datasets further verify its generalization ability, achieving best performance results across 14 out of 16 evaluated metrics. Under realistic backtest conditions, RAVEN-driven strategies outperform our production base-line by over 10% in cumulative returns, and the system is currently advancing through final online integration. 2Table I: Summary of notations.                                           
+
+> Notation Explanation / Description
+> DTotal dimension of the input channels
+> Lmax Maximum historical look-back window length
+> HForecast horizon for cumulative log return prediction
+> BBatch size
+> XtMarket state input matrix observed at time tCtAsset closing price at time trtOne-step log-return
+> y(H)
+> tThe H-period true cumulative log-return ˆy(H)
+> tThe H-period forecasted log-return
+> plen Fixed patch length
+> NTotal number of patches derived via ⌊Lmax /plen ⌋
+> dEmbedded feature dimension
+> EJoint patch embedding matrix
+> siRaw importance score assigned to the i-th embedded patch ˜siSoftmax-normalized patch importance
+> KTotal number of experts
+> τkThe k-th cumulative sum threshold
+> ΨiChronological reverse-cumulative patch importance score
+> GkMonotone patch index prefix subset to the k-th expert
+> ℓkDynamic selected patch number for expert khkVariable-length output hidden sequence
+> zkDimension-aligned representation vector
+> RExpert cosine similarity to evaluate representation overlap
+> rkAccumulated expert redundancy penalty score
+> αkRouting confidence of each expert
+> wkFinal adaptive gate weight
+> λLearnable redundancy penalty
+> zlocal Aggregated representation synthesized from local experts
+> zglobal Compressed holistic feature vector from the global branch
+> LMSE Log return forecasting loss utilizing mean squared error
+> Lent Router negative-entropy regularization penalty
+> Ldiv Expert representation diversity regularizer
+
+II. RAVEN D ESIGN 
+
+A. Problem Formulation 
+
+We consider the task of multi-horizon return forecasting from multivariate financial time series. Let xt ∈ RD denote the D-dimensional market state observed at time t, comprising standard market variables (e.g., OHLCV, bid-ask spread) and engineered factors. From the closing price Ct , we derive the one-step log-return: 
+
+rt = ln (Ct /Ct−1), (1) which encodes price innovations induced by the arrival of new market information [13], [15]. 
+
+Input. Given a maximum look-back length Lmax , an input instance at time t is defined as 
+
+Xt = [ xt−Lmax +1, . . . , xt ]⊤ ∈ RLmax ×D. (2) 
+
+Target. Given a forecast horizon H, the prediction target is the H-period cumulative log-return: 
+
+y(H) 
+
+> t
+
+=
+
+> H
+
+# ∑
+
+> h=1
+
+rt+h = ln (Ct+H /Ct ) ∈ R, (3) which corresponds to the realized holding-period return of a position entered at t and liquidated at t + H.
+
+Objective. The goal of RAVEN is to learn a mapping fθ :
+
+RLmax ×D → R, parameterized by θ , such that the prediction ˆy(H) 
+
+> t
+
+= fθ (Xt ) accurately approximates the true cumulative return (defined in Equation 3) over the out-of-sample test distribution [9], [35]. 
+
+B. Overall Architecture 
+
+Figure 2 illustrates the overall architecture of RAVEN. Given a look-back window X ∈ RLmax ×D, the model produces a scalar 
+
+H-period cumulative log-return forecast ˆy(H) 
+
+> t
+
+through three functionally distinct stages:  
+
+> •
+
+Preprocessing (§ II-C ) normalizes the input instances, pro-cesses each channel independently, and partitions the look-back window into an embedded patch sequence E =[e1, . . . , eN ] ∈ RN×d . 
+
+> •
+
+Dual-Branch Backbone (§ II-D ) consumes E through two parallel pathways. The local branch routes nested contiguous patch prefixes to K scale-specialized experts via a CIT-thresholded router. The global branch distills the entire look-back window into a single compressed representation.  
+
+> •
+
+Output Projection (§ II-E ) aligns the variable-length expert outputs to a common dimensionality, aggregates them via a CAW scheme, fuses the result with the global representation, and projects to the scalar forecast through an MLP head. We elaborate on each module in the following sections. 
+
+C. Preprocessing 
+
+Instance normalization. We normalize each input instance to zero mean and unit variance over the temporal dimension of the look-back window. This removes sample-level distributional shift, a well-known obstacle in non-stationary financial series, while preserving the temporal structure of returns [18]. 
+
+Channel-independent processing. The normalized window 
+
+X ∈ RLmax ×D may contain heterogeneous channels, e.g., OHLCV bars, bid-ask spreads, engineered factors. Follow-ing [26], we process each channel independently through shared linear projections. This design prevents spurious information leakage across semantically distinct channels and allows the model to learn channel-specific temporal dynamics. 
+
+Patch partitioning. We segment the look-back window into 
+
+N = ⌊Lmax /plen ⌋ non-overlapping patches {P1, . . . , PN } [26] arranged in reverse chronological order (most recent patch first). Each patch Pi ∈ Rplen is linearly projected to a d-dimensional embedding and augmented with a sinusoidal positional encoding: 
+
+ei = PatchEmbed (Pi) + PE (i) ∈ Rd , i = 1, . . . , N. (4) The resulting sequence E = [ e1, . . . , eN ] ∈ RN×d serves as the shared input to both branches of the backbone. 
+
+D. Dual-Branch Backbone 
+
+The backbone comprises two parallel branches that jointly consume E: a local branch that performs dynamic, scale-aware MoE routing over nested patch prefixes, and a global branch 3Figure 2: Overview of RAVEN. The pipeline consists of three modules. Preprocess applies instance normalization, channel-independent processing, and patch partitioning to produce embedded patches E = [ e1, . . . , eN ]. Backbone operates via two parallel branches. (i) The local adaptive branch scores patch importance and accumulates scores in reverse chronological order against CIT-based thresholds, generating K            
+
+> nested contiguous look-back windows {Gk}. Each window is processed by a scale-specialized expert, and the variable-length outputs are shape-aligned via average pooling into fixed-dimensional vectors for aggregation into zlocal . (ii) The GCR branch captures holistic historical dependencies across the full sequence Evia a Self-Attention layer, then distills a global context vector zglobal through average pooling.
+> Output Projection concatenates [zlocal ;zglobal ]and projects them through an MLP head to output the final H-period cumulative log-return ˆy(H)
+> t. The nested routing topology introduces collinearity among experts, which is jointly suppressed by the CAW scheme and the expert diversity regularizer.
+
+that maintains a holistic compressed view of the full look-back window. We describe each branch in turn. 
+
+Local branch: Patch-weighted MoE. The local branch comprises five steps. (i) Patch importance scoring. A lightweight two-layer MLP assigns each embedded patch a scalar importance score si =
+
+φ (ei) for i ∈ { 1, . . . , N}, where φ (·) denotes the MLP scoring network with GeLU activation. These scores are then softmax-normalized over the sequence to yield a categorical distribution: ˜si = exp (si)
+
+∑Nj=1 exp (s j) , i = 1, . . . , N. (5) Intuitively, ˜si reflects the model’s learned belief about how informative patch i is for the downstream forecast. (ii) CIT-thresholded routing. Unlike conventional MoE de-signs that route individual tokens to experts [11], [30], our router accumulates ˜s from the most recent patch backward, construct-ing a reverse-chronological cumulative importance curve, and segments it at K ordered thresholds 0 < τ1 < τ2 < · · · < τK ≤ 1 :
+
+Gk =  i ∈ { 1, . . . , N} : Ψi ≤ τk , Ψi =
+
+> i
+
+# ∑
+
+> j=1
+
+˜s j. (6) where k = 1, . . . , K. By construction, G1 ⊆ G 2 ⊆ · · · ⊆ G K forms a monotone chain of contiguous patch prefixes with data-dependent cardinalities ℓk = |G k|, always anchored at the most recent patch. Because accumulation starts from the present and proceeds backward, each expert receives the ℓk most informative contiguous patches, a property critical for positional attention to remain temporally coherent. We set K=3 , and the thresholds 
+
+(τ1, τ2, τ3) = ( 0.3, 0.6, 0.9) by default. (iii) Scale-specialized experts. Each group Gk is processed by an independent three-layer encoder Encoder k:
+
+hk = Encoder k
+
+ {ei}i∈Gk
+
+ ∈ Rℓk×d . (7) Since G1 is the shortest (most recent) prefix and GK the longest, expert Encoder 1 naturally specializes in short-term dynamics while Encoder k captures longer-term regime-scale structure, intermediate experts span intermediate horizons. This consti-tutes a fundamentally different form of specialization from content-based MoE routing: RAVEN experts are differentiated by temporal scale, not by token content. Since Transformer encoders natively handle variable-length sequences, no padding is required within any expert. (iv) Shape-aligned pooling. To align the outputs from different scale-specialized experts into a unified space for downstream fusion, we apply a parameter-free Shape-aligned Pooling that averages over the patch dimension: 
+
+zk = AvgPool (hk) ∈ Rd , (8) 4where AvgPool (·) averages over the ℓk patch embeddings in 
+
+hk ∈ Rℓk×d , collapsing them into a fixed d-dimensional vector. This parameter-free design avoids overfitting risk and produces a uniform representation for the subsequent correlation-aware gate. (v) CAW_based expert aggregation. Because the expert groups are nested ( G1 ⊆ · · · ⊆ G K ), their representations {zk}
+
+are inherently correlated: longer-horizon experts operate on supersets of the inputs to shorter-horizon experts. A naive uniform or softmax gate would amplify this redundancy, which is particularly harmful under the characteristically low SNR of financial returns. To mitigate this, we compute the pairwise cosine similarity matrix R ∈ RK×K with entries 
+
+R jk = z⊤ 
+
+> j
+
+zk/(∥z j∥∥ zk∥), derive the per-expert positive redun-dancy score rk = ∑ j̸ =k max (R jk , 0), and modulate a raw routing confidence αk with an exponential penalty: 
+
+wk = αk exp (−λ rk)
+
+∑Kk′=1 αk′ exp (−λ rk′ ) , λ ≥ 0 (learnable) . (9) The local representation is then obtained as the weighted aggregate: 
+
+zlocal = ∑Kk=1 wk zk ∈ Rd . (10) 
+
+Global branch: GCR. To preserve a holistic macroeconomic view alongside fine-grained local experts, RAVEN incorporates a GCR module. It first captures comprehensive historical dependencies across the entire sequence of embedded patches 
+
+E ∈ RN×d via a Self-Attention layer, then compresses the attended representations into a single vector through average pooling: 
+
+Esa = Self-Attn (E), (11) 
+
+zglobal = AvgPool (Esa ) ∈ Rd , (12) where AvgPool (·) averages over the N patch positions in Esa ∈
+
+RN×d , yielding a unified global context vector. The global branch thus serves as an information-preserving complement to the local branch’s selective, scale-specialized view. 
+
+E. Output Projection 
+
+The final prediction head fuses the two complementary representations via concatenation and projects to the scalar forecast: ˆy(H) 
+
+> t
+
+= MLP  Concat (zlocal , zglobal ) ∈ R. (13) For multi-horizon forecasting, the output dimension of the MLP is extended to M, yielding one prediction ˆy(Hm) 
+
+> t
+
+per target horizon Hm.
+
+F. Training Objective 
+
+We optimize a composite loss that combines the primary regression objective with two auxiliary regularizers targeting the specific failure modes of scale-aware MoE routing under low SNR: 
+
+L = LMSE + λent Lent + λdiv Ldiv . (14) 
+
+Forecasting loss. Consistent with the regression target defined in Eq. (3) , the primary objective is the mean squared error between the predicted and realized H-period cumulative log-return: 
+
+LMSE = 1
+
+B
+
+> B
+
+# ∑
+
+> i=1
+
+  ˆy(H) 
+
+> i
+
+− y(H)
+
+> i
+
+2, (15) where B denotes the batch size. 
+
+Router entropy regularization. The CIT-thresholded router operates on a softmax-normalized patch-importance distribution ˜s. Without regularization, the softmax parameterization tends to amplify initial score differences, concentrating all probability mass on a few patches, typically the most recent ones. This router collapse causes the cumulative sum to reach all thresholds 
+
+{τk} within the first few patches, truncating every expert group into nearly identical short prefixes and degenerating the MoE toward a single-scale model. We counteract this with a negative-entropy penalty: 
+
+Lent =
+
+> N
+
+# ∑
+
+> i=1
+
+˜si log ˜ si, (16) which is minimized at the uniform distribution. A high-entropy routing distribution causes the cumulative importance curve to increase more gradually, yielding balanced prefix lengths across experts and enabling the intended short-, medium-, and long-horizon specialization. 
+
+Expert diversity regularization. The nested structure G1 ⊆· · · ⊆ G K means longer-horizon experts observe a strict superset of patches seen by shorter-horizon ones. Without explicit encouragement, experts may converge to similar representations (representation collapse), causing zlocal to degenerate toward a single expert’s output. We penalize the off-diagonal entries of the expert cosine-similarity matrix: 
+
+Ldiv = R − IK 2 
+
+> F
+
+,
+
+R jk = z⊤ 
+
+> j
+
+zk
+
+∥z j∥2∥zk∥2
+
+, (17) which drives expert representations toward pairwise orthogonal-ity. While the CAW (Eq. 9) down-weights redundant experts at inference time, Ldiv structurally prevents redundancy during training. The two mechanisms are complementary. 
+
+Complementary regularization. Lent and Ldiv address orthog-onal failure modes. The entropy term prevents routing collapse on the input side, ensuring every expert receives sufficiently rich context. The diversity term prevents representation collapse on the output side, ensuring experts produce non-redundant representations despite overlapping inputs. Their joint use is critical for stable training in the low-SNR financial regime (see ablation in §III-D). 
+
+G. System Deployment 
+
+Figure 3 illustrates the deployed system architecture, con-sisting of an offline development environment and an online production environment. 
+
+Offline environment. RAVEN is trained on historical price-volume data stored in a financial data lake. The trained model 5Figure 3: Production deployment pipeline of RAVEN in a quantitative trading system. The offline phase handles model training and back-testing validation on historical data. The online phase appends newly available market data after each close, generates return predictions via daily inference, optimizes portfolio allocations, and routes orders through pre-trade risk checks to execution venues. A production monitor triggers the next offline retraining cycle upon sustained performance drift. 
+
+then undergoes rigorous backtesting that incorporates portfolio optimization, risk constraints, and transaction cost modeling to validate out-of-sample performance. This offline cycle for model training is re-executed periodically, or when production monitoring signals significant performance degradation. 
+
+Online environment. Once deployed online, deployed fore-casting models operates on a daily inference cycle. After each market close, newly available data is appended to the streaming database and fed into models to generate next-period return predictions across the target tickers. Predictions are consumed by a portfolio optimization module that solves for target allocation weights subject to risk and turnover constraints. Optimized orders pass pre-trade risk checks at the trading console before routing to execution venues via broker bridges. A production monitor continuously tracks realized prediction accuracy and portfolio; sustained drift beyond predefined thresholds triggers the next offline retraining cycle. 
+
+Deployment Status and Impact. At present, the offline mod-eling and backtesting validation phases have been completed. Under identical and realistic backtest conditions, RAVEN-driven strategies successfully outperform our single production baseline by over 10% in cumulative returns. The system is currently advancing through the final stages of live production integration, with active engineering efforts focused on online strategy ensembling and live out-of-sample monitoring prior to full-scale capital allocation. III. E XPERIMENTS 
+
+We evaluate RAVEN on financial log-return prediction and general time series forecasting tasks to demonstrate the effectiveness of dynamic look-back selection and correlation-aware expert aggregation.                           
+
+> Table II: Dataset statistics. Ticker/Sensors denotes the number of stocks or funds in financial datasets or sensors in traffic datasets. Timepoints reports the total available data samples across all entities and time steps.
+> Domain Dataset Ticker/Sensors Timepoints Granularity Financial
+> HS300 892 18,836,466 1-Day S&P500 4694 104,692,416 1-Day Fund 306 647,892 1-Day
+> Traffic
+> PEMS03 358 9,382,464 5-Min PEMS04 307 15,649,632 5-Min PEMS07 883 24,921,792 5-Min PEMS08 170 9,106,560 5-Min
+
+A. Experimental Settings 
+
+Datasets. We conduct experiments on three categories of datasets. Table II summarizes the dataset statistics. (1) FinMultiTime [39]: A cross-market financial dataset containing daily price and volume data for 892 HS300 con-stituents and 4,694 S&P 500 constituents, spanning from 2009 to 2024. This dataset covers diverse market regimes, including bull markets, bear markets, and high-volatility crisis periods across both Chinese and US equity markets. (2) Fund [42]: Daily user transaction records for mutual fund subscriptions and redemptions on Alipay, spanning from January 2015 to January 2023. This dataset captures retail investor behavior dynamics and fund-level return patterns. (3) PEMS (03, 04, 07, 08) [14]: Four widely used traffic flow datasets collected from the California Department of Transportation Performance Measurement System (PeMS). Each dataset records aggregated traffic flow measurements from highway sensor networks at 5-minute intervals. These datasets exhibit strong temporal non-stationarity due to rush-hour patterns, weekday/weekend shifts, and seasonal variations, serving to validate the generalizability of RAVEN beyond financial domains. 
+
+Baselines. We compare against twelve representative methods spanning diverse architectural strategies for temporal modeling:  
+
+> •
+
+Static Patching models: PatchTST [26] operates on fixed uniform patches, while Patch-Concat and Patch_Ensemble extend it via naive concatenation and ensembling over different lengths.  
+
+> •
+
+Predefined Multi-period models: MLF [42] utilizes explic-itly predefined multi-period inputs combined with inter-period redundancy filtering.  
+
+> •
+
+Cross-variate interactions: iTransformer [22] and Cross-former [43] capture global inter-sensor dependencies through variate-as-token and cross-dimensional attention mechanisms.  
+
+> •
+
+Hierarchical Multi-resolution: PathFormer [5], Scale-former [29], and NHits [4] extract multi-scale representations internally through predefined hierarchical pathways, iterative refinement, or interpolation.  
+
+> •
+
+Frequency-domain transformations: TimesNet [36], FED-former [47], and FiLM [46] tackle temporal dynamics via 2D-variations and spectral frequency decompositions. 6All baselines are evaluated under identical data splits and preprocessing protocols for a fair comparison. 
+
+Implementation details. RAVEN uses K=3 experts with CIT-based thresholds (τ1, τ2, τ3) = ( 0.3, 0.6, 0.9), patch length plen =
+
+16 , and embedding dimension d = 128 . Each expert is a 3-layer encoder. We optimize with AdamW for 60 epochs using cosine annealing. Auxiliary loss weights are λent = 0.1 and 
+
+λdiv = 0.01 . All experiments run on a single NVIDIA A100 40G GPU. 
+
+Evaluation metrics. For HS300 and S&P500, we train on 2009– 2019 and evaluate on 2020–2024 via rolling out-of-sample prediction of H=10 day cumulative log-returns. We report three complementary metrics: (1) Pearson correlation (Corr) between predicted and realized returns, measuring directional accuracy; (2) Mean Squared Error (MSE) of normalized predictions, capturing magnitude fidelity; and (3) Information Coefficient Information Ratio (ICIR), defined as the mean of the cross-sectional IC divided by its standard deviation across rebalancing periods, quantifying the stability of the predictive signal. For per-year evaluation (Table III), all three metrics are computed within each calendar year. For the overall summary (Table IV), Corr and ICIR are computed over the entire 5-year test period (2020– 2024) to reflect long-horizon stability, while MSE is reported as the multi-year average. For Fund, we forecast fund sales at horizons H ∈ { 1, 5, 8, 10 } days and report MSE and Weighted Mean Absolute Percentage Error (WMA for short). For general benchmarks, we adopt short-term horizons H ∈ { 12 , 24 } and report MSE and MAE. 
+
+B. Financial Time Series Forecasting 
+
+Financial time series exhibit non-stationary dynamics and regime-dependent SNR ratios, making fixed look-back ap-proaches particularly fragile. We evaluate RAVEN on two distinct financial forecasting tasks: 10-day period stock cumu-lative log return prediction and fund sales forecasting. 
+
+Results on FinMultiTime. Table III reports per-year results on HS300 and S&P500. On HS300, RAVEN ranks first or second in every year-metric cell, achieving 7 first-place and 8 second-place rankings out of 15. On S&P500, RAVEN achieves the highest Corr and ICIR across all 5 years, and the lowest MSE in 4 of 5 years, yielding 14 first-place rankings out of 15 cells. Overall, RAVEN obtains the top rank in 21 out of 30 total year-metric-dataset cells (70%), followed by MLF and NHits at 4 cells each. These results confirm that data-driven dynamic patch routing generalizes consistently across both datasets and all evaluation periods without manual scale configuration. Table IV summarizes the aggregated performance over the entire five-year test period from 2020 to 2024. On HS300, RAVEN achieves a Corr of 0.0390, an ICIR of 0.3932, and an MSE of 0.9905. Compared with the second-best baseline, MLF, it improves Corr by 9.2% and ICIR by 9.9%, while reducing MSE by 0.27%. On S&P500, RAVEN attains a Corr of 0.0363, an ICIR of 0.5980, and an MSE of 1.001. It outperforms MLF by 20.2% in Corr and 7.2% in ICIR, while reducing MSE by 1.5%. Across the two datasets, RAVEN ranks first in all six     
+
+> Figure 4: Cumulative return advantage of RAVEN over baselines on HS300, from 2020 to 2024. ∆(·)denotes the cumulative return of RAVEN minus that of baseline (·). All curves show a persistent upward trend across varying market regimes.
+
+dataset-metric pairs. The consistently higher ICIR suggests that RAVEN produces not only stronger average predictions but also more stable predictive signals across rebalancing periods. This stability is particularly desirable for sequential decision-making systems that rely on robust ranking signals. To further validate that superior prediction accuracy translates into real-world investment gains, we conduct backtesting on HS300 from January 2020 to December 2024 using Qlib [40]. Qlib is an open-source AI-driven quantitative investment plat-form with standardized data pipelines and strategy simulation. We construct a cross-sectional portfolio management scheme. At each rebalancing point, i.e. every 10 trading days, con-stituents are ranked by predicted score in descending order, and a fixed-size portfolio of K=30 stocks is maintained. A drop-N
+
+strategy ( Ndrop =30 ) limits turnover, as positions are only closed when their predicted rank falls significantly below the top-K
+
+threshold. Execution is simulated via Qlib’s SimulatorExecutor at daily frequency with an initial capital of 100M RMB and default transaction costs, including stamp duty and commission. We report the cumulative return of RAVEN minus that of each baseline under the identical strategy and period. Figure 4 shows the cumulative return advantage of RAVEN over each baseline. All gaps exhibit a persistent upward trend over the five-year period despite short-term fluctuations during volatile market phases, indicating sustained outperformance rather than episodic gains. The final cumulative return advantage over the strongest baseline (MLF) is +12.79%, while the gap over PatchTST reaches +38.45%. For the remaining baselines, the gaps are Patch-Ensemble (+34.41%), FiLM (+23.41%), PathFormer (+20.38%), PathConcat (+20.28%), and NHits (+19.46%). The steadily growing gaps confirm that adaptive dynamic routing delivers consistent predictive advantage across both trending and volatile market regimes. 
+
+Results on Fund. Table V reports fund sales predictions across four horizons, where RAVEN consistently achieves the best MSE and WMA. Specifically, RAVEN reduces the 7Table III: Performance comparison on HS300 and S&P500 (2020–2024). Corr and ICIR: higher is better ( ↑); MSE: lower is better ( ↓). Best in bold , second underlined.                                                                                                                                                                                                                                                                                       
+
+> Dataset: HS300
+> Model 2020 2021 2022 2023 2024 Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR RAVEN .0567 .9706 .5943 .0292 .9897 .1478 .0422 .9967 .5224 .0300 .9978 .3321 .0500 .9971 .3765 MLF .0525 .9647 .5457 .0173 1.002 .1056 .0583 .9786 .5467 .0152 1.002 .2771 .0388 1.004 .3325 NHits .0338 .9885 .3222 .0143 .9943 .1153 .0238 .9998 .4677 .0125 1.012 .3147 .0525 .9938 .3772
+> PathFormer .0462 .9759 .5438 .0216 .9917 .1363 .0253 .9996 .4063 .0176 1.003 .3332 .0315 1.012 .3080 PatchTST .0322 .9893 .3277 .0043 1.012 .0593 .0193 1.006 .4207 .0089 1.012 .2664 .0429 1.001 .3151 Patch-Concat .0373 .9803 .5082 .0140 1.003 .1190 .0286 .9974 .4233 .0138 1.005 .2202 .0428 1.002 .3550 Patch-Ensemble .0320 .9908 .3477 .0185 1.001 .0756 .0175 1.004 .4469 .0093 1.014 .2657 .0376 1.003 .3092 FiLM .0372 .9818 .5282 .0164 1.003 .1123 .0195 1.004 .4709 .0173 1.006 .3280 .0326 1.010 .3200
+> Dataset: S&P500
+> Model 2020 2021 2022 2023 2024 Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR Corr MSE ICIR RAVEN .0339 1.003 .7256 .0365 .9989 .5892 .0426 .9985 .6078 .0405 1.002 .5481 .0283 1.001 .5795
+> MLF .0268 1.027 .6515 .0283 1.023 .5420 .0350 1.011 .5689 .0339 1.008 .5149 .0207 1.013 .5128 NHits .0268 1.015 .6423 .0301 1.001 .5475 .0379 .9957 .5827 .0310 1.007 .5025 .0221 1.007 .5143 PathFormer .0258 1.027 .6337 .0212 1.039 .4737 .0297 1.028 .5204 .0397 1.006 .5394 .0220 1.009 .5070 PatchTST .0195 1.042 .5616 .0219 1.032 .5016 .0225 1.037 .4837 .0305 1.014 .4850 .0126 1.026 .4431 Patch-Concat .0242 1.027 .6254 .0262 1.023 .5154 .0234 1.032 .5132 .0324 1.011 .5041 .0186 1.013 .4713 Patch-Ensemble .0302 1.017 .6742 .0275 1.021 .5263 .0314 1.021 .5298 .0342 1.007 .5114 .0243 1.009 .5290 FiLM .0275 1.022 .6524 .0193 1.036 .4724 .0322 1.018 .5511 .0302 1.014 .5091 .0230 1.013 .5127
+
+Table IV: Overall average performance on HS300 and S&P500 (2020– 2024). Corr and ICIR: higher is better ( ↑); MSE: lower is better ( ↓). Best in bold , second underlined. 
+
+Model HS300 S&P500 Corr MSE ICIR Corr MSE ICIR RAVEN .0390 .9905 .3932 .0363 1.001 .5980 
+
+MLF .0357 .9932 .3579 .0302 1.016 .5577 NHits .0282 .9987 .3210 .0294 1.002 .5518 PathFormer .0278 .9990 .3260 .0272 1.020 .5300 PatchTST .0217 1.003 .2758 .0225 1.030 .4836 Patch-Concat .0272 .9987 .3177 .0254 1.023 .5203 Patch-Ensemble .0218 1.003 .2811 .0290 1.018 .5523 FiLM .0247 1.003 .3463 .0264 1.023 .5360 
+
+average MSE by 18.2% compared to the second-best MLF (32.42 vs. 39.62), maintaining stable gains from 14% to 21% across all horizons. Multi-scale architectures like PathFormer and Scaleformer perform similarly to single-scale methods, suggesting that implicit in-network multi-resolution modeling alone is insufficient. Explicit multi-period inputs with dynamic selection are imperative for capturing heterogeneous temporal patterns in transaction data. Moreover, fixed-window variants (Patch_E, Patch_C) consistently underperform MLF. This indicates that naively aggregating multi-period inputs without redundancy mitigation introduces correlated noise, negating the benefits of broader temporal context. 
+
+C. General Time Series Forecasting 
+
+To evaluate the generalizability of RAVEN beyond financial domains, we conduct experiments on four traffic flow datasets, namely PEMS03, PEMS04, PEMS07, and PEMS08 [14]. As shown in Table VI, RAVEN achieves competitive results, se-curing the best performance in 14 of 16 evaluated metrics. The variate-as-token iTransformer emerges as the strongest second-best baseline, consistently outperforming the pre-defined multi-scale MLF. Traffic networks exhibit strict macroscopic spatial correlations, which allows iTransformer to excel by embedding historical series for global cross-sensor dependency capture. In contrast, MLF’s static temporal squeezing inadvertently disrupts these spatial connections. Despite the spatial dominance of traffic data, the overall superiority of RAVEN reveals that predictive gains from data-dependent dynamic routing outweigh the lack of explicit spatial modeling. Traffic networks frequently suffer from abrupt, local-ized disruptions such as accidents or bottlenecks. iTransformer’s static global receptive field risks over-smoothing these transient temporal bursts. Conversely, RAVEN isolates these dynamics and adaptively assigns the optimal patch scale to each sensor’s immediate state. This confirms that even in spatially-dominated domains, granular temporal adaptability provides a crucial inductive bias for forecasting volatile sequences. 
+
+D. Ablation Study 
+
+We ablate each component of RAVEN on HS300 to isolate individual contributions. Table VII reports year-by-year and 8Table V: Performance comparison on Fund dataset. MSE ( ↓) and WMA ( ↓). Best in bold ; second-best underlined.                                                                                                                    
+
+> RAVEN MLF PatchTST Patch-Ensemble Patch-Concat NHits FiLM Scaleformer PathFormer MSE WMA MSE WMA MSE WMA MSE WMA MSE WMA MSE WMA MSE WMA MSE WMA MSE WMA 127.69 74.63 33.85 75.84 36.68 81.05 40.3 86.68 39.68 85.87 36.53 80.29 46.12 96.1 --35.54 80.75 530.22 80.09 38.28 80.37 40.28 83.09 39.95 83.24 41.6 87.14 40.91 83.93 42.86 85.35 40.43 83.74 39.9 82.58 833.62 85.32 41.94 86.06 44.71 88.81 44.06 88.77 43.49 88.08 44.81 89.23 44.57 89.12 43.97 87.62 44.17 88.67 10 38.13 86.46 44.42 88.66 46.18 90.63 46.09 91.36 45.59 90.46 56.73 91.12 46.62 92.67 45.75 89.63 45.56 89.82 Avg. 32.42 81.63 39.62 82.73 41.96 85.90 42.60 87.51 42.59 87.89 44.75 86.14 45.04 90.81 43.38 87.00 41.29 85.46
+
+Table VI: Short-term forecasting results on traffic datasets (MSE / MAE ↓). Best in bold ; second-best underlined.                                                                                                                                                                                                                                                          
+
+> Model PEMS03 PEMS04 PEMS07 PEMS08
+> H=12 H=24 H=12 H=24 H=12 H=24 H=12 H=24 MSE MAE MSE MAE MSE MAE MSE MAE MSE MAE MSE MAE MSE MAE MSE MAE RAVEN .067 .169 .091 .204 .074 .172 .093 .195 .072 .153 .086 .181 .077 .168 .110 .207
+> MLF .072 .184 .098 .227 .084 .194 .103 .233 .088 .165 .096 .207 .107 .192 .142 .246 PatchTST .099 .216 .142 .259 .105 .224 .153 .275 .095 .207 .150 .262 .168 .232 .224 .281 iTransformer .071 .174 .093 .201 .078 .183 .095 .205 .067 .165 .088 .190 .079 .182 .115 .219 NHits .083 .197 .112 .229 .081 .185 .098 .221 .083 .162 .094 .193 .114 .214 .169 .257 TimesNet .085 .192 .118 .223 .087 .195 .103 .215 .082 .181 .101 .204 .112 .212 .141 .238 FiLM .089 .208 .120 .233 .079 .188 .106 .227 .092 .182 .117 .226 .124 .225 .195 .273 Patch-Ensemble .107 .239 .159 .285 .118 .247 .176 .290 .104 .221 .153 .267 .182 .246 .231 .298 Patch-Concat .103 .224 .131 .247 .096 .218 .157 .279 .094 .213 .143 .255 .149 .228 .192 .260 Crossformer .090 .203 .121 .240 .098 .218 .131 .256 .094 .200 .139 .247 .165 .214 .215 .260 Scaleformer .086 .204 .109 .216 .088 .197 .120 .233 .096 .175 .105 .207 .131 .226 .174 .253 PathFormer .091 .209 .126 .237 .084 .190 .133 .231 .085 .173 .116 .219 .138 .215 .182 .258 FEDformer .126 .251 .149 .275 .138 .262 .177 .293 .109 .225 .125 .244 .173 .273 .210 .301
+
+Table VII: Ablation study on HS300 (Pearson Corr ↑). Best in bold .                                            
+
+> Year RAVEN w/o AR w/o CAW w/o GCR w/o Lent w/o Ldiv
+> 2020 0.0567 0.0550 0.0569 0.0573 0.0583 0.0584
+> 2021 0.0292 0.0271 0.0260 0.0263 0.0290 0.0288 2022 0.0422 0.0309 0.0313 0.0320 0.0321 0.0318 2023 0.0300 0.0193 0.0184 0.0204 0.0202 0.0199 2024 0.0500 0.0432 0.0441 0.0434 0.0449 0.0452 All 0.0390 0.0352 0.0358 0.0360 0.0373 0.0372
+
+overall Pearson correlation for six variants. Among the three architectural components, removing learned patch importance scoring without Adaptive Routing (AR) causes the largest degradation, with a 9.7% relative drop on the overall metric. Without the learnable patch importance vector Ψi, the CIT mechanism degenerates into predefined window lengths, losing the ability to adapt look-back selection to regime-shifting dynamics. Disabling correlation-aware expert weighting (w/o CAW) degrades performance by 8.2%, vali-dating that explicit redundancy suppression at the output side is necessary when nested windows share overlapping patches. The global context representation (w/o GCR) contributes 7.7%, providing a router-independent view that stabilizes predictions when local experts disagree. The two auxiliary losses each contribute approximately 4.5% individually. 
+
+E. Model Efficiency Analysis 
+
+We benchmark the computational efficiency of RAVEN against four representative baselines on HS300 using a single NVIDIA A100 (40GB) GPU, batch size 512, and a 120-day look-back window. Training and inference speeds are reported in milliseconds per iteration, where a training iteration denotes one full forward–backward pass over a batch and an inference iteration denotes one forward pass; memory denotes peak GPU memory during training. As shown in Figure 5, RAVEN achieves a favorable balance between accuracy and efficiency. Compared with lightweight baselines MLF and PatchTST, RAVEN incurs moderate overhead in training time (77.89 ms vs. 52.54/55.48 ms), memory (3.23 GB vs. 2.47/2.77 GB), and inference latency (26.98 ms vs. 15.94/17.68 ms), reflecting the cost of adaptive temporal-scale routing. However, this overhead remains within the same order of magnitude, while RAVEN achieves the best overall predictive performance on both HS300 and S&P500 (Table IV). Compared with heavier multi-scale or routing baselines, RAVEN is substantially more efficient: it reduces training time by 27.4% over Scaleformer and 89.1% over PathFormer, reduces peak memory by 93.1% over Scaleformer and 35.1% over PathFormer, and reduces inference latency by 42.0% over Scaleformer and 78.3% over PathFormer. These results indicate that RAVEN obtains the strongest predictive accuracy while maintaining computational cost close to lightweight baselines and far below heavier adaptive architectures. 
+
+F. Hyperparameter Analysis 
+
+We analyze the sensitivity of RAVEN to four key hyperpa-rameters on HS300: number of experts K, CIT-based threshold values, maximum look-back window length, and patch length 
+
+plen .
+
+Number of experts K. We vary K ∈ { 2, 3, 4} with thresholds uniformly spaced between τmin =0.3 and τmax =0.9 . Table VIII shows that K=3 achieves the best overall performance (0.0390), outperforming K=2 (0.0339) by 15.0% and K=4 (0.0361) by 9Figure 5: Efficiency comparison on HS300 (batch size 512, look-back window 120). Training and inference time are reported in milliseconds per iteration; memory denotes peak GPU memory during training. 
+
+Table VIII: Effect of number of experts K on HS300 (Corr ↑).                        
+
+> Year K=2K=3K=4(0.3, 0.9) (0.3, 0.6, 0.9) (0.3, 0.5, 0.7, 0.9) 2020 0.0533 0.0567 0.0582
+> 2021 0.0273 0.0292 0.0274 2022 0.0300 0.0422 0.0321 2023 0.0173 0.0300 0.0184 2024 0.0421 0.0500 0.0442 All 0.0339 0.0390 0.0361
+
+Table IX: Effect of threshold values under K=3 on HS300 (Corr ↑).                      
+
+> Year (0.3, 0.6, 0.9) (0.2, 0.4, 0.8) (0.1, 0.5, 0.9) 2020 0.0567 0.0602 0.0583 2021 0.0292 0.0304 0.0303 2022 0.0422 0.0313 0.0321 2023 0.0300 0.0207 0.0199 2024 0.0500 0.0442 0.0449 All 0.0390 0.0380 0.0370
+
+8.0%. With K=2 , only two scales are available, limiting the model’s ability to capture intermediate-term patterns. With 
+
+K=4 , adjacent experts cover highly overlapping windows, in-creasing redundancy without providing additional discriminative information. 
+
+Threshold values under K=3. We compare three threshold configurations: (0.3, 0.6, 0.9), (0.2, 0.4, 0.8), and (0.1, 0.5, 0.9). As shown in Table IX, all configurations yield comparable overall performance, with Corr ranging from 0.0370 to 0.0390 and less than 5.2% relative variation. We further conduct paired 
+
+t-tests on per-sample MSE using (0.3, 0.6, 0.9) as the reference. Neither (0.2, 0.4, 0.8) with p=0.66 nor (0.1, 0.5, 0.9) with 
+
+p=0.19 shows a statistically significant difference at the 0.05 level. This insensitivity is anticipated. Since the importance scores ˜si are learned in an end-to-end manner, the model adjusts its score distribution to compensate for different threshold settings. Consequently, the exact threshold values are non-critical in practice. 
+
+Maximum look-back window. As detailed in Table X, performance improves steadily as the window extends from 60 days (0.0361) through 90 days (0.0378) to the optimal 120 days (0.0388). However, expanding the window further to 150 days leads to a slight degradation (0.0376). This inflection point 
+
+Table X: Effect of maximum look-back window on HS300 (Corr ↑).                             
+
+> Year 60 90 120 150 2020 0.0644 0.0585 0.0567 0.0584 2021 0.0283 0.0290 0.0292 0.0289 2022 0.0294 0.0322 0.0422 0.0330 2023 0.0197 0.0198 0.0300 0.0204 2024 0.0430 0.0458 0.0379 0.0452 All 0.0361 0.0378 0.0388 0.0376
+
+Table XI: Effect of patch length plen on HS300 (Corr ↑). N denotes the number of patches per window.                                    
+
+> Year plen =8plen =12 plen =16 plen =20
+> N15 10 762020 0.0543 0.0557 0.0567 0.0520 2021 0.0303 0.0287 0.0292 0.0271 2022 0.0415 0.0404 0.0422 0.0353 2023 0.0315 0.0314 0.0300 0.0289 2024 0.0490 0.0473 0.0500 0.0482 All 0.0384 0.0384 0.0390 0.0372
+> (a) Yearly shift of 600176.SS. (b) Cross-ticker profiles (2023).
+
+Figure 6: Distributions of Mean Patch Importance Score (MPIS) ˜si on HS300. Each data point represents the annual average of the learned importance at a given patch index. Patch index 1 corresponds to the most recent time segment. (a) Annual mean importance profiles of stock 600176.SS across five years, illustrating temporal regime adaptation. (b) Annual mean importance profiles of four stocks within 2023, illustrating cross-sectional heterogeneity. 
+
+suggests that excessively long historical periods introduce stale patterns that exacerbate concept drift and eventually surpass the filtering capacity of the CIT-based routing mechanism. 
+
+Patch length plen . We vary plen ∈ { 8, 12 , 16 , 20 } to study the effect of routing granularity. As shown in Table XI, RAVEN is robust across the entire range, with overall Corr spanning from 0.0372 to 0.0390 (less than 5% relative variation). Paired 
+
+t-tests on per-sample MSE using plen =16 as the reference confirm no statistically significant difference for any alternative (p=0.26 , 0.21 , 0.18 for plen =8 , 12 , 20 respectively). This insensitivity arises because the learned importance scores ˜si
+
+adapt their distribution to the available routing granularity. With fewer patches, each score carries more discriminative weight, compensating for the coarser resolution. 
+
+G. Case Study 
+
+To understand how RAVEN adapts its routing behavior, we visualize the learned patch importance scores ˜si under different conditions in Figure 6. 10 (a) Temporal evolution of 605117.SS. (b) Cross-ticker distribution(2023).  
+
+> Figure 7: Empirical distributions of expert aggregation weights on HS300. Expert 1 corresponds to the short-horizon expert and Expert 3 to the long-horizon expert. Each bar shows the annual mean weight allocated to each expert. (a) Weight evolution of stock 605117.SS across five years, reflecting regime-driven reallocation. (b) Weight distribution across four stocks within 2023, reflecting asset-specific routing preferences.
+
+Temporal heterogeneity. Figure 6a shows the annual mean importance profile of a single stock (600176.SS) across five years. In 2020, a year marked by extreme volatility, the router concentrates importance heavily on the most recent patch ( ˜s1 = 0.33 ) with steep decay toward older patches, effectively selecting short look-back windows. In contrast, years with sustained trends such as 2021, 2023, and 2024 exhibit flatter distributions that allocate meaningful weight to intermediate and distant patches. This indicates that the router leverages longer historical context when the SNR of older observations is higher. The temporal shift emerges purely from data-driven learning of ˜ si, without explicit regime labels or calendar features. 
+
+Cross-sectional heterogeneity. Figure 6b reveals that even within the same year (2023), different stocks exhibit markedly different annual mean importance profiles. Some stocks show steep concentration on recent patches, suggesting short-memory price dynamics, while others maintain more distributed weights across the full look-back range, benefiting from longer historical context. This cross-sectional variation demonstrates that no single fixed window length is universally optimal. Individual securities require different effective windows depending on their microstructure characteristics. RAVEN addresses this by learning per-sample importance scores that drive CIT-based adaptive routing, enabling each input to select its own effective temporal scale without manual specification. To establish a holistic understanding of RAVEN’s decision-making paradigm, we extend our visual inspection from the upstream patch importance curves to the downstream gate weights emitted at the expert aggregation stage. Figures 7b and 7a illustrate the statistical distributions of the routing weights across different financial assets and historical periods, respectively. Crucially, these downstream weight topologies perfectly mirror the continuous context-carving behaviors observed in the upstream patch selection phase, confirming that the data-driven CIT-thresholded routing over learned importance matrices structurally translates into scale-specialized representations. Figure 7a tracks the expert weight allocation of stock 605117.SS across five years. In 2020, a period of heightened volatility, Expert 1 (short-horizon) receives the largest share of weight, indicating that the model favors recent context when the market undergoes rapid structural change. In contrast, during 2021 and 2022, Expert 3 (long-horizon) dominates, as the model leverages extended historical context during relatively stable trending periods. The weight distribution shifts again in 2023 and 2024, reflecting changing market regimes. This adaptive reallocation confirms that the routing mechanism responds to non-stationary dynamics without manual intervention. Figure 7b compares the weight allocations of four stocks within 2023. Stock 605117.SS allocates nearly half of its weight to Expert 1 (short-horizon), suggesting rapid price dynamics that benefit from short look-back contexts. In contrast, 300888.SZ assigns the majority of weight to Expert 3 (long-horizon), indicating stable temporal dependencies that reward extended historical input. The remaining two stocks fall between these extremes. This cross-sectional divergence mirrors the upstream patch importance heterogeneity observed in Figure 6b, validating that the entire routing pipeline maintains consistent behavior from patch scoring through expert aggregation. IV. R ELATED WORK 
+
+Deep learning and foundation models for financial forecast-ing. Classical financial forecasting relies heavily on gradient boosting trees (e.g., XGBoost [6], LightGBM [17]), which capture non-linear interactions but treat forecasts as inde-pendent and identically distributed (i.i.d.) tabular problems, fundamentally discarding the temporal topology of market regimes [3]. Subsequent sequential architectures, including RNNs [10] and LSTMs [16], restored temporal memory but remain disproportionately biased toward recency, frequently conflating transient microstructure noise with structural regime shifts [28]. To address long-range dependencies, general time-series architectures have evolved rapidly. Early efficient variants (Informer [45], Autoformer [37]) paved the way for advanced representation learning, precipitating breakthroughs in channel-independent patching (PatchTST [26]), cross-variate dependen-cies (Crossformer [43]), inverted attention (iTransformer [22]), and robust token blending (CARD [34]). Complementary paradigms have also demonstrated strong competitiveness; no-tably, frequency-domain and wavelet models (FEDformer [47], TimesNet [36], FredFormer [27], WPMixer [25]) explicitly exploit spectral periodicity, while DLinear [41] and Mod-ernTCN [24] established robust baselines using linear decom-position and modernized temporal convolutions. In the highly stochastic financial domain, specialized archi-tectures have emerged to capture complex market dynamics via graph-based trend prediction (HIST [38]), market-guided attention (MASTER [19]), meta-learning for distribution shifts (DoubleAdapt [44]), and early forms of conditional routing (TRA [20]). However, despite their immense architectural diversity and expressive capacity, these models share a critical structural bottleneck: they strictly commit to a fixed context window or 11 treat look-back length as a static hyperparameter. In the excep-tionally low SNR ratio (SNR) and non-stationary environment of financial markets, a static receptive field inevitably forces models to either truncate critical historical regime transitions or dilute actionable predictive signals with obsolete noise. 
+
+Adaptive context and non-stationarity in time series. In highly volatile and non-stationary time series domains, the temporal scale of a model’s receptive field must adaptively expand or contract to isolate meaningful predictive signals from transient noise. The Multi-period Learning Framework (MLF) [42] represents a notable attempt by simultaneously fusing varying look-back lengths using Inter-period Redun-dancy Filtering. Similarly, PathFormer [5] captures varying temporal dynamics by dynamically aggregating features from a predefined set of fixed patch resolutions. More recently, TimeSqueeze [1] attempts to alleviate fixed-resolution bot-tlenecks by dynamically altering patch boundaries within a sequence based on local signal complexity. However, these models fundamentally commit to either a rigidly fixed global look-back window or a predefined set of static scales, failing to perceive the optimal global context length on the fly. RAVEN bridges this gap at the architectural level. By deploying a data-driven CIT-thresholded routing mechanism over learned patch importance scores, RAVEN dynamically generates nested, variable-length historical windows for each sample, seamlessly preserving continuous temporal evolution without human-defined scale constraints. 
+
+MoE and routing topologies. Sparse MoE layers effectively scale model capacity without proportionally increasing com-putational overhead [11]. In the time-series domain, foun-dation models like Time-MoE [31] and Moirai-MoE [21] scale this paradigm to billion parameters, employing token-level sparse routing. Recent specialized architectures such as TFPS [33] follow a similar token-level paradigm, utilizing subspace clustering to route individual patches to pattern-specific experts. These content-based routing mechanisms are highly effective for localized pattern matching: experts specialize in patches with similar local morphology, regardless of where those patches appear in the sequence. However, such routing primarily induces pattern-level specialization rather than temporal-scale specialization. Since individual patches from different time positions may be dispatched to different experts, no expert is explicitly assigned to model a contiguous historical horizon. This limits the ability of each expert to capture how local patterns interact with medium- and long-range temporal context, which is important for non-stationary financial forecasting. RAVEN adopts an orthogonal routing topology: temporal-scale routing. By ensuring each expert processes a contiguous, nested prefix of historical data, RAVEN preserves positional coherence within each horizon while enforcing data-driven scale specialization. 
+
+Positioning of our work. Unlike fixed-context models [2], [32] and predefined multi-scale methods [1], [5], [42], RAVEN per-forms sample-dependent context selection via CIT-thresholded routing; unlike token-level MoE [21], [31], [33] that specializes experts by patch content, RAVEN specializes by temporal scale through contiguous nested prefixes. Two additional components address challenges unique to this topology: (1) Shape-Aligned Fusion with CAW aligns variable-length expert outputs and penalizes redundant representations caused by prefix overlap; (2) a GCR branch summarizes the full context in parallel, providing macro-level information that localized experts may miss. V. C ONCLUSION 
+
+We presented RAVEN, a regime-aware MoE framework that replaces fixed-length context windows with sample-adaptive, variable-length receptive fields for financial time series forecast-ing. By leveraging an importance-scoring mechanism coupled with CIT-based thresholds, RAVEN dynamically extracts nested look-back windows routed to scale-specialized experts, while a GCR branch maintains macro-level context coherence. Fur-thermore, a CAW mechanism effectively decorrelates expert outputs, mitigating information redundancy stemming from overlapping patch inputs. Extensive experiments across financial and general time-series tasks, including cumulative log-return prediction on HS300 and S&P500, fund flow forecasting, and traffic forecast-ing on PEMS benchmarks, demonstrate the effectiveness and generality of RAVEN. On the two equity benchmarks, RAVEN ranks first across all six overall metric–dataset combinations, improving Pearson correlation by 9.2% on HS300 and 20.2% on S&P500 over the strongest baselines; on fund flow forecasting, it reduces MSE by 18.2%. Beyond financial data, RAVEN achieves the best result in 14 of 16 traffic forecasting metrics, indicating that adaptive temporal-scale routing is also beneficial for general time series. Ablation studies confirm that adaptive routing, CAW, and the GCR branch each contribute indepen-dently, while efficiency and hyperparameter analyses show that RAVEN provides a favorable balance between accuracy and efficiency and remains stable across reasonable routing configurations. While RAVEN establishes a robust foundation for adaptive financial modeling, several promising avenues remain. First, integrating cross-asset dependencies and macro-regime indica-tors into the routing mechanism could better capture systemic market co-movements. Second, generalizing the framework to accommodate variable-resolution patching would further enhance its multi-scale expressiveness. Finally, scaling RAVEN to high-frequency intraday data and broader asset classes (e.g., fixed income and commodities) represents a natural next step to validate its universal efficacy in complex financial ecosystems. 12 REFERENCES [1] S. K. Ankireddy, N. Seleznev, N. H. Nguyen, Y. Wu, S. Kumar, F. Huang, and C. B. Bruss, “Timesqueeze: Dynamic patching for efficient time series forecasting,” CoRR, vol. abs/2603.11352, 2026. [Online]. Available: https://doi.org/10.48550/arXiv.2603.11352 [2] A. F. Ansari, L. Stella, A. C. Türkmen, X. Zhang, P. Mercado, H. Shen, O. Shchur, S. S. Rangapuram, S. Pineda-Arango, S. Kapoor, J. Zschiegner, D. C. Maddix, H. Wang, M. W. Mahoney, K. Torkkola, A. G. Wilson, M. Bohlke-Schneider, and B. Wang, “Chronos: Learning the language of time series,” Trans. Mach. Learn. Res., vol. 2024, 2024. [Online]. Available: https://openreview.net/forum?id=gerNCVqqtR [3] G. Bontempi, S. B. Taieb, and Y. L. Borgne, “Machine learning strategies for time series forecasting,” in Business Intelligence - Second European Summer School, eBISS 2012, Brussels, Belgium, July 15-21, 2012, Tutorial Lectures , ser. Lecture Notes in Business Information Processing, M. Aufaure and E. Zimányi, Eds. Springer, 2012, pp. 62–77. [Online]. Available: https://doi.org/10.1007/978-3-642-36318-4_3 [4] C. Challu, K. G. Olivares, B. N. Oreshkin, F. G. Ramírez, M. M. Canseco, and A. Dubrawski, “NHITS: neural hierarchical interpolation for time series forecasting,” in Thirty-Seventh AAAI Conference on Artificial Intelligence, AAAI 2023, Thirty-Fifth Conference on Innovative Applications of Artificial Intelligence, IAAI 2023, Thirteenth Symposium on Educational Advances in Artificial Intelligence, EAAI 2023, Washington, DC, USA, February 7-14, 2023 , B. Williams, Y. Chen, and J. Neville, Eds. AAAI Press, 2023, pp. 6989–6997. [Online]. Available: https://doi.org/10.1609/aaai.v37i6.25854 [5] P. Chen, Y. Zhang, Y. Cheng, Y. Shu, Y. Wang, Q. Wen, B. Yang, and C. Guo, “Pathformer: Multi-scale transformers with adaptive pathways for time series forecasting,” in The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. [Online]. Available: https://openreview.net/forum?id=lJkOCMP2aW [6] T. Chen and C. Guestrin, “Xgboost: A scalable tree boosting system,” in Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, San Francisco, CA, USA, August 13-17, 2016 , B. Krishnapuram, M. Shah, A. J. Smola, C. C. Aggarwal, D. Shen, and R. Rastogi, Eds. ACM, 2016, pp. 785–794. [Online]. Available: https://doi.org/10.1145/2939672.2939785 [7] K. Cho, B. van Merrienboer, Ç. Gülçehre, D. Bahdanau, F. Bougares, H. Schwenk, and Y. Bengio, “Learning phrase representations using RNN encoder-decoder for statistical machine translation,” in Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, EMNLP 2014, October 25-29, 2014, Doha, Qatar, Ameeting of SIGDAT, a Special Interest Group of the ACL , A. Moschitti, B. Pang, and W. Daelemans, Eds. ACL, 2014, pp. 1724–1734. [Online]. Available: https://doi.org/10.3115/v1/d14-1179 [8] F. Corsi, “A simple approximate long-memory model of realized volatility,” Journal of financial econometrics, vol. 7, no. 2, pp. 174–196, 2009. [9] F. X. Diebold and R. S. Mariano, “Comparing predictive accuracy,” Journal of Business & economic statistics , vol. 20, no. 1, pp. 134–144, 2002. [10] J. L. Elman, “Finding structure in time,” Cogn. Sci. , vol. 14, no. 2, pp. 179–211, 1990. [Online]. Available: https://doi.org/10.1207/ s15516709cog1402_1 [11] W. Fedus, B. Zoph, and N. Shazeer, “Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity,” J. Mach. Learn. Res. , vol. 23, pp. 120:1–120:39, 2022. [Online]. Available: https://jmlr.org/papers/v23/21-0998.html [12] J. H. Friedman, “Greedy function approximation: a gradient boosting machine,” Annals of statistics, pp. 1189–1232, 2001. [13] S. Gu, B. Kelly, and D. Xiu, “Empirical asset pricing via machine learning,” The Review of Financial Studies, vol. 33, no. 5, pp. 2223–2273, 2020. [14] S. Guo, Y. Lin, N. Feng, C. Song, and H. Wan, “Attention based spatial-temporal graph convolutional networks for traffic flow forecasting,” in The Thirty-Third AAAI Conference on Artificial Intelligence, AAAI 2019, The Thirty-First Innovative Applications of Artificial Intelligence Conference, IAAI 2019, The Ninth AAAI Symposium on Educational Advances in Artificial Intelligence, EAAI 2019, Honolulu, Hawaii, USA, January 27 - February 1, 2019 . AAAI Press, 2019, pp. 922–929. [Online]. Available: https://doi.org/10.1609/aaai.v33i01.3301922 [15] J. Hasbrouck, “Measuring the information content of stock trades,” The Journal of Finance, vol. 46, no. 1, pp. 179–207, 1991. [16] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural Comput. , vol. 9, no. 8, pp. 1735–1780, 1997. [Online]. Available: https://doi.org/10.1162/neco.1997.9.8.1735 [17] G. Ke, Q. Meng, T. Finley, T. Wang, W. Chen, W. Ma, Q. Ye, and T. Liu, “Lightgbm: A highly efficient gradient boosting decision tree,” in Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, December 4-9, 2017, Long Beach, CA, USA , I. Guyon, U. von Luxburg, S. Bengio, H. M. Wallach, R. Fergus, S. V. N. Vishwanathan, and R. Garnett, Eds., 2017, pp. 3146–3154. [Online]. Available: https://proceedings.neurips. cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html [18] T. Kim, J. Kim, Y. Tae, C. Park, J. Choi, and J. Choo, “Reversible instance normalization for accurate time-series forecasting against distribution shift,” in The Tenth International Conference on Learning Representations, ICLR 2022, Virtual Event, April 25-29, 2022 . OpenReview.net, 2022. [Online]. Available: https: //openreview.net/forum?id=cGDAkQo1C0p [19] T. Li, Z. Liu, Y. Shen, X. Wang, H. Chen, and S. Huang, “Master: Market-guided stock transformer for stock price forecasting,” in Proceedings of the AAAI conference on artificial intelligence , vol. 38, no. 1, 2024, pp. 162–170. [20] H. Lin, D. Zhou, W. Liu, and J. Bian, “Learning multiple stock trading patterns with temporal routing adaptor and optimal transport,” in KDD ’21: The 27th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, Virtual Event, Singapore, August 14-18, 2021 , F. Zhu, B. C. Ooi, and C. Miao, Eds. ACM, 2021, pp. 1017–1026. [Online]. Available: https://doi.org/10.1145/3447548.3467358 [21] X. Liu, J. Liu, G. Woo, T. Aksu, Y. Liang, R. Zimmermann, C. Liu, J. Li, S. Savarese, C. Xiong, and D. Sahoo, “Moirai-moe: Empowering time series foundation models with sparse mixture of experts,” in Forty-second International Conference on Machine Learning, ICML 2025, Vancouver, BC, Canada, July 13-19, 2025 , ser. Proceedings of Machine Learning Research, A. Singh, M. Fazel, D. Hsu, S. Lacoste-Julien, F. Berkenkamp, T. Maharaj, K. Wagstaff, and J. Zhu, Eds. PMLR / OpenReview.net, 2025. [Online]. Available: https://proceedings.mlr.press/v267/liu25an.html [22] Y. Liu, T. Hu, H. Zhang, H. Wu, S. Wang, L. Ma, and M. Long, “itransformer: Inverted transformers are effective for time series forecasting,” in The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. [Online]. Available: https: //openreview.net/forum?id=JePfAI8fah [23] A. W. Lo, “The adaptive markets hypothesis: Market efficiency from an evolutionary perspective,” Journal of Portfolio Management, Forthcoming, 2004. [24] D. Luo and X. Wang, “Moderntcn: A modern pure convolution structure for general time series analysis,” in The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. [Online]. Available: https://openreview.net/forum?id=vpJMJerXHU [25] M. M. N. Murad, M. Aktukmak, and Y. Yilmaz, “Wpmixer: Efficient multi-resolution mixing for long-term time series forecasting,” in Thirty-Ninth AAAI Conference on Artificial Intelligence, Thirty-Seventh Conference on Innovative Applications of Artificial Intelligence, Fifteenth Symposium on Educational Advances in Artificial Intelligence, AAAI 2025, Philadelphia, PA, USA, February 25 - March 4, 2025 ,T. Walsh, J. Shah, and Z. Kolter, Eds. AAAI Press, 2025, pp. 19 581– 19 588. [Online]. Available: https://doi.org/10.1609/aaai.v39i18.34156 [26] Y. Nie, N. H. Nguyen, P. Sinthong, and J. Kalagnanam, “A time series is worth 64 words: Long-term forecasting with transformers,” in The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net, 2023. [Online]. Available: https://openreview.net/forum?id=Jbdc0vTOcol [27] X. Piao, Z. Chen, T. Murayama, Y. Matsubara, and Y. Sakurai, “Fredformer: Frequency debiased transformer for time series forecasting,” in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, KDD 2024, Barcelona, Spain, August 25-29, 2024 , R. Baeza-Yates and F. Bonchi, Eds. ACM, 2024, pp. 2400–2410. [Online]. Available: https://doi.org/10.1145/3637528.3671928 [28] O. B. Sezer, M. U. Gudelek, and A. M. Özbayoglu, “Financial time series forecasting with deep learning : A systematic literature review: 2005-2019,” Appl. Soft Comput., vol. 90, p. 106181, 2020. [Online]. Available: https://doi.org/10.1016/j.asoc.2020.106181 
+
+13 [29] M. A. Shabani, A. H. Abdi, L. Meng, and T. Sylvain, “Scaleformer: Iterative multi-scale refining transformers for time series forecasting,” in The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net, 2023. [Online]. Available: https://openreview.net/forum?id=sCrnllCtjoE [30] N. Shazeer, A. Mirhoseini, K. Maziarz, A. Davis, Q. V. Le, G. E. Hinton, and J. Dean, “Outrageously large neural networks: The sparsely-gated mixture-of-experts layer,” in 5th International Conference on Learning Representations, ICLR 2017, Toulon, France, April 24-26, 2017, Conference Track Proceedings . OpenReview.net, 2017. [Online]. Available: https://openreview.net/forum?id=B1ckMDqlg [31] X. Shi, S. Wang, Y. Nie, D. Li, Z. Ye, Q. Wen, and M. Jin, “Time-moe: Billion-scale time series foundation models with mixture of experts,” in The Thirteenth International Conference on Learning Representations, ICLR 2025, Singapore, April 24-28, 2025 . OpenReview.net, 2025. [Online]. Available: https://openreview.net/forum?id=e1wDDFmlVu [32] Y. Shi, Z. Fu, S. Chen, B. Zhao, W. Xu, C. Zhang, and J. Li, “Kronos: A foundation model for the language of financial markets,” in Fortieth AAAI Conference on Artificial Intelligence, Thirty-Eighth Conference on Innovative Applications of Artificial Intelligence, Sixteenth Symposium on Educational Advances in Artificial Intelligence, AAAI 2026, Singapore, January 20-27, 2026 , S. Koenig, C. Jenkins, and M. E. Taylor, Eds. AAAI Press, 2026, pp. 25 366–25 373. [Online]. Available: https://doi.org/10.1609/aaai.v40i30.39730 [33] Y. Sun, Z. Xie, E. Eldele, D. Chen, Q. Hu, and M. Wu, “Learning pattern-specific experts for time series forecasting under patch-level distribution shift,” in Advances in Neural Information Processing Systems ,D. Belgrave, C. Zhang, H. Lin, R. Pascanu, P. Koniusz, M. Ghassemi, and N. Chen, Eds., vol. 38. Curran Associates, Inc., 2025, pp. 91 810–91 844. [Online]. Available: https://proceedings.neurips.cc/paper_files/paper/ 2025/file/8491a7fcc218946b471b600a915c8b02-Paper-Conference.pdf [34] X. Wang, T. Zhou, Q. Wen, J. Gao, B. Ding, and R. Jin, “CARD: channel aligned robust blend transformer for time series forecasting,” in The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. [Online]. Available: https://openreview.net/forum?id=MJksrOhurE [35] K. D. West, “Asymptotic inference about predictive ability,” Econometrica, vol. 64, no. 5, pp. 1067–1084, 1996. [36] H. Wu, T. Hu, Y. Liu, H. Zhou, J. Wang, and M. Long, “Timesnet: Temporal 2d-variation modeling for general time series analysis,” in The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net, 2023. [Online]. Available: https://openreview.net/forum?id=ju_Uqw384Oq [37] H. Wu, J. Xu, J. Wang, and M. Long, “Autoformer: Decomposition transformers with auto-correlation for long-term series forecasting,” in Advances in Neural Information Processing Systems 34: Annual Conference on Neural Information Processing Systems 2021, NeurIPS 2021, December 6-14, 2021, virtual , M. Ranzato, A. Beygelzimer, Y. N. Dauphin, P. Liang, and J. W. Vaughan, Eds., 2021, pp. 22 419–22 430. [Online]. Available: https://proceedings.neurips.cc/paper/ 2021/hash/bcc0d400288793e8bdcd7c19a8ac0c2b-Abstract.html [38] W. Xu, W. Liu, L. Wang, Y. Xia, J. Bian, J. Yin, and T. Liu, “HIST: A graph-based framework for stock trend forecasting via mining concept-oriented shared information,” CoRR, vol. abs/2110.13716, 2021. [Online]. Available: https://arxiv.org/abs/2110.13716 [39] W. Xu, D. Xiang, Y. Liu, X. Wang, Y. Ma, L. Zhang, C. Xu, and J. Zhang, “Finmultitime: A four-modal bilingual dataset for financial time-series analysis,” CoRR , vol. abs/2506.05019, 2025. [Online]. Available: https://doi.org/10.48550/arXiv.2506.05019 [40] X. Yang, W. Liu, D. Zhou, J. Bian, and T. Liu, “Qlib: An ai-oriented quantitative investment platform,” CoRR, vol. abs/2009.11189, 2020. [Online]. Available: https://arxiv.org/abs/2009.11189 [41] A. Zeng, M. Chen, L. Zhang, and Q. Xu, “Are transformers effective for time series forecasting?” in Thirty-Seventh AAAI Conference on Artificial Intelligence, AAAI 2023, Thirty-Fifth Conference on Innovative Applications of Artificial Intelligence, IAAI 2023, Thirteenth Symposium on Educational Advances in Artificial Intelligence, EAAI 2023, Washington, DC, USA, February 7-14, 2023 , B. Williams, Y. Chen, and J. Neville, Eds. AAAI Press, 2023, pp. 11 121–11 128. [Online]. Available: https://doi.org/10.1609/aaai.v37i9.26317 [42] X. Zhang, Z. Huang, Y. Wu, X. Lu, E. Qi, Y. Chen, Z. Xue, Q. Wang, P. Wang, and W. Wang, “Multi-period learning for financial time series forecasting,” in Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining, V.1, KDD 2025, Toronto, ON, Canada, August 3-7, 2025 , Y. Sun, F. Chierichetti, H. W. Lauw, C. Perlich, W. H. Tok, and A. Tomkins, Eds. ACM, 2025, pp. 2848–2859. [Online]. Available: https://doi.org/10.1145/3690624.3709422 [43] Y. Zhang and J. Yan, “Crossformer: Transformer utilizing cross-dimension dependency for multivariate time series forecasting,” in The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net, 2023. [Online]. Available: https://openreview.net/forum?id=vSVLM2j9eie [44] L. Zhao, S. Kong, and Y. Shen, “Doubleadapt: A meta-learning approach to incremental learning for stock trend forecasting,” in Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, KDD 2023, Long Beach, CA, USA, August 6-10, 2023 ,A. K. Singh, Y. Sun, L. Akoglu, D. Gunopulos, X. Yan, R. Kumar, F. Ozcan, and J. Ye, Eds. ACM, 2023, pp. 3492–3503. [Online]. Available: https://doi.org/10.1145/3580305.3599315 [45] H. Zhou, S. Zhang, J. Peng, S. Zhang, J. Li, H. Xiong, and W. Zhang, “Informer: Beyond efficient transformer for long sequence time-series forecasting,” in Thirty-Fifth AAAI Conference on Artificial Intelligence, AAAI 2021, Thirty-Third Conference on Innovative Applications of Artificial Intelligence, IAAI 2021, The Eleventh Symposium on Educational Advances in Artificial Intelligence, EAAI 2021, Virtual Event, February 2-9, 2021 . AAAI Press, 2021, pp. 11 106–11 115. [Online]. Available: https://doi.org/10.1609/aaai.v35i12.17325 [46] T. Zhou, Z. Ma, X. Wang, Q. Wen, L. Sun, T. Yao, W. Yin, and R. Jin, “Film: Frequency improved legendre memory model for long-term time series forecasting,” in Advances in Neural Information Processing Systems 35: Annual Conference on Neural Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, November 28 - December 9, 2022 , S. Koyejo, S. Mohamed, A. Agarwal, D. Belgrave, K. Cho, and A. Oh, Eds., 2022. [Online]. Available: http://papers.nips.cc/paper_files/paper/2022/hash/ 524ef58c2bd075775861234266e5e020-Abstract-Conference.html [47] T. Zhou, Z. Ma, Q. Wen, X. Wang, L. Sun, and R. Jin, “Fedformer: Frequency enhanced decomposed transformer for long-term series forecasting,” in International Conference on Machine Learning, ICML 2022, 17-23 July 2022, Baltimore, Maryland, USA ,ser. Proceedings of Machine Learning Research, K. Chaudhuri, S. Jegelka, L. Song, C. Szepesvári, G. Niu, and S. Sabato, Eds. PMLR, 2022, pp. 27 268–27 286. [Online]. Available: https: //proceedings.mlr.press/v162/zhou22g.html 
+
+14

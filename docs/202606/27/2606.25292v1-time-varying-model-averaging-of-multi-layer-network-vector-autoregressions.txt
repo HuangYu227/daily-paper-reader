@@ -1,0 +1,7046 @@
+Title: Time-Varying Model Averaging of Multi-layer Network Vector Autoregressions
+
+URL Source: https://arxiv.org/pdf/2606.25292v1
+
+Published Time: Thu, 25 Jun 2026 00:22:59 GMT
+
+Number of Pages: 56
+
+Markdown Content:
+# Time-Varying Model Averaging of Multi-layer Network Vector Autoregressions 
+
+Degui Li *, Yuying Sun †
+
+## , Boyao Wu ‡
+
+University of Macau, Chinese Academy of Sciences, University of International Business and Economics 
+
+Version: June 25, 2026 
+
+Abstract 
+
+In this paper, we introduce a flexible time-varying multi-layer network vector autoregres-sion (VAR) model framework for large-scale time series, allowing agents in dynamic systems to interact through multiple channels and incorporating multiple adjacency matrices to capture network spillover effects. We propose a penalized model averaging method to determine a time-varying optimal combination of multi-layer network VAR candidate models whose num-ber may be divergent. Under some regularity conditions, the asymptotic properties such as asymptotic optimality and convergence rates of the proposed time-varying weight estimation are derived in the contexts of both the in-sample fitting and out-of-sample prediction. In ad-dition, we extend the conformal prediction method to construct prediction bands for locally stationary time series. Monte-Carlo simulation studies and an empirical application to fore-cast CPI inflation by combining multiple network information are given to illustrate reliable finite-sample estimation and predictive performance of the developed methodology. 
+
+Keywords : asymptotic optimality, conformal prediction, model averaging, multi-layer network, time-varying VAR. 
+
+> *
+
+Faculty of Business Administration, Asia-Pacific Academy of Economics and Management and Department of Economics, University of Macau. Li’s research is supported by the National Natural Science Foundation of China (72525015) and the CPG and SRG grants funded by the University of Macau. 
+
+> †
+
+Academy of Mathematics and Systems Science, Chinese Academy of Sciences. Sun’s research is supported by the National Natural Science Foundation of China (72322016, 72073126, 72091212) and Young Elite Scientists Sponsorship Program by CAST (2020QNRC001). 
+
+> ‡
+
+China School of Banking and Finance, University of International Business and Economics. Wu’s research is supported by the National Natural Science Foundation of China (72403048 and 72271055) 
+
+> arXiv:2606.25292v1 [econ.EM] 24 Jun 2026
+
+# 1 Introduction 
+
+The vector autoregression (VAR) has become a standard econometric tool to model multivariate time series since the seminal work by Sims (1980). In the classic setting with a fixed number of time series variables, Lütkepohl (2006) and Kilian and Lütkepohl (2017) provide a comprehensive review of various VAR-based model estimation, inference and forecasting techniques. However, the conventional OLS or MLE estimation and forecasting methods often perform poorly when the number of variables diverges with the time series length. To address this issue in the high-dimensional time series setup, a commonly-used approach is to impose some structural restric-tion on transition matrices such as the sparsity or reduced-rank assumption and subsequently adopt regularized estimation methods (e.g., Negahban and Wainwright 2011, Kock and Callot 2015, Davis, Zang and Zheng 2016, Basu, Li and Michailidis 2019, Miao, Phillips and Su 2023). However, these models and methods often neglect potential inter-connection or network struc-ture among a large number of variables, a feature which commonly exists for large-scale dynamic macroeconomic or financial systems. The network VAR introduced by Zhu et al (2017) whose model formulation is virtually similar to the so-called global VAR (Pesaran, Schuermann and Weiner 2004), provides a flexible autoregressive framework for large-scale time series to jointly incorporate the network spillover (cross-lag) effect, momentum (own-lag) effect and nodal effect. Network models are an effective tool to tackle interconnected systems with applications to various fields such as economics, finance and social networks. There have been extensive stud-ies on estimation and inference of both the static network (e.g., Diebold and Yilmaz 2014, Scott 2017, Demirer et al 2018, Barigozzi and Brownlees 2019) and time-varying dynamic network (e.g., Kolar et al 2010, Zhou, Lafferty and Wasserman 2010, Chen et al 2025). The existing literature on network VAR models typically assumes that the network structure is available and incorpo-rates an observed adjacency matrix in VAR to capture the network spillover effect (e.g., Zhu et al 
+
+2017, Chen, Fan and Zhu 2023, Yin, Safikhani and Michailidis 2023, 2026, Li et al 2026). They often limit attention to the assumption of a single adjacency matrix to measure linkages between nodes. This assumption may be restrictive for modern social or economic networks as agents in dynamic systems often interact through multiple channels, resulting in the so-called multi-layer network (Kivelä et al 2014). Barigozzi, Cavaliere and Moramarco (2025) introduce a factor network VAR model and propose a tensor decomposition of multiple adjacency matrices which may vary over time to achieve dimension reduction in the subsequent estimation procedure. In this paper, we propose an alternative approach for multi-layer network VAR, adopting the model averaging method to construct an optimal combination of candidate time-varying multi-layer network VAR models with different linkage structures (to capture network spillover effects), varying lagged 2orders of dependent variables and node-specific predictors. Model averaging tackles model uncertainty by averaging over a number of candidate predic-tive models and serves as an alternative to model selection which aims to select one model accord-ing to a proper criterion. Model averaging methods can be broadly classified into two categories: Bayesian model averaging with prior information (Hoeting et al 1999), and frequentist model averaging, which focuses on determining optimal weights for candidate models. Commonly-used frequentist model averaging approaches include the Mallows model averaging (Hansen 2007, Liao and Tsay 2020) and jackknife model averaging (Hansen and Racine 2012, Liao et al 
+
+2019, Yu, Zhang and Liang 2025). These classic methods aim to select time-invariant combination weights. Their numerical performance may be unstable for dynamic environments with struc-tural changes. Sun et al (2021) is among the first to propose time-varying jackknife model averag-ing to accommodate smooth structural changes, with subsequent extensions to high-dimensional penalized time-varying model averaging (Sun et al 2023), factor-augmented regression (Chen, Hong and Li 2024) and quantile regression (Tu and Wang 2025), and time-varying VAR (Sun, Chen and Gao 2025). The aforementioned works, however, do not account for interconnections between time series variables and potential multi-layer network structures. Our paper aims to fill in this gap by studying time-varying model averaging of multi-layer network VAR for large-scale time series with smooth structural changes. Meanwhile, there has been increasing attention in recent years on time-varying VAR models, accommodating smooth structural changes over a long time span. Gao, Peng and Yan (2024) study estimation and inference of time-varying VAR models including the impulse response analysis for finite-dimensional time series. The time-varying VAR is naturally connected to the locally station-ary time series model framework, which has been systematically studied in the literature since Dahlhaus (1997). In the high-dimensional time-varying VAR model setup, Ding, Qiu and Chen (2017) combine the ℓ1-regularised method with kernel smoothing to estimate transition matrices; Xu, Chen and Wu (2020) study the multiple break structure and estimate smooth time-varying covariance and precision matrices between the break points; and Chen et al (2025) estimate dual network structures via directed Granger causality and undirected partial correlation linkages. A recent paper by Li et al (2026) further introduces a general time-varying network VAR model framework with a latent group structure, allowing both structural changes and structural breaks on model coefficients. However, they limit attention to a single-layer network structure to capture the network spillover effect. In this paper, we propose a penalized time-varying model averaging (PTVMA) method to es-timate the optimal weights for candidate multi-layer network VAR models whose time-varying coefficients are estimated via the classic local linear smoothing. The candidate models are con-3structed via distinct adjacency matrices in network spillover effects, varying lags in momentum effects and different subsets of node-specific exogenous predictors. In particular, we allow all the candidate models to be misspecified, enhancing the applicability of the proposed model and methodology. Under some regularity conditions, we establish the asymptotic optimality and convergence rates of the proposed time-varying weight estimates in the contexts of both the in-sample fitting and out-of-sample prediction. In particular, we show that the PTVMA criterion achieves the so-called “selection consistency" when there exist correctly-specified candidate mod-els, i.e., the sum of the estimated time-varying weights for correctly-specified candidate models approaches one asymptotically. In addition to point forecasts, we further construct the prediction interval, accounting for fore-cast uncertainty. Specifically, we propose a PTVMA-based conformal prediction method to con-struct interval forecasts without requiring the number of candidate models or predictors to be fixed. The conformal prediction method is first introduced by Vovk, Gammerman and Shafer (2005) as a sequential approach to form prediction intervals and has been extended by Lei and Wasserman (2014) and Lei et al (2018) to accommodate the nonparametric regression framework. In this paper, we make a further extension by combining the conformal prediction with the de-veloped PTVMA method to construct prediction bands in the context of large-scale and locally stationary network time series. The proposed PTVMA-based conformal prediction algorithm is easy to implement and can guarantee the coverage probability without requiring the asymptotic distribution theory of the model averaging estimation. Monte Carlo simulations demonstrate that the proposed PTVMA method delivers nearly iden-tical in-sample fit and superior out-of-sample prediction relative to the benchmark, even when all candidate models are misspecified. By assigning time-varying weights to candidate models to accommodate parameter instability, the PTVMA criterion achieves selection consistency when correctly specified candidates exist, and concentrates weight on the best-approximating models when all candidates are misspecified. The proposed conformal prediction intervals exhibit ro-bust finite-sample performance, with empirical coverage probabilities close to the nominal level, particularly as the sample size increases. The developed model and methodology are further ap-plied to analyze the monthly CPI inflation in 36 economies from January 2007 to December 2024. The empirical results reveal multiple channels of CPI inflation transmission across economies, with the production, equity, trade, and policy networks alternately dominating global inflation transmission. Our model and method consistently outperform a broad set of competing models, including the static and time-varying network VAR models and state-of-the-art machine learning methods, highlighting the advantage of the proposed time-varying multi-layer network VAR and PTVMA. 4The rest of the paper is organized as follows. Section 2 introduces the model framework and the PTVMA methodology. Section 3 gives the asymptotic properties of the developed weight es-timation together with technical assumptions. Section 4 proposes the PTVMA-based conformal prediction interval construction. Sections 5 and 6 report the simulation and empirical studies, re-spectively. Section 7 concludes the paper. All the theoretical proofs are contained in the appendix. 
+
+# 2 Model and methodology 
+
+In this section, we introduce the time-varying multi-layer network VAR model framework and propose the PTVMA method to determine a time-varying optimal combination of candidate mod-els. 
+
+## 2.1 Time-varying multi-layer network VAR 
+
+Consider N-dimensional vectors of time series observations Yt = ( y1, t, y2, t, . . . , yN,t)⊺
+
+, 1 ⩽ t ⩽ T,with N being the number of nodes in the large-scale network, and Q-dimensional node-specific vectors Xi = ( xi,1 , . . . , xi,Q)⊺
+
+, 1 ⩽ i ⩽ N. Throughout the paper, N is allowed to diverge to infin-ity while Q is a fixed positive integer. Let W(k) = ( ω(k) 
+
+> ij
+
+)N×N denote the k-th adjacency matrix, which is observed and non-stochastic, ω(k) 
+
+> ii
+
+= 0 and ω(k) 
+
+> ij
+
+= 1 if i follows j, k = 1, . . . , K. These adjacency matrices capture economic linkages, geographic distances, or other forms of connect-edness. All the adjacency matrices in this paper can be either directed or undirected. We consider the following data generating process: 
+
+yi,t = μi,t + ϵi,t
+
+=
+
+> K
+
+X
+
+> k=1
+
+βtk 
+
+X
+
+> j̸=i
+
+eω(k) 
+
+> ij
+
+yj,t−1 +
+
+> P
+
+X
+
+> p=1
+
+αtp yi,t−p +
+
+> Q
+
+X
+
+> q=1
+
+γtq xi,q + ϵi,t
+
+= eY⊺
+
+> i,t−1
+
+βt + Y⊺
+
+> i,t−1
+
+αt + X⊺ 
+
+> i
+
+γt + ϵi,t
+
+=: Z⊺
+
+> i,t−1
+
+θt + ϵi,t, 1 ⩽ i ⩽ N, (2.1) where eω(k) 
+
+> ij
+
+= ω(k) 
+
+> ij
+
+/n (k) 
+
+> i
+
+with n(k) 
+
+> i
+
+= P 
+
+> j̸=i
+
+ω(k) 
+
+> ij
+
+denoting the total number of nodes that i follows according the k-th linkage, βt = ( βt1, . . . , βtK)⊺
+
+, αt = ( αt1, . . . , αtP)⊺
+
+and γt = ( γt1, . . . , γtQ)⊺
+
+are unknown time-varying parameter vectors to be estimated, Zi,t denotes the predictor vector with 5dimension K + P + Q, i.e., 
+
+Zi,t =
+
+eY⊺
+
+> i,t
+
+, Y⊺
+
+> i,t
+
+, X⊺
+
+> i
+
+⊺
+
+,
+
+eYi,t = X
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t, . . . , X
+
+> j̸=i
+
+eω(K) 
+
+> ij
+
+yj,t
+
+!⊺
+
+,
+
+Yi,t = ( yi,t, . . . , yi,t−P+1)⊺
+
+, Xi = ( xi,1 , . . . , xi,Q)⊺
+
+,
+
+θt = ( β⊺
+
+> t
+
+, α⊺
+
+> t
+
+, γ⊺
+
+> t
+
+)⊺
+
+, and ϵi,t = σi(t/T )ui,t with σ2
+
+> i
+
+(·) being a time-varying variance function and 
+
+ui,t being independent and identically distributed (i.i.d.) with zero mean and unit variance. The time-varying VAR in (2.1) is split into multiple network spillover effects (or cross-lag effects), the momentum effects with order P (or own-lag effects) and the nodal effects, all of which are allowed to evolve smoothly over time. Here we only include the first lag of network spillover effects for simplicity and the extension to higher-order cross-lag effects is straightforward. 
+
+## 2.2 Penalized time-varying model averaging 
+
+Unlike the model selection which aims to select one time-varying network VAR model, to reduce model estimation and prediction uncertainty caused by selection of adjacency matrices, order of lagged dependent variables and subset of node-specific exogenous predictors, we next propose the PTVMA procedure, seeking to construct a dynamic optimal combination of candidate time-varying network VAR models. Consider a sequence of candidate network VAR models indexed by m = 1, . . . , M, which may be misspecified for the underlying data generating process. Specifi-cally, we formulate the m-th candidate model as 
+
+yi,t = μ(m) 
+
+> i,t
+
++ ϵ(m)
+
+> i,t
+
+= X
+
+> k∈I(m)
+> K
+
+β(m)
+
+> tk
+
+X
+
+> j̸=i
+
+eω(k) 
+
+> ij
+
+yj,t−1 + X
+
+> p∈I(m)
+> P
+
+α(m) 
+
+> tp
+
+yi,t−p + X
+
+> q∈I(m)
+> Q
+
+γ(m) 
+
+> tq
+
+xi,q + ϵ(m) 
+
+> i,t
+
+,
+
+=: Z(m)⊺
+
+> i,t−1
+
+θ(m) 
+
+> t
+
++ ϵ(m) 
+
+> i,t
+
+, 1 ⩽ i ⩽ N,where I(m) 
+
+> K
+
+= {i1, . . . , ikm } is a subset of {1, 2, . . . , K}, I(m) 
+
+> P
+
+= {i1, . . . , ipm } is a subset of {1, 2, . . . , P},
+
+I(m) 
+
+> Q
+
+= {i1, . . . , iqm } is a subset of {1, 2, . . . , Q},
+
+θ(m) 
+
+> t
+
+=
+
+
+
+β(m)⊺ 
+
+> t
+
+, α(m)⊺ 
+
+> t
+
+, γ(m)⊺
+
+> t
+
+⊺
+
+6with 
+
+β(m) 
+
+> t
+
+= ( βti 1 , . . . , βti km )⊺
+
+= βti 1 (t/ T), . . . , βti km (t/ T)⊺
+
+,
+
+α(m) 
+
+> t
+
+= ( αti 1 , . . . , αti pm )⊺
+
+= αti 1 (t/ T), . . . , αti pm (t/ T)⊺
+
+,
+
+γ(m) 
+
+> t
+
+= ( γti 1 , . . . , αti qm )⊺
+
+= γti 1 (t/ T), . . . , γti qm (t/ T)⊺
+
+,and Z(m) 
+
+> i,t
+
+denotes the predictor vector with dimension km + pm + qm. All the time-varying pa-rameters are defined as smooth functions of scaled times. Let ¯ρ = ( K + P + Q) ∨ max {ρ1, ρ2, · · · , ρM} with ρm = km + pm + qm,
+
+μ(m) 
+
+> t
+
+= ( μ(m) 
+
+> 1, t
+
+, . . . , μ(m) 
+
+> N,t
+
+)⊺
+
+and ϵ(m) 
+
+> t
+
+= ( ϵ(m) 
+
+> 1, t
+
+, . . . , ϵ(m) 
+
+> N,t
+
+)⊺
+
+. Throughout the paper, we allow candidate time-varying network VAR models to be non-nested and misspecified, and both ¯ ρ and M may diverge to infinity. For any given t0, we define the local linear estimate of θ(m) 
+
+> t0
+
+as 
+
+bθ(m) 
+
+> t0
+
+= ( Iρm , Oρm )
+
+> T
+
+X
+
+> t=1
+
+eZ(m)⊺ 
+
+> t−1
+
+eZ(m) 
+
+> t−1
+
+Kt,t0
+
+!−1 TX
+
+> t=1
+
+eZ(m)⊺ 
+
+> t−1
+
+YtKt,t0
+
+!
+
+, (2.2) where Iρm and Oρm are the identity and zero matrices, respectively, with size ρm × ρm,
+
+eZ(m) 
+
+> t−1
+
+=
+
+
+
+Z(m)⊺ 
+
+> t−1
+
+,
+
+t − t0
+
+T h 
+
+
+
+Z(m)⊺
+
+> t−1
+
+
+
+, Z(m) 
+
+> t
+
+= ( Z(m) 
+
+> 1, t
+
+, . . . , Z(m) 
+
+> N,t
+
+), Kt,t0 = K
+
+t − t0
+
+T h 
+
+
+
+with K(·) being a kernel function and h being a bandwidth. Let 
+
+W =
+
+
+
+w = ( w1, w2, . . . , wM)⊺
+
+∈ [0, 1 ]M :
+
+> M
+
+X
+
+> m=1
+
+wm = 1
+
+
+
+.With a given vector w = ( w1, w2, . . . , wM)⊺
+
+∈ W , we construct the model averaging estimators of time-varying parameters and conditional mean as follows 
+
+bθt(w) = 
+
+> M
+
+X
+
+> m=1
+
+wmΠ(m)⊺ bθ(m) 
+
+> t
+
+, (2.3) 
+
+bμt(w) = [ bμ1, t(w), . . . , bμN,t(w)] ⊺
+
+=
+
+> M
+
+X
+
+> m=1
+
+wmZ(m)⊺ 
+
+> t−1
+
+bθ(m) 
+
+> t
+
+, (2.4) 7where Π(m) is a matrix of size ρm × (K + P + Q) mapping Zi,t to Z(m) 
+
+> i,t
+
+and 
+
+bμi,t(w) = 
+
+> M
+
+X
+
+> m=1
+
+wmZ(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+.We propose the PTVMA criterion: 
+
+PTVMA t(w) = 
+
+> T
+
+X
+
+> s=1
+
+[Ys − bμs(w)] ⊺
+
+[Ys − bμs(w)] Ks,t + λ
+
+> M
+
+X
+
+> m=1
+
+wmρm, (2.5) where λ is a user-specified tuning parameter. The optimal weights are determined by 
+
+bwt =   bw1
+
+> t
+
+, bw2
+
+> t
+
+, . . . , bwM
+
+> t
+
+⊺
+
+= argmin w∈W PTVMA t(w). (2.6) Finally the one-step ahead forecast combination is constructed by 
+
+bYT+1( bwT) = [ by1, T+1( bwT), . . . , byN,T+1( bwT)] ⊺
+
+with byi,T+1( bwT) = 
+
+> M
+
+X
+
+> m=1
+
+bwm 
+
+> T
+
+Z(m)⊺ 
+
+> i,T
+
+bθ(m) 
+
+> T
+
+. (2.7) 
+
+# 3 Asymptotic theory 
+
+In this section, we give some regularity conditions and present the asymptotic properties of the PTVMA estimation developed in Section 2.2 including the asymptotic optimality and conver-gence rates. Section 3.1 considers the in-sample fitting, i.e., bwt for the interior point t in the sense that 0 < t/ T < 1, whereas Section 3.2 tackles the out-of-sample prediction, i.e., bwT for any forecast time point T + 1. 
+
+## 3.1 In-sample asymptotic theory 
+
+To establish the asymptotic optimality of the proposed PTVMA method for in-sample fitting, we define the following infeasible locally weighted (in-sample) quadratic error loss: 
+
+Lt(w) = 
+
+> T
+
+X
+
+> s=1
+
+[μs − bμs(w)] ⊺
+
+[μs − bμs(w)] Ks,t, (3.1) where μs = ( μ1, s, . . . , μN,s)⊺
+
+, μi,s = Z⊺
+
+> i,s−1
+
+θs, t is a fixed interior point such that 0 < t/ T < 1, in which case the local kernel smoothing utilizes the time series sample information on both sides 8of t. Denote 
+
+μ∗ 
+
+> t
+
+(w) = 
+
+> M
+
+X
+
+> m=1
+
+wmμ(m) 
+
+> t,∗
+
+= μ∗
+
+> 1, t
+
+(w), . . . , μ∗
+
+> N,t
+
+(w)⊺
+
+,where μ(m) 
+
+> t,∗
+
+= ( μ(m)∗ 
+
+> 1, t
+
+, . . . , μ(m)∗ 
+
+> N,t
+
+)⊺
+
+and μ(m)∗ 
+
+> i,t
+
+= Z(m)⊺
+
+> i,t−1
+
+θ(m) 
+
+> t,∗
+
+with θ(m) 
+
+> t,∗
+
+being the pseudo time-varying coefficient vector for the m-th candidate model to be defined in Assumption 1 below. Write 
+
+L∗ 
+
+> t
+
+(w) = 
+
+> T
+
+X
+
+> s=1
+
+[μs − μ∗
+
+> s
+
+(w)] ⊺
+
+[μs − μ∗
+
+> s
+
+(w)] Ks,t and ξt = inf  
+
+> w∈W
+
+L∗ 
+
+> t
+
+(w). (3.2) The following assumptions are required to derive the in-sample asymptotic optimality. 
+
+Assumption 1. (i) For the m-th candidate model, there exists a limit time-varying vector θ(m) 
+
+> s,∗
+
+such that 
+
+bθ(m) 
+
+> s
+
+− θ(m) 
+
+> s,∗
+
+= OP
+
+  ¯ρ1/2ζ
+
+uniformly over m and s, where ζ is a typical nonparametric uniform convergence rate. In addition, elements of θ(m) 
+
+> t,∗
+
+are bounded over t and m.(ii) The second moments for each element of Zi,t exist and are uniformly bounded. (iii) Both true and pseudo time-varying coefficients θs and θ(m) 
+
+> s,∗
+
+are Lipschitz continuous over [0, 1 ]
+
+and their difference ∥θs − Π(m)⊺
+
+θ(m) 
+
+> s,∗
+
+∥ = O( ¯ρ1/2) uniformly over m and s.
+
+Assumption 2. (i) The kernel K(·) is positive, symmetric and continuous with a bounded support [− 1, 1 ].(ii) ¯ρζ (MNT h)1/2 is larger than a positive number, and 
+
+¯ρMζ → 0, (λ + ¯ρζ MNT h) ¯ρξ −1 
+
+> t
+
+= oP(1).
+
+Remark 3.1 . Assumption 1(i) imposes a high-level condition on uniform convergence of local lin-ear smoothing for misspecified candidate models, which is comparable to those adopted by some recent works on time-varying model averaging (e.g., Sun et al 2023, Sun, Chen and Gao 2025). With standard techniques for locally stationary time series and nonparametric kernel-weighted smoothing (e.g., Li et al 2026), we may derive an explicit rate: ζ = plog T/(NT h) + h2 under some sufficient conditions which require higher moment restriction than Assumption 1(ii). With this ex-plicit rate for ζ, assuming that both ¯ ρ and M are bounded, NT h5 = O(1) and λ = O(( NT h·log T)1/2),we may verify Assumption 2(ii) if 
+
+(NT h · log T)1/2/ξ t = oP(1).9The latter indicating that all the candidate models must be misspecified , otherwise ξt ≡ 0. Theorem 3.1 below establishes the point-wise asymptotic optimality of the PTVMA estimator, similar to Theorem 1 in Sun et al (2023) and Theorem 3.3 in Chen, Hong and Li (2024). 
+
+Theorem 3.1. Suppose that Assumptions 1 and 2 are satisfied. For any given time t such that 0 < t/ T <
+
+1, the proposed PTVMA estimator satisfies the asymptotic optimality, i.e., 
+
+Lt( bwt)
+
+inf w∈W Lt(w)
+
+> P
+
+−→ 1. The following extra condition is required to derive an explicit in-sample convergence rate of the PTVMA weight estimation. 
+
+Assumption 3. (i) There exists a positive constant κ such that 
+
+λmin 
+
+ 1
+
+NE eμ∗ 
+
+> s
+
+eμ∗⊺
+
+> s
+
+
+
+> κ with eμ∗ 
+
+> s
+
+=  μ(1) 
+
+> s,∗
+
+, . . . , μ(M)
+
+> s,∗
+
+⊺
+
+for any s such that |s − t| ⩽ Th.(ii) For any given time point t,
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,t
+
+ Zi,sZ⊺ 
+
+> i,s
+
+− E Zi,sZ⊺
+
+> i,s
+
+ 
+
+> F
+
+= OP
+
+  ¯ρ(NT h)1/2
+
+and TX
+
+> s=1
+> N
+
+X
+
+> i=1
+
+σ2
+
+> i
+
+(s/ T)( u2 
+
+> is
+
+− 1)Ks,t = OP
+
+ (NT h)1/2 .
+
+(iii) Let the following rate condition hold: 
+
+(λ + ζMNT h) ¯ρ(NT h)−1 + ¯ρ2(NT h)−1/2 → 0
+
+Remark 3.2. Assumption 3(i) is comparable to some similar restriction on predictor vectors or the so-called “hat matrix". Assumption 3(ii) implies weak temporal dependence as well as cross-sectional correlation for predictors as in Li et al (2026). It is easy to verify Assumption 3(iii) when 
+
+ζ = plog T/(NT h) + h2, λ = O(( NT hlog T)1/2) and both ¯ ρ and M are bounded. 
+
+Theorem 3.2. Suppose Assumptions 1–3 are satisfied. For any given time point t such that 0 < t/ T < 1,
+
+10 bwt is a consistent in-sample estimate of w∗ 
+
+> t
+
+, satisfying 
+
+∥ bwt − w∗ 
+
+> t
+
+∥ = OP
+
+ (λ + ζMNT h)1/2 ¯ρ1/2(NT h)−1/2 + ¯ρ(NT h)−1/4 , (3.3) 
+
+where w∗ 
+
+> t
+
+= argmin w∈W E[Lt(w)] .
+
+Remark 3.3. Theorem 3.2 above reveals that the point-wise convergence rate of the in-sample time-varying weight estimation bwt relies on the number of candidate models M, the maximum dimension of potential predictors ¯ ρ, the tuning parameter in penalization λ, the bandwidth h as well as (N, T). With the sufficient conditions discussed in Remark 3.2 to verify Assumption 3(iii), we may simplify the rate in (3.3) to 
+
+∥ bwt − w∗ 
+
+> t
+
+∥ = OP
+
+ h + ( log T)1/4(NT h)−1/4 .We next consider the scenario when there exist correctly-specified candidate time-varying multi-layer network VAR models. Let D denote the index set of correctly-specified models, i.e., 
+
+m ∈ D if the m-th candidate model is correctly specified. Similar to ξt in (3.2), we define 
+
+eξt = inf  
+
+> w∈W(D)
+
+L∗ 
+
+> t
+
+(w), W (D) = {w = ( w1, w2, . . . , wM)⊺
+
+∈ W : wm = 0, m ∈ D}.Theorem 3.3 below shows that the proposed PTVMA criterion achieves the in-sample selection consistency (of correctly-specified candidate models) as the conventional model selection. 
+
+Theorem 3.3. Suppose Assumptions 1, 2 and 3(ii) are satisfied but with the condition (λ + ζMN T h ) ¯ρξ −1 
+
+> t
+
+=
+
+oP(1) in Assumption 2(ii) replaced by 
+
+ ¯ρ(λ + ζMN T h ) + ¯ρ2(NT h )1/2 eξ−1 
+
+> t
+
+= oP(1), (3.4) 
+
+and D is not empty. Then, P 
+
+> m∈D
+
+bwmtP
+
+−→ 1 for any interior time point t.
+
+## 3.2 Out-of-sample asymptotic theory 
+
+We next consider the asymptotic properties of bwT which has been adopted for constructing out-of-sample prediction combination. In this case, the local linear smoothing and PTVMA T (w) essen-tially use one-sided local sample information, which would subsequently slow down the weight 11 estimation convergence. Define the out-of-sample prediction risk: 
+
+RT+1(w) = E
+
+h
+
+YT+1 − bYT+1(w)
+
+i⊺ h
+
+YT+1 − bYT+1(w)
+
+i
+
+− 1
+
+Th
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/ T)Ks,T,where bYT+1(w) is defined similarly to bYT+1( bwT) defined in (2.7) but with bwT replaced by w. Note that the second term of RT+1(w) is independent of w. In the out-of-sample prediction, we expect the PTVMA estimate bwT to asymptotically minimize RT+1(w) over w ∈ W . Furthermore, we let 
+
+R∗
+
+> T+1
+
+(w) = E YT+1 − Y∗
+
+> T+1
+
+(w)⊺ YT+1 − Y∗
+
+> T+1
+
+(w) − 1
+
+Th
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/ T)Ks,T,and 
+
+ξ∗ 
+
+> T+1
+
+= inf  
+
+> w∈W
+
+R∗
+
+> T+1
+
+(w),where Y∗
+
+> T+1
+
+(w) = PM 
+
+> m=1
+
+wmY(m)∗ 
+
+> T+1
+
+and Y(m)∗ 
+
+> T+1
+
+= ( y(m)∗
+
+> 1, T+1
+
+, . . . , y(m)∗
+
+> N,T+1
+
+)⊺
+
+with y(m)∗ 
+
+> i,T+1
+
+= Z(m)⊺ 
+
+> i,T
+
+θ(m) 
+
+> T,∗
+
+. Let 
+
+ϵ(m)∗ 
+
+> t
+
+= ( ϵ(m)∗ 
+
+> 1, t
+
+, . . . , ϵ(m)∗ 
+
+> N,t
+
+)⊺
+
+with ϵ(m)∗ 
+
+> i,t
+
+= yi,t − μ(m)∗ 
+
+> i,t
+
+, 1 ⩽ t ⩽ T, and ϵ(m)∗ 
+
+> T+1
+
+= ( ϵ(m)∗
+
+> 1, T+1
+
+, . . . , ϵ(m)∗
+
+> N,T+1
+
+)⊺
+
+with ϵ(m)∗ 
+
+> i,T+1
+
+= yi,T+1 − y(m)∗ 
+
+> i,T+1
+
+for the out-of-sample period. 
+
+Assumption 4. (i) σi(·), 1 ⩽ i ⩽ N, are uniformly bounded and Lipschitz continuous. (ii) There exists δ1 > 0 such that 
+
+sup 
+
+> T
+
+E
+
+
+
+ξ∗−1/2
+
+> T+1
+
+
+
+max 
+
+> 1⩽m⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
++ max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗
+
+> T+1
+> 1/2
+
+ϵ(m′)∗
+
+> T+1
+> 1/2
+
+ 2+δ1
+
+< ∞,(3.5) 
+
+and in addition, sup T ξ∗
+
+> T+1
+
+/N < ∞.(iii) Let the following conditions hold: 
+
+ξ∗−1 
+
+> T+1
+
+¯ρ MN ζ + λ(Th)−1 → 0, ξ∗−1
+
+> T+1
+
+ ¯ρNh + M2N1/2(Th)−1/2 → 0. 
+
+(iv) For any given time point t such that T − Th ⩽ t ⩽ T,
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,TE Zi,t−1Z⊺
+
+> i,t−1
+
+ − E Zi,TZ⊺
+
+> i,T
+
+
+
+> op
+
+= OP (h) ,
+
+where ∥ · ∥ op denotes the operator norm of a square matrix. 
+
+Remark 3.4. Assumption 4(i) imposes a mild smoothness restriction on heterogeneous variance functions σ2
+
+> i
+
+(·) and is automatically satisfied for the case of homoskedasticity. The condition (3.5) 12 requires the potential best prediction (over all the candidate models) has finite risk in large-scale networks. A similar condition can be found in Assumptions 3(iii) and 5(iii) of Zhang and Zhang (2023). In fact, it provides a sufficient condition to derive the uniform integrability (over w) of 
+
+ξ∗−1 
+
+> T+1
+
+∥YT+1 − bYT+1(w)∥2 − ∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2 , which is required in the proof of Theorem 3.4 in the appendix. If, in addition, sup T ξ∗
+
+> T+1
+
+/N is strictly larger than a positive constant, we may replace ξ∗ 
+
+> T+1
+
+by N in (3.5) and further show that all the candidate models are misspecified. In fact, if the m0-th candidate model is correctly specified, Π(m0)⊺ bθ(m0) 
+
+> T
+
+converges to the true coefficient vector θT. Consequently, Y(m0)∗ 
+
+> T+1
+
+= μT+1(1 + oP(h)) and 
+
+ξ∗ 
+
+> T+1
+
+= inf  
+
+> w∈W
+
+R∗
+
+> T+1
+
+(w) ⩽ E
+
+
+
+YT+1 − Y(m0)∗
+
+> T+1
+
+⊺ 
+
+YT+1 − Y(m0)∗
+
+> T+1
+
+
+
+− 1
+
+Th
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/ T)Ks,T = o(N),which leads to contradiction. Assumption 4(iii) is comparable to Assumption 2(ii) and can be easily justified by using the sufficient conditions discussed in Remarks 3.1 and 3.2. Assumption 4(iv) contains a high-level condition for locally stationary Zi,t.
+
+Theorem 3.4. Suppose that Assumptions 1, 2(i) and 4 are satisfied. For any forecast time point T + 1,
+
+RT+1( bwT)
+
+inf w∈W RT+1(w)
+
+> P
+
+→ 1. 
+
+Remark 3.5. Theorem 3.4 above shows that the PTVMA estimator is out-of-sample asymptotically optimal in the sense that its out-of-sample prediction risk is asymptotically equivalent to that of the infeasible optimal weight estimator w∗ 
+
+> T
+
+:= inf w∈W RT+1(w). A similar property is also derived by Zhang and Liu (2023) and Zhang and Zhang (2023). A combination of Theorems 3.1 and 3.4 demonstrates that our proposed PTVMA estimator achieves not only the minimum of in-sample estimation error at the interior time point but also the minimum of out-of-sample prediction risk. To derive an explicit out-of-sample convergence rate of bwT, we require the following assump-tion which is analogous to Assumption 3(i)(iii) in Section 3.1. 
+
+Assumption 5. (i) There exists a positive constant κ∗ such that 
+
+λmin 
+
+ 1
+
+NE
+
+heY∗ 
+
+> T+1
+
+eY∗⊺
+
+> T+1
+
+i
+
+> κ ∗, eY∗ 
+
+> T+1
+
+=
+
+
+
+Y(1)
+
+> T+1, ∗
+
+, . . . , Y(M)
+
+> T+1, ∗
+
+⊺
+
+.
+
+(ii) Let the following condition hold: 
+
+(λ + ζMNT h) ¯ρ(NT h)−1 + M2(NT h)−1/2 → 0. 13 Theorem 3.5. Suppose that Assumptions 1, 2(i), 3(ii)(iii), 4(i) and 5 are satisfied, and w∗ 
+
+> T
+
+uniquely mini-mizes RT+1(w) in W . Then, for any forecast time point T + 1, bwT is a consistent estimate of w∗
+
+> T
+
+, satisfying 
+
+∥ bwT − w∗
+
+> T
+
+∥ = OP
+
+ (λ + ζMNT h)1/2 ¯ρ1/2(NT h)−1/2 + M(NT h)−1/4 + ( ¯ρh )1/2 . (3.6) 
+
+Remark 3.6. As in Theorem 3.2, the convergence rate of bwT relies on M, ¯ ρ, λ, h and (N, T). In fact, the rate in (3.6) is slightly slower than that in (3.3) due to the extra term h1/2, which is caused by the well-known boundary effect of kernel smoothing. Furthermore, as discussed in Remark 3.3, under some sufficient conditions, we may simplify the rate in (3.6) to 
+
+∥ bwT − w∗
+
+> T
+
+∥ = OP
+
+ h1/2 + ( log T)1/4(NT h)−1/4 .We finally consider the case when there exist correctly-specified candidate models. Let D and 
+
+W (D) be defined as in Section 3.1 and 
+
+eξ∗ 
+
+> T+1
+
+= inf  
+
+> w∈W(D)
+
+R∗
+
+> T+1
+
+(w),denoting the minimum out-of-sample prediction risk over misspecified models. The following theorem is an extension of Theorem 3.3 from in-sample fitting to out-of-sample prediction. 
+
+Theorem 3.6. Suppose that Assumptions 1, 2(i), 3(ii)(iii) and 4(i) are satisfied. In addition, 
+
+eξ∗−1 
+
+> T+1
+
+¯ρ MN ζ + λ(Th)−1 + eξ∗−1
+
+> T+1
+
+ ¯ρNh + M2N1/2(Th)−1/2 = oP(1), (3.7) 
+
+and D is not empty. Then, for any forecast time point T + 1, we have P 
+
+> m∈D
+
+bwm
+
+> T
+> P
+
+→ 1.
+
+# 4 PTVMA-based conformal prediction 
+
+Despite the growing literature on frequentist model averaging, construction of prediction inter-vals using model averaging estimators remain under-explored. A commonly-used approach to constructing interval forecasts often relies on the asymptotic distribution of the model averag-ing estimator. The relevant literature can be divided into two strands. The first examines the limiting distributions of least squares averaging estimators within a local asymptotic framework, where time-invariant regression coefficients lie in a local T−1/2 neighborhood of zero (Hjort and Claeskens (2003, Hansen 2014, Liu 2015). However, the realism of this local misspecification as-sumption has been questioned by Raftery and Zheng (2003), who argue that it lacks face validity 14 in certain empirical settings. The second strand relies on the asymptotic distribution of model averaging estimators under proper model assumptions such as the (non-)linear regression with fixed parameters (Zhang and Liu 2019, Yu et al 2024) and time-varying coefficient regressions (Sun 
+
+et al 2023, Tu and Wang 2025). These results are restricted to the setting where both the number of candidate models and the number of predictors remain fixed. We next propose the PTVMA-based conformal prediction approach to construct interval forecasts without requiring the num-ber of candidate models or predictors to be fixed; see Algorithm 1. Without loss of generality, we assume that Th takes a positive integer value. 
+
+ALGORITHM 1 The PTVMA-based conformal prediction 
+
+Step 1 : Generate residuals by implementing PTVMA to the training sample. 
+
+1.1 . Calculate bθ(m) 
+
+> t
+
+by Eq (2.2) and obtain bμ(m) 
+
+> i,t
+
+= Z(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+, t = T − Th, . . . , T, m = 1, . . . , M;
+
+1.2 . Estimate bwT by Eq (2.6) with t = T, and construct 
+
+bϵi,t := bϵi,t( bwT) = yi,t − bμi,t( bwT), bμi,t( bwT) = 
+
+> M
+
+X
+
+> m=1
+
+bwm 
+
+> T
+
+bμ(m) 
+
+> i,t
+
+, t = T − Th, . . . , T;
+
+1.3 . Construct the set of residuals: 
+
+bϵi = {| bϵi,t|, t = T − Th, . . . , T}.
+
+Step 2 : Determine the quantile of absolute residuals. Let bϵαi be defined as the ⌈(1 − α)( ni + 1)⌉-th smallest value of the elements in bϵi, where ni is the cardinality of bϵi.
+
+Step 3 : Generate the prediction interval. Integrate the quantile bϵαi with byi,T+1( bwT) defined in Eq (2.7) to generate the conformal predic-tion interval with confidence level 1 − α:
+
+Cαi (ZT) = [ byi,T+1( bwT) − bϵαi , byi,T+1( bwT) + bϵαi ].To establish a valid coverage property of the proposed conformal prediction procedure, we require the following technical assumptions. 
+
+Assumption 6. (i) σi(·) is second-order continuously differentiable, and σ ⩽ σi(·) ⩽ σ, where σ and σ
+
+are finite positive constants. (ii) {ui,t} are i.i.d. with mean zero, unit variance and E[u4
+
+> i,t
+
+] < ∞. Furthermore, their common 
+
+15 cumulative distribution function F satisfies a Lipschitz condition, i.e., 
+
+sup 
+
+> x1,x2
+
+|F(x1) − F(x2)| ⩽ MF|x1 − x2|, 0 < M F < ∞.
+
+(iii) Let |θT+1 − θT| ⩽ Mθ/T with Mθ being a positive constant. 
+
+Letting bui,t = σ−1 
+
+> i
+
+(τt)bϵi,t with τt = t/ T, we define the following in-sample and out-of-sample performance measures: 
+
+δ2 
+
+> i,T
+
+= 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+(|bui,t| − |ui,t|)2 and ψi,T+1 = |bui,T+1| − |ui,T+1| .The following proposition gives the finite-sample upper bound on the gap between the actual coverage probability and the nominal level 1 − α and further establishes the asymptotic validity of the developed PTVMA-based conformal prediction method. 
+
+Proposition 4.1. Suppose that Assumption 6 is satisfied. There exists a positive constant c† such that 
+
+|P (yi,T+1 ∈ Cαi (ZT)) − ( 1 − α)| ⩽ c†
+
+E  δ2
+
+> i,T
+
+ 1/4 + [ E (ψi,T+1)] 1/2 + h4/5 + ( Th)−1/3
+
+
+
+(4.1) 
+
+for any fixed i, if [E (ψi,T+1)] < 1. Furthermore, if 
+
+¯ρeξ∗−1
+
+> T+1
+
+ ¯ρMN ζ + ¯ρλ (Th)−1 + ¯ρNh + M2N1/2(Th)−1/2 = oP(1)
+
+and D is not empty, we have 
+
+P (yi,T+1 ∈ Cαi (ZT)) = 1 − α + o(1). (4.2) 
+
+Remark 4.1. We allow all the candidate models to be misspecified to obtain the finite-sample upper bound for the deviation of the actual coverage probability from the nominal level in (4.1). To further derive the asymptotic validity of the constructed prediction interval in (4.2), we need to prove that E(δ2
+
+> i,T
+
+) → 0 and E(ψi,T+1) → 0, which requires D to be not empty, indicating that there exists at least one correctly-specified candidate model so that Theorem 3.6 is applicable. 
+
+# 5 Monte-Carlo simulation 
+
+To demonstrate advantages of the proposed PTVMA procedure, this section creates a sharp chal-lenge for classic approaches in which any single-network specification may be misspecified. In 16 the two simulation settings, model selection over a set of single-network specifications is global misspecified because no candidate model coincides with the true DGP throughout the entire pe-riod. By comparing the finite-sample performance of PTVMA with several competing models, our simulation experiment examines whether the proposed PTVMA can adaptively learn rele-vant network layers and variables over time and deliver accurate predictions despite persistent specification uncertainty. 
+
+## 5.1 Evaluation measures on finite-sample performance 
+
+To evaluate the in-sample performance, we calculate the in-sample ratio of the root mean squared prediction errors (RMSPE) to compare the proposed model with benchmark models: 
+
+RMSPE in =
+
+vuut
+
+PRr=1
+
+PT
+
+> t=1
+
+PN
+
+> i=1
+
+ yit :r − byPTVMA 
+
+> it :r
+
+2
+
+PRr=1
+
+PT
+
+> t=1
+
+PN
+
+> i=1
+
+ yit :r − byBenchmark 
+
+> it :r
+
+2 ,where R = 1000 is the replication number in simulations, yit :r is the true value in the r-th repli-cation, byPTVMA  
+
+> it :r
+
+is the fitted value from the PTVMA, and byBenchmark  
+
+> it :r
+
+is from a benchmark model. We consider two benchmarks. The network vector autoregressive (NAR) model (Zhu et al 2017) includes the same response and predictors as the DGP but restricts the parameters to be time-invariant, estimating them via the OLS. The time-varying NAR (tv-NAR) model (Li et al 2026) adopts the same DGP specification, utilizing a local linear approach to estimate time-varying co-efficients. The proposed PTVMA method outperforms the benchmark model when the RMSPE in 
+
+ratio is smaller than one. The out-of-sample predictive performance is assessed by employing the rolling forecasting procedure. Specifically, we compute the out-of-sample ratio of the RMSPE for the l-step-ahead out-of-sample rolling prediction of bYT+l:
+
+RMSPE out (l) = 
+
+vuut
+
+PRr=1
+
+PT−lt=T0+1
+
+PN
+
+> i=1
+
+ yi,t+l:r − byPTVMA 
+
+> i,t+l:r
+
+2
+
+PRr=1
+
+PT−lt=T0+1
+
+PN
+
+> i=1
+
+ yi,t+l:r − byBenchmark 
+
+> i,t+l:r
+
+2 ,where byPTVMA  
+
+> i,t+l:r
+
+and byBenchmark  
+
+> i,t+l:r
+
+denotes the l-step-ahead rolling prediction in the r-th replication using the proposed PTVMA and benchmark methods, respectively, T0 = ⌊0.4 T⌋ is the rolling window length. Under the iterated scheme, multi-step-ahead forecasts are obtained by estimating a one-step-ahead model and recursively replacing future lagged values with their forecasts. The performance of conformal prediction is evaluated by the empirical coverage probability. 17 Specifically, we use the test set to calculate empirical coverage probabilities: 
+
+CP = 1
+
+RN(T − T0)
+
+> R
+
+X
+
+> r=1
+> T
+
+X
+
+> t=T0+1
+> N
+
+X
+
+> i=1
+
+I {yi,t:r ∈ Cαi:r(Zt−1)} ,where Cαi:r(Zt−1) is the conformal prediction interval constructed for individual i at time t in the 
+
+r-th replication. 
+
+## 5.2 One candidate model is correctly specified over half-period. 
+
+The DGP 1 simulates a setting in which the response variable yit is driven by two distinct net-works, W(1) and W(2), with time-varying impacts βt1 and βt2. Consider 
+
+yi,t = βt1
+
+X
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1 + βt2
+
+X
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1 + αt1yi,t−1 + αt2yi,t−2 +
+
+> 3
+
+X
+
+> q=1
+
+γtq xi,q + ϵi,t, (5.1) where eω(k) 
+
+> ij
+
+= ω(k) 
+
+> ij
+
+/ P 
+
+> j̸=i
+
+ω(k) 
+
+> ij
+
+is the (i, j)-th element of the matrix obtained by row-normalizing the adjacency matrix W(k), Xi = ( xi,1 , xi,2 , xi,3 )⊺
+
+is independently drawn from a three-dimensional normal distribution across i with mean 0 and covariance ΣX = ( σx,q1q2 )3×3 with σx,q1q2 = 0.5 |q1−q2|
+
+for 1 ⩽ q1, q2 ⩽ 3, the error term ϵi,t = σi(t/ T)ui,t, ui,t is independently simulated by the stan-dard normal distribution, σi(t/ T) = ( 0.25 sin (t/ T)+ 0.3 )0.5 for odd i, and σi(t/ T) = ( 0.25 cos (t/ T)+ 
+
+0.3 )0.5 for even i. True time-varying coefficients are set as 
+
+βt1 = 0.4 /(1 + exp {50 (t/ T − 0.5 )}), βt2 = 0.4 /(1 + exp {−50 (t/ T − 0.5 )}),
+
+αt1 = − 0.3 sin (πt/ T) + 0.25, αt2 = − 0.3 cos (πt/ T) + 0.25, 
+
+γt1 = 2 cos (πt/ T), γt2 = 2(t/ T − 0.5 )2, γt3 = 1 − 2t/ T.The first adjacency matrix W(1) is generated by the stochastic block model with two blocks. Each node is randomly assigned for one block label with equal probability and probabilities within and between blocks are generated by: P(ω(1) 
+
+> ij
+
+= 1) = 0.5 if i and j are in the same block; 
+
+P(ω(1) 
+
+> ij
+
+= 1) = 0.1 otherwise. The second adjacency matrix W(2) is generated by using the power-law distribution model. The power-law distribution of degrees widely exists in the real world, where most agents have low degrees while a few hubs have very high degrees. We follow Zhu 
+
+et al (2017) and define W(2) as follows. First, generate for each agent’s degree i via the discrete power-law distribution P(degree i = k) ∝ k−c, where c is the exponent parameter and a smaller 18 value implies a heavier distribution tail. 1 Next, we randomly select degree i agents to be agent i’s followers. We consider M = 8 candidate models in the proposed PTVMA for DGP 1 and list their re-spective predictors in Table 1. Note that βt1 is significant in the first half of the simulation period but not in the second, while βt2 exhibits the reverse pattern that is insignificant in the first half and significant in the second. Consequently, candidate models 2 and 4 are correctly specified in the first and second half of the sample period, respectively, but misspecified in the other pe-riod. We also involve irrelevant predictors xi4, xi5, P 
+
+> j̸=i
+
+eω(3) 
+
+> ij
+
+yj,t−1 and P 
+
+> j̸=i
+
+eω(4) 
+
+> ij
+
+yj,t−1 into some candidate models to demonstrate that the PTVMA method can dynamically select the correctly specified model if it is in the candidate models. Irrelevant predictors xi4 and xi5 are indepen-dently drawn from a normal distribution with mean 1 and variance 1. We refer to Zhang and Yu (2018) and adopt the left-right matrix as one irrelevant adjacency matrix W(3), where each agent interacts only with its left and right neighbors. The other irrelevant adjacency matrix W(4) is constructed by a distance-based spatial weight matrix. We first independently generate agent i’s location (xi, yi) from U [0, 1 ], and then compute the pairwise Euclidean distance dij between agent 
+
+i and j. The spatial weight matrix is constructed using an exponential distance-decay function, with off-diagonal elements ω(4) 
+
+> ij
+
+= I (exp {−10 dij } < d 0) and zero diagonal, where d0 is the 25% quantile of {dij }.As reported in Table 2, the PTVMA delivers uniformly better in-sample fit than the NAR benchmark. The RMSPE ratio (PTVMA/NAR) ranges from 0.746 to 0.825 across all (N, T) designs, indicating significant reductions of in-sample prediction error. Furthermore, PTVMA delivers nearly the same in-sample performance as the correct specification (tv-NAR model), with RMSPE ratios tightly around 1.002 and decreasing as either N or T grows. Given that the tv-NAR model is correctly specified here, this comparison suggests that the PTVMA approximates the true model specification without priori information. Table 2 also reports the average weights of eight candidate models over the 1000 replications. The estimated weights are highly concentrated on candidate model 2 and 4, each receiving about 0.48 and jointly accounting for more than 95% of the total weight. In contrast, the (averaged) time-varying weight estimates for the other six candidate models are negligible across all N and T. This pattern is consistent with the design of DGP 1: the true network is generated from a combination of W(1) and W(2) while W(3) and W(4) are irrelevant alternatives. Overall, the evidence indicates that PTVMA places most of the weight on DGP-relevant network components while shrinking irrelevant candidates toward zero, confirming Theorem 3.3 in finite samples.    
+
+> 1Here, we set c=2.5 and the created networks share a similar density size at around 20%.
+
+19 Table 1: Candidate models for DGPs 1 and 2 in the simulation study. 
+
+Index DGP 1 predictors DGP 2 predictors cm 1 P 
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4, xi5
+
+P 
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4
+
+cm 2 P 
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3
+
+P 
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1, yi,t−2, xi1, xi2, xi3, xi5
+
+cm 3 P 
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4, xi5
+
+P 
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3
+
+cm 4 P 
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3
+
+P 
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4
+
+cm 5 P 
+
+> j̸=i
+
+eω(3) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4, xi5
+
+P 
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1, yi,t−2, xi1, xi2, xi3, xi5
+
+cm 6 P 
+
+> j̸=i
+
+eω(3) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3
+
+P 
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3
+
+cm 7 P 
+
+> j̸=i
+
+eω(4) 
+
+> ij
+
+yj,t−1, yi,t−1, xi1, xi2, xi3, xi4, xi5 /cm 8 P 
+
+> j̸=i
+
+eω(4) 
+
+> ij
+
+yj,t−1, yi,t−1, yi,t−2, xi1, xi2, xi3 /
+
+Note: The response variable is yit . In DGP 1, W(3) and W(4) are irrelevant adjacency matrixes, and xi4 and xi5 are irrelevant variables. Candidate models 2 and 4 are correctly specified in the first and second half of the sample period, respectively, but misspecified in the other period. The other six candidate models are misspecified. In DGP 2, all the candidate models are misspecified over the sample period. 
+
+Table 2: In-sample performance of simulations in DGP 1. 
+
+RMSPE Average weights of candidate models NAR tv-NAR cm 1 cm 2 cm 3 cm 4 cm 5 cm 6 cm 7 cm 8 
+
+T = 60 0.745 1.005 0.00 0.46 0.00 0.49 0.00 0.03 0.00 0.02 
+
+N = 10 T = 80 0.760 1.004 0.00 0.47 0.00 0.50 0.00 0.02 0.00 0.02 
+
+T = 100 0.760 1.003 0.00 0.48 0.00 0.49 0.00 0.02 0.00 0.01 
+
+T = 60 0.795 1.003 0.00 0.47 0.00 0.49 0.00 0.02 0.00 0.02 
+
+N = 20 T = 80 0.804 1.002 0.00 0.48 0.00 0.49 0.00 0.01 0.00 0.02 
+
+T = 100 0.811 1.002 0.00 0.48 0.00 0.49 0.00 0.01 0.00 0.01 
+
+T = 60 0.813 1.002 0.00 0.48 0.00 0.49 0.00 0.02 0.00 0.02 
+
+N = 30 T = 80 0.821 1.001 0.00 0.48 0.00 0.49 0.00 0.02 0.00 0.02 
+
+T = 100 0.825 1.001 0.00 0.48 0.00 0.49 0.00 0.01 0.00 0.02 
+
+Note: This table reports the in-sample RMSPE ratio of the PTVMA relative to NAR and tv-NAR model and the average weight estimates of eight candidate models. The NAR and tv-NAR model involve W(1) and W(2) as network adjacency matrixes and the tv-NAR model is the correct specification. 
+
+20 Figure 1 illustrates a central implication of the proposed PTVMA: when the strength of net-work dependence is time-varying, the optimal weights are expected to be time-varying as well. The solid lines report the averaged time-varying weights on candidate model 2 and 4, and the dashed lines plot the true coefficient functions: βt1 and βt2. The plots show that the assigned weights closely track the DGP 1: the PTVMA places most weight on candidate model 2 in the first half of the sample period and rapidly shifts weight toward candidate model 4 in the second half, consistent with the time-varying pattern of true coefficient functions. In addition, the weight real-location is concentrated around the mid-sample transition where βt1 and βt2 switch most sharply, indicating PTVMA’s strong adaptivity to smooth structural changes. 0.00 0.25 0.50 0.75 1.00    
+
+> 0.0 0.5 1.0
+> 020 40 60
+
+(a) N = 10, T = 60. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 020 40 60 80
+
+(b) N = 10, T = 80. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 025 50 75 100
+
+(c) N = 10, T = 100. 0.00 0.25 0.50 0.75 1.00    
+
+> 0.0 0.5 1.0
+> 020 40 60
+
+(d) N = 20, T = 60. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 020 40 60 80
+
+(e) N = 20, T = 80. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 025 50 75 100
+
+(f) N = 20, T = 100. 0.00 0.25 0.50 0.75 1.00    
+
+> 0.0 0.5 1.0
+> 020 40 60
+
+(g) N = 30, T = 60. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 020 40 60 80
+
+(h) N = 30, T = 80. 0.00 0.25 0.50 0.75 1.00      
+
+> 0.0 0.5 1.0
+> 025 50 75 100
+
+(i) N = 30, T = 100. 
+
+Figure 1: Time-varying weight estimates of candidate model 2 and 4 in DGP 1. 
+
+Note: The figures plot the average time-varying weights of candidate model 2 (solid blue line) and 4 (solid red line) across 1000 replications for different cases. The true functional patterns of βt1 and βt2 are displayed in dashed blue and red lines, respectively. The left axis corresponds to time-varying weight estimates, while the right axis corresponds to true time-varying coefficients. 
+
+Table 3 reports out-of-sample RMSPEs of the PTVMA relative to two benchmarks under DGP 1. Nearly all reported ratios fall below unity, confirming that the PTVMA uniformly dominates both the NAR and the tv-NAR models across all forecast horizons and sample sizes. In particular, 21 the PTVMA outperforms the tv-NAR model even though the latter is correctly specified under DGP 1. The proposed PTVMA achieves the forecast gain by adaptively weighting candidate models as network dependence varies over time, and thus delivers higher forecast accuracy than a correctly specified benchmark model. The last column of Table 3 reports the empirical coverage probabilities of conformal prediction intervals at 90% nominal level. The coverage probabilities are close to 90% in general, suggesting that the conformal intervals are well-calibrated in finite samples. Table 3: Out-of-sample performance of simulations in DGP 1. 
+
+Prediction type 1-step-ahead 2-step-ahead 3-step-ahead Coverage RMSPE NAR tv-NAR NAR tv-NAR NAR tv-NAR probability 
+
+T = 60 0.996 0.970 1.017 0.937 1.059 0.891 0.873 
+
+N = 10 T = 80 0.961 0.973 0.960 0.948 0.973 0.910 0.894 
+
+T = 100 0.926 0.976 0.906 0.956 0.891 0.923 0.853 
+
+T = 60 0.937 0.984 0.927 0.970 0.911 0.946 0.900 
+
+N = 20 T = 80 0.922 0.987 0.901 0.976 0.871 0.956 0.915 
+
+T = 100 0.905 0.988 0.874 0.979 0.826 0.961 0.863 
+
+T = 60 0.915 0.989 0.895 0.980 0.862 0.963 0.900 
+
+N = 30 T = 80 0.903 0.991 0.876 0.983 0.831 0.968 0.918 
+
+T = 100 0.893 0.992 0.857 0.985 0.800 0.972 0.931 
+
+> Note: This table reports the out-of-sample RMSPEs of the PTVMA relative to two NAR and tv-NAR model for one-, two-, and three-step-ahead predictions. The last column reports the empirical coverage probabilities of conformal prediction intervals at 90% nominal level. Under the iterated scheme, multi-step forecasts are obtained by estimating a one-step-ahead model and recursively replacing future lagged values with their forecasts.
+
+## 5.3 All the candidate models are misspecified. 
+
+In the DGP 2 below, we consider a more challenging setting with all the single-network specifica-tions misspecified over any time period. Define 
+
+yi,t = βt1
+
+X
+
+> j̸=i
+
+eω(1) 
+
+> ij
+
+yj,t−1 + βt2
+
+X
+
+> j̸=i
+
+eω(2) 
+
+> ij
+
+yj,t−1 + αt1yi,t−1 + αt2yi,t−2 +
+
+> 3
+
+X
+
+> q=1
+
+γtq xi,q + ϵi,t, (5.2) 22 where the true time-varying coefficients are set as 
+
+αt1 = 0.5 sin (πt/ T) − 0.45, αt2 = 0.5 cos (πt/ T) − 0.45, 
+
+βt1 = − 0.25 (t/ T)2 + 0.3, βt2 = 0.25 (t/ T)2 + 0.05, indicating that the impact of W(1) diminishes and that of W(2) grows over the time. The other model settings are the same as those in DGP 1. The predictors of candidate models for DGP 2 are listed in Table 1. The in-sample performance of the PTVMA under DGP 2 exhibits a similar pattern to that in DGP 1, demonstrating the PTVMA’s advantages in the misspecification scenario. As reported in Table 4, the PTVMA substantially outperforms the NAR model (RMSPE ranging from 0.550 to 0.570) while delivers a near-identical fit to the correctly specified tv-NAR model (RMSPE tightly around 1.001). This result confirms that even when all the candidate models are misspecified, the proposed PTVMA can adaptively combine them to approximate the response as effectively as a correctly-specified model. Table 4: In-sample performance of simulations in DGP 2. 
+
+RMSPE Average weights of candidate models NAR tv-NAR cm 1 cm 2 cm 3 cm 4 cm 5 cm 6 
+
+T = 30 0.565 1.001 0.08 0.10 0.39 0.03 0.08 0.32 
+
+N = 30 T = 40 0.556 1.001 0.08 0.11 0.41 0.03 0.07 0.30 
+
+T = 50 0.550 1.001 0.09 0.10 0.41 0.02 0.06 0.32 
+
+T = 30 0.567 1.000 0.08 0.11 0.40 0.03 0.08 0.30 
+
+N = 40 T = 40 0.557 1.001 0.08 0.10 0.40 0.03 0.07 0.32 
+
+T = 50 0.550 1.001 0.08 0.10 0.42 0.02 0.06 0.31 
+
+T = 30 0.570 1.000 0.07 0.10 0.40 0.03 0.08 0.32 
+
+N = 50 T = 40 0.559 1.001 0.08 0.10 0.41 0.02 0.06 0.32 
+
+T = 50 0.551 1.001 0.09 0.09 0.43 0.02 0.06 0.32 
+
+> Note: This table reports the in-sample RMSPEs of the PTVMA relative to NAR and tv-NAR model and averaged weight estimates of six candidate models.
+
+Table 4 also reports the averaged weight estimates of six candidate models over 1000 replica-tions to further reveal PTVMA’s weight-assignment capacity. Due to incorporating both autore-23 gressive lags, candidate models 3 and 6 receive the majority of weight with approximately 0.41 and 0.31, respectively. Note that the other candidate models receiving negligible weights either omit lags or contain irrelevant predictors. Consequently, these specifications are less informative than candidate models 3 and 6 under the DGP 2. The results confirm that the proposed PTVMA successfully allocates significant weights to the candidate models with most relevant predictors whereas effectively shrinks the other irrelevant specifications. Table 5 presents out-of-sample RMSPE for both the one- and multiple-step-ahead forecasts. Across all horizons and sample sizes, the PTVMA consistently outperforms two benchmarks and achieves lower forecast errors than the correctly specified model (tv-NAR), again demonstrating that the proposed model averaging procedure delivers forecast gains by adaptively combining information from candidate models even when all of them are misspecified. Table 5: Out-of-sample performance of simulations in DGP 2. 
+
+Prediction type 1-step-ahead 2-step-ahead 3-step-ahead RMSPE NAR tv-NAR NAR tv-NAR NAR tv-NAR 
+
+T = 30 0.709 0.985 0.689 0.984 0.770 0.969 
+
+N = 30 T = 40 0.673 0.987 0.645 0.985 0.727 0.975 
+
+T = 50 0.652 0.988 0.621 0.986 0.707 0.976 
+
+T = 30 0.689 0.989 0.670 0.990 0.755 0.983 
+
+N = 40 T = 40 0.658 0.990 0.630 0.989 0.716 0.983 
+
+T = 50 0.641 0.992 0.608 0.990 0.696 0.983 
+
+T = 30 0.678 0.992 0.658 0.992 0.746 0.986 
+
+N = 50 T = 40 0.651 0.994 0.624 0.993 0.711 0.990 
+
+T = 50 0.634 0.993 0.603 0.991 0.690 0.985  
+
+> Note: This table reports the out-of-sample RMSPEs of the proposed model relative to NAR and tv-NAR model for one-, two-, and three-step-ahead predictions. Under the iterated scheme, multi-step forecasts are obtained by estimating a one-step-ahead model and recursively replacing future lagged values with their forecasts.
+
+# 6 An empirical application 
+
+Accurate forecasting of Consumer Price Index (CPI) inflation plays a critical role in the conduct of monetary policy and preservation of financial stability. Inflation expectations serve as a key 24 anchor for policy credibility and exert a substantial influence on asset pricing. Nevertheless, fore-casting inflation remains a persistent challenge, even when employing comprehensive datasets and state-of-the-art econometric methods (Stock and Watson 2007). These difficulties are com-pounded in open economies, where domestic inflation is increasingly shaped by global shocks and the cross-country transmission of price pressures. A growing body of literature demon-strates that inflation dynamics are increasingly dominated by global determinants, even as do-mestic conditions remain relevant (Ciccarelli and Mojon 2010). Key international transmission channels include global production networks, international financial markets, trade and policy shocks (Carvalho et al 2021, Miranda-Agrippino and Rey 2020, Amiti, Redding and Weinstein 2019). These channels subsequently form multi-layer networks that evolve over time, creating substantial model uncertainty and structural instability. Traditional univariate or panel models often fail to capture complex cross-country spillovers and time-varying nature of inflation trans-mission, leading to potentially misspecified models and degraded forecast performance. This sec-tion aims to address this issue by combining information from multiple international networks and applying the proposed PTVMA method to forecast CPI inflation, 
+
+## 6.1 Data 
+
+The CPI inflation data is obtained from the International Monetary Fund (IMF) 2. We consider a dataset on monthly CPI inflation in 36 economies ( N = 36) from Januaray 2007 to December 2024 with 216 observations ( T = 216). This economy set covers the largest and most systemically rele-vant economies with established equity markets, ensuring representation of advanced economies, major emerging markets, and key commodity producers that jointly account for the overwhelm-ing majority of global output. 3 We include two variables as controls in the model: a time-varying trend term, capturing exogenous shocks such as oil price fluctuations; and the monthly period-average nominal exchange rate for economy i (domestic currency per U.S. dollar), sourced from the IMF Data. We consider four types of networks to characterize the international transmission channels of CPI inflation, each reflecting a distinct economic mechanism. The economic rationale for each  
+
+> 2The data is downloaded from the IMF Data, available at: https://data.imf.org/en .
+> 3Selected economies include Belgium, Brazil, Canada, Switzerland, Chile, China, Colombia, the Czech Republic, Germany, Denmark, Spain, Finland, France, the United Kingdom, Greece, Hong Kong, Hungary, Indonesia, India, Ireland, Israel, Italy, Japan, South Korea, Mexico, Malaysia, the Netherlands, Norway, Poland, Portugal, Singapore, Sweden, Turkey, the United States, Vietnam, and South Africa. We exclude nine candidate economies due to data limitations during the sample period: Russia and Saudi Arabia are omitted due to missing daily MSCI indices, while the United Arab Emirates, Argentina, Australia, New Zealand, Peru, the Philippines, and Thailand are excluded due to the unavailability of monthly inflation data.
+
+25 network and the corresponding data sources are discussed below, with detailed network con-struction procedures presented in Appendix B. • Global production networks. Global production networks transmit cost shocks across bor-ders through input-output linkages, generating price co-movement that extends beyond di-rect bilateral trade (Auer, Levchenko and Sauré 2019, Carvalho et al 2021). Since the CPI measures prices of final goods and services consumed by households, we construct the production network layer by using the origin of value added embodied in final demand. 4
+
+Within this framework, an inflation increase in economy i raises the cost of its value added, which subsequently transmits through global value chains and becomes embodied in final goods consumed in economy j, thereby exerting upward pressure on economy j’s CPI. • Global equity networks. The integration of national equity markets affects cross-country inflation dynamics through information diffusion and the formation of inflation expecta-tions (Miranda-Agrippino and Rey 2020, Ciccarelli and Mojon 2010, Cai, Chou and Li 2009). As institutional ownership and algorithmic trading become more prevalent globally, cross-market equity linkages generate forward-looking signals about macroeconomic fundamen-tals. Equity-market connectedness thus serves as a leading transmission channel through which global financial conditions shape inflation dynamics across countries, often ahead of real-sector and policy channels. We construct the global equity network using daily MSCI country-level equity indices (standard, price-return, U.S. dollar–denominated) and the VAR decomposition framework of Diebold and Yilmaz (2014). 5 These MSCI indices pro-vide comparable, internationally tradable measures of equity price movements and capture high-frequency financial channels relevant for inflation transmission. • Trade and policy networks. Trade policy acts as a distinct channel of international infla-tion transmission by affecting import prices and the cost of intermediate inputs. Evidence from the 2018–2019 U.S.–China trade conflicts indicates that tariff costs pass through to con-sumer prices and propagate along input–output linkages, generating inflationary effects that extend beyond directly targeted goods (Fajgelbaum et al 2020, Amiti, Redding and We-instein 2019). To disentangle market-based trade integration from policy-driven exposure, we construct two types of network layers capturing trade linkages and political connect-edness, respectively. The bilateral trade linkages in the trade network layer are measured by monthly FOB (free on board) export values (in U.S. dollars) sourced from the IMF Di-  
+
+> 4The data is downloaded from the Trade in Value-Added (TiVA) database, available at: https://www.oecd. org/en/topics/sub-issues/trade-in-value-added.html .
+> 5Data are obtained from the MSCI database. https://www.msci.com/indexes#featured-indexes .
+
+26 rection of Trade Statistics (DOTS). 6 We also quantify bilateral political connectedness us-ing ideal-point estimates derived from United Nations General Assembly (UNGA) roll-call votes (Bailey, Strezhnev and Voeten 2017), following standard practice in the political econ-omy literature. 
+
+## 6.2 Empirical analysis 
+
+Consider the m-th candidate model specification: 
+
+yi,t = β(m)
+
+> t1
+
+X
+
+> j̸=i
+
+eω(m) 
+
+> ij
+
+yj,t−1 + α(m) 
+
+> t1
+
+yi,t−1 + γ(m) 
+
+> t1
+
++ γ(m) 
+
+> t2
+
+ER i,t + ϵ(m) 
+
+> i,t
+
+, (6.1) where yi,t denotes the CPI inflation of economy i in month t, ER i,t is the period-average nominal exchange rate of economy i in month t, γ(m) 
+
+> t1
+
+is the time-varying trend term, and eω(m) 
+
+> ij
+
+is the (i, j)-th element of the matrix constructed from the network layer W(m) by setting its diagonal elements to zero and applying row-normalization. We consider 4 and 10 network layers for in- and out-of-sample analysis, respectively. Details on network constructions are presented in Appendix B. Figure 2 plots the estimated time-varying weights of four candidate models over 2007–2024. The weights of candidate models exhibit pronounced time variation. The production network layer is dominant in the early part of the time period, especially around 2009–2012, and then rapidly loses most weight in the later period. The policy network layer becomes prominent in 2013–2019, while the global equity network layer receives substantial weight in the late period (after 2019). In contrast, the trade network layer is assigned only intermittent weight and never attains persistent dominance. Figure 2 suggests that the transmission mechanism of CPI inflation shifts across different types of network dependence and varies along the time. This finding is consistent with multiple transmission channels for CPI inflation, with no single network main-taining uniformly dominant weights. A single-layer specification would thus be too restrictive when another layer better matches the network dependence structure. It also shows that the can-didate weights concentrate on one or two layers at a time and shift as the underlying structure evolves, indicating that the PTVMA adaptively captures locally optimal specifications which may vary over the temporal dimension. 
+
+> 6Data are obtained from the IMF DOTS database ( https://data.imf.org/en/datasets/IMF.STA:IMTS ).
+
+27 0.00 0.25 0.50 0.75 1.00         
+
+> 2007 2009 2011 2013 2015 2017 2019 2021 2023
+
+(a) Production network. 0.00 0.25 0.50 0.75 1.00          
+
+> 2007 2009 2011 2013 2015 2017 2019 2021 2023
+
+(b) Global equity network. 0.00 0.25 0.50 0.75 1.00         
+
+> 2007 2009 2011 2013 2015 2017 2019 2021 2023
+
+(c) Trade network. 0.00 0.25 0.50 0.75 1.00          
+
+> 2007 2009 2011 2013 2015 2017 2019 2021 2023
+
+(d) Policy network. 
+
+Figure 2: Time-varying weight estimates of 4 candidate models. 
+
+Note: The figure reports the estimated time-varying weights of 4 candidate models over 2007–2024. 
+
+Overall, the in-sample results provide evidence that global inflation transmission is governed by a multi-layer, regime-dependent structure in which production, financial, trade, and policy linkages alternately dominate. Therefore, conventional time series models with a single network structure or time-invariant parameters fail to capture the shifting dominance of these transmission channels, underscoring the value of the proposed PTVMA. Table 6 reports the out-of-sample prediction performance of the proposed model for CPI infla-tion. Predictive accuracy is evaluated by the RMSPE, and our model is compared with seven al-ternative specifications: NAR, time-varying NAR (tv-NAR), VAR(1) estimated by the OLS (VAR), VARX(1) estimated by the Elastic Net (HD-VARX), adaptive LASSO (ALASSO), random forest (RF), and stochastic gradient boosting (SGB), spanning one-, two-, and three-step-ahead forecasts across VAR, penalized regression, and state-of-the-art machine learning methods. Exogenous variables are the nominal exchange rates for all economies. In addition, the ALASSO, the RF and 28 the SGB also involves in- and out-degrees of networks from W(1) to W(8) and degrees of networks 
+
+W(9) and W(10 ) as controls, see Appendix B for details. Table 6: Out-of-sample performance of CPI inflation. 
+
+RMSPE NAR tv-NAR VAR HD-VARX ALASSO RF SGB 1-step-ahead 0.978 0.973 0.650 0.281 0.997 0.717 0.615 2-step-ahead 1.049 0.956 0.678 0.476 1.084 0.913 0.597 3-step-ahead 1.137 0.939 0.722 0.647 1.197 1.075 0.681 
+
+> Note: This table reports the out-of-sample RMSPE of the PTVMA relative to seven competing models for one-, two-, and three-step-ahead predictions, including NAR, tv-NAR, VAR(1) model estimated by the OLS (VAR), VARX(1) model with exchange rates estimated by the Elastic Net (HD-VARX), adaptive LASSO (ALASSO), random forest (RF), and stochastic gradient boost (SGB).
+
+Table 6 shows a pronounced advantage of the PTVMA in short-run CPI inflation forecasting. At the one-step horizon, our method uniformly outperforms all competitors and attains the low-est RMSPE (with all the ratios strictly smaller than one), indicating a marked improvement in short-run predictive accuracy. At the two-step horizon, the proposed PTVMA performs slightly worse than the NAR and ALASSO but continues to outperform the remaining methods. At the three-step horizon, however, the PTVMA only performs better than the tv-NAR and two VAR-based methods, suggesting that the short-horizon advantage attenuates as the forecast horizon expands. This is because the time-varying coefficient specification amplifies the negative impact of cumulative errors on multi-step-ahead forecasting. It is also worth noting that the proposed PTVMA still dominates the tv-NAR across three horizons, highlighting the advantage of forecast combination via time-varying model averaging. 
+
+# 7 Conclusion 
+
+This paper introduces a dynamic model averaging criterion within a general time-varying net-work VAR framework which incorporates multiple adjacency matrices to capture network spillover effects. The main aim is to determine a time-varying optimal combination of multi-layer net-work VAR candidate models whose number may be divergent. In particular, all the candidate models with different linkage structures and varying lagged orders of dependent variables and node-specific predictors are allowed to be misspecified. Both the in-sample and out-of-sample asymptotic properties including the asymptotic optimality and estimation convergence rates are 29 derived under some technical conditions. In particular, the proposed PTVMA achieves the se-lection consistency (of correctly-specified models) as the conventional model selection criterion. Furthermore, an extended conformal prediction method is proposed to construct prediction in-tervals for network time series. The Monte Carlo simulation demonstrates that the proposed PTVMA delivers superior out-of-sample predictive performance relative to the benchmark, even when all the candidate models are misspecified. The empirical case study further reveals the time-varying patterns of optimal weight estimation and shows that our model and method con-sistently outperform other competing models in the short-run CPI inflation prediction. 
+
+# References 
+
+Amiti, M., Redding, S. J. and Weinstein, D. E. (2019). The impact of the 2018 tariffs on prices and welfare. Journal of Economic Perspectives 33 , 187–210. Auer, R. A., Levchenko, A. A. and Sauré, P. (2019). International inflation spillovers through input linkages. The Review of Economics and Statistics 101 , 507–521. Bailey, M. A., Strezhnev, A. and Voeten, E. (2017). Estimating dynamic state preferences from United Nations voting data. Journal of Conflict Resolution 61 , 430–456. Barigozzi, M. and Brownlees, C. (2019). NETS: Network estimation for time series. Journal of Applied Econometrics 34 ,347–364. Barigozzi, M., Cavaliere, G. and Moramarco, G. (2025). Factor network autoregressions. Journal of Business and Eco-nomic Statistics 43 , 1105–1118. Basu, S., Li, X. and Michailidis, G. (2019). Low rank and structured modeling of high-dimensional vector autoregres-sions. IEEE Transactions on Signal Processing 67 , 1207–1222. Basu, S. and Michailidis, G. (2015). Regularized estimation in sparse high-dimensional time series models. The Annals of Statistics 43 , 1535–1567. Cai, Y., Chou, R. Y. and Li, D. (2009). Explaining international stock correlations with CPI fluctuations and market volatility. Journal of Banking & Finance 33 , 2026–2035. Carvalho, V. M., Nirei, M., Saito, Y. U. and Tahbaz-Salehi, A. (2021). Supply chain disruptions: Evidence from the great east Japan earthquake. The Quarterly Journal of Economics 136 , 1255–1321. Ciccarelli, M. and Mojon, B. (2010). Global inflation. The Review of Economics and Statistics 92 , 524–535. Chen, E., Fan, J. and Zhu, X. (2023). Community network autoregression for high-dimensional time series. Journal of Econometrics 235 , 1239–1256. 
+
+30 Chen, J., Li, D., Li, Y. and Linton, O. (2025). Estimating time-varying networks for high-dimensional time series. 
+
+Journal of Econometrics 249 , 105941. Chen, Q., Hong, Y. and Li, H. (2024). Time-varying forecast combination for factor-augmented regressions with smooth structural changes. Journal of Econometrics 240 , 105693. Dahlhaus, R. (1997). Fitting time series models to nonstationary processes. The Annals of Statistics 25 , 1–37. DasGupta, A. (2008). Asymptotic Theory of Statistics and Probability . Springer. Davis, R., Zang, P. and Zheng, T. (2016). Sparse vector autoregressive modeling. Journal of Computational and Graphical Statistics 25 , 1077–1096. Demirer, M., Diebold, F., Liu, L. and Yilmaz, K. (2018). Estimating global bank network connectedness. Journal of Applied Econometrics 33 , 1–15. Diebold, F. and Yilmaz, K. (2014). On the network topology of variance decompositions: Measuring the connected-ness of financial firms. Journal of Econometrics 182 , 119–134. Ding, X., Qiu, Z. and Chen, X. (2017). Sparse transition matrix estimation for high-dimensional and locally stationary vector autoregressive models. Electronic Journal of Statistics 11 , 3871–3902. Fajgelbaum, P. D., Goldberg, P. K., Kennedy, P. J. and Khandelwal, A. K. (2020). The return to protectionism. The Quarterly Journal of Economics 135 , 1–55. Gao, J., Peng, B. and Yan, Y. (2024). Estimation, inference, and empirical analysis for time-varying VAR models. 
+
+Journal of Business and Economic Statistics 42 , 310–321. Gao, Y., Zhang, X., Wang, S., Chong, T. T. L. and Zou, G. (2019). Frequentist model averaging for threshold models. 
+
+Annals of the Institute of Statistical Mathematics 71 (2), 275–306. Hansen, B. E. (2007). Least squares model averaging. Econometrica 75 , 1175–1189. Hansen, B. E. (2014). Model averaging, asymptotic risk, and regressor groups. Quantitative Economics 5, 495–530. Hansen, B. E. and Racine, J. S. (2012). Jackknife model averaging. Journal of Econometrics 167 , 38–46. Hjort, N. L. and Claeskens, G. (2003). Frequentist model average estimators. Journal of the American Statistical Associa-tion 98 , 879–899. Hoeting, J. A., Madigan, D., Raftery, A. E. and Volinsky, C. T. (1999). Bayesian model averaging: a tutorial. Statistical Science 14 , 382–417. Kilian, K. and Lütkepohl, H. (2017). Structural Vector Autoregressive Analysis . Cambridge University Press. Kivelä, M., Arenas, A., Barthelemy, M., Gleeson, J.P., Moreno, Y. and Porter, M.A. (2014). Multilayer networks. Journal of Complex Networks 2, 203–271. Kock, A.B. and Callot, L. (2015). Oracle inequalities for high dimensional vector autoregressions. Journal of Economet-rics 186 , 325–344. 
+
+31 Kolar, M., Song, L., Ahmed, A. and Xing, E. (2010). Estimating time-varying networks. The Annals of Applied Statistics 
+
+4, 94–123. Lei, J., G’Sell, M., Rinaldo, A. and Tibshirani, R.J. and Wasserman, L. (2018). Distribution-free prediction inference for regression. Journal of the American Statistical Association 113 , 1094-1111. Lei, J. and Wasserman, L. (2014). Distribution-free prediction bands for non-parametric regression. Journal of the Royal Statistical Society, Series B 76 , 71–96. Li, D., Peng, B., Tang, S. and Wu, W. (2026). Estimation of grouped time-varying network vector autoregressive models. The Annals of Statistics 54 , 621–646. Liao, J., Zong, X., Zhang, X. and Zou, G. (2019). Model averaging based on leave-subject-out cross-validation for vector autoregressions. Journal of Econometrics 209 , 35–60. Liao, J.-C. and Tsay, W.-J. (2020). Optimal multistep var forecast averaging. Econometric Theory 36 , 1099–1126. Liu, C.-A. (2015). Distribution theory of the least squares averaging estimator. Journal of Econometrics 186 , 142–159. Lütkepohl, H. (2006). New Introduction to Multiple Time Series Analysis . Springer. Miao, K., Phillips, P.C.B. and Su, L. (2023). High-dimensional VARs with common factors. Journal of Econometrics 233 ,155–183. Miranda-Agrippino, S. and Rey, H. (2020). US monetary policy and the global financial cycle. The Review of Economic Studies 87 , 2754–2776. Negahban, S. and Wainwright, M. J. (2011). Estimation of (near) low-rank matrices with noise and high-dimensional scaling. The Annals of Statistics 39 , 1069–1097. Pesaran, M.H., Schuermann, T. and Weiner, S.M. (2004). Modeling regional interdependencies using a global error correcting macroeconometric model. Journal of Business and Economic Statistics 22 , 129–162. Raftery, A. E. and Zheng, Y. (2003). Discussion: Performance of Bayesian model averaging. Journal of the American Statistical Association 98 , 931–938. Scott, J. (2017). Social Network Analysis (4th Edition). Sage, London. Sims, C. A. (1980). Macroeconomics and reality. Econometrica 48 , 1–48. Sun, Y., Chen, F. and Gao, J. (2025). Model averaging for time-varying vector autoregressions. Working paper, De-partment of Econometrics and Business Statistics, Monash University. Sun, Y., Hong, Y., Lee, T.-H., Wang, S. and Zhang, X. (2021). Time-varying model averaging. Journal of Econometrics 
+
+222 , 974–992. Sun, Y., Hong, Y., Wang, S. and Zhang, X. (2023). Penalized time-varying model averaging. Journal of Econometrics 
+
+235 , 1355–1377. 
+
+32 Stock, J. H. and Watson, M. W. (2007). Why has US inflation become harder to forecast? Journal of Money, Credit and Banking 39 , 3–33. Tu, Y. and Wang, S. (2025). Quantile prediction with factor-augmented regression: Structural instability and model uncertainty. Journal of Econometrics 249 , 105999. Vovk, V., Gammerman, A. and Shafer, G. (2005). Algorithmic Learning in a Random World . Springer, NewYork. Xu, M., Chen, X. and Wu, W. (2020). Estimation of dynamic networks for high-dimensional nonstationary time series. 
+
+Entropy 22 , 55. Yin, H., Safikhani, A. and Michailidis, G. (2023). A general modeling framework for network autoregressive pro-cesses. Technometrics 65 , 579–589. Yin, H., Safikhani, A. and Michailidis, G. (2026). A functional coefficients network autoregressive model. Statistica Sinica 36 , 1-25. Yu, D., Lian, H., Sun, Y., Zhang, X. and Hong, Y. (2024). Post-averaging inference for optimal model averaging estimator in generalized linear models. Econometric Reviews 43 , 98–122. Yu, D., Zhang, X. and Liang, H. (2025). Unified optimal model averaging with a general loss function based on cross-validation. Journal of the American Statistical Association 120 , 2697–2708. Zhang, X. and Liu, C. A. (2019). Inference after model averaging in linear regression models. Econometric Theory 35 ,816–841. Zhang, X. and Liu, C. A. (2023). Model averaging prediction by K-fold cross-validation. Journal of Econometrics 235 ,280–301. Zhang, X. and Zhang, X. (2023). Optimal model averaging based on forward-validation. Journal of Econometrics 237 ,105295. Zhang, X. and Yu, J. (2018). Spatial weights matrix selection and model averaging for spatial autoregressive models. 
+
+Journal of Econometrics , 203 , 1–18. Zhou, S., Lafferty, J. and Wasserman, L. (2010). Time varying undirected graphs. Machine Learning 80 , 295–319. Zhu, X., Pan, R., Li, G., Liu, Y. and Wang, H. (2017). Network vector autoregression. The Annals of Statistics 45 , 1096– 1123. 
+
+33 Supplementary Material for “Time-Varying Model Averaging of Multi-layer Network Vector Autoregressions” 
+
+DEGUI LI∗, Y UYING SUN †, B OYAO WU‡∗University of Macau, † Chinese Academy of Sciences, ‡University of International Business and Economics 
+
+Appendix A contains the detailed proofs of the main theorems and Appendix B provides the network structure construction used in the empirical application. 
+
+# A Proofs of theorems 
+
+Proof of Theorem 3.1. Let Lt(w) and L∗ 
+
+> t
+
+(w) be defined as in (3.1) and (3.2), respectively. Define 
+
+Ψt1(w) = 
+
+> T
+
+X
+
+> s=1
+
+[Ys − μs]⊺
+
+[μs − μ∗
+
+> s
+
+(w)] Ks,t +
+
+> T
+
+X
+
+> s=1
+
+[Ys − μs]⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+=: Ψ†
+
+> t1
+
+(w) + Ψ‡
+
+> t1
+
+(w),and 
+
+Ψt2(w) = 
+
+> T
+
+X
+
+> s=1
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t + 2
+
+> T
+
+X
+
+> s=1
+
+[μs − μ∗
+
+> s
+
+(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+=: Ψ†
+
+> t2
+
+(w) + 2 · Ψ‡
+
+> t2
+
+(w).Note that 
+
+PTVMA t(w) − Lt(w)=
+
+> T
+
+X
+
+> s=1
+
+[Ys − bμs(w)] ⊺
+
+[Ys − bμs(w)] Ks,t + λ
+
+> M
+
+X
+
+> m=1
+
+wmρm −
+
+> T
+
+X
+
+> s=1
+
+[μs − bμs(w)] ⊺
+
+[μs − bμs(w)] Ks,t
+
+=
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+(Ys − μs) Ks,t + 2
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+[μs − bμs(w)] Ks,t + λ
+
+> M
+
+X
+
+> m=1
+
+wmρm
+
+=
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+(Ys − μs) Ks,t + 2
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+[μs − μ∗
+
+> s
+
+(w)] Ks,t +
+
+2
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t + λ
+
+> M
+
+X
+
+> m=1
+
+wmρm
+
+34 =
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+(Ys − μs) Ks,t + 2Ψt,1 (w) + λ
+
+> M
+
+X
+
+> m=1
+
+wmρm, (A.1) where the first term is unrelated to w. Consider a further decomposition for Lt(w):
+
+Lt(w) = 
+
+> T
+
+X
+
+> s=1
+
+[μs − bμs(w)] ⊺
+
+[μs − bμs(w)] Ks,t
+
+=
+
+> T
+
+X
+
+> s=1
+
+[μs − μ∗
+
+> s
+
+(w)] ⊺
+
+[μs − μ∗
+
+> s
+
+(w)] Ks,t +
+
+> T
+
+X
+
+> s=1
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t +
+
+2
+
+> T
+
+X
+
+> s=1
+
+[μs − μ∗
+
+> s
+
+(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+= L∗ 
+
+> t
+
+(w) + Ψt2(w). (A.2) With the decomposition in (A.1) and (A.2), to prove Theorem 3.1, it suffices to show that sup 
+
+> w∈W
+
+|Ψt1(w)|
+
+L∗ 
+
+> t
+
+(w) = oP(1), (A.3) sup 
+
+> w∈W
+
+|Ψt2(w)|
+
+L∗ 
+
+> t
+
+(w) = oP(1), (A.4) sup 
+
+> w∈W
+
+λ PM 
+
+> m=1
+
+wmρm
+
+L∗ 
+
+> t
+
+(w) = oP(1). (A.5) By Assumption 2(ii), we readily have that sup 
+
+> w∈W
+
+λ PM 
+
+> m=1
+
+wmρm
+
+L∗ 
+
+> t
+
+(w) ⩽ λ ¯ρξt
+
+= oP(1),completing the proof of (A.5). We next turn to the proof of (A.4). By Assumption 1, we have sup 
+
+> w∈W
+
+Ψ†
+
+> t,2
+
+(w) = sup 
+
+> w∈W
+> T
+
+X
+
+> s=1
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+⩽ sup 
+
+> w∈W
+> M
+
+X
+
+> m=1
+> M
+
+X
+
+> k=1
+
+wmwk
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+
+
+μ(m)∗ 
+
+> i,s
+
+− bμ(m)
+
+> i,s
+
+  
+
+μ(k)∗ 
+
+> i,s
+
+− bμ(k)
+
+> i,s
+
+
+
+Ks,t
+
+⩽
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,t max 
+
+> 1⩽m,k⩽M
+
+
+
+μ(m)∗ 
+
+> i,s
+
+− bμ(m)
+
+> i,s
+
+  
+
+μ(k)∗ 
+
+> i,s
+
+− bμ(k)
+
+> i,s
+
+
+
+35 ⩽
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,t
+
+
+
+max  
+
+> 1⩽m⩽M
+
+Z(m) 
+
+> i,s−1
+
+bθ(m) 
+
+> s
+
+− θ(m)
+
+> s,∗
+
+2
+
+⩽
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,t ∥Zi,s−1∥2
+
+> M
+
+X
+
+> m=1
+
+bθ(m) 
+
+> s
+
+− θ(m)
+
+> s,∗
+> 2
+
+= OP
+
+  ¯ρ2TNM hζ 2 , (A.6) where ζ is the rate defined in Assumption 1(i). On the other hand, note that 
+
+E
+
+"
+
+sup 
+
+> w∈W
+> T
+
+X
+
+> s=1
+
+∥μs − μ∗
+
+> s
+
+(w)∥2 Ks,t
+
+#
+
+⩽ E
+
+"
+
+max 
+
+> 1⩽m⩽MT
+
+X
+
+> s=1
+
+μs − μ(m) 
+
+> s,∗
+> 2
+
+Ks,t
+
+#
+
+⩽
+
+> M
+
+X
+
+> m=1
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,tE μi,s − μ(m)∗
+
+> i,s
+> 2
+
+⩽
+
+> M
+
+X
+
+> m=1
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+Ks,tE∥Zi,s−1∥2 · ∥ θs − Π(m)⊺
+
+θ(m) 
+
+> s,∗
+
+∥2
+
+= O ( ¯ρMNT h) (A.7) by Assumption 1(ii)(iii), which, together with (A.6) and the Cauchy-Schwarz inequality, leads to sup 
+
+> w∈W
+
+Ψ‡
+
+> t,2
+
+(w) = sup 
+
+> w∈W
+> T
+
+X
+
+> s=1
+
+[μs − μ∗
+
+> s
+
+(w)] ⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+⩽ sup 
+
+> w∈W
+
+" TX
+
+> s=1
+
+∥μs − μ∗
+
+> s
+
+(w)∥2Ks,t
+
+#1/2 " TX
+
+> s=1
+
+∥μ∗
+
+> s
+
+(w) − bμs(w)∥2Ks,t
+
+#1/2
+
+= OP
+
+ ( ¯ρMNT h)1/2 × OP
+
+  ¯ρζ (TNM h)1/2
+
+= OP
+
+  ¯ρ3/2ζMNT h . (A.8) By virtue of (A.6), (A.8) and Assumption 2(ii), we may show that sup 
+
+> w∈W
+
+|Ψt2(w)|
+
+L∗ 
+
+> t
+
+(w) ⩽ sup 
+
+> w∈W
+
+|Ψ†
+
+> t2
+
+(w)|
+
+L∗ 
+
+> t
+
+(w) + sup 
+
+> w∈W
+
+|Ψ‡
+
+> t2
+
+(w)|
+
+L∗ 
+
+> t
+
+(w)= OP
+
+ ξ−1 
+
+> t
+
+¯ρ2ζ2MNT h + ξ−1 
+
+> t
+
+¯ρ3/2ζMNT h
+
+= OP
+
+ ξ−1 
+
+> t
+
+¯ρ2ζMNT h = oP(1),completing the proof of (A.4). 36 We finally turn to the proof of (A.3). Note that 
+
+E
+
+
+
+sup 
+
+> w∈W
+
+Ψ†
+
+> t,1
+
+(w) 2
+
+= E
+
+sup 
+
+> w∈W
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+[μs − μ∗
+
+> s
+
+(w)] Ks,t
+
+> 2
+
+
+
+⩽ E
+
+sup 
+
+> w∈W
+> M
+
+X
+
+> m=1
+
+wm
+
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺  μs − μ(m)
+
+> s,∗
+
+ Ks,t
+
+!2
+
+⩽ E
+
+ max 
+
+> 1⩽m⩽M
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺  μs − μ(m)
+
+> s,∗
+
+ Ks,t
+
+!2
+
+⩽
+
+> M
+
+X
+
+> m=1
+
+E
+
+
+
+> T
+
+X
+
+> s=1
+
+ϵ⊺
+
+> s
+
+ μs − μ(m)
+
+> s,∗
+
+ Ks,t
+
+> 2
+
+
+
+=
+
+> M
+
+X
+
+> m=1
+
+E
+
+
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+ϵi,s
+
+
+
+μi,s − μ(m)∗
+
+> i,s
+
+
+
+Ks,t
+
+> 2
+
+
+
+=
+
+> M
+
+X
+
+> m=1
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+K2
+
+> s,t
+
+E
+
+
+
+ϵ2
+
+> i,s
+
+
+
+μi,s − μ(m)∗
+
+> i,s
+
+2
+
+⩽
+
+> M
+
+X
+
+> m=1
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+K2
+
+> s,t
+
+Eϵ2 
+
+> i,s
+
+· E∥Zi,s−1∥2 · ∥ θs − Π(m)⊺
+
+θ(m) 
+
+> s,∗
+
+∥2
+
+= O( ¯ρMNT h), (A.9) by Assumption 1(iii). On the other hand, since 
+
+E
+
+" TX
+
+> s=1
+
+(Ys − μs)K1/2
+
+> s,t
+> 2
+
+#
+
+= E
+
+" TX
+
+> s=1
+
+ϵsK1/2
+
+> s,t
+> 2
+
+#
+
+=
+
+> T
+
+X
+
+> s=1
+
+Ks,tE ϵ⊺
+
+> s
+
+ϵs
+
+ = O(NT h),by (A.6) and the Cauchy-Schwarz inequality, we have sup 
+
+> w∈W
+
+Ψ‡
+
+> t,1
+
+(w) = sup 
+
+> w∈W
+> T
+
+X
+
+> s=1
+
+(Ys − μs)⊺
+
+[μ∗
+
+> s
+
+(w) − bμs(w)] Ks,t
+
+⩽
+
+" TX
+
+> s=1
+
+∥Ys − μs∥2Ks,t
+
+#1/2
+
+sup 
+
+> w∈W
+
+" TX
+
+> s=1
+
+∥μ∗
+
+> s
+
+(w) − bμs(w)∥2Ks,t
+
+#1/2
+
+= OP
+
+ (NT h)1/2 × OP
+
+  ¯ρζ (TNM h)1/2
+
+= OP
+
+  ¯ρζ NTM 1/2h . (A.10) 37 Combining (A.9), (A.10) and Assumptions 1(i) and 2(ii), we readily have that sup 
+
+> w∈W
+
+|Ψt,1 (w)|
+
+L∗ 
+
+> t
+
+(w) ⩽ sup 
+
+> w∈W
+
+Ψ†
+
+> t,1
+
+(w)
+
+L∗ 
+
+> t
+
+(w) + sup 
+
+> w∈W
+
+Ψ‡
+
+> t,1
+
+(w)
+
+L∗ 
+
+> t
+
+(w)
+
+⩽ OP
+
+ ξ−1
+
+> t
+
+( ¯ρMNT h)1/2 + ¯ρζ M1/2NT h 
+
+= OP
+
+ ξ−1 
+
+> t
+
+¯ρζ M1/2NT h = oP(1),completing the proof of (A.3). 
+
+Proof of Theorem 3.2. Let 
+
+PTVMA ∗ 
+
+> t
+
+(w) = 1
+
+ThPTVMA t(w) − 1
+
+Th
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/T )Ks,t,where the second term on the right side is unrelated to w. Hence, 
+
+bwt = arg min 
+
+> w∈W
+
+PTVMA t(w) = arg min 
+
+> w∈W
+
+PTVMA ∗ 
+
+> t
+
+(w).We first show the in-sample point-wise weak consistency, i.e., bwt converges to w∗ 
+
+> t
+
+in probabil-ity. For any w ∈ W , we have sup 
+
+> w∈W
+
+1
+
+N PTVMA ∗ 
+
+> t
+
+(w) − ( Th)−1E[Lt(w)] 
+
+= sup 
+
+> w∈W
+
+1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+h NX
+
+> i=1
+
+σ2
+
+> i
+
+(s/ T)( u2 
+
+> is
+
+− 1)Ks,t + ∥μs − bμs(w)∥2 Ks,t + 2(Ys − μs)⊺
+
+[μs − bμs(w)] Ks,t
+
+−E∥μs − bμs(w)∥2Ks,t
+
+i
+
++ λ
+
+NT h
+
+> M
+
+X
+
+> m=1
+
+wmρm
+
+⩽ sup 
+
+> w∈W
+
+1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+
+
+∥μs − bμs(w)∥2 Ks,t − ∥μs − μ∗
+
+> s
+
+(w)∥2Ks,t
+
+
+
++
+
+1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+Ks,t
+
+
+
+∥μs − μ∗
+
+> s
+
+(w)∥2 − E∥μs − μ∗
+
+> s
+
+(w)∥2
+
+
+
++
+
+1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+Ks,t
+
+E∥μs − μ∗
+
+> s
+
+(w)∥2 − E∥μs − bμs(w)∥2 +
+
+38 2
+
+NT hΨt,1 (w) + 1
+
+NT hλ
+
+> M
+
+X
+
+> m=1
+
+wmρm + 1
+
+NT h
+
+> T
+
+X
+
+> s=1
+> N
+
+X
+
+> i=1
+
+σ2
+
+> i
+
+(s/ T)( u2 
+
+> is
+
+− 1)Ks,t
+
+=: Π1 + Π2 + Π3 + Π4 + Π5 + Π6, (A.11) where Ψt,1 (w) is defined in the proof of Theorem 3.1. From the proof of Theorem 3.1, ¯ ρMζ → 0 in Assumption 2(ii) and λ ¯ρ = o(NT h ) in Assumption 3(iii), we may show that 
+
+Π1 = OP
+
+ ¯ρζ MNT h
+
+NT h
+
+
+
+= OP ( ¯ρζ M) = oP(1), (A.12) 
+
+Π3 = O
+
+ ¯ρζ MNT h
+
+NT h
+
+
+
+= O ( ¯ρζ M) = o(1), (A.13) 
+
+Π4 = oP
+
+ ¯ρζ MNT h
+
+NT h
+
+
+
+= oP ( ¯ρζ M) = oP(1), (A.14) 
+
+Π5 = O
+
+ λ ¯ρ
+
+NT h
+
+
+
+= o(1). (A.15) Meanwhile, it follows from Assumption 3(ii)(iii) that 
+
+Π2 = OP
+
+  ¯ρ2(NT h)−1/2 = oP(1), Π6 = OP
+
+ (NT h)−1/2 = oP(1). (A.16) Combining (A.11)–(A.16), we readily have that sup 
+
+> w∈W
+
+1
+
+N PTVMA ∗ 
+
+> t
+
+(w) − ( Th)−1E[Lt(w)] = oP(1),which, together with the argmin continuity theorem and the fact that PTVMA ∗ 
+
+> t
+
+(w) has a unique minimizer on W , completes the proof of weak consistency, i.e., bwtP
+
+→ w∗ 
+
+> t
+
+.We next turn to the proof of (3.3). Letting bμt = ( bμ(1) 
+
+> t
+
+, . . . , bμ(M) 
+
+> t
+
+)⊺
+
+and 
+
+∆t = 1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+bμs bμ⊺
+
+> s
+
+Ks,t,we write 1
+
+NT h E[Lt(w)] = 1
+
+NT hE
+
+> T
+
+X
+
+> s=1
+
+[μs − bμs(w)] ⊺
+
+[μs − bμs(w)] Ks,t
+
+!
+
+39 = 1
+
+NT hE
+
+" TX
+
+> s=1
+
+μ⊺
+
+> s
+
+μsKs,t − 2w⊺
+
+> T
+
+X
+
+> s=1
+
+bμsμsKs,t + w⊺
+
+> T
+
+X
+
+> s=1
+
+bμs bμ⊺
+
+> s
+
+Ks,tw
+
+#
+
+= w⊺
+
+E [∆t] w − 2w⊺
+
+E
+
+"
+
+1
+
+NT h 
+
+> T
+
+X
+
+> s=1
+
+bμsμsKs,t
+
+#
+
++ c∗,for some positive constant c∗ which is unrelated to w. Letting 
+
+∆∗ 
+
+> t
+
+= 1
+
+NT h 
+
+> T
+
+X
+
+> s=1
+
+eμ∗ 
+
+> s
+
+eμ∗⊺ 
+
+> s
+
+Ks,t,it follows from Assumption 3(i) that λmin (E[∆∗ 
+
+> t
+
+]) is larger than κ. Furthermore, by Assumption 1(i) and ¯ ρζ M → 0 in Assumption 2(ii), we may show that 
+
+λmin (E[∆t]) ⩾ λmin (E[∆∗ 
+
+> t
+
+]) − OP
+
+  ¯ρζ M + ¯ρζ 2M ⩾ κ/ 2, indicating that ELt[( w)] is strongly convex, and consequently, for any w ∈ W ,1
+
+NT h [ELt(w) − ELt(w∗ 
+
+> t
+
+)] > 12κ∥w − w∗ 
+
+> t
+
+∥2. (A.17) Since bwt is the minimizer of PTVMA ∗ 
+
+> t
+
+(w), we readily have that 0 ⩾ PTVMA ∗ 
+
+> t
+
+( bwt) − PTVMA ∗ 
+
+> t
+
+(w∗ 
+
+> t
+
+)=
+
+
+
+PTVMA ∗ 
+
+> t
+
+( bwt) − 1
+
+ThE[Lt( bwt)] 
+
+
+
++
+
+ 1
+
+ThE[Lt( bwt)] − 1
+
+ThE[Lt(w∗ 
+
+> t
+
+)] 
+
+
+
+−
+
+
+
+PTVMA ∗ 
+
+> t
+
+(w∗ 
+
+> t
+
+) − 1
+
+ThE[Lt(w∗ 
+
+> t
+
+)] 
+
+
+
+. (A.18) Then, by virtue of (A.11)–(A.16) and (A.18), we obtain 1
+
+N
+
+ 1
+
+ThE[Lt( bwt)] − 1
+
+ThE[Lt(w∗ 
+
+> t
+
+)] 
+
+
+
+⩽ 1
+
+N
+
+
+
+PTVMA ∗ 
+
+> t
+
+(w∗ 
+
+> t
+
+) − 1
+
+ThE[Lt(w∗ 
+
+> t
+
+)] 
+
+
+
+− 1
+
+N
+
+
+
+PTVMA ∗ 
+
+> t
+
+( bwt) − 1
+
+ThE[Lt( bwt)] 
+
+
+
+⩽ 2 sup 
+
+> w∈W
+
+1
+
+N PTVMA ∗ 
+
+> t
+
+(w) − 1
+
+ThE[Lt(w)] 
+
+= OP
+
+ ¯ρ(λ + ζMNT h)
+
+NT h + ¯ρ2(NT h)−1/2
+
+
+
+.This, together with (A.17) with bwt replacing w, completes the proof of (3.3). 40 Proof of Theorem 3.3. Similar to the proof of Theorem 3.2, we have 1
+
+NPTVMA ∗ 
+
+> t
+
+(w) = 1
+
+NT hL∗ 
+
+> t
+
+(w) + OP
+
+ ¯ρ(λ + ζMNT h)
+
+NT h + ¯ρ2(NT h)−1/2
+
+
+
+. (A.19) For w = ( w1, . . . , wM) ∈ W , we define w◦ = ( w1
+
+> ◦
+
+, . . . , wM 
+
+> ◦
+
+) as a weight vector with wm 
+
+> ◦
+
+= 0 for the correctly-specified models ( m ∈ D) and wm 
+
+> ◦
+
+= wm/(1 − τ(w)) for all the other misspecified models ( m / ∈ D), where τ(w) = P 
+
+> m∈D
+
+wm. Note that 
+
+μ(m)∗ 
+
+> i,t
+
+− μi,t = 0, 1 ⩽ i ⩽ N and 1
+
+N μt − μ(m)
+
+> t,∗
+> 2
+
+= 0 for m ∈ D. (A.20) By (A.20) and the definition of w◦, we readily have that 1
+
+NT hL∗ 
+
+> t
+
+(w) = 1
+
+NT h
+
+> T
+
+X
+
+> s=1
+
+∥μs − μ∗
+
+> s
+
+(w)∥2Ks,t
+
+= 1
+
+NT h
+
+
+
+> T
+
+X
+
+> s=1
+
+X
+
+> m/ ∈D
+
+wm(μs − μ(m) 
+
+> s,∗
+
+)
+
+> 2
+
+Ks,t
+
+
+
+= [1 − τ(w)] 2
+
+NT h
+
+
+
+> T
+
+X
+
+> s=1
+
+X
+
+> m/ ∈D
+
+(1 − τ(w)) −1wm(μs − μ(m) 
+
+> s,∗
+
+)
+
+> 2
+
+Ks,t
+
+
+
+= [1 − τ(w)] 2
+
+NT h L∗ 
+
+> t
+
+(w◦). (A.21) Hence, replacing w with bwt and using (A.19) and (A.21), we obtain 1
+
+NPTVMA ∗ 
+
+> t
+
+( bwt) = [1 − τ( bwt)] 2
+
+NT h L∗ 
+
+> t
+
+( bw◦ 
+
+> t
+
+) + OP
+
+ ¯ρ(λ + ζMNT h)
+
+NT h + ¯ρ2(NT h)−1/2
+
+
+
+, (A.22) where bw◦ 
+
+> t
+
+is defined similarly to w◦ but with wm, m / ∈ D, and τ(w) replaced by bwmt and τ( bwt) = 
+
+P 
+
+> m∈D
+
+bwmt , respectively. Let ˇ w be a weight vector with P 
+
+> m∈D
+
+ˇwm = 1. By (A.19) and (A.21), we also have 1
+
+NPTVMA ∗ 
+
+> t
+
+( ˇw) = OP
+
+ ¯ρ(λ + ζMNT h)
+
+NT h + ¯ρ2(NT h)−1/2
+
+
+
+. (A.23) As bwt = arg min w∈W PTVMA ∗ 
+
+> t
+
+(w), we obtain 1
+
+NPTVMA ∗ 
+
+> t
+
+( ˇw) ⩾ 1
+
+NPTVMA ∗ 
+
+> t
+
+( bwt),41 which, together with (A.22) and (A.23), indicates that 
+
+[1 − τ( bwt)] 2
+
+NT h L∗ 
+
+> t
+
+( bw◦ 
+
+> t
+
+) = OP
+
+ ¯ρ(λ + ζMNT h)
+
+NT h + ¯ρ2(NT h)−1/2
+
+
+
+.This, together with the condition (3.4), indicates that we must have τ( bwt) P
+
+→ 1, completing the proof of Theorem 3.3. 
+
+Proof of Theorem 3.4. By Lemma 1 in Gao et al (2019), it suffices to show that sup 
+
+> w∈W
+
+RT+1(w)
+
+R∗
+
+> T+1
+
+(w) − 1 = o(1), (A.24) and sup 
+
+> w∈W
+
+PTVMA ∗
+
+> T
+
+(w)
+
+R∗
+
+> T+1
+
+(w) − 1 = oP(1). (A.25) We first verify (A.24). Note that sup 
+
+> w∈W
+
+bYT+1(w) − Y∗
+
+> T+1
+
+(w) = OP
+
+  ¯ρζ (MN )1/2 , (A.26) by Assumption 1(i). By Assumption 4(ii), we may show that sup 
+
+> T
+
+E ξ∗−1 
+
+> T+1
+
+max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+bY(m′) 
+
+> T+1
+
+− Y(m′)∗
+
+> T+1
+> 1+δ1/2
+
+⩽ sup 
+
+> T
+
+E ξ∗−1/2 
+
+> T+1
+
+max 
+
+> 1⩽m⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗
+
+> T+1
+> 2+δ1
+
+< ∞. (A.27) This indicates that ξ∗−1 
+
+> T+1
+
+max 1⩽m,m′⩽M ∥bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+∥∥ bY(m′) 
+
+> T+1
+
+− Y(m′)∗ 
+
+> T+1
+
+∥ is uniformly integrable over 
+
+T. Thus, by Assumption 4(ii), the weight constraint, i.e., PM 
+
+> i=1
+
+wi = 1, and (A.27), we have 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+h
+
+YT+1 − bYT+1 (w)
+
+i⊺ h
+
+YT+1 − bYT+1 (w)
+
+i
+
+− YT+1 − Y∗ 
+
+> T+1
+
+(w)⊺ YT+1 − Y∗ 
+
+> T+1
+
+(w)
+
+= ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+hbYT+1(w) − Y∗
+
+> T+1
+
+(w)
+
+i⊺ hbYT+1 (w) + Y∗
+
+> T+1
+
+(w) − 2YT+1
+
+i
+
+= ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+> M
+
+X
+
+> m=1
+> M
+
+X
+
+> m′=1
+
+wmwm′ hbY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+i⊺ hbY(m′) 
+
+> T+1
+
++ Y(m′)∗ 
+
+> T+1
+
+− 2YT+1
+
+i
+
+⩽ ξ∗−1 
+
+> T+1
+
+max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+bY(m′) 
+
+> T+1
+
++ Y(m′)∗ 
+
+> T+1
+
+− 2YT+1 sup 
+
+> w∈W
+> M
+
+X
+
+> m=1
+
+wm
+
+> M
+
+X
+
+> m′=1
+
+wm′
+
+!
+
+42 = ξ∗−1 
+
+> T+1
+
+max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+bY(m′) 
+
+> T+1
+
+− Y(m′)∗ 
+
+> T+1
+
+− 2ϵ(m′)∗
+
+> T+1
+
+⩽ ξ∗−1 
+
+> T+1
+
+max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+bY(m′) 
+
+> T+1
+
+− Y(m′)∗ 
+
+> T+1
+
++ 2ξ∗−1 
+
+> T+1
+
+max 
+
+> 1⩽m,m′⩽M
+
+bY(m) 
+
+> T+1
+
+− Y(m)∗ 
+
+> T+1
+
+ϵ(m′)∗ 
+
+> T+1
+
+,implying that ξ∗−1 
+
+> T+1
+
+sup w∈W YT+1 − bYT+1(w) 2
+
+− YT+1 − Y∗
+
+> T+1
+
+(w) 2 is uniformly integrable. This, together with (A.26), leads to sup 
+
+> w∈W
+
+RT+1(w)
+
+R∗
+
+> T+1
+
+(w) − 1 ⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+E
+
+
+
+YT+1 − bYT+1 (w) 2
+
+− YT+1 − Y∗
+
+> T+1
+
+(w) 2
+
+
+
+⩽ E ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+YT+1 − bYT+1(w) 2
+
+− YT+1 − Y∗ 
+
+> T+1
+
+(w) 2
+
+= O  ξ∗−1
+
+> T+1
+
+MN ¯ρ2ζ2 + ξ∗−1
+
+> T+1
+
+MN ¯ρζ  = O  ξ∗−1
+
+> T+1
+
+MN ¯ρζ  = o(1), (A.28) completing the proof of (A.24). We next turn to the proof of (A.25). Observe that sup 
+
+> w∈W
+
+PTVMA ∗
+
+> T
+
+(w)
+
+R∗
+
+> T+1
+
+(w) − 1
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+PTVMA ∗
+
+> T
+
+(w) − R∗
+
+> T+1
+
+(w)
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+∥Yt − bμt(w)∥2 Kt,T − E ∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2 + ξ∗−1
+
+> T+1
+
+λ
+
+Th sup 
+
+> w∈W
+> M
+
+X
+
+> m=1
+
+wmρm
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − bμt(w)∥2 − ∥Yt − μ∗ 
+
+> t
+
+(w)∥2
+
+Kt,T +
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2 − E
+
+h
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2i 
+
+Kt,T +
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+E || Yt − μ∗ 
+
+> t
+
+(w)|| 2 Kt,T − E ∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2 + oP(1),which the last inequality is due to Assumption 4(iii). Hence, to prove (A.25), it suffices to show 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − bμt(w)∥2 − ∥Yt − μ∗ 
+
+> t
+
+(w)∥2
+
+Kt,T = oP(1), (A.29) 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2 − E
+
+h
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2i 
+
+Kt,T = oP(1), (A.30) 43 ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+E || Yt − μ∗ 
+
+> t
+
+(w)|| 2 Kt,T − E ∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2 = o(1). (A.31) By Assumptions 1(i) and 4(iii), we may prove that 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,T
+
+h
+
+∥Yt − bμt(w)∥2 − ∥Yt − μ∗ 
+
+> t
+
+(w)∥2i
+
+= ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,T
+
+bμt(w) − μ∗ 
+
+> t
+
+(w)
+
+⊺ bμt(w) − μ∗ 
+
+> t
+
+(w) + 2μ∗ 
+
+> t
+
+(w) − 2Yt
+
+
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,T
+
+> M
+
+X
+
+> m=1
+
+wm
+
+bμ(m) 
+
+> t
+
+− μ(m)
+
+> t,∗
+
+
+
+2 [Yt − μ∗ 
+
+> t
+
+(w)] − [ bμt(w) − μ∗ 
+
+> t
+
+(w)] 
+
+= OP
+
+ ξ∗−1
+
+> T+1
+
+MN ¯ρζ + ξ∗−1
+
+> T+1
+
+MN ¯ρ2ζ2 = OP
+
+ ξ∗−1
+
+> T+1
+
+MN ¯ρζ  = oP(1),leading to (A.29). We next consider the proof of (A.30). Recall that yi,t −μ∗
+
+> i,t
+
+(w) = ϵi,t +PMm=1 wm(μi,t −μ(m)∗ 
+
+> i,t
+
+) = 
+
+ϵi,t + Z⊺
+
+> i,t−1
+
+PMm=1 wm(θt − Π(m)⊺
+
+θ(m) 
+
+> t,∗
+
+). By Assumptions 1(iii), 3(ii), 4(iii)(iv), we may show that 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2 − E
+
+h
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2i 
+
+Kt,T
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+> N
+
+X
+
+> i=1
+
+
+
+ϵi,t + Z⊺
+
+> i,t−1
+
+δt(w) 2 − E ϵi,t + Z⊺
+
+> i,t−1
+
+δt(w) 2
+
+Kt,T
+
+⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+> N
+
+X
+
+> i=1
+
+Kt,T
+
+ ϵ2 
+
+> i,t
+
+− Eϵ2
+
+> i,t
+
+ + ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+2
+
+Th
+
+> T
+
+X
+
+> t=1
+> N
+
+X
+
+> i=1
+
+Kt,Tϵi,tZ⊺
+
+> i,t−1
+
+δt(w)
+
++ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+T h δ⊺ 
+
+> T
+
+(w)
+
+" TX
+
+> t=1
+> N
+
+X
+
+> i=1
+
+Kt,T
+
+ Zi,t−1Z⊺ 
+
+> i,t−1
+
+− E Zi,t−1Z⊺
+
+> i,t−1
+
+ #
+
+δT (w) · (1 + Op(h)) 
+
+= OP
+
+ ξ∗−1
+
+> T+1
+
+(Th)−1/2 ¯ρ2N1/2 = oP(1)
+
+Finally, we observe that 
+
+ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+E
+
+h
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2i
+
+Kt,T − E YT+1 − Y∗
+
+> T+1
+
+(w) 2
+
+= ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+> N
+
+X
+
+> i=1
+
+Kt,TE ϵi,t + Z⊺
+
+> i,t−1
+
+δt(w) 2 −
+
+> N
+
+X
+
+> i=1
+
+E ϵi,T+1 + Z⊺
+
+> i,T
+
+δT(w) 2
+
+44 ⩽ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+> N
+
+X
+
+> i=1
+
+1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,TEϵ2 
+
+> i,t
+
+− Eϵ2
+
+> i,T+1
+
+!
+
++ ξ∗−1 
+
+> T+1
+
+sup 
+
+> w∈W
+> N
+
+X
+
+> i=1
+
+δ⊺
+
+> T
+
+(w) 1
+
+Th
+
+> T
+
+X
+
+> t=1
+
+Kt,TEZi,t−1Z⊺ 
+
+> i,t−1
+
+− EZi,TZ⊺
+
+> i,T
+
+!
+
+δT(w) · (1 + O(h)) 
+
+= O   ¯ρξ ∗−1
+
+> T+1
+
+Nh = o(1).due to Assumption 4(i)(iv). This completes the proof of (A.31). 
+
+Proof of Theorem 3.5. As in the proof of Theorem 3.2, we first show the weak consistency of bwT
+
+and then derive its convergence rate. For any w ∈ W , note that sup 
+
+> w∈W
+
+1
+
+N ∥PTVMA ∗
+
+> T
+
+(w) − RT+1(w)∥
+
+= sup 
+
+> w∈W
+
+1
+
+NT h
+
+> T
+
+X
+
+> t=1
+
+∥Yt − bμt(w)∥2 Kt,T + λ
+
+NT h
+
+> M
+
+X
+
+> m=1
+
+wmρm − 1
+
+NE∥YT+1 − bYT+1(w)∥2
+
+⩽ sup 
+
+> w∈W
+
+1
+
+NT h
+
+> T
+
+X
+
+> t=1
+
+
+
+∥Yt − bμt(w)∥2 Kt,T − ∥Yt − μ∗ 
+
+> t
+
+(w)∥2Kt,T
+
+
+
++ 1
+
+NT h
+
+> T
+
+X
+
+> t=1
+
+Kt,T
+
+
+
+∥Yt − μ∗ 
+
+> t
+
+(w)∥2 − E∥Yt − μ∗ 
+
+> t
+
+(w)∥2
+
+
+
+++ 1
+
+NT h
+
+> T
+
+X
+
+> t=1
+
+Kt,TE∥Yt − μ∗ 
+
+> t
+
+(w)∥2 − 1
+
+NE∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2
+
++ 1
+
+NE∥YT+1 − Y∗
+
+> T+1
+
+(w)∥2 − 1
+
+NE∥YT+1 − bYT+1(w)∥2 + λ
+
+NT h
+
+> M
+
+X
+
+> m=1
+
+wmρm
+
+=: Ξ1 + Ξ2 + Ξ3 + Ξ4 + Ξ5. (A.32) As in the proofs of (A.12), (A.14)–(A.16) and (A.31), we readily have that 
+
+Ξi = oP(1), i = 1, . . . , 5. (A.33) It follows from (A.32) and (A.33) that sup 
+
+> w∈W
+
+1
+
+N |PTVMA ∗
+
+> T
+
+(w) − RT+1(w)| = oP(1).Since RT+1 has a unique minimizer on W , the argmin continuity theorem implies that bwT
+
+> P
+
+→ w∗
+
+> T
+
+,completing the proof of weak consistency property. 45 We next give the proof of (3.5). Let 
+
+e∆T = 1
+
+NE
+
+heYT+1 eY⊺
+
+> T+1
+
+i
+
+, eYT+1 = ( bY(1)
+
+> T+1
+
+, . . . , bY(M)
+
+> T+1
+
+)⊺
+
+.Note that, for any w ∈ W ,1
+
+NRT+1(w) = 1
+
+NE
+
+h
+
+YT+1 − bYT+1(w)
+
+i⊺ h
+
+YT+1 − bYT+1(w)
+
+i
+
+− 1
+
+NT h
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/ T)Ks,T
+
+= 1
+
+NE
+
+h
+
+Y⊺
+
+> T+1
+
+YT+1 − 2(w⊺ eYT+1)YT+1 + w⊺ eYT+1 eY⊺
+
+> T+1
+
+w
+
+i
+
+− 1
+
+NT h
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> s=1
+
+σ2
+
+> i
+
+(s/ T)Ks,T
+
+= w⊺ e∆T w − 2 1
+
+Nw⊺
+
+EeYT+1YT+1
+
+ + c⋄, (A.34) where c⋄ is a constant unrelated to w. Write 
+
+e∆∗ 
+
+> T
+
+= 1
+
+NE
+
+heY∗ 
+
+> T+1
+
+eY∗⊺
+
+> T+1
+
+i
+
+,whose minimum eigenvalue is larger than κ∗ > 0 by Assumption 5(i). Using the argument in the proof of Theorem 3.2, we readily have that 
+
+λmin 
+
+ e∆T
+
+
+
+⩾ λmin 
+
+ e∆∗
+
+> T
+
+
+
+− oP(1) ⩾ κ∗/2, indicating that RT+1(w) is strongly convex. For any w ∈ W , the strong convexity of RT+1(w) leads to 1
+
+N [RT+1(w) − RT+1(w∗
+
+> T
+
+)] > κ∗
+
+2 ∥w − w∗
+
+> T
+
+∥2 . (A.35) As bwT is the minimizer of PTVMA ∗
+
+> T
+
+(w), we have 0 ⩾ PTVMA ∗
+
+> T
+
+( bwT) − PTVMA ∗
+
+> T
+
+(w∗
+
+> T
+
+)= PTVMA ∗
+
+> T
+
+( bwT) − RT+1( bwT) + RT+1( bwT) − RT+1(w∗
+
+> T
+
+) + RT+1(w∗
+
+> T
+
+) − PTVMA ∗
+
+> T
+
+(w∗
+
+> T
+
+).This, together with (A.35) with bwT replacing w, leads to 
+
+∥ bwT − w∗
+
+> T
+
+∥2 ⩽ 2
+
+κ∗
+
+· 1
+
+N [RT+1( bwT) − RT+1(w∗
+
+> T
+
+)] 
+
+⩽ 2
+
+κ∗
+
+· 1
+
+N {[PTVMA ∗
+
+> T
+
+(w∗
+
+> T
+
+) − RT+1(w∗
+
+> T
+
+)] − [ PTVMA ∗ 
+
+> T
+
+( bwT) − RT+1( bwT)] }
+
+⩽ 4
+
+κ∗
+
+· 1
+
+N sup 
+
+> w∈W
+
+|PTVMA ∗
+
+> T
+
+(w) − RT+1(w)|
+
+46 = OP
+
+ M ¯ρζ + λ ¯ρ(NT h)−1 + ( NT h)−1/2M2 + ¯ρh  , (A.36) where the last equality is due to the rates obtained in the proofs of (A.28)–(A.31). We complete the proof of (3.5) using (A.36). 
+
+Proof of Theorem 3.6. The proof is analogous to the proof of Theorem 3.3 with minor amend-ments. Details are omitted to save the space. 
+
+Proof of Proposition 4.1. Denote the empirical p-values using the estimated residuals: 
+
+bpi,T+1 = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| bϵi,t| > |bϵi,T+1)|} ,
+
+bqi,T+1 = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| bui,t| > |bui,T+1|} ,and denote the empirical p-values using true errors: 
+
+epi,T+1 = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| ϵi,t| > |ϵi,T+1|} ,
+
+eqi,T+1 = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| ui,t| > |ui,T+1|} ,where bui,t = σ−1 
+
+> i
+
+(τt)bϵi,t, and I{·} is an indicator function. Note that bpi,T+1 > α is equivalent to |bϵi,T+1| < |bϵαi |, and thus 
+
+Yi,T+1 ∈ [Yi,T+1 − bϵi,T+1 − bϵαi , Yi,T+1 − bϵi,T+1 + bϵαi ]=
+
+hbYi,T+1( bwT) − bϵαi , bYi,T+1( bwT) + bϵα
+
+i
+
+= Cαi (ZT)
+
+by the definition of bYi,T+1( bwT) in (2.7). Then we readily have that 
+
+P (bpi,T+1 > α ) = P (Yi,T+1 ∈ Cαi (ZT)) . (A.37) Write the empirical distribution functions of {ui,t}T 
+
+> t=T−Th
+
+and {bui,t}T 
+
+> t=T−Th
+
+as 
+
+eF(x) = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| ui,t| ⩽ x}
+
+47 and 
+
+bF(x) = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| bui,t| ⩽ x},respectively. Then, we readily have that 
+
+bF(|eui,T+1|) = 1 − bqi,T+1 and eF(|ui,T+1|) = 1 − eqi,T+1.With Assumption 6(ii) and Dvoretzky–Kiefer–Wolfowitz inequality (e.g., DasGupta 2008), we have 
+
+P
+
+
+
+sup 
+
+> x
+
+eF(x) − F(x) > z 
+
+
+
+⩽ 2e−2Thz 2
+
+, (A.38) for any z > 0. Letting aT = ( Th)−1/3, it follows from (A.38) that 
+
+E
+
+
+
+sup 
+
+> x
+
+|eF(x) − F(x)|
+
+
+
+=
+
+Z ∞
+
+> 0
+
+P
+
+
+
+sup 
+
+> x
+
+|eF(x) − F(x)| ⩾ z
+
+
+
+dz 
+
+⩽ aT +
+
+Z ∞
+
+> aT
+
+2e−2Thz 2
+
+dz 
+
+⩽ aT + O
+
+
+
+e−2Tha 2
+
+> T
+
+
+
+⩽ 2aT. (A.39) Define 
+
+S = t = T − Th, . . . , T, |bui,t| − |ui,t| ⩾ δ1/2 
+
+> i,T
+
+, δ2 
+
+> i,T
+
+= 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+(|bui,t| − |ui,t|)2 .For any random variable X, we have 
+
+bF(X) − eF(X) ⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+|I {| bui,t| ⩽ X} − I {| ui,t| ⩽ X}| 
+
+⩽ 1
+
+Th + 1
+
+X
+
+> t∈S
+
++ X
+
+> t/ ∈S
+
+!
+
+I  |ui,t| − X ⩽ |bui,t| − |ui,t|
+
+⩽ 1
+
+Th + 1|S | + 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I |ui,t| − X ⩽ δ1/2
+
+> i,T
+
+⩽ 1
+
+Th + 1|S | + eF(X + δ1/2 
+
+> i,T
+
+) − eF(X − δ1/2 
+
+> i,T
+
+), (A.40) where the second inequality is due to I {a ⩽ x} − I {b ⩽ x} ⩽ I {| b − x| ⩽ |a − b|} , and |S | denotes 48 the cardinality of S . Furthermore, by the definition of δ2
+
+> i,T
+
+, we may show that 1
+
+Th + 1|S | = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I |eui,t| − |ui,t| ⩾ δ1/2
+
+> i,T
+
+⩽ δ−1/2 
+
+> i,T
+
+· 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+|eui,t| − |ui,t|
+
+⩽ δ−1/2 
+
+> i,T
+
+δi,T = δ1/2 
+
+> i,T
+
+, (A.41) which, together with (A.40), leads to 
+
+bF(X) − eF(X) ⩽ δ1/2 
+
+> i,T
+
++ eF(X + δ1/2 
+
+> i,T
+
+) − eF(X − δ1/2 
+
+> i,T
+
+). (A.42) With (A.39) and (A.42), using Assumption 6(ii) and the basic inequality I {a ⩽ x} − I {b ⩽ x} ⩽
+
+I {| b − x| ⩽ |a − b|} again, we may show that 
+
+|P (bqi,T+1 ⩽ α) − α|
+
+= P
+
+bF(|bui,T+1|) ⩾ 1 − α
+
+
+
+− P (F(|ui,T+1|) ⩾ 1 − α)
+
+⩽ E I 1 − bF(|bui,T+1) ⩽ α − I {1 − F(|ui,T+1|) ⩽ α}
+
+⩽ P
+
+
+
+F(|ui,T+1|) − ( 1 − α) ⩽ bF(|bui,T+1|) − F(|ui,T+1|)
+
+
+
+⩽ 2E bF(|bui,T+1) − F(|ui,T+1|)
+
+⩽ 2E
+
+ bF(|bui,T+1|) − eF(|bui,T+1|) + eF(|bui,T+1|) − F(|bui,T+1) + F(|bui,T+1|) − F(|ui,T+1|)
+
+
+
+⩽ 2E
+
+
+
+δ1/2
+
+> i,T
+
+
+
++ 2E
+
+ eF(|bui,T+1| + δ1/2 
+
+> i,T
+
+) − F(|bui,T+1| + δ1/2 
+
+> i,T
+
+)
+
+
+
++
+
+2E
+
+ eF(|bui,T+1| − δ1/2 
+
+> i,T
+
+) − F(|bui,T+1| − δ1/2 
+
+> i,T
+
+)
+
+
+
++ 2E
+
+
+
+F(|bui,T+1| + δ1/2 
+
+> i,T
+
+) − F(|bui,T+1| − δ1/2 
+
+> i,T
+
+)
+
+
+
++
+
+2E
+
+ eF(|bui,T+1|) − F(|bui,T+1)
+
+
+
++ 2E
+
+
+
+F(|bui,T+1|) − F(|ui,T+1|)
+
+
+
+⩽ (2 + 4MF)E
+
+
+
+δ1/2
+
+> i,T
+
+
+
++ 6E
+
+
+
+sup 
+
+> x
+
+|eF(x) − F(x)|
+
+
+
++ 2MFE |bui,T+1| − |ui,T+1|
+
+⩽ (2 + 4MF)E
+
+
+
+δ1/2
+
+> i,T
+
+
+
++ 12 aT + 2MFE(ψi,T+1), (A.43) where MF is defined in Assumption 6(ii). On the other hand, note that σi(τt) − σi(τT+1) = O(h), t = T − Th, . . . , T, by the smoothness 49 condition in Assumption 6(i), where τt = t/ T. Define 
+
+S1 = t = T − Th, . . . , T, |bui,t| − |ui,t| ⩽ E  δ2
+
+> i,T
+
+ 1/4
+
+and 
+
+S2 = |bui,T+1| − |ui,T+1| ⩽ [E (ψi,T+1)] 1/2 , S3 = t = T − Th, . . . , T, |ui,t| ⩽ h−1/5 .Then, by Assumption 6(i)(ii), we may show that 
+
+|bpi,T+1 − bqi,T+1|
+
+= 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I {| bϵi,t| > |bϵi,T+1|} − 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I {| bui,t| > |bui,T+1|} 
+
+= 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I {[σi(τt) − σi(τT+1)] |bui,t| + σi(τT+1) ( |bui,t| − |bui,T+1|) > 0} −
+
+1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{σi(τT+1) ( |bui,t| − |bui,T+1|) > 0}
+
+⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I {[σi(τt) − σi(τT+1)] |bui,t| + σi(τT+1) ( |bui,t| − |bui,T+1|) > 0} −
+
+I{σi(τT+1) ( |bui,t| − |bui,T+1|) > 0}
+
+⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+I{| σi(τt) − σi(τT+1)| | bui,t| ⩾ σi(τT+1) |bui,t| − |bui,T+1| }
+
+⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+Iσ |ui,t| − |ui,T+1| ⩽ |σi(τt) − σi(τT+1)| | ui,t| +
+
+3σ |bui,t − ui,t| + σ bui,T+1 − ui,T+1
+
+⩽ 1
+
+Th + 1
+
+ X
+
+> t∈S1∩S3
+
++ X 
+
+> t/ ∈Sc
+> 1
+
++ X 
+
+> t/ ∈Sc
+> 3
+
+ Iσ |ui,t| − |ui,T+1| ⩽ |σi(τt) − σi(τT+1)| | ui,t| +
+
+3σ |bui,t − ui,t| + σ |bui,T+1 − ui,T+1| , S2 + IS c
+
+> 2
+
+⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+Iσ |ui,t| − |ui,T+1| ⩽ |σi(τt) − σi(τT+1)| h−1/5 + 3σ E  δ2
+
+> i,T
+
+ 1/4 +
+
+σ [E (ψi,T+1)] 1/2 + 1
+
+Th + 1 (|S c 
+
+> 1
+
+| + |S c 
+
+> 3
+
+|) + IS c 
+
+> 2
+
+, (A.44) 50 where S ck denotes the complement of Sk, k = 1, 2, 3. As in the proof of (A.41), with Assumption 6(ii) and the Markov inequality, there exists a positive constant c1 such that 
+
+E (|S c 
+
+> 1
+
+|) ⩽ c1(Th + 1) E  δ2
+
+> i,T
+
+ 1/4 ,
+
+E (|S c 
+
+> 3
+
+|) ⩽ c1(Th + 1)h4/5,
+
+P (S c 
+
+> 2
+
+) ⩽ c1 [E (ψi,T+1)] 1/2 ,which, together with (A.44), lead to 
+
+|P (bpi,T+1 ⩽ α) − P (bqi,T+1 ⩽ α)| ⩽ c2
+
+E  δ2
+
+> i,T
+
+ 1/4 + [ E (ψi,T+1)] 1/2 + h4/5
+
+
+
+, (A.45) where c2 is a positive constant. With (A.43) and (A.45), as E (ψi,T+1) < 1, we have 
+
+|P (bpi,T+1 > α ) − ( 1 − α)|
+
+= |P (bpi,T+1 ⩽ α) − α|
+
+⩽ |P (bpi,T+1 ⩽ α) − P (bqi,T+1 ⩽ α)| + |P (bqi,T+1 ⩽ α) − α|
+
+⩽ c†
+
+E  δ2
+
+> i,T
+
+ 1/4 + [ E (ψi,T+1)] 1/2 + h4/5 + ( Th)−1/3
+
+
+
+, (A.46) where c† is a sufficiently large positive constant. By virtue of (A.37) and (A.46), we complete the proof of (4.1) in Proposition 4.1. We next turn to the proof of (4.2). Define 
+
+∆i,T = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+ |bϵi,t| − |ϵi,t|2 and Ψi,T+1 = |bϵi,T+1| − |ϵi,T+1| .Observe that 
+
+∆i,T = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+σ2
+
+> i
+
+(τt) |bui,t| − |ui,t|2 ⩾ σ2δ2
+
+> i,T
+
+,by Assumption 6(i), and similarly, Ψi,T+1 ⩾ σψ i,T+1. In view of (4.1), to prove (4.2), it suffices to show that 
+
+E(∆i,T) = o(1) and E (Ψi,T+1) = o(1). (A.47) Note that 
+
+∆i,T ⩽ 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+ bϵi,t − ϵi,t
+
+2
+
+51 = 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+> M
+
+X
+
+> m=1
+
+bwm 
+
+> T
+
+Z(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+− Z⊺
+
+> i,t−1
+
+θt
+
+!2
+
+⩽ 2
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+" X
+
+> m∈D
+
+bwm
+
+> T
+
+
+
+Z(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+− Z⊺
+
+> i,t−1
+
+θt
+
+#2
+
++
+
+2
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+" X
+
+> m/ ∈D
+
+bwm
+
+> T
+
+
+
+Z(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+− Z⊺
+
+> i,t−1
+
+θt
+
+#2
+
+=: Ω1 + Ω2.For Ω1, noting that Π(m)⊺
+
+θ(m) 
+
+> t,∗
+
+= θt for m ∈ D which is not empty, we have 
+
+Ω1 = 2
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+" X
+
+> m∈D
+
+bwm
+
+> T
+
+
+
+Z(m)⊺ 
+
+> i,t−1
+
+bθ(m) 
+
+> t
+
+− Z(m)⊺
+
+> i,t−1
+
+θ(m) 
+
+> t,∗
+
++ Z(m)⊺
+
+> i,t−1
+
+θ(m) 
+
+> t,∗
+
+− Z⊺
+
+> i,t−1
+
+θt
+
+#2
+
+⩽ 2
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+" X
+
+> m∈D
+
+bwm 
+
+> T
+
+Z(m) 
+
+> i,t−1
+
+· bθ(m) 
+
+> t
+
+− θ(m)
+
+> t,∗
+
+#2
+
+= OP
+
+  ¯ρζ 2 · 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+X
+
+> m∈D
+
+( bwm 
+
+> T
+
+)2 X
+
+> m∈D
+
+Z(m)
+
+> i,t−1
+> 2
+
+!
+
+= OP
+
+  ¯ρζ 2 · 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+X
+
+> m∈D
+
+Z(m)
+
+> i,t−1
+> 2
+
+= OP
+
+ M ¯ρζ 2 = oP(1). (A.48) For Ω2, using the argument in the proofs of Theorems 3.3 and 3.5 as well as Assumption 6(iii), we can similarly prove that 
+
+Ω2 ⩽ OP
+
+  ¯ρζ 2 · 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+X
+
+> m/ ∈D
+
+bwm 
+
+> T
+
+Z(m)
+
+> i,t−1
+
+!2
+
++ OP( ¯ρ) · 1
+
+Th + 1
+
+> T
+
+X
+
+> t=T−Th
+
+X
+
+> m/ ∈D
+
+bwm
+
+> T
+
+!2
+
+= oP
+
+ M ¯ρζ 2 + OP
+
+
+
+¯ρeξ∗−1
+
+> T+1
+
+ ¯ρMN ζ + ¯ρλ (Th)−1 + N ¯ρh + M2N1/2(Th)−1/2
+
+= oP(1). (A.49) By virtue of (A.48) and (A.49), we complete the proof of the first assertion in (A.47). Finally, we note that 
+
+Ψi,T+1 ⩽
+
+> M
+
+X
+
+> m=1
+
+bwm
+
+> T
+
+
+
+Z(m)⊺ 
+
+> i,T
+
+bθ(m) 
+
+> T
+
+− Z⊺
+
+> i,T
+
+θT + Z⊺
+
+> i,T
+
+θT − Z⊺
+
+> i,T
+
+θT+1
+
+
+
+52 ⩽
+
+> M
+
+X
+
+> m=1
+
+bwm
+
+> T
+
+
+
+Z(m)⊺ 
+
+> i,T
+
+bθ(m) 
+
+> T
+
+− Z⊺
+
+> i,T
+
+θT
+
+
+
++
+
+> M
+
+X
+
+> m=1
+
+bwm 
+
+> T
+
+∥Zi,T∥ · ∥ θT+1 − θT∥
+
+=: Ω3 + Ω4.Similarly the proofs of (A.48) and (A.49), we may show that 
+
+E(Ω3) = o(1). (A.50) By the smoothness condition in Assumption 6(iii), we also have 
+
+E(Ω4) = o(1). (A.51) A combination of (A.50) and (A.51) leads to the second assertion of (A.47). 
+
+# B Construction of networks in the empirical study 
+
+Global production networks. We use the origin of value added embodied in final demand to construct the global production network. The annual Trade in Value Added (TiVA) measure is treated as constant within each year and assigned to all months in that year. For the in-sample analysis, the adjacency matrix of the production-network layer is constructed by 
+
+ω(1) 
+
+> In, ij
+
+= I
+
+
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Production ij ,t > c ω,1 
+
+
+
+,where Production ij ,t denotes the estimated final demand of economy i for final goods and ser-vices sourced from economy j in month t, and the threshold cω,1 is set as the 60th percentile of 
+
+PT 
+
+> t=1
+
+Production ij ,t/T.Given the 2–3 year publication lag of the TiVA data, we use lagged input-output information to construct two production-network layers for the out-of-sample prediction. For month t in the test set, two adjacency matrices of the production network layers are constructed by 
+
+ω(1) 
+
+> Out, ij ,t
+
+= I {Production ij ,t−3 > c ω,2 } and ω(2) 
+
+> Out, ij ,t
+
+= I
+
+
+
+1
+
+LRoll 
+
+> t−3
+
+X
+
+> m=t−3−LRoll +1
+
+Production ij ,m > c ω,3 
+
+ ,where LRoll denotes the length of rolling window and cω,2 and cω,3 are the thresholding parame-ters which are set as the 70th percentile of Production ij ,t−3 and Pt−3 
+
+> m=t−3−LRoll +1
+
+Production ij ,m/L Roll ,53 respectively. Here, ω(1) 
+
+> Out, ij ,t
+
+and ω(2) 
+
+> Out, ij ,t
+
+reflect the latest information and the average level on the production network, respectively. 
+
+Global equity networks. We use the MSCI database and Diebold and Yilmaz (2014)’s VAR de-composition framework to quantify the cross-country financial connectedness. For the in-sample analysis, the adjacency matrix of the equity layer is constructed by 
+
+ω(2) 
+
+> In, ij
+
+= I Equity ij > c ω,4 ,where Equity ij denotes the (i, j)-th entry of Diebold and Yilmaz (2014)’s spillover matrix esti-mated using the full sample, and cω,4 is the 60th percentile of Equity ij .For the out-of-sample analysis, we consider three equity-network layers to capture short-, medium-, and long-term connectedness in the global market. For month t in the test set, the three adjacency matrices of the equity network layers are constructed by 
+
+ω(3) 
+
+> Out, ij ,t
+
+= I Equity short: ij ,t > c ω,5 ,
+
+ω(4) 
+
+> Out, ij ,t
+
+= I Equity medium: ij ,t > c ω,6 ,
+
+ω(5) 
+
+> Out, ij ,t
+
+= I Equity long: ij ,t > c ω,7 ,where Equity short: ij ,t, Equity medium: ij ,t, Equity long: ij ,t denote the (i, j)-th elements of Diebold and Yilmaz (2014)’s spillover matrices generated by MSCI indices over windows [t − 2, t], [t − 11, t],and the full training sample, respectively. The thresholds cω,5 , cω,6 and cω,7 are set as the 70th percentile of Equity short: ij ,t, the 30th percentile of Equity medium: ij ,t and Equity long: ij ,t, respectively. 
+
+Trade and policy networks. We use monthly bilateral export flows from the IMF’s Direction of Trade Statistics (DOTS) to construct trade networks. For the in-sample analysis, the adjacency matrix of the trade-network layer is constructed by 
+
+ω(3) 
+
+> In, ij
+
+= I
+
+
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Trade ij ,t > c ω,8 
+
+
+
+,where Trade ij ,t denotes the FOB export value from economy j to i in month t, and cω,8 is set to be the 60th percentile of PT 
+
+> t=1
+
+Trade ij ,t/T. For the out-of-sample analysis, we consider three trade-network layers to accommodate the 2–3 month publication lag and mitigate seasonal volatility in shipment values. For the month t in the test set, the three adjacency matrices of the trade network 54 layers are constructed by 
+
+ω(6) 
+
+> Out, ij ,t
+
+= I {Trade ij ,t−12 > c ω,9 } ,
+
+ω(7) 
+
+> Out, ij ,t
+
+= I
+
+
+
+13
+
+> 3
+
+X
+
+> k=1
+
+Trade ij ,t−12 k > c ω,10 
+
+
+
+,
+
+ω(8) 
+
+> Out, ij ,t
+
+= I
+
+
+
+1
+
+LRoll − 3
+
+> t−3
+
+X
+
+> m=t−LRoll +1
+
+Trade ij ,m > c ω,11 
+
+ ,where cω,9 , cω,10 and cω,11 are set as the 60th percentile of Trade ij ,t−12 , P3 
+
+> k=1
+
+Trade ij ,t−12 k/3 and 
+
+Pt−3 
+
+> m=t−LRoll +1
+
+Trade ij ,m/(LRoll − 3), respectively. We use ideal-point distances to measure bilateral political connectedness. For year t, the po-litical distance between countries i and j is defined as the inverse of their absolute ideal-point distance, i.e., Policy ij ,t = |IdealPoint i,t − IdealPoint j,t|−1 .Then, the annual ideal-point distances are assigned to all months within the corresponding year. For the in-sample analysis, the adjacency matrix of the policy-network layer is constructed by 
+
+ω(4) 
+
+> In, ij
+
+= I
+
+
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+Policy ij ,t > c ω,12 
+
+
+
+,where cω,12 is set to be the 60th percentile of PT 
+
+> t=1
+
+Trade ij ,t/T. For the out-of-sample analysis, we consider two policy-network layers to accommodate one-year publication lag in UN voting data. For the month t in the test set, the two adjacency matrices of the policy network layers are constructed by 
+
+ω(9) 
+
+> Out, ij ,t
+
+= I Policy ij ,t−12 > c ω,13 , ω(10 ) 
+
+> Out, ij ,t
+
+= I
+
+
+
+1
+
+LRoll − 12 
+
+> t−12
+
+X
+
+> m=t−LRoll +1
+
+Policy ij ,m > c ω,14 
+
+ ,where thresholding parameters cω,13 and cω,14 are set as the 60th percentile of Policy ij ,t−12 and 
+
+Pt−12  
+
+> m=t−LRoll +1
+
+Policy ij ,m/(LRoll − 12 ), respectively. 55 References 
+
+DasGupta, A. (2008). Asymptotic Theory of Statistics and Probability . Springer. Diebold, F. and Yilmaz, K. (2014). On the network topology of variance decompositions: Measur-ing the connectedness of financial firms. Journal of Econometrics 182 , 119–134. Gao, Y., Zhang, X., Wang, S., Chong, T. T. L. and Zou, G. (2019). Frequentist model averaging for threshold models. Annals of the Institute of Statistical Mathematics 71 (2), 275–306. 56
