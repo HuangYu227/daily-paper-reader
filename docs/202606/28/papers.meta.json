@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-28",
+  "date": "2026-06-28",
+  "generated_at": "2026-06-28T21:34:04",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/28/2606.22874v1-spotattention-plug-in-block-sparse-routing-for-pretrained-long-context-transformers",
+      "section": "deep",
+      "title_en": "SpotAttention: Plug-In Block-Sparse Routing for Pretrained Long-Context Transformers",
+      "authors": "Huzama Ahmad, Se-Young Yun",
+      "date": "2026-06-22",
+      "pdf": "https://arxiv.org/pdf/2606.22874v1",
+      "score": "8.0",
+      "evidence": "在冻结的预训练变换器上附加轻量选择器以实现稀疏注意力",
+      "tldr": "长上下文Transformer推理成本高昂，稀疏注意力需高效选择关键令牌。本文提出SpotAttention，通过KL蒸馏学习冻结注意力分布的轻量选择器，实现块稀疏路由。结合双top-p规则动态分配每查询、每层预算。在Qwen3/3.5上，128K上下文匹配密集精度，解码速度比FlashAttention快3.9倍，比Twilight快1.8倍，量化缓存压缩3.5倍无精度损失。作为即插即用模块，显著加速推理并支持缓存压缩。",
+      "tags": "query:fe",
+      "abstract_en": "Long contexts have become standard in pretrained LLMs, yet they remain expensive to run: prefill compute grows quadratically with sequence length, and every decode step re-reads a key-value cache that grows linearly with it. Sparse attention cuts these costs by attending only to a relevant subset of past tokens, but selecting that subset is itself expensive. We present SpotAttention, a lightweight selector that attaches to a frozen pretrained transformer and learns by KL distillation to estimate its attention distribution. The selector picks the top-K keys each query attends to, and because its estimate is a calibrated distribution, a dual top-p rule reads the per-query, per-layer budget directly from it. Across Qwen3 (dense, 4B-32B) and Qwen3.5 (hybrid linear/full attention, 4B-9B), SpotAttention matches dense accuracy at contexts up to 128K tokens, eight times the training length. Decode at L=128K runs 3.9x faster than FlashAttention and 1.8x faster than Twilight, the strongest training-free baseline. Quantizing the selector's K-cache to INT4 or FP4 microscale shrinks it 3.5x at no accuracy cost.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/28/2606.24467v1-compresskv-semantic-retrieval-guided-kv-cache-compression-for-resource-efficient-long-context-llm-inference",
+      "section": "deep",
+      "title_en": "CompressKV: Semantic-Retrieval-Guided KV-Cache Compression for Resource-Efficient Long-Context LLM Inference",
+      "authors": "Xiaolin Lin, Jingcun Wang, Olga Kondrateva, Yiyu Shi, Bing Li, Grace Li Zhang",
+      "date": "2026-06-23",
+      "pdf": "https://arxiv.org/pdf/2606.24467v1",
+      "score": "8.0",
+      "evidence": "在冻结的预训练变换器上附加轻量选择器以压缩键值缓存",
+      "tldr": "长上下文大语言模型推理受限于键值缓存的内存和计算开销。现有淘汰方法忽略不同注意力头的功能差异，导致关键token被误删。CompressKV通过识别语义检索头选择重要token，并基于层间误差分配缓存预算。在LongBench上仅用3%缓存保留97%全缓存性能，Needle-in-a-Haystack上0.7%缓存达90%准确率，实现了更好的资源-性能平衡。",
+      "tags": "query:fe",
+      "abstract_en": "Long-context large language model (LLM) inference is increasingly constrained by the memory footprint and decoding cost of key-value (KV) caches, limiting sustainable deployment on resource-constrained hardware. Existing KV cache eviction methods typically apply heuristic token scoring over all heads in GQA-based LLMs. These methods ignore the different functionalities of attention heads, leading to the eviction of critical tokens and thus degrading the performance of LLMs. To address this issue, we propose CompressKV, a resource-efficient KV-cache compression framework for GQA-based LLMs. Instead of aggregating attention scores from all heads, CompressKV identifies Semantic Retrieval Heads (SRHs) that capture both the initial and final tokens of a prompt and semantically important mid-context evidence, and uses them to select tokens whose KV pairs should be retained. Furthermore, CompressKV allocates cache budgets across layers according to offline estimates of layer-wise eviction error. Experiments on LongBench and Needle-in-a-Haystack show that CompressKV consistently outperforms existing KV-cache eviction methods across memory budgets. Notably, it preserves over 97\\% of full-cache performance using only 3\\% of the KV cache on LongBench question-answering tasks and achieves 90\\% accuracy with just 0.7\\% KV storage on Needle-in-a-Haystack. These results demonstrate an improved resource--performance trade-off for long-context LLM inference. Our code is publicly available at: https://github.com/TUDa-HWAI/CompressKV",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/28/2606.22126v1-from-recognition-to-understanding-unlocking-cognitive-time-series-reasoning-with-llms",
+      "section": "quick",
+      "title_en": "From Recognition to Understanding: Unlocking Cognitive Time Series Reasoning with LLMs",
+      "authors": "Xin Qiu, Junlong Tong, Yao Zhang, Yunpu Ma, Wei Zhang, Xiaoyu Shen",
+      "date": "2026-06-20",
+      "pdf": "https://arxiv.org/pdf/2606.22126v1",
+      "score": "6.0",
+      "evidence": "引入时间序列推理基准，挖掘语义属性",
+      "tldr": "现有时间序列分析结合LLM时局限于曲线拟合，缺乏认知推理能力。为此提出TSCognition多模态基准，含41K样本覆盖五大推理任务，以及TSAlign对齐框架，通过patch编码和门控残差注入将时间序列与LLM语义空间对齐。实验表明TSAlign在多个基准上超越现有模型，同时大幅降低计算成本。这项工作为时间序列的认知推理提供了新范式。",
+      "tags": "query:fe",
+      "abstract_en": "Time series analysis has recently been coupled with Large Language Models (LLMs) to leverage their reasoning and world knowledge capabilities, yet gains remain limited. We attribute this to a fundamental mismatch between existing task formulations and LLM strengths: most settings reduce time series understanding to curve-fitting systems, focusing on low-level prediction while ignoring the semantic, contextual, and reasoning-intensive nature of real-world temporal decision-making.To address these limitations, we introduce TSCognition, a multimodal benchmark for multi-dimensional time series reasoning. It collects real-world time series and textual information from 15 public sources and constructs approximately 41K QA samples around five cognitive reasoning tasks: Decoding, Grounding, Inferring, Extrapolating, and Acting. Building on this, we further propose TSAlign, a unified framework that encodes time series into compact patch-level representations and aligns them with semantic directions in the LLM embedding space via gated residual injection and multivariate fusion.Experiments show that TSAlign outperforms existing LLM, VLM, and time series QA baselines on TSCognition and the publicly available TimerBed benchmark while substantially reducing computational cost.Code is available at: [https://github.com/EIT-NLP/CognitiveTSR](https://github.com/EIT-NLP/CognitiveTSR)",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/28/2606.27199v1-forecasting-with-llms-improved-generalization-through-feature-steering",
+      "section": "quick",
+      "title_en": "Forecasting With LLMs: Improved Generalization Through Feature Steering",
+      "authors": "Humzah Merchant, Bradford Levy",
+      "date": "2026-06-25",
+      "pdf": "https://arxiv.org/pdf/2606.27199v1",
+      "score": "6.0",
+      "evidence": "通过LLM特征引导进行时间序列性质挖掘",
+      "tldr": "LLM在预测任务中常依赖前瞻偏差而非历史模式，导致泛化受限。本研究通过稀疏自编码器分析模型内部特征，识别出与时间感知和前瞻偏差相关的特征，并在不同领域进行干预。增强时间感知特征可显著减少前瞻偏差，同时保持推理性能，而干预前瞻偏差特征无效。结果表明可解释时间特征能因果地将LLM转向基于历史的推理，提升泛化能力。",
+      "tags": "query:fe",
+      "abstract_en": "Successful forecasting involves identifying patterns between historical and future states of the world which generalize to future observations. We apply LLMs to a variety of forecasting tasks and inspect their internal states using sparse autoencoders to understand whether they appear to rely on time-specific pieces of knowledge versus generalizable patterns. Our analyses identify features associated with both time-aware reasoning and look-ahead-biased reasoning. We then apply the LLMs to an entirely different domain and intervene on these features. We find that amplifying time-awareness features substantially reduces look-ahead bias on forecasting prompts while preserving general reasoning performance. In contrast, steering the candidate look-ahead-bias features does not produce an effect. These results suggest that interpretable temporal features can be used to causally shift LLMs toward more historically grounded reasoning.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
