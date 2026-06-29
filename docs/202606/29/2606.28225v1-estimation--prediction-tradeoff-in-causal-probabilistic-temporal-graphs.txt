@@ -1,0 +1,719 @@
+Title: Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs
+
+URL Source: https://arxiv.org/pdf/2606.28225v1
+
+Published Time: Mon, 29 Jun 2026 01:02:46 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+Aniq Ur Rahman 1
+
+## Abstract 
+
+Temporal link prediction is usually evaluated by predictive performance on unseen edges, but in probabilistic temporal graphs this criterion can conflate model error with irreducible uncertainty. We study this issue by characterising an inherent estimation–prediction tradeoff in binary logistic models where regimes that maximise Fisher information and improve parameter recoverability are also those with the highest entropy, making individual predictions intrinsically harder even under perfect parameter recovery. We propose a probabilistic causal framework for generating temporal graphs with transient edges and known ground-truth causal structure, allowing temporal link prediction to be evaluated jointly with causal parameter recovery. For the proposed binary logistic parametrisation, we derive the Cram ´er–Rao bound and validate the tradeoff between parameter estimation error and irreducible predictive loss. Our results show that predictive accuracy alone may not reflect whether a model has learned the underlying causal mechanism, motivating benchmarks that distinguish reducible model error from intrinsic process uncertainty. 
+
+## 1. Introduction 
+
+In supervised learning, a model is trained on a set of input–output pairs such that the predicted outputs closely match the ground-truth, thereby minimising a prescribed error function, typically referred to as the loss . The trained model is then evaluated on previously unseen data, referred to as the test set. The resulting prediction error on the test set is reported as the predictive performance of the model, on the basis of which it is benchmarked against competing approaches. An important aspect, often overlooked by machine learning practitioners, is that the training objective 
+
+> 1
+
+Department of Engineering Science, University of Oxford, Oxford, OX1 3PJ, UK.. Correspondence to: Aniq Ur Rahman 
+
+<aniq.rahman@eng.ox.ac.uk >.Preliminary work. 
+
+is not designed to recover the true mapping, but rather to approximate a model which best fits the given training data. 
+
+In other words, the learned model is inherently sensitive to the sampled training data, and a substantial body of research has focused on mitigating this sensitivity through techniques such as batch training, stochastic gradient descent, batch normalisation, and regularisation, to name a few. In this work, we revisit the problem of model sensitivity to the training data (Murphy, 2012) and instead of accepting low training loss as a proxy for successful learning, we ask the following question: 
+
+(Q1) What if the learned model could be compared directly against the true model? 
+
+To this end, we assume that the true model belongs to a known parametric family, and that minimising the training loss recovers the true parameters asymptotically as the number of training samples increases (Vapnik, 2013). Parameter recovery performance can then be quantified directly through the difference between the estimated and true parameters. Since, in practice we are limited by a finite number of samples, a question naturally arises: 
+
+(Q2) Does the observed data contain sufficient information to accurately recover the parameters? 
+
+A refined version of this question is: 
+
+(Q3) What is the relation between parameter estimation error and the amount of useful information in the observed data? 
+
+We have tools from information theory at our disposal to answer such questions, under the additional assumption that the parametric model is probabilistic. Once the parameters have been estimated as accurately as permitted by the available data, we evaluate the predictive performance of the resulting model on unseen samples, leading to the final question: 
+
+(Q4) How is the predictive performance of the estimated model related to the parameter estimation error? 
+
+More specifically, we study how the lowest achievable parameter estimation error is related to the predictive performance attained by the corresponding estimated model. 1
+
+> arXiv:2606.28225v1 [cs.LG] 26 Jun 2026 Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs
+
+We now motivate the problem in the context of temporal link prediction (TLP) (Longa et al., 2023), where the objective is to predict whether an edge exists at a given time based on the past history of the temporal graph. In the literature, this task is typically formulated as a binary classification problem (Huang et al., 2024), where the implicit assumption is that the existence or non-existence of edges in the past contains sufficient information to predict the existence of edges in the future (Rahman & Coon, 2026). However, the underlying state space of the problem grows rapidly with the size of the graph. Consider a graph with n
+
+nodes and therefore n(n−1) /2 possible edges. Suppose the prediction of a target edge depends on the existence history of m past edges. Since each past edge may either exist or not exist, the number of possible historical configurations is 2m. Consequently, the size of the state space associated with predicting a single edge grows exponentially in m.Moreover, in practice, the relevant dependencies among edges are generally unknown a priori. As a result, the learning procedure may effectively search over all possible edges in the graph in order to identify the causal dependencies. In such settings, the number of relevant historical edges may itself scale with the size of the graph, i.e. m = O(n2), yielding an effective state space of 
+
+O(n22n2
+
+), which grows exponentially with the number of edges. 
+
+For a graph with 5 nodes, the effective state space exceeds 10 4, while for a graph with 10 nodes, it grows to over a quadrillion (10 15 ).
+
+This state explosion (Valmari, 1996) raises an important issue for learning and evaluation. Many asymptotic arguments in statistical learning rely on the assumption that the number of available samples grows sufficiently large relative to the size of the underlying state space. However, in temporal link prediction, the combinatorial growth of the state space makes such assumptions difficult to justify. In the preceding paragraphs, we highlighted an assumption in TLP which has largely remained implicit due to the lack of certifiably causal temporal graph datasets. However, in a recent work, (Rahman & Coon, 2026), we proposed a parametric causal model for generating temporal graphs where the causal relation between an edge and its parent edges is deterministic. In this work, we instead require a probabilistic formulation, and therefore extend the deterministic model to a probabilistic causal framework. In this setting, parameter estimation naturally corresponds to causal discovery allowing us to reframe (Q4) as follows: 
+
+(Q5) How is the TLP performance achieved by the estimated causal model related to the causal discovery error? 
+
+With respect to the questions (Q4) and (Q5), we see that the data regime which enables more accurate parameter estimation is simultaneously the regime in which prediction becomes intrinsically more difficult, which follows from the classical relationship between the Fisher information and entropy of binary logistic models. We refer to this relationship as the estimation–prediction tradeoff and clarify it analytically in Section 2. Then, we describe the proposed causal framework for temporal graph generation in Section 3. In Section 3.3 and Section 3.4, we derive the information-theoretic quantities associated with the proposed causal model and use them to analyse the estimation–prediction trade-off. Finally, we present empirical results for TLP in Section 4 and conclude in Section 5. Therefore, the core contribution of this work is the proposal of a parametric causal model for generating temporal graphs which exhibit the aforementioned estimation–prediction tradeoff. 
+
+## 2. Estimation–Prediction Tradeoff 
+
+The following relationship between Fisher information and predictive entropy in binary logistic models is an elementary consequence of both quantities being determined by p(θ)(1 − p(θ)) .
+
+Estimation Consider a Bernoulli model with success probability p(θ) parametrised by θ ∈ R, such that 
+
+p(θ) = σ(g(θ)) , (1) where σ(·) denotes the sigmoid function and g(θ) is differentiable with respect to θ. The log-likelihood of a single observation x is 
+
+ℓ(θ; x) = x log p(θ) + (1 − x) log (1 − p(θ)) . (2) Differentiating with respect to θ and applying the chain rule through σ(·), the Fisher information is: 
+
+J(θ) = E
+
+" ∂ℓ (θ; x)
+
+∂θ 
+
+2#
+
+= E
+
+"
+
+(x − p(θ)) 2
+
+ ∂g (θ)
+
+∂θ 
+
+2#
+
+= p(θ)(1 − p(θ)) 
+
+ ∂g (θ)
+
+∂θ 
+
+2
+
+, (3) where the last step uses Var( X) = p(θ)(1 − p(θ)) and the fact that ∂g (θ) 
+
+> ∂θ
+
+is deterministic given θ.Applying the Cram ´er–Rao (CR) inequality (Cover, 1999, § 11.10) for N samples gives a lower bound on the mean 2Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+squared parameter estimation error, 
+
+E
+
+h
+
+(ˆθ − θ)2i
+
+≥ 1
+
+N J(θ)−1. (4) 
+
+Prediction Now consider a set of samples from the Bernoulli model, and a prediction model which has recovered the parameter ˆθ. Let the true value sampled be x
+
+and the prediction be ˆx.Under a probabilistic prediction model, the expected binary cross-entropy (BCE) loss is, 
+
+LBCE (θ, ˆθ) = −E
+
+h
+
+x log p(ˆθ) + (1 − x) log(1 − p(ˆθ)) 
+
+i
+
+= h(p(θ)) + DKL (p(θ)∥p(ˆθ)) , (5) where h(p(θ)) is the irreducible entropy and 
+
+DKL (p(θ)∥p(ˆθ)) ≥ 0 is the excess loss due to parameter mismatch, vanishing as ˆθ → θ.For soft predictions ˆx = p(ˆθ), the mean squared error (MSE) is 
+
+LMSE (θ, ˆθ) = E
+
+h
+
+(x − p(ˆθ)) 2i
+
+= p(θ)(1 − p(θ)) + ( p(θ) − p(ˆθ)) 2, (6) where the first term is the irreducible variance of X and the second is the squared bias due to parameter mismatch. 
+
+Tradeoff We are now interested in the relationship between the parameter estimation error E[( θ − ˆθ)2] and the prediction error. In Fig. 1, we illustrate how the BCE loss varies with parameter estimation error. The BCE loss has two components: the entropy h(p(θ)) of the data-generating process, which cannot be reduced by any estimator, and an excess term DKL (p(θ)∥p(ˆθ)) ≥ 0, which reflects how far the estimated parameters are from the truth. By the CR bound, the estimation error cannot be lower than 1 
+
+> N
+
+J(θ)−1,meaning there is always a residual parameter mismatch and the KL term cannot vanish entirely with finite samples. As the estimation error grows beyond this bound, the KL term increases further, adding to the total prediction loss. Therefore, the total BCE loss is always strictly greater than the entropy h(p(θ)) , with the gap determined by how well the model parameters have been recovered relative to the CR bound. 1
+
+A similar decomposition holds for the MSE loss, where the total prediction error equals the irreducible variance 
+
+p(θ)(1 − p(θ)) plus an excess term (p(θ) − p(ˆθ)) 2 that grows as the estimation error increases.   
+
+> 1Note that the exact shape of the curve depends on the specific form of p(θ), and the figure is for illustrative purposes only.
+> Figure 1. BCE loss as a function of parameter estimation error.
+
+We now turn our attention to the relationship between the irreducible prediction error and the CR bound. The irreducible terms of both the BCE loss and the MSE loss, namely h(p(θ)) and p(θ)(1 − p(θ)) , respectively, are both functions of p(θ) alone, as is the CR bound 1 
+
+> N
+
+J(θ)−1,which is inversely proportional to p(θ)(1 − p(θ)) . As shown in Fig. 2a, both h(p(θ)) and p(θ)(1 − p(θ)) are symmetric about p(θ) = 12 and monotone equivalent in p(θ) ∈ [0 , 1] .0.00 0.25 0.50 0.75 1.00             
+
+> p
+> 0.00
+> 0.25
+> 0.50 h(p)
+> p(1 −p)
+> (a) Prediction error vs. p025 50 75 100
+> 1
+> p(1 −p)
+> 0.00
+> 0.25
+> 0.50
+> h(p)(b) Entropy vs. the CR bound
+> Figure 2. Prediction errors and the CR bound.
+
+Furthermore, in Fig. 2b, we plot the entropy h(p(θ)) 
+
+against the p(θ)-dependent component of the CR bound,  
+
+> 1
+> p(θ)(1 −p(θ))
+
+, revealing a smooth inverse relationship. As the CR bound decreases, the entropy increases. Since a lower CR bound means the parameters can be estimated more accurately, and higher entropy means the lowest achievable prediction error is larger, the two quantities are fundamentally linked through the data-generating process and cannot be controlled. 
+
+Therefore, the more we can learn about the parameters from the data, the less we can know about the prediction outcome. 
+
+This should not be confused with the idea that better parameter estimation leads to higher prediction error. As shown in Fig. 1, better estimation always leads to lower prediction error for a fixed data-generating process. What we are characterising here 2 is the fundamental performance limit of a binary logistic model described in (1). Specifically, 
+
+> 2The relationship is a consequence of definitions. We include it to make the subsequent analysis self-contained.
+
+3Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+the regime of the data-generating process that allows parameters to be estimated most accurately is the same regime in which the irreducible prediction error is largest, regardless of how good the estimator is. 
+
+## 3. Random Causal Temporal Graphs 
+
+We now consider the problem of generating causal temporal graphs with transient edges. Unlike ephemeral edges, which exist only instantaneously, transient edges persist for some finite duration before vanishing. Our approach extends our earlier model (Rahman & Coon, 2026), originally proposed for ephemeral edges, to the transient case. The key premise is that the presence or absence of certain edges in the recent past may cause the activation or deactivation of other edges. 
+
+3.1. Preliminaries 
+
+We begin by formalising our representation. A temporal graph with transient edges can be viewed as a collection of irregular binary pulse signals, one per edge, that switch between active and inactive states. More precisely: 
+
+Definition 1 (Temporal Graph) . A temporal graph G with transient edges and continuous timestamps over a set of nodes V is defined as a set of quadruples (u, v, t, t ′), where 
+
+u, v ∈ V , t, t ′ ∈ R with t < t ′. Each quadruple indicates that edge (u, v ) is active on the interval [t, t ′).To model the timestamps at which edges activate and deactivate, we use one-dimensional homogeneous Poisson point processes (Haenggi, 2012), one process per edge. 
+
+Definition 2 (Poisson Point Process) . A one-dimensional homogeneous Poisson point process (PPP) with rate parameter λ > 0 is a random countable set Φ( λ) ⊆ R
+
+such that for any interval B ⊆ R, the number of points in 
+
+B follows a Poisson distribution with mean λ|B| , where |B| 
+
+denotes the length of the interval. Any realization of Φ( λ) can be written as an ordered sequence {t1, t 2, . . . } where t1 < t 2 < · · · . The causal model, which we introduce next, determines how these timestamps translate into edge activations and deactivations. We adopt the causal models introduced by Pearl (2009), which formalise how variables causally influence one another through a directed graph and associated structural equations. The causal model consists of a set of exogenous variables denoted by U = {U1, U 2, . . . }, and a set of endogenous variables X = {X1, X 2, . . . }, whose values are determined within the model. The causal structure is encoded in a directed acyclic graph G , where an edge from A to B
+
+indicates that A causally influences B, and A is called a 
+
+parent of B. We denote the set of parents of Xi by P a i.
+
+Definition 3 (Causal Model) . A causal model is a pair 
+
+(G , Θ) consisting of a causal graph G and a set of parameters Θ compatible with G . The parameters Θ assign a function xi = fi(pa i, u i) to each variable Xi ∈ X and a probability P(ui) to each ui.In our setting, we use a probabilistic variant where structural equations specify conditional distributions rather than deterministic mappings. To this end, we write the probabilistic structural equation model (SEM) specifying the conditional distribution of Xi given pa i and ui as 
+
+P(Xi = xi | P a i = pa i, U i = ui) = fi(xi | pa i, u i). (7) 
+
+3.2. Generation 
+
+We define a causal model that captures the influence of past edge states on future edge activations. For a temporal graph with n nodes, there are k =  n
+
+> 2
+
+ possible edges. The causal graph G is defined over the following sets of binary variables: • U = {Ui(t) : i ∈ [k]}, where Ui(t) indicates whether a Poisson trigger occurs for edge i at time t,• X ′ = {X′ 
+
+> i
+
+(t) : i ∈ [k]}, where X′ 
+
+> i
+
+(t) denotes the state of edge i immediately before time t,• X = {Xi(t) : i ∈ [k]}, where Xi(t) denotes whether edge i is active at time t.At time t, the variables X are treated as endogenous, while 
+
+U and X ′ are treated as exogenous. 3
+
+We begin by constructing a binomial random intersection graph 4 G(k, m, p ), where k =  n
+
+> 2
+
+ is the number of possible edges in a graph with n nodes (Frieze & Karo ´nski, 2023, § 13.1). Each undirected edge in G is then assigned an orientation independently and uniformly at random, yielding a directed graph. Let A ∈ { 0, 1}k×k denote its adjacency matrix. The causal graph G is defined over the variable set X ′ ∪ X ∪ U, where the current state Xi(t) depends on (i) the previous states X′ 
+
+> j
+
+(t) of its parent edges, as specified by A, and (ii) the trigger variable Ui(t).Ordering the variables as (X ′, X , U), with each block arranged by edge index from 1 to k, the adjacency matrix                           
+
+> 3At each time t, we treat X′and Uas given inputs to determine
+> X. Temporally, X′represents the edge states from the previous instant.
+> 4In a binomial random intersection graph, each vertex i∈[k]is associated with a random subset Mi⊆[m], formed by including each element independently with probability p. An undirected edge is placed between iand jif Mi∩ M j̸=∅.
+
+4Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+of the causal graph takes the block form 
+
+AG =
+
+
+
+0 A 00 0 00 I 0
+
+ . (8) For each edge i ∈ [k], we define an independent homogeneous PPP Φi with rate λi over [0 , T ), where 
+
+T ∈ R+. We denote the rate parameters collectively as 
+
+λ = {λ1, . . . , λ k}. At each timestamp t ∈ Φi, the causal model determines whether edge i changes state, as we now specify through the probabilistic structural equations. At each trigger t ∈ Φi, we sample the value of Xi(t) via a Bernoulli trial with success probability 
+
+pti = P(Xi(t) = 1 | pa i, u i(t)) = ui(t) · σ
+
+ X 
+
+> X′
+> j(t)∈P a i
+
+Θj,i x′ 
+
+> j
+
+(t)
+
+ , (9) where Θj,i ∈ R is the causal parameter matrix satisfying 
+
+Aj,i = 0 =⇒ Θj,i = 0. In vector notation, the probabilistic SEM can be written compactly as 
+
+pti = σ  Θ⊤ 
+
+> :,i
+
+x′(t) , (10) where Θ:,i denotes the i-th column of the parameter matrix and x′(t) = [ x′
+
+> 1
+
+(t), . . . , x ′
+
+> k
+
+(t)] ⊤ ∈ { 0, 1}k is the vector of all edge states immediately before time t.In this work, we sample the elements of Θ independently from a zero-mean normal distribution, 
+
+Θj,i ∼ N (0 , σ 2), ∀i, j ∈ [k] : Aj,i = 1 , (11) and Θj,i = 0 whenever Aj,i = 0 .In realistic settings, not all edges are causally influenced by others. To reflect this, we designate a subset of edges as 
+
+noisy edges that evolve independently of the other edges. For a noise level η ∈ [0 , 1) , we uniformly sample a subset 
+
+J ⊂ [k] of size |J | = ⌊ηk ⌋ and set 
+
+Ai,j = 0 ∀i ∈ [k], j ∈ J . (12) This ensures that edges in J have no parents in the causal graph. Consequently, when a trigger occurs for edge j ∈J , its activation probability becomes ptj = σ(0) = 12 ,equivalent to a fair coin flip. These noisy edges serve two purposes: they provide a more realistic model where not all edges participate in causal relationships, and they present a challenge for causal discovery methods, which must distinguish truly causal edges from noise. We summarise the proposed generative causal model as a parametric generator M defined by 
+
+M (n, m, p, σ 2, T, λ, η ), (13) where n is the number of nodes, (m, p ) parametrise the binomial random intersection graph used to construct the causal graph G , σ2 is the variance of the Gaussian distribution from which non-zero entries of Θ are sampled, 
+
+T defines the time horizon [0 , T ), λ = {λ1, . . . , λ k} are the PPP intensities, and η ∈ [0 , 1) is the noise level. Sampling from M proceeds in two stages. First, we sample the causal model structure, parameters, and triggers: 
+
+C (AG , Θ, Φ) ∼ M (n, m, p, σ 2, T, λ, η ), (14) where AG is the causal graph adjacency matrix (8), Θ
+
+is the causal parameter matrix, and Φ = {Φ1, . . . , Φk}
+
+are the realized Poisson point processes within the time horizon [0 , T ). Second, we generate the temporal graph by traversing ∪i∈[k]Φi chronologically, and evaluating the probabilistic structural equations for the triggered edge. Sampling a temporal graph G from the causal model C
+
+is represented as 
+
+G ∼ C (AG , Θ, Φ). (15) We present the generative mechanism in Algorithm 1. 
+
+3.3. Estimation 
+
+Given a realisation G ∼ C (AG , Θ, Φ), the goal of estimation is to recover the causal parameter matrix Θ from the observed edge states. For each edge i ∈ [k], we estimate the column Θ:,i by minimising the binary cross-entropy loss over the trigger times Φi,
+
+ˆΘ:,i = arg min 
+
+> θ∈Rk
+
+− X
+
+> t∈Φi
+
+
+
+xi(t) ln σ θ⊤x′(t)
+
++ (1 − xi(t)) ln  1 − σ θ⊤x′(t) 
+
+. (16) Equation 16 depicts unregularised logistic regression, solved independently for each edge i ∈ [k]. This formulation ensures consistency: as |Φi| → ∞, the estimator ˆΘ:,i 
+
+converges to the true Θ:,i . In Proposition 3.1 we present the CR bound for our proposed temporal graph model. 
+
+Proposition 3.1. Let ˆΘ be any unbiased estimator of Θ
+
+obtained by solving (16) independently for each edge i ∈ [k].Then the total parameter estimation error E[∥ ˆΘ − Θ∥2 
+
+> F
+
+] is bounded below by 
+
+X
+
+> i∈[k]
+
+tr 
+
+ X
+
+> t∈Φi
+
+pti
+
+ 1 − pti
+
+ x′(t)x′(t)⊤
+
+!−1 . (17) 
+
+Proof. See Appendix A. 5Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+Algorithm 1 Sampling from M(n, m, p, σ 2, T, λ, η )
+
+Require: Number of nodes n, parameters (m, p ), variance 
+
+σ2, time horizon T , rates λ, noise level η
+
+Ensure: Temporal graph G and ground-truth causal model 
+
+(AG , Θ, Φ)
+
+1: Set k ←  n
+
+> 2
+
+ and initialize G ← ∅ 
+
+2: Sample a binomial random intersection graph on k edge variables with m objects and probability p
+
+3: Orient each edge independently to obtain A
+
+4: Sample a noise set J ⊂ [k] with |J | = ⌊ηk ⌋
+
+5: for j ∈ J do 
+
+6: Set Ai,j ← 0 for all i ∈ [k]
+
+7: end for 
+
+8: Initialize Θ ← 0k×k
+
+9: for i, j ∈ [k] such that Aj,i = 1 do 
+
+10: Sample Θj,i ∼ N (0 , σ 2)
+
+11: end for 
+
+12: for i ∈ [k] do 
+
+13: Sample trigger times Φi ∼ PPP( λi) on [0 , T )
+
+14: end for 
+
+15: Initialize x′(0) ← 0
+
+16: Sort all trigger events S
+
+> i∈[k]
+
+{(i, t ) : t ∈ Φi} in increasing time order 
+
+17: for each trigger event (i, t ) in chronological order do 
+
+18: x′(t) is the edge-state vector immediately before t
+
+19: Set pti ← σ(Θ ⊤
+
+> :,i
+
+x′(t)) 
+
+20: Sample xi(t) ∼ Bernoulli( pti)
+
+21: if xi(t) = 1 and x′
+
+> i
+
+(t) = 0 then 
+
+22: Record activation time si ← t for edge i
+
+23: else if xi(t) = 0 and x′
+
+> i
+
+(t) = 1 then 
+
+24: Add interval (ei, s i, t ) to G
+
+25: end if 
+
+26: end for 
+
+27: for each edge i with x′
+
+> i
+
+(T ) = 1 do 
+
+28: Add interval (ei, s i, T ) to G
+
+29: end for 
+
+30: return G and (AG , Θ, Φ) 
+
+3.4. Prediction 
+
+As the temporal graph G is generated in chronological order of trigger events, at each trigger (i, t ) a Bernoulli random variable Xi(t) is realized with success probability pti.Given an estimated parameter matrix ˆΘ, the corresponding predicted success probability is ˆpti = σ
+
+ ˆΘ⊤
+
+> :,i
+
+x′(t)
+
+
+
+. To study the fundamental limits of prediction, we consider the expected binary cross-entropy (BCE) loss under the true data-generating model: 
+
+LG (Θ , ˆΘ) = X
+
+> i∈[k]
+
+X
+
+> t∈Φi
+
+Eℓ Xi(t); ˆ pti
+
+ , (18) where ℓ(x; ˆ p) = −x ln ˆ p − (1 − x) ln(1 − ˆp).Taking expectation with respect to Xi(t) ∼ Bernoulli( pti),the loss decomposes as 
+
+LG (Θ , ˆΘ) = X
+
+> i∈[k]
+
+X
+
+> t∈Φi
+
+h(pti) + X
+
+> i∈[k]
+
+X
+
+> t∈Φi
+
+DKL 
+
+ pti ∥ ˆpti
+
+ ,
+
+(19) where h(pti) is the binary entropy of the Bernoulli distribution under the true parameters, and the KL divergence term captures the excess loss due to parameter mismatch, vanishing as ˆΘ → Θ.The first term represents the intrinsic uncertainty of the outcome at each trigger and constitutes an irreducible lower bound on predictive performance. The second term measures the additional error introduced by imperfect parameter estimation. Thus, even under perfect recovery of the parameters, the predictive loss is bounded below by the entropy of the underlying process. 
+
+## 4. Results 
+
+Temporal graphs were generated using M across multiple parameter regimes. The number of nodes was fixed to n = 5 ,yielding k = 10 possible edges, and the noise level to η = 0 ,corresponding to a fully causal setting. The causal graph was sampled using a binomial random intersection graph with m = 20 and p ∈ { 0.1, . . . , 0.9}. For each edge, an independent PPP was sampled over [0 , T ) with T = 10 4,and the causal parameters were drawn from N (0 , σ 2) with 
+
+σ ∈ { 1.0, 2.0, 2.5, 3.0, 4.0, 5.0}.10 5 10 4 10 3 10 2 10 1 10 0   
+
+> ∑
+> i∈[k]
+> tr (J−1
+> i)
+> 10 1
+> 10 2
+> [‖ ˆΘ − Θ‖2
+> F
+> ]
+
+Figure 3. Empirical parameter estimation error vs. CR bound. 
+
+In Fig. 3 we show the empirical parameter estimation error E[∥ ˆΘ − Θ∥2 
+
+> F
+
+] against the CR bound P 
+
+> i∈[k]
+
+tr( J−1 
+
+> i
+
+)
+
+across parameter configurations of M . The estimation error increases monotonically with the CR bound, consistent with Proposition 3.1. 6Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+In Fig. 4, we show the irreducible prediction error P
+
+> i∈[k]
+
+P 
+
+> t∈Φi
+
+h(pti) against the CR bound P 
+
+> i∈[k]
+
+tr( J−1 
+
+> i
+
+)
+
+across parameter configurations of M . The sharp inverse relationship is consistent with the estimation–prediction tradeoff: the regime in which parameters can be estimated most accurately is precisely the regime in which the irreducible prediction error is largest. 10 5 10 4 10 3 10 2 10 1 10 0    
+
+> ∑
+> i∈[k]
+> tr (J−1
+> i)
+> 0
+> 5000
+> 10000
+> 15000
+> 20000
+> 25000
+> 30000
+> 35000
+> 40000
+> ∑
+> i ∈ [k]
+> ∑
+> t ∈ Φi
+> h(pti )
+> Figure 4. Irreducible prediction error vs. CR bound.
+
+Therefore, standard metrics may conflate model performance with irreducible uncertainty and rank models by the entropy of the dataset rather than their ability to recover the data-generating mechanism. This makes the existence of temporal graph models with explicit generative structure important for principled benchmarking. It must be noted that the estimation–prediction tradeoff is derived here for the binary logistic case, and closed-form results may not generalise directly to more complex temporal graph models. However, one can examine the relationship between dataset entropy and predictive performance empirically to probe the tradeoff without requiring an analytical derivation. 
+
+## 5. Conclusion 
+
+This work shows that, in the probabilistic temporal graph model proposed here 5, learning and prediction are limited by different aspects of the same data-generating process. In binary logistic models, high Fisher information improves parameter recoverability but coincides with high-entropy regimes where individual outcomes are intrinsically uncertain. The regime in which a causal mechanism is easiest to learn may therefore be precisely the regime in which future edge states are hardest to predict. To study this in temporal graphs, we proposed aprobabilistic causal generator with transient edges and known ground-truth parameters, enabling joint evaluation 
+
+> 5The source code will be made available upon request.
+
+of predictive loss and causal recovery. The derived Fisher information and Cram ´er–Rao bounds provide information-theoretic reference points, and the experiments confirm the relationship between estimation error and irreducible predictive uncertainty. The main lesson is that predictive accuracy alone is not a reliable proxy for learning the temporal mechanism. Temporal graph benchmarks should separate reducible model error from irreducible uncertainty and evaluate causal recovery whenever ground truth is available. We hope this work motivates the temporal graph learning community (Yi et al., 2025) to integrate causality into model evaluation and look beyond standard predictive metrics. 
+
+## References 
+
+Cover, T. M. Elements of information theory . John Wiley & Sons, 1999. Frieze, A. and Karo ´nski, M. Random graphs and networks: a first course . Cambridge University Press, 2023. Haenggi, M. Stochastic geometry for wireless networks .Cambridge University Press, 2012. Huang, S., Poursafaei, F., Danovitch, J., Fey, M., Hu, W., Rossi, E., Leskovec, J., Bronstein, M., Rabusseau, G., and Rabbany, R. Temporal graph benchmark for machine learning on temporal graphs. Advances in Neural Information Processing Systems , 36, 2024. Longa, A., Lachi, V., Santin, G., Bianchini, M., Lepri, B., Lio, P., Passerini, A., et al. Graph neural networks for temporal graphs: State of the art, open challenges, and opportunities. Transactions on Machine Learning Research , 2023. Murphy, K. P. Machine learning: a probabilistic perspective .MIT press, 2012. Pearl, J. Causality . Cambridge university press, 2009. Rahman, A. U. and Coon, J. Causal temporal graphs for counterfactual validation of temporal link prediction. In 
+
+Symposium on Probabilistic Machine Learning , 2026. Valmari, A. The state explosion problem. In Advanced Course on Petri Nets , pp. 429–528. Springer, 1996. Vapnik, V. The nature of statistical learning theory . Springer science & business media, 2013. Yi, L., Peng, J., Zheng, Y., Mo, F., Wei, Z., Ye, Y., Zixuan, Y., and Huang, Z. Tgb-seq benchmark: Challenging temporal gnns with complex sequential dynamics. In 
+
+The Thirteenth International Conference on Learning Representations , 2025. 7Estimation–Prediction Tradeoff in Causal Probabilistic Temporal Graphs 
+
+## A. Proof of Proposition 3.1 
+
+We proceed in two steps: first deriving the CR bound for a single edge i ∈ [k], then summing over all edges. 
+
+Single edge Fix i ∈ [k]. At each trigger t ∈ Φi, the activation Xi(t) ∈ { 0, 1} is a Bernoulli random variable with success probability pti = σ(Θ ⊤
+
+> :,i
+
+x′(t)) , conditioned on the context x′(t). The log-likelihood contribution of a single observation is 
+
+ℓ(Θ :,i ; Xi(t)) = Xi(t) ln pti + (1 − Xi(t)) ln  1 − pti
+
+ .
+
+(20) Differentiating with respect to Θ:,i and applying the identity 
+
+σ′(z) = σ(z)(1 − σ(z)) , the score is 
+
+∂ℓ ∂Θ:,i 
+
+=  Xi(t) − pti
+
+ x′(t). (21) The Fisher information matrix for a single observation is 
+
+Jti = E
+
+"
+
+∂ℓ ∂Θ:,i 
+
+∂ℓ ∂Θ:,i 
+
+> ⊤
+
+#
+
+= E
+
+h Xi(t) − pti
+
+2i
+
+x′(t)x′(t)⊤
+
+= pti
+
+ 1 − pti
+
+ x′(t)x′(t)⊤, (22) where we have used Var( Xi(t)) = pti(1 − pti) and the fact that x′(t) is deterministic given Θ:,i . Since the Ni = |Φi|
+
+observations are independent, the total Fisher information matrix accumulates as 
+
+Ji = X
+
+> t∈Φi
+
+pti
+
+ 1 − pti
+
+ x′(t)x′(t)⊤. (23) Applying the multivariate CR bound (Cover, 1999, § 11.10) to any unbiased estimator ˆΘ:,i ,
+
+E
+
+
+
+ˆΘ:,i − Θ:,i 
+
+> 2
+
+
+
+≥ tr  J−1
+
+> i
+
+ . (24) 
+
+All edges Since the optimisation in (16) is solved independently for each i ∈ [k], the estimators ˆΘ:,i are independent across edges. The total squared error therefore decomposes as 
+
+E
+
+
+
+ˆΘ − Θ 2
+
+> F
+
+
+
+= X
+
+> i∈[k]
+
+E
+
+
+
+ˆΘ:,i − Θ:,i 
+
+> 2
+
+
+
+, (25) where we have used the fact that the Frobenius norm decomposes column-wise. Applying the per-edge CR bound to each term and summing gives the stated lower bound. 8

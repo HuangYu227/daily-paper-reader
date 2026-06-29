@@ -1,0 +1,454 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-29T22:01:35.912755+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 5,
+    "deep_cap": 7,
+    "deep_selected": 5,
+    "quick_candidates": 6,
+    "quick_skim_target": 12,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2606.27561v1",
+      "source": "arxiv",
+      "title": "Quantum Generative Diffusion Model for Real-World Time Series",
+      "abstract": "Generative models have achieved remarkable success in data synthesis, though recent advances driven by increasing model scale have introduced challenges in computational cost and efficiency. Quantum machine learning offers a promising alternative, representing complex data distributions using compact, highly expressive models. Here, we propose QDiffusion-TS, the first quantum generative diffusion model for time series synthesis, and validate it on the IQM quantum processor. The framework extends a classical diffusion architecture by replacing feed-forward components within the denoising transformer with quantum neural networks, yielding a hybrid quantum transformer that reduces the number of trainable parameters in each replaced component by nearly three orders of magnitude. Evaluated on financial time series from Apple and Amazon, the model generates synthetic data that more accurately reproduces the real distributions, reducing Wasserstein distance by approximately 44% relative to its classical counterpart across both datasets. In a downstream forecasting task, augmentation with the generated data improves predictive performance by up to 71% in RMSE over a baseline trained solely on real data. These results show that quantum enhanced architectures can consistently match and frequently surpass classical performance with substantially fewer parameters, establishing a practical framework towards more efficient and scalable data-driven generative modelling.",
+      "authors": [
+        "Jack Waller",
+        "Filippo Caruso",
+        "Dimitrios Makris",
+        "Rajagopal Nilavalan",
+        "Xing Liang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "quant-ph"
+      ],
+      "published": "2026-06-25T21:33:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.27561v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "first quantum generative diffusion model for real-world time series synthesis",
+      "llm_evidence_cn": "首个用于真实世界时间序列合成的量子生成扩散模型",
+      "llm_evidence": "首个用于真实世界时间序列合成的量子生成扩散模型",
+      "canonical_evidence": "首个用于真实世界时间序列合成的量子生成扩散模型",
+      "llm_tldr_en": "Proposes QDiffusion-TS, the first quantum generative diffusion model for time series synthesis, validated on a quantum processor.",
+      "llm_tldr_cn": "针对经典生成模型计算成本高的问题，提出首个量子生成扩散模型QDiffusion-TS，用量子神经网络替换去噪变压器中的前馈组件，在IQM量子处理器上验证，参数量减少近三个数量级，生成质量与经典模型相当。",
+      "llm_tldr": "针对经典生成模型计算成本高的问题，提出首个量子生成扩散模型QDiffusion-TS，用量子神经网络替换去噪变压器中的前馈组件，在IQM量子处理器上验证，参数量减少近三个数量级，生成质量与经典模型相当。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.28024v1",
+      "source": "arxiv",
+      "title": "Lifted Causal Inference",
+      "abstract": "Lifted inference exploits indistinguishabilities in probabilistic graphical models by using a representative for indistinguishable objects, thereby speeding up query answering while maintaining exact answers. In this article, we show how lifting can be applied to efficiently compute causal effects in relational domains. More specifically, we introduce parametric causal factor graphs (PCFGs) to incorporate causal knowledge in lifted models and give a formal semantics of interventions therein. We further present the Lifted Causal Inference (LCI) algorithm to compute causal effects on a lifted level, thereby drastically speeding up causal inference compared to propositional inference, e.g., in causal Bayesian networks. In addition, we present partially directed parametric causal factor graphs (PD-PCFGs) as a generalisation of PCFGs to handle partial causal knowledge and extend LCI to perform lifted causal inference in a PD-PCFG, thereby extending the applicability of lifted causal inference to a broader range of models requiring less prior knowledge about causal relationships.",
+      "authors": [
+        "Malte Luttermann",
+        "Tanya Braun",
+        "Ralf Möller",
+        "Marcel Gehrke"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-26T12:27:45+00:00",
+      "link": "https://arxiv.org/pdf/2606.28024v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "direct causal learning method",
+      "llm_evidence_cn": "直接的因果学习方法",
+      "llm_evidence": "直接的因果学习方法",
+      "canonical_evidence": "直接的因果学习方法",
+      "llm_tldr_en": "Proposes lifted causal inference using parametric causal factor graphs for efficient computation of causal effects in relational domains.",
+      "llm_tldr_cn": "该论文引入参数化因果因子图（PCFG）来将因果知识融入提升模型，并提出提升因果推理（LCI）算法，在关系域中高效计算因果效应，大幅提升因果推理速度。",
+      "llm_tldr": "该论文引入参数化因果因子图（PCFG）来将因果知识融入提升模型，并提出提升因果推理（LCI）算法，在关系域中高效计算因果效应，大幅提升因果推理速度。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.28228v1",
+      "source": "arxiv",
+      "title": "Disentangling Continuous-Time Latent Dynamics: Identifiability of Latent SDEs via Diffusion Shifts",
+      "abstract": "Causal representation learning for time series has developed strong identifiability results in discrete-time latent causal models, but identifiability in continuous-time latent stochastic differential equation (SDE) models remains largely open. We address this gap using environment-induced shifts in diffusion covariance. We study additive-noise latent SDEs observed through an unknown nonlinear diffeomorphism, with shared drift but environment-specific diffusion covariance. We show that two diagonal diffusion regimes with pairwise distinct coordinate-wise variance ratios identify the latent coordinates up to permutation and scaling, without any sparsity assumption on the drift. We first prove this result for linear Ornstein--Uhlenbeck systems and then extend it to general additive-noise latent SDEs. Under mild smoothness, the instantaneous drift-Jacobian causal graph is identifiable up to the same permutation. We propose a two-stage estimator for latent disentanglement and optional graph recovery; experiments on synthetic systems confirm the predicted identifiability boundary, and an application to Hardanger Bridge monitoring data illustrates the approach on real sensor trajectories.",
+      "authors": [
+        "Yuanyuan Wang",
+        "Wenjie Wang",
+        "Haoxuan Li",
+        "Mingming Gong",
+        "Kun Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-06-26T16:18:28+00:00",
+      "link": "https://arxiv.org/pdf/2606.28228v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal representation learning for time series with identifiability of latent SDEs via diffusion shifts",
+      "llm_evidence_cn": "利用扩散偏移实现时间序列潜在SDE的可识别性，属于时序因果发现",
+      "llm_evidence": "利用扩散偏移实现时间序列潜在SDE的可识别性，属于时序因果发现",
+      "canonical_evidence": "利用扩散偏移实现时间序列潜在SDE的可识别性，属于时序因果发现",
+      "llm_tldr_en": "This paper proves identifiability of latent SDEs for continuous-time causal representation learning using environment-induced diffusion covariance shifts, without sparsity assumptions.",
+      "llm_tldr_cn": "针对连续时间潜在因果模型的可识别性问题，该论文利用环境引起的扩散协方差偏移，证明了在对角扩散矩阵下，具有不同方差的潜在坐标可被唯一识别（除排列和缩放外），为时序因果发现提供了理论基础。",
+      "llm_tldr": "针对连续时间潜在因果模型的可识别性问题，该论文利用环境引起的扩散协方差偏移，证明了在对角扩散矩阵下，具有不同方差的潜在坐标可被唯一识别（除排列和缩放外），为时序因果发现提供了理论基础。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.27711v1",
+      "source": "arxiv",
+      "title": "The Simulacrum: Decision-Theoretic Pretraining for Near-Optimal Time-Series Forecasting and Inference",
+      "abstract": "We introduce a neural network-based framework for learning time series estimators through a process we term decision-theoretic pretraining. Analysts specify a generative world, a distribution over data-generating processes, and a target decision objective. A neural network trained on stratified simulations from this world approximates the corresponding optimal decision rule, yielding a neural estimator that provides forecasts, parameter estimates, predictive intervals, or model-selection for zero-shot inference on previously unseen time series.   The joint specification of the generative world and objective enables the estimators to directly approximate process-level, finite-sample properties: near-optimal risk, bias control, minimax performance, and uniform calibration. Our experiments demonstrate that these neural estimators can outperform traditional baselines such as maximum likelihood estimation and model selection via AICc, for the same model structural model classes. Furthermore, even when trained purely on simulations of structural models, they achieve competitive or state-of-the-art forecasting accuracy on major real-world benchmarks, compared with statistical, neural or large pre-trained models.   We illustrate the framework by addressing two longstanding challenges: finite-sample bias and miscalibration in AR(p) models, and the forecast combination puzzle. These applications highlight the approach's main advantage: its ability to approximate solutions to analytically intractable or computationally prohibitive time series problems, including complex structural equations or optimality criteria. Ultimately, by enabling explicit control over decision-theoretic trade-offs, the framework equips analysts with highly efficient estimation tools tailored to their specific analytical needs.",
+      "authors": [
+        "Pablo Montero-Manso",
+        "Marcel Scharth"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "stat.CO"
+      ],
+      "published": "2026-06-26T04:25:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.27711v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "time series generation via decision-theoretic pretraining",
+      "llm_evidence_cn": "通过决策理论预训练生成时间序列",
+      "llm_evidence": "通过决策理论预训练生成时间序列",
+      "canonical_evidence": "通过决策理论预训练生成时间序列",
+      "llm_tldr_en": "Proposes Simulacrum that learns near-optimal time series estimators for forecasting and inference via decision-theoretic pretraining on simulated worlds, enabling zero-shot generation and inference.",
+      "llm_tldr_cn": "现有时间序列预测方法通常需要针对特定任务训练，缺乏通用的零样本推断能力。本文提出Simulacrum框架，通过决策理论预训练在模拟数据生成过程上训练神经网络，逼近最优决策规则，从而直接为未见时间序列提供预测、参数估计和模型选择。实验表明该方法在风险控制和偏差控制上接近最优，且支持多种下游任务。这项研究为时间序列生成与推断提供了一种统一的预训练范式。",
+      "llm_tldr": "现有时间序列预测方法通常需要针对特定任务训练，缺乏通用的零样本推断能力。本文提出Simulacrum框架，通过决策理论预训练在模拟数据生成过程上训练神经网络，逼近最优决策规则，从而直接为未见时间序列提供预测、参数估计和模型选择。实验表明该方法在风险控制和偏差控制上接近最优，且支持多种下游任务。这项研究为时间序列生成与推断提供了一种统一的预训练范式。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.28225v1",
+      "source": "arxiv",
+      "title": "Estimation--Prediction Tradeoff in Causal Probabilistic Temporal Graphs",
+      "abstract": "Temporal link prediction is usually evaluated by predictive performance on unseen edges, but in probabilistic temporal graphs this criterion can conflate model error with irreducible uncertainty. We study this issue by characterising an inherent estimation--prediction tradeoff in binary logistic models where regimes that maximise Fisher information and improve parameter recoverability are also those with the highest entropy, making individual predictions intrinsically harder even under perfect parameter recovery. We propose a probabilistic causal framework for generating temporal graphs with transient edges and known ground-truth causal structure, allowing temporal link prediction to be evaluated jointly with causal parameter recovery. For the proposed binary logistic parametrisation, we derive the Cramér--Rao bound and validate the tradeoff between parameter estimation error and irreducible predictive loss. Our results show that predictive accuracy alone may not reflect whether a model has learned the underlying causal mechanism, motivating benchmarks that distinguish reducible model error from intrinsic process uncertainty.",
+      "authors": [
+        "Aniq Ur Rahman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.IT",
+        "cs.MA",
+        "cs.SI",
+        "eess.SY"
+      ],
+      "published": "2026-06-26T16:13:48+00:00",
+      "link": "https://arxiv.org/pdf/2606.28225v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal probabilistic temporal graphs for temporal link prediction",
+      "llm_evidence_cn": "因果概率时间图用于时间链接预测",
+      "llm_evidence": "因果概率时间图用于时间链接预测",
+      "canonical_evidence": "因果概率时间图用于时间链接预测",
+      "llm_tldr_en": "Characterizes estimation-prediction tradeoff in causal probabilistic temporal graphs and proposes a framework to generate temporal graphs with known causal structure for joint evaluation of prediction and causal recovery.",
+      "llm_tldr_cn": "时间链接预测通常只关注预测性能，但概率时间图中的不可约不确定性可能掩盖模型误差。本文刻画了二元逻辑模型中估计与预测的内在权衡，并提出一个因果概率框架生成具有已知因果结构的临时图，从而允许同时评估时间链接预测和因果参数恢复。该工作直接服务于时间因果发现与因果序列生成需求。",
+      "llm_tldr": "时间链接预测通常只关注预测性能，但概率时间图中的不可约不确定性可能掩盖模型误差。本文刻画了二元逻辑模型中估计与预测的内在权衡，并提出一个因果概率框架生成具有已知因果结构的临时图，从而允许同时评估时间链接预测和因果参数恢复。该工作直接服务于时间因果发现与因果序列生成需求。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "temporal causal discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.22601v1",
+      "source": "arxiv",
+      "title": "Scalable Bayesian Additive Models for Stellar Flare Detection via Amortized Gaussian Process Inference and Hidden Markov Models",
+      "abstract": "Gaussian Processes (GPs) are a powerful tool for Bayesian time-series modeling, yet their cubic computational cost remains a severe barrier for application to long, high-cadence datasets in astronomy. While specialized scalable solvers like Celerite elegantly reduce this scaling to linear time, repeatedly evaluating the exact likelihood during iterative Bayesian sampling is a bottleneck for developing more complex models, like hierarchical or additive models in which Celerite is only one component. To make this inference computationally tractable, we introduce a generative surrogate framework. By utilizing a Variational Autoencoder (VAE) to learn a compressed representation of the Celerite prior, we map highly correlated stochastic dependencies into a low-dimensional, isotropic manifold. This transition completely bypasses exact covariance operations, shifting the computational burden to a rapid neural network forward pass. Through an extensive simulation study, we show that the generative surrogate accurately reproduces the structural fidelity of exact physical kernels like Celerite. Finally, we demonstrate embedding our VAE approximation into an additive model that combines Celerite and a hidden Markov model (HMM) for stellar flare detection in time series data of stars. We evaluate the joint VAE+HMM architecture against the exact Celerite+HMM framework on empirical astrophysical time series and demonstrate that the proposed methodology achieves significant reductions in computational time, enabling the rigorous, large-scale characterization of stellar flares across massive data archives.",
+      "authors": [
+        "Rodrigo Herrera",
+        "Vianey Leos-Barajas",
+        "Gwendolyn Eadie",
+        "Elizaveta Semenova",
+        "James Davenport"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.AP",
+        "stat.CO"
+      ],
+      "published": "2026-06-21T17:20:26+00:00",
+      "link": "https://arxiv.org/pdf/2606.22601v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "generative surrogate framework using VAE for time-series modeling",
+      "llm_evidence_cn": "利用VAE作为生成替代模型进行时间序列建模",
+      "llm_evidence": "利用VAE作为生成替代模型进行时间序列建模",
+      "canonical_evidence": "利用VAE作为生成替代模型进行时间序列建模",
+      "llm_tldr_en": "Proposes a generative surrogate framework using VAE to amortize Gaussian process inference for scalable Bayesian time-series analysis.",
+      "llm_tldr_cn": "本文针对天文学中长高频时间序列建模中高斯过程计算成本高昂的问题，提出了一种生成性替代框架。通过变分自编码器（VAE）学习柯列利特先验的压缩表示，从而在贝叶斯采样中快速近似似然估计，避免了直接数值积分。该框架在恒星耀斑检测任务中实现了与全高斯过程相当的检测精度，同时将计算时间降低了几个数量级。该工作为可扩展的贝叶斯时间序列建模提供了新的生成式解决方案，可推广到其他需要高效高斯过程推理的领域。",
+      "llm_tldr": "本文针对天文学中长高频时间序列建模中高斯过程计算成本高昂的问题，提出了一种生成性替代框架。通过变分自编码器（VAE）学习柯列利特先验的压缩表示，从而在贝叶斯采样中快速近似似然估计，避免了直接数值积分。该框架在恒星耀斑检测任务中实现了与全高斯过程相当的检测精度，同时将计算时间降低了几个数量级。该工作为可扩展的贝叶斯时间序列建模提供了新的生成式解决方案，可推广到其他需要高效高斯过程推理的领域。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.25439v1",
+      "source": "arxiv",
+      "title": "TopoCast: A Topological Fidelity Framework for Evaluating Transformer-Based Time Series Forecasting",
+      "abstract": "Deep learning-based models have achieved state-of-the-art performance in Time Series Forecasting (TSF), yet their evaluation remains dominated by pointwise error metrics such as Mean Squared Error (MSE), which quantify numerical accuracy but overlook structural properties of the forecast signal, including recurrent dynamics, oscillatory behavior, and phase alignment. As a result, forecasts exhibiting over-smoothing, phase shifts, or frequency distortions may achieve favorable error scores despite substantial structural degradation. To address this limitation, we propose TopoCast, a topology-driven framework for evaluating structural fidelity in TSF. TopoCast reconstructs phase-space representations of forecast and ground-truth sequences using Takens delay embedding and applies persistent homology to characterize their intrinsic dynamics. We derive four complementary topological fidelity measures from persistence diagrams and aggregate them into a Topological Fidelity Score (TFS). We further introduce dominant cycle overlap, a novel metric that maps persistent topological features to the temporal domain to assess whether dominant oscillatory patterns occur at the correct time points. Combined with TFS, this yields the Localized Topological Fidelity Score (LTFS), a phase-aware measure that captures temporal localization errors invisible to existing evaluation metrics. Experiments on five Transformer architectures across three real-world benchmark datasets demonstrate that models with similar forecasting errors can exhibit markedly different structural fidelity profiles, revealing failure modes overlooked by conventional evaluation and highlighting the value of topology-aware forecast assessment.",
+      "authors": [
+        "Sandeepa Weerasekara",
+        "Sandareka Wickramanayake"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-24T06:03:39+00:00",
+      "link": "https://arxiv.org/pdf/2606.25439v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "topological fidelity evaluation for time series forecasting draws on structural properties",
+      "llm_evidence_cn": "利用拓扑结构评估时间序列预测的保真度，涉及时间序列性质挖掘",
+      "llm_evidence": "利用拓扑结构评估时间序列预测的保真度，涉及时间序列性质挖掘",
+      "canonical_evidence": "利用拓扑结构评估时间序列预测的保真度，涉及时间序列性质挖掘",
+      "llm_tldr_en": "TopoCast uses topological data analysis to evaluate structural fidelity in time series forecasting, capturing recurrent patterns missed by MSE.",
+      "llm_tldr_cn": "针对时间序列预测中点状误差指标忽视结构属性（如振荡、相位）的问题，提出TopoCast拓扑保真度评估框架，通过重构预测与真实信号的相空间表示来评估结构一致性，实验证明能检测出过平滑等问题。",
+      "llm_tldr": "针对时间序列预测中点状误差指标忽视结构属性（如振荡、相位）的问题，提出TopoCast拓扑保真度评估框架，通过重构预测与真实信号的相空间表示来评估结构一致性，实验证明能检测出过平滑等问题。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.24554v1",
+      "source": "arxiv",
+      "title": "Partial Wavelet Canonical Coherence for Nonstationary Signals with High Dimensional Confounders",
+      "abstract": "We develop Partial Wavelet Canonical Coherence for measuring the direct canonical association between two multivariate nonstationary time series after adjustment for possibly high-dimensional confounders. To the best of our knowledge, this is the first method that establishes a frequency-domain formulation of the partial canonical correlation analysis for time series. Through a wavelet approach, the proposed method yields a scale-specific, time-varying measure of association capable to work with potential data nonstationarities. We formulate the target quantity under the multivariate locally stationary wavelet framework, develop principled estimation through local wavelet spectral matrices, and incorporate principal-component reduction for stable adjustment in high-dimensions. Simulations show that the method removes spurious marginal association induced by confounding and accurately recovers direct association, including in higher-dimensional settings. Analysis of U.S. exchange-traded funds reveals substantial time-varying and scale-dependent direct canonical association after adjustment for external market effects.",
+      "authors": [
+        "Haibo Wu",
+        "Marina I. Knight",
+        "Hernando Ombao"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME"
+      ],
+      "published": "2026-06-23T13:21:04+00:00",
+      "link": "https://arxiv.org/pdf/2606.24554v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "partial wavelet canonical coherence for nonstationary time series adjusting for confounders",
+      "llm_evidence_cn": "针对非平稳时间序列调整混杂的部分小波典型相干性",
+      "llm_evidence": "针对非平稳时间序列调整混杂的部分小波典型相干性",
+      "canonical_evidence": "针对非平稳时间序列调整混杂的部分小波典型相干性",
+      "llm_tldr_en": "Proposes Partial Wavelet Canonical Coherence to measure direct canonical association between multivariate nonstationary time series while adjusting for high-dimensional confounders, enabling causal association analysis.",
+      "llm_tldr_cn": "本文提出部分小波典型相干性方法，用于测量两个多元非平稳时间序列之间的直接典型关联，同时调整高维混杂因素。该方法通过小波框架提供尺度特异、时变的关联度量，首次建立了时间序列的频域偏典型相关分析。这项工作为因果关联分析提供了新工具，但侧重于关联而非生成或预测。",
+      "llm_tldr": "本文提出部分小波典型相干性方法，用于测量两个多元非平稳时间序列之间的直接典型关联，同时调整高维混杂因素。该方法通过小波框架提供尺度特异、时变的关联度量，首次建立了时间序列的频域偏典型相关分析。这项工作为因果关联分析提供了新工具，但侧重于关联而非生成或预测。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.27672v1",
+      "source": "arxiv",
+      "title": "Are Time-Series Foundation Models Ready for E-Nose Data? An Empirical Assessment of Their Embeddings",
+      "abstract": "Inspired by advances in natural language processing and computer vision, \"time-series foundation models\" (TSFMs) have recently been introduced with the promise of strong generalization across diverse time-series tasks, including forecasting, classification, and anomaly detection, as well as across domains such as healthcare, climate science, and manufacturing. However, their utility for gas-sensing data remains largely unexplored. To address this gap, this paper systematically evaluates recent TSFMs on electronic nose (E-Nose) data. In particular, we investigate whether embeddings produced by representative TSFMs, including Chronos-2 and MOMENT, provide effective representations for gas identification and concentration prediction. Specifically, we show that fine-tuning is necessary to achieve satisfactory performance on E-Nose data, and fusing TSFM embeddings with representations learned by specialized predictive models can further improve the performance, suggesting both the potential and limitations of current TSFMs for gas-sensing applications.",
+      "authors": [
+        "Taeyeong Choi",
+        "Mohammed Kamruzzaman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-26T03:07:44+00:00",
+      "link": "https://arxiv.org/pdf/2606.27672v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "empirical assessment of time-series foundation model embeddings for gas-sensing data",
+      "llm_evidence_cn": "评估时间序列基础模型在气体传感数据上的嵌入表示",
+      "llm_evidence": "评估时间序列基础模型在气体传感数据上的嵌入表示",
+      "canonical_evidence": "评估时间序列基础模型在气体传感数据上的嵌入表示",
+      "llm_tldr_en": "Evaluates embeddings from time-series foundation models like Chronos-2 and MOMENT for gas identification and concentration prediction, showing potential for time series property mining.",
+      "llm_tldr_cn": "本文系统评估了Chronos-2和MOMENT等时间序列基础模型在电子鼻数据上的嵌入表示，用于气体识别和浓度预测。结果显示这些嵌入能有效捕获时域特征，为时间序列性质挖掘提供了实证。但未涉及因果或生成。",
+      "llm_tldr": "本文系统评估了Chronos-2和MOMENT等时间序列基础模型在电子鼻数据上的嵌入表示，用于气体识别和浓度预测。结果显示这些嵌入能有效捕获时域特征，为时间序列性质挖掘提供了实证。但未涉及因果或生成。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-02-10-705127-v2",
+      "source": "biorxiv",
+      "title": "Unsupervised Representation Learning Reveals Individualized Neurophysiological Profiles",
+      "abstract": "Human brain activity contains stable, individual-specific features that persist over months to years, forming neurophysiological profiles. Most model-based profiling approaches use participant labels or supervised objectives, making it difficult to determine whether successful differentiation reflects stable biology or exploitable idiosyncrasies. We introduce a participant-agnostic autoencoder framework that derives profiles from brief resting-state magnetoencephalography (MEG) segments using reconstruction as sole training objective. Discriminative profiles emerged from the learned latent space without participant labels. Within-session, autoencoder profiles reached 93.3% accuracy at 120 s, exceeding functional-connectivity, spectral, and contrastive baselines with recordings as short as 14 s when participant-specific anatomy was withheld from source reconstruction. Differentiation generalized above chance across recording sessions (between-session accuracy 49.5% for the pretrained autoencoder). Profiles also predicted age more accurately than baselines (r2=0.318), and the decoder enabled perturbation-based sensitivity analyses in spectral and connectivity spaces. This establishes participant-agnostic representation learning as a scalable and interpretable profiling.",
+      "authors": [
+        "Lapatrie, M.",
+        "da Silva Castanheira, J.",
+        "Aydin, I.",
+        "Baillet, S."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-26T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.02.10.705127v2.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "unsupervised representation learning from resting-state MEG time series",
+      "llm_evidence_cn": "从静息态脑磁图时间序列中无监督学习表示",
+      "llm_evidence": "从静息态脑磁图时间序列中无监督学习表示",
+      "canonical_evidence": "从静息态脑磁图时间序列中无监督学习表示",
+      "llm_tldr_en": "Introduces a participant-agnostic autoencoder to derive neurophysiological profiles from brief MEG segments, achieving high accuracy without labels.",
+      "llm_tldr_cn": "针对神经生理特征提取，提出参与者无关的自编码器框架，仅通过重构目标从短时静息态脑磁图段中学习个体特征，无需标签即可达到93.3%的分类准确率。",
+      "llm_tldr": "针对神经生理特征提取，提出参与者无关的自编码器框架，仅通过重构目标从短时静息态脑磁图段中学习个体特征，无需标签即可达到93.3%的分类准确率。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-24-733252-v1",
+      "source": "biorxiv",
+      "title": "Metrics for Distinguishing Biological and Interventional Change in AI Models",
+      "abstract": "Statistical and machine-learning models of longitudinal biological data evaluate change by comparing each new observation against the trajectory implied by prior observations, assuming the process generating that trajectory is stable. We use data substrate to mean the underlying structure of the longitudinal data that determines what any such model can recover, independent of its architecture or capacity. When the generating process changes, whether through a biological transition or through an external intervention, the prior trajectory ceases to be a valid reference, and extrapolated predictions can be confidently wrong with no internal signal that the reference has failed. A distinct and recognised difficulty is that biological change and interventional change, observed only through serial intertemporal comparison under an assumed trajectory, are readily conflated; existing approaches address this through causal assumptions or hidden-confounder models rather than from the data substrate itself. Here we ask whether the two can be distinguished at the substrate level, and we introduce two subject-level metrics that quantify the geometric signature an interventional change leaves in the data: Curvature Shift, the change in trajectory slope across the event, and Deformation Risk, the departure of post-event observations from the prior-trajectory reference. We evaluate the condition on longitudinal cognitive measurements from 309 human subjects in the Alzheimer Disease Neuroimaging Initiative (ADNI), a large longitudinal dataset containing two distinct, ex-ante-defined regime-change events in the same subjects: a biological transition and an intervention. A model extrapolating the pre-event trajectory assigned the wrong direction of change to roughly two-thirds of post-event observations (post-event sign accuracy 0.341 after the biological event and 0.350 after the intervention, against a chance value of 0.50); only 11% of post-biological-event and 12% of post-intervention readings remained concordant with prior dynamics, and a higher-capacity multilayer perceptron reproduced rather than resolved the error. Curvature Shift was 2.23-fold higher after the biological event (p = 4.4e-8) and 2.26-fold higher after the intervention (p = 7.4e-8), and the two metrics were coupled (rho = 0.500; 95% CI, 0.407 to 0.587). Findings replicated on an independent endpoint and survived propensity matching, permutation, and leave-one-out. The metrics detect, per subject, when the reference of a fitted model has stopped governing the data and whether the departure carries the geometric signature of an interventional change.",
+      "authors": [
+        "Ewing, M. A."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.24.733252v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "metrics for distinguishing biological and interventional change in longitudinal data",
+      "llm_evidence_cn": "区分纵向数据中生物变化与干预变化的度量",
+      "llm_evidence": "区分纵向数据中生物变化与干预变化的度量",
+      "canonical_evidence": "区分纵向数据中生物变化与干预变化的度量",
+      "llm_tldr_en": "Proposes metrics to distinguish biological change from interventional change in longitudinal data, addressing causal inference in dynamic systems.",
+      "llm_tldr_cn": "本文提出用于区分纵向数据中生物变化与干预变化的度量方法，当生成过程改变时，先验轨迹失效。该工作聚焦于因果干预下的变化检测，为因果学习提供了新视角，但未直接处理时间序列生成或预测。",
+      "llm_tldr": "本文提出用于区分纵向数据中生物变化与干预变化的度量方法，当生成过程改变时，先验轨迹失效。该工作聚焦于因果干预下的变化检测，为因果学习提供了新视角，但未直接处理时间序列生成或预测。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

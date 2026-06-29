@@ -1,0 +1,454 @@
+Title: TopoCast: A Topological Fidelity Framework for Evaluating Transformer-Based Time Series Forecasting
+
+URL Source: https://arxiv.org/pdf/2606.25439v1
+
+Published Time: Thu, 25 Jun 2026 00:33:49 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# TopoCast: A Topological Fidelity Framework for Evaluating Transformer-Based Time Series Forecasting 
+
+## Sandeepa Weerasekara 1* and Sandareka Wickramanayake 1* 
+
+1* Department of Computer Science and Engineering, University of Moratuwa, Katubedda, Moratuwa, 10400, Sri Lanka. *Corresponding author(s). E-mail(s): sandeepa.25@cse.mrt.ac.lk; sandarekaw@cse.mrt.ac.lk ; 
+
+Abstract 
+
+Deep learning-based models have achieved state-of-the-art performance in Time Series Forecasting (TSF), yet their evaluation remains dominated by pointwise error metrics such as Mean Squared Error (MSE), which quantify numerical accuracy but overlook structural properties of the forecast signal, including recur-rent dynamics, oscillatory behavior, and phase alignment. As a result, forecasts exhibiting over-smoothing, phase shifts, or frequency distortions may achieve favorable error scores despite substantial structural degradation. To address this limitation, we propose TopoCast , a topology-driven framework for evaluating structural fidelity in TSF. TopoCast reconstructs phase-space representations of forecast and ground-truth sequences using Takens delay embedding and applies persistent homology to characterize their intrinsic dynamics. We derive four complementary topological fidelity measures from persistence diagrams and aggregate them into a Topological Fidelity Score (TFS) . We further introduce 
+
+dominant cycle overlap , a novel metric that maps persistent topological features to the temporal domain to assess whether dominant oscillatory patterns occur at the correct time points. Combined with TFS, this yields the Localized Topo-logical Fidelity Score (LTFS) , a phase-aware measure that captures temporal localization errors invisible to existing evaluation metrics. Experiments on five Transformer architectures across three real-world benchmark datasets demon-strate that models with similar forecasting errors can exhibit markedly different structural fidelity profiles, revealing failure modes overlooked by conventional evaluation and highlighting the value of topology-aware forecast assessment. 
+
+Keywords: Time Series Forecasting, Topological Data Analysis, Transformers, Persistent Homology 
+
+1          
+
+> arXiv:2606.25439v1 [cs.LG] 24 Jun 2026 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Time (s)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Amplitude
+> MSE =0.0110
+> Ground truth
+> Forecast
+
+(A) Smooth forecast 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00    
+
+> Time (s)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Amplitude
+> MSE =0.0321
+> Ground truth
+> Forecast
+
+(B) Phase shift 
+
+Fig. 1 : Two structural failure modes undetectable by MSE. Both forecasts would be considered acceptable under pointwise evaluation, yet they exhibit fundamentally different and complementary forms of structural degradation. 
+
+# 1 Introduction 
+
+Time series forecasting (TSF) is a fundamental task in many application domains, including energy systems [1], finance [2], and healthcare [3], where forecast quality directly influences downstream decision-making. Recent advances in deep learning have established Transformer-based architectures as leading approaches for TSF due to their ability to model long-range temporal dependencies and complex sequential patterns [4–7]. Despite their strong predictive performance, model evaluation remains largely dependent on pointwise error metrics such as Mean Squared Error (MSE) and Mean Absolute Error (MAE). Although widely adopted, pointwise metrics assess only numerical discrepancies between predicted and observed values at individual time steps. Consequently, they provide limited insight into whether a forecast preserves the underlying temporal structure of the target signal. Forecasts that closely match the overall trend may nev-ertheless distort seasonal patterns, introduce temporal lag, suppress high-frequency dynamics, or generate spurious oscillatory behaviour. Such deviations alter important characteristics of the underlying dynamical system, yet often result in only minor changes in pointwise error measures [8]. As a result, structurally distinct forecasts may receive similar evaluation scores despite exhibiting substantially different temporal behaviours. Figure 1 illustrates two representative examples. In Figure 1(A), a smoothed fore-cast achieves low MSE while failing to preserve the sharp R-peaks that characterize the ECG signal. In Figure 1(B), the forecast reproduces the dominant oscillatory pat-tern with comparable amplitude and frequency but exhibits a temporal phase shift relative to the ground truth. Although these forecasts differ substantially in their struc-tural properties, both may be assigned favourable scores under conventional pointwise evaluation. These observations motivate the need for evaluation methodologies that explicitly quantify structural preservation in forecasted time series. Topological Data Analysis (TDA), particularly persistent homology, provides a principled framework for characterizing the geometric and dynamical structure of time series. By reconstructing the underlying phase space through Takens delay embedding [9] and tracking the emergence and disappearance of topological features across multiple scales, persistent homology captures recurrent structures, cycles, and 2other dynamical properties that are not reflected in pointwise error metrics [10]. The resulting topological descriptors are robust to small perturbations and provide a complementary perspective on forecast quality. In this work, we propose TopoCast , a persistent homology-based framework for evaluating structural fidelity in time series forecasting. Given a forecast sequence and its corresponding ground truth, we construct multivariate Takens embeddings and extract persistence diagrams. From these diagrams, we derive four complementary fidelity components, which quantify loop count, dominant cycle strength, total persis-tence, and diagram complexity, respectively. These components are aggregated using the geometric mean to obtain a Topological Fidelity Score (TFS). To assess tempo-ral localization of recurrent structures, we further introduce dominant cycle overlap ,a novel metric that maps cocycle generators back to the original temporal domain through inverse Takens reconstruction. This metric quantifies the extent to which dominant oscillatory structures in the forecast align with those in the ground truth. By integrating dominant cycle overlap with TFS, we obtain the Localized Topologi-cal Fidelity Score (LTFS), a phase-aware measure that captures temporal localization errors not reflected by existing diagram-level metrics, including persistence summaries and Wasserstein distances. We evaluate TopoCast on five Transformer-based forecasting models, namely Aut-oformer [4], FEDformer [5], Informer [6], Transformer [11], and PatchTST [7], using three real-world multivariate benchmark datasets (ETTm2, Exchange Rate, and ILI) across multiple forecasting horizons. Experimental results demonstrate that mod-els with comparable forecasting errors can exhibit substantially different topological fidelity profiles. Furthermore, LTFS reveals temporal phase-related failure modes that remain undetected by both pointwise and existing diagram-level evaluation methods. The main contributions of this work are summarized as follows: 1. We propose TopoCast , a persistent homology-based framework for evaluating structural fidelity in time series forecasting, providing information complemen-tary to conventional pointwise error metrics while requiring access only to forecast outputs. 2. We introduce dominant cycle overlap , a novel topological metric that quantifies temporal localization of dominant oscillatory structures by mapping persistent homology generators back to the time domain, enabling the detection of phase-related forecasting errors that are not captured by existing diagram-level evaluation methods. 
+
+# 2 Related Work 
+
+## 2.1 Transformer-Based Time Series Forecasting 
+
+Transformer architectures [11] have become a dominant paradigm for time series forecasting owing to their capacity to model long-range temporal dependencies via self-attention. Several variants address the quadratic complexity of standard atten-tion [6, 12, 13], while others explicitly target temporal structure: Autoformer [4] 3replaces dot-product attention with an autocorrelation mechanism coupled with trend– seasonal decomposition, FEDformer [5] leverages Fourier and wavelet transforms for frequency-domain modelling, and PatchTST [7] introduced patch-based tokenisation to improve local semantic representation. Despite their strong predictive performance, these models are evaluated almost exclusively on pointwise error, and whether their forecasts preserve the structural and dynamical properties of the target signal remains an open and largely unexamined question. 
+
+## 2.2 Limitations of Forecasting Evaluation Metrics 
+
+Pointwise metrics such as MSE and MAE remain the dominant evaluation crite-ria in time series forecasting [14–16], yet their limitations as sole measures are increasingly recognised. Both reduce forecast quality to an average of per-timestep deviations, rendering them blind to structurally meaningful discrepancies: a forecast may align numerically with the ground truth while failing to reproduce its direction-ality, variance, or periodic pattern. Patch-wise structural loss formulations [17] have highlighted that MSE’s point-independence assumption causes it to overlook correla-tion structure, variance dynamics, and phase relationships simultaneously, and a recent re-examination of long-term forecasting evaluation [18] showed that aggregated point-wise metrics obscure window-level heterogeneity, misrepresenting model behaviour on structurally irregular segments. To address these limitations, shape-aware and alignment metrics have been pro-posed. Dynamic Time Warping and Soft-DTW [19, 20] compare time series by allowing temporal distortions, the Temporal Distortion Index [21] quantifies timing discrepancies based on the DTW warping path, and Wasserstein distance evaluates distributional similarity between forecast and observed series. Yu et al. [8] demon-strated that two time series with identical MSE can have entirely different geometric structures, directly motivating structure-aware evaluation. Despite capturing comple-mentary aspects of forecast quality, none of these metrics evaluates whether a forecast preserves the underlying topological structure of the signal — its recurrent cycles, dominant seasonal patterns, and broader geometric characteristics — motivating a topology-aware evaluation framework grounded in persistent homology. 
+
+## 2.3 Topological Data Analysis for Time Series 
+
+Topological Data Analysis (TDA) [22] provides a mathematically principled framework for characterising the global, scale-invariant structure of data. Persistent homology (PH) [23], its core computational tool, tracks the birth and death of topological fea-tures — connected components, loops, and voids — as a filtration parameter varies, producing a persistence diagram encoding the multi-scale shape of the data. The Sta-bility Theorem [24] guarantees that small perturbations produce bounded changes in the persistence diagram, making PH inherently robust to noise. Efficient implemen-tations including Ripser [25], GUDHI, and Giotto-TDA [26] have made large-scale computation practical, and TDA has demonstrated the ability to detect structural patterns invisible to conventional statistical descriptors across domains, including materials science [27] and financial modelling [28]. 4Fig. 2 : The TopoCast structural fidelity evaluation pipeline. In time series analysis, PH is typically applied via delay-coordinate embeddings that lift signals into point clouds for topological feature extraction [29]. The Tak-ens embedding theorem [30] guarantees that such embeddings are diffeomorphic to the underlying attractor, preserving its topological invariants. In deep learning, PH has served as a feature extractor for classification [28], a contrastive learning sig-nal [31], and a basis for graph ensembles in regression tasks [32]. Domain-adaptive extensions [33] and supervised forecasting frameworks [10] have further demonstrated topology’s utility as a predictive signal, though the latter treats topology as a learning feature rather than an evaluation criterion, leaving structural fidelity and temporal localisation largely unaddressed. 
+
+# 3 TopoCast Methodology 
+
+Figure 2 illustrates the complete TopoCast evaluation pipeline described in the following subsections. 
+
+## 3.1 Phase Space Reconstruction 
+
+A time series cannot be directly analysed topologically in its raw form because one-dimensional signals have trivial topology. The key step is to lift the signal into a 5higher-dimensional phase space where its dynamical structure, including cycles, attrac-tors, and recurrent patterns, becomes geometrically visible as loops and connected components. The Takens embedding theorem [30] guarantees that a delay-coordinate embedding reconstructs the topology of the underlying dynamical attractor. For a multivariate signal with C channels, each channel xi(t) is embedded independently with dimension 
+
+m = 3 and delay τ = 2, producing an embedding matrix for each channel: 
+
+Xi = xi(t), x i(t + τ ), x i(t + 2 τ ), t = 0 , 1, . . . , N − 1 (1) where N = T − (m − 1) τ = T − 4 and T is the sequence length. The C channel embeddings are concatenated column-wise to produce a single joint point cloud X ∈ 
+
+RN ×mC . Both the forecast ˆ y and ground truth y are embedded independently using identical parameters, producing point clouds X ˆy and X y of the same dimension. The embedding dimension m = 3 and delay τ = 2 are fixed throughout all exper-iments. These values are standard choices for short-to-medium length financial and energy time series and are consistent with prior work applying persistent homology to time series forecasting evaluation [29, 34]. Figure 3 illustrates this pipeline for a syn-thetic cyclic signal, showing how a periodic time series forms a closed loop in phase space whose dominant feature is captured as a single high-persistence point in the H1
+
+diagram. 0 5 10 15 20 25        
+
+> Time
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> Amplitude
+> (a) Time Series
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> x(t)
+> 1.0 0.5
+> 0.0 0.5 1.0 1.5 2.0
+> x(t+)
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> x(t + 2  )
+> (b) 3D Takens Embedding
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Birth
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Death
+> (c) Persistence Diagram ( H1)
+
+Fig. 3 : From time series to topological descriptor via Takens delay embedding and 
+
+H1 persistent homology. 
+
+## 3.2 Persistent Homology Extraction 
+
+A Vietoris–Rips filtration is constructed on the pairwise Euclidean distance matrix of each point cloud. The filtration works by progressively connecting points as the distance threshold ε increases: at each value of ε, any two points within distance ε
+
+are connected by an edge, and any set of points mutually within distance ε forms a simplex. As ε grows from 0 to ∞, topological features including connected components and loops are born and die. 6H1 persistence features, which are one-dimensional loops, are the primary descrip-tor because periodic signals form closed loop structures under Takens embedding. A time series with a dominant seasonal cycle of period P will trace a closed loop in phase space, whose lifetime in the persistence diagram reflects the strength and regularity of that cycle. Each H1 feature is tracked as a birth–death interval [ b, d ) with lifetime 
+
+ℓ = d − b. Features with ℓ < ε 0 = 10 −6 are discarded as numerical noise. Persistent homology is computed via the Ripser library [25], enabling both the persistence diagram and the representative cocycle of each feature to be extracted. The cocycle is required for dominant cycle localisation described in Section 3.4. From each H1 diagram, four scalar descriptors are computed: 
+
+• β1 (loop count) : the total number of significant H1 features, measuring how many independent cyclic structures the signal contains. 
+
+• Lmax (dominant cycle strength) : the maximum lifetime max k ℓk, measuring the strength of the most persistent seasonal pattern. 
+
+• T P (total persistence) : the sum of all lifetimes P 
+
+> k
+
+ℓk, measuring the aggregate topological energy across all cyclic structures. 
+
+• H (persistence entropy) : − P 
+
+> k
+
+pk log pk where pk = ℓk/ P 
+
+> j
+
+ℓj , measuring the complexity of the loop lifetime distribution. These four descriptors are computed independently for both X ˆy and X y , yielding descriptor vectors for the forecast and ground truth respectively. 
+
+## 3.3 Topological Fidelity Scores 
+
+Four interpretable scores compare forecast descriptors against ground-truth descrip-tors, each targeting a distinct structural property (Table 1). All four use a log-ratio form bounded in (0 , 1], with 1 .0 indicating perfect preservation of the correspond-ing descriptor. They are combined via geometric mean into a composite Topological Fidelity Score :
+
+T F S = ( Sβ1 · SLmax · ST P · SH )1/4 (2) The geometric mean ensures that collapse in any single component propagates aggres-sively to the composite, producing an unambiguous structural damage signal. TFS is further multiplied by the dominant cycle overlap (Section 3.4) to produce the final metric: 
+
+LT F S = STFS × Overlap (3) 
+
+SLTFS ∈ [0 , 1], with 1 .0 indicating complete structural preservation and perfect tem-poral co-localisation of the dominant cycle. All scores are computed per test window and averaged over N windows. 
+
+## 3.4 Dominant Cycle Overlap 
+
+TFS operates on diagram-level summaries and is therefore blind to temporal local-isation errors: a forecast may achieve high TFS while systematically misplacing the dominant oscillation in time. Dominant cycle overlap addresses this by mapping the topological generator of the dominant H1 feature back to the original time domain. 7Table 1 : Structural quality score components.                  
+
+> Score Formula Interpretation
+> Sβ1exp −log ˆβ1
+> βy
+> 1
+> !
+> Loop count preservation
+> SLmax exp −log ˆLmax
+> Ly
+> max
+> !
+> Dominant cycle strength preservation
+> ST P exp −log dT P T P y
+> !
+> Total topological energy preservation
+> SHexp −log ˆHHy
+> !
+> Persistence diagram complexity preserva-tion
+
+For a point cloud X ∈ RN ×mC constructed via Takens embedding, each row i
+
+corresponds to time step i in the original signal. The dominant cycle is identified as the longest-lived H1 feature; its representative cocycle, extracted via Ripser, is a set of simplices whose vertex indices map injectively back to time steps in {0, 1, . . . , T − 1}.Applying this inverse mapping to both point clouds yields two sets of active time steps: 
+
+T y 
+
+> dom
+
+⊂ { 0, 1, . . . , T − 1}, T ˆy 
+
+> dom
+
+⊂ { 0, 1, . . . , T − 1} (4) Temporal co-localisation is then quantified as the Jaccard coefficient between these two sets: Overlap = 
+
+T ˆy 
+
+> dom
+
+∩ T y
+
+> dom
+
+T ˆy 
+
+> dom
+
+∪ T y
+
+> dom
+
+(5) Overlap ∈ [0 , 1], with 1 .0 indicating perfect co-localisation and 0 .0 indicating com-plete displacement. Windows where the ground-truth diagram contains no valid 
+
+H1 generator are excluded; windows where the forecast contains none are assigned Overlap = 0, representing complete dominant cycle loss. Dominant cycle overlap is the only TopoCast component that reconnects topological analysis to the original time domain, detecting phase localisation errors entirely invisible to TFS, the Wasserstein distance W2, and all other diagram-level summaries. 
+
+# 4 Experiments 
+
+## 4.1 Datasets 
+
+We evaluate TopoCast on three multivariate time series benchmarks spanning diverse temporal dynamics and topological regimes. ETTm2 consists of 7 variables sampled at 15-minute intervals over two years, exhibiting strong periodicity and long-range seasonal dependencies. ILI (Influenza-Like Illness) is a weekly CDC dataset covering 2002–2021 with 7 variables and 966 time steps, characterised by higher volatility and weaker seasonality than ETTm2. Exchange contains daily exchange rates for eight 8currencies against the U.S. dollar, with non-stationary dynamics and minimal periodic structure. 
+
+## 4.2 Models 
+
+We evaluate five Transformer-based forecasting architectures spanning three cate-gories of inductive bias. Transformer [11] serves as the standard self-attention baseline. Informer [6] introduces ProbSparse attention with encoder distillation for efficient long-horizon forecasting. Autoformer [4] replaces dot-product atten-tion with an autocorrelation mechanism coupled with trend–seasonal decomposition. 
+
+FEDformer [5] extends decomposition-based modelling to the frequency domain via Fourier and wavelet transforms. PatchTST [7] tokenises time series patches and applies channel-independent self-attention across patches rather than timesteps. Together they represent standard attention (Transformer, Informer), decomposition-based attention (Autoformer, FEDformer), and patch-based channel-independent attention (PatchTST). 
+
+## 4.3 Implementation Details 
+
+All experiments use official or widely adopted open-source PyTorch implementations trained under their original hyperparameter settings. Takens embedding uses m = 3, 
+
+τ = 2 throughout; persistent homology is computed via Ripser [25] with cocycle extraction enabled. We evaluate 100 randomly sampled non-overlapping test windows per (model, dataset, prediction length) for ETTm2 and Exchange, and 50 for ILI given its smaller size. Prediction lengths are {48 , 96 , 192 } for ETTm2 and Exchange and 
+
+{36 , 48 , 60 } for ILI, yielding 45 experiments (5 models × 3 datasets × 3 prediction lengths). 
+
+# 5 Synthetic Validation 
+
+Benchmark evaluations cannot verify that topological metrics respond correctly to specific failure modes, since real datasets provide no ground truth about which struc-tural property has degraded. We therefore design a controlled synthetic validation where each failure mode is specified exactly by construction. 
+
+## 5.1 Experimental Setup and Results 
+
+The ground truth is a synthetic ECG signal constructed via a sum-of-Gaussians PQRST template with 8 beats at fs = 300 Hz and heart rate of 70 bpm, with low-amplitude Gaussian noise ( σ = 0 .005) added to simulate measurement variability. Four forecast scenarios isolate distinct structural failure modes while keeping MSE deliberately low (Table 2); the scenarios are visualised in Figure 4. Table 3 reports MSE, TFS, LTFS, dominant cycle overlap, and the four component scores for each scenario. The GT baseline row confirms pipeline validity; all forecast rows should be read against it. 90.00                                  
+
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> Amplitude
+> A: Smooth forecast
+> MSE =0.0110 S*shape =0.0000 Ground truth
+> Forecast
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> Amplitude
+> B: Attenuated peaks
+> MSE =0.0081 S*shape =0.4990
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> Amplitude
+> C: Missing beat
+> MSE =0.0020 S*shape =0.8246
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> Amplitude
+> D: Phase shift Time (s)
+> MSE =0.0321 S*shape =0.0000
+
+Fig. 4 : Synthetic ECG validation across four structural failure scenarios. MSE remains low in all cases while LTFS correctly reflects the degree of structural degradation in each. 
+
+## 5.2 Interpretation 
+
+MSE and structural fidelity measure distinct properties. The smooth forecast achieves MSE = 0 .011 yet T F S = 0 .117, indicating near-total structural collapse: R-peak topology is destroyed while MSE reports a numerically close forecast. Conversely, the phase shift scenario achieves T F S = 0 .999 with MSE = 0 .032, confirming that the two metrics measure fundamentally different properties. 
+
+LT F S detects temporal mislocalisation invisible to T F S . The phase shift scenario achieves T F S = 0 .999 but LT F S = 0 .000 with Overlap = 0 .000: the domi-nant cycle exists at the correct amplitude and frequency but at entirely wrong time steps, a failure mode invisible to all diagram-level metrics. 
+
+Component scores decompose structural damage precisely. For attenuated peaks, SLmax = 0 .250 and ST P = 0 .250 precisely reflect the 25% amplitude scaling 10 Table 2 : Controlled ECG forecast scenarios and targeted failure modes.                           
+
+> Scenario Construction Expected structural effect Smooth forecast Gaussian smoothing ( σ= 15 sam-ples) R-peaks flattened; dominant cycle destroyed; SLmax and ST P collapse Attenuated peaks Amplitudes scaled to 25% around signal mean Cycle structure preserved spatially;
+> SLmax and ST P collapse proportionally Missing beat Beat 2 replaced by linear interpo-lation One cyclic structure removed; β1drops and temporal overlap degrades Phase shift Signal cyclically shifted by half a beat period Cyclic structure fully intact; TFS remains high; LTFS collapses
+
+while Overlap = 1 .000 confirms correct temporal localisation. For missing beat, MSE = 0 .002 is essentially zero yet LT F S = 0 .829 and Overlap = 0 .881 reveal the structural gap, invisible to pointwise evaluation. 
+
+# 6 Results 
+
+## 6.1 Structural Fidelity Across Datasets and Horizons 
+
+Tables 8–10 report LT F S and its components alongside MSE and MAE across all three datasets and prediction horizons. Across all datasets, LT F S values remain substan-tially below 1.0 even for the best-performing models, indicating that no architecture fully preserves both diagram-level structural properties and temporal localisation of the dominant cycle simultaneously. The overlap component drives LT F S lower on Exchange and ILI, confirming that temporal mislocalisation is a pervasive failure mode independent of model class. 
+
+## 6.2 Divergence Between Pointwise Accuracy and Structural Fidelity 
+
+The most consequential finding is that MSE and LT F S rankings diverge substantially and systematically. On ETTm2 at p = 48, the Transformer achieves MSE competitive with FEDformer and Informer yet its SLTFS is the lowest among all models, driven by 
+
+Table 3 : Synthetic ECG results. 
+
+Scenario MSE ↓ Sβ1 ↑ SLmax ↑ ST P ↑ SH ↑ TFS ↑ Overlap ↑ LTFS ↑
+
+GT baseline 0.0000 1.0000 1.0000 1.0000 1.0000 1.0000 1.0000 1.0000 Smooth forecast 0.0110 0.2780 0.0357 0.0287 0.6627 0.1172 0.0000 0.0000 Attenuated peaks 0.0081 0.9918 0.2500 0.2500 0.9999 0.4990 1.0000 0.4990 Missing beat 0.0020 0.8622 1.0000 0.9546 0.9342 0.9364 0.8806 0.8246 Phase shift 0.0321 1.0000 1.0000 0.9981 0.9978 0.9990 0.0000 0.0000 
+
+11 Table 4 : Forecast H1 descriptors β1 and Lmax across datasets and prediction horizons. GT rows show ground-truth values. 
+
+ETTm2 Exchange ILI Model Metric 48 96 192 48 96 192 36 48 60 GT β1 11.20 30.28 81.67 4.71 12.34 27.23 1.98 3.72 5.36 
+
+Lmax 0.81 1.25 1.40 0.65 0.83 0.79 0.86 1.49 2.15 Autoformer β1 8.50 21.93 39.49 10.56 19.51 43.45 2.96 4.16 6.40 
+
+Lmax 1.33 1.61 2.51 1.79 1.38 1.26 1.13 1.64 1.57 FEDformer β1 4.34 13.93 4.34 10.09 25.55 96.04 1.50 3.42 5.46 
+
+Lmax 1.16 2.08 1.16 0.75 0.63 0.57 0.35 0.73 1.12 Transformer β1 1.16 6.01 18.27 2.68 20.65 41.89 1.06 3.44 4.94 
+
+Lmax 0.11 1.35 2.15 0.24 0.77 0.60 0.14 0.24 0.37 Informer β1 8.22 18.85 25.47 8.80 13.88 27.23 5.58 9.06 12.46 
+
+Lmax 0.60 0.96 0.69 0.73 0.75 0.79 0.72 0.67 0.71 PatchTST β1 4.43 16.69 56.07 18.50 56.14 136.16 2.58 4.74 8.50 
+
+Lmax 0.76 2.11 2.54 0.65 0.74 0.76 0.28 0.60 1.31 
+
+Table 5 : Forecast descriptors T P and H across datasets and prediction horizons. 
+
+ETTm2 Exchange ILI Model Metric 48 96 192 48 96 192 36 48 60 GT T P 3.14 7.95 18.93 1.35 2.93 4.72 1.02 1.88 2.97 
+
+H 1.97 2.90 3.92 0.99 1.84 2.64 0.34 0.63 0.88 Autoformer T P 3.18 6.21 11.64 5.00 5.84 8.78 1.65 2.51 3.22 
+
+H 1.44 2.40 2.77 1.80 2.33 3.09 0.55 0.77 1.23 FEDformer T P 1.73 5.00 1.73 2.33 4.45 13.50 0.41 1.12 2.25 
+
+H 0.82 1.79 0.82 1.77 2.82 4.23 0.29 0.75 1.19 Transformer T P 0.16 1.86 5.30 0.36 3.07 4.84 0.19 0.46 0.79 
+
+H 0.25 0.82 1.84 0.59 2.38 3.16 0.22 0.75 1.03 Informer T P 2.00 4.55 4.21 2.50 3.45 4.71 1.71 2.08 2.93 
+
+H 1.60 2.40 2.74 1.77 2.18 2.63 1.22 1.75 2.10 PatchTST T P 1.39 5.68 14.61 4.36 12.35 25.41 0.44 1.10 2.62 
+
+H 0.89 1.88 3.30 2.59 3.70 4.57 0.56 1.03 1.41 
+
+near-total collapse in SLmax and ST P : numerically close forecasts while the dominant cyclic structure is destroyed, a failure mode entirely invisible to pointwise evaluation. The Exchange dataset provides the sharpest illustration. PatchTST achieves the lowest MSE across all three prediction horizons yet its LT F S is consistently the lowest among all models, driven by severe loop injection (∆ β1 > 0, Table 6) and systemati-cally low temporal overlap. The model ranking first under pointwise evaluation ranks 12 Table 6 : Signed topological descriptor deltas (∆ = FC −GT) across datasets and pre-diction horizons. Negative values indicate structural loss, while positive values indicate over-generation.                                                                                                            
+
+> ETTm2 Exchange ILI Model Metric 48 96 192 48 96 192 36 48 60 Autoformer ∆β1−2.70 −8.35 −42.18 +5.85 +7.17 +16.22 +0.98 +0.44 +1.04 ∆Lmax +0.52 +0.36 +1.11 +1.15 +0.54 +0.46 +0.27 +0.15 −0.59 FEDformer ∆β1−6.86 −16.35 −6.86 +5.38 +13.21 +68.81 −0.48 −0.30 +0.10 ∆Lmax +0.35 +0.83 +0.35 +0.10 −0.20 −0.23 −0.51 −0.76 −1.03 Transformer ∆β1−10.04 −24.27 −63.40 −2.03 +8.31 +14.66 −0.92 −0.28 −0.42 ∆Lmax −0.70 +0.10 +0.75 −0.41 −0.07 −0.19 −0.72 −1.25 −1.79 Informer ∆β1−2.98 −11.43 −56.20 +4.09 +1.54 −12.63 +3.60 +5.34 +7.10 ∆Lmax −0.22 −0.29 −0.71 +0.08 −0.09 −0.26 −0.14 −0.82 −1.44 PatchTST ∆β1−6.77 −13.59 −25.60 +13.79 +43.80 +108.93 +0.60 +1.02 +3.14 ∆Lmax −0.05 +0.86 +1.14 +0.00 −0.09 −0.03 −0.59 −0.89 −0.84
+
+last under topological evaluation — an inverted ordering reflecting a genuine structural property: PatchTST generates spurious cyclic structure on a dataset whose ground truth has minimal periodicity, a failure mode that MSE neither penalises nor detects. 
+
+Table 7 : Signed H1 descriptor deltas (∆ = FC − GT) across datasets and pre-diction horizons.Negative values indicate structural loss; positive values indicate over-generation. 
+
+ETTm2 Exchange ILI Model Metric 48 96 192 48 96 192 36 48 60 Autoformer ∆T P +0.04 −1.74 −7.29 +3.65 +2.90 +4.07 +0.63 +0.63 +0.25 ∆H −0.52 −0.50 −1.15 +0.81 +0.49 +0.44 +0.21 +0.14 +0.34 FEDformer ∆T P −1.41 −2.95 −1.41 +0.97 +1.52 +8.79 −0.61 −0.76 −0.71 ∆H −1.15 −1.11 −1.15 +0.78 +0.98 +1.59 −0.05 +0.11 +0.31 Transformer ∆T P −2.98 −6.09 −13.63 −0.99 +0.13 +0.12 −0.83 −1.41 −2.18 ∆H −1.72 −2.07 −2.08 −0.40 +0.54 +0.52 −0.13 +0.11 +0.15 Informer ∆T P −1.14 −3.40 −14.73 +1.15 +0.51 −2.37 +0.69 +0.20 −0.04 ∆H −0.37 −0.50 −1.17 +0.78 +0.34 −0.43 +0.88 +1.12 +1.22 PatchTST ∆T P −1.75 −2.28 −4.33 +3.01 +9.41 +20.70 −0.58 −0.78 −0.35 ∆H −1.07 −1.01 −0.62 +1.60 +1.86 +1.93 +0.22 +0.40 +0.53 
+
+## 6.3 Dataset-Dependent Structural Failure Signatures 
+
+Tables 6 and 7 reveal that architectural inductive biases produce characteristic dataset-dependent patterns of structural degradation. On ETTm2, ∆ β1 < 0 for all models across all horizons, indicating systematic loop loss that grows with prediction horizon, 13 most severely for the Transformer and Informer whose standard attention provides no structural bias to preserve periodicity. On Exchange, the pattern inverts: Autoformer, FEDformer, and PatchTST show ∆β1 > 0 across all horizons, indicating loop injection on a dataset whose ground-truth topology is sparse. The decomposition-based architectures impose periodic structure regardless of whether the input supports it. PatchTST’s injection grows with horizon, reaching ∆ β1 = +108 .93 at p = 192, the largest over-generation observed. On ILI, failure signatures are more heterogeneous. Informer over-generates loops while losing dominant cycle strength — additional but weaker cyclic structure rather than the dominant one preserved. PatchTST shows a similar pattern; the Transformer shows the opposite, with loop count and cycle strength both declining progressively, pointing to gradual structural collapse. FEDformer is the most consistent, with near-zero ∆ β1 at p = 60. 
+
+## 6.4 Dominant Cycle Overlap and Temporal Phase Errors 
+
+The overlap component of LT F S reveals a failure mode orthogonal to diagram-level structural quality. On ETTm2, models show systematic overlap degradation at longer horizons even when aggregate structural properties are partially preserved. Autoformer maintains the highest overlap across all horizons, consistent with its autocorrelation mechanism targeting periodic alignment. On Exchange, overlap is uniformly low across all models and horizons. Temporal mislocalisation is the primary failure mode on non-stationary data independent of architecture: T F S values are moderate for several models yet the dominant cycle is placed at systematically wrong time steps, a failure visible only through LT F S .On ILI, overlap is more variable. Autoformer achieves the highest overlap at p = 36 (0.60), while Informer and PatchTST show lower and declining overlap with horizon length, confirming that temporal mislocalisation contributes to structural degradation beyond what diagram-level scores alone capture. 
+
+## 6.5 Comprehensive Metric Comparison 
+
+Tables 11 and 12 report pointwise accuracy (MSE, RMSE, MAE, MASE, RMSSE), shape similarity (DTW), temporal alignment (TDI), distribution distance ( W2), and topological fidelity ( LT F S , Overlap) for ILI ( p = 60) and Exchange ( p = 192). On ILI, PatchTST ranks first under all conventional metrics yet its LT F S 
+
+(0.19) ranks fourth. Autoformer ranks third under MSE but achieves the highest 
+
+LT F S (0.35) and Overlap (0.44). On Exchange, the divergence is more pronounced: PatchTST again leads all pointwise metrics yet achieves the highest W2 (12.633) and joint lowest LT F S (0.05), consistent with the severe loop injection identified in Section 6.3. FEDformer shows the highest TDI (52.145) on Exchange despite com-petitive MSE, indicating large temporal displacements invisible to pointwise and shape-similarity metrics. 
+
+Agreement with existing structural metrics. LT F S shows broad directional agreement with W2 and DTW on model rankings. On ILI, models with lower DTW (PatchTST: 8.347, FEDformer: 8.701) tend to achieve higher LT F S relative to models 14 with higher DTW (Informer: 18.376, Transformer: 14.959), confirming that topological fidelity and shape similarity are correlated dimensions of structural quality. Similarly, lower W2 values broadly correspond to higher LT F S on ILI, with Autoformer and FEDformer occupying the top positions on both metrics. This agreement is consistent with prior work showing that persistence diagram distances and shape-based metrics capture overlapping but non-identical aspects of signal structure [29]. 
+
+Enhancement over existing metrics. Despite this directional agreement, 
+
+LT F S provides additional discriminative information not available from DTW, TDI, or W2 alone. On Exchange, PatchTST achieves the lowest DTW (4.477) yet the highest 
+
+W2 (12.633) and lowest SLTFS (0.05), a pattern that neither DTW nor W2 alone can expose. The Overlap component of LT F S further distinguishes models that preserve diagram-level structure from those that additionally preserve the temporal location of the dominant oscillation: on ILI, Autoformer and FEDformer achieve comparable DTW (10.253 vs 8.701) yet substantially different Overlap (0.44 vs 0.31), a difference invisible to all scalar distance metrics. Furthermore, the four-component decomposi-tion of T F S allows the source of structural degradation to be identified precisely — whether it originates from loop count loss, dominant cycle attenuation, total persis-tence reduction, or diagram complexity change — a diagnostic capability absent from DTW, TDI, and W2. Together, these properties establish LT F S as a complemen-tary evaluation signal that both corroborates and extends the information provided by existing structural metrics. 
+
+# 7 Discussion 
+
+The results across all three datasets and five architectures point to three consistent observations worth synthesising. 
+
+Table 8 : Structural quality scores and pointwise errors at the shortest predic-tion horizon per dataset (ETTm2 p = 48, Exchange p = 48, ILI p = 36).                                                                                                                                                     
+
+> Dataset Model Sβ1SLmax ST P SHT F S Overlap LT F S ↑MSE ↓MAE ↓
+> ETTm2 Autoformer 0.76 0.61 0.99 0.73 0.76 0.56 0.42 0.12 0.24 FEDformer 0.39 0.70 0.55 0.41 0.50 0.41 0.21 0.12 0.24 Transformer 0.10 0.14 0.05 0.12 0.10 0.11 0.01 0.12 0.25 Informer 0.73 0.73 0.64 0.81 0.73 0.26 0.19 0.18 0.31 PatchTST 0.40 0.94 0.44 0.45 0.52 0.44 0.23 0.10 0.21 Exchange Autoformer 0.45 0.36 0.27 0.55 0.39 0.55 0.22 0.11 0.24 FEDformer 0.47 0.86 0.58 0.56 0.60 0.40 0.24 0.09 0.21 Transformer 0.57 0.37 0.27 0.59 0.43 0.23 0.10 0.40 0.49 Informer 0.54 0.89 0.54 0.56 0.62 0.25 0.16 0.58 0.61 PatchTST 0.25 0.99 0.31 0.38 0.42 0.27 0.11 0.04 0.14 ILI Autoformer 0.67 0.76 0.62 0.62 0.66 0.60 0.40 3.14 1.25 FEDformer 0.76 0.41 0.40 0.85 0.57 0.27 0.15 2.74 1.13 Transformer 0.54 0.17 0.18 0.63 0.32 0.19 0.06 4.40 1.41 Informer 0.35 0.84 0.60 0.28 0.47 0.39 0.18 3.78 1.38 PatchTST 0.77 0.32 0.44 0.61 0.51 0.24 0.12 2.22 0.94
+
+15 Table 9 : Structural quality scores and pointwise errors at p = 96 (ETTm2, Exchange) and p = 48 (ILI). 
+
+Dataset Model Sβ1 SLmax ST P SH T F S Overlap LT F S ↑ MSE ↓ MAE ↓
+
+ETTm2 Autoformer 0.72 0.77 0.78 0.83 0.78 0.48 0.37 0.14 0.26 FEDformer 0.46 0.60 0.63 0.62 0.57 0.45 0.26 0.13 0.25 Transformer 0.20 0.93 0.23 0.28 0.33 0.35 0.12 0.16 0.28 Informer 0.62 0.77 0.57 0.83 0.69 0.21 0.14 0.17 0.30 PatchTST 0.55 0.59 0.71 0.65 0.62 0.46 0.29 0.11 0.22 Exchange Autoformer 0.63 0.61 0.50 0.79 0.62 0.42 0.26 0.15 0.29 FEDformer 0.48 0.76 0.66 0.65 0.63 0.19 0.12 0.14 0.27 Transformer 0.60 0.92 0.96 0.77 0.80 0.25 0.20 0.67 0.64 Informer 0.89 0.90 0.85 0.85 0.87 0.14 0.12 0.77 0.70 PatchTST 0.22 0.89 0.24 0.50 0.39 0.26 0.10 0.08 0.20 ILI Autoformer 0.89 0.91 0.75 0.82 0.84 0.44 0.37 3.08 1.22 FEDformer 0.92 0.49 0.60 0.85 0.69 0.33 0.23 2.69 1.12 Transformer 0.92 0.16 0.25 0.85 0.42 0.23 0.10 4.89 1.49 Informer 0.41 0.45 0.90 0.36 0.50 0.26 0.13 5.92 1.74 PatchTST 0.78 0.40 0.58 0.61 0.58 0.39 0.23 2.22 0.94 
+
+Table 10 : Structural quality scores and pointwise errors at p = 192 (ETTm2, Exchange) and p = 60 (ILI). 
+
+Dataset Model Sβ1 SLmax ST P SH T F S Overlap LT F S ↑ MSE ↓ MAE ↓
+
+ETTm2 Autoformer 0.48 0.56 0.61 0.71 0.58 0.46 0.27 0.15 0.28 FEDformer 0.39 0.70 0.55 0.41 0.50 0.41 0.21 0.12 0.24 Transformer 0.22 0.65 0.28 0.47 0.37 0.38 0.14 0.22 0.32 Informer 0.31 0.49 0.22 0.70 0.39 0.13 0.05 0.97 0.77 PatchTST 0.69 0.55 0.77 0.84 0.70 0.50 0.35 0.15 0.26 Exchange Autoformer 0.63 0.63 0.54 0.86 0.65 0.26 0.17 0.34 0.42 FEDformer 0.28 0.71 0.35 0.62 0.46 0.10 0.04 0.26 0.37 Transformer 0.65 0.76 0.98 0.84 0.80 0.12 0.09 1.12 0.82 Informer 0.54 0.66 0.50 0.83 0.62 0.09 0.05 2.52 1.32 PatchTST 0.20 0.96 0.19 0.58 0.38 0.13 0.05 0.18 0.30 ILI Autoformer 0.84 0.73 0.92 0.72 0.80 0.44 0.35 3.08 1.22 FEDformer 0.98 0.52 0.76 0.74 0.73 0.31 0.23 2.71 1.12 Transformer 0.92 0.17 0.27 0.85 0.44 0.27 0.12 5.34 1.55 Informer 0.43 0.33 0.99 0.42 0.49 0.19 0.09 7.25 1.94 PatchTST 0.63 0.61 0.88 0.62 0.68 0.28 0.19 2.18 0.95 
+
+Topological and pointwise evaluation are complementary, not redun-dant. The divergence between MSE and LT F S rankings is not an artefact of a specific dataset or horizon — it appears consistently across ETTm2, Exchange, and ILI, and at all three prediction lengths. This suggests that structural fidelity and numerical 16 Table 11 : Comprehensive evaluation metrics for ILI at p = 60.                                                                       
+
+> Model MSE ↓RMSE ↓MAE ↓MASE ↓RMSSE ↓DTW ↓TDI ↓W2↓Overlap ↑SLTFS ↑
+> Autoformer 3.027 1.679 1.178 10.244 11.659 10.253 6.466 3.621 0.44 0.35 FEDformer 2.712 1.589 1.121 9.681 10.934 8.701 6.016 3.410 0.31 0.23 Transformer 5.342 2.244 1.553 11.846 14.990 14.959 9.986 4.977 0.27 0.12 Informer 7.223 2.627 1.949 13.046 15.840 18.376 7.494 5.491 0.19 0.09 PatchTST 2.178 1.413 0.946 7.699 9.557 8.347 4.300 4.706 0.28 0.19
+
+accuracy reflect genuinely different properties of forecast quality, and that neither sub-sumes the other. A practitioner relying solely on MSE would systematically misrank architectures on structural grounds, and vice versa. 
+
+Architectural inductive biases have topological consequences. The dataset-dependent failure signatures identified in Section 6.3 are not random — they are predictable from the inductive bias of each architecture. Decomposition-based models (Autoformer, FEDformer) inject loops on non-stationary data because their seasonal components impose periodic structure regardless of the signal. Standard attention models (Transformer, Informer) lose loops on periodic data because they lack any structural prior to preserve cyclicity. PatchTST’s patch-based tokenisation ampli-fies loop injection at long horizons. These patterns suggest that topological evaluation could inform architecture selection for structurally sensitive applications. 
+
+Temporal localisation is a distinct failure dimension. The gap between T F S 
+
+and LT F S across all experiments confirms that preserving diagram-level topological structure is insufficient — a forecast can reproduce the correct loop count, dominant cycle strength, and total persistence while placing the dominant oscillation at entirely wrong time steps. This failure mode is orthogonal to both pointwise accuracy and existing structural metrics including W2 and DTW, and is only made visible through the dominant cycle overlap component. 
+
+# 8 Conclusion 
+
+We presented TopoCast, a persistent homology-based framework for evaluating struc-tural fidelity of time series forecasts as a complement to pointwise metrics. Takens delay embedding lifts forecast and ground-truth sequences into phase space, from 
+
+Table 12 : Comprehensive evaluation metrics for Exchange at p = 192.                                                                       
+
+> Model MSE ↓RMSE ↓MAE ↓MASE ↓RMSSE ↓DTW ↓TDI ↓W2↓Overlap ↑SLTFS ↑
+> Autoformer 0.337 0.545 0.420 20.555 16.584 5.528 47.024 6.669 0.26 0.17 FEDformer 0.262 0.487 0.373 17.906 14.403 5.017 52.145 5.715 0.10 0.08 Transformer 1.123 1.032 0.820 48.939 35.863 10.019 46.922 9.740 0.12 0.09 Informer 2.852 1.650 1.389 84.057 59.865 18.766 28.876 8.746 0.09 0.05 PatchTST 0.179 0.403 0.298 14.443 12.192 4.477 49.778 12.633 0.13 0.05
+
+17 which H1 persistence diagrams yield four structural quality scores combined into 
+
+LT F S via geometric mean and dominant cycle overlap. Experiments across five Transformer architectures and three benchmarks show that topological and pointwise rankings diverge substantially, that architectural inductive biases produce characteristic structural failure signatures, and that dominant cycle overlap detects temporal phase errors invisible to all diagram-level metrics. TopoCast requires no model access and exposes a dimension of forecast quality that MSE cannot measure. Future work includes higher homology dimensions, probabilistic forecasts, and topology-aware training objectives. 
+
+# References 
+
+[1] Hossain, M.L., Shams, S.N., Ullah, S.M.: Time-series and deep learning approaches for renewable energy forecasting in dhaka: a comparative study of arima, sarima, and lstm models. Discover Sustainability 6(1), 775 (2025) [2] Praveen, M., Dekka, S., Sai, D.M., Chennamsetty, D.P., Chinta, D.P.: Finan-cial time series forecasting: A comprehensive review of signal processing and optimization-driven intelligent models. Computational Economics, 1–27 (2025) [3] Saleh, H., El-Sappagh, S., McCann, M., Alsamhi, S.H., Breslin, J.G.: Multivari-ate multi-horizon time-series forecasting for real-time patient monitoring based on cascaded fine tuning of attention-based models. Computers in Biology and Medicine 194 , 110406 (2025) [4] Wu, H., Xu, J., Wang, J., Long, M.: Autoformer: Decomposition transform-ers with auto-correlation for long-term series forecasting. Advances in neural information processing systems 34 , 22419–22430 (2021) [5] Zhou, T., Ma, Z., Wen, Q., Wang, X., Sun, L., Jin, R.: Fedformer: Fre-quency enhanced decomposed transformer for long-term series forecasting. In: International Conference on Machine Learning, pp. 27268–27286 (2022). PMLR [6] Zhou, H., Zhang, S., Peng, J., Zhang, S., Li, J., Xiong, H., Zhang, W.: Informer: Beyond efficient transformer for long sequence time-series forecasting. In: Proceedings of the AAAI Conference on Artificial Intelligence, vol. 35, pp. 11106–11115 (2021) [7] Nie, Y.: A time series is worth 64words: Long-term forecasting with transformers. arXiv preprint arXiv:2211.14730 (2022) [8] Yu, M., Guo, X., Chen, P., Li, Z., Shu, Y.: Towards measuring and modeling geometric structures in time series forecasting via image modality. In: Proceedings of the 33rd ACM International Conference on Multimedia, pp. 2390–2398 (2025) [9] Takens, F.: Detecting strange attractors in turbulence. In: Dynamical Sys-tems and Turbulence, Warwick 1980: Proceedings of a Symposium Held at the 18 University of Warwick 1979/80, pp. 366–381 (2006). Springer [10] Lin, Z., Zulkepli, N.F.S., Kasihmuddin, M.S.M., Gobithaasan, R.: Time-series forecasting via topological information supervised framework with efficient topo-logical feature learning. Expert Systems with Applications, 130032 (2025) [11] Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., Polosukhin, I.: Attention is all you need. Advances in neural information processing systems 30 (2017) [12] Child, R.: Generating long sequences with sparse transformers. arXiv preprint arXiv:1904.10509 (2019) [13] Kitaev, N., Kaiser, L., Levskaya, A.: Reformer: The efficient transformer. arXiv preprint arXiv:2001.04451 (2020) [14] Hyndman, R.J., Koehler, A.B.: Another look at measures of forecast accuracy. International journal of forecasting 22 (4), 679–688 (2006) [15] Makridakis, S., Spiliotis, E., Assimakopoulos, V.: The m4 competition: 100,000 time series and 61 forecasting methods. International Journal of Forecasting 
+
+36 (1), 54–74 (2020) [16] Wen, Q., Zhou, T., Zhang, C., Chen, W., Ma, Z., Yan, J., Sun, L.: Transformers in time series: A survey. arXiv preprint arXiv:2202.07125 (2022) [17] Kudrat, D., Xie, Z., Sun, Y., Jia, T., Hu, Q.: Patch-wise structural loss for time series forecasting. arXiv preprint arXiv:2503.00877 (2025) [18] Phungtua-eng, T., Yamamoto, Y.: Are we winning the wrong game? revisit-ing evaluation practices for long-term time series forecasting. arXiv preprint arXiv:2603.08156 (2026) [19] Sakoe, H., Chiba, S.: Dynamic programming algorithm optimization for spoken word recognition. IEEE transactions on acoustics, speech, and signal processing 
+
+26 (1), 43–49 (1978) [20] Cuturi, M., Blondel, M.: Soft-dtw: a differentiable loss function for time-series. In: International Conference on Machine Learning, pp. 894–903 (2017). PMLR [21] Le Guen, V., Thome, N.: Shape and time distortion loss for training deep time series forecasting models. Advances in neural information processing systems 32 
+
+(2019) [22] Carlsson, G.: Topology and data bulletin of the american mathematical society (2009) [23] Edelsbrunner, Letscher, Zomorodian: Topological persistence and simplification. 19 Discrete & computational geometry 28 (4), 511–533 (2002) [24] Cohen-Steiner, D., Edelsbrunner, H., Harer, J.: Stability of persistence dia-grams. In: Proceedings of the Twenty-first Annual Symposium on Computational Geometry, pp. 263–271 (2005) [25] Bauer, U.: Ripser: efficient computation of vietoris–rips persistence barcodes. Journal of Applied and Computational Topology 5(3), 391–423 (2021) [26] Tauzin, G., Lupo, U., Tunstall, L., P´ erez, J.B., Caorsi, M., Medina-Mardones, A.M., Dassatti, A., Hess, K.: giotto-tda:: A topological data analysis toolkit for machine learning and data exploration. Journal of Machine Learning Research 
+
+22 (39), 1–6 (2021) [27] Obayashi, I.: Homcloud: A python/c++ package for persistent homology and topological data analysis. Journal of Applied and Computational Topology 6,633–647 (2022) https://doi.org/10.1007/s41468-021-00083-6 [28] Gidea, M., Katz, Y.: Topological data analysis of financial time series: Landscapes of crashes. Physica A: Statistical mechanics and its applications 491 , 820–834 (2018) [29] Perea, J.A., Harer, J.: Sliding windows and persistence: An application of topo-logical methods to signal analysis. Foundations of computational mathematics 
+
+15 (3), 799–838 (2015) [30] Takens, F.: Detecting strange attractors in turbulence. In: Rand, D., Young, L.-S. (eds.) Dynamical Systems and Turbulence, Warwick 1980. Lecture Notes in Mathematics, vol. 898, pp. 366–381. Springer, ??? (1981) [31] Kim, N., Baik, H., Yoon, Y.: Topocl: Topological contrastive learning for time series. IEEE Transactions on Neural Networks and Learning Systems (2026) [32] Nguyen, V.T., Pham, D.A., Le, A.T., Peter, J., Gust, G.: Persistent homology-induced graph ensembles for time series regressions. arXiv preprint arXiv:2503.14240 (2025) [33] Heo, E., Jung, J.-H.: Persistent homology of featured time series data and its applications. arXiv preprint arXiv:2405.04796 (2024) [34] Myers, A., Khasawneh, F.A., Munch, E.: Persistence of weighted ordinal parti-tion networks for dynamic state detection. SIAM Journal on Applied Dynamical Systems 22 (1), 65–89 (2023) 20
