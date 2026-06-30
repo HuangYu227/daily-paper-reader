@@ -1,0 +1,3333 @@
+Title: Global Explanations for Multivariate Time Series Forecasting Models via K-Order Markov Approximations
+
+URL Source: https://arxiv.org/pdf/2606.27599v1
+
+Published Time: Mon, 29 Jun 2026 00:13:38 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# GLOBAL EXPLANATIONS FOR MULTIVARIATE TIME SERIES 
+
+# FORECASTING MODELS VIA K-O RDER MARKOV 
+
+# APPROXIMATIONS 
+
+A P REPRINT 
+
+Amadeo Tunyi 
+
+XITASO GmbH Austraße 35, 86153 Augsburg, Germany 
+
+amadeo.tunyi@xitaso.com 
+
+June 29, 2026 
+
+ABSTRACT 
+
+While many explainable AI (XAI) methods have been proposed, most are not designed for time-series forecasting models and often rely on the implicit assumption that timestamp features are independent. This assumption ignores the fundamental property of temporal dependence and can lead to explanations that violate the sequential and causal structure of the data. We introduce KARMA, a method for explaining time-series predictors by constructing a Markov surrogate model that captures the temporal dependencies learned by the predictor. Our approach revolves around three main aspects: identifying the minimal history length K that is predictively sufficient for the model, estimating the best-fitting K-order Markov transition kernel from the discretized history space, and a five-level global explanation hierarchy that can be derived from the Markov transition kernel, which we illustrate using real-world weather data (Beijing PM 2.5). We also certify using complex synthetic data with known true causal edges that KARMA (i) recovers the data causal structure as learned by the model via a controlled experiment and (ii) identifies temporal dependencies better than established attribution methods such as TimeSHAP. 
+
+Keywords Explainable AI · Time Series Forecasting · Markov Chains 
+
+1 Introduction 
+
+The deployment of deep learning models on financial time series, clinical monitoring and industrial sensing have grown substantially. Recurrent networks, temporal convolutional networks (TCNs), and transformer architectures achieve strong predictive performance, but remain largely opaque: practitioners cannot readily identify which temporal patterns, cross-variable dependencies, or historical regimes drive a particular prediction. This opacity creates regulatory friction under ESMA guidelines and the EU AI Act, and undermines model trust in high-stakes decision environments. Explainable AI (XAI) methods such as LIME Ribeiro et al. [2016], SHAP Lundberg and Lee [2017], and attention-based attribution were developed primarily for static, i.i.d. settings. Their extension to time series is non-trivial: temporal autocorrelation, non-stationarity, and inter-variable Granger causality violate the independence assumptions underlying most attribution frameworks. For instance, SHAP’s baseline marginalisation is structurally incoherent for time series because Xt−2 is not independent of Xt−1; gradient attributions describe local geometry at a single point rather than the systematic conditional structure of what the model has globally learned. We propose a different approach rooted in probabilistic approximation. Rather than perturbing inputs or computing gradient-based attributions, we ask: can the behaviour of a black-box model on a multivariate time series be faithfully approximated by a K-th order Markov chain? If so, the transition probabilities of that chain constitute a structured, interpretable explanation grounded in the conditional dependence structure of the data as learned by the model. This framing is natural for sequential domains: a clinician, engineer, or trader already reasons in conditional scenarios “given 
+
+> arXiv:2606.27599v1 [cs.LG] 25 Jun 2026
+
+KARMA A P REPRINT 
+
+the last three states of the system, what does the model expect next?” and transition probabilities answer that question directly, in the native language of the domain. We present KARMA, an approach to interpreting a black-box time-series model using a five-level (global) explanation hierarchy derived from the transition kernel. Our contribution is organized around three distinct pillars with different theoretical foundations and different data requirements. 1. Pillar 1 (Markov surrogate). A surrogacy predictive validity stopping rule selects the minimal lag K∗ that is predictively sufficient, and for this K∗ estimate with minimal error using the data, the best nearest K∗−Order Markov probability transition kernel. This answers the question every practitioner should ask before trusting a sequential model: how much of its input window does the model actually use? The answer is both certified and model-agnostic, 2. Pillar 2 (Compression and certified attribution). When K is smaller than the model window size, the model is provably insensitive to inputs beyond lag K∗. This yields a compression ratio, a model-certified baseline b∗
+
+that resolves the baseline selection problem, and certified-zero attributions for all lags beyond K∗, not merely small attributions, but mathematically zero within approximation error. 3. Pillar 3 (Five Level Global Explanation Derivation). Given the estimated kernel, KARMA extracts five layers of explanation without additional oracle queries. Level 1 computes the normalized variable importance or feature-level importance, ranking source variables by their total distributional influence on the model’s predictions across all target variables and lags. Level 2 resolves this influence by lag k, yielding cell-level explanations (for example, influence on forecast at time t of value at time t − k for feature d) that reveals whether the model has learned momentum, mean-reversion, or long-memory dynamics for each variable. 
+
+Level 3 identifies distinctive regimes via the marginal interdependence index identifying distinct paths (histories) relevant to the forecast. Level 4 computes average interventional effects and the edge contributions that populate the model-induced causal graph, connecting the explanation directly to the level 1. Level 5 
+
+quantifies explanation reliability: aleatoric entropy measures genuine model uncertainty at each history, while the epistemic variance flags histories where kernel estimates are unreliable. 
+
+2 Related Work 
+
+XAI for Time Series Forecasting. Existing methods fall into three families. Gradient-based methods propagate predic-tion sensitivity back to inputs: Saliency Simonyan et al. [2014], Grad-CAM Selvaraju et al. [2017], DeepLIFT Shrikumar et al. [2017], Layer-wise Relevance Propagation Bach et al. [2015], and Integrated Gradients Sundararajan et al. [2017], often smoothed via SmoothGrad Smilkov et al. [2017]. These are fast but provide no probabilistic guarantees and are sensitive to architecture; moreover, standard saliency methods transfer poorly to temporal data, as benchmarked by Ismail et al. Ismail et al. [2020], who propose Temporal Saliency Rescaling (TSR) to recover time-localized importance. Temporal Integrated Gradients (TIG; Enguehard [2023]) extends this family to sequential settings but remains local. 
+
+Perturbation-based methods (LIME Ribeiro et al. [2016], SHAP Lundberg and Lee [2017]) struggle with temporal autocorrelation since random perturbations break sequential structure and induce off-manifold inputs. The simplest in-stance, Feature Occlusion (FO; Suresh et al. [2017]), replaces a feature or group with a baseline and scores the resulting output change; its augmented variant (AFO; Tonekaboni et al. [2020]) perturbs with in-distribution samples to mitigate off-manifold artifacts. TimeSHAP Bento et al. [2021] extends SHAP to recurrent models but inherits the baseline selection problem and provides no certified attributions. FIT Tonekaboni et al. [2020] instead scores each observation by its contribution to the predictive-distribution shift under a KL divergence against a counterfactual where remaining features are unobserved, explicitly controlling for time-dependent shift, but remains purely local. Dynamask Crabbé and van der Schaar [2021] learns a salient input mask but operates locally with no reliability guarantees, and subsequent mask-based refinements such as ContraLSP Liu et al. [2024] (contrastive, locally sparse perturbations) and the surrogate explainer TimeX Queen et al. [2023] improve fidelity yet likewise yield only instance-level, uncertified attributions. WinIT Leung et al. [2023] measures information transfer across time windows but yields no certified attributions. 
+
+Attention-based methods treat attention weights as explanations, a practice whose reliability is contested Jain and Wallace [2019], Wiegreffe and Pinter [2019]; interpretable forecasters such as the Temporal Fusion Transformer Lim et al. [2021] expose variable-selection and attention weights intrinsically but offer no statistical guarantees on the resulting attributions. KARMA is a global surrogate method that explicitly models sequential dependence through Markov structure, yielding explanations that respect the temporal geometry of the data and carry explicit statistical reliability guarantees absent from all prior work. 
+
+Total Variation for Model Selection. The formal definition of the total variation commonly used, 2KARMA A P REPRINT 
+
+Definition 2.1 (Total Variation Distance) . Let M([ N ]) denote the set of conditional probability kernels on a set [N ].For p(·| h), q (·| h) ∈ M ([ N ]) , h in some history space, the total variation distance is given by 
+
+∥p(·| h) − q(·| h)∥T V = 12
+
+X 
+
+> s∈[N]
+
+|p(s|h) − q(s|h)| (1) The use of total variation distance as a Markov order stopping rule is related to Csiszár and Shields [2000] on consistent order estimation, though our formulation targets surrogate equivalence rather than data compression, and operates on the model kernel rather than the data kernel. 
+
+3 K-Order Markov Chain Surrogate Model 
+
+Building on the intuition introduced in the introduction, we now formalize KARMA as a K-order Markov surrogate model. We model a multivariate time series (MVTS) as a stochastic process X = {Xt}t∈Z, X t = ( X1 
+
+> t
+
+, . . . , X Dt )⊤ ∈
+
+RD . Condider the predictor f : RW ×D → Y ∈ RT ×D be a trained black-box predictor that takes an input window of length W and outputs a T -length prediction window. For the rest of this manuscript, we consider T = 1 , T > 1 follows by constructive extension. Our goal is to construct an explanation based on the transition kernel of a surrogate K-order Markov chain that is (1) human–interpretable, (2) faithful to f in the total variation sense, and (3) explicit about its own statistical reliability. This section develops the construction of this surrogate model. 
+
+Definition 3.1 (K−Order Markov chain) . Let X = ( Xn)n≥1 be a stochastic process with countable state space S. The process is a k-th order Markov chain if, for all n > k , Xn is independent of all other past time steps given the last k
+
+steps. The chain is time-homogeneous if the transition probabilities do not depend on n.
+
+3.1 State Space Construction 
+
+Denote [D] = {1, . . . , D } and [N ] = {1, . . . , N }. For each variable d ∈ [D], define a measurable partition of R into 
+
+N bins using quantile boundaries estimated on the training data: 
+
+ψd : R → [N ], ψd(x) = n ⇐⇒ x ∈ [qdn−1, q dn).
+
+The multivariate discretization 
+
+ψ : RD → [N ]D
+
+induces the discrete state space S = [ N ]D with |S| = N D .
+
+The discretized process is ˜Xt = ψ(Xt) ∈ S . And for histories of length K, the corresponding history space is 
+
+HK = SK , |H K | = N DK .
+
+where hdk ∈ [N ] is the discretized bin of variable d at lag position k, and the total number of distinct indices is 
+
+N DK = |H K |.
+
+3.2 The K-Order Markov Surrogate 
+
+Let f : RW ×D → Y be a trained black-box predictor and ψ : RD → S the discretization map defined above. Since 
+
+f operates on a window of length W , its predictions may in principle depend on the full input history. However, the predictive information relevant to f may be concentrated in a strictly shorter suffix. To identify the minimal such suffix, we prepend a baseline b ∈ B to a K-length suffix to form a complete input window and measure 
+
+ˆ∆pred (K, b ) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ℓ
+
+
+
+f (˜hi), f (b ⊕ hi)
+
+
+
+, (2) where ˜hi ∈ RW ×D denotes the W length i observed history, b ⊕ hi denotes the K length suffix hi of ˜hi concatenated with a W − K length baseline b, and ℓ(·, ·) a user imposed predictive difference metric (absolute difference for 3KARMA A P REPRINT 
+
+· · · 
+
+· · · 
+
+· · · 
+
+... ... ...
+
+. . .
+
+˜h ∈ RW ×D
+
+continuous window 
+
+· · · 
+
+· · · 
+
+· · · 
+
+... ... ...
+
+. . .
+
+ψ(˜h) ∈ [N ]D×W
+
+discretized state 
+
+... ... ...
+
+h ∈ [N ]D×K∗
+
+history (suffix)   
+
+> 123
+
+ˆT f,d K∗ (· | h)
+
+transition kernel 
+
+suffix K∗ 
+
+> last K∗
+> steps
+
+ψ
+
+> quantile bins
+
+ψd ◦ f
+
+> query & pool
+
+Figure 1: KARMA surrogate construction. A continuous input window ˜h ∈ RW ×D is discretized by the quantile map ψ into [N ]D×W ; its length-K∗ suffix forms the history h ∈ [N ]D×K∗
+
+. The K∗-order surrogate kernel ˆT f,d K∗ (· | h)
+
+is the distribution of the discretized model output ψd(f (˜h)) over next-bins sd ∈ [N ], conditioned on h and pooled over all windows landing in that history. forecasting). ˆ∆pred (K, b ) defines the average discrepancy between f ’s predictions on the true window and on the substituted window. The selected order K∗ is the smallest K for which min b∈B ˆ∆pred (K, b ) < ε , ε > 0 with 
+
+b∗ = arg min b ˆ∆pred (K∗, b ). When K∗ < W , the model is provably insensitive to all inputs beyond lag K∗, yielding compression ratio W/K ∗ and certified-zero attributions for all k > K ∗. Importantly, ˆ∆pred requires only direct model queries, no kernel estimation, making it the sole stopping certificate. Given K∗, the surrogate transition kernel of f is 
+
+T fK∗ (s | h) = P
+
+
+
+ψ(f (˜h)) = s suffix K∗ (ψ(˜h)) = h
+
+
+
+, (3) 
+
+s ∈ S , h ∈ H K∗
+
+with marginal at dimension d ∈ [D]
+
+T f,d K∗ (sd | h) = P
+
+
+
+ψd(f (˜h)) = sd suffix K∗ (ψ(˜h)) = h
+
+
+
+. (4) where sd is the d-th component of s. The K-order Markov chain associated with T fK∗ is the K-order Markov Surrogate MK∗ . Crucially, f itself need not satisfy any Markov property: T fK∗ defines the nearest K-order Markov approximation to f ’s predictive behavior, not an extraction of latent Markov structure from the model. 
+
+4 Why Transition Probabilities Are (Global) Explanations 
+
+Standard attribution methods ask: how much does feature xi contribute relative to a baseline? For time series, this framing is problematic — Xt−2 and Xt−1 are strongly dependent, so marginalizing one while fixing the other produces counterfactuals off the data manifold, and gradient-based explanations describe local sensitivity at a single point rather than the global conditional structure the model has learned. Transition probabilities answer a different and more natural question: given that the system was in state h for the last K∗ steps, what does the model predict next? For a K∗-order Markov process, T fK∗ and T f,d K∗ are sufficient statistics for next-state prediction, so under output equivalence at tolerance 
+
+ε the surrogate kernel captures precisely the predictive dependencies the model has learned between variables and lags. Under the faithfulness assumption (in the sense of causality), this directly reveals which variables at which lags act as direct causal drivers. 
+
+4.1 The Five-Level Explanation Hierarchy 
+
+Let K∗ > 0, h ∈ H K∗ , d ∈ [D] and f a trained model. Further assume ˆT f,d K∗ the approximation of T f,d K∗ such that 
+
+E
+
+h
+
+∥ ˆT f,d K (· | h) − T f,d K (· | h)∥T V 
+
+i
+
+< λ
+
+4 , λ > 0 (5) We demonstrate how marginal transition probabilities are used to provide global explanations. We also go on to prove in Supplementary Material S4 that under a model-centric faithfulness condition on MK∗ , the resulting attributions are causally grounded in a precise sense: nonzero attributions correspond exactly to direct effects in the model-induced causal graph, and zero attributions to d-separated pairs. 4KARMA A P REPRINT 
+
+4.1.1 Level 1: Variable Importance - Who Matters? Definition 4.1 (Lag-Resolved Influence and Variable Importance) . For any dimension d′ ∈ [D] at lag k ∈ { 1, . . . , K ∗},the lag-resolved influence on the forecast at time t is 
+
+ϕd′ 
+
+> k
+
+=
+
+> D
+
+X
+
+> d=1
+
+ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) · 1{ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) > λ }. (6) where: 
+
+ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) = X
+
+> h∈H K∗
+
+ˆπ∗(h) · 12 ∆T V , (7) with 
+
+∆T V = X 
+
+> sd∈[N]
+
+ˆT f,d K∗ (sd | h) − 1
+
+N 
+
+> N−1
+
+X
+
+> x=0
+
+ˆT f,d K∗ (sd | hd′←xk ) ,
+
+where hd′←xk replaces only the d′-th component at lag k. ˆπ∗(h) = P(ψ(Xt−K∗+1: t) = h) > 0 is the approximate stationary probability of history h. Intuitively, ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) measures how much the model’s forecast distribution for variable d shifts when we average out the influence of variable d′ at lag k. λ here serves as a threshold for which there exists genuine causal dependency, not noise arising from approximations, and prevents false positive and false negative causal edges with probability dependent on the upper bound estimate of E
+
+h
+
+∥ ˆT f,d K (· | h) − T f,d K (· | h)∥T V 
+
+i
+
+(λ ≤ 0.1) is recommended, Supplementary Material S2). The Marginal Total-Variation Influence of variable d′ aggregated across all lags is: 
+
+Φd′
+
+=
+
+> K∗
+
+X
+
+> k=1
+
+ϕd′ 
+
+> k
+
+(8) and finally define the Variable Importance as the normalization of the marginal total-variation influence. The quantity 
+
+˜Φd′
+
+quantifies the total influence of {Xd′
+
+}t−1 
+
+> t−k
+
+to predict Xt for any t ≥ 0.This ranking is (i) global, averaged over the full state space; (ii) probabilistically grounded, measuring actual distribu-tional shift rather than contribution to a local linear approximation; and (iii) directly comparable across variables, as all values lie in [0 , 1] .
+
+4.1.2 Level 2: Lag Profiles - When does Each Variable Matter? 
+
+The lag-resolved influence in equation (6) plotted against k reveals the temporal shape of how the model uses past information. The decay profile reveals whether the model has learned momentum, volatility clustering, or mean-reversion. 
+
+4.1.3 Level 3: Marginal Regime Explanation (Top-k) - What Sequences Matter? 
+
+For target dimension d ∈ [D] and history sequence h ∈ H K∗ , we define marginal interdependence index as: 
+
+Ψd(h) = Eh′∼ˆπ∗
+
+∥ ˆT f,d K∗ (· | h) − ˆT f,d K∗ (· | h′)∥T V ]= X
+
+> h′∈H K∗
+
+ˆπ∗(h′) · ∥ ˆT f,d K∗ (· | h) − ˆT f,d K∗ (· | h′)∥T V 
+
+the ˆπ∗-weighted average total variation distance between the model’s prediction at h and its prediction at a history drawn from the stationary distribution. A high value of Ψd(h) identifies h as a distinctive regime: the model behaves unusually at h relative to its typical conditional behavior across the history space. Level 3 reports the score table 
+
+{Ψd(h)}d∈[D], h ∈H K∗ .5KARMA A P REPRINT 
+
+4.1.4 Level 4: Interventional Profiles - What Happens When We Fix a Variable? 
+
+For h ∈ H+ 
+
+> K∗
+
+, the counterfactual history hd′←xk replaces the d′-th component of h at lag k with bin x. The average interventional effect (AIE) of variable d′ at lag k on variable d is 
+
+AIE d(d′, k, x ) = X
+
+> h
+
+ˆπ∗(h) ˆT f,d K∗ (· | h) − ˆT f,d K∗ (· | hd′←xk ) (9) 
+
+AIE d(d′, k, x ) measures f ’s predictive sensitivity to fixing past inputs; it is a property of the surrogate MK∗ , not of the data-generating process. One can verify that 1
+
+> N
+
+P 
+
+> x
+
+AIE d(d′, k, x ) = ρ(Xd′ 
+
+> t−k
+
+→ Xdt ), connecting Level 4 directly to the edge-trimming criterion of Level 1. Level 4 reports the ranked table { 1
+
+> N
+
+P 
+
+> x
+
+AIE d(d′, k, x )}d,d ′,k .
+
+4.1.5 Level 5: Uncertainty of Explanations 
+
+Per-variable aleatoric uncertainty is given by the entropy of the predictive distribution: 
+
+Hdh = − X
+
+> sd
+
+ˆT f,d K∗ (sd | h) log ˆT f,d K∗ (sd | h), (10) We estimate the Epistemic Uncertainty via an MLE bootstrap variance: 
+
+Var( ˆT f,d K∗ (sd | h)) ≈ ˆT f,d K∗ (sd | h)
+
+h
+
+1 − ˆT f,d K∗ (sd | h)
+
+i
+
+/n f (h). (11) where nf (h) is the query-visit count for history h. Histories with low nf (h) flag unreliable explanations, yielding a natural explanation coverage map. No other XAI method for time series provides this reliability certificate. 
+
+5 KARMA 
+
+The complete KARMA procedure is summarized in Algorithm 2 (Supplementary Material S4.1); we describe each step in turn. 
+
+5.1 Step 1: State Space Discretization 
+
+Each marginal series Xd is discretized into N bins via quantile boundaries on the training window. We recommend 
+
+N ∈ { 2, 3, 4, 5}.
+
+5.2 Step 2: K∗ Selection and Certified Attribution Surrogate validity. The selected order K∗ is the smallest K for which the model is certified insensitive to the prefix: 
+
+K∗ = min 
+
+
+
+K ≥ 1 : min 
+
+> b∈B
+
+ˆ∆pred (K, b ) < ε 
+
+
+
+, ε > 0, (12) 
+
+ˆ∆pred is a direct model test requiring no kernel estimation: query f twice per sample, once with the full window and once with b∗ ⊕ hi, and average the prediction discrepancy. 1
+
+5.3 Step 3: KARMA Baseline and Model Compression 
+
+When K∗ < W , define the KARMA baseline b∗ as the prefix minimizing the average prediction discrepancy when the true prefix is replaced: 
+
+b∗ = arg min 
+
+> b
+
+ˆ∆pred (K∗, b ). (13) 
+
+> 1
+
+Optimally, for maximum confidence in the surrogacy approximation, it is performed on unseen data to ensure transparency. However, due to data scarcity, the validation split can be used as an alternative. 
+
+6KARMA A P REPRINT 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 
+
+Normalised importance d′
+
+DEWP 
+
+pm2.5 
+
+TEMP 
+
+PRES 
+
+Iws 
+
+cbwd_SE 
+
+cbwd_cv 
+
+cbwd_NW 
+
+Is 
+
+cbwd_NE 
+
+Ir 
+
+0.3072 
+
+0.1896 
+
+0.1638 
+
+0.1520 
+
+0.1433 
+
+0.0441 
+
+certified zero 
+
+certified zero 
+
+certified zero 
+
+certified zero 
+
+certified zero 
+
+Level 1 Variable importance 
+
+D = 11, K * = 4, = 0.025 
+
+= 0.025 
+
+0.31 0.50 0.66 0.81 0.96 1.00 
+
+Cumulative d′
+
+(a) k = 1 k = 2 k = 3 k = 4 
+
+Lag k
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+1.25 
+
+1.50 
+
+1.75 
+
+> Lag-resolved influence  d′
+> k
+
+Level 2 Lag profiles d′
+
+> k
+
+K * = 4 lags (certified-zero variables omitted) 
+
+source variable 
+
+pm2.5 
+
+DEWP 
+
+TEMP 
+
+PRES 
+
+Iws 
+
+cbwd_SE 
+
+= 0.025 (b) 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 
+
+TV edge contribution (e)
+
+DEWP DEWP, k = 1 
+
+pm2.5 pm2.5, k = 1 
+
+PRES PRES, k = 1 
+
+TEMP TEMP, k = 1 
+
+Iws Iws, k = 1 
+
+DEWP Ir, k = 1 
+
+DEWP PRES, k = 1 
+
+DEWP TEMP, k = 1 
+
+Iws Is, k = 1 
+
+pm2.5 Is, k = 1 
+
+pm2.5 Iws, k = 1 
+
+DEWP Is, k = 1 
+
+PRES Is, k = 1 
+
+pm2.5 Ir, k = 1 
+
+DEWP Iws, k = 1 
+
+Iws Ir, k = 1 
+
+TEMP Ir, k = 1 
+
+TEMP Is, k = 1 
+
+DEWP pm2.5, k = 1 
+
+Iws pm2.5, k = 1 
+
+TEMP Iws, k = 1 
+
+PRES Iws, k = 1 
+
+TEMP PRES, k = 1 
+
+TEMP pm2.5, k = 1 
+
+pm2.5 cbwd_SE, k = 1      
+
+> 0.5848 (self)
+> 0.5408 (self)
+> 0.4697 (self)
+> 0.4393 (self)
+> 0.3604 (self)
+> 0.2355
+> 0.1941
+> 0.1929
+> 0.1413
+> 0.1041
+> 0.1024
+> 0.1006
+> 0.0988
+> 0.0958
+> 0.0915
+> 0.0840
+> 0.0746
+> 0.0746
+> 0.0721
+> 0.0661
+> 0.0637
+> 0.0585
+> 0.0550
+> 0.0535
+> 0.0492
+
+Level 4 Ranked causal effects 
+
+Top 25 edges, = 0.025, K * = 4 
+
+> source variable
+
+pm2.5 
+
+DEWP 
+
+TEMP 
+
+PRES 
+
+Iws (c) h=(2,0,0,1,0,2  )
+
+> h=(2,0,0,1,1,2  )
+> h=(2,0,0,1,1,2  )
+> h=(2,0,0,1,0,2  )
+> h=(2,0,0,1,0,2  )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,1,2 )
+
+h=(2,0,0,1,1,2 )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,0,2 )
+
+0.00 0.00 0.03 0.03 0.03 
+
+0.00 0.00 0.03 0.03 0.03 
+
+0.03 0.03 0.00 0.00 0.00 
+
+0.03 0.03 0.00 0.00 0.00 
+
+0.03 0.03 0.00 0.00 0.00 
+
+Level 3 Regime distance matrix target = pm2.5 
+
+> regime
+
+(h, h′) = TV (T( | h), T( | h′)) 
+
+> 0.00 0.25
+> *
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> TV distance
+
+(d) 0.0 0.2 0.4 0.6 0.8 1.0 1.2 
+
+Aleatoric entropy Hdh (nats, avg over variables) 
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,1,2 )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,1,2 )
+
+> 0.34 n=8
+> 0.34 n=8
+> 0.20 n=6
+> 0.20 n=5
+> 0.20 n=5
+
+A · Aleatoric uncertainty per history 
+
+> max H = ln(3) = 1.10
+
+0.00 0.05 0.10 0.15 0.20 0.25 
+
+Epistemic std Var( T(s′|h)) (avg over variables) 
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,1,2 )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,0,2 )
+
+h=(2,0,0,1,1,2 )
+
+> 0.284
+> 0.284
+> 0.236
+> 0.259
+> 0.259
+
+B · Epistemic uncertainty by bin 
+
+> next bin
+> s = 0
+> s = 1
+> s = 2
+
+pm2.5 DEWP TEMP PRES Iws Is Ir cbwd_NE cbwd_NW cbwd_SE cbwd_cv 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> * -weighted probability
+
+C · * -weighted marginal distribution per target variable  
+
+> bin
+> uniform 1/3
+> bin 0
+> bin 1 bin 2
+
+0.2 0.3 0.4 0.5 0.6 0.7 0.8 
+
+Aleatoric entropy Hdh (nats) 
+
+0.24 
+
+0.25 
+
+0.26 
+
+0.27 
+
+0.28      
+
+> Total epistemic std  Var( T(s′|h))
+> h=(2,0,0,1,0,2 )h=(2,0,0,1,1,2 )
+> h=(2,0,0,1,0,2 )
+> h=(2,0,0,1,0,2 )h=(2,0,0,1,1,2 )
+> ideal
+> (low both)
+> high aleatoric
+> (model uncertain)
+> high epistemic
+> (need more data)
+
+D · Coverage map 
+
+> bubble size
+> *=0.10
+> *=0.20
+
+Level 5 · Uncertainty-aware explanation · 11 variables ( * -weighted) 
+
+= 0.025 · pred = 0.0462 · M = 100 · 5 sampled histories (e) Figure 2: Five-level KARMA explanation hierarchy applied to a TCN ( W = 24 , hidden 64, 2 layers, kernel 3) trained on the Beijing PM 2.5 dataset ( D = 11 , N = 3 , K∗ = 4 , ε = 0 .049 , λ = 0 .025 , ˆ∆pred = 0 .046 ). All levels are derived from the single estimated kernel ˆT f,d K∗ without additional oracle queries. History indices h follow the mixed-radix encoding h = P
+
+k,d hdk · N D(K∗−1−k)+( D−1−d). (a) Level 1 — Variable importance ˜Φd′
+
+: DEWP dominates; the remaining wind-direction and precipitation variables receive certified-zero attributions ( < λ ). (b) Level 2 — Lag profiles ϕd′
+
+k : active variables peak sharply at k = 1 and decay over the K∗ = 4 retained lags, with TEMP retaining secondary influence (certified-zero variables omitted). (c) Level 4 — Ranked interventional effects ρ(e): self-loops dominate the top-25 retained edges; the strongest cross-variable effect is DEWP →TEMP . (d) Level 3 — Regime distance matrix (target PM 2.5): pairwise total-variation distances ∥ ˆT f,d K∗ (· | h) − ˆT f,d K∗ (· | h′)∥T V between histories, hierarchically clustered; bright off-diagonal blocks mark distinctive regimes where the model’s conditional forecast departs from its typical behaviour, the pairwise view from which Ψd(h) aggregates. (e) Level 5 — Uncertainty-aware explanation (ˆπ∗-weighted): (A) per-history aleatoric entropy Hdh (bits, averaged over variables); (B) epistemic uncertainty by next-bin, the bootstrap standard deviation 
+
+q
+
+Var( ˆT f,d K∗ ); (C) ˆπ∗-weighted marginal next-bin distribution per target variable, against the uniform 1/N reference; (D) coverage map of aleatoric entropy vs. epistemic deviation with bubble area ∝ visit count nf (h), flagging high-epistemic, low-coverage histories that warrant more data. Unlike other baselines, which are analyst-chosen, b∗ is model-certified : it is the prefix that makes f ’s predictions under the surrogate closest to f ’s true predictions, discovered from model behavior. Define the Compression ratio by 
+
+W/K ∗.2
+
+2Model compression and the certified-zero result require only that ˆ∆pred be estimated reliably, which demands n ≳ 200 
+
+independent model queries for stable averages, easily satisfied with any held-out series of length T ≥ W + 200 . Pillars 1–2 are therefore applicable under standard data budgets without qualification. 
+
+7KARMA A P REPRINT 
+
+5.4 Step 4: (Marginal) Transition Kernel Estimation 
+
+The five-level explanations are computed from the marginal transition kernel ˆT f,d K∗ . Estimating the full joint kernel is statistically prohibitive: the number of histories grows as N DK ∗
+
+, so the data required for a uniform total-variation guarantee is exponential in DK ∗ and infeasible at standard series lengths. KARMA therefore estimates D factored marginal kernels, one per target variable, which a single set of model queries supplies simultaneously. We provide three estimators, all with finite-sample total-variation guarantees; the choice trades data efficiency against implementation simplicity. 
+
+Strategy A (empirical counting). A Dirichlet posterior-mean estimator accumulates discretised model outputs into per-history counts. It is simple and unbiased in the large-sample limit, but its sufficient sample budget still scales with 
+
+N DK ∗
+
+, limiting it to small state spaces. 
+
+Strategy B ( b∗-prefix Monte Carlo, default). We provide first the following definition 
+
+Definition 5.1 (Observed history support) . The observed support of ˆπ∗ at order K is: 
+
+H+ 
+
+> K
+
+= h ∈ H K : ˆ π∗(h) > θ, θ ≥ 0 , (14) the set of histories that actually appear in the training data, where ˆπ∗(h) = P(ψ(Xt−K∗+1: t) = h) > 0. All ˆπ∗-weighted explanation quantities are zero outside this set. Restricting to H+ 
+
+> K∗
+
+bounds the effective history space by 
+
+|H + 
+
+> K∗
+
+| ≤ T − K∗, growing linearly in T rather than exponentially in DK ∗. We use θ = 0 is the default setting. Rather than relying on observed history counts, Strategy B draws samples from a distribution pool, substitutes the certified baseline b∗ on the prefix, and queries the model. Its sufficient budget scales with |H + 
+
+> K∗
+
+| ≤ T − K∗, linear in the series length rather than exponential in DK ∗, which is what makes KARMA tractable in practice. We use Strategy B by default. 
+
+Strategy C (tree-structured pooling). Strategies A and B estimate each history’s kernel independently, so they fail on histories that are never sufficiently covered, no matter how long the series. Strategy C instead grows a regression tree that partitions the covered histories Hcov (patterns with sufficient coverage) into leaves of structurally similar histories and pools their model counts, sharing statistical strength across histories that agree on the bins the tree identifies as predictive. Sparse histories inherit the pooled kernel of the leaf they route to, extending reliable estimates to histories inaccessible to Strategies A and B. The sample budget scales with the number of leaves L ≪ |H + 
+
+> K∗
+
+| rather than with 
+
+|H + 
+
+> K∗
+
+|, and when every history is covered the tree reduces to one history per leaf and recovers Strategy B exactly. The split variables additionally read off as Level 1–2 structure: a source variable at a given lag that appears as a high split node for target d is a primary driver of d.All estimators admit explicit noise floors that upper-bound the per-history estimation error (5) and feed directly into the Level 5 reliability map; the precise bounds and sample budgets are stated and proved in Supplementary Material. 
+
+Remark 5.2 (Reliability below the sufficient budget) . The sample thresholds are sufficient conditions for kernel error below λ/ 4; reliable estimates are routinely obtained with fewer observations. We therefore recommend reporting Level 5 alongside any KARMA output, as the epistemic variance map certifies reliability under the actual data budget. 
+
+5.5 Step 5: 5-level Explanation Retrieval 
+
+See Section 4.1 
+
+6 Experiments 
+
+We compare KARMA (KM) to three temporal aware methods, TimeSHAP (TS), WinIT (WI), and Dynamask (DM), the Feature Occlusion (FO) method, and the gradient-based method Integrated Gradients (IG). Code available on https://github.com/AmTuTi1999/karma_.git. 8KARMA A P REPRINT 
+
+6.1 Case Study A: Synthetic Data 6.1.1 Experimental setup 
+
+All methods explain the same analytical oracle fVAR , which implements the true VAR data-generating process exactly (no model error) with known true Markov Order Ktrue given coefficient matrix A ∈ RD×D×Ktrue :
+
+fVAR (x)j =
+
+> Ktrue
+
+X
+
+> k=1
+> D
+
+X
+
+> i=1
+
+A(k) 
+
+> ij
+
+xW −k, i , j ∈ [D]
+
+where x ∈ RW ×D is the input window of length W . The ground-truth importance matrix is Φ∗ 
+
+> i,k
+
+= P 
+
+> j
+
+|A(k) 
+
+> ij
+
+|,aggregating the absolute coefficient magnitudes over all target variables. Methods are ranked by Kendall’s τ between their flattened attribution estimate ˆΦ and Φ∗.For KARMA, the Markov order K∗ is immediately obtained as Ktrue and certified baseline b∗ is selected via ∆pred < ε 
+
+with ε = 10 −5. The history discretizer uses N = 3 bins for D ≤ 4 and N = 2 for D > 4 to keep the symbolic state space tractable. M = 100 Monte Carlo draws per history are used to build sampling pool for kernel estimation. To obtain cell-level global explanations from FO, DynaMask, and TimeSHAP, the raw (B, D, W ) attribution tensor is aggregated to ˆΦ ∈ RD×W by 
+
+ˆΦd = 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+|ϕb,d, W −k|, d ∈ [D], k ∈ [W ]
+
+reading each lag k from window position W − k. WinIT uses the last-target slice at the same window positions. KARMA produces ˆΦ directly without further aggregation. We exclude IG from the synthetic comparison: on the linear VAR oracle, integrated gradients reduce to the exact coefficient magnitudes, making the comparison degenerate rather than informative. IG is retained in the real-world evaluation (Table 3), where the models are nonlinear. 
+
+6.1.2 Results 
+
+We first evaluate KARMA on model-induced causal graph recovery, treating ρ(e) > λ (0.025 for TINY , 0.1 for the rest) as the criterion for a retained edge e. Table 1 reports the precision, recall, and F1 scores of edge discovery. KARMA achieves a recall score of 1.0 in all but the most complex case (still achieving 0.71) showing KARMA excludes no true causal relationships. The high precision and F1 indicates KARMA’s ability to not retain spurious edges. Table 1: KARMA edge-recovery metrics, |E| denotes the number of edges. Recall is 1.00 through large ; precision and recall also stay consistently close or equal to 1.00. Config D Ktrue |E| Precision Recall F1 tiny 2 1 2 1.00 1.00 1.00 small 4 2 5 1.00 1.00 1.00 medium 4 3 7 0.70 1.00 0.82 large 6 3 9 1.00 1.00 1.00 xlarge 8 4 14 1.00 0.71 0.83 We further evaluate across five VAR configurations of increasing scale (Table 2). KARMA is the sole top-ranked method on medium, large, and xlarge configurations, where the other methods degrade as the graph grows denser. Table 2: Kendall’s τ vs. ground truth across VAR configurations. Bold marks the highest per row (ties included). ∗
+
+indicates Kendall test with p value less than 0.05 Config FO DM WI TS KARMA tiny 0.36 0.76 0.94 ∗ 0.94 ∗ 0.94 ∗
+
+small 0.13 0.14 0.86 ∗ 0.92 ∗ 0.92 ∗
+
+medium 0.26 −0.09 0.77 ∗ 0.79 ∗ 0.90 ∗
+
+large −0.07 −0.32 ∗ 0.72 ∗ 0.68 ∗ 0.92 ∗
+
+xlarge 0.25 0.09 0.76 ∗ 0.64 ∗ 0.77 ∗
+
+9KARMA A P REPRINT 
+
+Table 3: AUC lag @25% under VAR-conditional imputation. Higher is better. Dataset Arch FO DM WI IG TS KM ETTh1 GRU 0.03 0.04 0.03 0.61 0.61 0.63 
+
+LSTM 0.16 0.08 0.09 0.62 0.66 0.66 
+
+TCN 0.03 0.24 0.02 0.49 0.49 0.71 
+
+ExRA GRU 0.00 0.01 0.00 0.03 0.03 0.02 LSTM 0.00 0.06 0.00 0.01 0.01 0.00 TCN 0.00 0.01 0.00 0.02 0.02 0.05 
+
+Bei GRU 0.01 0.01 0.29 0.29 0.22 0.18 LSTM 0.01 0.01 0.10 0.25 0.24 0.24 TCN 0.02 0.01 0.28 0.22 0.19 0.28 6.2 Case Study B: Real-World Forecasting Benchmark 
+
+We consider three diverse time series datasets: Electricity Transformer Temperature hourly 1 dataset (ETTh1) Zhou et al. [2021], Beijing PM 2.5 (Bei) Liang et al. [2015], Exchange Rate (ExRa) Lai et al. [2018], and three time series forecasting models (GRU, LSTM, TCN). To compare KARMA to the different methods, we use a temporal aware lag based AUC score (AUC lag ) (Supplementary Material S5) to measure predictive change under time lag occlusion i.e. we evaluate how well the XAI method learns model induced temporal dependencies by replacing entire time horizons with conditional expectations learnt by a VAR on transition dynamics on the training data. Given a batch of B test windows and a D-variate attribution tensor ϕ ∈ RB×D×T , we aggregate attributions into a per-timestep importance score 
+
+st = 1
+
+BD 
+
+> B
+
+X
+
+> b=1
+> D
+
+X
+
+> d=1
+
+ϕb,d,t , t = 1 , . . . , T. (15) For KARMA, we bypass the cell attribution matrix and derive time scores directly from the raw edge weights, 
+
+sKARMA  
+
+> t
+
+= X   
+
+> {e:T−ℓe=t}
+
+ρe, (16) where ℓe is the lag and ρe is the importance of edge e, so that a timestep targeted by many high-weight causal edges scores proportionally higher. We report AUC lag @25% , a single-point summary of how much prediction changes when the top quarter of timesteps are removed. A method that correctly identifies the temporal dependencies concentrates its top-ranked positions there, producing a steep early rise and a high area; one that wastes rankings on non-blanket lags sees a flat curve. 
+
+6.2.1 Results. 
+
+Table 3 reports AUC lag @25% across the three datasets and three architectures, with the full removal curves shown in Figure 3. On ETTh1, KARMA attains the highest score on every architecture and opens a clear margin on the TCN ( 0.71 
+
+vs. 0.49 for the next-best method), indicating that its edge-derived timestep scores concentrate prediction-relevant lags more sharply than the flat baselines. On Beijing PM2.5, KARMA is competitive throughout, matching or marginally trailing the strongest baseline on each architecture. On Exchange Rate, all methods collapse to near-zero AUC lag @25%: this dataset is close to a random walk, where successive increments carry little learnable temporal structure, so no attribution method can identify timesteps whose removal substantially shifts the forecast. We read this not as a failure of the explainers but as the metric behaving correctly: when the model has learned little exploitable temporal dependence, a faithful temporal-importance score should be flat. Notably, the strong perturbation baselines IG and TimeSHAP, which are competitive on ETTh1, exhibit the same collapse on Exchange Rate, confirming that the effect is a property of the data rather than of KARMA’s construction. 
+
+7 Conclusion 
+
+We presented KARMA, a framework for certified temporal explanation of black-box models on multivariate time series via K-order Markov approximations. KARMA makes three contributions. Pillar 1 selects the minimal predictively sufficient lag K∗. Pillar 2 delivers a model compression theorem certifying prediction fidelity loss ≤ ε at compression 10 KARMA A P REPRINT 0.0                      
+
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> ETTh1
+> | y|
+> GRU
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> LSTM
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> TCN
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> Exchange Rate
+> | y|
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> 0% 20% 40% 60% 80% 100%
+> Fraction removed
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Beijing PM2.5
+> | y|
+> 0% 20% 40% 60% 80% 100%
+> Fraction removed
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0% 20% 40% 60% 80% 100%
+> Fraction removed
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Lag AUC curves whole-timestep removal (higher = better)
+> FO DynaMask WinIT IG TimeShap KARMA
+
+Figure 3: Lag AUC removal curves for all datasets and architectures. Each curve shows cumulative |∆ˆ y| as the fraction of removed timesteps grows from 0 to 1. ratio W/K ∗, a model-certified baseline b∗, and certified-zero attributions for all lags beyond K∗, not merely small attributions. Pillar 3 extracts five layers of global explanation from the single estimated kernel without additional oracle queries, spanning variable importance, lag profiles, regime distinctiveness, average causal effects, and uncertainty quantification. On synthetic VAR benchmarks with known ground truth, KARMA recovers the model-induced causal structure with perfect recall on all but the largest configuration ( 1.00 through the large setting, 0.71 on xlarge ), correctly retaining every true edge; its high precision on all graphs reflects a robustness to spurious relationships that might arise from autocorrelation. On feature-importance ranking, KARMA is the sole top-ranked method on the medium , large , and 
+
+xlarge configurations, where perturbation-based baselines such as TimeSHAP and WinIT degrade as graph density grows, while remaining competitive on the smaller settings. On real-world forecasting across three datasets and three architectures, KARMA matches or exceeds the strongest baselines under VAR-conditional imputation, most notably on ETTh1. A key limitation is the exponential growth of the state space in N DK ∗
+
+, which can make full kernel estimation challenging in high-dimensional settings. In practice, KARMA mitigates this via marginal kernels, sampling strategies restricting to 
+
+H+ 
+
+> K∗
+
+(bounded linearly by T − K∗) and thresholding on ˆπ∗(h), with reliability certified by the Level 5 coverage map; scaling to very high-dimensional systems remains an open direction. We believe the Markov approximation paradigm offers a principled and underexplored direction for XAI in sequential domains, with applications spanning finance, neuroscience, and genomics. 11 KARMA A P REPRINT 
+
+References 
+
+M. T. Ribeiro, S. Singh, and C. Guestrin. “Why should I trust you?”: Explaining the predictions of any classifier. In 
+
+Proceedings of KDD , 2016. S. M. Lundberg and S. I. Lee. A unified approach to interpreting model predictions. In Proceedings of NeurIPS , 2017. Karen Simonyan, Andrea Vedaldi, and Andrew Zisserman. Deep inside convolutional networks: Visualising image classification models and saliency maps. In International Conference on Learning Representations (ICLR) Workshop ,2014. Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, and Dhruv Batra. Grad-cam: Visual explanations from deep networks via gradient-based localization. In Proceedings of the IEEE International Conference on Computer Vision (ICCV) , pages 618–626, 2017. Avanti Shrikumar, Peyton Greenside, and Anshul Kundaje. Learning important features through propagating activation differences. In Proceedings of the 34th International Conference on Machine Learning (ICML) , volume 70, pages 3145–3153, 2017. Sebastian Bach, Alexander Binder, Grégoire Montavon, Frederick Klauschen, Klaus-Robert Müller, and Wojciech Samek. On pixel-wise explanations for non-linear classifier decisions by layer-wise relevance propagation. PLOS ONE , 10(7):e0130140, 2015. Mukund Sundararajan, Ankur Taly, and Qiqi Yan. Axiomatic attribution for deep networks. In Proceedings of the 34th International Conference on Machine Learning (ICML) , volume 70, pages 3319–3328, 2017. Daniel Smilkov, Nikhil Thorat, Been Kim, Fernanda Viégas, and Martin Wattenberg. Smoothgrad: Removing noise by adding noise. arXiv preprint arXiv:1706.03825 , 2017. Aya Abdelsalam Ismail, Mohamed Gunady, Hector Corrada Bravo, and Soheil Feizi. Benchmarking deep learning interpretability in time series predictions. In Advances in Neural Information Processing Systems (NeurIPS) ,volume 33, pages 6441–6452, 2020. Joseph Enguehard. Learning perturbations to explain time series predictions. In Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research , pages 9329–9342. PMLR, 2023. Harini Suresh, Nathan Hunt, Alistair Johnson, Leo Anthony Celi, Peter Szolovits, and Marzyeh Ghassemi. Clinical intervention prediction and understanding using deep networks. arXiv preprint arXiv:1705.08498 , 2017. Sana Tonekaboni, Shalmali Joshi, Kieran Campbell, David Duvenaud, and Anna Goldenberg. What went wrong and when? instance-wise feature importance for time-series black-box models. In Advances in Neural Information Processing Systems (NeurIPS) , volume 33, 2020. J. Bento, P. Saleiro, A. F. Cruz, M. A. T. Figueiredo, and P. Bizarro. TimeSHAP: Explaining recurrent models through sequence perturbations. In Proceedings of KDD , 2021. Jonathan Crabbé and Mihaela van der Schaar. Explaining time series predictions with dynamic masks. In Proceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research ,pages 2166–2177. PMLR, 2021. Zichuan Liu, Yingying Zhang, Tianchun Wang, Zefan Wang, Dongsheng Luo, Mengnan Du, Min Wu, Yi Wang, Chunlin Chen, Lunting Fan, and Qingsong Wen. Explaining time series via contrastive and locally sparse perturbations. In 
+
+The Twelfth International Conference on Learning Representations (ICLR) , 2024. Owen Queen, Thomas Hartvigsen, Teddy Koker, Huan He, Theodoros Tsiligkaridis, and Marinka Zitnik. Encoding time-series explanations through self-supervised model behavior consistency. In Advances in Neural Information Processing Systems (NeurIPS) , volume 36, pages 32129–32159, 2023. Kin Kwan Leung, Clayton Rooke, Jonathan Smith, Saba Zuberi, and Maksims Volkovs. Temporal dependencies in feature importance for time series prediction. In The Eleventh International Conference on Learning Representations (ICLR) , 2023. S. Jain and B. C. Wallace. Attention is not explanation. In Proceedings of NAACL , 2019. Sarah Wiegreffe and Yuval Pinter. Attention is not not explanation. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP-IJCNLP) , pages 11–20, 2019. Bryan Lim, Sercan Ö. Arık, Nicolas Loeff, and Tomas Pfister. Temporal fusion transformers for interpretable multi-horizon time series forecasting. International Journal of Forecasting , 37(4):1748–1764, 2021. I. Csiszár and P. C. Shields. The consistency of the BIC Markov order estimator. Annals of Statistics , 28(6):1601–1619, 2000. 12 KARMA A P REPRINT 
+
+Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong, and Wancai Zhang. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 11106–11115, 2021. Xuan Liang, T. Zou, Bin Guo, Shuo Li, Haozhe Zhang, Shuyi Zhang, Hui Huang, and S. X. Chen. Assessing beijing’s pm2.5 pollution: severity, weather impact, apec and winter heating. Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences , 471(2182):20150257, 2015. Guokun Lai, Wei-Cheng Chang, Yiming Yang, and Hanxiao Liu. Modeling long-and short-term temporal patterns with deep neural networks. In Proceedings of the 41st International ACM SIGIR Conference on Research and Development in Information Retrieval , pages 95–104, 2018. Aryeh Dvoretzky, Jack Kiefer, and Jacob Wolfowitz. Asymptotic minimax character of the sample distribution function and of the classical multinomial estimator. Annals of Mathematical Statistics , 27(3):642–669, 1956. doi:10.1214/aoms/1177728174. 13 KARMA A P REPRINT 
+
+14 KARMA A P REPRINT 
+
+Supplementary Material 
+
+This supplementary material gathers the proofs and implementation details deferred from the main text: the soundness of the trimming threshold λ and the K.E.R.I. reliability index (Section S2); finite-sample total-variation guarantees, noise floors, and sample budgets for the three kernel estimators (Section S3); the model-induced causal graph and faithfulness of KARMA’s attributions (Section S4); and the full algorithm, the T > 1 extension, and the evaluation metric. References prefixed with “S” point to this supplement; unprefixed ones to the main paper. 
+
+S1 Constructive Extension to T > 1
+
+Recall [N ], [D], ψ, S and HK as defined in Section 3.1 of the manuscript. For a forecast horizon of length T ,let ST = [ N ]D×T denote the extended (discretised) output state space, so that a discretised forecast is a matrix 
+
+s = ( sdi )d∈[D], i ∈[T ] ∈ S T , where sdi is the bin of variable d at horizon step i. Given the selected order K∗, the 
+
+multi-step (joint) surrogate transition kernel of f is 
+
+T fK∗ (s | h) = P
+
+
+
+ψ(f (˜h)) = s suffix K∗ (ψ(˜h)) = h
+
+
+
+, (S1) for s ∈ S T and h ∈ H K∗ , where ˜h is a W -length input window whose discretised K∗-suffix equals h.
+
+Horizon paths. For T > 1 an explanation tracks a single target variable at each future step. We encode this choice by a relevant mask M ∈ { 0, 1}D×T with exactly one active entry per horizon step, 
+
+M [d][ i] = 
+
+1 d = di,
+
+0 otherwise, i ∈ [T ], (S2) where di ∈ [D] is the variable selected at step i (the di need not be distinct across steps). Writing ⟨s, M ⟩ = ( sdi 
+
+> i
+
+)i∈[T ] ∈
+
+[N ]T for the entries of s picked out by M , the multi-step marginal surrogate transition kernel along the path M is 
+
+T f,M K∗ (sT | h) = P
+
+
+
+⟨ψ(f (˜h)) , M ⟩ = sT suffix K∗ (ψ(˜h)) = h
+
+
+
+, (S3) where sT ∈ [N ]T is the length-T horizon trajectory selected by M . Because M activates at most one variable per step, the path contains no contemporaneous (same-step) couplings, consistent with the strictly-past construction of Section 3.2; the single-target case T = 1 recovers the marginal kernel T f,d K∗ of Eq. (4). 
+
+S1.1 The Five-Level Explanation Hierarchy 
+
+Let K∗ > 0, h ∈ H K∗ , d ∈ [D] and f a trained model. Further assume ˆT f,M K∗ the approximation of T f,M K∗ such that 
+
+E
+
+h
+
+∥ ˆT f,M K (· | h) − T f,M K (· | h)∥T V 
+
+i
+
+< λ
+
+4 , λ > 0 (S4) We describe two cases, user-specified prediction time steps 
+
+Definition S1.1 (Lag-Resolved Influence and Variable Importance) . We are given the estimated horizon kernel ˆT fK∗ (s |
+
+h) over ST = [ N ]D×T (Eq. S1) and wish to quantify the effect on q chosen forecast steps τ = {t1, . . . , t q } ⊆ [T ]. Fix a target dimension d. Selecting its length-T horizon with the dimension mask Md ∈ { 0, 1}D×T (Md[d′][ i] = 1{d′ = d})gives 
+
+ˆT f,d K∗ (sd 
+
+> 1: T
+
+| h) = P
+
+
+
+⟨ψ(f (˜h)) , M d⟩ = sd 
+
+> 1: T
+
+| suffix K∗ (ψ(˜h)) = h
+
+
+
+, sd 
+
+> 1: T
+
+∈ [N ]T ,
+
+already computed in equation (19) and marginalizing out the T − q steps outside τ keeps the requested steps: 
+
+ˆT f,d,τ K∗ (sdτ | h) = X  
+
+> x∈[N][T]\τ
+
+ˆT f,d K∗
+
+ sdτ , s d  
+
+> [T]\τ
+
+= x | h, sdτ ∈ [N ]q .
+
+The edge strength of source d′ at lag k on target d over the steps τ is 
+
+ρ(Xd′ 
+
+> t1−k
+
+→ Xdτ ) = X
+
+> h∈H K∗
+
+ˆπ∗(h) · 12 ∆T V , ∆T V = X  
+
+> sdτ∈[N]q
+
+ˆT f,d,τ K∗ (sdτ | h) − 1
+
+N 
+
+> N−1
+
+X
+
+> x=0
+
+ˆT f,d,τ K∗ (sdτ | hd′←xk ) , (S5) 15 KARMA A P REPRINT 
+
+· · · 
+
+· · · 
+
+· · · 
+
+... ... ... ...
+
+. . .    
+
+> W
+> D
+> W×Dinput window
+> lag k
+
+f
+
+> predictor
+
+· · · 
+
+· · · 
+
+· · · 
+
+... ... ...
+
+. . .           
+
+> t1t2· · · T
+> τ={t1, . . . , t q}
+> d
+> T×Dforecast horizon
+> ρ
+> 
+> Xd′
+> t1−k→Xdτ
+> 
+
+Figure S1: KARMA explanation for a T > 1 forecast. A black-box predictor f maps a W × D input window (window length W , D variables) to a T × D forecast horizon. The explanation targets a user-chosen subset of horizon steps τ = {t1, . . . , t q } ⊆ [T ]; the remaining T − q steps are marginalised out of the estimated horizon kernel. The shaded input column is the lag-k source slice, and the highlighted row-d band over τ is the target. The curved arrow denotes the interventional edge ρ
+
+
+
+Xd′ 
+
+> t1−k
+
+→ Xdτ
+
+
+
+measured by KARMA: the ˆπ∗-weighted total-variation shift in the targeted forecast ˆT f,d,τ K∗ (· | h) when the d′-th input component at lag k is intervened on. Lags k > K ∗ are certified negligible by the stopping rule. where hd′←xk replaces only the d′-th component at lag k.The lag-resolved influence of source d′ at lag k sums the edge strengths over all targets d,
+
+ϕd′ 
+
+> k
+
+=
+
+> D
+
+X
+
+> d=1
+
+ρ(Xd′ 
+
+> t−k
+
+→ Xdτ ) · 1{ρ(Xd′ 
+
+> t−k
+
+→ Xdτ ) > λ }, (S6) and the variable importance sums over lags, Φd′
+
+= PK∗ 
+
+> k=1
+
+ϕd′ 
+
+> k
+
+, normalised as in the T = 1 case. The remaining levels follow as in the T = 1 case. 
+
+Remark S1.2 (Semantics of cross-variable, cross-time edges) . By construction, the surrogate conditions only apply to strictly past states, so KARMA admits no contemporaneous cross-variable links: two distinct variables at the same time slice, Xd′ 
+
+> t−k
+
+→ Xdt−k (d′̸ = d), are excluded by design (cf. Definition S4). Cross-variable influence is therefore expressible only when separated by a delay k ≥ 1, and every such edge Xd′ 
+
+> t−k
+
+→ Xdt makes precisely one claim: variable d′ exerts a direct influence on variable d that materialises after k steps and that no other variable–lag pair in the Markov blanket can account for. Its strength ρ(e) quantifies this residual effect, while the lag k carries an equally concrete meaning, it is the propagation delay with which d′ acts on d. Such delays are physical rather than statistical: the transatlantic contagion lag in finance, the axonal conduction delay in neuroscience, the generation-plus-travel time in epidemiology, or the transcription delay from a regulator to its target in genomics. KARMA reads k as a learned estimate of this delay, not an artifact of estimation. The stopping rule sharpens the reading: edges at lags k > K ∗ are certified negligible, whereas those at k ≤ K∗ are precisely the mechanistic pathways the model has learned to exploit. Contemporaneous couplings, where one variable drives another within the same step, fall outside this surrogate; we leave such instantaneous extensions to future work. 
+
+S2 Causal Sufficiency of Thresholding Constant λ
+
+Let K∗ ≥ 1 and e = ( Xd′ 
+
+> t−k
+
+→ Xdt ) denote a causal edge and ˆρ(ρ), the quantity in Eq (6) w.r.t. ˆT f,d K∗ (T f,d K∗ ) respectively. In the following, the argument proceeds analogously for the joint kernel T fK∗ as well. 
+
+Proposition S2.1. Let T f,d K∗ (· | h) be the true model K−lag surrogate kernel and ˆT f,d K∗ (· | h) it’s approximation via any strategy. The constant λ > 0 is chosen such that 
+
+16 KARMA A P REPRINT 
+
+E
+
+h
+
+∥ ˆT f,d K∗ (· | h) − T f,d K∗ (· | h)∥T V 
+
+i
+
+< λ
+
+4 .
+
+for any h ∈ H + 
+
+> K∗
+
+. Further assume max h∈H + 
+
+> K∗
+
+ρfloor (h) < λ/ 4, where ρfloor (h) is an approximate upper bound for 
+
+E
+
+h
+
+∥ ˆT f,d K (· | h) − T f,d K (· | h)∥T V 
+
+i
+
+. Then the trimming decision at threshold λ in Level 1 is correct with probability at least 1/2 for each edge, and the probability of a incorrect trimming decision is bounded by: 
+
+P (|ˆρ(e) − ρ(e)| ≥ λ/ 2) ≤ 4 max h ρfloor (h)
+
+λ < 1. (S7) 
+
+Proof. By definition of ˆρ and ρ from Eq. (6), using |a| − | b| ≤ | a − b| and then the triangle inequality to the inner difference: 
+
+|ˆρ(e) − ρ(e)| ≤ X
+
+> h
+
+ˆπ∗(h) · 12
+
+X
+
+> sd
+
+h ˆT f,d K∗ (sd|h) − T f,d K∗ (sd|h)
+
++ 1
+
+N
+
+X
+
+> x
+
+ˆT f,d K∗ (sd|hd′←xk ) − T f,d K∗ (sd|hd′←xk )
+
+#
+
+. (S8) Recognizing the inner sums as total variation distances: 
+
+|ˆρ(e) − ρ(e)| ≤ X
+
+> h
+
+ˆπ∗(h)
+
+" h
+
+∥ ˆT f,d K∗ (·| h) − T f,d K∗ (·| h)∥T V 
+
+i
+
++ 1
+
+N
+
+X
+
+> x
+
+h
+
+∥ ˆT f,d K∗ (·| hd′←xk ) − T f,d K∗ (·| hd′←xk )∥T V 
+
+i#
+
+.
+
+(S9) Taking expectations on both sides and applying linearity, noting that ˆπ∗(h) is estimated independently of the kernel: 
+
+E [|ˆρ(e) − ρ(e)|] ≤ X
+
+> h
+
+ˆπ∗(h)
+
+"
+
+E
+
+h
+
+∥ ˆT f,d K∗ (·| h) − T f,d K∗ (·| h)∥T V 
+
+i
+
++ 1
+
+N
+
+X
+
+> x
+
+E
+
+h
+
+∥ ˆT f,d K∗ (·| hd′←xk ) − T f,d K∗ (·| hd′←xk )∥T V 
+
+i#
+
+. (S10) Since counterfactual histories hd′←xk ∈ H + 
+
+> K∗
+
+for all x ∈ [N ]. Since P 
+
+> h
+
+ˆπ∗(h) = 1 :
+
+E [|ˆρ(e) − ρ(e)|] ≤ X
+
+> h
+
+ˆπ∗(h) · 2 · max  
+
+> h′
+
+ρfloor (h′)= 2 · max 
+
+> h∈H +
+> K∗
+
+ρfloor (h). (S11) Since |ˆρ(e) − ρ(e)| ≥ 0, Markov’s inequality applies directly: 
+
+P (|ˆρ(e) − ρ(e)| ≥ t) ≤ E [|ˆρ(e) − ρ(e)|]
+
+t ≤ 2 · max h ρfloor (h)
+
+t . (S12) Setting t = λ/ 2:
+
+P (|ˆρ(e) − ρ(e)| ≥ λ/ 2) ≤ 4 · max h ρfloor (h)
+
+λ . (S13) We now verify that the trimming decision at threshold λ is correct with high probability under the condition 
+
+max h ρfloor (h) < λ/ 4. Consider two cases: • False negative : A true edge with ρ(e) ≥ λ is missed because ˆρ(e) < λ . This requires |ˆρ(e) − ρ(e)| ≥ λ/ 2,since if the true value is at least λ away from λ/ 2, an error of at most λ/ 2 cannot push the estimate below λ.By Eq. (S13), this occurs with probability at most 4 max h ρfloor (h) 
+
+> λ
+
+< 1.17 KARMA A P REPRINT 
+
+• False positive : A spurious non-edge with ρ(e) = 0 is included because ˆρ(e) ≥ λ. This requires |ˆρ(e)−ρ(e)| ≥ 
+
+λ, a stricter condition. By Markov’s inequality with t = λ:
+
+P (|ˆρ(e) − ρ(e)| ≥ λ) ≤ 2 · max h ρfloor (h)
+
+λ < 12 , (S14) under the condition max h ρfloor (h) < λ/ 4.Therefore, under max h ρfloor (h) < λ/ 4, both false negatives and false positives occur with probability strictly less than 
+
+1, and the probability of any incorrect trimming decision across all edges is bounded by Eq. (S7) . Substituting the condition max h ρfloor (h) < λ/ 4 into Eq. (S13) gives the safety guarantee: 
+
+P (|ˆρ(e) − ρ(e)| ≥ λ/ 2) < 1, (S15) confirming λ as a valid trimming threshold provided the noise floor condition max h ρfloor (h) < λ/ 4 is satisfied. 
+
+S2.1 KARMA Explanation Reliability Index 
+
+We derive the probabilistic foundation of K.E.R.I from the Markov bound established in Proposition 1. Recall that for any causal edge e = ( d′, k, d ):
+
+P
+
+
+
+|ˆρ(e) − ρ(e)| ≥ λ
+
+2
+
+
+
+≤ 4 · max h ρfloor (h)
+
+λ , (S16) which is derived by applying Markov’s inequality to the corrected bound: 
+
+E [|ˆρ(e) − ρ(e)|] ≤ 2 · max 
+
+> h∈H+
+> K∗
+
+ρfloor (h). (S17) For the bound in Eq. (S16) to be non-vacuous, i.e. strictly less than 1, we require: 
+
+max 
+
+> h∈H+
+> K∗
+
+ρfloor (h) < λ
+
+4 . (S18) Since ρfloor (h) is itself an upper bound on the true per-history estimation error, the condition in Eq. (S18) may be overly conservative: the true noise floor is likely smaller than ρfloor (h) by some factor κ ≥ 1. To account for this inflation, we relax the non-vacuity condition by replacing λ/ 4 with κ · λ/ 4:
+
+max 
+
+> h∈H+
+> K∗
+
+ρfloor (h) < κ · λ
+
+4 , (S19) and redefine the per-history miscoverage probability bound accordingly: 
+
+δκ(h) := min 
+
+ 4 ρfloor (h)
+
+κ · λ , 1
+
+
+
+, (S20) so that δκ(h) ∈ [0 , 1] is the worst-case probability that the trimming decision at history h is incorrect under the relaxed threshold. The conservatism constant κ > 1 reflects the practitioner’s belief that ρfloor (h) overestimates the true noise floor; κ = 1 recovers the unrelaxed bound, and κ = 2 is the recommended default. K.E.R.I aggregates the complementary per-history reliability 1 − δκ(h) over the stationary distribution: 
+
+K.E.R.I = X
+
+> ˆπ∗(h)>0
+
+ˆπ∗(h) ·  1 − δκ(h)
+
+= X
+
+> ˆπ∗(h)>0
+
+ˆπ∗(h) ·
+
+
+
+1 − 4 ρfloor (h)
+
+κ · λ
+
+
+
+> +
+
+, (S21) which is the ˆπ∗-weighted expected reliability of the λ-trimming decisions across the full history space. A value of 
+
+K.E.R.I close to 1 indicates that the non-vacuity condition (S19) is comfortably satisfied at most histories; a low value suggests increasing M (more Monte Carlo draws) or λ until the condition is met. Note that K.E.R.I is a lower bound on reliability for any fixed κ: increasing κ relaxes the threshold and raises the reported score, so the practitioner should choose κ conservatively. 18 KARMA A P REPRINT 
+
+Interpretation. K.E.R.I = 1 if and only if ρfloor (h) = 0 for all h ∈ H + 
+
+> K∗
+
+, an ideal case requiring perfect kernel estimation. In practice, K.E.R.I ∈ [0 , 1) , and values close to 1 indicate that trimming decisions are well-supported across the stationary distribution. Since ρfloor (h) is itself an upper bound, K.E.R.I is conservative: the true expected reliability is at least as large as the reported value. We therefore recommend interpreting K.E.R.I as a lower bound on reliability . A low K.E.R.I does not invalidate the certified-zero attributions for lags k > K ∗, which rest solely on 
+
+ˆ∆pred < ε and are unaffected by kernel estimation quality. 
+
+Remark S2.2 . Setting λ < 0.15 is sufficient to ensure a non-vacuous edge decisions under Eq. (S19) with κ = 10 for all estimation strategies in Section 5.4. 
+
+Remark S2.3 (Empirical robustness beyond the sufficient condition) . The condition ρfloor (h) < ·λ/ 4 in Proposition A.1 is sufficient but not necessary for correct edge recovery. In our synthetic experiments, KARMA recovered the true causal structure even for histories where this condition was violated. This is consistent with two sources of conservatism in the bound: (i) ρfloor (h) is itself an upper bound on the true per-history estimation error ∥ ˆT f,d K∗ (·| h) − T f,d K∗ (·| h)∥TV ,which may be substantially smaller in practice; and (ii) correct thresholding of ρ(e) requires only that the ˆπ∗-weighted average error across all h ∈ H + 
+
+> K∗
+
+is small relative to the gap between true edge strengths and λ, a strictly weaker condition than the per-history guarantee in Proposition A.1. Accordingly, K.E.R.I even with the κ-relaxation, should be interpreted as a conservative lower bound on explanation reliability: a low value warrants caution but does not certify that edge decisions are incorrect. The uncertainty estimates of level 5 still offer the best reliability estimates. 
+
+S3 Step 4: (Marginal) Transition Kernel Estimation 
+
+We expand in detail the strategies for kernel estimation introduced in the manuscript. 
+
+S3.1 Strategy A: Empirical Counting (Dirichlet Estimator) 
+
+The empirical estimator accumulates model outputs directly from held-out data. For each query i on window ˜hi, record the K∗-length discretised suffix hi and the discretised output s(i) = ψ(f (˜hi)) . Define the counts 
+
+nf (h, s ) = i ∈ [N ] : hi = h, ψ (f (˜hi)) = s ,nf (h) = X
+
+> s
+
+nf (h, s ).
+
+The Dirichlet posterior mean with Jeffreys prior α ≥ 0 gives: 
+
+ˆT f, (A)  
+
+> K∗
+
+(s | h) = nf (h, s ) + αnf (h) + N D α . (S22) A sufficient minimum number of observations needed to estimate T f, (A)  
+
+> K
+
+(·| h) up to maximum expected total variation error λ 
+
+> 4
+
+> 0 for any h ∈ H + 
+
+> K
+
+is T (A) min = W + N D   
+
+> (λ
+> 4)2
+
+· N DK ∗
+
+(Theorem S3.1) and grows exponentially in DK ∗ + D the number of histories blows up faster than the per-history count requirement, infeasible at standard financial or clinical series lengths. To remain tractable, KARMA estimates D factored marginal kernels instead of the full joint. For target variable 
+
+d ∈ [D], history h ∈ H + 
+
+> K
+
+, and next bin sd ∈ [N ]:
+
+T f,d, (A)  
+
+> K
+
+(sd | h) = P
+
+
+
+ψd f (˜h) = sd suffix K (ψ(˜h)) = h
+
+
+
+, (S23) the marginal of T f, (A)  
+
+> K
+
+over the d-th output coordinate. Each model query (h, s ) contributes to all D marginals simultaneously by reading off sd for each d, yielding a reduction in the data requirement per history. Define the marginal counts: 
+
+nf,d (h, s d) = i ∈ [N ] : hi = h, ψ d(f (˜hi)) = sd ,nf (h) = X
+
+> sd
+
+nf,d (h, s d).
+
+19 KARMA A P REPRINT 
+
+The Dirichlet posterior mean with Jeffreys prior α ≥ 0 becomes: 
+
+ˆT f,d, (A)  
+
+> K∗
+
+(sd | h) ≈ nf,d (h, s d) + αnf (h) + N α . (S24) Each query contributes to all D marginals simultaneously by reading off s(i) 
+
+> d
+
+for each d, giving a factor N D−1
+
+count improvement over the joint kernel. This strategy with the marginal kernel reduces T (A) min to W + N   
+
+> (λ
+> 4)2
+
+· N DK ∗
+
+(Theorem S3.3), better but still not an easily attainable budget for large N, D and/or K∗.
+
+Theorem S3.1 (Total Variation Error of Estimation of Joint Kernel) . Let ˆT f, (A)  
+
+> K
+
+(· | h) denote the Dirichlet posterior mean estimator (Eq. S22) with Jeffreys prior α = 1 /2, based on nf (h) observations. The following inequality holds true 
+
+E
+
+h
+
+∥ ˆT f, (A)  
+
+> K
+
+(· | h) − T fK (· | h)∥T V 
+
+i
+
+≤
+
+s
+
+N D
+
+2 nf (h) , (S25) 
+
+We define the noise floor as 
+
+ρ(A) 
+
+> floor
+
+(h) := 
+
+s
+
+N D
+
+2 nf (h)
+
+Setting this below ( λ 
+
+> 4
+
+) ≥ 0: s
+
+N D
+
+2 nf (h) < ( λ
+
+4 ) =⇒ nf (h) > N D
+
+( λ 
+
+> 4
+
+)2
+
+and the minimum amount of observed history needed, 
+
+T (A) min = W + N D
+
+( λ 
+
+> 4
+
+)2 · N DK ∗
+
+Let n = nf (h), ps = T f,d K (· | h) denote the true kernel, and ˆps = ( ns + α)/(n + N D α) the Dirichlet posterior mean with Jeffreys prior α ≥ 0, where ns = nf,d (h, s ) and (ns)s∈[N ].
+
+Lemma S3.2 (Pinsker’s Inequality) . Let P and Q be two probability distributions on the same measurable space. Then Pinsker’s inequality states: 
+
+∥P − Q∥T V ≤
+
+r 12 KL( P ∥Q) ≤
+
+r 12 χ2(P ∥Q)
+
+where 
+
+KL( P ∥Q) := X
+
+> x
+
+P (x) log P (x)
+
+Q(x)
+
+χ2(P ∥Q) := X
+
+> x
+
+(P (x) − Q(x)) 2
+
+Q(x)
+
+are the Kullback–Leibler divergence and chi-squared divergence, respectively. Proof of Theorem S3.1. Decompose the estimation error: 
+
+ˆps − ps = (ns − np s) + α(1 − N D ps)
+
+n + N D α .
+
+Since E[ns] = np s, the cross term vanishes and: 
+
+E(ˆ ps − ps)2 = Var( ns) + α2(1 − N D ps)2
+
+(n + N D α)2
+
+= np s(1 − ps) + α2(1 − N D ps)2
+
+(n + N D α)2 ,
+
+20 KARMA A P REPRINT 
+
+using Var( ns) = np s(1 − ps) for Binomial (n, p s).Summing over s and dividing by ps:
+
+Eχ2(ˆ p∥p) = 1(n + N D α)2 × 
+
+> N−1
+
+X
+
+> s=0
+
+np s(1 − ps) + α2(1 − N D ps)2
+
+ps
+
+= n
+
+(n + N D α)2
+
+X
+
+> s
+
+(1 − ps) + α2
+
+(n + N D α)2
+
+X
+
+> s
+
+(1 − N D ps)2
+
+ps
+
+(S26) 
+
+= 1(n + N D α)2
+
+"
+
+n(N D − 1) + α2 X
+
+> s
+
+(1 − N D ps)2
+
+ps
+
+#
+
+. (S27) For the bias term, expand (1 − N D ps)2/p s = 1 /p s − 2N D + N 2D ps and use P 
+
+> s
+
+ps = 1 and ps ≤ 1:
+
+X
+
+> s
+
+(1 − N D ps)2
+
+ps
+
+≤ X
+
+> s
+
+1
+
+ps
+
+− 2N D+1 + N 2D ≤ X
+
+> s
+
+1
+
+ps
+
++ N 2D .
+
+Retaining only the leading term in (S27): 
+
+Eχ2(ˆ p∥p) ≤ n(N D − 1) + α2Cp
+
+(n + N D α)2
+
+≤ N D
+
+n · 1 + α2Cp/(nN D )(1 + N D α/n )2 , (S28) where Cp = P
+
+> s
+
+(1 + N D ps)2/p s ≥ 0. For n sufficiently large (specifically n ≥ N D α and n ≥ α2Cp/N D or setting 
+
+α → 0): 
+
+EKL(ˆ p∥p) ≤ Eχ2(ˆ p∥p) ≤ N D
+
+nf (h) , (S29) The KL divergence from the posterior mean to the true kernel satisfies: 
+
+KL 
+
+ ˆT f, (A)  
+
+> K
+
+(· | h) T fK (· | h)
+
+
+
+≤ N D
+
+nf (h) , (S30) for nf (h) sufficiently large. Applying Pinsker’s Inequality to (S30) yields: 
+
+E
+
+h
+
+∥ ˆT f, (A)  
+
+> K
+
+(· | h) − T fK (· | h)∥T V 
+
+i
+
+≤
+
+s
+
+N D
+
+2 nf (h) (S31) If we define the noise floor as 
+
+ρ(A) 
+
+> floor
+
+(h) := 
+
+s
+
+N D
+
+2 nf (h)
+
+Setting this below ( λ 
+
+> 4
+
+) ≥ 0: s
+
+N D
+
+2 nf (h) < ( λ
+
+4 ) =⇒ nf (h) > N D
+
+( λ 
+
+> 4
+
+)2
+
+Meaning every history h ∈ H + 
+
+> K∗
+
+needs at least N D   
+
+> (λ
+> 4)2
+
+model queries. The total number of histories in the worst case is: 
+
+|H K∗ | = N DK ∗
+
+Let T be the number of observations used in the training set (or whatever held-out set is used). Since each window contributes to exactly one history’s count, the total number of windows needed is: 
+
+T − W ≥ N D
+
+( λ 
+
+> 4
+
+)2 · N DK ∗
+
+21 KARMA A P REPRINT 
+
+giving: 
+
+T (A) min ≈ W + N D
+
+( λ 
+
+> 4
+
+)2 · N DK ∗
+
+, nf (h) > N D
+
+( λ 
+
+> 4
+
+)2
+
+the sufficient minimum amount of history needed. 
+
+Theorem S3.3. Let ˆT f,d K (· | h) denote the Dirichlet posterior mean estimator (Eq. S24) with Jeffreys prior α = 1 /2,based on nf (h) observations. 
+
+E
+
+h
+
+∥ ˆT f,d K (· | h) − T f,d K (· | h)∥T V 
+
+i
+
+≤
+
+s
+
+N
+
+2 nf (h) , (S32) 
+
+which is the noise floor of Strategy A (Eq. S33). By Pinsker’s inequality applied to the Dirichlet posterior: 
+
+ρ(A) floor (h) := 
+
+s
+
+N
+
+2 nf (h) , (S33) 
+
+which diverges as nf (h) → 0. And the sufficient minimum series length if we require ρ(A) floor (h) < ( λ 
+
+> 4
+
+), ( λ 
+
+> 2
+
+) ≥ 0:
+
+T (A) min ≈ W + N
+
+( λ 
+
+> 4
+
+)2 · N DK ∗
+
+, nf (h) > N
+
+( λ 
+
+> 4
+
+)2 (S34) 
+
+growing exponentially in DK ∗.Proof of Theorem S3.3. Follows from the fact that: 
+
+KL 
+
+ ˆT f,d, (A)  
+
+> K
+
+(· | h) T f,d K (· | h)
+
+
+
+≤ Nnf (h) , (S35) for nf (h) sufficiently large. Everything else follows as in the proof of Theorem S3.1 
+
+S3.2 Strategy B: b∗-Prefix Monte Carlo (default in practice) 
+
+Even in the marginal case, the Dirichlet estimator still proves inconvenient as we require observation lengths of order 
+
+N (DK ∗+1) . So instead of observed history instances, we look at observed history distribution. We define the following quantity, 
+
+Definition S3.4 (Within-bin conditional density) . Let pstat : RD×K∗
+
+→ R≥0 denote the stationary joint density of the K∗-length suffix (Xt−K∗+1 , . . . , X t) under the data-generating process. The within-bin conditional density at history h is: 
+
+p(x | ψ(x) = h) = pstat (x) 1[ψ(x) = h]ˆπ∗(h) , x ∈ RD×K∗
+
+, (S36) where ˆπ∗(h) = P(ψ(Xt−K∗+1: t) = h) > 0 is the stationary probability of history h. This density characterises the distribution of continuous states conditional on falling in the bins specified by h. Sampling from p(· | ψ(·) = h) gives the authentic within-bin continuous variation that both estimation strategies must approximate. 
+
+Definition S3.5 (Suffix pool) . For h ∈ H + 
+
+> K∗
+
+, the suffix pool is: 
+
+pool( h) = ˜x ∈ Xtrain : ψ(˜ xW −K∗+1: W ) = h , (S37) the set of all W -length training windows whose discretised K∗-suffix equals h. Sampling uniformly from pool( h)
+
+provides a non-parametric Monte Carlo approximation to the within-bin conditional density (Definition S3.4). Strategy B proceeds as follows: For each h ∈ H + 
+
+> K∗
+
+and m = 1 , . . . , M :1. Sample ˜x(m) ∼ Uniform(pool( h)) (Definition S3.5). This approximates the within-bin conditional density (Definition S3.4) non-parametrically from training data. 2. Replace the prefix with b∗: ˜h(m) = b∗ ⊕ ˜x(m)  
+
+> W−K∗+1: W
+
+, where b∗ ∈ R(W −K∗)×D is the model-certified baseline from Step 3. 22 KARMA A P REPRINT 
+
+3. Query the model: s(m) 
+
+> d
+
+= ψd(f (˜h(m))) .The kernel estimate is: 
+
+ˆT f,d, (B)  
+
+> K∗
+
+(sd | h) = 
+
+PMm=1 1[s(m) 
+
+> d
+
+= sd] + αM + N α , α = 12 . (S38) 
+
+Theorem S3.6 (Strategy B noise floor decomposition) . Let ˆT f,d, (B)  
+
+> K∗
+
+(· | h) be the b∗-prefix Monte Carlo estimator (Eq. S38) with M draws and pool pool( h) of size Ph = |pool( h)|. Then: 
+
+E
+
+h
+
+∥ ˆT f,d, (B)  
+
+> K∗
+
+(· | h) − T f,d K∗ (· | h)∥T V 
+
+i
+
+≤ ρ(B) floor (h) (S39) 
+
+where, 
+
+ρ(B) floor (h) = 
+
+r π
+
+2M
+
+| {z } 
+
+> (i) MC variance
+
++ ˆ∆pred 
+
+| {z } 
+
+> (ii) prefix error
+
++
+
+r π
+
+2Ph
+
+| {z } 
+
+> (iii) within-bin var.
+
+And the minimum series length if we require ρ(B) floor (h) < ( λ 
+
+> 4
+
+), λ 
+
+> 4
+
+> 0:
+
+T (B) min ≈ W +
+
+ 2πλ2
+
+
+
+· H+ 
+
+> K∗
+
+, and, Ph >
+
+ 2πλ2
+
+
+
+Proof of Theorem S3.6. Assume the Jeffrey prior α = 0 , the case when α = 1 /2 follows via upper bound approximation. Introduce two intermediate distributions. Let T f,d,b ∗ 
+
+> K∗
+
+(· | h) denote the kernel estimated using the true within-bin density but with prefix replaced by b∗: T f,d,b ∗ 
+
+> K∗
+
+(sd | h) given by 
+
+Ex∼p(·| ψ(x)= h)
+
+1ψd f (b∗ ⊕ xW −K∗+1: W ) = sd , (S40) where the expectation is over the true within-bin conditional density (Definition S3.4). Let T f,d, pool  
+
+> K∗
+
+(· | h) denote the same quantity with the pool empirical distribution replacing the true within-bin density: 
+
+T f,d, pool  
+
+> K∗
+
+(sd | h) given by 
+
+1
+
+Ph
+
+X
+
+> ˜x∈pool( h)
+
+1ψd f (b∗ ⊕ ˜xW −K∗+1: W ) = sd . (S41) The estimator ˆT f,d, (B)  
+
+> K∗
+
+is a Monte Carlo approximation to (S41) with M draws. By the triangle inequality: 
+
+∥ ˆT f,d, (B)  
+
+> K∗
+
+− T f,d K∗ ∥T V ≤ ∥ ˆT f,d, (B)  
+
+> K∗
+
+− T f,d, pool  
+
+> K∗
+
+∥T V 
+
+| {z }
+
+> (i)
+
++ ∥T f,d, pool  
+
+> K∗
+
+− T f,d,b ∗ 
+
+> K∗
+
+∥T V 
+
+| {z }
+
+> (ii)
+
++ ∥T f,d,b ∗ 
+
+> K∗
+
+− T f,d K∗ ∥T V 
+
+| {z }
+
+> (iii)
+
+.
+
+• For the term (i): ˆT f,d, (B)  
+
+> K∗
+
+(· | h) estimates T f,d, pool  
+
+> K∗
+
+(· | h) by averaging M i.i.d. Bernoulli indicators in [0 , 1] 
+
+for each sd ∈ [N ]. By Hoeffding’s inequality, each marginal probability is estimated within t with probability at least 1 − 2e−2M t 2
+
+. Taking expectation over the M draws: 
+
+E
+
+h
+
+∥ ˆT f,d, (B)  
+
+> K∗
+
+− T f,d, pool  
+
+> K∗
+
+∥T V 
+
+i
+
+≤
+
+r π
+
+2M . (S42) • For the term (iii): T f,d,b ∗ 
+
+> K∗
+
+uses the true within-bin density but the b∗ prefix, while T f,d K∗ uses the true within-bin density and the true prefix. The Total Variation distance between them is bounded by the average prediction discrepancy when the prefix is replaced by b∗:
+
+∥T f,d,b ∗ 
+
+> K∗
+
+(· | h) − T f,d K∗ (· | h)∥T V 
+
+23 KARMA A P REPRINT 
+
+≤ Ex∼p(·| ψ(x)= h)
+
+h
+
+ℓ
+
+
+
+f (˜htrue ), f (b∗ ⊕ xW −K∗+1: W )
+
+i 
+
+≤ ˆ∆pred ,
+
+where the last inequality follows from the surrogate validity certificate (Eq. 2), which bounds the average prediction discrepancy under prefix substitution by ˆ∆pred < ε .• For the term (ii): T f,d, pool  
+
+> K∗
+
+uses the empirical pool distribution as a surrogate for the true within-bin density. The pool is a random sample of size Ph from the within-bin conditional distribution, so by the Dvoretzky– Kiefer–Wolfowitz (DKW) inequality Dvoretzky et al. [1956] applied to the empirical distribution: 
+
+E
+
+h
+
+∥T f,d, pool  
+
+> K∗
+
+(· | h) − T f,d,b ∗ 
+
+> K∗
+
+(· | h)∥T V 
+
+i
+
+≤
+
+r π
+
+2Ph
+
+, (S43) where Ph = |pool( h)|. Intuitively, the pool is an empirical approximation to the within-bin density; the TV error of this approximation decreases as P −1/2 
+
+> h
+
+, the standard Monte Carlo rate for distribution estimation. The noise floor ρfloor (h) has three terms: 
+
+ρfloor (h) = 
+
+r π
+
+2M + ˆ∆pred +
+
+r π
+
+2Ph
+
+The first two terms are controlled by design choices M and ε independently of T . The binding constraint from T comes entirely from the pool size term 
+
+q π 
+
+> 2Ph
+
+.Subtracting the other two terms from the budget λ 
+
+> 4
+
+> 0:
+
+r π
+
+2Ph
+
+< λ
+
+4 −
+
+r π
+
+2M − ˆ∆pred < λ
+
+4
+
+requires: 
+
+Ph >
+
+ 2πλ2
+
+
+
+=: npool 
+
+where ⌈a⌉ is the nearest biggest integer to a ∈ R. Now Ph = |pool (h)| is the number of training windows whose discretised K∗-suffix equals h. Each of the T − W available windows lands in exactly one pool. For every h ∈ H + 
+
+> K∗
+
+to accumulate npool windows: 
+
+T − W ≥ npool · H+
+
+> K∗
+
+giving: 
+
+T (B) min ≈ W + npool · H+
+
+> K∗
+
+The key difference from Strategy A is that: 
+
+H+ 
+
+> K∗
+
+≤ T − K∗,
+
+that is, the observed support is at most the number of distinct suffixes seen in the data, which grows linearly in T rather than exponentially in DK ∗. This is what gives Strategy B its linear scaling. 
+
+Remark S3.7 (Practical reliability below the sufficient sample budget) . The sample thresholds T (A)min and T (B)min are 
+
+sufficient conditions for kernel estimation error to fall below λ/ 4; reliable transition kernel estimates are routinely obtained in practice with fewer observations. It is therefore critical to report Level 5 of the explanation hierarchy alongside any KARMA output, as the epistemic variance map directly certifies the reliability of the estimated kernel and hence of all Level 1–4 explanations under the actual data budget. 
+
+S3.3 Strategy C: Regression Tree on the Transition Tensor 
+
+Strategies A and B both estimate T f,d K∗ (· | h) independently for each h ∈ H + 
+
+> K∗
+
+, treating every history as a separate estimation problem. This nonparametric approach is interpretable and certified but data-hungry: the pool requirement scales as n(B) pool · |H + 
+
+> K∗
+
+|, where n(B) pool is the minimum pool size such that ρ(B) floor (h) ≤ β for all h. Strategy C replaces independent per-history estimation with a regression tree that partitions H+ 
+
+> K∗
+
+into leaves and pools counts within each leaf, sharing statistical strength across structurally similar histories while remaining fully interpretable. 24 KARMA A P REPRINT 
+
+Covered and sparse sets. Partition H+ 
+
+> K∗
+
+according to whether each history has accumulated sufficient model counts: 
+
+Hcov = h ∈ H + 
+
+> K∗
+
+: Ph ≥ n(B) pool , Hsparse = H+ 
+
+> K∗
+
+\ H cov .
+
+Histories in Hcov have enough data to estimate their individual transition distributions reliably at the noise floor; histories in Hsparse do not. The regression tree is grown on Hcov and extrapolates to Hsparse via leaf assignment. 
+
+What the tree is doing. The tree operates in three conceptually distinct steps. 
+
+Step 1 (direct estimation). For every h ∈ H cov , compute the individual kernel estimate ˆT f,d, (C)  
+
+> K∗
+
+(· | h) directly from B. The covered set exists precisely because these estimates are reliable: Ph ≥ npool ensures the noise floor at each 
+
+h ∈ H cov is already below the coverage threshold. 
+
+Step 2 (structured pooling). Let h ∈ H cov ⊆ [N ]D×K and target dimension d, the input is the discrete history vector 
+
+h be represented as (hd′ 
+
+> k
+
+)d′∈[D], k ∈[K∗] ∈ [N ]DK ∗
+
+, hd′ 
+
+> k
+
+denoting the bin of variable d′ ≤ d at lag k within h. The tree partitions Hcov into L leaves by recursively selecting binary splits of the form {h : hd′ 
+
+> k
+
+= n} vs. {h : hd′
+
+> k
+
+̸ = n} for any random (d′, k, n ) ∈ [D] × [K∗] × [N ] such that the split minimises the within-leaf heterogeneity of the individual kernel estimates (Eq. S44). Within each leaf ℓ, model counts are aggregated across all member histories to form a 
+
+pooled leaf kernel ¯T dℓ (Eq. S45), which replaces the individual estimates for every covered history in that leaf. This pooling is structured rather than arbitrary: the splits are chosen so that histories assigned to the same leaf have similar individual kernels, making the pooled kernel a good representative for all of them. The cost of pooling is the within-leaf bias δℓ , the maximum Total Variation distance between any individual kernel in the leaf and the pooled kernel, which the KL The splitting criterion is directly minimized. 
+
+Step 3 (extrapolation by structural similarity). For h ∈ H sparse , there are insufficient model counts to form a reliable individual estimate. The tree routes h to a leaf ℓ(h) by evaluating the same binary split conditions top-down from the root: at each internal node, check whether hd∗ 
+
+> k∗
+
+= n∗, d∗ ≤ d and go left if true, right otherwise. The sparse history then inherits the leaf’s pooled kernel. The implicit claim is: h shares the same bin values as the covered histories in ℓ(h) on the variables and lags that the tree has identified as predictively important, so their transition distributions should be similar. This is extrapolation by structural similarity, not smoothing, not interpolation, but stratification: histories that look alike on the splits that matter are assigned the same transition distribution estimate. 
+
+Input and response. For each h ∈ H cov ⊆ [N ]D×K and target dimension d, the input is the discrete history vector 
+
+xh = ( hd′ 
+
+> k
+
+)d′∈[D], k ∈[K∗] ∈ [N ]DK ∗
+
+, hd′ 
+
+> k
+
+denoting the bin of variable d′ at lag k within h and the response is the individually estimated kernel simplex yh = ˆT f,d K∗ (· | h).
+
+Tree construction. The tree recursively partitions Hcov by choosing splits of the form {h : hd′ 
+
+> k
+
+= n} vs. {h : hd′
+
+> k
+
+̸ =
+
+n} for each variable d′ ∈ [D], lag k ∈ [K∗], and bin n ∈ [N ], giving D · K∗ · N candidates per node. At each node the split minimising the ˆπ∗-weighted within-leaf KL divergence is selected: 
+
+csplit = X 
+
+> ℓ∈{ left ,right }
+
+X
+
+> h∈ℓ
+
+ˆπ∗(h) · KL 
+
+ ˆT f,d K∗ (· | h) ¯T dℓ (·)
+
+
+
+, (S44) where the pooled leaf kernel is: 
+
+¯T dℓ (sd) = 
+
+X
+
+> h∈ℓ
+
+nf,d (h, s d) + α
+
+X
+
+> h∈ℓ
+
+nf (h) + N α , α = 12 . (S45) Splitting halts when any of the following hold: the node contains a single history; maximum depth dmax is reached; no valid split exists that gives both children pooled count ≥ n(C) pool ; or the best cost reduction is below threshold η. The pool-size check P 
+
+> h∈ℓ
+
+Ph ≥ n(C) pool at every candidate child is the structural link between tree construction and T (C) min :it guarantees that every leaf produced by the algorithm meets the coverage requirement by construction, without any post-hoc pruning. 
+
+Extrapolation to sparse histories. For h ∈ H sparse , route h down the tree to its leaf ℓ(h) and assign: 
+
+ˆT f,d, (C)  
+
+> K∗
+
+(· | h) = ¯T dℓ(h)(·). (S46) 25 KARMA A P REPRINT 
+
+Algorithm 1 Strategy C: Tree construction 
+
+Require: Individual kernel estimates { ˆT f,d K∗ (· | h)}h∈H cov , counts {nf,d (h, s d), n f (h)}h∈H cov , stationary weights 
+
+{ˆπ∗(h)}h∈H cov , pool sizes {Ph}h∈H cov , parameters npool , d max , η, α = 12
+
+Ensure: Tree T d with leaf kernels { ¯T dℓ } and split conditions {(d′∗  
+
+> ν
+
+, k ∗ 
+
+> ν
+
+, n ∗ 
+
+> ν
+
+)}ν internal 
+
+1: Initialise root ν0: H(ν0) ← H cov , depth( ν0) ← 0
+
+2: Q ← { ν0}
+
+3: while Q̸ = ∅ do 
+
+4: Pop node ν from Q
+
+5: Compute pooled kernel and node cost: 
+
+¯T dν (sd) ←
+
+X
+
+> h∈H (ν)
+
+nf,d (h, s d) + α
+
+X
+
+> h∈H (ν)
+
+nf (h) + N α ∀ sd ∈ [N ]
+
+cν ← X
+
+> h∈H (ν)
+
+ˆπ∗(h) · KL 
+
+ ˆT f,d K∗ (· | h) ¯T dν
+
+
+
+6: if |H (ν)| = 1 or depth( ν) ≥ dmax then 
+
+7: Mark ν as leaf with kernel ¯T dν ; continue ▷ trivial stopping 
+
+8: end if 
+
+9: c∗ ← cν , σ∗ ← null 
+
+10: for (d′, k, n ) ∈ [D] × [K∗] × [N ] do ▷ D · K∗ · N candidates 
+
+11: HL ← { h ∈ H (ν) : hd′ 
+
+> k
+
+= n}, HR ← H (ν) \ H L
+
+12: if HL = ∅ or HR = ∅ then 
+
+13: continue 
+
+14: end if 
+
+15: if P 
+
+> h∈H L
+
+Ph < n pool or P 
+
+> h∈H R
+
+Ph < n pool then 
+
+16: continue ▷ child pool violates coverage requirement 
+
+17: end if 
+
+18: Compute child pooled kernels ¯T dL , ¯T dR via Eq. (S45) 
+
+19: csplit ← X
+
+> ℓ∈{ L, R }
+
+X
+
+> h∈H ℓ
+
+ˆπ∗(h) · KL   ˆT f,d K∗ (· | h) ∥ ¯T dℓ
+
+ ▷ Eq. (S44), single variable d
+
+20: if csplit < c ∗ then 
+
+21: c∗ ← csplit , σ∗ ← (d′, k, n, HL, HR)
+
+22: end if 
+
+23: end for 
+
+24: if σ∗ = null or cν − c∗ < η then 
+
+25: Mark ν as leaf with kernel ¯T dν ▷ no valid split or gain < η 
+
+26: else 
+
+27: (d′∗ , k ∗, n ∗, HL, HR) ← σ∗
+
+28: ν. split ← (d′∗ , k ∗, n ∗)
+
+29: Create children νL, νR: H(νL) ← H L, H(νR) ← H R, depth ← depth( ν) + 1 
+
+30: Q ← Q ∪ { νL, ν R}
+
+31: end if 
+
+32: end while 
+
+33: return tree T d
+
+26 KARMA A P REPRINT     
+
+> yes no
+> yes no yes no
+
+Hcov 
+
+> covered histories
+
+hd2 
+
+> k2
+
+= n2 ? hd3 
+
+> k3
+
+= n3 ?
+
+split: hd1 
+
+> k1
+
+= n1 ?
+
+¯T dℓ1
+
+¯T dℓ2
+
+¯T dℓ3
+
+¯T dℓ4   
+
+> sparse h∈ H sparse
+> inherits
+> ¯Tdℓ4
+
+Figure S2: Strategy C: regression tree on the transition tensor. The tree partitions the covered histories Hcov 
+
+through binary bin tests hd′ 
+
+> k
+
+= n, with candidates (d′, k, n ) ∈ [D] × [K∗] × [N ] chosen to minimise the ˆπ∗-weighted within-leaf KL divergence (Eq. S44). Each leaf stores a pooled kernel ¯T dℓ (Eq. S45) aggregated from the model counts of its member histories, shown here as a distribution over the N next-state bins. Growth halts when a node holds a single history, reaches depth dmax , yields gain below η, or would give a child pooled count P 
+
+> h∈ℓ
+
+Ph < n pool . A sparse history h ∈ H sparse (dashed) is routed top-down through the same tests to a leaf and inherits its pooled kernel, extending reliable estimates to histories never sufficiently covered by Strategies A and B. The sample budget then scales with the number of leaves L ≪ |H + 
+
+> K∗
+
+| rather than with |H + 
+
+> K∗
+
+|.The leaf ℓ(h) groups histories sharing the same bin conditions on the predictively important splits, providing a non-parametric but a structured estimate for histories that would otherwise be inaccessible to Strategies A and B. Algorithm 1 is run independently for each target variable d ∈ [D], producing D trees {T d}Dd=1 with potentially different split structures. The split candidates (d′, k, n ) range over all source variables d′ ∈ [D], lags k ∈ [K∗], and bins n ∈ [N ],so the tree for target variable d may select splits on any source variable d′, including d′ = d (self-influence) and d′̸ = d
+
+(cross-variable influence). The split variables selected across the D trees directly encode the Level 1 and Level 2 explanation: a source variable d′ at lag k that appears as a high-level split node in T d is a primary driver of the transition distribution of variable d.
+
+Theorem S3.8 (Strategy C noise floor) . Let ˆT f,d, (C) 
+
+> K∗
+
+(· | h) be the Strategy C estimator for h ∈ H+ 
+
+> K∗
+
+routed to leaf 
+
+ℓ = ℓ(h) with pooled count Pℓ = P 
+
+> h′∈ℓ
+
+Ph′ . Define the population within-leaf diameter 
+
+δ∗ 
+
+> ℓ
+
+= max  
+
+> h′,h ′′ ∈ℓ
+
+T f,d K∗ (· | h′) − T f,d K∗ (· | h′′ ) T V , (S47) 
+
+and the population pooled kernel 
+
+T f,d, pool  
+
+> ℓ
+
+(sd) = 1
+
+Pℓ
+
+X
+
+> h′′ ∈ℓ
+
+Ph′′ T f,d K∗ (sd | h′′ ). (S48) 
+
+Then, for any h ∈ ℓ,
+
+E
+
+h ˆT f,d, (C) 
+
+> K∗
+
+(· | h) − T f,d K∗ (· | h) T V 
+
+i
+
+≤
+
+r N
+
+2Pℓ
+
+| {z } 
+
+> (i) pooled estimation
+
++ δ∗
+
+> ℓ
+
+|{z} 
+
+> (ii) within-leaf bias
+
+, (S49) 
+
+so the noise floor is ρ(C)floor (h) = pN/ (2 Pℓ) + δ∗ 
+
+> ℓ
+
+.
+
+27 KARMA A P REPRINT 
+
+Proof. Fix h ∈ H+ 
+
+> K∗
+
+routed to leaf ℓ. By definition (S48) and the assignment rule ˆT f,d, (C) 
+
+> K∗
+
+(· | h) = ¯T dℓ (Eq. 55 in the main paper), apply the triangle inequality with T f,d, pool  
+
+> ℓ
+
+as intermediate: 
+
+ˆT f,d, (C) 
+
+> K∗
+
+(· | h) − T f,d K∗ (· | h) T V 
+
+≤ ¯T dℓ − T f,d, pool  
+
+> ℓT V
+
+| {z }
+
+> Term (i)
+
++ T f,d, pool  
+
+> ℓ
+
+− T f,d K∗ (· | h) T V 
+
+| {z }
+
+> Term (ii)
+
+. (S50) 
+
+Bounding Term (i). ¯T dℓ is the Dirichlet posterior mean (Eq. 54 in the main paper) formed by pooling all Pℓ model queries within leaf ℓ. Each query yields a Multinomial observation in [N ]. By the same Pinsker–Dirichlet argument used in Theorem A.4 (Strategy A, marginal kernel), applied now to the pooled estimator with Pℓ total counts and N
+
+bins: 
+
+E
+
+h ¯T dℓ − T f,d, pool  
+
+> ℓT V
+
+i
+
+≤
+
+r N
+
+2Pℓ
+
+. (S51) This is a finite-sample statement requiring no limiting argument. 
+
+Bounding Term (ii). By convexity of the total variation distance, 
+
+(ii ) = 1
+
+Pℓ
+
+X
+
+> h′′ ∈ℓ
+
+Ph′′ T f,d K∗ (· | h′′ ) − T f,d K∗ (· | h) T V 
+
+≤ 1
+
+Pℓ
+
+X
+
+> h′′ ∈ℓ
+
+Ph′′ 
+
+
+
+∥T f,d K∗ (· | h′′ ) − T f,d K∗ (· | h)∥T V 
+
+
+
+≤ max  
+
+> h′′ ∈ℓ
+
+T f,d K∗ (· | h′′ ) − T f,d K∗ (· | h) T V 
+
+≤ δ∗ 
+
+> ℓ
+
+, (S52) where the last inequality holds because h ∈ ℓ and the maximum in (S47) is taken over all pairs in ℓ. Crucially, every step here involves only the true population kernels T f,d K∗ ; no estimated quantity appears, so no finite-sample correction is needed for this term. 
+
+Combining. Taking expectations in (S50) and substituting (S51)–(S52): 
+
+E
+
+h ˆT f,d, (C) 
+
+> K∗
+
+(· | h) − T f,d K∗ (· | h) T V 
+
+i
+
+≤
+
+r N
+
+2Pℓ
+
++ δ∗ 
+
+> ℓ
+
+, (S53) establishing (S49). 
+
+Remark S3.9 (Why the original proof was incorrect) . The original proof defined δℓ using estimated kernels ˆT f,d K∗ (· | h′)
+
+and then invoked a limiting argument ( Ph′′ → ∞ ) to transfer this to the population quantity needed in Term (ii). This conflates estimated and population objects and provides no finite-sample guarantee for the substitution error. The corrected proof avoids this by defining δ∗ 
+
+> ℓ
+
+directly in population terms (Eq. (S47) ), so Term (ii) is bounded purely at the population level with no estimation error, and Term (i) carries the sole finite-sample contribution. 
+
+Remark S3.10 (Minimum series length) . Setting ρ(C)floor (h) ≤ β and solving for Pℓ gives 
+
+Pℓ > N
+
+2( β − δ∗ 
+
+> ℓ
+
+)2 =: npool , β > δ ∗ 
+
+> ℓ
+
+. (S54) With L leaves and windows approximately uniformly distributed, Pℓ ≈ (T − W )/L , so 
+
+T (C)min ≈ W + npool · L, (S55) which grows in L ≪ | H+ 
+
+> K∗
+
+| rather than in |H+ 
+
+> K∗
+
+|, recovering the sample-size advantage of Strategy C over Strategy B. Note that β > δ ∗ 
+
+> ℓ
+
+is a necessary condition: if the leaf is too heterogeneous, no amount of data can drive the noise floor below the within-leaf bias, and the tree must be grown deeper to reduce δ∗ 
+
+> ℓ
+
+.28 KARMA A P REPRINT 
+
+Degradation to Strategy B. When T is large enough that Hsparse = ∅, Strategy C with one history per leaf recovers the nonparametric kernel exactly. Strategy C therefore degrades gracefully: it activates the tree structure only where coverage fails and reverts to the nonparametric estimate for well-covered histories. 
+
+S4 Model Induced Causal Graph Recovery 
+
+We refer to DAG, a Directed Acyclic Graph. We distinguish carefully between (i) the data-generating causal DAG G∗
+
+over the true data-generating process, and (ii) the model-induced causal DAG Gf encoding what f has learned. This distinction is not merely philosophical: if f has learned spurious correlations, Gf faithfully reflects them, which is precisely what model-centric XAI should report. Comparing Gf with G∗ (recovered by PCMCI on raw data) constitutes a model audit: agreement indicates causally correct learning; divergence flags what the model got wrong. 
+
+Definition S4.1 (Model-induced causal DAG) . Given surrogate MK∗ , define the node set 
+
+V = {Xdt−k : d ∈ [D], k ∈ { 0, . . . K ∗}} 
+
+A directed edge Xdt−k → Xd′ 
+
+> t−k′
+
+(with k > k ′, forward in time) belongs to E iff 
+
+Xdt−k̸ ⊥⊥ Xd′ 
+
+> t−k′
+
+|V \{ Xdt−k}
+
+under the marginal distribution define ˆT f,d K∗ . The model-induced DAG is Gf = ( V, E ).Three structural properties of Gf follow immediately from the time-ordered construction. First, acyclicity is automatic: all edges run strictly forward in time, so no directed cycle can exist, and KARMA need not enforce acyclicity as a constraint. Second, orientation is given rather than inferred: because time-ordering provides all edge orientations for free, KARMA recovers a fully oriented Model induced DAG, a strictly stronger result than the CPDAG recovered by standard algorithms such as PC or FCI. We note that intra-slice edges ( k = k′) are excluded by construction, as the transition kernel conditions only on strictly past states; we leave contemporaneous extensions to future work. In the presence of noise from data budget and approximations, we impose a minimum detectable causal effect λ that ensures meaningful causation. 
+
+Definition S4.2 (Total-Variation Markov Blanket) . The Total-Variation Markov Blanket of Xd′ 
+
+> t
+
+at threshold λ ≥ 0 is MB λ(Xd′ 
+
+> t
+
+) = {Xdt−k : ρ(Xdt−k → Xd′ 
+
+> t
+
+) ≥ λ, k ∈ { 0, . . . , K ∗}} 
+
+where, ρ(·) is defined as per Eq 7. The DAG recovered by KARMA Gf has edge set 
+
+Eλ = {(Xdt−k → Xd′ 
+
+> t−k′
+
+) : Xdt−k ∈ MB λ(Xd′ 
+
+> t−k′
+
+), k < k ′}
+
+As λ → 0, Gλf approaches the full transition graph; as λ → ∥ Pf − PMK∗ ∥T V , it approaches the empty graph, where 
+
+Pf is the model distribution and PMK∗ the distribution of the Markov Surrogate. The operating range λ ∈ (0 , ε/ 2) is where causal structure is meaningfully identified. If ρ(Xdt−k → Xd′ 
+
+> t−k′
+
+) < λ , the edge (Xdt−k → Xd′ 
+
+> t−k′
+
+) has no effective contribution. This treats trimming as 
+
+regularization under a faithfulness prior : edges removed by trimming are those whose path coefficient is smaller than 
+
+λ, analogous to d-separation. 
+
+Theorem S4.3 (Causal Faithfulness of KARMA Explanations) . Let MK∗ be the K-order Markov surrogate of 
+
+f with estimated transition kernel ˆT f,d K∗ and model-induced causal graph Gf = ( V, E λ). Suppose the following 
+
+transition–separation correspondence holds: for all d ∈ [D], d′ ∈ [D], k ∈ { 1, . . . , K ∗},
+
+ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) = 0 ⇐⇒ Xd′ 
+
+> t−k
+
+⊥⊥Gf Xdt | V \ { Xd′
+
+> t−k
+
+}, (S56) 
+
+where ⊥⊥Gf denotes d-separation in Gf . Then: (i) Faithfulness. The edge set Eλ of Gf exactly encodes the conditional dependence structure of MK∗ : an edge 
+
+(Xd′ 
+
+> t−k
+
+→ Xdt ) is retained iff Xd′ 
+
+> t−k
+
+has a direct distributional influence on Xdt within the surrogate that is not mediated by any other variable in the Markov blanket. 
+
+29 KARMA A P REPRINT 
+
+(ii) Causal grounding. The AIE (Eq. 9) satisfies 
+
+AIE d(d′, k, x ) > 0 ⇐⇒ (Xd′ 
+
+> t−k
+
+→ Xdt ) ∈ Eλ, (S57) 
+
+so the Level 1–4 explanations are causally grounded in Gf : every retained attribution corresponds to a genuine direct effect within the surrogate, and every zero attribution corresponds to a d-separated pair. (iii) Inheritance to G∗. If additionally f has learned the true conditional dependence structure of the data-generating process, i.e. Gf is faithful to G∗, then the explanations are causally grounded in the data-generating causal graph G∗.Proof. We prove each part in turn. 
+
+Part (i). By Definition A.7, an edge (Xd′ 
+
+> t−k
+
+→ Xdt ) belongs to Eλ iff ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) ≥ λ > 0, i.e. iff condition (S56) holds with ρ > 0. By (S56) , ρ = 0 iff Xd′ 
+
+> t−k
+
+and Xdt are d-separated in Gf given the remaining Markov blanket. Therefore Eλ retains edges corresponding to conditionally dependent pairs in MK∗ , which is precisely the definition of faithfulness for a DAG with respect to a distribution. 
+
+Part (ii). From Eq. (9) in Level 4, 
+
+1
+
+N
+
+X 
+
+> x∈[N]
+
+AIE d(d′, k, x ) = ρ(Xd′ 
+
+> t−k
+
+→ Xdt ). (S58) Since AIE d(d′, k, x ) ≥ 0 for all x by definition (it is a total variation distance), the average over x is zero iff every summand is zero, iff ˆT f,d K∗ (· | h) = ˆT f,d K∗ (· | hd′←xk ) for ˆπ∗-almost all h and all x ∈ [N ], iff ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) = 0 .Combined with Part (i), this gives (S57) : a positive AIE iff the edge is retained, i.e. iff the pair is not d-separated in Gf .Hence every nonzero attribution in Levels 1–4 maps bijectively to a direct effect in Gf , and every zero attribution maps to a d-separated pair. 
+
+Part (iii). Faithfulness of Gf to G∗ means that d-separation in Gf coincides with conditional independence in the data-generating distribution P ∗. By Part (i), d-separation in Gf already coincides with ρ = 0 in MK∗ . Chaining these two equivalences: 
+
+ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) = 0 ⇐⇒ Xd′ 
+
+> t−k
+
+⊥⊥Gf Xdt
+
+⇐⇒ Xd′ 
+
+> t−k
+
+⊥⊥G∗ Xdt , (S59) so the retained edges of Eλ coincide with the true direct effects in G∗, and the KARMA explanations are causally grounded in the data-generating process. 
+
+Remark S4.4 (Role of the correspondence assumption) . Condition (S56) is the model-centric analogue of the standard faithfulness assumption in causal discovery. It requires that the surrogate MK∗ faithfully represents f ’s conditional dependence structure: no two variables that are conditionally dependent under f are made to appear independent by cancellation in the transition kernel, and no two d-separated variables produce spurious nonzero influences. This is testable in principle via the K.E.R.I. reliability index (Level 5): a high K.E.R.I. value certifies that the kernel estimates are accurate enough that such cancellations are unlikely to distort the trimming decisions. 
+
+S4.1 KARMA Algorithm Algorithm 2 KARMA 
+
+Require: MVTS X, model f with window W , Training series Xtrain of length Ttrain , held-out series Xval 
+
+of length Tval , model f with window W , tolerances ε, λ , candidate baselines B, kernel estimator E ∈{STRAT A, STRAT B, STRAT C}, estimator hyperparameters ΘE ▷ e.g. M, n pool , d max for S TRAT B/C 
+
+— Shared pre-processing —  
+
+> 1:
+
+Discretise Xtrain into S via quantisation  
+
+> 2:
+
+Compute ˆπ∗(h) from X ▷ stationary weights, independent of model 
+
+— Pillar 1: Markov order selection —  
+
+> 3:
+
+K ← 1 
+
+> 4:
+
+repeat 
+
+30 KARMA A P REPRINT 
+
+5: Query f on n ≤ Tval − W independent windows; record triples (˜hi, h (K) 
+
+> i
+
+, s ′
+
+> i
+
+)
+
+6: Find bK = arg min b∈B ˆ∆pred (K, b ) ▷ direct model test, no kernel needed 
+
+7: K ← K + 1 
+
+8: until ˆ∆pred (K, b K ) < ε ▷ sole stopping certificate 
+
+9: K∗ ← K; b∗ ← bK ▷ assert K∗ ≤ W by architecture 
+
+— Pillar 2: compression and certified attribution — 
+
+10: Certified zeros: ϕdk ≈ 0 for all k > K ∗, d ∈ [D]
+
+11: Report compression ratio K∗/W 
+
+— Pillar 3: kernel estimation — 
+
+12: Compute Tmin ▷ strategy-specific Tmin 
+
+13: for d = 1 , . . . , D do 
+
+14: ˆT f,d K∗ ← ESTIMATE KERNEL (E, ΘE , K ∗) ▷ final kernel at selected order 
+
+15: Compute noise floor ρfloor (h) for all h ∈ H +
+
+> K∗
+
+16: end for 
+
+17: Report : Tmin ;
+
+18: for d = 1 , . . . , D do 
+
+19: for (d′, k ) ∈ [D] × [K∗] do 
+
+20: Compute ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) via Eq. (7) using ˆT f,d K∗
+
+21: end for 
+
+22: end for 
+
+23: Gf ← { (d′, k, d ) : ρ(Xd′ 
+
+> t−k
+
+→ Xdt ) > λ } ▷ Regularised trimming 
+
+— Five-level explanation hierarchy — 
+
+24: Compute Levels 1–5 from ˆT f,d K∗ and Gf
+
+25: return K∗, b∗, K∗/W , { ˆT f,d K∗ }Dd=1 , Gf , Cov( K∗), Levels 1–5 
+
+S5 Temporal Aware Lag Based AUC Score 
+
+Naive AUC and its limitation. Let σ be the permutation that sorts s in descending order. A natural metric masks the top-k timesteps with the training-set mean ¯xd,t :
+
+˜x(k) 
+
+> b,d,t
+
+=
+
+¯xd,t t ∈ { σ(1) , . . . , σ (k)},xb,d,t otherwise. (S60) This is problematic: substituting an unconditional constant into a temporally correlated sequence creates out-of-distribution discontinuities. The model reacts to the broken correlation structure rather than to any genuine absence of causal information, inflating prediction shifts even for lags outside the Markov blanket and masking meaningful differences between methods. 
+
+VAR-conditional imputation. We address this by replacing the masked value with its conditional mean given recent history. We fit a VAR( K) model by ridge regression on the training windows, selecting K via BIC: 
+
+ˆxt =
+
+> K
+
+X
+
+> k=1
+
+ˆAk xt−k + ˆb, ˆAk ∈ RD×D. (S61) When position t is masked, we substitute ˜xt = ˆA1xt−1 + · · · + ˆAK xt−K , processing positions in temporal order so each imputation can condition on already-imputed predecessors (an AR-consistent chain). This withholds only the innovation rt = xt − ˜xt—the component unpredictable from recent history—while preserving the learnable dynamics. A timestep outside the Markov blanket thus yields ∥f (x) − f (˜ x)∥1 ≈ 0 when imputed, whereas a blanket member carrying genuine causal signal produces a measurable drop. 31

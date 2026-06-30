@@ -1,0 +1,282 @@
+Title: Primary ICD Category Prediction using LLM-based Probing
+
+URL Source: https://arxiv.org/pdf/2606.28798v1
+
+Published Time: Tue, 30 Jun 2026 00:30:16 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Primary ICD Category Prediction using LLM-based Probing 
+
+# Chengyuan Liu, 1, ∗ Xinyue Zhang, 2 Yao Li 3 and Guanting Chen 3, ∗
+
+> 1
+
+Department of Statistics, Pennsylvania State University, PA, USA 
+
+> 2
+
+Department of Biostatistics, University of North Carolina at Chapel Hill, NC, USA 
+
+> 3
+
+Department of Statistics and Operations Research, University of North Carolina at Chapel Hill, NC, USA 
+
+> ∗
+
+Corresponding to cjl6934@psu.edu and guanting@unc.edu 
+
+# Abstract 
+
+Objective: ICD codes are central to reimbursement, research, quality measurement, and population health surveillance, yet automated coding systems often struggle to integrate diagnostic signals from both clinical narratives and structured electronic health record (EHR) variables. We evaluated whether frozen medical large language model (LLM) representations can serve as a shared embedding space for multimodal primary diagnosis category prediction. 
+
+Materials and Methods: We constructed a MIMIC-IV cohort of 13,645 admissions from the 10 most frequent primary ICD-10 codes, consolidated into seven diagnosis categories. Structured variables were serialized into clinical narratives and combined with leakage-pruned discharge-note sections. Using a frozen MedFound-Llama3-8B-finetuned backbone, we extracted hidden states from five transformer layers and trained linear probes for structured-only, unstructured-only, and combined inputs. We compared probes with XGBoost and information-matched PLM-ICD baselines and evaluated MIMIC-III adaptation using a compact bottleneck adapter. 
+
+Results: Our probing pipeline consistently outperformed baseline methods across structured-only, unstructured-only, and combined-input settings, with the strongest performance achieved by the combined probe, suggesting that frozen medical LLM embeddings can effectively integrate complementary diagnostic signals from multiple EHR modalities. On MIMIC-IV, the Combined Layer-32 probe achieved the best performance (87.69% strict accuracy; 91.45% medical accuracy). The Structured-only probe also outperformed the corresponding standard baseline (+6.19 percentage points in medical accuracy). Moreover, diagnostic information became increasingly linearly separable in deeper layers and showed the capacity for transferability: MIMIC-III adaptation improved transfer across coding systems while keeping the LLM backbone frozen. 
+
+Discussion: This framework shows that LLM embeddings can unify structured and narrative EHR information for multimodal diagnosis prediction. By improving with combined inputs and adapting across MIMIC-IV and MIMIC-III through a small representation-level module, the approach supports efficient reuse of clinical representations across modalities and datasets. 
+
+Conclusion: Multimodal probing of frozen medical LLM representations provides a practical approach for studying EHR modalities and adapting clinical representations across datasets. 
+
+Keywords ICD coding; electronic health records; large language models; linear probing; multimodal fusion 
+
+# Introduction 
+
+## Background and Significance 
+
+Electronic health records (EHRs) combine complementary clinical signals from structured measurements, medications, demographics, and narrative documentation. As large language models (LLMs) are increasingly applied to clinical data, a central question is whether they can support generalizable disease and diagnosis prediction from the full multimodal EHR record rather than from a single data source [1, 2]. We evaluate this question using primary ICD-derived diagnosis categories as a controlled label space [3]. Many existing clinical prediction pipelines rely primarily on unstructured notes, leaving complementary structured signals— such as laboratory values, medications, and vital signs—less fully integrated [4, 5, 2]. Discharge summaries are naturally compatible with language-model inputs, whereas structured EHR data is heterogeneous, sparse, and high-dimensional. Yet structured measurements can capture diagnostic evidence that narrative documentation under-reports, such as renal dysfunction, infection severity, medication exposure, or cardiovascular risk patterns. This complementarity motivates methods that place structured and unstructured EHR inputs in a shared representational space rather than treating them as separate modeling problems. 1
+
+> arXiv:2606.28798v1 [cs.AI] 27 Jun 2026
+
+Prior multimodal EHR studies show that both clinical text and structured variables contain diagnostic signal, but many approaches depend on modality-specific architectures or task-specific fusion modules [4, 5, 1]. Such fusion models are costly to train per task, hard to reuse, and offer little insight into where diagnostic signal resides, and they do not exploit the clinical knowledge already encoded in medical LLMs. The central difficulty is that structured EHR data is heterogeneous, sparse, and high-dimensional and is not natively compatible with the text interface of an LLM, which is what has made a single shared representation hard to obtain without bespoke architectures. Medical LLMs and EHR foundation models create an alternative possibility: structured variables can be serialized into natural language and embedded with the same frozen backbone used for narratives [6, 7, 8, 9]. This raises a representation-level question distinct from training a new prediction model: whether frozen medical LLM embeddings already organize structured, unstructured, and combined EHR inputs in a way that makes diagnosis categories linearly recoverable. Several practical questions remain open for LLM-based multimodal EHR prediction. First, it is unclear whether structured measurements and clinical narratives can be represented together so that their combined signal improves diagnosis prediction beyond either source alone. Second, we want to know if structured EHR information can be converted into language-based inputs that retain value beyond standard tabular baselines. Third, we are interested in whether learned clinical representations can be reused across datasets when only limited target labels are available. Answering these questions requires a framework that evaluates modality integration, baseline comparisons, representation reuse, and cross-dataset adaptation under matched task definitions and preprocessing constraints. In this study, we propose a model-agnostic multimodal probing framework for EHR diagnosis category prediction. The framework addresses modality fragmentation by converting structured and unstructured EHR data into a shared text interface that can be encoded by a frozen medical LLM backbone. It combines layer-wise probing and lightweight adaptation to evaluate where diagnosis-relevant information emerges and how representations transfer across datasets [10]. Unlike prior multimodal EHR systems that learn a joint space with modality-specific encoders and task-specific fusion modules, our approach serializes structured variables into clinical narrative so that a single frozen medical LLM encodes both modalities into one shared space, which we then interrogate with linear probes that attribute recoverable diagnostic signal to the representations rather than to probe capacity. Because the backbone stays frozen, the same embeddings are reusable across modality, depth, and prompt analyses and can be realigned across datasets and coding systems with a 2M-parameter adapter, without retraining the model. Using MedFound-Llama3-8B-finetuned [6] as the backbone, we apply the prediction pipeline on MIMIC-IV and MIMIC-III, and find that deeper frozen LLM representations become increasingly diagnosis-informative. The Combined Layer-32 probe achieves the strongest MIMIC-IV performance (87.69% strict accuracy; 91.45% medical accuracy), indicating that structured and unstructured EHR signals can be analyzed within a shared representation space. Structured-only probing exceeds XGBoost by 6.19 percentage points in medical accuracy, supporting the value of text-serialized structured data for frozen LLM embeddings. Finally, a 2M-parameter adapter reaches 92.2% transfer accuracy on MIMIC-III using only 5% labeled target data, suggesting that cross-dataset mismatch can be mitigated through lightweight representation-level adaptation rather than full-model retraining. 
+
+# Materials and Methods 
+
+In this study, we propose a multimodal probing framework that represents structured and unstructured EHR data in a single frozen medical-LLM embedding space for primary diagnosis-category prediction. As illustrated in Figure 1, each hospitalization is treated as one sample combining two types of data: structured variables, and unstructured discharge-note text. To develop the probing pipeline, both types of data are serialized into a standard form of input, so that the same frozen backbone can encode them without a task-specific fusion model. We evaluate the framework under three input configurations—Structured-only, Unstructured-only, and Combined. 
+
+## Data Source and Task Definition 
+
+We used MIMIC-IV as the primary development and evaluation dataset and MIMIC-III for out-of-distribution generalizability analysis [11, 10]. At the admission level, we defined one primary diagnosis per hospitalization and consolidated the target space into seven clinically meaningful diagnosis categories, including grouped cardiovascular, hypertensive-heart-failure, and infection-related classes [12, 13, 14]. This label space was used consistently across probing and baseline analyses. 
+
+## Input Construction 
+
+For each admission, we serialized both structured and unstructured EHR data into a shared text interface, so that a single frozen backbone could encode either modality or their combination under a common format. This text-serialization step is what allows heterogeneous tabular variables and clinical narratives to be placed in the same representational space, and we constructed three configurations to isolate the contribution of each modality. We defined three input configurations c ∈ C = {str , txt , combined }.Structured variables were mapped to a clinical narrative through a template Tstr , and discharge notes were reduced to clinically relevant content through a section-extraction function Ttxt :                
+
+> Example input
+> Structured ( Tstr ): Patient: [age]-year-old [gender] |Medications: . . . |
+> Laboratory results: . . .
+> Unstructured (Ttxt ): Chief Complaint: . . . |History of Present Illness: . . . |Pertinent Results: . . .
+
+The Structured-only and Unstructured-only configurations used 
+
+Tstr and Ttxt respectively, while the Combined configuration concatenated both sources under a shared template, Pcombined =
+
+Tstr ⊕ Ttxt , where ⊕ denotes concatenation with a fixed delimiter. Every configuration ended with the same diagnostic query to standardize the prediction context across modalities. To prevent label leakage, we removed discharge-tail sections that state the diagnosis directly (e.g., discharge diagnosis and final impression), retaining only sections that describe the clinical course and findings. This step is essential to our analysis: because the probe is evaluated on the recoverability of diagnostic signal, any 2Figure 1 Overview of the multimodal probing framework. Structured and unstructured EHR inputs are converted to text prompts, encoded by a frozen MedFound backbone, and evaluated with layer-wise linear probes under Structured-only, Unstructured-only, and Combined configurations. 
+
+residual diagnosis-bearing text in the input would inflate apparent separability and confound the representational claim. The same pruning was applied identically across configurations and to all baseline comparisons. Full serialization templates, variable-selection rules (including medication and laboratory-test limits and abnormal-value prioritization), section-boundary detection, and resulting input-length statistics are provided in the Supplementary Methods. 
+
+## Frozen-LLM Probing Framework 
+
+We extracted hidden states from a frozen MedFound-Llama3-8B-finetuned backbone, leaving all of its parameters unchanged. Keeping the backbone frozen is central to our analysis: it ensures that any recoverable diagnostic signal reflects information the medical LLM has already organized during its own training, rather than information introduced by task-specific fine-tuning. For each admission i under configuration c ∈ C and layer 
+
+l ∈ L = {1, 8, 16 , 24 , 32 }, we mean-pooled the token-level hidden states over non-padding tokens to obtain a single admission-level embedding h(c,l ) 
+
+> i
+
+∈ Rd (d = 4096), where h(c,l ) 
+
+> i
+
+denotes the pooled hidden-state representation of admission i at layer l under configuration c. The selected layers span the 32-block architecture at approximately even intervals to capture shallow, intermediate, and terminal representations. We then trained a linear probe to map each embedding to M = 7 diagnosis-category scores: 
+
+z(c,l ) 
+
+> i
+
+= W (c,l )h(c,l ) 
+
+> i
+
++ b(c,l ),
+
+where z(c,l ) 
+
+> i
+
+∈ RM are the class logits, and W (c,l ) ∈ RM ×d and 
+
+b(c,l ) ∈ RM are the weight matrix and bias vector of the linear probe for configuration c and layer l. Only the probe parameters were optimized, using cross-entropy loss, while the backbone remained frozen. We restricted the probe to a linear map so that recoverable diagnostic signal is attributable to the structure of the frozen representations themselves rather than to the capacity of the probe [15, 16]. A more expressive probe could extract additional signal, but that capacity would confound the representational question this study aims to answer. Probe training settings and optimization details are provided in the Supplementary Methods. 
+
+## Baseline Methods 
+
+To benchmark our multimodal pipeline against existing approaches, we compared it with representative methods on each modality: aconventional non-LLM method for structured EHR data, and a task-specific neural model for unstructured clinical text. 
+
+Structured Baseline (XGBoost): 
+
+As a structured baseline, we trained an XGBoost classifier on laboratory, vital-sign, and medication-derived features [17], representing the conventional gradient-boosted approach to structured 
+
+EHR prediction that does not rely on LLM representations. Longitudinal variables were summarized into fixed-length features, with missingness retained for sparsity-aware splitting. Additional preprocessing details are provided in the Supplementary Methods. 3Unstructured Baseline (PLM-ICD): 
+
+As an unstructured baseline, we used PLM-ICD, a BERT-based model fine-tuned for long-note ICD prediction [5], representing the task-specific training paradigm in which the full model is optimized for the coding task. To ensure a fair comparison, PLM-ICD used the same train/validation/test split, the same leakage-pruned note construction, and the same seven-category evaluation space after label mapping, so that differences in performance cannot be attributed to preprocessing or label definition. The Combined configuration was not assigned a separate external baseline; its value is assessed directly against the two single-modality baselines and against the single-modality probes, isolating the contribution of multimodal integration. 
+
+Baseline Rationale: 
+
+We chose these baselines to represent the strongest conventional approach for each modality: XGBoost is a standard, tuned gradient-boosted baseline for sparse tabular clinical data, and PLM-ICD is a widely used task-specific model for long-note ICD coding, so the frozen-embedding probe is compared against established methods rather than weak ones. To keep the comparison fair, both baselines used the same patient-level split, leakage-pruned inputs, and seven-category label space as our framework, with the text information budget additionally matched for the PLM-ICD comparison. Performance differences therefore reflect modeling choices rather than data access or label definition. Beyond these per-modality baselines, the prior approach closest to ours jointly models structured and unstructured signals for ICD prediction [18], but it cannot serve as a controlled comparator: no runnable implementation is publicly available, and the specific subset of laboratory and medication variables it retains from the thousands present in MIMIC is not fully specified, so its preprocessing cannot be reproduced under our matched split and inputs. To the best of our knowledge, there is likewise no established pipeline that predicts primary ICD categories from structured data alone; widely used structured-EHR models instead target different endpoints—such as in-hospital mortality, readmission, or length-of-stay prediction— under a longitudinal, patient-level framing [19, 20] rather than our admission-level diagnosis task, which is why we adopt a tuned XGBoost as the conventional structured reference. More recent multimodal fusion architectures—dedicated cross-modal encoders and ensembles [21, 22, 1]—are built around modalities or tasks we do not target: several fuse imaging (e.g., chest radiographs) or dense ICU time series [21] rather than discharge text, and none predict primary ICD categories, so running them here would require supplying inputs we do not use and re-targeting the task. We therefore treat them as complementary directions rather than head-to-head comparators. 
+
+## Evaluation and Statistical Analysis 
+
+All MIMIC-IV probing and baseline comparisons were evaluated on the same canonical patient-level split (70%/15%/15% for train/validation/test) and the same seven-category label space. We report strict top-1 accuracy as the primary exact-match metric and medical accuracy as a clinically relaxed secondary metric. Medical accuracy applies a fixed soft-matching rule that credits clinically related but non-identical predictions: for example, predicting “Sepsis” for a “urinary tract infection” case is counted as correct because both map to the Infection Related category. This rule is applied consistently throughout the analysis. We additionally report strict per-class recall, macro accuracy, and, when class scores are available, macro AUROC and macro AUPRC. For paired comparisons on the same admissions, we used exact McNemar tests for strict accuracy and paired bootstrap resampling for differences in continuous metrics, with Benjamini-Hochberg false discovery rate control across multiple planned tests. We interpret layer-wise trends rather than small differences between individual layers. Detailed implementation settings, the full soft-matching specification, and complete statistical procedures are provided in the Supplementary Methods. 
+
+# Results 
+
+We evaluate our multimodal embedding framework on 13,645 admissions from the MIMIC-IV database, representing a cohort with the top 10 most frequent ICD-10 diagnosis codes. Across all settings, linear probes on frozen MedFound embeddings recovered primary diagnosis categories with high accuracy: diagnostic information became increasingly linearly separable in deeper layers, and combining structured and unstructured inputs performed best (Combined Layer-32: 87.69% strict and 91.45% medical accuracy), exceeding both single-modality probes and the XGBoost and PLM-ICD baselines. The same frozen representations also transferred to MIMIC-III with a lightweight adapter. 
+
+## Cohort Characteristics 
+
+The final MIMIC-IV cohort included 13,645 admissions from the 10 most frequent ICD-10 diagnosis codes, consolidated into seven clinically meaningful categories (Table 1). The mean age was 64.0 ± 16.4 years, with a balanced sex distribution (52.9% male and 47.1% female). Infection-related diagnoses were the most prevalent category (31.7%), followed by hypertensive heart failure (21.3%), cardiovascular events (16.4%), and chemotherapy encounters (15.9%). The cohort was split using the canonical stratified partition used throughout model evaluation: 9,556 training admissions, 2,042 validation admissions, and 2,047 test admissions. 
+
+## Probing Pipeline’s Performance 
+
+Figure 2 and Table 2 present linear probing medical accuracy across transformer layers and data configurations. We evaluated the linear separability of representations at different depths by training linear classifiers on frozen embeddings. Medical accuracy uses the fixed soft-matching rule described above, so it can credit clinically related but non-identical predictions. In terms of the overall performance, the Combined configuration achieved the best medical accuracy of any configuration (91.45%), exceeding Structured-only (87.79%) and Unstructured-only (89.50%). Paired analyses showed the clearest and most consistent gains over Structured-only, while the margin over Unstructured-only was smaller; full multi-metric and pairwise probing results are reported in Supplementary Tables S2–S3. Across all configurations, medical accuracy rose steeply from shallow to intermediate layers and plateaued in the deepest layers, indicating that diagnostic information becomes substantially more linearly separable in deeper MedFound representations; unless stated otherwise, single-number comparisons below refer to the best (Layer-32) setting. 4Table 1 Cohort characteristics and ICD-10 diagnosis categories for the MIMIC-IV prediction cohort. 
+
+Characteristic or category ICD-10 code(s) Value Cohort characteristics 
+
+Total admissions – 13,645 Age, mean ± SD, years – 64.0 ± 16.4 Male sex – 7,212 (52.9%) Female sex – 6,433 (47.1%) 
+
+Diagnosis categories 
+
+Infection Related A419; N390 4,326 (31.7%) Hypertensive Heart Failure I110; I130 2,902 (21.3%) Cardiovascular Event R079; I214 2,241 (16.4%) Chemotherapy Encounter Z5111 2,163 (15.9%) Acute Kidney Failure N179 1,596 (11.7%) Major Depression F329 368 (2.7%) Alcohol Intoxication F10129 49 (0.4%) 
+
+Data split 
+
+Training – 9,556 (70.0%) Validation – 2,042 (15.0%) Test – 2,047 (15.0%) 
+
+> ICD-10 code descriptions and per-code case counts are provided in Supplementary Table S1.
+
+1 8 16 24 32 
+
+Transformer layer 
+
+30% 
+
+45% 
+
+60% 
+
+75% 
+
+90% 
+
+> Medical accuracy
+
+Combined 
+
+Structured 
+
+Unstructured 
+
+Figure 2 Layer-wise medical accuracy for linear probes trained on frozen MedFound embeddings across input configurations. 
+
+Table 2 Linear probing medical accuracy across transformer layers on the MIMIC-IV canonical split.                         
+
+> Layer Combined Structured Unstructured
+> 10.5222 0.5452 0.3283 80.8872 0.8149 0.8544 16 0.8969 0.8344 0.8774 24 0.9077 0.8598 0.8955
+> 32 0.9145 0.8779 0.8950 Models were trained and evaluated on seven merged diagnosis categories. Best performance per configuration is bold. Medical accuracy credits exact matches and clinically related predictions under the fixed soft-matching rule described in the Evaluation metrics section.
+
+## Per-Diagnosis Performance Comparison 
+
+To complement the medical soft-match metric, Supplementary Table S4 reports exact per-class recovery for the Combined Layer-32 probe on the canonical MIMIC-IV test set. Values are strict recall with Wilson 95% confidence intervals, so clinically related but non-identical predictions are not credited. Exact recall was highest for chemotherapy encounters, major depression, infection-related diagnoses, and cardiovascular events, but lower for acute kidney failure. The alcohol-intoxication category had only seven test cases, so its recall estimate is unstable despite being included for completeness. This pattern suggests that the Combined probe captures several clinically explicit categories well under exact matching, while kidney failure remains more challenging than its medical-accuracy counterpart would suggest. 
+
+## Comparison with Baselines 
+
+Structured Baseline: 
+
+The XGBoost structured baseline achieved 81.60% medical accuracy on structured EHR features under the same evaluation rule. In the same seven-category prediction task, the Structured-only MedFound probe at Layer 32 reached 87.79% medical accuracy, a 6.19 percentage-point improvement. This comparison supports the value of serializing tabular clinical variables into natural-language descriptions: even without updating the LLM backbone, the resulting representations capture structured diagnostic signal beyond a conventional gradient-boosted tree baseline in this cohort. 
+
+Unstructured Baseline: 
+
+We next compared the Combined probe with PLM-ICD, a task-specific text baseline for ICD coding. To avoid attributing performance differences to preprocessing or information budget, the primary PLM-ICD comparison used the same canonical train/validation/test split, removed discharge-tail diagnosis-bearing sections, and mapped raw ICD predictions to the same seven merged categories. 
+
+Table 3 Information-matched comparison between Combined probing and PLM-ICD on MIMIC-IV.                   
+
+> Model Strict Medical AUROC AUPRC
+> Combined probe 0.8769 0.9145 0.9821 0.8981 PLM-ICD 0.8647 0.9062 0.9432 0.7919 Combined denotes the Layer-32 probe. PLM-ICD used the same canonical split, discharge-tail pruning, and merged seven-category label space. Macro AUROC/AUPRC are unweighted one-vs-rest averages over all seven categories.
+
+Under this matched setting, the Combined probe had modestly higher strict accuracy (87.69% vs. 86.47%) and medical accuracy (91.45% vs. 90.62%) than PLM-ICD. The strict-accuracy difference was not statistically significant by paired testing (paired bootstrap ∆ = +1 .22 percentage points, 95% CI [ −0.34 , +2 .83]; McNemar BH-adjusted p = 0.215), so we interpret the top-1 result as a small point-estimate advantage rather than decisive predictive superiority. Ranking-based metrics showed a clearer separation: the Combined probe achieved higher full macro AUROC (∆ = +0 .0390, 95% CI [+0 .0235 , +0 .0532], BH-adjusted p < 0.001) and macro AUPRC (∆ = +0 .1062, 95% CI [+0 .0503 , +0 .1441], BH-adjusted 5p = 0 .0096). However, when the low-support alcohol category was excluded, common-class macro AUROC and AUPRC no longer differed significantly, indicating that the ranking advantage should not be interpreted as uniform across all diagnoses. 
+
+Overall Assessment: 
+
+Together, these baselines position the proposed framework as an efficient multimodal probing approach rather than a replacement for task-specific ICD coding architectures in every setting. It substantially improves over a structured XGBoost baseline and is competitive with an information-matched PLM-ICD baseline while using frozen, reusable MedFound embeddings and lightweight linear probes. This reuse is important for the analyses in this study: the same extracted representations support layer-wise probing, modality ablations, prompt-order checks, and cross-dataset adapter experiments without repeatedly fine-tuning a large text model. In a model-native full-note sensitivity analysis after the same discharge-tail pruning, PLM-ICD recovered to 91.55% merged medical accuracy; because that setting uses substantially more text than the MedFound probing pipeline, we report it as a sensitivity result rather than the primary matched comparison. 
+
+## Out-of-Distribution Generalizability on MIMIC-III 
+
+We used MIMIC-III as an out-of-distribution test bed because it differs from MIMIC-IV in calendar period, documentation style, and coding system. This setting tests whether the layer-wise probing pattern reproduces in a new dataset and whether MIMIC-IV representations can be realigned using limited MIMIC-III supervision. We find that the framework behaves consistently: the same depth-wise increase in linear separability reappears, in-distribution Combined probing reaches 87.77% medical accuracy, and although zero-shot cross-dataset transfer degrades (44.5–79.7%), a 2M-parameter adapter trained on only 5% of MIMIC-III labels restores Combined accuracy to 92.2%. We detail each result below. 
+
+## Dataset and Label Mapping 
+
+We evaluated 13,137 MIMIC-III admissions from the 10 most frequent ICD-9 diagnosis codes. We applied the same data-construction pipeline across Structured-only, Unstructured-only, and Combined inputs. Analogous consolidation reduced the ICD-9 label space to seven clinically coherent categories (Supplementary Table S5). For transfer evaluation, MIMIC-III ICD-9 categories were mapped to their closest MIMIC-IV ICD-10 counterparts (Supplementary Table S6). Intracerebral Hemorrhage and Respiratory Failure had no valid counterpart and were excluded, leaving five mappable classes across 10,321 samples. 
+
+## In-Distribution Performance on MIMIC-III 
+
+We first trained linear probes directly on MIMIC-III embeddings to test whether the framework remains effective in an ICD-9-era cohort before cross-dataset transfer. Full layer-wise MIMIC-III medical accuracy is reported in Supplementary Table S7. The layer-wise pattern broadly recapitulated the MIMIC-IV results: diagnostic separability increased with depth, and Combined achieved the highest Layer-32 medical accuracy (87.77%), followed by Structured-only (85.79%) and Unstructured-only (81.18%). Exact top-1 performance was lower, as expected, and is reported through strict per-class recall below. 
+
+## Per-Diagnosis Performance at Layer 32 
+
+Supplementary Table S8 reports exact per-class recovery at Layer 32 using strict recall on the held-out test set ( n = 1 , 971). Class-wise performance showed clinically plausible heterogeneity. Combined probes performed strongly for coronary artery disease and intracerebral hemorrhage, while structured inputs were competitive for septicemia and pneumonia. Pneumonia, valvular heart disease, and congestive heart failure remained challenging, likely reflecting overlapping clinical presentations and less explicit diagnostic documentation in older discharge summaries. 
+
+## Cross-Dataset Transfer via Domain Adaptation 
+
+We next evaluated direct transfer from the MIMIC-IV probe to MIMIC-III as a stress test for cross-dataset shift. As expected, zero-shot transfer degraded substantially across modalities, with accuracy ranging from 44.5% to 79.7%. We therefore treat zero-shot transfer as a lower-bound reference rather than a primary finding: it quantifies the representational shift induced by different coding systems and documentation styles. The main transfer result is that this shift could be corrected with a compact representation-level adapter. We trained a lightweight 
+
+bottleneck domain adapter with 2M parameters on MIMIC-III embeddings while keeping both the MedFound backbone and the MIMIC-IV probe frozen. For a patient i, let hi ∈ R4096 denote the original Combined Layer-32 hidden state. The adapted representation ˆhi is computed as: 
+
+ui = ReLU( Wdown hi), (1) ˆhi = LayerNorm( hi + Wup ui). (2) where Wdown ∈ R256 ×4096 and Wup ∈ R4096 ×256 . Only the adapter parameters are optimized, and the probe’s decision boundaries remain fixed. Wup is zero-initialized so the adapter starts as an identity transformation. 
+
+Table 4 Lightweight adapter performance on MIMIC-III transfer. 
+
+Configuration Accuracy Trainable Params. Target Labels 
+
+Combined 92.2% 2M 361 (5%) Structured-only 90.7% 2M 361 (5%) Unstructured-only 86.3% 2M 361 (5%) 
+
+The adapter restored the Combined configuration to 92.2% accuracy while updating only a small representation-level module. With only 5% of labeled MIMIC-III admissions (361 examples), Combined already reached 92.2%, suggesting that much of the cross-dataset mismatch can be addressed through lightweight representation realignment rather than full model retraining. Together, the MIMIC-III experiments show that the probing framework reproduces under a different coding system when trained in-domain, and that cross-dataset degradation can be substantially mitigated using a small labeled subset of MIMIC-III admissions supervision. 6Discussion 
+
+## Principal Findings 
+
+This study shows that frozen MedFound representations encode clinically useful signal for primary ICD category prediction and that this signal becomes more accessible to linear probes in deeper layers. On MIMIC-IV, the Combined structured-and-unstructured prompt achieved the strongest Layer-32 medical accuracy among the probing configurations. The clearest statistical separation was observed against Structured-only probing, whereas the margin over Unstructured-only was smaller, suggesting that discharge-note text already carries much of the diagnostic information captured by the multimodal prompt. Exact per-class recall further showed heterogeneous performance: chemotherapy encounters, major depression, infection-related diagnoses, and cardiovascular events were recovered strongly, while acute kidney failure remained more difficult under strict top-1 evaluation. In matched-budget baseline comparisons, the Combined probe was competitive with PLM-ICD, with modest top-1 differences and stronger full macro ranking metrics, although common-class sensitivity analyses were more conservative. Finally, MIMIC-III experiments supported the broader utility of the framework: the layer-wise pattern reproduced in an ICD-9-era cohort, and a small representation-level adapter substantially mitigated cross-dataset shift using a small labeled subset of MIMIC-III admissions. 
+
+## Comparison with Prior Work 
+
+Prior automated ICD-coding systems have primarily learned from unstructured discharge summaries. Early MIMIC-III benchmarks established the value of neural encoders for top-code prediction [2], and later models improved long-note modeling through label-wise attention, segment aggregation, and domain-specific pretraining, with PLM-ICD remaining a strong task-specific text baseline [4, 5]. These systems are important comparators, but they do not directly test whether structured EHR variables and clinical narratives can be represented in a single frozen LLM embedding space. Multimodal EHR studies have shown that structured variables can complement notes through late fusion, separate encoders, cross-modal pretraining, or specialized transformer architectures [23, 24, 25, 26, 22, 1, 21]. Our framework differs by serializing laboratory values, medications, and demographics into clinical narratives before embedding extraction, allowing one frozen medical LLM backbone to encode both modalities without a new fusion architecture. Building on recent medical LLM and EHR foundation-model work [6, 7, 8, 9], we position this approach as a probing and adaptation methodology rather than a replacement for production-scale ICD-coding systems. 
+
+## Clinical Implications 
+
+Clinically, the framework is most useful as a representation analysis and adaptation tool rather than an autonomous ICD coding system. Because the LLM backbone remains frozen, the same extracted embeddings can support repeated analyses of layers, modalities, prompt formats, and site-specific adaptation without repeatedly fine-tuning a task-specific model. This may be useful in clinical informatics settings where investigators want to understand whether structured values, clinical narratives, or their combination carry the relevant signal for a target phenotype. The class-wise results also illustrate how such analyses can identify categories that are well captured by text and categories that may require better structured temporal modeling. The MIMIC-III adapter experiment suggests a practical route for local adaptation when only a small labeled sample from a local target dataset is available. 
+
+## Limitations 
+
+Several limitations should be considered. First, the prediction task was restricted to the 10 most prevalent primary ICD codes, consolidated into seven categories. This controlled setting improves interpretability for representation probing, but it does not capture the full multi-label and long-tail structure of production ICD coding. Second, both MIMIC-IV and MIMIC-III are retrospective critical-care datasets, so performance may not generalize to outpatient settings, non-ICU populations, or institutions with different documentation practices. Third, template-based serialization compresses structured EHR trajectories into text and may lose clinically important temporal patterns in laboratory values, medications, and vital signs. Fourth, medical accuracy is a clinically relaxed soft-matching metric and should be interpreted alongside strict accuracy and per-class recall. Fifth, we evaluated a single frozen LLM backbone and a limited set of prompt configurations. Finally, the study does not include prospective validation or assessment of workflow integration with professional coders. 
+
+# Conclusion 
+
+We presented a multimodal probing framework that places structured and unstructured EHR data in a single frozen medical-LLM embedding space and successfully recovers primary diagnosis categories with lightweight probes. On MIMIC-IV, diagnostic signal became increasingly separable in deeper layers, and the Combined Layer-32 probe reached 87.69% strict accuracy and 91.45% medical accuracy with the clearest gains over Structured-only probing. Under matched information-budget conditions, the framework was competitive with PLM-ICD while preserving reusable embeddings for rapid ablations. On MIMIC-III, a 2M-parameter adapter reached 92.2% accuracy using limited labeled MIMIC-III admissions. Future work should evaluate full multi-label ICD coding, richer temporal serialization, and prospective external validation. 
+
+# Conflicts of Interest 
+
+None declared. 
+
+# Funding 
+
+No external funding was received. 
+
+# Data Availability 
+
+MIMIC-IV v3.1 and MIMIC-III v1.4 are available through PhysioNet credentialed access and data-use agreements. Patient-level data cannot be redistributed. Derived aggregate metrics and analysis code can be made available upon reasonable request to Chengyuan Liu (cjl6934@psu.edu). 7References 
+
+1. Alimurtaza Mustafa Merchant, Naveen Shenoy, Sidharth Lanka, and Sowmya Kamath. Ensemble neural models for icd code prediction using unstructured and structured healthcare data. Heliyon , 10(17), 2024. 2. Jinmiao Huang, Cesar Osorio, and Luke Wicent Sy. An empirical evaluation of deep learning for icd-9 code assignment using mimic-iii clinical notes. Computer methods and programs in biomedicine , 177:141–153, 2019. 3. World Health Organization. International classification of diseases. WHO [Internet] , page 53, 1992. 4. James Mullenbach, Sarah Wiegreffe, Jon Duke, Jimeng Sun, and Jacob Eisenstein. Explainable prediction of medical codes from clinical text. In Proceedings of the 2018 conference of the north American chapter of the association for computational linguistics: human language technologies, volume 1 (long papers) , pages 1101–1111, 2018. 5. Chao-Wei Huang, Shang-Chi Tsai, and Yun-Nung Chen. Plm-icd: Automatic icd coding with pretrained language models. arXiv preprint arXiv:2207.05289 , 2022. 6. Xiaohong Liu, Hao Liu, Guoxing Yang, Zeyu Jiang, Shuguang Cui, Zhaoze Zhang, Huan Wang, Liyuan Tao, Yongchang Sun, Zhu Song, et al. A generalist medical language model for disease diagnosis assistance. Nature medicine , 31(3):932–942, 2025. 7. Angeela Acharya, Sulabh Shrestha, Anyi Chen, Joseph Conte, Sanja Avramovic, Siddhartha Sikdar, Antonios Anastasopoulos, and Sanmay Das. Clinical risk prediction using language models: benefits and considerations. Journal of the American Medical Informatics Association , 31(9): 1856–1864, 2024. 8. Ekaterina Redekop, Zichen Wang, Rushikesh Kulkarni, Mara Pleasure, Aaron Chin, Hamid Reza Hassanzadeh, Brian L Hill, Melika Emami, William F Speier, and Corey W Arnold. Zero-shot medical event prediction using a generative pretrained transformer on electronic health records. Journal of the American Medical Informatics Association , 32(12):1833–1842, 2025. 9. Junmo Kim, Namkyeong Lee, Jiwon Kim, and Kwangsoo Kim. Medrep: medical concept representations for general electronic health record foundation models. Journal of the American Medical Informatics Association , page ocag032, 2026. 10. Alistair Johnson, Tom Pollard, and Roger Mark. MIMIC-III Clinical Database. PhysioNet , September 2016. doi: 10.13026/C2XW26. URL https://doi.org/10.13026/C2XW26 .Version 1.4. 11. Alistair Johnson, Lucas Bulgarelli, Tom Pollard, Brian Gow, Benjamin Moody, Steven Horng, Leo Anthony Celi, and Roger Mark. MIMIC-IV. PhysioNet , October 2024. doi: 10.13026/kpb9-mt58. URL https://doi.org/10.13026/ kpb9-mt58 . Version 3.1. 12. Sunil V Rao, Michelle L O’Donoghue, Marc Ruel, Tanveer Rab, Jaqueline E Tamis-Holland, John H Alexander, Usman Baber, Heather Baker, Mauricio G Cohen, Mercedes Cruz-Ruiz, et al. 2025 acc/aha/acep/naemsp/scai guideline for the management of patients with acute coronary syndromes: a report of the american college of cardiology/american heart association joint committee on clinical practice guidelines. 
+
+Journal of the American College of Cardiology , 85(22): 2135–2237, 2025. 13. Janani Rangaswami, Vivek Bhalla, John EA Blair, Tara I Chang, Salvatore Costa, Krista L Lentine, Edgar V Lerma, Kenechukwu Mezue, Mark Molitch, Wilfried Mullens, et al. Cardiorenal syndrome: classification, pathophysiology, diagnosis, and treatment strategies: a scientific statement from the american heart association. Circulation , 139(16): e840–e878, 2019. 14. Luming Zhang, Feng Zhang, Fengshuo Xu, Zichen Wang, Yinlong Ren, Didi Han, Jun Lyu, and Haiyan Yin. Construction and evaluation of a sepsis risk prediction model for urinary tract infection. Frontiers in Medicine , 8:671184, 2021. 15. Guillaume Alain and Yoshua Bengio. Understanding intermediate layers using linear classifier probes. arXiv preprint arXiv:1610.01644 , 2016. 16. John Hewitt and Percy Liang. Designing and interpreting probes with control tasks. In Proceedings of the 2019 conference on empirical methods in natural language processing and the 9th international joint conference on natural language processing (emnlp-ijcnlp) , pages 2733– 2743, 2019. 17. Tianqi Chen and Carlos Guestrin. Xgboost: A scalable tree boosting system. In Proceedings of the 22nd acm sigkdd international conference on knowledge discovery and data mining , pages 785–794, 2016. 18. Keyang Xu, Mike Lam, Jingzhi Pang, Xin Gao, Charlotte Band, Piyush Mathur, Frank Papay, Ashish K Khanna, Jacek B Cywinski, Kamal Maheshwari, et al. Multimodal machine learning for automated icd coding. In Machine learning for healthcare conference , pages 197–215. PMLR, 2019. 19. Alvin Rajkomar, Eyal Oren, Kai Chen, Andrew M Dai, Nissan Hajaj, Michaela Hardt, Peter J Liu, Xiaobing Liu, Jake Marcus, Mimi Sun, et al. Scalable and accurate deep learning with electronic health records. NPJ digital medicine , 1(1):18, 2018. 20. Hrayr Harutyunyan, Hrant Khachatrian, David C Kale, Greg Ver Steeg, and Aram Galstyan. Multitask learning and benchmarking with clinical time series data. Scientific data ,6(1):96, 2019. 21. Phan Nguyen Minh Thao, Cong-Tinh Dao, Chenwei Wu, Jian-Zhe Wang, Shun Liu, Jun-En Ding, David Restrepo, Feng Liu, Fang-Ming Hung, and Wen-Chih Peng. Medfuse: Multimodal ehr data fusion with masked lab-test modeling and large language models. In Proceedings of the 33rd ACM International Conference on Information and Knowledge Management , pages 3974–3978, 2024. 22. Weimin Lyu, Xinyu Dong, Rachel Wong, Songzhu Zheng, Kayley Abell-Hart, Fusheng Wang, and Chao Chen. A multimodal transformer: Fusing clinical notes with structured ehr data for interpretable in-hospital mortality prediction. In AMIA Annual Symposium Proceedings ,volume 2022, page 719, 2023. 23. Edward Choi, Mohammad Taha Bahadori, Andy Schuetz, Walter F Stewart, and Jimeng Sun. Doctor ai: Predicting clinical events via recurrent neural networks. In Machine learning for healthcare conference , pages 301–318. PMLR, 2016. 24. Edward Choi, Mohammad Taha Bahadori, Jimeng Sun, Joshua Kulas, Andy Schuetz, and Walter Stewart. Retain: 
+
+8An interpretable predictive model for healthcare using reverse time attention mechanism. Advances in neural information processing systems , 29, 2016. 25. Elyne Scheurwegs, Kim Luyckx, L´ eon Luyten, Walter Daelemans, and Tim Van den Bulcke. Data integration of structured and unstructured sources for assigning clinical codes to patient stays. Journal of the American Medical Informatics Association , 23(e1):e11–e19, 2016. 26. Sicen Liu, Xiaolong Wang, Yongshuai Hou, Ge Li, Hui Wang, Hui Xu, Yang Xiang, and Buzhou Tang. Multimodal data matters: Language model pre-training over structured and unstructured electronic health records. IEEE Journal of Biomedical and Health Informatics , 27(1):504–514, 2022. 
+
+9

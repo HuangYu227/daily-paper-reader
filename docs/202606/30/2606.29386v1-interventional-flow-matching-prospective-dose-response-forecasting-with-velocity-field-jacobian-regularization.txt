@@ -1,0 +1,3598 @@
+Title: Interventional Flow Matching: Prospective Dose-Response Forecasting with Velocity-Field Jacobian Regularization
+
+URL Source: https://arxiv.org/pdf/2606.29386v1
+
+Published Time: Tue, 30 Jun 2026 01:12:26 GMT
+
+Number of Pages: 29
+
+Markdown Content:
+# Interventional Flow Matching: Prospective Dose-Response Forecasting with Velocity-Field Jacobian Regularization 
+
+Amirreza Dolatpour Fathkouhi 
+
+Department of Computer Science Center for Diabetes Technology University of Virginia Charlottesville, VA, USA 
+
+aww9gh@virginia.edu 
+
+Justin Lee 
+
+School of Data Science Center for Diabetes Technology University of Virginia Charlottesville, VA, USA 
+
+jgh2xh@virginia.edu 
+
+Heman Shakeri 
+
+School of Data Science Center for Diabetes Technology University of Virginia Charlottesville, VA, USA 
+
+hs9hd@virginia.edu 
+
+Abstract 
+
+Predicting a patient’s physiological trajectory under a planned treatment sequence is a prospective interventional problem, not standard time-series extrapolation. We study this problem in glucose management, where insulin and carbohydrate records are policy-dependent: future drivers are coupled to patient state, behavior, and clinical decision rules, so observational forecasting accuracy alone does not guarantee correct responses to planned interventions. We introduce Interventional Flow Matching (IFM), a continuous-time generative framework for physiologically constrained prospective forecasting. IFM conditions a flow-matching velocity field on patient history and planned future drivers in a bounded latent glucose space. Rather than embedding strict mechanistic glucose– insulin ODE equations or enforcing causality through rollout-based simulations, IFM uses a solver-free regularization: it penalizes the Jacobian of the instantaneous velocity field with respect to smoothed treatment drivers. This imposes signed, dose-bounded local sensitivities directly on the learned dynamics: insulin lowers glucose, carbohydrates raise it, and both responses remain within plausible ranges. On a simulated UVA/Padova type 1 diabetes cohort, IFM achieves the strongest bal-ance between observed-driver RMSE and interventional response metrics. Across experiments, it consistently produces physiologically correct responses to both insulin and carbohydrate drivers while maintaining high directional, and ranking consistency. 
+
+1 Introduction 
+
+Glucose forecasting for treatment planning is a prospective interventional problem. At decision time, future insulin and carbohydrate inputs are not observed; they are candidate actions. Given the observed history X1: L, containing past glucose, insulin, and carbohydrate measurements, the goal is to predict the glucose trajectory under a planned future driver sequence U int 1: H .
+
+> Preprint.
+> arXiv:2606.29386v1 [cs.LG] 28 Jun 2026
+
+In observational data, future drivers follow the clinical or behavioral policy U1: H ∼ πobs (· | X1: L). At deployment, this natural assignment process is replaced by a chosen plan, U1: H ← U int 1: H . Following Pearl’s do -operator [ 20 ], we aim to learn the target p(G1: H | X1: L, do( U1: H = U int 1: H )) . The model must therefore learn the physiological effect of imposed treatments , not only the correlations present in observed treatment patterns. This is difficult because glucose data are strongly confounded. Insulin is often delivered when glucose is already rising, and meals occur in contexts that also influence future glucose. A purely predictive model can fit observed trajectories while learning incorrect intervention semantics, such as associating insulin with rising glucose even though its physiological effect is glucose-lowering. Exact glucose forecasting under planned interventions is intrinsically difficult because future glu-cose is affected by many unobserved or poorly measured factors, including activity, stress, illness, absorption variability, and recording error. Therefore, the most defensible intervention claim in this setting is not exact interventional trajectory accuracy, but whether the model predicts plausible response magnitude, correct response direction, and consistent dose ranking. This also matches the intended use of interventional trajectory forecasting: comparing generated trajectories under alternative treatment plans and identifying those that move glucose toward a desired range [ 11 ]. For this reason, sensitivity, directional validity, and ranking validity are central requirements for prospective diabetes intervention forecasting, beyond trajectory accuracy alone. We propose Interventional Flow Matching (IFM), a conditional flow matching model [ 14 ] for prospective glucose response prediction. IFM represents glucose in an unbounded latent space and constrains the local flow response to planned interventions. Future insulin and carbohydrate inputs are pharmacokinetically smoothed and injected through an AdaLN-modulated velocity pathway [ 30 ]. A velocity-field Jacobian penalty then enforces physiologically valid sensitivities: insulin should lower glucose, carbohydrates should raise it, and both effects should remain within plausible physiological sensitivity bounds. This uses weak directional physiological knowledge without requiring a full mechanistic ODE simulator. This response penalty is simulation-free : it is applied to the instantaneous velocity field at sampled flow-matching states, rather than through full alternative-intervention rollouts as in ranking-based objectives [31]. The full modeling framework performs a trajectory rollout by delegating i) autoregressive physical time advancement to a recurrent cell which updates history and context information that ii) gets passed into the IFM module to generate the glucose prediction at the current physical time. This prediction is then input to the recurrent cell for the next time step, and so on. We employ a small subsampled rollout loss only to control autoregressive error accumulation. Empirically, IFM maintains competitive observed-driver RMSE while improving interventional metrics, with physiologically correct contributions from both insulin and carbohydrate drivers. 
+
+Contributions. This paper makes four main contributions: • Physiologically valid interventional flow responses. We propose IFM, which routes planned insulin and carbohydrate inputs through the conditional flow-matching velocity field and regularizes its local response to interventions. Instead of relying only on observational trajectory fitting, IFM constrains intervention sensitivities to have physiologically valid signs and magnitudes: insulin lowers glucose, carbohydrates raise it, and both responses remain within prescribed physiological sensitivity bounds. • Physiological response constraints without explicit mechanistic ODEs. Unlike hybrid physio-logical ODE models, IFM does not require hand-specified glucose–insulin differential equations, latent physiological compartments, or graph-structured mechanistic interactions. It uses weak but clinically reliable directional knowledge about intervention effects, making it a lighter alternative to fully mechanistic physiological scaffolds. • Simulation-free intervention regularization. Compared with ranking-based causal objectives that require rollout simulations to evaluate intervention effects, IFM applies a Jacobian regularizer directly to the instantaneous velocity field. This makes the physiological-response penalty solver-free, while a small subsampled fidelity term controls autoregressive rollout error. • Improved accuracy–intervention tradeoff. On the UVA/Padova type 1 diabetes benchmark, IFM maintains high observed-driver forecasting accuracy while producing physiologically correct 2Physical Time Recurrent State Transition                                           
+
+> z1,τ =0 [h0;d1]
+> z2,τ =0 [h1;d2]
+> zt,τ =0 [ht−1;dt]
+> ...
+> zH,τ =0 [hH−1;dH]
+> ˜z1
+> ˜z2
+> ˜zt
+> ...
+> ˜zH
+> t+ 1
+> t+ 1
+> t+ 1
+> t+ 1
+> t= 1
+> t=H
+> Physical time t
+> h1= GRUCell(˜ z1, h 0)
+> hH−1= GRUCell(˜ zH−1, h H−2)
+> Interventional Flow Matcher
+> τ= 0 τ= 1 vθ([ ht−1;dt], z t,τ , τ )
+> IFM (Zoomed)
+> Flow time τ
+> τ= 0 τ= 1
+> p(zt, 0)
+> p(˜ zt)
+> zt, 0
+> zt,τ
+> ˜zt
+> τ
+> Dose-Bounded Sensitivity
+> Ec= 0
+> ℓcarb ucarb
+> Ecarb (Valid)
+> ×
+> Ecarb (Wrong)
+> ReLU( ℓcarb −Ecarb )
+> ℓins uins
+> Eins
+> LJac =X
+> c
+> h
+> ReLU( ℓc−Ec) + ReLU( Ec−uc)
+> i
+> vθ
+> Jcarb (Valid)
+> Jcarb (Wrong)
+> Jins (Valid)
+
+Figure 1: Illustration of the full modeling framework. The GRUCell progresses physical time t and the IFM module generates predictions through flow time τ . IFM measures local insulin and carbohydrate sensitivities of the velocity field, converts them to physical glucose units, and penalizes values outside signed physiological sensitivity bounds: negative for insulin and positive for carbohydrates. 
+
+responses to both drivers, with insulin-lowering and carbohydrate-raising effects alongside high directional and ranking consistency. 
+
+2 Related Work 
+
+Longitudinal causal inference. Treatment-effect estimation under time-varying confounding uses propensity adjustment, neural G-computation, and adversarial balancing [ 3, 12 , 17 , 28 ]. These methods mainly regularize history representations to address treatment-assignment bias. IFM is complementary: it leaves the encoder unconstrained and instead regularizes the velocity field that generates prospective forecasts. 
+
+Mechanistic and hybrid glucose models. Graph-based neural simulators use message passing to model physical dynamics [ 1, 27 , 21 , 13 ]. In glucose forecasting, hybrid causal models impose interventional structure through mechanistic ODEs, latent compartments, learnable physiological parameters, or rollout-based ranking losses [ 31 , 32 , 18 ]. These methods encode detailed physiological assumptions. IFM takes a lighter approach: it uses only directional priors—insulin lowers glucose and carbohydrates raise it—and enforces them with a local velocity-field Jacobian penalty rather than a full physiological scaffold; rollout simulation is used separately for forecasting and fidelity supervision, not to impose the physiological response constraint. 
+
+Flow matching and structured intervention regularization. Flow matching learns a velocity field that transports samples from a base distribution to the data distribution [ 14 , 24 , 22 ]. In conditional forecasting, planned treatments enter this velocity field as conditioning variables, so derivatives of the velocity field with respect to these treatment inputs describe the model’s local interventional response. Prior causal regularizers shape model behavior by suppressing nuisance features or improving causation and dose–response estimation [ 5 , 2, 19 ]. This motivates IFM’s use of the instantaneous velocity field as the site of solver-free intervention regularization. Unlike DoFlow, which uses graph-conditioned invertible flows and factual-future abduction for counterfactual prediction [ 26 ], IFM targets prospective forecasting without requiring a causal graph, and regularizes the velocity-field Jacobian to enforce signed physiological responses to smoothed insulin and carbohydrate drivers. 
+
+3 Interventional Flow Matching 
+
+We instantiate the prospective interventional problem with continuous glucose Gt as the response, and planned treatments Ut = [ uins 
+
+t , u carb 
+
+t ] as a two-channel insulin–carbohydrate driver. Given an observed patient history X1: L ∈ RL×din with din = 3 denoting insulin, carbohydrate, and glucose history channels, and a planned future intervention sequence U int 1: H ∈ RH×du with du = 2 denoting insulin and carbohydrate drivers, IFM learns the interventional forecasting map 
+
+(X1: L, U int 1: H ) 7 → ˆGint 1: H ,
+
+where ˆGint 1: H ∈ RH is the predicted glucose trajectory under the specified treatment plan. The goal is robust generalization to intervention plans not observed during training. 33.1 Input Preprocessing Mamba history encoder. IFM uses a residual Mamba encoder [ 7] to summarize a batch of observed histories X1: L ∈ RB×L×din . The encoder maps each input step to dimension dm, processes the sequence with RMSNorm-preconditioned [ 29 ] Mamba blocks, and uses the final state h0 ∈ RB×dm
+
+to initialize the recurrent forecasting loop. Full architectural details are provided in Appendix A.1. 
+
+PharmacoKinetic smoothing of future drivers (PK smoother). Insulin and carbohydrate inputs arrive as sparse impulses, but their physiological effects are delayed and distributed over time. IFM therefore maps the planned driver sequence U int 1: H ∈ RB×H×du into an effective smoothed driver sequence D1: H = ( d1, . . . , d H ) ∈ RB×H×du . The smoother uses learned per-channel fast and slow decay states to produce a delayed-peak response, providing physiologically informed insulin and carbohydrate features for the velocity network. Full details are provided in Appendix A.2. 
+
+3.2 Unbounded Latent Glucose Representation 
+
+Rather than modeling glucose directly in physical units, IFM maps glucose into an unconstrained la-tent space and decodes it through a bounded sigmoid transform. For a glucose target g ∈ [gmin , g max ],we compute 
+
+y =
+
+ g − gmin 
+
+gmax − gmin 
+
+κ
+
+, z = logit( y) , (1) where κ > 0 is a fixed skew hyperparameter controlling how much of the latent range z maps to interior values of g. For a horizon target, this produces latent glucose z1: H ∈ RB×H . The inverse map 
+
+g = gmin + ( gmax − gmin )y1/κ (2) decodes latent predictions back to physical glucose using y = σ(z) = (1 + e−z )−1. Thus, all flow dynamics operate in the unbounded latent space z, while decoded predictions remain bounded within the physiological range [gmin , g max ]. For the remainder of this paper we fix κ = 1 , but additional ablations on the effect of κ are provided in Appendix F.3. 
+
+3.3 Conditional Velocity Network 
+
+At each forecast step t ∈ [1 , H ], IFM concatenates the recurrent state ht−1 ∈ RB×dm with the smoothed driver dt ∈ RB×du to form the conditioning vector hcond  
+
+> t−1
+
+= [ ht−1; dt] ∈ RB×dcond , where 
+
+dcond = dm + du. This vector modulates a scalar velocity field vθ : Rdcond × R × [0 , 1] → R, which transports latent glucose in continuous flow time. Flow time τ ∈ [0 , 1] is encoded with K Fourier features [ 25 ], denoted by ψ(τ ) ∈ RB×(1+2 K). Given a latent state zt,τ ∈ RB at times (t, τ ), the network forms [zt,τ ; ψ(τ )] ∈ RB×(2+2 K) and computes 
+
+r = Linear 2+2 K→df
+
+ [zt,τ ; ψ(τ )]  , r ∈ RB×df , (3) 
+
+[γ; β] = Linear dcond →2df
+
+ hcond 
+
+> t−1
+
+ , γ, β ∈ RB×df , (4) 
+
+˜r = LayerNorm(SiLU( r)) ⊙ (1 + γ) + β , ˜r ∈ RB×df , (5) 
+
+vθ (hcond  
+
+> t−1
+
+, z t,τ , τ ) = Linear df →1
+
+ MLP df →df (˜ r) , vθ (hcond  
+
+> t−1
+
+, z t,τ , τ ) ∈ RB . (6) Here df is the hidden width of the velocity network, and MLP df →df denotes the stack of hidden linear layers with SiLU activations. Since LayerNorm has no learnable affine parameters, the AdaLN [ 30 ] parameters (γ, β ) provide the context-dependent rescaling and shifting. Thus, changes in the planned driver dt directly alter the local latent transport dynamics. 
+
+3.4 Autoregressive Rollout and Teacher-Forced Conditioning Driver-isolated recurrent update. After each prediction, the recurrent state is advanced using only latent glucose via 
+
+ht = GRUCell(˜ zt, h t−1) , (7) 4where ˜zt ∈ RB is either the predicted latent glucose ˆzt or the ground-truth latent glucose z⋆t under teacher forcing. Thus, planned interventions affect the forecast through just the AdaLN-modulated velocity field vθ (hcond  
+
+> t−1
+
+, z t,τ , τ ), not the recurrent state transition. 
+
+Teacher-forced conditioning. During training, we use teacher-forced recurrent updates which provides two major benefits. First, the ground truth z⋆t provides a stable conditioning trajectory. Second, access to the full z⋆t trajectory allows us to bypass the integration step in generating a prediction ˆzt for the recurrent state update, hTF  
+
+> t
+
+= GRUCell( z⋆t , h TF 
+
+> t−1
+
+) where we pair the previous teacher-forced state hTF  
+
+> t−1
+
+with the smoothed driver to form hTF ,cond  
+
+> t−1
+
+= [ hTF 
+
+> t−1
+
+; dt]. Stacking over the horizon gives hTF ,cond all ∈ RB×H×dcond , which conditions the flow matching and Jacobian objectives (Section 4.2). 
+
+Autoregressive inference. At inference time, IFM generates forecasts autoregressively over physi-cal time t. Given the conditioning vector hcond  
+
+> t−1
+
+and a base noise sample zt, 0 ∈ RB from N (0 , 1) ,IFM integrates the learned velocity field vθ with Kf forward-Euler steps starting at k = 0 :
+
+zt,τ k+1 = zt,τ k + ∆ τ v θ
+
+ hcond  
+
+> t−1
+
+, z t,τ k , τ k
+
+ , τk = kKf
+
+, ∆τ = 1
+
+Kf
+
+(8) and uses the resulting ˆzt, 1 to update the recurrent state ht = GRUCell(ˆ zt, h t−1). The full autore-gressive interventional rollout is summarized in Appendix A.3, Algorithm 1. 
+
+4 Training Objectives 
+
+Training combines three complementary objectives for accurate, physiologically constrained, and rollout-consistent forecasting. The flow matching ( LCFM ) and Jacobian ( Ljac ) objectives act locally on the instantaneous velocity field using the teacher-forced conditioning tensor hTF ,cond all so they do not require full rollout integration during optimization. Subsequently, a lightweight simulation fidelity penalty ( Lfid ) supervises the multi-step autoregressive forecast on a subsampled batch, discouraging error accumulation during free-running inference. The total training loss is 
+
+L = LCFM + λjac Ljac + λfid Lfid (9) where λjac and λfid are scalar weights. We describe the individual components below. 
+
+4.1 Conditional Flow Matching (CFM) Loss 
+
+The primary generative objective trains the velocity network to transport Gaussian base noise to the target latent glucose distribution, conditioned on patient history and the planned intervention. Following the linear-interpolant formulation of flow matching [ 14 ], we encode the ground-truth future glucose into latent space to obtain z⋆ 
+
+> 1: H
+
+∈ RB×H . We then sample z1: H, 0 ∼ N (0 , 1) and draw independent flow times τ (b,t ) ∼ Uniform(0 , 1) for each sample b and horizon step t:
+
+z(b) 
+
+> t,τ
+
+= (1 − τ (b,t ))z(b) 
+
+> t, 0
+
++ τ (b,t )z⋆(b) 
+
+> t
+
+, v⋆ (b) 
+
+> t
+
+= z⋆(b) 
+
+> t
+
+− z(b) 
+
+> t, 0
+
+.
+
+Using hTF ,cond all , the conditional flow matching loss is 
+
+LCFM = 1
+
+BH 
+
+> B
+
+X
+
+> b=1
+> H
+
+X
+
+> t=1
+
+vθ
+
+
+
+hTF ,cond ,(b,t )all , z (b) 
+
+> t,τ
+
+, τ (b,t )
+
+− v⋆ (b) 
+
+> t
+> 22
+
+. (10) 
+
+4.2 Velocity-Field Jacobian Regularization 
+
+CFM models observational dynamics, but does not constrain intervention semantics. Under policy confounding, a model can achieve low CFM loss while ignoring treatment inputs entirely, or worse, learning inverted responses (e.g., predicting glucose to rise after insulin) [ 23 ]. To impose a structural physiological prior on this response, we regularize the gradient of the velocity field with respect to the planned drivers and ask that each component of that gradient lies within clinically motivated bounds. 5Single-pass computation of pointwise driver Jacobians. To isolate the direct intervention effect, we stop gradients through the recurrent state hTF 
+
+> t−1
+
+, the interpolated latent glucose z(b) 
+
+> t,τ
+
+, and the flow time τ . We then aggregate the velocity outputs into a single scalar 
+
+S =
+
+> B
+
+X
+
+> b=1
+> H
+
+X
+
+> t=1
+
+vθ
+
+
+
+[hTF ,sg ,(b) 
+
+> t−1
+
+; d(b) 
+
+> t
+
+], z sg ,(b) 
+
+> t,τ
+
+, τ sg ,(b,t )
+
+, (11) where (·)sg denotes a stopped gradient, and differentiate once with respect to the entire driver tensor: 
+
+J = ∂S ∂D 1: H ∈ RB×H×du . Although we compute these derivatives by differentiating a summed scalar, separability of the velocity evaluations across (b, t ) means the resulting tensor contains the 
+
+pointwise local derivatives 
+
+J(b,t ) 
+
+> c
+
+= ∂S ∂d (b,c )
+
+> t
+
+= ∂v θ
+
+ [hTF ,sg ,(b) 
+
+> t−1
+
+; d(b) 
+
+> t
+
+], z sg ,(b) 
+
+> t,τ
+
+, τ sg ,(b,t )
+
+∂d (b,c )
+
+> t
+
+, c ∈ { ins , carb } . (12) The summation in Eq. (11) is an autograd batching device, not a cumulative-effect operator; each 
+
+J(b,t ) 
+
+> c
+
+depends only on the velocity evaluation at (b, t ). The penalty acts on the smoothed effective driver dt rather than the raw impulse ut; gradients through the PK smoother are stopped at this stage so the smoother is not updated by the Jacobian regularizer, although it remains learnable through the CFM and fidelity objectives. 
+
+Local sensitivity response constraints. The velocity field operates in latent z-space, whereas physiological constraints are specified in mg/dL. We convert each local driver derivative J(b,t ) 
+
+> c
+
+to physical glucose units using the analytic decoder slope derived from the latent transform in Eq. (1): 
+
+dg dz = gmax − gmin 
+
+κ y1/κ (1 − y), (13) 
+
+E(b,t ) 
+
+> c
+
+= αc J(b,t )
+
+> c
+
+dg dz 
+
+
+
+z(b)
+
+> t,τ
+
+
+
+. (14) Here αins = 1 .0 unit of insulin and αcarb = 25 .0 grams of carbohydrate map the insulin and carbohydrate perturbation units onto a common mg/dL response scale. We impose physiologically motivated sensitivity bounds [ℓc, u c] on both channels: insulin sensitivity must be negative, ℓins <uins < 0, while carbohydrate sensitivity must be positive, 0 < ℓ carb < u carb . Because both valid intervals exclude zero, the regularizer also penalizes the lazy solution Ec ≈ 0, where the model ignores either intervention channel instead of learning a physiologically meaningful response. We interpret these as local effective-driver sensitivity responses evaluated at sampled CFM flow states, not as endpoint cumulative dose-response bounds. The regularizer applies a two-sided hinge per component of E:
+
+Ljac = 1
+
+BH 
+
+> B
+
+X
+
+> b=1
+> H
+
+X
+
+> t=1
+
+X
+
+> c
+
+h
+
+ReLU 
+
+
+
+ℓc − E(b,t )
+
+> c
+
+
+
++ ReLU 
+
+
+
+E(b,t ) 
+
+> c
+
+− uc
+
+i 
+
+. (15) Because the hinge acts pointwise on each E(b,t ) 
+
+> c
+
+, a wrong-signed local response (e.g., a brief upward velocity response to insulin) is penalized at the step where it occurs. A cumulative-aggregate hinge on P 
+
+> t
+
+E(b,t ) 
+
+> c
+
+would, by contrast, allow such a wrong-signed contribution to be masked by larger correctly-signed contributions elsewhere; the pointwise version removes that cancellation channel. 
+
+What the penalty does and does not do. Ljac is a structural prior on the local gradient of the velocity field, evaluated at sampled CFM states (zt,τ , τ ). It does not guarantee that every multi-step autoregressive rollout under every history and plan satisfies the bounds, since that would require constraining the full forecast operator. Instead, it pushes each pointwise driver sensitivity J(b,t ) 
+
+> c
+
+,after the unit conversion in Eq. (14) , into physiologically plausible sensitivity bounds at training points. Empirically, this local constraint is sufficient to produce correctly signed and dose-bounded interventional responses, as shown in Section 5.1. 6Solver-depth independence. A computational advantage of Ljac is that it is evaluated directly on the instantaneous velocity field at sampled CFM states, rather than through the Kf -step Euler solver used during rollout. Over the full horizon, computing Ljac requires one batched velocity evaluation and one batched reverse-mode derivative with respect to the smoothed drivers, with leading cost 
+
+O(BH C J ), where CJ denotes the cost of this local Jacobian computation. By contrast, a trajectory-level sensitivity penalty would require differentiating through all Kf Euler steps, increasing compute and memory by a factor proportional to Kf . Thus, the intervention regularizer is solver-free, although IFM still uses solver-based rollouts for inference and for the fidelity loss. 
+
+4.3 Fidelity Loss 
+
+The CFM and Jacobian terms shape the local velocity field, but they do not directly penalize errors that accumulate during the discrete autoregressive rollout. To provide global rollout supervision without the cost of full-batch solver-based training, we add a lightweight fidelity loss that compares the free-running latent forecast ˆz1: H with the ground-truth latent trajectory z⋆ 
+
+> 1: H
+
+obtained from Eq. (1). For efficiency, we evaluate this loss on a random subset S ⊆ { 1, . . . , B } with |S| = ⌊ρB ⌋, where 
+
+ρ ∈ (0 , 1] and typically ρ ≪ 1:
+
+Lfid = 1
+
+|S| H
+
+X
+
+> i∈S
+> H
+
+X
+
+> t=1
+
+
+
+ˆz(i) 
+
+> t
+
+− z⋆ (i)
+
+> t
+
+2
+
+. (16) This term provides end-to-end autoregressive factual grounding while keeping the main optimization dominated by the local CFM and Jacobian objectives. 
+
+5 Experiments 
+
+Dataset. We evaluate IFM on the simulated diabetes dataset provided by [ 6 ]. The dataset contains 100 virtual adult subjects, each with 56 days of data generated with the UVA/Padova type 1 diabetes simulator [ 16 ]. Each trajectory is sampled every 5 minutes and contains glucose measurements, insulin delivery, and carbohydrate intake. The simulation follows a daily meal protocol with breakfast, lunch, and dinner occurring within prespecified time ranges, with stochastic variation in both meal timing and meal size. No exercise covariates are present. We use an 80 /10 /10 patient-level train/validation/test split, so test performance is evaluated on unseen virtual subjects. Sliding-window examples are extracted from each subject trajectory with history length L = 2016 , corresponding to one week of 5-minute observations, stride 24 , and forecast horizon H = 24 , corresponding to 2 hours. Each example pairs the multivariate history X1: L with future drivers U1: H , where U1: H contains insulin and carbohydrate inputs over the prediction horizon. 
+
+Baselines and training. We compare against neural and hybrid forecasting baselines adapted from H2NCM [ 31 ]. Following H2NCM, each baseline is trained with L = (1 − α)Lpred + αLrank , where 
+
+Lpred fits observed-driver forecasts, Lrank ranks the strongest-response intervention branch highest, and α controls the tradeoff. For each model family, we tune with seed 42 , select the configuration with the lowest validation MSE, and rerun it with seeds {1, 10 , 42 , 50 }. Main tables report seed-averaged means; standard deviations and full sweeps are provided in Appendix D. Throughout, we fix ρ = 0 .1,
+
+λjac = 1 , and λfid = 1 unless otherwise specified. Search spaces, selected configurations, and additional baseline details are provided in Appendix E and C. 
+
+Evaluation. We report observed-driver RMSE over 30, 60, and 120 minutes. Interventional plausibility is evaluated by perturbing future insulin or carbohydrate drivers and measuring sensitivity, strict direction, and strict ranking consistency: Sins , Scarb , Dstrict , and Rstrict . These response-plausibility metrics, defined in Appendix B, assess magnitude, sign, and ordering under planned driver perturbations; they are not paired interventional errors. Qualitative 2-hour IFM interventional forecasts under planned insulin doses of 2, 4, 8, and 10 units and carbohydrate intakes of 20, 40, 80, and 100 grams are provided in Appendix G. 7Table 1: Representative non-degenerate points from the accuracy–intervention response frontier. For IFM,        
+
+> α=λjac ; for baselines, αis the H2NCM prediction/ranking tradeoff. Baseline rows with α= 1 are omitted because the prediction term is removed. Lower RMSE is better; higher intervention metrics are better. Full sweep results are reported in Appendix D, Table 3.
+
+Model α RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+IFM 0.0 8.76 12.65 18.30 15.80 17.08 0.478 0.002 IFM 0.1 9.11 14.81 23.53 6.17 36.02 0.936 0.914 IFM 0.3 9.10 14.34 23.40 7.49 39.34 0.937 0.917 IFM 0.5 9.31 14.71 24.05 7.35 35.72 0.938 0.917 IFM 0.7 9.01 14.40 23.91 7.92 35.23 0.938 0.918 IFM 1.0 9.11 14.74 24.90 7.59 37.92 0.938 0.918 LSTM 0.7 5.01 8.29 13.11 3.29 19.35 0.899 0.803 Hovorka 0.1 8.24 13.26 19.36 2.94 41.48 0.762 0.609 Hovorka 0.5 8.50 13.42 20.96 1.18 51.39 0.743 0.570 BNODE 0.1 8.93 13.17 18.63 1.67 23.56 0.883 0.765 BNODE 0.7 9.56 14.38 20.91 1.14 35.77 0.941 0.894 S4D 0.1 13.00 13.81 14.81 2.84 16.09 0.763 0.533 LP-Reduced 0.7 18.73 24.54 33.28 0.67 24.75 0.667 0.497 TCN 0.1 8.13 9.81 12.06 9.28 13.90 0.829 0.660 TCN 0.7 9.81 12.10 15.40 8.31 29.58 0.795 0.589 
+
+5.1 Forecasting Accuracy and Interventional Response 
+
+Table 1 summarizes representative non-degenerate points from the accuracy–intervention response frontier; the full sweep is reported in Appendix D, Table 3. For IFM, α denotes the Jacobian weight 
+
+λjac ; for the H2NCM-style baselines, it denotes the prediction/ranking tradeoff in (1 − α)Lpred +
+
+αLrank . Because α = 1 removes the prediction term for the baselines, we exclude those rows from accuracy–response tradeoff claims and treat them only as response-only endpoints. 
+
+IFM achieves strong response magnitude and intervention validity. Across nonzero Jacobian weights, IFM maintains strong responses to both drivers, with Sins ∈ [6 .17 , 7.92] and Scarb ∈
+
+[35 .23 , 39 .34] , while also achieving high strict validity, Dstrict ∈ [0 .936 , 0.938] and Rstrict ∈
+
+[0 .914 , 0.918] . No baseline row with α < 1 matches this combination. Hovorka responds strongly to carbohydrates, Scarb ∈ [41 .48 , 51 .39] , but weakly to insulin, Sins ≤ 2.94 . BNODE achieves high ranking consistency, up to Dstrict = 0 .941 and Rstrict = 0 .894 , but has weak insulin response, 
+
+Sins ≤ 1.67 . LP-Reduced has weak insulin response, Sins ≤ 0.67 , and lower ranking consistency, 
+
+Rstrict ≤ 0.497 , across α < 1. LSTM has the lowest RMSE, but weaker carbohydrate response, 
+
+Scarb ≤ 19 .35 , and lower ranking consistency, Rstrict ≤ 0.803 . TCN is the closest in channel sensitivity, with Sins ≤ 9.28 and Scarb ≤ 29 .58 , but has lower ranking consistency, Rstrict ≤ 0.66 .
+
+The accuracy cost remains controlled. Adding the Jacobian penalty sacrifices some observed-driver accuracy relative to α = 0 , but does not cause an RMSE collapse. Across nonzero λjac ,RMSE remains in a narrow range: RMSE 30 ∈ [9 .01 , 9.31] , RMSE 60 ∈ [14 .34 , 14 .81] , and RMSE 120 ∈ [23 .40 , 24 .90] . Thus, IFM trades a moderate increase in RMSE for substantially improved intervention validity while keeping CFM and fidelity supervision active. 
+
+5.2 Ablations Effect of removing the Jacobian penalty. The λjac = α = 0 IFM row in Table 1 isolates the model without Jacobian regularization. Although this setting gives the best IFM observed-driver RMSE, 
+
+8.76 /12 .65 /18 .30 mg/dL at 30 /60 /120 minutes, its intervention behavior is not physiologically reliable: Dstrict = 0 .478 and Rstrict = 0 .002 , with weak carbohydrate response Scarb = 17 .08 ,despite large insulin sensitivity Sins = 15 .80 . This shows that strong observational accuracy does not imply valid prospective intervention response. 8Table 2: Representative fidelity ablations for IFM. The ρ rows vary the fidelity subsampling ratio, while the λfid 
+
+> rows vary the fidelity-loss weight. Lower RMSE is better; higher intervention metrics are better. Full sweeps are reported in Appendix D, Tables 4 and 5.
+
+Sweep Setting RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+ρ 0.1 8.93 14.26 23.32 7.26 39.89 0.936 0.915 
+
+ρ 0.7 8.41 13.09 21.16 6.63 40.39 0.928 0.898 
+
+λfid 0.0 11.66 25.16 52.10 29.82 55.37 0.935 0.913 
+
+λfid 0.1 9.62 15.48 26.31 11.59 42.26 0.934 0.910 
+
+λfid 0.5 9.31 15.34 25.45 8.34 36.53 0.935 0.912 
+
+λfid 1.0 9.24 14.24 23.71 7.25 36.22 0.938 0.918 
+
+Fidelity ablation. Table 2 shows that the fidelity term mainly improves autoregressive accuracy without removing the intervention behavior induced by the Jacobian regularizer. Increasing the subsampling ratio ρ improves long-horizon RMSE, with RMSE 120 decreasing from 23 .32 at ρ = 0 .1
+
+to 21 .16 at ρ = 0 .7, while directional consistency remains high, Dstrict ∈ [0 .928 , 0.936] . Even the default lightweight setting ρ = 0 .1 remains effective, preserving strong intervention response while maintaining competitive observed-driver accuracy. The λfid sweep further shows that fidelity supervision is necessary: without it, RMSE degrades to 11 .66 /25 .16 /52 .10 at 30 /60 /120 minutes, whereas λfid = 1 .0 improves RMSE to 9.24 /14 .24 /23 .71 . For all λfid > 0, intervention validity remains stable, with Dstrict ∈ [0 .934 , 0.938] and Rstrict ∈ [0 .91 , 0.918] .Additional ablations on physiological sensitivity bounds are provided in Appendix F.2. 
+
+6 Discussion 
+
+IFM separates forecasting from intervention-response control: the encoder and flow model learn glucose dynamics from history, while the Jacobian penalty constrains local responses to planned insulin and carbohydrate inputs. This places IFM between unconstrained sequence models, which may learn confounded driver effects, and mechanistic ODE models, which require fixed physiological scaffolds. The Jacobian penalty is a structural prior, not a causal identification guarantee. It constrains local effective-driver sensitivities but does not recover arbitrary interventional distributions under un-measured confounding. Our goal is prospective response regularization: given credible directional priors, IFM encourages physiologically valid local responses and tests whether they persist through autoregressive rollout. Driver isolation helps prevent interventions from bypassing the regularized velocity field, although extreme sparsity or confounding may still cause treatment underuse, as shown in Appendix F.1. This principle may extend to other dose–response settings with sparse interventions, delayed effects, and calibrated sensitivity bounds. No single interventional metric is sufficient. Sensitivity captures response magnitude, while Dstrict 
+
+and Rstrict capture sign and ordering. Thus, a model can rank interventions correctly but respond too weakly, or show large responses with invalid direction. We therefore compare models using all three aspects jointly. 
+
+7 Limitations 
+
+IFM has several limitations. Its Jacobian bounds are fixed at the population level and do not capture patient-specific sensitivities. Experiments use a single simulated UVA/Padova cohort [ 6]; validation on real clinical data remains open, especially with missing or noisy carbohydrate records. The method is only partially solver-free, since the fidelity loss still uses subsampled rollouts. Finally, IFM forecasts glucose under candidate plans but does not prescribe doses. Future work should study patient-adaptive bounds, uncertainty calibration, real-world validation, and integration with safety-constrained decision support. 98 Conclusion 
+
+We introduced Interventional Flow Matching (IFM), a conditional generative framework for prospec-tive clinical dose–response forecasting. IFM constrains intervention semantics at the instantaneous velocity-field level: its Jacobian regularizer enforces signed, dose-bounded local responses to planned insulin and carbohydrate drivers using directional physiological priors. IFM still uses rollout simula-tion for forecasting and fidelity supervision; the physiological response constraint itself is imposed locally on the velocity field. In physiological glucose forecasting, IFM maintains competitive observed-driver RMSE and improves interventional validity, producing physiologically meaningful insulin-lowering and carbohydrate-raising responses with high directional and ranking consistency. More broadly, these results suggest that local response-level regularization can complement learned rollout forecasting when reliable directional priors are available. 
+
+Acknowledgments and Disclosure of Funding 
+
+This work was supported by the Launchpad Foundation. 
+
+References 
+
+[1] Kelsey R Allen, Tatiana Lopez Guevara, Yulia Rubanova, Kim Stachenfeld, Alvaro Sanchez-Gonzalez, Peter Battaglia, and Tobias Pfaff. Graph network simulators can learn discontinuous, rigid contact dynamics. In Conference on Robot Learning , pages 1157–1167. PMLR, 2023. [2] Mohammad Taha Bahadori, Krzysztof Chalupka, Edward Choi, Robert Chen, Walter F Stewart, and Jimeng Sun. Causal regularization. arXiv preprint arXiv:1702.02604 , 2017. [3] Ioana Bica, Ahmed M. Alaa, James Jordon, and Mihaela van der Schaar. Estimating coun-terfactual treatment outcomes over time through adversarially balanced representations. In 
+
+International Conference on Learning Representations , 2020. [4] Chiara Dalla Man, Marc D Breton, and Claudio Cobelli. Physical activity into the meal glucose—insulin model of type 1 diabetes: In silico studies, 2009. [5] Hongwei Dong, Fangzhou Han, Lingyu Si, Wenwen Qiang, Ruiheng Zhang, and Lamei Zhang. Background debiased SAR automatic target recognition via a novel causal interventional regularizer. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing , 17:16993–17006, 2024. [6] Amirreza Dolatpour Fathkouhi, Alireza Namazi, and Heman Shakeri. The stationarity bias: Stratified stress-testing for time-series imputation in regulated dynamical systems. arXiv preprint arXiv:2602.15637 , 2026. [7] Albert Gu and Tri Dao. Mamba: Linear-time sequence modeling with selective state spaces. 
+
+arXiv preprint arXiv:2312.00752 , 2023. [8] Albert Gu, Karan Goel, Ankit Gupta, and Christopher Ré. On the parameterization and initialization of diagonal state space models. Advances in Neural Information Processing Systems , 35:35971–35983, 2022. [9] Roman Hovorka, Valentina Canonico, Ludovic J Chassin, Ulrich Haueter, Massimo Massi-Benedetti, Marco Orsini Federici, Thomas R Pieber, Helga C Schaller, Lukas Schaupp, Thomas Vering, et al. Nonlinear model predictive control of glucose concentration in subjects with type 1 diabetes. Physiological Measurement , 25(4):905–920, 2004. [10] Colin Lea, Rene Vidal, Austin Reiter, and Gregory D Hager. Temporal convolutional networks: A unified approach to action segmentation. In European Conference on Computer Vision , pages 47–54. Springer, 2016. 10 [11] Jung Min Lee, Rodica Pop-Busui, Joyce M Lee, Jesper Fleischer, and Jenna Wiens. Short-comings in the evaluation of blood glucose forecasting. IEEE Transactions on Biomedical Engineering , 71(12):3424–3431, 2024. [12] Rui Li, Stephanie Hu, Mingyu Lu, Yuria Utsumi, Prithwish Chakraborty, Daby M. Sow, Piyush Madan, Jun Li, Mohamed Ghalwash, Zach Shahn, and Li-wei Lehman. G-net: A recurrent network approach to G-computation for counterfactual prediction under a dynamic treatment regime. In Subhrajit Roy, Stephen Pfohl, Emma Rocheteau, Girmaw Abebe Tadesse, Luis Oala, Fabian Falck, Yuyin Zhou, Liyue Shen, Ghada Zamzmi, Purity Mugambi, Ayah Zirikly, Matthew B. A. McDermott, and Emily Alsentzer, editors, Proceedings of Machine Learning for Health , volume 158 of Proceedings of Machine Learning Research , pages 282–299. PMLR, 2021. [13] Zijie Li, Kazem Meidani, Prakarsh Yadav, and Amir Barati Farimani. Graph neural networks accelerated molecular dynamics. The Journal of Chemical Physics , 156(14), 2022. [14] Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. Flow match-ing for generative modeling. In 11th International Conference on Learning Representations, ICLR 2023 , 2023. [15] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2017. [16] Chiara Dalla Man, Francesco Micheletto, Dayu Lv, Marc Breton, Boris Kovatchev, and Claudio Cobelli. The UVA/PADOVA type 1 diabetes simulator: new features. Journal of Diabetes Science and Technology , 8(1):26–34, 2014. [17] Valentyn Melnychuk, Dennis Frauen, and Stefan Feuerriegel. Causal transformer for estimating counterfactual outcomes. In Kamalika Chaudhuri, Stefanie Jegelka, Le Song, Csaba Szepesvari, Gang Niu, and Sivan Sabato, editors, Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pages 15293– 15329. PMLR, 2022. [18] Andrew C Miller, Nicholas J Foti, and Emily Fox. Learning insulin-glucose dynamics in the wild. In Machine Learning for Healthcare Conference , pages 172–197. PMLR, 2020. [19] Lizhen Nie, Mao Ye, Qiang Liu, and Dan Nicolae. VCNet and functional targeted regularization for learning causal effects of continuous treatments. In International Conference on Learning Representations , 2021. [20] Judea Pearl. Causality . Cambridge University Press, 2009. [21] Tobias Pfaff, Meire Fortunato, Alvaro Sanchez-Gonzalez, and Peter W Battaglia. Learning mesh-based simulation with graph networks. In International Conference on Learning Representations ,2021. [22] Davide Scassola, Sebastiano Saccani, and Luca Bortolussi. Graph-conditional flow matching for relational data generation. In Proceedings of the AAAI Conference on Artificial Intelligence ,volume 40, pages 25209–25217, 2026. [23] Heman Shakeri. The driver-blindness phenomenon: Why deep sequence models default to autocorrelation in blood glucose forecasting. arXiv preprint arXiv:2511.20601 , 2025. [24] Ella Tamir, Najwa Laabid, Markus Heinonen, Vikas Garg, and Arno Solin. Conditional flow matching for time series modelling. In ICML 2024 Workshop on Structured Probabilistic Inference & Generative Modeling , 2024. [25] Matthew Tancik, Pratul Srinivasan, Ben Mildenhall, Sara Fridovich-Keil, Nithin Raghavan, Utkarsh Singhal, Ravi Ramamoorthi, Jonathan Barron, and Ren Ng. Fourier features let networks learn high frequency functions in low dimensional domains. Advances in Neural Information Processing Systems , 33:7537–7547, 2020. 11 [26] Dongze Wu, Feng Qiu, and Yao Xie. Doflow: Flow-based generative models for interventional and counterfactual forecasting on time series. In The 14th International Conference on Learning Representations , 2025. [27] Tailin Wu, Qinchen Wang, Yinan Zhang, Rex Ying, Kaidi Cao, Rok Sosic, Ridwan Jalali, Hassan Hamam, Marko Maucec, and Jure Leskovec. Learning large-scale subsurface simulations with a hybrid graph network simulator. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pages 4184–4194, 2022. [28] Kevin Muyuan Xia, Yushu Pan, and Elias Bareinboim. Neural causal models for counterfactual identification and estimation. In 11th International Conference on Learning Representations, ICLR 2023 , 2023. [29] Biao Zhang and Rico Sennrich. Root mean square layer normalization. Advances in Neural Information Processing Systems , 32, 2019. [30] Fan Zhang, Yi Wei, Naye Ji, Jingmei Wu, Zhaohan Wang, Fuxing Gao, Liuqing Zhang, Zhenqing Ye, Leyao Yan, Lanxin Dai, et al. Dim-gestor: Co-speech gesture generation with adaptive layer normalization mamba-2. In 2025 International Conference on Computer Vision, Image Processing and Computational Photography (CVIP) , pages 01–13. IEEE, 2025. [31] Bob Junyi Zou, Matthew E Levine, Dessi P Zaharieva, Ramesh Johari, and Emily Fox. Hybrid 2
+
+neural ode causal modeling and an application to glycemic response. In International Conference on Machine Learning , pages 62934–62963. PMLR, 2024. [32] Bob Junyi Zou and Lu Tian. Automatic and structure-aware sparsification of hybrid neural ODEs with application to glucose prediction. In The 14th International Conference on Learning Representations , 2026. 
+
+A Architecture Details 
+
+A.1 Encoder Architecture 
+
+The encoder receives X1: L ∈ RB×L×din and projects each time step to the model dimension: 
+
+R(0) 1: L = Linear din →dm (X1: L) , R(0) 1: L ∈ RB×L×dm . (17) The projected sequence is processed by Le residual Mamba [ 7] blocks with RMSNorm[ 29 ] pre-normalization: 
+
+˜R(ℓ−1) 1: L = RMSNorm 
+
+
+
+R(ℓ−1) 1: L
+
+
+
+, (18) 
+
+R(ℓ)1: L = R(ℓ−1) 1: L + Mamba ℓ
+
+ ˜R(ℓ−1) 1: L
+
+
+
+, ℓ = 1 , . . . , L e , (19) 
+
+˜RLe 
+
+> 1: L
+
+= RMSNorm 
+
+
+
+R(Le)1: L
+
+
+
+, ˜RLe 
+
+> 1: L
+
+∈ RB×L×dm . (20) The initial recurrent state is the final encoded history state: 
+
+h0 = ˜RLe 
+
+> L
+
+∈ RB×dm . (21) 
+
+A.2 Physiological Smoothing of Future Drivers 
+
+Insulin and carbohydrate interventions arrive as sparse impulses, whereas their physiological effects are delayed and distributed over time. IFM therefore maps the planned driver sequence U1: H ∈
+
+RB×H×du to an effective smoothed sequence D1: H = ( d1, . . . , d H ) ∈ RB×H×du .At each step t, the raw driver ut ∈ RB×du is passed through fast and slow decay states sfast  
+
+> t
+
+, s slow  
+
+> t
+
+∈
+
+RB×du , initialized as sfast 0 = sslow 0 = 0 :
+
+sfast  
+
+> t
+
+= af ⊙ sfast  
+
+> t−1
+
++ ut , (22) 
+
+sslow  
+
+> t
+
+= as ⊙ sslow  
+
+> t−1
+
++ ut , (23) 12 Algorithm 1 Prospective Interventional Glucose Forecasting 
+
+Require: History X1: L, planned drivers U int 1: H , flow steps Kf , skew κ, bounds [gmin , g max ] 
+
+> 1:
+
+˜RLe 
+
+> 1: L
+
+← MambaEncoder( X1: L) ▷ Section 3.1  
+
+> 2:
+
+h0 ← ˜RLe 
+
+> L
+> 3:
+
+Dint 1: H = ( dint 1 , . . . , d int  
+
+> H
+
+) ← PKSmooth( U int 1: H ) ▷ Section 3.1  
+
+> 4:
+
+for t = 1 , . . . , H do  
+
+> 5:
+
+hcond  
+
+> t−1
+
+← [ht−1; dint  
+
+> t
+
+] 
+
+> 6:
+
+zint  
+
+> t, 0
+
+∼ N (0 , I ) 
+
+> 7:
+
+for k = 0 , . . . , K f − 1 do ▷ Euler steps (Eq. 8)  
+
+> 8:
+
+τk ← k/K f 
+
+> 9:
+
+zint  
+
+> t,τ k+1
+
+← zint  
+
+> t,τ k
+
++ 1 
+
+> Kf
+
+vθ
+
+ hcond  
+
+> t−1
+
+, z int  
+
+> t,τ k
+
+, τ k
+
+ 
+
+> 10:
+
+end for  
+
+> 11:
+
+ˆzint  
+
+> t
+
+← zint  
+
+> t,τ Kf
+> 12:
+
+ˆGint  
+
+> t
+
+← gmin + ( gmax − gmin )σ(ˆ zint  
+
+> t
+
+)1/κ ▷ Decode latent state (Eq. 2)  
+
+> 13:
+
+ht ← GRUCell(ˆ zint  
+
+> t
+
+, h t−1) ▷ Progress physical time (Eq. 7)  
+
+> 14:
+
+end for  
+
+> 15:
+
+return ˆGint 1: H
+
+where af , a s ∈ (0 , 1) du are learned per-channel decay vectors parameterized to satisfy af < a s. The effective driver is 
+
+dt = η ⊙ ReLU  sslow  
+
+> t
+
+− sfast 
+
+> t
+
+ , (24) where η ∈ Rdu 
+
+> >0
+
+is a learned per-channel gain. The difference between the slow and fast states produces a delayed-peak response, illustrated in Figure 2.                     
+
+> 0510 15 20
+> 0
+> 1
+> Time step t
+> Raw input ut
+> 0510 15 20
+> 0
+> 0.5
+> 1
+> sfast
+> sslow
+> Time step t
+> States sfast
+> t, s slow
+> t
+> 0510 15 20
+> 0
+> 0.3
+> 0.6peak
+> Time step t
+> Effective driver dt
+
+Figure 2: Physiological smoothing of a single unit impulse at t = 3 . Left: raw input ut. Middle: fast and slow decay states. Right: effective driver dt = η ⊙ ReLU( sslow  
+
+> t
+
+− sfast  
+
+> t
+
+), which peaks after the impulse and decays smoothly, mimicking delayed insulin or carbohydrate absorption. 
+
+A.3 Interventional Rollout Algorithm 
+
+Algorithm 1 summarizes the rollout procedure used for prospective intervention queries. For paired comparisons, we reuse the same base-noise samples across candidate plans so that trajectory differ-ences reflect the planned drivers rather than independent sampling noise. 
+
+B Interventional Forecasting Evaluation Metrics 
+
+Notation. Let i ∈ { 1, . . . , N } index samples and t ∈ { 1, . . . , H } index forecast steps. We evaluate three forecast branches per sample. Let Fi,t denote the observed-driver forecast, i.e., the prediction using the future drivers observed in the data. Let Ii,t denote the prediction obtained after adding 2 units of insulin to the observed drivers, and let Ci,t denote the prediction obtained after adding 50 grams of carbohydrate to the observed drivers. Both interventions occur at time t = 1 . We define interventional effects relative to the observed-driver forecast: 
+
+∆Ii,t = Ii,t − Fi,t , ∆Ci,t = Ci,t − Fi,t . (25) Physiologically consistent responses have ∆Ii,t < 0 and ∆Ci,t > 0.13 Observed-driver forecasting error (RMSE). For the observed-driver forecast, prediction error is measured against the observed glucose trajectory Gi,t :
+
+RMSE = 
+
+vuut 1
+
+N H 
+
+> N
+
+X
+
+> i=1
+> H
+
+X
+
+> t=1
+
+(Fi,t − Gi,t )2 . (26) 
+
+Boundary-aware masks. To avoid evaluating intervention effects at saturated physiological bound-aries, we mask insulin effects near the lower bound and carbohydrate effects near the upper bound: 
+
+M Ii,t = 1(Fi,t > g min + δ) , M Ci,t = 1(Fi,t < g max − δ) , (27) with ranking mask 
+
+M Ri,t = M Ii,t M Ci,t . (28) We use δ = 10 mg/dL. 
+
+Masked interventional sensitivity ( Sins , Scarb ). Sensitivity is the average absolute response to each added intervention over its valid mask: 
+
+Sins =
+
+P 
+
+> i,t
+
+M Ii,t |∆Ii,t |
+
+P 
+
+> i,t
+
+M Ii,t 
+
+, Scarb =
+
+P 
+
+> i,t
+
+M Ci,t |∆Ci,t |
+
+P 
+
+> i,t
+
+M Ci,t 
+
+. (29) Sensitivity measures response magnitude, while direction is evaluated separately by Dstrict .
+
+Evaluable set ( E). Strict consistency scores are computed only on samples with valid timesteps and non-negligible responses to both added interventions. With effect margin m = 0 .5 mg/dL, define 
+
+AIi = max  
+
+> t:MIi,t =1
+
+|∆Ii,t | , ACi = max  
+
+> t:MCi,t =1
+
+|∆Ci,t | . (30) The evaluable set is 
+
+E =
+
+(
+
+i : X
+
+> t
+
+M Ii,t > 0, X
+
+> t
+
+M Ci,t > 0, X
+
+> t
+
+M Ri,t > 0, A Ii > m, A Ci > m 
+
+)
+
+. (31) All strict consistency metrics below are averaged over E.
+
+Strict directional consistency ( Dstrict ). For each i ∈ E , directional consistency is the fraction of valid steps for which each added intervention has the expected signed effect: 
+
+DIi =
+
+P 
+
+> t
+
+M Ii,t 1(∆ Ii,t < −m)
+
+P 
+
+> t
+
+M Ii,t 
+
+, DCi =
+
+P 
+
+> t
+
+M Ci,t 1(∆ Ci,t > m )
+
+P 
+
+> t
+
+M Ci,t 
+
+. (32) The strict directional consistency score is 
+
+Dstrict = 1
+
+|E| 
+
+X
+
+> i∈E
+
+DIi + DCi
+
+2 . (33) 
+
+Strict ranking consistency ( Rstrict ). Across the three branches, the expected pointwise ordering is 
+
+Ii,t < F i,t < C i,t . (34) Using margin m, the per-sample ranking score is 
+
+Ri =
+
+P 
+
+> t
+
+M Ri,t 1(∆ Ii,t < −m)1(∆ Ci,t > m )
+
+P 
+
+> t
+
+M Ri,t 
+
+. (35) The strict ranking consistency is 
+
+Rstrict = 1
+
+|E| 
+
+X
+
+> i∈E
+
+Ri . (36) 14 C Comparison Baselines 
+
+C.1 H2NCM Baselines 
+
+We compare against the baseline families considered in H2NCM [ 31 ]: BNODE, LP-Reduced, LSTM, S4D [ 8], and TCN [ 10 ]. BNODE is the black-box neural ODE baseline, which parameterizes the state dynamics entirely with a neural network. LP-Reduced is the reduced latent-parameter hybrid model from H2NCM, retaining the reduced UVA/Padova mechanistic dynamics [ 16 ] while allowing selected simulator parameters to vary over time through learned latent dynamics. We do not directly instantiate the MNODE variant from H2NCM. In that work, MNODE is con-structed from the reduced UVA/Padova mechanistic dependency graph and includes exercise-response components [ 4 ] with exercise-related covariates such as heart rate and step count. Our setting does not include exercise channels; the available inputs are glucose, insulin, and carbohydrates. We therefore retain the hybrid neural ODE design principle, but instantiate the mechanistic component with the Hovorka glucose–insulin model [ 9]. As detailed in Appendix C.2, the Hovorka model is driven by insulin and carbohydrate inputs and does not require exercise modules, making it compatible with our forecasting setting while preserving a physiologically grounded glucose–insulin structure. Glucose, insulin, and carbohydrate channels are normalized using training-set statistics, and prediction accuracy is optimized with a normalized glucose MSE loss ( Lpred ). For the baselines, we use the driver-based intervention-ranking loss of [ 31 ]. For each training example, one intervention category is sampled uniformly, and the ranking loss is computed from three forecasts generated by perturbing the observed future drivers. The intervention categories follow the original protocol: (i) carbohydrate-only, adding {0, 50 , 100 } grams of carbohydrate; (ii) insulin-only, adding 
+
+{0, 2.5, 5.0} units of insulin; and (iii) mixed, using { no change , +50 grams carbohydrate, +10 units insulin}. Each branch is scored by its mean predicted glucose over the forecast horizon. For branch k, define μk = 1
+
+> H
+
+PHt=1 ˆG(k) 
+
+> t
+
+. Let r denote the branch that should be ranked highest under the selected intervention category. With temperature β = 10 , the ranking loss is 
+
+Lrank = − log exp( βμ r )
+
+P3 
+
+> j=1
+
+exp( βμ j ) . (37) The full baseline objective is 
+
+L = (1 − α)Lpred + αLrank , α ∈ [0 , 1] , (38) where α controls the trade-off between observed-driver prediction accuracy and intervention-ranking supervision. 
+
+C.2 Hovorka-Structured Neural Dynamics 
+
+Following the mechanistic neural ODE (MNODE) framework [ 31 ], we model glucose evolution with a neural state-space model that preserves a mechanistic dependency graph while learning the state transition functions from data. We instantiate this graph using the compartmental structure of the Hovorka glucose–insulin model [9]. The latent state is 
+
+ξt = [ Q1, Q 2, S 1, S 2, I, x 1, x 2, x 3, G 1, G 2]t , (39) where Q1, Q 2 are accessible and non-accessible glucose masses, S1, S 2 are subcutaneous insulin absorption compartments, I is plasma insulin, and x1, x 2, x 3 are remote insulin actions on glucose transport, disposal, and endogenous glucose production. The states G1, G 2 are learned gut absorption compartments representing the two-stage carbohydrate absorption pathway. Let ξt,j denote the j-th component of the latent state vector ξt. Each component is updated by a neural transition function that receives only its physiologically admissible parent states and inputs: 
+
+ξt+1 ,j = ξt,j + ∆ t f θj
+
+ ξt, Pa ξ (j), u t, Pa u(j)
+
+ , ∆t = 1 . (40) Here ut = [ uins  
+
+> t
+
+, u carb  
+
+> t
+
+] denotes insulin and carbohydrate inputs, Pa ξ (j) and Pa u(j) are the parent state and input sets for component j, and fθj is the component-specific neural transition function 15 with learnable parameters θj . The parent sets define the Hovorka-inspired graph: 
+
+∆Q1 = fQ1 (Q1, Q 2, x 1, x 3, G 2) , ∆Q2 = fQ2 (Q1, Q 2, x 1, x 2) , (41) 
+
+∆S1 = fS1 (S1, u ins ) , ∆S2 = fS2 (S1, S 2) , (42) 
+
+∆I = fI (S2, I ) , ∆xi = fxi (I, x i) , i = 1 , 2, 3 , (43) 
+
+∆G1 = fG1 (G1, u carb ) , ∆G2 = fG2 (G1, G 2) . (44) An LSTM encoder maps the observed history of glucose, insulin, and carbohydrate inputs to the initial latent state. The graph-structured decoder then rolls the state forward under future insulin and carbohydrate drivers. Glucose is read out from the accessible glucose compartment using the Hovorka measurement relation: 
+
+ˆyt = Q1,t 
+
+VG
+
+, VG = softplus( ωVG ) + ϵ , (45) where ωVG is an unconstrained learnable scalar and the softplus parameterization ensures that VG
+
+remains positive. 
+
+D Full Results 
+
+Table 3: Full α-sweep results across model families. For IFM, α = λjac ; for baselines, α is the H2NCM prediction–ranking tradeoff. Results are averaged across seeds, with sample standard deviations reported below each mean. Lower RMSE is better; higher intervention metrics are better. Model α RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+IFM 0.0 8.76  
+
+> ±0.55
+
+12.65  
+
+> ±0.84
+
+18.30  
+
+> ±1.11
+
+15.80  
+
+> ±1.12
+
+17.08  
+
+> ±2.97
+
+0.478  
+
+> ±0.001
+
+0.002  
+
+> ±0.002
+
+IFM 0.1 9.11  
+
+> ±0.45
+
+14.81  
+
+> ±0.81
+
+23.53  
+
+> ±0.99
+
+6.17  
+
+> ±0.56
+
+36.02  
+
+> ±2.73
+
+0.936  
+
+> ±0.004
+
+0.914  
+
+> ±0.007
+
+IFM 0.3 9.10  
+
+> ±0.90
+
+14.34  
+
+> ±0.79
+
+23.40  
+
+> ±1.12
+
+7.49  
+
+> ±0.27
+
+39.34  
+
+> ±4.19
+
+0.937  
+
+> ±0.000
+
+0.917  
+
+> ±0.000
+
+IFM 0.5 9.31  
+
+> ±0.68
+
+14.71  
+
+> ±0.36
+
+24.05  
+
+> ±0.24
+
+7.35  
+
+> ±0.12
+
+35.72  
+
+> ±3.42
+
+0.938  
+
+> ±0.000
+
+0.917  
+
+> ±0.000
+
+IFM 0.7 9.01  
+
+> ±0.83
+
+14.40  
+
+> ±0.51
+
+23.91  
+
+> ±0.67
+
+7.92  
+
+> ±0.30
+
+35.23  
+
+> ±3.19
+
+0.938  
+
+> ±0.000
+
+0.918  
+
+> ±0.000
+
+IFM 1.0 9.11  
+
+> ±0.59
+
+14.74  
+
+> ±0.78
+
+24.90  
+
+> ±1.75
+
+7.59  
+
+> ±0.44
+
+37.92  
+
+> ±3.44
+
+0.938  
+
+> ±0.000
+
+0.918  
+
+> ±0.000
+
+Hovorka 0.1 8.24  
+
+> ±1.29
+
+13.26  
+
+> ±1.50
+
+19.36  
+
+> ±0.91
+
+2.94  
+
+> ±1.59
+
+41.48  
+
+> ±8.87
+
+0.762  
+
+> ±0.018
+
+0.609  
+
+> ±0.036
+
+Hovorka 0.3 8.32  
+
+> ±0.66
+
+13.21  
+
+> ±0.96
+
+20.52  
+
+> ±1.09
+
+1.30  
+
+> ±0.52
+
+50.14  
+
+> ±1.79
+
+0.742  
+
+> ±0.051
+
+0.569  
+
+> ±0.101
+
+Hovorka 0.5 8.50  
+
+> ±0.61
+
+13.42  
+
+> ±0.71
+
+20.96  
+
+> ±0.74
+
+1.18  
+
+> ±0.08
+
+51.39  
+
+> ±5.60
+
+0.743  
+
+> ±0.021
+
+0.570  
+
+> ±0.043
+
+Hovorka 0.7 8.92  
+
+> ±1.01
+
+14.02  
+
+> ±0.71
+
+21.38  
+
+> ±0.82
+
+1.07  
+
+> ±0.14
+
+51.39  
+
+> ±5.10
+
+0.747  
+
+> ±0.033
+
+0.578  
+
+> ±0.066
+
+Hovorka 1.0 55.49  
+
+> ±24.93
+
+165.34  
+
+> ±54.18
+
+2706.45  
+
+> ±2665.93
+
+161.11  
+
+> ±155.12
+
+364.80  
+
+> ±405.33
+
+0.701  
+
+> ±0.022
+
+0.366  
+
+> ±0.115
+
+BNODE 0.1 8.93  
+
+> ±0.68
+
+13.17  
+
+> ±1.12
+
+18.63  
+
+> ±1.61
+
+1.67  
+
+> ±0.36
+
+23.56  
+
+> ±3.46
+
+0.883  
+
+> ±0.030
+
+0.765  
+
+> ±0.059
+
+BNODE 0.3 9.25  
+
+> ±0.95
+
+13.67  
+
+> ±1.22
+
+19.60  
+
+> ±1.21
+
+1.32  
+
+> ±0.25
+
+27.40  
+
+> ±4.39
+
+0.879  
+
+> ±0.029
+
+0.757  
+
+> ±0.058
+
+BNODE 0.5 9.31  
+
+> ±0.92
+
+13.87  
+
+> ±1.22
+
+19.73  
+
+> ±1.31
+
+1.17  
+
+> ±0.28
+
+30.82  
+
+> ±3.86
+
+0.874  
+
+> ±0.017
+
+0.748  
+
+> ±0.034
+
+BNODE 0.7 9.56  
+
+> ±0.91
+
+14.38  
+
+> ±1.28
+
+20.91  
+
+> ±1.82
+
+1.14  
+
+> ±0.22
+
+35.77  
+
+> ±12.96
+
+0.941  
+
+> ±0.031
+
+0.894  
+
+> ±0.041
+
+BNODE 1.0 187.88  
+
+> ±24.91
+
+256.48  
+
+> ±59.25
+
+1996.69   
+
+> ±1507.35
+
+– 63.57   
+
+> ±41.46
+
+– –LP-Reduced 0.1 10.44  
+
+> ±1.65
+
+16.80  
+
+> ±3.14
+
+25.50  
+
+> ±4.23
+
+0.39  
+
+> ±0.03
+
+24.64  
+
+> ±16.11
+
+0.560  
+
+> ±0.094
+
+0.324  
+
+> ±0.039
+
+LP-Reduced 0.3 11.33  
+
+> ±1.96
+
+18.79  
+
+> ±4.41
+
+28.77  
+
+> ±6.70
+
+0.61  
+
+> ±0.09
+
+18.71  
+
+> ±18.18
+
+0.632  
+
+> ±0.042
+
+0.441  
+
+> ±0.046
+
+LP-Reduced 0.5 13.12  
+
+> ±2.15
+
+21.57  
+
+> ±3.48
+
+32.10  
+
+> ±5.47
+
+0.62  
+
+> ±0.07
+
+19.58  
+
+> ±20.10
+
+0.622  
+
+> ±0.069
+
+0.462  
+
+> ±0.071
+
+16 Model α RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+LP-Reduced 0.7 18.73  
+
+> ±12.51
+
+24.54  
+
+> ±10.88
+
+33.28  
+
+> ±9.53
+
+0.67  
+
+> ±0.05
+
+24.75  
+
+> ±16.85
+
+0.667  
+
+> ±0.036
+
+0.497  
+
+> ±0.111
+
+LP-Reduced 1.0 112.80  
+
+> ±112.90
+
+108.00  
+
+> ±65.29
+
+113.62  
+
+> ±38.18
+
+0.86  
+
+> ±0.49
+
+8.65  
+
+> ±7.56
+
+0.666  
+
+> ±0.125
+
+0.522  
+
+> ±0.200
+
+LSTM 0.1 5.16  
+
+> ±0.42
+
+7.77  
+
+> ±0.70
+
+11.30  
+
+> ±0.70
+
+5.09  
+
+> ±0.21
+
+14.36  
+
+> ±1.69
+
+0.837  
+
+> ±0.011
+
+0.677  
+
+> ±0.021
+
+LSTM 0.3 4.89  
+
+> ±0.17
+
+7.84  
+
+> ±0.47
+
+11.90  
+
+> ±0.60
+
+4.02  
+
+> ±0.38
+
+14.49  
+
+> ±0.69
+
+0.859  
+
+> ±0.029
+
+0.722  
+
+> ±0.060
+
+LSTM 0.5 5.06  
+
+> ±0.24
+
+8.01  
+
+> ±0.54
+
+12.39  
+
+> ±0.66
+
+3.52  
+
+> ±0.25
+
+16.32  
+
+> ±1.75
+
+0.873  
+
+> ±0.048
+
+0.754  
+
+> ±0.091
+
+LSTM 0.7 5.01  
+
+> ±0.51
+
+8.29  
+
+> ±0.78
+
+13.11  
+
+> ±0.61
+
+3.29  
+
+> ±0.85
+
+19.35  
+
+> ±3.42
+
+0.899  
+
+> ±0.050
+
+0.803  
+
+> ±0.101
+
+LSTM 1.0 61.55  
+
+> ±4.08
+
+61.42  
+
+> ±3.82
+
+62.57  
+
+> ±3.72
+
+5.33  
+
+> ±1.09
+
+11.28  
+
+> ±2.15
+
+0.958  
+
+> ±0.000
+
+0.917  
+
+> ±0.000
+
+S4D 0.1 13.00  
+
+> ±0.46
+
+13.81  
+
+> ±0.54
+
+14.81  
+
+> ±0.47
+
+2.84  
+
+> ±0.21
+
+16.09  
+
+> ±1.57
+
+0.763  
+
+> ±0.015
+
+0.533  
+
+> ±0.031
+
+S4D 0.3 13.70  
+
+> ±0.46
+
+14.63  
+
+> ±0.64
+
+15.67  
+
+> ±0.50
+
+2.46  
+
+> ±0.15
+
+18.03  
+
+> ±0.89
+
+0.786  
+
+> ±0.017
+
+0.574  
+
+> ±0.034
+
+S4D 0.5 14.56  
+
+> ±0.36
+
+15.52  
+
+> ±0.63
+
+16.57  
+
+> ±0.59
+
+2.16  
+
+> ±0.10
+
+19.41  
+
+> ±1.51
+
+0.771  
+
+> ±0.013
+
+0.543  
+
+> ±0.026
+
+S4D 0.7 15.46  
+
+> ±0.60
+
+16.43  
+
+> ±0.80
+
+17.52  
+
+> ±0.71
+
+1.97  
+
+> ±0.12
+
+18.89  
+
+> ±0.75
+
+0.776  
+
+> ±0.012
+
+0.553  
+
+> ±0.024
+
+S4D 1.0 61.33  
+
+> ±3.79
+
+60.47  
+
+> ±3.85
+
+60.25  
+
+> ±3.85
+
+1.03  
+
+> ±0.18
+
+1.19  
+
+> ±0.09
+
+0.874  
+
+> ±0.017
+
+0.753  
+
+> ±0.032
+
+TCN 0.1 8.13  
+
+> ±0.33
+
+9.81  
+
+> ±0.46
+
+12.06  
+
+> ±0.50
+
+9.28  
+
+> ±0.53
+
+13.90  
+
+> ±5.21
+
+0.829  
+
+> ±0.023
+
+0.660  
+
+> ±0.047
+
+TCN 0.3 8.76  
+
+> ±0.37
+
+10.75  
+
+> ±0.53
+
+13.45  
+
+> ±0.79
+
+8.72  
+
+> ±0.29
+
+15.62  
+
+> ±2.42
+
+0.815  
+
+> ±0.013
+
+0.630  
+
+> ±0.025
+
+TCN 0.5 9.46  
+
+> ±0.52
+
+11.38  
+
+> ±0.69
+
+14.31  
+
+> ±0.59
+
+8.48  
+
+> ±0.29
+
+16.93  
+
+> ±5.49
+
+0.804  
+
+> ±0.013
+
+0.608  
+
+> ±0.026
+
+TCN 0.7 9.81  
+
+> ±0.57
+
+12.10  
+
+> ±0.69
+
+15.40  
+
+> ±0.96
+
+8.31  
+
+> ±0.62
+
+29.58  
+
+> ±9.42
+
+0.795  
+
+> ±0.002
+
+0.589  
+
+> ±0.004
+
+TCN 1.0 62.31  
+
+> ±4.01
+
+61.78  
+
+> ±4.09
+
+62.01  
+
+> ±3.97
+
+3.95  
+
+> ±1.05
+
+7.00  
+
+> ±0.65
+
+1.000  
+
+> ±0.000
+
+1.000  
+
+> ±0.000
+
+Table 4: Fidelity subsampling-ratio sweep for IFM. Each entry reports mean ± sample standard deviation across seeds. Lower RMSE is better; higher intervention metrics are better. 
+
+ρ RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+0.1 8.93  
+
+> ±0.41
+
+14.26  
+
+> ±1.15
+
+23.32  
+
+> ±1.79
+
+7.26  
+
+> ±1.24
+
+39.89  
+
+> ±3.33
+
+0.936  
+
+> ±0.005
+
+0.915  
+
+> ±0.010
+
+0.3 8.91  
+
+> ±0.35
+
+13.78  
+
+> ±0.93
+
+22.43  
+
+> ±1.17
+
+6.78  
+
+> ±0.64
+
+38.90  
+
+> ±4.23
+
+0.935  
+
+> ±0.003
+
+0.913  
+
+> ±0.006
+
+0.5 9.92  
+
+> ±1.22
+
+14.22  
+
+> ±1.38
+
+21.98  
+
+> ±1.30
+
+7.07  
+
+> ±0.87
+
+40.17  
+
+> ±1.92
+
+0.933  
+
+> ±0.006
+
+0.909  
+
+> ±0.011
+
+0.7 8.41  
+
+> ±1.13
+
+13.09  
+
+> ±1.31
+
+21.16  
+
+> ±1.22
+
+6.63  
+
+> ±0.65
+
+40.39  
+
+> ±3.77
+
+0.928  
+
+> ±0.003
+
+0.898  
+
+> ±0.006
+
+1 7.69  
+
+> ±0.92
+
+13.24  
+
+> ±0.97
+
+21.91  
+
+> ±0.68
+
+7.23  
+
+> ±0.55
+
+42.05  
+
+> ±3.29
+
+0.933  
+
+> ±0.004
+
+0.908  
+
+> ±0.007
+
+Table 5: Fidelity-loss weight sweep for IFM. Each entry reports mean ± sample standard deviation across seeds. Lower RMSE is better; higher intervention metrics are better. 
+
+λfid RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+0 11.66  
+
+> ±0.92
+
+25.16  
+
+> ±0.71
+
+52.10  
+
+> ±2.26
+
+29.82  
+
+> ±3.10
+
+55.37  
+
+> ±4.33
+
+0.935  
+
+> ±0.000
+
+0.913  
+
+> ±0.000
+
+0.1 9.62  
+
+> ±0.72
+
+15.48  
+
+> ±0.48
+
+26.31  
+
+> ±0.71
+
+11.59  
+
+> ±0.97
+
+42.26  
+
+> ±6.72
+
+0.934  
+
+> ±0.002
+
+0.910  
+
+> ±0.003
+
+0.3 8.60  
+
+> ±0.30
+
+15.01  
+
+> ±0.75
+
+25.61  
+
+> ±1.42
+
+10.10  
+
+> ±0.39
+
+40.09  
+
+> ±7.68
+
+0.936  
+
+> ±0.003
+
+0.914  
+
+> ±0.007
+
+0.5 9.31  
+
+> ±0.78
+
+15.34  
+
+> ±1.17
+
+25.45  
+
+> ±1.34
+
+8.34  
+
+> ±1.04
+
+36.53  
+
+> ±4.08
+
+0.935  
+
+> ±0.002
+
+0.912  
+
+> ±0.004
+
+17 λfid RMSE 30 RMSE 60 RMSE 120 Sins Scarb Dstrict Rstrict 
+
+0.7 9.27  
+
+> ±0.93
+
+14.59  
+
+> ±0.85
+
+24.37  
+
+> ±1.10
+
+7.88  
+
+> ±0.48
+
+37.34  
+
+> ±5.46
+
+0.938  
+
+> ±0.000
+
+0.917  
+
+> ±0.000
+
+1 9.24  
+
+> ±0.54
+
+14.24  
+
+> ±0.38
+
+23.71  
+
+> ±0.62
+
+7.25  
+
+> ±0.17
+
+36.22  
+
+> ±4.57
+
+0.938  
+
+> ±0.000
+
+0.918  
+
+> ±0.000
+
+E Training Hyperparameters 
+
+Table 6: Hyperparameter grid search spaces and selected optimal values for each model. We constrained the grid search to the first 20 combinations. 
+
+Model Hyperparameter Search Space Selected 
+
+BNODE Latent size {32 , 64 , 128 } 32 MLP size {32 , 64 , 128 } 128 Num hidden layer {1, 2, 3} 3Number of layers {1, 2} 1IFM Flow hidden dimension {32 , 64 , 128 } 32 Model dimension (df ) {32 , 64 } 32 Number of encoder layers {1, 2, 3} 3Number of flow layers {1, 2, 3} 1Hovorka Encoder size {32 , 64 , 128 } 32 Lstm num layers {1, 2} 2MLP size {32 , 64 , 128 } 128 Number of hidden layers {1, 2, 3} 3LP-Reduced Latent size {32 , 64 , 128 } 64 MLP size {32 , 64 , 128 } 32 Num hidden layer {1, 2, 3} 1Number of layers {1, 2} 2LSTM Latent size {32 , 64 , 128 } 128 Number of layers {1, 2, 3} 3S4D D model {32 , 64 , 128 } 64 D state {32 , 64 , 128 } 32 Number of layers {1, 2} 2TCN Channel width {32 , 64 , 128 } 64 Kernel size {2, 3, 5} 5Number of levels {2, 3, 4} 418 Table 7: Fixed hyperparameters used for all experiments. 
+
+Hyperparameter Value 
+
+Weight decay 1 × 10 −4
+
+Learning rate 1 × 10 −3
+
+Batch size 512 Optimizer AdamW [15] Prediction horizon 24 Window size 2016 Flow steps Kf 20 
+
+Number of Monte Carlo Trials 4
+
+gmin , g max 40 , 400 mg/dL Skew parameter κ 1.0
+
+αins 1.0 units of insulin 
+
+αcarb 25 .0 grams Insulin sensitivity bounds [−60 , −30] mg/dL Carbohydrate sensitivity bounds [5 , 80] mg/dL Number of time frequencies K 8
+
+F Ablation on PK Smoother and Physiological Sensitivity Bounds 
+
+F.1 Effect of physiological driver smoothing. 
+
+Removing the PK smoother and feeding raw drivers directly degrades both forecasting accuracy and intervention validity. Without smoothing, RMSE increases to 11 .95 /21 .45 /34 .74 mg/dL at 
+
+30 /60 /120 minutes, compared with 9.11 /14 .74 /24 .90 with smoothing. The intervention metrics degrade more sharply: insulin sensitivity drops from 7.59 to 2.18 , carbohydrate sensitivity from 
+
+37 .92 to 0.68 , directional consistency from 0.938 to 0.706 , and ranking consistency from 0.918 to 
+
+0.419 . This indicates that raw impulse inputs do not provide a physiologically aligned intervention pathway; smoothing is needed to expose delayed insulin and carbohydrate effects to the velocity network in a form that supports accurate rollout prediction and meaningful prospective intervention response. 
+
+F.2 Physiological Sensitivity Bounds. 
+
+We sweep one channel’s Jacobian bounds while holding the other fixed: carbohydrate bounds are fixed at [5 , 80] during the insulin sweep, and insulin bounds are fixed at [−60 , −30] during the carbohydrate sweep. The carbohydrate sweep shows that increasing the carbohydrate upper bound mainly increases carbohydrate sensitivity, while strict direction and ranking remain stable. The insulin sweep is more sensitive: making the insulin interval more permissive, especially by moving the upper bound closer to zero, reduces insulin sensitivity substantially and weakens ranking and directional consistency. Overall, the bounds tune response magnitude, while their signs enforce the expected intervention direction. However, overly loose insulin bounds can move the constraint closer to the lazy solution Eins ≈ 0, allowing the model to learn a much weaker glucose-lowering response. 
+
+F.3 Role of the Skew Parameter 
+
+The skew parameter κ affects IFM through both the latent CFM target and the physical-unit scaling of the Jacobian regularizer. In the latent transform of Eq. (1) , changing κ changes y, and therefore changes the encoded ground-truth latent target z⋆t for the same physical glucose value. Since the CFM target velocity is v⋆t = z⋆t − zt, 0, varying κ changes the latent transport target learned by vθ .The same κ also appears in the decoder slope in Eq. (13) , which is used in Eq. (14) to convert each 
+
+J(b,t ) 
+
+> c
+
+into the physical-unit sensitivity E(b,t ) 
+
+> c
+
+. If the decoder slope becomes smaller in the relevant glucose range, the same physiological sensitivity bounds [ℓc, u c] require a larger-magnitude J(b,t ) 
+
+> c
+
+. In other words, the velocity field must respond more strongly to the corresponding smoothed effective driver d(b,c ) 
+
+> t
+
+to produce a physical-unit sensitivity E(b,t ) 
+
+> c
+
+inside the admissible bounds. 19 [5, 80] [5, 105] [5, 130] [5, 150] 
+
+9.00 
+
+9.25 
+
+9.50 
+
+9.75 
+
+10.00 
+
+10.25 
+
+> mg/dL
+
+RMSE 30 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+14.0 
+
+14.2 
+
+14.4 
+
+14.6 
+
+14.8 
+
+15.0 
+
+> mg/dL
+
+RMSE 60 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+23.0 
+
+23.2 
+
+23.4 
+
+23.6 
+
+23.8 
+
+24.0 
+
+24.2 
+
+> mg/dL
+
+RMSE 120 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+6.50 
+
+6.75 
+
+7.00 
+
+7.25 
+
+7.50 
+
+7.75 
+
+> mg/dL
+
+Sins 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+40 
+
+41 
+
+42 
+
+43 
+
+44 
+
+45 
+
+> mg/dL
+
+Scarb 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Percentage (%)
+
+Rstrict 
+
+[5, 80] [5, 105] [5, 130] [5, 150] 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Percentage (%)
+
+Dstrict 
+
+Carbohydrate Sensitivity Bounds Sweep Figure 3: Carbohydrate-bound sweep with insulin bounds fixed at [−60 , −30] . Increasing the carbohydrate upper bound mainly increases carbohydrate sensitivity, while strict direction and ranking remain stable across the tested intervals. [-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+9.4 
+
+9.6 
+
+9.8 
+
+10.0 
+
+10.2 
+
+10.4 
+
+10.6 
+
+> mg/dL
+
+RMSE 30 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+14.0 
+
+14.2 
+
+14.4 
+
+14.6 
+
+14.8 
+
+15.0 
+
+> mg/dL
+
+RMSE 60 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+22.6 
+
+22.8 
+
+23.0 
+
+23.2 
+
+> mg/dL
+
+RMSE 120 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+3
+
+4
+
+5
+
+6
+
+> mg/dL
+
+Sins 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+34 
+
+36 
+
+38 
+
+40 
+
+> mg/dL
+
+Scarb 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Percentage (%)
+
+Rstrict 
+
+[-60, -30] [-90, -20] [-120, -10] [-150, -5] 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Percentage (%)
+
+Dstrict 
+
+Insulin Sensitivity Bounds Sweep 
+
+Figure 4: Insulin-bound sweep with carbohydrate bounds fixed at [5 , 80] . Looser insulin bounds reduce insulin sensitivity and weaken both ranking and directional consistency. 
+
+Figure 5 shows this effect empirically: changing κ shifts the intervention sensitivity magnitudes, while directional and ranking consistency remain stable. 
+
+F.4 Existing Assets 
+
+We use the public simulated glucose-management dataset [ 6], released under CC BY 4.0. We do not use the UVA/Padova simulator directly. 
+
+G Qualitative Results 
+
+20 0.5 1 2
+
+> 9.0
+> 9.5
+> 10.0
+> 10.5
+> 11.0
+> mg/dL
+
+RMSE 30   
+
+> 0.5 12
+> 14.0
+> 14.5
+> 15.0
+> 15.5
+> 16.0
+> mg/dL
+
+RMSE 60   
+
+> 0.5 12
+> 23.5
+> 24.0
+> 24.5
+> 25.0
+> mg/dL
+
+RMSE 120   
+
+> 0.5 12
+> 6.5
+> 7.0
+> 7.5
+> mg/dL
+
+Sins   
+
+> 0.5 12
+> 36
+> 37
+> 38
+> 39
+> 40
+> mg/dL
+
+Scarb   
+
+> 0.5 12
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Percentage (%)
+
+Rstrict   
+
+> 0.5 12
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Percentage (%)
+
+Dstrict 
+
+Glucose-Skew Ablation: Mean Across Seeds Figure 5: Effect of the skew parameter κ. Increasing κ changes the latent glucose encoding and the decoder-slope scaling of the Jacobian regularizer, leading to lower observed-driver RMSE and higher intervention sensitivity magnitudes. Strict directional and ranking consistency remain stable across the sweep. 
+
+21 0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+200 
+
+300 
+
+400 
+
+> Glucose (mg/dL)
+
++carbs 20g 
+
++carbs 40g 
+
++carbs 80g 
+
++carbs 100g 
+
++ins 2U 
+
++ins 4U 
+
++ins 8U 
+
++ins 10U 
+
+factual 
+
+ground truth 
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+350 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+250 
+
+275 
+
+300 
+
+325 
+
+350 
+
+375 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+160 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+160 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+160 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+160 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+160 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+250 
+
+300 
+
+350 
+
+400 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+0 25 50 75 100 
+
+Time (min) 
+
+50 
+
+75 
+
+100 
+
+125 
+
+150 
+
+175 
+
+> Glucose (mg/dL)
+
+Figure 6: Example 24-step (2-hour) interventional forecasts from IFM under different planned insulin and carbohydrate perturbations. Insulin plans use doses of 2, 4, 8, and 10 units, while carbohydrate plans use 20 , 40 ,
+
+80 , and 100 grams. Relative to the factual-driver forecast, increasing insulin produces smooth downward glucose responses, whereas increasing carbohydrate produces smooth upward responses. Near the decoder bounds, approximately 40 and 400 mg/dL, the trajectories saturate rather than extrapolating outside the physiological glucose range. 
+
+22 NeurIPS Paper Checklist 
+
+1. Claims 
+
+Question: Do the main claims made in the abstract and introduction accurately reflect the paper’s contributions and scope? Answer: [Yes] Justification: The abstract and introduction clearly present IFM as a prospective dose-response forecasting method and state its scope as velocity-field response regularization. Guidelines: • The answer [N/A] means that the abstract and introduction do not include the claims made in the paper. • The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A [No] or [N/A] answer to this question will not be perceived well by the reviewers. • The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. • It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 2. Limitations 
+
+Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The paper discusses limitations including use of simulated data without real-world validation due to missing or noisy clinical carbohydrate records, and the rollout-based fidelity loss. Guidelines: • The answer [N/A] means that the paper has no limitation while the answer [No] means that the paper has limitations, but those are not discussed in the paper. • The authors are encouraged to create a separate “Limitations” section in their paper. • The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. • The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. • The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. • The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. • If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. • While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren’t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an impor-tant role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations. 3. Theory assumptions and proofs 
+
+Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? 23 Answer: [N/A]. Justification: No formal theorems are presented; the relevant mathematical steps are given directly in the methodology section. Guidelines: • The answer [N/A] means that the paper does not include theoretical results. • All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced. • All assumptions should be clearly stated or referenced in the statement of any theorems. • The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. • Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material. • Theorems and Lemmas that the proof relies upon should be properly referenced. 4. Experimental result reproducibility 
+
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-perimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)? Answer: [Yes] Justification: The paper provides the methodological details, experimental setup, hyperpa-rameter search space, selected configurations, and evaluation metrics needed to reproduce the main results. Guidelines: • The answer [N/A] means that the paper does not include experiments. • If the paper includes experiments, a [No] answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not. • If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. • Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed. • While NeurIPS does not require releasing code, the conference does require all submis-sions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example (a) If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm. (b) If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully. (c) If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset). (d) We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results. 24 5. Open access to data and code 
+
+Question: Does the paper provide open access to the data and code, with sufficient instruc-tions to faithfully reproduce the main experimental results, as described in supplemental material? Answer: [Yes] Justification: The dataset is publicly available, and the code with reproduction instructions is included in the supplemental material. Guidelines: • The answer [N/A] means that paper does not include experiments requiring code. • Please see the NeurIPS code and data submission guidelines ( https://neurips.cc/ public/guides/CodeSubmissionPolicy ) for more details. • While we encourage the release of code and data, we understand that this might not be possible, so [No] is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark). • The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //neurips.cc/public/guides/CodeSubmissionPolicy ) for more details. • The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. • The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. • At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). • Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted. 6. Experimental setting/details 
+
+Question: Does the paper specify all the training and test details (e.g., data splits, hyperpa-rameters, how they were chosen, type of optimizer) necessary to understand the results? Answer: [Yes] Justification: The paper specifies the data preprocessing, train/validation/test splits, hy-perparameter selection, optimizer settings, and training details needed to understand the results. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. • The full details can be provided either with the code, in appendix, or as supplemental material. 7. Experiment statistical significance 
+
+Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [Yes] Justification: The appendix reports mean ± sample standard deviation across random seeds for the main experimental sweeps, with the seeds explicitly stated. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The authors should answer [Yes] if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. 25 • The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). • The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) • The assumptions made should be given (e.g., Normally distributed errors). • It should be clear whether the error bar is the standard deviation or the standard error of the mean. • It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. • For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g., negative error rates). • If error bars are reported in tables or plots, the authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text. 8. Experiments compute resources 
+
+Question: For each experiment, does the paper provide sufficient information on the com-puter resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [No] Justification: The experiments were relatively lightweight and were run on a shared university HPC cluster, but the paper does not systematically report hardware type, memory usage, or wall-clock runtime for each experiment. We do not expect compute requirements to be a limiting factor for reproduction. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. • The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. • The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn’t make it into the paper). 9. Code of ethics 
+
+Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines ?Answer: [Yes] Justification: The research uses a simulated dataset, preserves anonymity, and does not involve human-subject data collection or clinical deployment. Guidelines: • The answer [N/A] means that the authors have not reviewed the NeurIPS Code of Ethics. • If the authors answer [No], they should explain the special circumstances that require a deviation from the Code of Ethics. • The authors should make sure to preserve anonymity (e.g., if there is a special consid-eration due to laws or regulations in their jurisdiction). 10. Broader impacts 
+
+Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [Yes] 26 Justification: The paper discusses potential positive impacts for dose–response forecasting and glucose-management research, while also noting that real-world clinical deployment could cause harm if inaccurate forecasts were used for treatment decisions without clinical validation, uncertainty calibration, and safety constraints. Guidelines: • The answer [N/A] means that there is no societal impact of the work performed. • If the authors answer [N/A] or [No], they should explain why their work has no societal impact or why the paper does not address societal impact. • Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. • The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate Deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. • The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. • If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML). 11. Safeguards 
+
+Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pre-trained language models, image generators, or scraped datasets)? Answer: [N/A]. Justification: The released artifacts are not high-risk generative models or scraped datasets. The work uses simulated glucose-management data and evaluates forecasting behavior only; it does not release a deployable clinical dosing or decision-support system. Guidelines: • The answer [N/A] means that the paper poses no such risks. • Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. • Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. • We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort. 12. Licenses for existing assets 
+
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: The paper cites the original sources for the existing datasets, simulators, and baseline methods used in the experiments and the lincenses are mentioned. 27 Guidelines: • The answer [N/A] means that the paper does not use existing assets. • The authors should cite the original paper that produced the code package or dataset. • The authors should state which version of the asset is used and, if possible, include a URL. • The name of the license (e.g., CC-BY 4.0) should be included for each asset. • For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided. • If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets 
+
+has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. • For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. • If this information is not available online, the authors are encouraged to reach out to the asset’s creators. 13. New assets 
+
+Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [Yes] Justification: The new asset introduced by the paper is the accompanying research code. The supplement documents how to run the proposed method and reproduce the reported experiments. Guidelines: • The answer [N/A] means that the paper does not release new assets. • Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. • The paper should discuss whether and how consent was obtained from people whose asset is used. • At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file. 14. Crowdsourcing and research with human subjects 
+
+Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [N/A]. Justification: The paper does not involve crowdsourcing experiments or research with human subjects. Guidelines: • The answer [N/A] means that the paper does not involve crowdsourcing nor research with human subjects. • Including this information in the supplemental material is fine, but if the main contribu-tion of the paper involves human subjects, then as much detail as possible should be included in the main paper. • According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15. Institutional review board (IRB) approvals or equivalent for research with human subjects 
+
+28 Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [N/A]. Justification: The paper does not involve crowdsourcing or research with human subjects; experiments use simulated glucose-management data. Guidelines: • The answer [N/A] means that the paper does not involve crowdsourcing nor research with human subjects. • Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. • We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. • For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16. Declaration of LLM usage 
+
+Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigor, or originality of the research, declaration is not required. Answer: [N/A]. Justification: LLMs are not used as an important, original, or non-standard component of the core method. Any LLM use, if applicable, was limited to writing, editing, or formatting support. Guidelines: • The answer [N/A] means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. • Please refer to our LLM policy in the NeurIPS handbook for what should or should not be described. 29

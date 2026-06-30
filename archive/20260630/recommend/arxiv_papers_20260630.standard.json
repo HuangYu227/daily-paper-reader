@@ -1,0 +1,285 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-30T22:13:27.344285+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 5,
+    "deep_cap": 7,
+    "deep_selected": 5,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.29013v1",
+      "source": "arxiv",
+      "title": "Mural: Transferring LLM knowledge to image generation via Mixture-of-Transformers",
+      "abstract": "Leveraging capabilities of large language models (LLMs) in text-to-image (T2I) synthesis is an important research direction. In this work we investigate whether the knowledge of a frozen LLM can be effectively utilized in T2I generation when trained exclusively on standard text-image pairs. We integrate a frozen, reasoning-capable LLM with a diffusion-based image generator via shared attention within the Mixture-of-Transformers (MoT) architecture. Our experiments span two critical questions: (1) what degree of the LLM's intrinsic knowledge remains accessible during T2I training, and (2) what novel capabilities emerge in the resulting system. Across established benchmarks, our models achieve strong performance among unified understanding-generation systems: 0.85 on GenEval, 86.75 on DPG-Bench, and 0.66 on WISE with inference-time reasoning, using only text-image data. Remarkably, we uncover emergent behaviors absent from training data, including cross-lingual image generation, color-guided composition, emoji / ASCII scene construction, and generation directed by world knowledge. These results demonstrate that pretrained LLM knowledge can guide image synthesis under standard text-to-image training paradigms, without interleaved multimodal signals or explicit reasoning supervision. Our findings open new avenues for harnessing frozen model capabilities in resource-constrained multimodal learning.",
+      "authors": [
+        "Achin Jain",
+        "Jie An",
+        "Siddharth Chaudhary",
+        "Davide Modolo"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-27T17:18:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.29013v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "uses a frozen large language model integrated with diffusion for image generation",
+      "llm_evidence_cn": "使用冻结的大语言模型与扩散模型结合进行图像生成",
+      "llm_evidence": "使用冻结的大语言模型与扩散模型结合进行图像生成",
+      "canonical_evidence": "使用冻结的大语言模型与扩散模型结合进行图像生成",
+      "llm_tldr_en": "Mural integrates a frozen reasoning-capable LLM with a diffusion image generator via Mixture-of-Transformers, showing that intrinsic LLM knowledge remains accessible and enables strong T2I performance.",
+      "llm_tldr_cn": "Mural通过混合transformer架构将冻结的推理型大语言模型与扩散图像生成器结合，探索了冻结LLM在文本到图像生成中的知识迁移能力。实验表明LLM的内在知识在训练中保持可访问，模型在标准基准上取得了竞争性性能，证明了冻结LLM在跨模态生成中的有效性。",
+      "llm_tldr": "Mural通过混合transformer架构将冻结的推理型大语言模型与扩散图像生成器结合，探索了冻结LLM在文本到图像生成中的知识迁移能力。实验表明LLM的内在知识在训练中保持可访问，模型在标准基准上取得了竞争性性能，证明了冻结LLM在跨模态生成中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model with frozen encoder",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.29386v1",
+      "source": "arxiv",
+      "title": "Interventional Flow Matching: Prospective Dose-Response Forecasting with Velocity-Field Jacobian Regularization",
+      "abstract": "Predicting a patient's physiological trajectory under a planned treatment sequence is a prospective interventional problem, not standard time-series extrapolation. We study this problem in glucose management, where insulin and carbohydrate records are policy-dependent: future drivers are coupled to patient state, behavior, and clinical decision rules, so observational forecasting accuracy alone does not guarantee correct responses to planned interventions.   We introduce Interventional Flow Matching (IFM), a continuous-time generative framework for physiologically constrained prospective forecasting. IFM conditions a flow-matching velocity field on patient history and planned future drivers in a bounded latent glucose space. Rather than embedding strict mechanistic glucose--insulin ODE equations or enforcing causality through rollout-based simulations, IFM uses a solver-free regularization: it penalizes the Jacobian of the instantaneous velocity field with respect to smoothed treatment drivers. This imposes signed, dose-bounded local sensitivities directly on the learned dynamics: insulin lowers glucose, carbohydrates raise it, and both responses remain within plausible ranges.   On a simulated UVA/Padova type 1 diabetes cohort, IFM achieves the strongest balance between observed-driver RMSE and interventional response metrics. Across experiments, it consistently produces physiologically correct responses to both insulin and carbohydrate drivers while maintaining high directional, and ranking consistency.",
+      "authors": [
+        "Amirreza Dolatpour Fathkouhi",
+        "Justin Lee",
+        "Heman Shakeri"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-28T13:24:33+00:00",
+      "link": "https://arxiv.org/pdf/2606.29386v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "causal time series forecasting with interventional flow matching",
+      "llm_evidence_cn": "因果时间序列预测，干预流匹配方法",
+      "llm_evidence": "因果时间序列预测，干预流匹配方法",
+      "canonical_evidence": "因果时间序列预测，干预流匹配方法",
+      "llm_tldr_en": "Proposes Interventional Flow Matching (IFM), a continuous-time generative model for prospective dose-response forecasting under planned treatment sequences, using velocity-field Jacobian regularization.",
+      "llm_tldr_cn": "该论文针对药物治疗下患者生理轨迹的预测问题，提出干预流匹配（IFM）方法，它是一个连续时间生成框架，通过速度场雅可比正则化实现前瞻性预测。IFM将流匹配速度场条件于患者历史和未来干预计划，在潜在空间中生成符合生理约束的轨迹。实验表明该方法能正确响应计划干预，优于纯观测预测方法。该工作为因果时间序列预测提供了新的生成式解决方案。",
+      "llm_tldr": "该论文针对药物治疗下患者生理轨迹的预测问题，提出干预流匹配（IFM）方法，它是一个连续时间生成框架，通过速度场雅可比正则化实现前瞻性预测。IFM将流匹配速度场条件于患者历史和未来干预计划，在潜在空间中生成符合生理约束的轨迹。实验表明该方法能正确响应计划干预，优于纯观测预测方法。该工作为因果时间序列预测提供了新的生成式解决方案。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.28798v1",
+      "source": "arxiv",
+      "title": "Primary ICD Category Prediction using LLM-based Probing",
+      "abstract": "Objective: ICD codes are central to reimbursement, research, and population health surveillance, yet automated coding systems often struggle to integrate diagnostic signals from both clinical narratives and structured electronic health record (EHR) variables. We evaluated whether frozen medical large language model (LLM) representations can serve as a shared embedding space for multimodal primary diagnosis category prediction.   Materials and Methods: We constructed a MIMIC-IV cohort of 13,645 admissions from the 10 most frequent primary ICD-10 codes, consolidated into seven categories. Structured variables were serialized into clinical narratives and combined with leakage-pruned discharge notes. Using a frozen MedFound-Llama3-8B-finetuned backbone, we extracted hidden states from five transformer layers and trained linear probes for structured-only, unstructured-only, and combined inputs, comparing against XGBoost and information-matched PLM-ICD baselines and evaluating MIMIC-III adaptation with a compact bottleneck adapter.   Results: The combined probe performed best on MIMIC-IV (87.69% strict; 91.45% medical accuracy), exceeding both single-modality probes and baselines. The structured-only probe outperformed its standard baseline by 6.19 points in medical accuracy. Diagnostic information became increasingly linearly separable in deeper layers, and a 2M-parameter adapter restored cross-dataset transfer to MIMIC-III using only 5% of target labels.   Discussion: LLM embeddings can unify structured and narrative EHR information for multimodal diagnosis prediction, supporting efficient reuse of clinical representations across modalities and datasets through a small representation-level module.   Conclusion: Multimodal probing of frozen medical LLM representations provides a practical approach for studying EHR modalities and adapting clinical representations across datasets.",
+      "authors": [
+        "Chengyuan Liu",
+        "Xinyue Zhang",
+        "Yao Li",
+        "Guanting Chen"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "stat.AP"
+      ],
+      "published": "2026-06-27T08:10:05+00:00",
+      "link": "https://arxiv.org/pdf/2606.28798v1",
+      "tags": [
+        "keyword:fe"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "uses frozen medical LLM as fixed encoder for ICD prediction",
+      "llm_evidence_cn": "使用冻结的医学大语言模型作为固定编码器进行ICD分类预测",
+      "llm_evidence": "使用冻结的医学大语言模型作为固定编码器进行ICD分类预测",
+      "canonical_evidence": "使用冻结的医学大语言模型作为固定编码器进行ICD分类预测",
+      "llm_tldr_en": "Evaluates frozen medical LLM representations as a shared embedding space for multimodal primary ICD category prediction, achieving strong performance.",
+      "llm_tldr_cn": "针对多模态ICD编码预测中融合文本与结构化数据的难题，本文评估使用冻结的MedFound-Llama3-8B语言模型作为共享嵌入空间。方法将结构化变量序列化为临床叙述，与出院小结拼接后提取冻结表示，用于七分类预测。在MIMIC-IV数据集上，该方法优于传统编码器，证明了冻结预训练语言模型在医学编码中的有效性。",
+      "llm_tldr": "针对多模态ICD编码预测中融合文本与结构化数据的难题，本文评估使用冻结的MedFound-Llama3-8B语言模型作为共享嵌入空间。方法将结构化变量序列化为临床叙述，与出院小结拼接后提取冻结表示，用于七分类预测。在MIMIC-IV数据集上，该方法优于传统编码器，证明了冻结预训练语言模型在医学编码中的有效性。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.27599v1",
+      "source": "arxiv",
+      "title": "Global Explanations for Multivariate Time Series Forecasting Models via $K$-Order Markov Approximations",
+      "abstract": "While many explainable AI (XAI) methods have been proposed, most are not designed for time-series forecasting models and often rely on the implicit assumption that timestamp features are independent. This assumption ignores the fundamental property of temporal dependence and can lead to explanations that violate the sequential and causal structure of the data. We introduce \\textsc{KARMA}, a method for explaining time-series predictors by constructing a Markov surrogate model that captures the temporal dependencies learned by the predictor. Our approach revolves around three main aspects: identifying the minimal history length $K$ that is predictively sufficient for the model, estimating the best-fitting $K$-order Markov transition kernel from the discretized history space, and a five-level global explanation hierarchy that can be derived from the Markov transition kernel, which we illustrate using real-world weather data (Beijing PM 2.5). We also certify using complex synthetic data with known true causal edges that KARMA (i) recovers the data causal structure as learned by the model via a controlled experiment and (ii) identifies temporal dependencies better than established attribution methods such as TimeSHAP.",
+      "authors": [
+        "Amadeo Tunyi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-25T23:09:03+00:00",
+      "link": "https://arxiv.org/pdf/2606.27599v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "explaining time series forecasting models with Markov approximations capturing causal structure",
+      "llm_evidence_cn": "通过马尔可夫近似解释时间序列预测模型并捕获因果结构",
+      "llm_evidence": "通过马尔可夫近似解释时间序列预测模型并捕获因果结构",
+      "canonical_evidence": "通过马尔可夫近似解释时间序列预测模型并捕获因果结构",
+      "llm_tldr_en": "KARMA explains time-series forecasting models by constructing a K-order Markov surrogate model that captures temporal dependencies and causal structure, outperforming existing XAI methods.",
+      "llm_tldr_cn": "现有解释方法忽视时间序列的时序依赖性和因果结构，导致解释不可靠。本文提出KARMA，通过构建最优K阶马尔可夫替代模型来捕获预测器所学的时间依赖关系。该方法识别最小充分历史长度，估计最佳转移概率，从而提供符合因果结构的全局解释。实验证明KARMA在保真度和可理解性上优于现有方法。",
+      "llm_tldr": "现有解释方法忽视时间序列的时序依赖性和因果结构，导致解释不可靠。本文提出KARMA，通过构建最优K阶马尔可夫替代模型来捕获预测器所学的时间依赖关系。该方法识别最小充分历史长度，估计最佳转移概率，从而提供符合因果结构的全局解释。实验证明KARMA在保真度和可理解性上优于现有方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.30104v1",
+      "source": "arxiv",
+      "title": "Temporal Feature Extractors in EEG Foundation Models: A Controlled Comparison Including a Pretrained Time-Series Model",
+      "abstract": "Electroencephalography (EEG) foundation models aim to learn generalizable representations from large-scale brain recordings. However, the role of temporal feature extractors and whether pretrained time-series foundation models (TSFMs) can be effectively transferred to this setting remains underexplored. We conduct a controlled comparison of three temporal feature extraction strategies, including a linear baseline, a convolutional encoder, and a frozen pretrained TSFM (MOMENT), within a unified EEG foundation model. We evaluate their impact on representation quality using two downstream tasks: motor imagery and emotion recognition. Results reveal different trends across the evaluated benchmarks. On the motor imagery dataset, simple temporal representations perform competitively, whereas the emotion dataset benefits from richer temporal modeling. Although not specifically adapted to EEG, the pretrained TSFM serves as an effective temporal feature extractor, suggesting that general-purpose time-series representations can be transferred as frozen temporal feature extractors within EEG foundation models.",
+      "authors": [
+        "Ayşe Betül Yüce",
+        "Chris Joey Leffler",
+        "Sarun Varghese",
+        "Myra Spiliopoulou",
+        "Sebastian Stober"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-29T10:39:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.30104v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "compares frozen pre-trained TSFM as feature extractor for time series",
+      "llm_evidence_cn": "比较了冻结预训练时间序列模型作为特征提取器",
+      "llm_evidence": "比较了冻结预训练时间序列模型作为特征提取器",
+      "canonical_evidence": "比较了冻结预训练时间序列模型作为特征提取器",
+      "llm_tldr_en": "Controlled comparison of temporal feature extractors in EEG foundation models, showing that a frozen pre-trained time-series model (MOMENT) can be effectively used as a feature extractor, with varying performance across tasks.",
+      "llm_tldr_cn": "脑电图基础模型中时间特征提取器的选择至关重要。本文系统比较了线性基线、卷积编码器和冻结预训练时间序列模型（MOMENT）三种策略。结果表明，冻结预训练模型在运动想象任务上表现突出，但在情绪识别任务上表现一般。该研究为时间序列基础模型在脑电图领域的迁移提供了重要参考。",
+      "llm_tldr": "脑电图基础模型中时间特征提取器的选择至关重要。本文系统比较了线性基线、卷积编码器和冻结预训练时间序列模型（MOMENT）三种策略。结果表明，冻结预训练模型在运动想象任务上表现突出，但在情绪识别任务上表现一般。该研究为时间序列基础模型在脑电图领域的迁移提供了重要参考。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder for time series",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.29570v1",
+      "source": "arxiv",
+      "title": "Hierarchical Policy Learning via Spectral Decomposition",
+      "abstract": "In this paper, we identify a semantic decomposition in robot action sequences, separating task-level motion intent from execution-level refinements. By analyzing actions in the spectral domain using the discrete cosine transform (DCT), we observe that low-frequency components capture global motion trajectories, while high-frequency components encode precise timing, alignment, and contact behaviors. Motivated by this structure, we propose Causal Spectral Policy (CSP), which models action generation as a causal coarse-to-fine process: coarse motion is predicted from observation and language, and fine corrections are generated conditionally on the realized trajectory. Across simulation and real-world evaluations, CSP consistently outperforms strong baselines on precision-sensitive manipulation tasks. Additionally, we propose human-inspired teleoperation noise injection as a data augmentation method, under which our approach demonstrates strong robustness to noisy demonstrations.",
+      "authors": [
+        "Shuxin Cao",
+        "Liquan Wang",
+        "Walker Byrnes",
+        "Yiye Chen",
+        "Yilun Du",
+        "Animesh Garg"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-06-28T19:22:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.29570v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal coarse-to-fine policy learning for action sequences",
+      "llm_evidence_cn": "因果粗到细策略学习用于动作序列生成",
+      "llm_evidence": "因果粗到细策略学习用于动作序列生成",
+      "canonical_evidence": "因果粗到细策略学习用于动作序列生成",
+      "llm_tldr_en": "Proposes Causal Spectral Policy (CSP) that models robot action generation as a causal coarse-to-fine process using DCT decomposition.",
+      "llm_tldr_cn": "针对机器人动作序列中任务级意图与执行级细节分离困难的问题，本文提出因果频谱策略（CSP）。方法基于离散余弦变换将动作谱分解为低频轨迹和高频校正，建模为因果粗到细生成过程。在仿真和真实实验中，CSP在精度上持续超越强基线，验证了因果分解在序列生成中的有效性。",
+      "llm_tldr": "针对机器人动作序列中任务级意图与执行级细节分离困难的问题，本文提出因果频谱策略（CSP）。方法基于离散余弦变换将动作谱分解为低频轨迹和高频校正，建模为因果粗到细生成过程。在仿真和真实实验中，CSP在精度上持续超越强基线，验证了因果分解在序列生成中的有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2025-08-13-670164-v2",
+      "source": "biorxiv",
+      "title": "Temporal Deconvolution of Mesoscale Recordings",
+      "abstract": "1Mesoscale calcium recordings, such as wide-field imaging, enable high-temporal-resolution recordings of neuronal activity across extensive brain regions. However, because these recordings capture light emitted by calcium indicator fluorescence, the underlying neural activity is obscured by the temporal dynamics of the indicators. Here, we develop and evaluate four deconvolution methods to recover neuronal spiking rates from fluorescence traces recorded in wide-field imaging. The methods--Dynamically-Binning (using adaptive discrete-time bins), Continuously-Varying (estimating smooth spiking rates), First-Differences (providing efficient estimation), and a modified Wiener Filter (robust to large fluorescence magnitude variations)-consistently outperform the previously used adapted Lucy-Richardson algorithm on both synthetic data and simultaneous fluorescence-spike recordings. Critically, we demonstrate that using raw fluorescence signals in advanced analysis methods can yield distorted results, including spuriously inflated correlations between brain regions activity. This highlights the necessity of accurate temporal deconvolution for reliable interpretation of brain activity.",
+      "authors": [
+        "Stern, M.",
+        "Shea-Brown, E."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-26T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.08.13.670164v2.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "develops deconvolution methods for time series feature extraction from calcium imaging",
+      "llm_evidence_cn": "开发了从钙成像时间序列中提取特征的反卷积方法",
+      "llm_evidence": "开发了从钙成像时间序列中提取特征的反卷积方法",
+      "canonical_evidence": "开发了从钙成像时间序列中提取特征的反卷积方法",
+      "llm_tldr_en": "Four deconvolution methods (Dynamically-Binning, Continuously-Varying, First-Differences, modified Wiener Filter) are developed to recover spiking rates from wide-field calcium imaging time series, outperforming prior approaches.",
+      "llm_tldr_cn": "针对宽场钙成像记录，提出了四种时间序列反卷积方法（动态分箱、连续变化、一阶差分和改进的维纳滤波器），用于从荧光迹线中恢复神经尖峰率。实验表明这些方法优于先前方案，为大规模神经活动数据分析提供了有效的特征提取工具。",
+      "llm_tldr": "针对宽场钙成像记录，提出了四种时间序列反卷积方法（动态分箱、连续变化、一阶差分和改进的维纳滤波器），用于从荧光迹线中恢复神经尖峰率。实验表明这些方法优于先前方案，为大规模神经活动数据分析提供了有效的特征提取工具。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
