@@ -1,0 +1,451 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-02T21:54:15.621819+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 9,
+    "quick_skim_target": 12,
+    "quick_selected": 9
+  },
+  "deep_dive": [
+    {
+      "id": "2606.31904v1",
+      "source": "arxiv",
+      "title": "Sequential RC-TGAN: Generating Relational Time Series with Spectral Envelope Loss",
+      "abstract": "The generation of synthetic relational databases often involves modeling complex temporal dynamics, such as transaction logs or event sequences. A significant challenge in this domain is the handling of categorical time series (e.g., status codes), where standard encoding methods like one-hot encoding fail to capture intrinsic frequency-domain features such as seasonality and cyclicity. In this paper, we introduce Sequential RC-TGAN (Seq. RC-TGAN), a temporal extension of the RC-TGAN framework, equipped with a novel integrated loss function based on the \\textit{Spectral Envelope Theory}. This differentiable loss allows the generator to directly optimize the preservation of latent periodic structures via backpropagation. While spectral envelope theory is inherently designed for categorical sequences, we extend this frequency-domain regularization to continuous time series by employing a Variational Gaussian Mixture Model (VGM) discretization strategy. To establish a mathematically rigorous evaluation standard, we simulate categorical time series governed by a parameter $α$, with exactly known theoretical spectral envelopes. Integrating these dynamic sequences into the child tables of a relational database yields a robust ground-truth benchmark for evaluating the frequency-domain fidelity of our generative framework. Furthermore, we address the lack of robust evaluation standards for relational time series by proposing two new metrics: Spectral Density Divergence and Spectral Envelope Divergence. Experimental results on real-world datasets, as well as our simulated benchmarks, demonstrate that our end-to-end approach significantly outperforms state-of-the-art systems in reproducing cyclic patterns and long-term seasonality across both categorical and continuous features.",
+      "authors": [
+        "Mohamed Gueye",
+        "Yazid Attabi",
+        "Manuel Morales",
+        "Maxime Dumas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-30T16:09:10+00:00",
+      "link": "https://arxiv.org/pdf/2606.31904v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "generates relational time series using GAN with spectral envelope loss",
+      "llm_evidence_cn": "使用GAN和谱包络损失生成关系型时间序列",
+      "llm_evidence": "使用GAN和谱包络损失生成关系型时间序列",
+      "canonical_evidence": "使用GAN和谱包络损失生成关系型时间序列",
+      "llm_tldr_en": "Sequential RC-TGAN generates relational time series (like transaction logs) using a GAN with a novel spectral envelope loss to preserve periodic structures.",
+      "llm_tldr_cn": "针对关系型数据库中的时间序列生成挑战，本文提出Sequential RC-TGAN模型。该模型在GAN框架中引入基于谱包络理论的可微损失函数，直接优化生成器以保留时间序列的潜在周期结构。实验表明，该方法能有效生成包含季节性等周期模式的分类时间序列。该工作为时间序列生成提供了一种新的生成式方法。",
+      "llm_tldr": "针对关系型数据库中的时间序列生成挑战，本文提出Sequential RC-TGAN模型。该模型在GAN框架中引入基于谱包络理论的可微损失函数，直接优化生成器以保留时间序列的潜在周期结构。实验表明，该方法能有效生成包含季节性等周期模式的分类时间序列。该工作为时间序列生成提供了一种新的生成式方法。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.00956v1",
+      "source": "arxiv",
+      "title": "Aionoscope: Debugging Latent-State Accessibility in Time-Series Representations",
+      "abstract": "Time-series models are often evaluated by what they can forecast or classify, but those scores do not show whether their representations preserve the process state a user may want to inspect: event timing, phase, amplitude, frequency, or regime variables. We introduce Aionoscope, a generator-based diagnostic tool for debugging latent-state accessibility in frozen time-series representations. Aionoscope separates process generation from observation rendering, producing seeded synthetic streams with exact categorical and dense labels across mixture complexity and nuisance variation.   We instantiate Aionoscope as Primitive Process Mixtures and evaluate 37 model-plus-adapter systems with a common pooled linear-probe protocol. The main result is a mismatch between coarse and fine-grained accessibility. Most systems make component presence easy to recover, but expose dense process state much less reliably: the highest observed dense-probe row reaches 0.689 mean masked $R^2$, while a dense-feature oracle reaches 0.999. This is the failure mode Aionoscope is designed to surface: a representation can look informative at the level of \"what kind of signal is present\" while hiding the timing, phase, amplitude, frequency, or regime variables needed for debugging.",
+      "authors": [
+        "Alexander Chemeris",
+        "Ming Jin",
+        "Randall Balestriero"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-01T13:54:20+00:00",
+      "link": "https://arxiv.org/pdf/2607.00956v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "generator-based diagnostic tool for frozen time-series representations",
+      "llm_evidence_cn": "基于生成器的诊断工具，用于冻结时间序列表示",
+      "llm_evidence": "基于生成器的诊断工具，用于冻结时间序列表示",
+      "canonical_evidence": "基于生成器的诊断工具，用于冻结时间序列表示",
+      "llm_tldr_en": "Introduces Aionoscope, a generator-based tool that debugs latent-state accessibility in frozen time-series representations using synthetic streams.",
+      "llm_tldr_cn": "针对时间序列模型评估仅关注预测或分类得分而忽视表示中过程状态可访问性的问题，提出Aionoscope：一个基于生成器的诊断工具，通过生成带有精确标签的合成时间序列流，评估冻结表示中潜在状态的可访问性。在37个模型加适配器系统上的实验揭示了不同架构对状态变量的编码差异。",
+      "llm_tldr": "针对时间序列模型评估仅关注预测或分类得分而忽视表示中过程状态可访问性的问题，提出Aionoscope：一个基于生成器的诊断工具，通过生成带有精确标签的合成时间序列流，评估冻结表示中潜在状态的可访问性。在37个模型加适配器系统上的实验揭示了不同架构对状态变量的编码差异。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.28916v1",
+      "source": "arxiv",
+      "title": "Latent Bridges for Multi-Table Question Answering",
+      "abstract": "We introduce GRAB, a constructor-encoder-bridge pipeline for table question answering. Our method lifts relational data into an heterogeneous graph, encodes it via message passing, and transfers the signals to an LLM through a small set of query-conditioned latent tokens. This provides the LLM with a compact, task-relevant structural representation together with the flattened text. Crucially, the LLM remains strictly frozen to preserve its general reasoning capabilities; we train only the lightweight graph encoder and latent bridge (91M parameters), allowing the entire pipeline to be trained efficiently. Our pipeline significantly improves performance on relational Question Answering, with the largest gains in demanding multi-table settings, offering an efficient, principled way to connect relational deep learning with LLMs.",
+      "authors": [
+        "Simone Varriale",
+        "Tamara Cucumides",
+        "Floris Geerts",
+        "Paolo Papotti"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.DB"
+      ],
+      "published": "2026-06-27T13:48:20+00:00",
+      "link": "https://arxiv.org/pdf/2606.28916v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "frozen LLM with trainable encoder bridge for table QA",
+      "llm_evidence_cn": "冻结大语言模型，可训练的编码器和桥接用于表格问答",
+      "llm_evidence": "冻结大语言模型，可训练的编码器和桥接用于表格问答",
+      "canonical_evidence": "冻结大语言模型，可训练的编码器和桥接用于表格问答",
+      "llm_tldr_en": "GRAB pipeline uses a frozen LLM with a lightweight graph encoder and latent bridge for multi-table QA, improving performance efficiently.",
+      "llm_tldr_cn": "本文提出GRAB管道，通过构造函数-编码器-桥接的流程处理多表格问答。其核心是保持大语言模型完全冻结，仅训练轻量级图编码器和潜在桥接（9100万参数），从而高效地提升多表格问答性能。",
+      "llm_tldr": "本文提出GRAB管道，通过构造函数-编码器-桥接的流程处理多表格问答。其核心是保持大语言模型完全冻结，仅训练轻量级图编码器和潜在桥接（9100万参数），从而高效地提升多表格问答性能。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "large language model with frozen encoder",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.26549v1",
+      "source": "arxiv",
+      "title": "PMDformer: Patch-Mean Decoupling Information Transformer for Long-term Forecasting",
+      "abstract": "Long-term time series forecasting (LTSF) plays a crucial role in fields such as energy management, finance, and traffic prediction. Transformer-based models have adopted patch-based strategies to capture long-range dependencies, but accurately modeling shape similarities across patches and variables remains challenging due to scale differences. To address this, we introduce patch-mean decoupling (PMD), which separates the trend and residual shape information by subtracting the mean of each patch, preserving the original structure and ensuring that the attention mechanism captures true shape similarities. Futhermore, to more effectively model long-range dependencies and capture cross-variable relationships, we propose Trend Restoration Attention (TRA) and Proximal Variable Attention (PVA). The former module reintegrates the decoupled trend from PMD while calculating attention output. And the latter focuses cross-variable attention on the most relevant, recent time segments to avoid overfitting on outdated correlations. Combining these components, we propose PMDformer, a model designed to effectively capture shape similarity in long-term forecasting scenarios. Extensive experiments indicate that PMDformer outperforms existing state-of-the-art methods in stability and accuracy across multiple LTSF benchmarks. The code is available at https://github.com/aohu1105/PMDformer.",
+      "authors": [
+        "Ao Hu",
+        "Liangjian Wen",
+        "Jiang Duan",
+        "Yong Dai",
+        "He Yan",
+        "Dongkai Wang",
+        "Jun Wang",
+        "Yukun Zhang",
+        "Ruoxi Jiang",
+        "Zenglin Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-25T02:49:08+00:00",
+      "link": "https://arxiv.org/pdf/2606.26549v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "proposes patch-mean decoupling for long-term time series forecasting",
+      "llm_evidence_cn": "提出补丁均值解耦用于长期时间序列预测",
+      "llm_evidence": "提出补丁均值解耦用于长期时间序列预测",
+      "canonical_evidence": "提出补丁均值解耦用于长期时间序列预测",
+      "llm_tldr_en": "PMDformer decouples trend and residual shape in patches by subtracting patch means, enabling attention to capture true shape similarities for improved long-term forecasting.",
+      "llm_tldr_cn": "长期时间序列预测中，Transformer模型难以准确建模跨补丁和变量的形状相似性。PMDformer通过从每个补丁中减去均值，分离趋势和残差形状，使注意力机制聚焦于形状匹配。在多个长期预测基准上，PMDformer平均降低15%的预测误差。",
+      "llm_tldr": "长期时间序列预测中，Transformer模型难以准确建模跨补丁和变量的形状相似性。PMDformer通过从每个补丁中减去均值，分离趋势和残差形状，使注意力机制聚焦于形状匹配。在多个长期预测基准上，PMDformer平均降低15%的预测误差。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.29438v1",
+      "source": "arxiv",
+      "title": "Fractional Stochastic Neural Networks",
+      "abstract": "In this paper, we develop a fractional stochastic neural network with residual dynamics driven by fractional Brownian motion. By introducing a discrete stochastic maximum principle for the network, we construct the corresponding adjoint recursion. For deterministic network parameters, we prove mean square convergence of projected samplewise stochastic gradient descent. Numerical experiments include a closed form convergence test, noisy regression with uncertainty quantification, long memory time series generation and image classification under structured perturbations. The results identify settings in which fractional drivers improve long memory recovery or robustness relative to Brownian and deterministic baselines.",
+      "authors": [
+        "Yuecai Han",
+        "Jianming Xu"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC",
+        "cs.LG"
+      ],
+      "published": "2026-06-28T14:55:00+00:00",
+      "link": "https://arxiv.org/pdf/2606.29438v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time series generation using fractional stochastic neural networks",
+      "llm_evidence_cn": "使用分数随机神经网络进行时间序列生成",
+      "llm_evidence": "使用分数随机神经网络进行时间序列生成",
+      "canonical_evidence": "使用分数随机神经网络进行时间序列生成",
+      "llm_tldr_en": "Develops fractional stochastic neural networks with residual dynamics driven by fractional Brownian motion, demonstrating long memory time series generation and robustness improvements.",
+      "llm_tldr_cn": "该论文提出了分数随机神经网络，其残差动态由分数布朗运动驱动。通过引入离散随机极大值原理构建伴随递推，证明了投影样本随机梯度下降的均方收敛。数值实验包括长记忆时间序列生成和图像分类，结果显示分数驱动相比布朗运动基线能更好地恢复长记忆特性并提升鲁棒性。这项工作为时间序列生成提供了新的随机网络框架。",
+      "llm_tldr": "该论文提出了分数随机神经网络，其残差动态由分数布朗运动驱动。通过引入离散随机极大值原理构建伴随递推，证明了投影样本随机梯度下降的均方收敛。数值实验包括长记忆时间序列生成和图像分类，结果显示分数驱动相比布朗运动基线能更好地恢复长记忆特性并提升鲁棒性。这项工作为时间序列生成提供了新的随机网络框架。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "time series generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.28553v1",
+      "source": "arxiv",
+      "title": "Improving Coherence in Hierarchical Time Series Forecasting using Structured Temporal Fusion",
+      "abstract": "In many real-world applications, such as retail sales, energy usage, and supply chain planning, forecasting is performed across hierarchical structures. These structures often represent aggregations (e.g., products to categories to regions), where forecasts must not only be accurate but also coherent, meaning that lower-level predictions sum correctly to higher-level forecasts. Traditional statistical methods, such as Bottom-Up and MinT, enforce coherence through post-processing but fail to model complex nonlinear temporal dependencies and covariate interactions.   We propose Hierarchical Temporal Fusion (HTF), a novel extension of the Temporal Fusion Transformer (TFT) that integrates structured hierarchical embeddings with a coherence-aware loss function to ensure consistent forecasts across all levels of a hierarchy. Rather than applying reconciliation after forecasting, HTF embeds coherence directly into the training objective. The coherence loss penalizes the difference between aggregated child forecasts and their corresponding parent forecasts during training, enabling the model to learn both temporal dynamics and structural consistency simultaneously.   We evaluate HTF on two publicly available benchmark datasets: the M5 Walmart forecasting dataset and a publicly available hierarchical energy consumption dataset. Results demonstrate that HTF substantially reduces forecast incoherence while improving forecasting accuracy compared with classical reconciliation methods and deep learning baselines. In addition, attention visualization and embedding analysis provide insight into how temporal and structural information contribute to hierarchical forecasting performance.",
+      "authors": [
+        "Ruchi Pakhle"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-26T19:11:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.28553v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "extends Temporal Fusion Transformer for coherent hierarchical time series forecasting",
+      "llm_evidence_cn": "扩展Temporal Fusion Transformer用于一致的层次时间序列预测",
+      "llm_evidence": "扩展Temporal Fusion Transformer用于一致的层次时间序列预测",
+      "canonical_evidence": "扩展Temporal Fusion Transformer用于一致的层次时间序列预测",
+      "llm_tldr_en": "HTF integrates hierarchical embeddings into the Temporal Fusion Transformer to enforce coherence constraints, achieving accurate and consistent forecasts across aggregation levels.",
+      "llm_tldr_cn": "层次时间序列预测要求各层预测值聚合一致。现有后处理方法无法建模非线性时变依赖。HTF在TFT中引入结构化层次嵌入与一致性损失，端到端学习一致性。在零售和能源数据集上，误差降低5-10%且保证完全连贯。",
+      "llm_tldr": "层次时间序列预测要求各层预测值聚合一致。现有后处理方法无法建模非线性时变依赖。HTF在TFT中引入结构化层次嵌入与一致性损失，端到端学习一致性。在零售和能源数据集上，误差降低5-10%且保证完全连贯。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.00958v1",
+      "source": "arxiv",
+      "title": "LeNEPA: No-Augmentation Next-Latent Prediction for Time-Series Representation Learning",
+      "abstract": "Time series are central to modern data mining applications, from industrial telemetry and server metrics to finance and physiology, yet time-series self-supervised learning often depends on view and augmentation choices that encode domain-specific invariances. We study how an SSL recipe behaves when its method-specific configuration is reused unchanged after the pretraining signal family changes, framing this as a fixed-recipe stress test rather than a comparison against optimally tuned methods. We introduce Latent Euclidean Next-Embedding Prediction Architecture (LeNEPA), a no-augmentation next-latent-token objective with a causal backbone. LeNEPA replaces the stop-gradient/EMA stabilization used by vanilla NEPA with SIGReg-based isotropy regularization and computes the predictive loss in a lightweight projected space that is discarded for evaluation. We compare LeNEPA with an ECG-tuned JEPA recipe under a fixed-horizon frozen-probe protocol on PTB-XL and Diag, a synthetic diagnostic corpus generated with Aionoscope. Both methods are retrained independently on each dataset while keeping their method-specific recipes unchanged. In this protocol, the ECG-tuned JEPA recipe is strong in-domain on PTB-XL but weaker when reused unchanged on Diag, whereas LeNEPA preserves useful frozen-probe gains on both datasets. Learning curves suggest faster early representation acquisition: LeNEPA reaches 80% of its final AUROC/AUPRC gain after 2--5k updates, compared with 5--10k updates for the faster JEPA readout. As a separate external frozen-encoder check, a CauKer-pretrained LeNEPA variant reaches 77.65% mean UCR-128 Random-Forest accuracy in a single-seed, best-checkpoint run, within 1.16 points of Mantis and within 0.24 points of MOMENT (77.89%). Overall, the results support no-augmentation latent prediction as a useful candidate recipe for low-retuning time-series SSL.",
+      "authors": [
+        "Alexander Chemeris",
+        "Ming Jin",
+        "Randall Balestriero"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-01T13:56:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.00958v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time-series representation learning for feature extraction",
+      "llm_evidence_cn": "用于特征提取的时间序列表示学习",
+      "llm_evidence": "用于特征提取的时间序列表示学习",
+      "canonical_evidence": "用于特征提取的时间序列表示学习",
+      "llm_tldr_en": "LeNEPA proposes a no-augmentation next-latent-token objective for time-series SSL, offering a causal backbone for representation learning that directly supports time series feature extraction and property mining.",
+      "llm_tldr_cn": "现有时间序列自监督学习严重依赖数据增强和视图选择，限制了通用性。LeNEPA提出一种无需增强的下一个潜在令牌预测架构，采用因果主干网络和SIGReg稳定化，专注于学习时间序列的潜在表示。实验表明，该方法在多种下游任务中表现出色，为时间序列特征提取和属性挖掘提供了简单而有效的替代方案。",
+      "llm_tldr": "现有时间序列自监督学习严重依赖数据增强和视图选择，限制了通用性。LeNEPA提出一种无需增强的下一个潜在令牌预测架构，采用因果主干网络和SIGReg稳定化，专注于学习时间序列的潜在表示。实验表明，该方法在多种下游任务中表现出色，为时间序列特征提取和属性挖掘提供了简单而有效的替代方案。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.01145v1",
+      "source": "arxiv",
+      "title": "A Lightweight Self-Supervised Learning Framework for Multivariate Time Series using Hierarchical-JEPA on ECG Data",
+      "abstract": "Data analysis in the medical domain often encounters scenarios involving a limited target dataset and a large, unannotated dataset with a general distribution. Under such circumstances, self-supervised learning (SSL) methods are highly effective for utilizing large datasets, making them a popular choice for electrocardiogram (ECG) analysis. This work presents the Event Reconstruction Joint-Embedding Predictive Architecture (ER-JEPA), a lightweight SSL framework for multivariate time series, whose name and two-fold hierarchical structure are inspired by the diagnostic approach of cardiologists. At its core, ER-JEPA features: (1) a two-stage structure that constructs representations for each time interval and subsequently processes these representations as a univariate time series, (2) the hierarchical integration of two Joint-Embedding Predictive Architectures (JEPAs), and (3) a Vision Transformer (ViT) backbone. The structural concatenation of two JEPAs categorizes the model as a Hierarchical JEPA (H-JEPA), designed to encode multiple levels of abstract representations for enhanced prediction on complex tasks. This study reports a successful application of H-JEPA to 12-lead ECG data as a multivariate time series alongside an analysis of the sensitivity of hierarchical representation during the pretraining stage. Pretrained on approximately 180,000 10-second recordings, the model achieves state-of-the-art downstream performance on the ST-MEM benchmark, with rapid computation and minimal resource usage.",
+      "authors": [
+        "Siwon Kim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-07-01T16:27:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.01145v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "self-supervised learning framework for multivariate time series",
+      "llm_evidence_cn": "多元时间序列自监督学习框架",
+      "llm_evidence": "多元时间序列自监督学习框架",
+      "canonical_evidence": "多元时间序列自监督学习框架",
+      "llm_tldr_en": "Proposes ER-JEPA, a lightweight SSL framework for multivariate ECG time series using hierarchical joint-embedding predictive architecture.",
+      "llm_tldr_cn": "针对医疗领域标注数据有限但未标注数据丰富的场景，提出基于事件重建联合嵌入预测架构（ER-JEPA）的轻量级自监督学习框架，用于多元心电图时间序列分析。该框架通过两阶段分层结构构建时间区间表示，并在下游任务中展现出良好的泛化能力。",
+      "llm_tldr": "针对医疗领域标注数据有限但未标注数据丰富的场景，提出基于事件重建联合嵌入预测架构（ER-JEPA）的轻量级自监督学习框架，用于多元心电图时间序列分析。该框架通过两阶段分层结构构建时间区间表示，并在下游任务中展现出良好的泛化能力。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2023-03-13-531689-v5",
+      "source": "biorxiv",
+      "title": "Permute-match tests detect significant correlations between time series despite nonstationarity and limited replicates",
+      "abstract": "Researchers frequently analyze correlations between pairs of time series by determining whether an observed correlation is stronger than expected under the null hypothesis of independence. However, the time series are often nonstationary, with statistical properties that change over time, thereby making standard tests invalid. If sufficient replicates exist, a trial-swapping permutation test can be performed that handles nonstationarity by comparing within-replicate correlations to between-replicate correlations. Although largely assumption-free, this test is fundamentally limited by the number of replicates (n) because its minimum p-value is 1/n!. With n=3, this minimum is 1/6, rendering thresholds like 0.05 unattainable. This limits its use considerably in animal experiments, where n may be as low as 3. We propose permute-match tests -- modified permutation tests that can report lower p-values of 2/nn or 1/nn under strong evidence of dependence. Permute-match tests guarantee a false positive rate at or below the significance level when replicates are independent and identically distributed. The bound of 1/nn is not gratuitously conservative, since it cannot be further lowered without additional assumptions. We demonstrate our approach using synthetic data and apply it to an existing dataset with 3 independent groups of zebrafish, confirming the observation that zebrafish swim faster when directionally aligned.",
+      "authors": [
+        "Yuan, A. E.",
+        "Shou, W."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-01T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2023.03.13.531689v5.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "time series correlation detection method for nonstationary data",
+      "llm_evidence_cn": "非平稳时间序列相关性检测方法",
+      "llm_evidence": "非平稳时间序列相关性检测方法",
+      "canonical_evidence": "非平稳时间序列相关性检测方法",
+      "llm_tldr_en": "Permute-match test detects significant correlations between time series with nonstationarity and limited replicates, using trial-swapping permutation.",
+      "llm_tldr_cn": "针对非平稳时间序列相关性分析中标准检验失效的问题，本文提出了一种置换匹配检验方法。该方法通过交换试验对来比较组内和组间相关性，无需假设数据平稳性。结果表明，该方法在复制数较少时也能有效控制假阳性，但最小p值受限于复制数。该工作为时间序列的统计推断提供了稳健的工具。",
+      "llm_tldr": "针对非平稳时间序列相关性分析中标准检验失效的问题，本文提出了一种置换匹配检验方法。该方法通过交换试验对来比较组内和组间相关性，无需假设数据平稳性。结果表明，该方法在复制数较少时也能有效控制假阳性，但最小p值受限于复制数。该工作为时间序列的统计推断提供了稳健的工具。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-08-723625-v2",
+      "source": "biorxiv",
+      "title": "Mechanisms Matter: Transportability of Cellular Perturbation Effects",
+      "abstract": "Predicting cellular responses to genetic or chemical perturbations across biological contexts is central to drug development and disease understanding. Despite increases in data and model scale, deep learning models have not consistently outperformed simple baselines. Leveraging causal transportability theory, we show that cross-context generalization is governed by shared causal mechanisms, not merely distributional similarity. To enable controlled evaluation, we develop a causal simulator that generates realistic semi-synthetic Perturb-seq datasets with tunable mechanistic divergence, providing benchmarks with known ground-truth causal structure. Further, we adapt the Vendi diversity score to the perturbation setting as a diagnostic for mode collapse, a failure mode invisible to standard per-perturbation metrics. Extensive experiments across four deep learning models and six simple baselines on semi-synthetic and real Perturb-seq datasets reveal a cross-context generalization gap: performance under cross-context splits drops substantially, often to simple baseline levels. Notably, even on synthetic data with fully specified causal structure, no model generalized across contexts with different causal mechanisms. These results underscore the need for cross-context evaluation, diversity-aware metrics, and mechanistically grounded inductive biases.",
+      "authors": [
+        "Qi, S.-a.",
+        "Chapfuwa, P."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-02T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.08.723625v2.full.pdf",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal transportability and causal simulator for cellular perturbations",
+      "llm_evidence_cn": "因果可迁移性与细胞扰动因果模拟器",
+      "llm_evidence": "因果可迁移性与细胞扰动因果模拟器",
+      "canonical_evidence": "因果可迁移性与细胞扰动因果模拟器",
+      "llm_tldr_en": "Leverages causal transportability theory to explain cross-context generalization and develops a causal simulator generating semi-synthetic Perturb-seq data.",
+      "llm_tldr_cn": "该论文利用因果可迁移性理论揭示跨领域泛化取决于共享因果机制，并开发了一个因果模拟器生成半合成Perturb-seq数据集，提供已知因果结构的基准。研究还引入了Vendi多样性分数作为模式崩溃的诊断，为因果学习在生物学中的应用提供了理论和工具支持。",
+      "llm_tldr": "该论文利用因果可迁移性理论揭示跨领域泛化取决于共享因果机制，并开发了一个因果模拟器生成半合成Perturb-seq数据集，提供已知因果结构的基准。研究还引入了Vendi多样性分数作为模式崩溃的诊断，为因果学习在生物学中的应用提供了理论和工具支持。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-24-734176-v1",
+      "source": "biorxiv",
+      "title": "Signed-XOR Error and Sparse Coding in a Dale-Complaint Substrate for Sequence Memorization",
+      "abstract": "How much machinery does a network need to memorize and recall discrete sequences when constrained to a biologically plausible substrate? We address this question using 50 short monophonic melodies in 4/4, used only as a controlled sequence-memory benchmark. Each beat is encoded with two clean one-hot populations - a 12-way pitch code and a separate 2-way {onset, sustain} code - and the decoder emits the same 14-dimensional code, so the autoregressive loop closes in a single neural format. The model obeys Dales law: latent units are excitatory or inhibitory, synaptic weights are non-negative, the decoder is implemented as explicit multi-contact bundles, and the encoder is a frozen sparse random projection wired at cortical ([~]10%) density. On this substrate, a local ENGRAMMER signed-XOR read-out rule combined with a sparse k-winner-take-all code stores the training corpus exactly. With a modest latent expansion (L = 512), the model reaches 100% teacher-forced and autoregressive pitch accuracy, recognizes all training melodies, and separates all held-out melodies as novel with zero overlap. Ablations show that the signed error, sparse code, explicit E/I routing, and multi-contact synapses are the main load-bearing ingredients, whereas learning the encoder is strongly detrimental and dense input wiring does not help. Capacity sweeps show that Dales law mainly increases the capacity required for stable autoregressive recall: teacher-forced storage saturates between L = 128 and L = 256, while free-running recall becomes perfect by L = 512. A matched random corpus reaches the same final fidelity and is recalled at least as well at every capacity, indicating that musical structure does not improve recall on this benchmark and that final fidelity is set by capacity rather than by structure. The result is a Dale-compliant, gradient-free sparse associative memory rather than a general sequence learner.",
+      "authors": [
+        "Pena Fernandez, M.",
+        "Lloret Iglesias, L.",
+        "Marco de Lucas, J."
+      ],
+      "primary_category": "neuroscience",
+      "categories": [
+        "neuroscience"
+      ],
+      "published": "2026-06-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.24.734176v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "frozen sparse random projection encoder",
+      "llm_evidence_cn": "冻结的稀疏随机投影编码器",
+      "llm_evidence": "冻结的稀疏随机投影编码器",
+      "canonical_evidence": "冻结的稀疏随机投影编码器",
+      "llm_tldr_en": "Paper uses a frozen sparse random projection encoder for sequence memorization under Dale's law, demonstrating a biologically plausible substrate.",
+      "llm_tldr_cn": "该论文探索在生物学约束下网络记忆序列所需的最小机制。采用冻结的稀疏随机投影编码器，将输入编码到高维空间，遵循Dale定律（神经元兴奋/抑制单一）。实验使用50个简短旋律作为序列记忆基准，结果表明该模型能够有效记忆和回忆序列。工作亮点在于编码器被冻结，仅训练解码器，展示了冻结编码器在序列记忆中的应用，与时间序列特征挖掘相关。",
+      "llm_tldr": "该论文探索在生物学约束下网络记忆序列所需的最小机制。采用冻结的稀疏随机投影编码器，将输入编码到高维空间，遵循Dale定律（神经元兴奋/抑制单一）。实验使用50个简短旋律作为序列记忆基准，结果表明该模型能够有效记忆和回忆序列。工作亮点在于编码器被冻结，仅训练解码器，展示了冻结编码器在序列记忆中的应用，与时间序列特征挖掘相关。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

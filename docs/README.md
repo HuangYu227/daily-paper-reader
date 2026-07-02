@@ -6,41 +6,53 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-30
-- 运行时间：2026-06-30 22:17:59 UTC
+- 最新运行日期：2026-07-02
+- 运行时间：2026-07-02 21:59:05 UTC
 - 运行状态：成功
-- 本次总论文数：7
-- 精读区：5
-- 速读区：2
+- 本次总论文数：11
+- 精读区：2
+- 速读区：9
 
 ### 今日简报（AI）
-今日共处理7篇论文，精读5篇，速读2篇，重点推荐两篇9.0高分研究。前者提出混合Transformer架构将LLM知识迁移至图像生成，后者通过速度场雅可比正则化实现前瞻性剂量-反应预测。建议先读Mural理解跨模态知识迁移机制，再探索Interventional Flow Matching在生物医学预测中的实际应用。
-- 详情：[/202606/30/README](/202606/30/README)
+今日11篇论文中，精读聚焦时序生成与表征调试，最高分10/10的Sequential RC-TGAN提出谱包络损失来生成关系型时间序列，8/10的Aionoscope则关注潜状态可访问性调试。最值得深入的两个方向是时序数据生成与潜表征分析。建议读者优先精读这两篇高分论文，并结合速读中的时序表示学习（如LeNEPA）进行系统梳理。
+- 详情：[/202607/02/README](/202607/02/README)
 
 ### 精读区论文标签
-1. [Mural: Transferring LLM knowledge to image generation via Mixture-of-Transformers](/202606/30/2606.29013v1-mural-transferring-llm-knowledge-to-image-generation-via-mixture-of-transformers)  
-   标签：评分：9.0/10、query:fe
-   evidence：使用冻结的大语言模型与扩散模型结合进行图像生成
-2. [Interventional Flow Matching: Prospective Dose-Response Forecasting with Velocity-Field Jacobian Regularization](/202606/30/2606.29386v1-interventional-flow-matching-prospective-dose-response-forecasting-with-velocity-field-jacobian-regularization)  
-   标签：评分：9.0/10、query:tsc
-   evidence：因果时间序列预测，干预流匹配方法
-3. [Global Explanations for Multivariate Time Series Forecasting Models via $K$-Order Markov Approximations](/202606/30/2606.27599v1-global-explanations-for-multivariate-time-series-forecasting-models-via-k-order-markov-approximations)  
-   标签：评分：8.0/10、query:tsc
-   evidence：通过马尔可夫近似解释时间序列预测模型并捕获因果结构
-4. [Primary ICD Category Prediction using LLM-based Probing](/202606/30/2606.28798v1-primary-icd-category-prediction-using-llm-based-probing)  
+1. [Sequential RC-TGAN: Generating Relational Time Series with Spectral Envelope Loss](/202607/02/2606.31904v1-sequential-rc-tgan-generating-relational-time-series-with-spectral-envelope-loss)  
+   标签：评分：10.0/10、query:tsc
+   evidence：使用GAN和谱包络损失生成关系型时间序列
+2. [Aionoscope: Debugging Latent-State Accessibility in Time-Series Representations](/202607/02/2607.00956v1-aionoscope-debugging-latent-state-accessibility-in-time-series-representations)  
    标签：评分：8.0/10、query:fe
-   evidence：使用冻结的医学大语言模型作为固定编码器进行ICD分类预测
-5. [Temporal Feature Extractors in EEG Foundation Models: A Controlled Comparison Including a Pretrained Time-Series Model](/202606/30/2606.30104v1-temporal-feature-extractors-in-eeg-foundation-models-a-controlled-comparison-including-a-pretrained-time-series-model)  
-   标签：评分：8.0/10、query:fe
-   evidence：比较了冻结预训练时间序列模型作为特征提取器
+   evidence：基于生成器的诊断工具，用于冻结时间序列表示
 
 ### 速读区论文标签
-1. [Hierarchical Policy Learning via Spectral Decomposition](/202606/30/2606.29570v1-hierarchical-policy-learning-via-spectral-decomposition)  
+1. [Latent Bridges for Multi-Table Question Answering](/202607/02/2606.28916v1-latent-bridges-for-multi-table-question-answering)  
+   标签：评分：7.0/10、query:fe
+   evidence：冻结大语言模型，可训练的编码器和桥接用于表格问答
+2. [Fractional Stochastic Neural Networks](/202607/02/2606.29438v1-fractional-stochastic-neural-networks)  
    标签：评分：7.0/10、query:tsc
-   evidence：因果粗到细策略学习用于动作序列生成
-2. [Temporal Deconvolution of Mesoscale Recordings](/202606/30/biorxiv-10-1101-2025-08-13-670164-v2-temporal-deconvolution-of-mesoscale-recordings)  
-   标签：评分：6.0/10、query:fe
-   evidence：开发了从钙成像时间序列中提取特征的反卷积方法
+   evidence：使用分数随机神经网络进行时间序列生成
+3. [LeNEPA: No-Augmentation Next-Latent Prediction for Time-Series Representation Learning](/202607/02/2607.00958v1-lenepa-no-augmentation-next-latent-prediction-for-time-series-representation-learning)  
+   标签：评分：7.0/10、query:fe
+   evidence：用于特征提取的时间序列表示学习
+4. [A Lightweight Self-Supervised Learning Framework for Multivariate Time Series using Hierarchical-JEPA on ECG Data](/202607/02/2607.01145v1-a-lightweight-self-supervised-learning-framework-for-multivariate-time-series-using-hierarchical-jepa-on-ecg-data)  
+   标签：评分：7.0/10、query:fe
+   evidence：多元时间序列自监督学习框架
+5. [Permute-match tests detect significant correlations between time series despite nonstationarity and limited replicates](/202607/02/biorxiv-10-1101-2023-03-13-531689-v5-permute-match-tests-detect-significant-correlations-between-time-series-despite-nonstationarity-and-limited-replicates)  
+   标签：评分：7.0/10、query:fe
+   evidence：非平稳时间序列相关性检测方法
+6. [Mechanisms Matter: Transportability of Cellular Perturbation Effects](/202607/02/biorxiv-10-64898-2026-05-08-723625-v2-mechanisms-matter-transportability-of-cellular-perturbation-effects)  
+   标签：评分：7.0/10、query:tsc
+   evidence：因果可迁移性与细胞扰动因果模拟器
+7. [Signed-XOR Error and Sparse Coding in a Dale-Complaint Substrate for Sequence Memorization](/202607/02/biorxiv-10-64898-2026-06-24-734176-v1-signed-xor-error-and-sparse-coding-in-a-dale-complaint-substrate-for-sequence-memorization)  
+   标签：评分：7.0/10、query:fe
+   evidence：冻结的稀疏随机投影编码器
+8. [PMDformer: Patch-Mean Decoupling Information Transformer for Long-term Forecasting](/202607/02/2606.26549v1-pmdformer-patch-mean-decoupling-information-transformer-for-long-term-forecasting)  
+   标签：评分：6.0/10、query:tsc
+   evidence：提出补丁均值解耦用于长期时间序列预测
+9. [Improving Coherence in Hierarchical Time Series Forecasting using Structured Temporal Fusion](/202607/02/2606.28553v1-improving-coherence-in-hierarchical-time-series-forecasting-using-structured-temporal-fusion)  
+   标签：评分：6.0/10、query:tsc
+   evidence：扩展Temporal Fusion Transformer用于一致的层次时间序列预测
 
 
 <div class="dpr-home-promo-card">

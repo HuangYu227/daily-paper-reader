@@ -1,0 +1,623 @@
+Title: Improving Coherence in Hierarchical Time Series Forecasting using Structured Temporal Fusion
+
+URL Source: https://arxiv.org/pdf/2606.28553v1
+
+Published Time: Tue, 30 Jun 2026 00:10:03 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Improving Coherence in Hierarchical Time Series Forecasting using Structured Temporal Fusion 
+
+Ruchi Pakhle 
+
+Data and AI Red Hat 
+
+I. ABSTRACT 
+
+In many real-world applications, such as retail sales, energy usage, and supply chain planning, forecasting is performed across hierarchical structures. These structures often repre-sent aggregations (e.g., products → categories → regions), where forecasts must not only be accurate, but also coherent, meaning that lower-level predictions sum correctly to higher-level forecasts. Traditional statistical methods (e.g., Bottom-Up, MinT) enforce coherence through post-processing, but they fail to model complex, non-linear temporal dependencies and covariate interactions. We propose Hierarchical Temporal Fusion (HTF), a novel extension of the Temporal Fusion Transformer (TFT) that inte-grates structured hierarchical embeddings with a coherence-aware loss function to ensure consistent forecasts across all levels of a hierarchy. Rather than applying reconciliation post hoc, we embed coherence as a first-class constraint within the training objective. Our coherence loss penalizes the L2 norm of the difference between aggregated child forecasts and their parent forecasts during training, enabling the model to learn both temporal dynamics and structural consistency simultaneously. We evaluated HTF on two publicly available benchmark datasets: the M5 Walmart forecasting dataset and a publicly available hierarchical energy consumption dataset. 1) the Walmart M5 competition dataset, which features a rich hierarchy of items grouped by category and store across time 2) a multilevel energy dataset capturing hourly electricity consumption across substations, cities, and regions. Our results demonstrate that HTF significantly reduces incoherence while improving forecast accuracy compared to baseline models and classical reconciliation techniques. Through interpretable tools such as attention visualizations and embedding projections, we provide insight into how temporal and structural features interact in hierarchical forecasting sce-narios. II. KEYWORDS 
+
+Time Series Forecasting, Hierarchical Forecasting, Coher-ence Loss, Temporal Fusion Transformer, Structured Embed-dings, Deep Learning III. INTRODUCTION 
+
+Forecasting lies at the heart of strategic decision-making across domains such as supply chain optimization, energy grid management, retail planning, and public policy. In many of these settings, data is inherently hierarchical: sales are recorded per SKU and roll up to categories and regions; electricity usage is tracked at substations and aggregated at city and national levels. This structure introduces a key requirement for forecasting systems: predictions must be both accurate and coherent across hierarchical levels. Coherent forecasting refers to the property that forecasts made at lower levels of a hierarchy, when aggregated, should match forecasts at higher levels. Traditional hierarchical time series (HTS) forecasting methods such as Bottom-Up, Top-Down, and MinT (Minimum Trace Reconciliation) attempt to satisfy coherence through post-processing: they generate forecasts independently for each node and reconcile incon-sistencies after the fact. However, such methods ignore the temporal dynamics, non-linear dependencies, and exogenous variables that often play a crucial role in real-world data. With the advent of deep learning in time series forecasting, models like the Temporal Fusion Transformer (TFT) have achieved state-of-the-art performance by combining gated re-current units, attention mechanisms, and static/dynamic co-variate embeddings. Yet, TFT is designed for flat, unstructured time series and does not account for the structural relationships present in hierarchical datasets. In this paper, we propose Hierarchical Temporal Fusion (HTF), a principled extension of TFT that incorporates: 1) Structured hierarchical embeddings , where the iden-tity and location of each time series within a hierarchy is encoded as a learnable vector. 2) A coherence-aware loss function , which ensures con-sistency by directly minimizing the discrepancy between parent forecasts and the sum of their children forecasts at every timestep. 3) A scalable architecture that retains TFT’s interpretabil-ity and can model exogenous features, variable impor-tance, and attention-based dependencies. Let:  
+
+> •
+
+y(p) 
+
+> t
+
+be the predicted value at parent node p at time ’t’  
+
+> •
+
+{y(c1) 
+
+> t
+
+, y (c2) 
+
+> t
+
+, . . . , y (cn) 
+
+> t
+
+} be the predicted values of its n child nodes at the same time step 
+
+> arXiv:2606.28553v1 [cs.LG] 26 Jun 2026
+
+Then the coherence loss is defined as: 
+
+Lcoherence = X t = 1 T X
+
+> p∈P
+
+y(p) 
+
+> t
+
+− X
+
+> c∈children (p)
+
+y(c)
+
+> t
+
+
+
+> 2
+
+(1) This is added to the standard forecasting loss, yielding the total loss: 
+
+Ltotal = Lforecast + λ · L coherence (2) where λ is a hyperparameter controlling the trade-off be-tween accuracy and coherence. 
+
+A. Research Contributions 
+
+The primary contributions of this work are summarized as follows: 1) We propose Hierarchical Temporal Fusion (HTF) , a novel extension of the Temporal Fusion Transformer (TFT) designed specifically for hierarchical time series forecasting. 2) We introduce a coherence-aware training objective 
+
+that incorporates hierarchical consistency directly into model optimization, eliminating the need for post-hoc reconciliation. 3) We develop structured hierarchical embeddings that encode node identity and hierarchical position, enabling the model to learn structural relationships across aggre-gation levels. 4) We evaluate HTF on two real-world hierarchical fore-casting datasets spanning retail demand forecasting and energy consumption forecasting. 5) Experimental results demonstrate improvements in both forecasting accuracy and hierarchical coherence when compared with classical reconciliation approaches and deep learning baselines. IV. RELATED WORK 
+
+A. Hierarchical Time Series Forecasting (HTS) 
+
+Forecasting hierarchically structured time series has been an important problem in econometrics and operations research. The objective is not only to generate accurate forecasts at each level of the hierarchy but also to ensure coherence—i.e., the forecasts at child nodes should sum up to the forecasts at their parent nodes. Traditional methods include:  
+
+> •
+
+Bottom-Up : Forecasts are generated only at the lowest (leaf) level and then aggregated upward. It’s simple but ignores useful information available at higher levels.  
+
+> •
+
+Top-Down : Forecasting begins at the top of the hierarchy, and predictions are disaggregated down the tree using historical proportions. This is prone to propagation of error.  
+
+> •
+
+Middle-Out : Forecasts are made at an intermediate level and then reconciled up and down the hierarchy.  
+
+> •
+
+MinT (Minimum Trace Reconciliation) : Proposed by Hyndman et al. [2011], MinT is a statistical reconciliation method that generates independent base forecasts at all levels and then adjusts them using a linear transformation that minimizes the total forecast variance: 
+
+ˆyreconciled = SG ˆy
+
+where: 
+
+– ˆy is a vector of base forecasts 
+
+– S is the summing matrix encoding the hierarchy 
+
+– G is the reconciliation matrix, typically derived using the covariance matrix of forecast errors While effective, these techniques assume linear relationships and ignore temporal dynamics, multivariate covariates, and contextual information. 
+
+B. Comparison with Existing Approaches 
+
+Table I summarizes the key differences between HTF and existing hierarchical forecasting approaches.                   
+
+> TABLE I COMPARISON OF HIERARCHICAL FORECASTING APPROACHES
+> Method Deep Learning Hierarchy Aware Train-time Coherence Bottom-Up No Yes Yes MinT No Yes No DeepAR Yes No No TFT Yes No No
+> HTF Yes Yes Yes
+
+Unlike existing approaches, HTF incorporates hierarchical structure directly into representation learning while enforcing coherence during optimization rather than relying on post-processing reconciliation. 
+
+C. Deep Learning for Time Series Forecasting 
+
+Deep learning methods such as RNNs, LSTMs, GRUs, and more recently Transformers, have revolutionized time series forecasting by learning non-linear temporal dependencies and enabling multivariate modeling. These models excel in un-structured scenarios but fall short in hierarchically organized settings unless explicitly modified. The Temporal Fusion Transformer (TFT), proposed by Google Cloud AI [Lim et al., 2021], is among the most expressive and interpretable architectures in this domain. It integrates:  
+
+> •
+
+Gated residual networks (GRNs) for processing static and temporal covariates  
+
+> •
+
+Multi-head attention for capturing long-term dependen-cies  
+
+> •
+
+Variable selection networks for feature-level interpretabil-ity  
+
+> •
+
+Quantile loss for probabilistic forecasting Despite its success, TFT operates on flat time series and cannot enforce structural constraints like coherence when applied to hierarchical data. D. Deep Learning for HTS: Gaps and Challenges 
+
+There have been limited attempts to bridge hierarchical modeling and deep learning. Some efforts have:  
+
+> •
+
+Modeled each node independently using LSTMs or CNNs (no coherence enforcement)  
+
+> •
+
+Used GNNs to propagate temporal information across node relationships  
+
+> •
+
+Reconciled deep learning forecasts post hoc using MinT or Top-Down adjustments None of these approaches embed coherence into the learning process itself, nor do they combine temporal modeling with learnable structural awareness. Our work extends TFT by:  
+
+> •
+
+Introducing structured hierarchical embeddings that en-code node identities and their position within the tree structure.  
+
+> •
+
+Designing a coherence-aware loss function that penalizes incoherent forecasts during training.  
+
+> •
+
+Preserving TFT’s interpretability while enabling it to model hierarchical, multivariate data. This makes our approach fully end-to-end, interpretable, and scalable for practical HTS applications. V. METHODOLOGY : H IERARCHICAL TEMPORAL 
+
+FUSION TRANSFORMER (HTF) 
+
+A. Problem Definition 
+
+Let the hierarchy be represented by a set of nodes N , where each node ’i’ ∈ N corresponds to a time series. The hierarchy forms a tree with directed edges from children to parents. Each node i has: 1) Observations y(i) 
+
+> t
+
+for timestamp t = 1 , 2, . . . , T 
+
+2) Exogenous covariances x(i)
+
+> t
+
+3) A parent node parent(i) , if applicable The objective is to forecast future values ˆy(i)   
+
+> T+1: T+H
+
+for a horizon H , such that:  
+
+> •
+
+The forecasts are accurate  
+
+> •
+
+The forecasts are coherent, i.e., for each non-leaf node: 
+
+ˆyt (p) ≈ X c ∈ children (p)ˆ y(c) 
+
+> t
+
+∀t ∈ [T + 1 , T + H]
+
+(3) 
+
+B. Model Architecture 
+
+The proposed Hierarchical Temporal Fusion (HTF) extends the Temporal Fusion Transformer (TFT) [Lim et al., 2021] to handle structured time series hierarchies with explicit coher-ence constraints. As illustrated in Fig. 2 (HTF Model Architecture), the model consists of four main stages: 1) Data sources and feature embeddings, 2) TFT core for temporal reasoning, 3) Coherence-aware loss module, 4) Final coherent forecasts at all hierarchy levels. This end-to-end design ensures that both temporal dynam-ics and hierarchical consistency are jointly optimized during training.   
+
+> Fig. 1. Hierarchical Fusion Transformers Overview
+> Fig. 2. HTF Model Architecture
+
+C. Structured Hierarchical Embeddings 
+
+Each node i ∈ N receives a learnable embedding vector 
+
+e(i) that represents its identity, level, and ancestry. These embeddings are concatenated with static covariates and passed into TFT’s static encoder. The learnable embedding vector is represented by: 
+
+e(i) = enode (i) + elevel (Level (i)) , (4) where enode (i) encodes the identity of node i and elevel (·)
+
+captures its hierarchical level (e.g., SKU, Category, Store, Region). Additional inputs are processed as follows:  
+
+> •
+
+Static metadata ( s(i), e.g., product category, location) →
+
+static embeddings.  
+
+> •
+
+Dynamic covariates ( x(i) 
+
+> t
+
+, e.g., price, weather, holidays) 
+
+→ temporal embeddings.  
+
+> •
+
+Target series (y(i) 
+
+> t
+
+) → passed directly as numerical se-quences. All embeddings are concatenated into a combined feature representation: 
+
+z(i) 
+
+> t
+
+= [ e(i) ; s(i) ; x(i)t ; y(i)t − 1] , (5) which serves as input to the TFT core. This allows the model to:  
+
+> •
+
+Differentiate between nodes  
+
+> •
+
+Learn relationships between structurally similar nodes (e.g., products in the same category) D. Temporal Fusion Transformer Core 
+
+The TFT core models both short and long-term dependen-cies while preserving interpretability. It includes: 1) Variable Selection Networks : dynamically select the most relevant covariates at each timestep. 2) Local Sequence Encoder (LSTM) : captures short-term memory, 
+
+h(i)t = LSTM (z(i)1 : t)
+
+3) Multi-Head Attention : learns long-term dependencies across historical windows. 4) Quantile Decoder : outputs probabilistic forecasts at quantiles q ∈ { 0.1, 0.5, 0.9} : ˆ y(i)t, q = f decoder (h(i) 
+
+> t
+
+)
+
+The TFT core thus produces per-node forecasts for each horizon. 
+
+E. Coherence-Aware Loss 
+
+While the Temporal Fusion Transformer (TFT) core captures temporal dependencies and produces forecasts for each node independently, hierarchical structures require an additional constraint: forecasts at parent nodes must be consistent with the sum of their children . Without this, models can achieve good accuracy at the leaf level but produce incoherent aggregations (e.g., store-level sales not matching total regional sales). To address this, we introduce a coherence-aware loss term that explicitly penalizes inconsistencies across the hierarchy. 
+
+ˆy(p)t ≈ X c ∈ C (p)ˆ y(c) 
+
+> t
+
+(6) let:  
+
+> •
+
+ˆy(p) 
+
+> t
+
+: predicted value at parent node ’p’ at time ’t’.  
+
+> •
+
+ˆy(c1) 
+
+> t
+
+, ˆy(c2) 
+
+> t
+
+, . . . , ˆy(cn) 
+
+> t
+
+: predicted values for child nodes 
+
+c1, . . . , c n 
+
+> •
+
+P : set of parent nodes in the hierarchy. The coherence constraint requires: 
+
+ˆy(p)t ≈ X c ∈ children (p)ˆ y(c) 
+
+> t
+
+(7) We enforce this requirement during training via a coherence penalty: 
+
+Lcoherence = 
+
+> T+H
+
+X 
+
+> t=T+1
+
+X
+
+> p∈P
+
+ˆy(p) 
+
+> t
+
+− X
+
+> c∈children (p)
+
+ˆy(c)
+
+> t
+
+
+
+> 2
+
+(8) This term is added to the forecasting loss, which in our case is the pinball loss (quantile regression) for probabilistic forecasting: 
+
+Lforecast = 1
+
+|Q| 
+
+X q ∈ Q X
+
+> t
+
+ρq
+
+ yt − ˆyt,q 
+
+, (9) where Q is the set of quantiles (e.g., 0.1, 0.5, 0.9), and 
+
+ρq (u) = u · (q − ⊮{u< 0})
+
+is the quantile regression loss function. Finally, the total training objective is: 
+
+Ltotal = Lforecast + λ · L coherence (10) where λ is a regularization coefficient that balances forecast accuracy and coherence. By integrating coherence into the loss rather than applying reconciliation post hoc (as in classical methods), the model learns to internalize structural consistency during training. This yields forecasts that are both individually accurate and hierarchically consistent. 
+
+F. Output and Interpretability 
+
+The proposed HTF produces hierarchy-consistent forecasts across all levels of the tree. Unlike classical reconciliation methods (Bottom-Up, MinT), coherence is enforced during training, leading to: 1) Point Forecasts 
+
+a) Typically the median forecast (P50) for each node. b) Ensures that decision-makers have a single best estimate of future demand or consumption. 2) Prediction Intervals 
+
+a) Quantile forecasts (P10, P90) provide uncertainty bounds. b) Useful in risk-aware planning (e.g., energy re-serves, retail stocking). 3) Hierarchical Consistency 
+
+a) Forecasts at parent nodes equal the sum of fore-casts from their children. b) ˆy(p)t ≈ P c ∈ C (p)ˆ y(c) 
+
+> t
+
+holds for all p. In addition, the model preserves TFT’s interpretability mechanisms:  
+
+> •
+
+Attention maps highlight which past timesteps influence predictions.  
+
+> •
+
+Variable selection weights show which covariates matter most.  
+
+> •
+
+Embedding projections provide insight into structural relationships (e.g., grouping of products, similarity of regions). VI. IMPLEMENTATION 
+
+A. Framework and Environment 
+
+The proposed Hierarchical Temporal Fusion (HTF) framework was implemented in PyTorch 2.2 with training managed through PyTorch Lightning for modularity and repro-ducibility. Hyperparameter optimization was performed with Optuna, and early stopping was applied based on validation loss.  
+
+> •
+
+Optimizer: AdamW (η = 10 −3, weightdecay = 10 −4) 
+
+> •
+
+Batch size: 128 sequences per GPU  
+
+> •
+
+Epochs: Maximum 100, with patience of 10 epochs  
+
+> •
+
+Forecast horizons: H=28 (M5 dataset) and H=24 (Energy dataset) This environment ensures both scalability and reproducibil-ity across datasets. B. Data Preprocessing 
+
+Accurate hierarchical forecasting requires careful handling of input data. We performed preprocessing in four stages: 1) Normalization of Target Series 
+
+a) Each time series y(i) 
+
+> t
+
+corresponding to node i was normalized independently: ˜y(i) 
+
+> t
+
+= y(i)  
+
+> t−μ(i)
+> σ(i)
+
+, where 
+
+μ(i) and σ(i) are the mean and standard deviation of node i.2) Encoding Dynamic Covariates 
+
+a) Calendar features such as day-of-week and month were represented using cyclical encoding: sin day (t) = sin 
+
+ 2π·day (t)7
+
+
+
+,
+
+cos day (t) = cos 
+
+ 2π·day (t)7
+
+
+
+b) Weather, promotions, and pricing variables were standardized. c) Holidays and events were represented as binary indicators. 3) Static Feature Processing 
+
+a) Time-invariant features such as store location, product category, and regional identifiers were mapped to static embeddings s(i)
+
+4) Hierarchical Encoding 
+
+a) Each node was assigned a hierarchical embedding 
+
+e(i) capturing its position in the aggregation tree (e.g., item → category → region). b) Additionally, a summing matrix S was constructed such that: y(parent ) = S · y(child ), ensuring that coherence could be evaluated at inference time. 
+
+C. Model Training 
+
+The training objective combines forecast accuracy and co-herence: 
+
+Ltotal = Lforecast + λ · L coh , (11) where:  
+
+> •
+
+Forecasting loss (Lforecast ): pinball loss for prob-abilistic forecasting across quantiles Q Lforecast =
+
+> 1
+> |Q|
+
+P q ∈ Q P 
+
+> t
+
+ρq (yt − ˆyt, q ), ρq (u) = u · (q −
+
+⊮{u < 0}) 
+
+> •
+
+Coherence loss (Lcoh ): squared error between parent forecasts and the sum of child forecasts: Lcoh =
+
+P t = T + 1 T +H P
+
+> p∈P
+
+
+
+ˆy(p)t − P c ∈ children (p)ˆ y(c)
+
+> t
+
+2 
+
+> •
+
+Hyperparameter λ: balances forecast accuracy and coher-ence. Grid search was performed in [0.1, 1.0] Batching Strategy: Mini-batches were constructed across both nodes and timesteps to ensure balanced training of leaf-level and aggregate nodes. 
+
+D. Datasets 
+
+To evaluate the effectiveness of the proposed Hierarchical Temporal Fusion (HTF) framework, we conducted experi-ments on two large-scale hierarchical time series datasets that represent distinct domains: retail demand forecasting and energy consumption forecasting. 1) M5 Walmart Competition Dataset 
+
+a) The M5 dataset (Kaggle, 2020) is a benchmark for hierarchical retail forecasting. b) It records daily unit sales of 30,490 SKUs over 1,941 days across Walmart stores in the U.S. i) The hierarchy consists of five levels: ii) Level 1: Total (all items, all stores) iii) Level 2: State (CA, TX, WI) iv) Level 3: Store (10 stores) v) Level 4: Category/Department (FOODS, HOB-BIES, HOUSEHOLD) vi) Level 5: Item/SKU (30,490 leaf nodes) c) This structure makes it an ideal benchmark for coherence, as forecasts at SKU level must roll up consistently to category, store, and state levels. 2) Hierarchical Energy Consumption Dataset 
+
+a) A real-world dataset capturing hourly electricity demand over 4 years b) Hierarchy includes: i) Level 1: National demand ii) Level 2: Regional demand (5 geographical zones) iii) Level 3: City demand (20 cities) iv) Level 4: Substation demand (hundreds of sub-stations, leaf nodes) c) This dataset emphasizes the multivariate and sea-sonal dynamics of energy forecasting (daily and weekly cycles) and the necessity of maintaining coherence across substations, cities, and regions. Table 1 summarizes the hierarchy structure of both datasets.             
+
+> TABLE II HIERARCHY STRUCTURE OF EVALUATION DATASETS
+> Dataset Domain Levels Nodes per Level
+> M5 Retail 51 (total), 3 (state), 10 (store), 7 (dept), 30k+ (items) Energy Power 41 (national), 5 (regions), 20 (cities), 400+ (substations)
+
+E. Evaluation Metrics 
+
+To evaluate HTF, we used both forecast accuracy metrics and a dedicated coherence error metric: 1) Pinball Loss (Quantile Loss) 
+
+For quantile forecasts q ∈ { 0.1, 0.5, 0.9}:
+
+Lforecast = 1
+
+> |Q|
+
+P q ∈ Q P 
+
+> t
+
+ρq (yt − ˆyt, q ),
+
+with ρq (u) = u · (q − 1{u < 0})
+
+2) Weighted Root Mean Squared Scaled Error (WRMSSE) 
+
+Used in M5 competition: 
+
+W RM SSE =
+
+s
+
+> 1
+> M
+
+PMi=1 wi
+
+ y(i) 
+
+> t−ˆy(i)
+> t
+> scale (i)
+
+2
+
+,
+
+where wi are series-specific weights 3) Coherence Error (CE) :Measures violation of structural consistency: CE = 1
+
+> |P| H
+
+PT +Ht=T +1 
+
+P 
+
+> p∈P
+
+ˆy(p)t − P c ∈ children (p)ˆ y(c)
+
+> t
+
+Lower CE implies better coherence across hierarchy levels. 
+
+F. Embedding Analysis 
+
+A unique contribution of HTF lies in its use of structured hierarchical embeddings. These embeddings encode the iden-tity and ancestry of each node and are learned jointly with the forecasting model. 1) Static Embeddings: Capture metadata such as store location, product category, or substation type. 2) Dynamic Embeddings: Represent time-varying categor-ical covariates like holidays, promotions, and event indicators. 3) Hierarchical Embeddings: Encode tree structure (e.g., ”item belongs to category → belongs to store → belongs to state”). These embeddings serve two purposes:  
+
+> •
+
+Provide inductive bias for the model by encoding hierar-chy explicitly.  
+
+> •
+
+Enable interpretability: t-SNE projections reveal clusters of related nodes (e.g., items in the same category or cities with similar demand patterns). 
+
+G. Forecasting Results 
+
+We compared HTF against baselines:  
+
+> •
+
+Bottom-Up (BU),  
+
+> •
+
+MinT Reconciliation,  
+
+> •
+
+Flat TFT (no hierarchy),  
+
+> •
+
+Independent LSTMs per node. Some of our key findings were:  
+
+> •
+
+HTF reduced Coherence Error (CE) by >60% compared to Flat TFT.  
+
+> •
+
+HTF improved WRMSSE by 12% on M5 dataset, and 15% on Energy dataset. 
+
+H. Computational Complexity 
+
+The addition of hierarchical embeddings introduces neg-ligible computational overhead relative to the original TFT architecture. The primary additional cost arises from the coherence loss computation, which scales linearly with the number of parent-child relationships in the hierarchy. For a hierarchy with N nodes and E parent-child edges, the coherence loss contributes an additional computational complexity of: 
+
+O(EH ) (12) where H denotes the forecast horizon. In practice, the additional training cost remained below 10% of standard TFT training time while yielding significant improvements in coherence and forecasting accuracy. VII. RESULTS 
+
+We evaluated the proposed Hierarchical Temporal Fusion (HTF) framework on two benchmark datasets: M5 retail sales and hierarchical energy demand. The experiments were designed to test both forecast accuracy and hierarchical coherence across multiple levels of aggregation. For comparison, we included classical reconciliation methods (Bottom-Up, MinT) and deep learning baselines (Flat TFT, LSTMs). All models were trained using the same preprocessing pipeline, forecast horizon, and optimization strategy to ensure fair comparison. Metrics were averaged over multiple random seeds to reduce variance.                 
+
+> TABLE III PERFORMANCE COMPARISON ACROSS METHODS (LOWER IS BETTER ).
+> Model WRMSSE Pinball Loss Coherence Error (CE)
+> Bottom-Up 0.842 0.216 0.000 MinT 0.765 0.204 0.000 Flat TFT 0.691 0.172 0.121
+> HTF (ours) 0.605 0.158 0.045
+
+The proposed HTF model achieves the best overall perfor-mance across all evaluation metrics. Compared with Flat TFT, HTF reduces WRMSSE from 0.691 to 0.605 and lowers co-herence error from 0.121 to 0.045. These results indicate that incorporating hierarchical embeddings and coherence-aware optimization improves both forecast accuracy and structural consistency. VIII. LIMITATIONS AND FUTURE WORK 
+
+While HTF demonstrates strong performance on hierarchi-cal forecasting benchmarks, several limitations remain. First, the coherence-aware loss introduces additional train-ing overhead for very large hierarchies with millions of nodes. Second, the current formulation assumes a tree-structured hierarchy and does not explicitly support arbitrary graph-based aggregation structures. Third, experiments were conducted on retail and energy forecasting datasets; additional evaluation on finance, health-care, and supply chain datasets would further validate gener-alization. Future work will investigate graph-based hierarchical repre-sentations, adaptive coherence regularization, and probabilistic reconciliation techniques. REFERENCES [1] G. E. P. Box and G. M. Jenkins, Time Series Analysis: Forecasting and Control , Holden-Day, 1970. [2] R. J. Hyndman, R. A. Ahmed, G. Athanasopoulos, and H. Shang, “Optimal combination forecasts for hierarchical time series,” Comput. Stat. Data Anal. , vol. 55, pp. 2579–2589, 2011. [3] S. L. Wickramasuriya, G. Athanasopoulos, and R. J. Hyndman, “Optimal forecast reconciliation for hierarchical and grouped time series through trace minimization,” J. Am. Stat. Assoc. , vol. 114, no. 526, pp. 804–819, 2019. [4] B. Lim, S. S. Arik, N. Loeff, and T. Pfister, “Temporal fusion trans-formers for interpretable multi-horizon time series forecasting,” Int. J. Forecasting , vol. 37, no. 4, pp. 1748–1764, 2021. [5] S. Makridakis et al., “The M5 accuracy competition: Results, findings and conclusions,” Int. J. Forecasting , 2020. [6] R. J. Hyndman and G. Athanasopoulos, Forecasting: Principles and Practice , 3rd ed. OTexts, 2021. (online book) [7] C. C. Holt, “Forecasting seasonals and trends by exponentially weighted moving averages,” Int. J. Forecasting , 1957. [8] P. R. Winters, “Forecasting sales by exponentially weighted moving averages,” Management Science , 1960. [9] J. D. Croston, “Forecasting and stock control for intermittent demands,” 
+
+Operational Research Quarterly , 1972. [10] R. J. Hyndman and Y. Khandakar, “Automatic time series forecasting: the forecast package for R,” J. Stat. Software , 2008. [11] A. Vaswani et al., “Attention is all you need,” in Proc. NeurIPS , 2017. [12] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural Computation , vol. 9, no. 8, pp. 1735–1780, 1997. [13] D. Salinas, V. Flunkert, J. Gasthaus, and T. Januschowski, “DeepAR: Probabilistic forecasting with autoregressive recurrent networks,” Int. J. Forecasting , 2019. [14] S. S. Rangapuram et al., “Deep state space models for time series forecasting,” in NeurIPS , 2018. [15] B. N. Oreshkin, D. Carpov, N. Chapados, and Y. Bengio, “N-BEATS: Neural basis expansion analysis for interpretable time series forecasting,” in ICML , 2020. [16] H. Zhou et al., “Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting,” AAAI, 2022. [17] H. Wu et al., “TimesNet: Temporal 2D-Variation Modeling for General Time Series Analysis,” ICLR, 2023. [18] Y. Nie et al., “A Time Series is Worth 64 Words: Long-term Forecasting with Transformers,” ICLR, 2023.

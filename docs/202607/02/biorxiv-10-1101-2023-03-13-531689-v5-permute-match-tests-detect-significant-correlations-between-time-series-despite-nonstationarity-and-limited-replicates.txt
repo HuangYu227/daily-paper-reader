@@ -1,0 +1,1222 @@
+Title: Permute-match tests detect significant correlations between time series despite nonstationarity and limited replicates
+
+URL Source: https://www.biorxiv.org/content/10.1101/2023.03.13.531689v5.full.pdf
+
+Published Time: Thu, 02 Jul 2026 21:57:17 GMT
+
+Number of Pages: 36
+
+Markdown Content:
+# Permute-match tests detect significant correlations between time series despite nonstationarity and limited replicates 
+
+Alex E. Yuan 1 and Wenying Shou 2
+
+1 Molecular and Cellular Biology PhD program, University of Washington and Fred Hutchinson Cancer Center, Seattle, United States; 2 Centre for Life’s Origins and Evolution, Department of Genetics, Evolution and Environment, University College London, London, United Kingdom alexericyuan@gmail.com; wenying.shou@gmail.com 
+
+# Abstract 
+
+Researchers frequently analyze correlations between pairs of time series by determining whether an observed correlation is stronger than expected under the null hypothesis of independence. However, the time series are often nonstationary, with statistical properties that change over time, thereby making standard tests invalid. If sufficient replicates exist, a trial-swapping permutation test can be performed that handles nonstationarity by comparing within-replicate correlations to between-replicate correlations. Although largely assumption-free, this test is fundamentally limited by the number of replicates ( n) because its minimum p-value is 1/n !.With n = 3 , this minimum is 1/6, rendering thresholds like 0.05 unattainable. This limits its use considerably in animal experiments, where n may be as low as 3. We propose permute-match tests — modified permutation tests that can report lower p-values of 2/n n or 1/n n under strong evidence of dependence. Permute-match tests guarantee a false positive rate at or below the significance level when replicates are independent and identically distributed. The bound of 1/n n is not gratuitously conservative, since it cannot be further lowered without additional assumptions. We demonstrate our approach using synthetic data and apply it to an existing dataset with 3 independent groups of zebrafish, confirming the observation that zebrafish swim faster when directionally aligned. 
+
+## Data availability 
+
+Source code 1 contains all the simulation and analysis code used to prepare this manuscript. The experimental data analyzed in this paper can be obtained at the following web address: https://drive.google.com/ drive/folders/1UmzlX-yJhzQ5KX5rGry8wZgXvcz6HefD .1
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# Introduction 
+
+Scientists frequently look for correlations between variables to identify potentially important relationships or to support conceptual models. In disciplines with a focus on dynamics such as ecology and physiology, it is common to measure correlations between time series. Many important biological processes are nonstationary, meaning that their statistical properties (e.g., mean or variance) change systematically across time. Such processes range from the spread of an invasive species to a cell’s response to a new environmental stress. Interpreting a correlation between a pair of nonstationary time series can be highly fraught because it is easy to obtain a seemingly impressive correlation between two time series that have no meaningful relationship [1]. For example, the sizes of any two exponentially-growing populations will be correlated over time due to a shared growth law, even if the populations lack any interactions or shared influences (e.g., bacterial cultures in separate tubes). To avoid overinterpreting spurious correlations, it helps to distinguish between the concepts of “correlation” and “dependence”. In time series research, the term “correlation” is often used procedurally [2, 3, 4]. Similarly, here we define a correlation function ( ρ) to be any function that takes two time series and produces a statistic, although it is usually interpreted as a measure of similarity or relatedness. In contrast to correlation, “dependence” is a hypothesis about the relationship between variables, and it has clearer scientific implications. Two events A and B are called dependent if P (A, B ), the probability that they both occur, differs from P (A)P (B), the product of their individual probabilities. The formal definition of dependence extends this idea to continuous variables, where discrete probabilities are replaced by probability densities [5, 6]. Similarly, two temporal processes are dependent if the probability of observing any particular pair of trajectories differs from the product of the probabilities of the individual trajectories. The importance of dependence relationships can be attributed to Reichenbach’s common cause principle, which states that if two variables are dependent, then either they share a common causal influence, or one variable causally influences the other (possibly indirectly) [7, 8]. Thus, it is useful to first test whether an observed correlation indicates dependence before pursuing any mechanistic explanations. There are a handful of systematic approaches to testing for dependence between nonstationary time series. However, most are fairly limited in their scope. First, when possible, a nonstationary time series can be transformed to become stationary, meaning that its statistical properties do not change systematically across time. This enables access to a wide arsenal of tests applicable to stationary data. Transformations include subtracting a trend, taking the derivative (more precisely, “differencing” between neighboring points), or choosing a stationary-seeming window of time [9, 10]. However, it is easy to see potential pathologies in each of these: Taking the derivative of an exponential curve just produces another exponential curve; 2
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+subtracting a fitted linear trend from the random walk X(t) = X(t − 1) + ϵ(t) (where ϵ(t) is random noise) does not make it stationary [9]; similarly, searching for a stationary window of the same random walk process is futile since the variance of X(t) increases with each step. In a second approach, one may compare the observed correlation with correlations obtained when one time series is replaced by a synthetic replicate, where synthetic replicates are generated in a way that reflects the original nonstationary process [11]. However, these require a correct model of how the statistical properties of the process evolve over time. Lastly, there are tests within the econometrics literature that can provide evidence for dependence between random-walk-like nonstationary processes by detecting a property called cointegration, but cointegration only occurs when some linear combination of the time series is stationary [12]. Alternatively, a permutation-based approach is possible when there are multiple identically distributed and independent (iid) replicates (or trials; we use “replicates” and “trials” interchangeably). In this case, one may evaluate the significance of a within-replicate correlation by comparing it to between-replicate correlations. That is, if Xi and Yi are time series of variables X and Y from replicate i, the correlation of 
+
+(Xi, Y i) may be compared to the correlation of (Xi, Y j̸ =i). If the two variables are dependent, within-replicate correlations may differ systematically from between-replicate correlations. This approach is sometimes called “inter-subject surrogates” [13, 14]. The inter-subject surrogate approach can be used to test for dependence in each trial separately [15]. In this case, a simple nonparametric test of dependence between, for instance, X1 and Y1 can be performed by computing the correlation ρ(X1, Y j ) for j = 1 , ..., n and writing down a p-value as the proportion of these correlations that are greater than or equal to ρ(X1, Y 1) [16, 17]. For this approach, at least n = 20 trials are needed if one wishes to possibly obtain a p-value of 0.05 or below. This procedure checks for dependence in trial 1 specifically; assessing dependence in a different trial via this method would involve an analogous test. To reduce the required number of trials below 20 , a straightforward strategy is to perform a single permutation test (Fig 1A) using the data from all replicates [18, 19]. As an example with n = 4 trials, the test procedure begins by computing the mean within-trial correlation: 
+
+ρorig = 14 (ρ(X1, Y 1) + ρ(X2, Y 2) + ρ(X3, Y 3) + ρ(X4, Y 4)) .
+
+Next, as a null model, recompute the mean correlation after permuting the Y time series while holding the X time series in the original order. For instance, one such permutation might be: 
+
+ρshuffle = 14 (ρ(X1, Y 3) + ρ(X2, Y 2) + ρ(X3, Y 4) + ρ(X4, Y 1)) .
+
+3
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+A p-value can be calculated as the proportion of permutations (including the original ordering) that produce a mean correlation that is as strong as, or stronger than, ρorig (Fig 1A). One may then detect a correlation at the significance level α if p ≤ α. We emphasize that these permutations are obtained by swapping trials, not by swapping time points. This test has been used to detect correlations between time series in neuroscience and psychology settings [20, 18, 21]. It has also been used to detect correlations between variables measured in brain images, which can have similar nonstationarity challenges as time series [22]. A noteworthy advantage of this approach is that it is valid (meaning that the false positive rate is guaranteed to not exceed α) under very mild assumptions. Namely, the test is valid if the Xi trials are exchangeable with one another (i.e. all permutations of the sequence X1, ..., X n have the same joint probability distribution), or if the Yi trials are exchangeable (see Corollary 4 in Appendix 1). Yet, even the permutation test remains considerably limited by the number of trials. The lowest p-value that can be obtained with n replicates is 1/n ! since there are n! possible permutations. For example, with 
+
+n = 3 , the lowest possible p-value is 1/3! ≈ 0.17 and with n = 4 , the lowest is 1/4! ≈ 0.04 . These minima apply even if the average within-trial correlation is much greater than the average between-trial correlation. While replicate counts of 4 and 5 can produce p-values below the conventional 0.05 threshold, these p-values remain modest. This limitation is particularly problematic when multiple hypothesis testing is required, as the modest p-values may no longer be significant after applying corrections such as the Bonferroni method. The challenge of limited replicates is a reality in many experimental settings due to cost and feasibility concerns [23, 24, 25]. Factors outside the control of investigators further restrict the number of useful replicates. For example, a study of cerebral ischemia in pigs began with 6 animals, but lost 2 due to death and experimental mishap, so complete records exist for only 4 pigs [26]. Similarly, in an animal migration study, authors affixed GPS tags to 13 juvenile cuckoos, but only 5 of them produced GPS records suitable for the study due to heterogeneous behavior among cuckoos [27]. Finally, secondary analysis of public data from earlier studies can be a resource-efficient mode of research [28], although this approach is necessarily limited to the number of replicates within the existing dataset. In this article, we show that permute-match tests, by adding additional steps to the permutation test, can achieve p-values as low as 1/n n. For n = 3 or 4 respectively, the lowest possible p-value is then ≈ 0.04 or 
+
+0.004 , compared to 1/3! ≈ 0.17 or 1/4! ≈ 0.04 . The permute-match tests only require that the replicates are iid. Thus, permute-match tests allow the data analyst to detect dependence with stronger confidence when there is sufficient evidence to do so. We illustrate this approach using simulations as well as a real world example involving recordings of zebrafish swimming behavior with only 3 replicates. 4
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# Results 
+
+## The concept of an X-perfect or Y -perfect match 
+
+Central to our approach is the concept of an X-perfect match or Y -perfect match. To motivate the ideas, suppose that a group of n graduate students X = ( X1, ..., X n) has been paired with a group of n advisors 
+
+Y = ( Y1, ..., Y n) so that the ith student ( Xi) is paired with the ith advisor ( Yi). Moreover, let ρ(Xi, Y j ) be a number that measures how well the ith student and the jth advisor get along. We say that the ith student is “happy” if they get along with their own advisor strictly better than they get along with any other advisor, meaning that ρ(Xi, Y i) > ρ (Xi, Y j ) for all j̸ = i. Similarly, the ith advisor is “happy” if ρ(Xi, Y i) > ρ (Xj , Y i)
+
+for all j̸ = i. The arrangement of student-advisor pairs is X-perfect if all students are happy, and Y -perfect if all advisors are happy. Analogously, if X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) are collections of time series with n trials each, and if ρ is some correlation function, we say that an X-perfect match has occurred if (and only if) for each 
+
+i ∈ { 1, ..., n },
+
+ρ(Xi, Y i) > ρ (Xi, Y j ) for all j̸ = i. 
+
+Similarly, a Y -perfect match has occurred if and only if for each i,
+
+ρ(Xi, Y i) > ρ (Xj , Y i) for all j̸ = i. 
+
+See Fig 1B for an example of a Y -perfect (but not X-perfect) match. Throughout the article, we use boldface X or Y to indicate a collection of trials, Xi or Yi to indicate an individual trial, and X or Y to refer to the variable in general. A perfect match (either X-perfect or Y -perfect) provides especially strong evidence to support the hy-pothesis that X and Y are dependent. With a perfect match, the original correlation ρorig is strictly greater than any of the shuffled correlations, as illustrated in Fig 1C. Thus, a perfect match guarantees pperm = 1 /n !,the lowest p-value achievable with the permutation test (Fig 1D). Furthermore, letting P denote probability, we can prove that 
+
+P (X−perfect match) ≤ 1/n n
+
+under the null hypothesis H0 wherein (1) the Yi trials are iid, (2) the Xi trials are iid, and (3) X and Y are independent (Lemma 8 in Appendix 2). In Proposition 14 (Appendix 2), we show that this upper bound of 
+
+1/n n cannot be reduced further without requiring additional assumptions. 5
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+The same bound applies to the Y -perfect match: under H0 we have P (Y −perfect match) ≤ 1/n n (Lemma 6 in Appendix 2) and thus 
+
+P (X − perfect match or Y −perfect match) ≤ 2/n n. (1) 
+
+## Permute-match tests: modified permutation tests of dependence 
+
+We now describe tests for dependence between nonstationary time series based on the ideas just laid out, which we will call permute-match tests. Suppose that an experiment with n replicates produces time series 
+
+X = ( X1, ..., X n) and Y = ( Y1, ..., Y n), and we want to test whether X and Y are dependent. For example, we may have video recordings of n animals, each in a separate but identically constructed enclosure; for the 
+
+ith animal, we extract a time series of movement speed ( Xi) and a time series of the distance from a light source ( Yi). Using these data, we may wish to investigate whether the animals under study tend to move at different speeds depending on their distance from the light source. We introduce two tests: simultaneous permute-match and sequential permute-match. As we will see, the former can be more reproducible while the latter can be more powerful. In the simultaneous permute-match test (Fig 1E), we check for both an X-perfect and a Y -perfect match. If either the X- or Y -perfect match occurs, we write down a p-value to be p = 2 /n n as per equation 1. If neither X nor Y achieves a perfect match, then we fall back to the permutation test: p = pperm = N≥/n !
+
+where N≥ is the number of all n! possible permutations (including the original ordering) that produce an average correlation that is at least as large as the original ordering (Fig 1A). In the sequential permute-match test, we begin by choosing a variable (either X or Y ) for the first perfect match test. For example, suppose we choose X first (the “permute-match (X▶Y )” test). If an X-perfect match is observed, then p = 1 /n n (Fig 1F). If X-perfect match is not observed, we then check for a Y -perfect match, and write p = 2 /n n if a Y -perfect match is observed. If neither an X-perfect nor Y -perfect match occurs, then p = pperm . A permute-match (Y ▶X) test is defined analogously. Under H0 (i.e. the Yi replicates are iid, the Xi replicates are iid, and X and Y are independent), all the above tests are valid, meaning that for any significance level α, we have P (p ≤ α) ≤ α. This fact is proven as Theorems 11-13 in Appendix 2. 6
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Figure 1: The permutation test, perfect match concept, and permute-match tests. (A) The permutation test. Circles indicate the average correlation without trial swapping ( ρorig ; pink) or with trial swapping (ρshuffle ; grey). Here, N≥ is the number of average correlations (including ρorig ) that are equal to or larger than the original correlation ρorig . It follows that pperm = N≥/n ! because n! is the number of ways the trials can be shuffled. ( B) Illustration of a Y -perfect match, represented as a table of correlations wherein each diagonal entry is the greatest in its own row. Each line with a “ >” or “ <” symbol denotes a required ordering relationship between the two numbers at either end of the line. Note that this example has a 
+
+Y -perfect match, but not an X-perfect match. For an X-perfect match, each diagonal entry would need to be the greatest in its own column. (C) If an X- or Y -perfect match occurs, then the original correlation 
+
+ρorig is always greater than any shuffled correlation ρshuffle . Top: If a Y -perfect match occurs, then each 
+
+Yi gives the greatest correlation when it is paired with the Xi from the same trial. A shuffled correlation 
+
+ρshuffle pairs Yis from some trials with Xj s from different trials, thereby reducing the correlation. Lines with symbols “ >”, “ <”, and “ =” denote comparisons between terms. Bottom: If an X-perfect match occurs, a similar argument can be applied. (D) Since a perfect match ensures that the original correlation is greater than any shuffled correlation, a perfect match also ensures that pperm takes on its lowest possible value of 
+
+1/n !. (E) The simultaneous permute-match (X;Y ) test. (F) The sequential permute-match (X▶Y ) test; note that the permute-match (Y ▶X) test is defined analogously. The permute-match tests (Fig 1E-F) are “upgrades” to the permutation test (Fig 1A) because permute-match tests always report the same or a lower p-value (since 1/n n < 2/n n ≤ 1/n ! for all integers n ≥ 2; see Lemma 10 in Appendix 2). In exchange for lower p-values, the permute-match tests have a slightly more restrictive data requirement than the permutation test. The permutation test is valid either if the Xi trials are exchangeable, or if the Yi trials are exchangeable (Corollary 4 in Appendix 1). The permute-match tests require that all Xi trials are iid and that Yi trials are iid. If trials are iid, then they are necessarily exchangeable. However, exchangeable trials are not always iid. For example, the first five cards drawn from a shuffled deck are exchangeable because all possible orderings of cards are equally likely, but they are not 7
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+iid because if the first card is an ace of hearts, the second card cannot be the ace of hearts. In practice, biological experimental designs typically use replicates that are both exchangeable and iid, so the more restrictive requirement of the permute-match test is often inconsequential. The different tests – permutation test, simultaneous permute-match test, and sequential permute-match tests – are valid tests of dependence given iid replicates (Theorems 11-13 in Appendix 2). In other words, they all guarantee false positive rates at or below the significance level. Two subtle aspects of the permute-match tests are worth mentioning here. First and crucially, the permutation test and perfect match events are nested . That is, an X- or Y -perfect match is possible only if pperm is already at its lowest possible value of 1/n ! (Fig 1C-D). We can therefore combine the checks for perfect matches with the permutation test without inflating the false positive rate above the nominal level. This would not work if the tests were not nested, because then each test would separately contribute false positive results. The second subtlety refers specifically to the sequential permute-match tests. These tests use the lower p-value of 1/n n if the first perfect match occurs, but use the more conservative “Bonferroni-corrected” p-value of 2/n n if only the second match occurs (Fig 1F). This superficially resembles the practice of conducting additional tests merely because earlier tests did not result in a detection – a form of p-hacking that generally results in an invalid final p-value. However, our sequential permute-match procedure is actually valid because it combines binary events instead of continuous variables. See Appendix 3 for a detailed discussion of this point. 
+
+## Permutation and permute-match test variants may differ in statistical power 
+
+Although the permutation test, simultaneous permute-match test, and sequential permute-match test are all valid, they vary in power – the probability of detecting true dependence. Depending on the number of replicates n and the desired significance level α, there are four regimes to consider (Fig 2A). Regime 1: when α ≥ 1/n !, all tests have the same power. If the permutation test detects dependence, permute-match tests will too since they fall back to a permutation test in the “worst case” (Fig 2A, column 1). Conversely, if the permutation test did not detect dependence (i.e. pperm > α ), then it follows that 
+
+pperm > 1/n !, which implies that neither an X-perfect nor Y -perfect match occurred (Fig 1D), and so the permute-match tests cannot have detected dependence either. Regime 2: when 1/n ! > α ≥ 2/n n, all permute-match tests are tied for highest power (Fig 2A, column 2). In this regime, the permutation test has zero power, since its p-value is limited at 1/n !. Conversely, if either an X-perfect or a Y -perfect match occurs, then, the sequential permute-match tests as well as the simultaneous permute-match (X;Y ) test will all detect dependence. Regime 3: when 2/n n > α ≥ 1/n n, the simultaneous permute-match (X;Y ) test will have no power as the 8
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+desired p-value is below the lowest possible p-value achievable by the test. Only the permute-match (X▶Y ) or   
+
+> (Y▶X)
+
+tests now have power (Fig 2A, column 3). Note that permute-match (X▶Y ) and permute-match (Y ▶X)
+
+test may differ in power, as can be seen in the upper left panel of Fig 2D. We do not currently know how to pre-diagnose which of these two tests will be most powerful based on a given dataset, so the choice of which test to run in this case is arbitrary. Regime 4: when α < 1/n n, no test has any power even when a perfect match occurs. Figure 2B-D illustrates these different scenarios using a simulated nonstationary system and some com-mon significance cutoffs. We simulated time series of two variables ( X and Y ) from a small number of replicates (between 3 and 5). Here, the time series were produced from a pair of linear time trends with coupled additive noise ( rX,Y determines the strength of coupling; Fig 2B). We chose the Pearson corre-lation coefficient as our correlation function ρ. The various sub-panels of Fig 2D illustrate the different aforementioned regimes. The above example was chosen for ease of presentation: in fact, the example is so simple that it may be reasonably treated by just fitting and removing the linear trend. In Appendix 4, we show the overall higher statistical power of permute-match tests over the permutation test in a more complex example where the data-generating process is nonstationary (a logistic map with time-varying parameters) and where a nonlinear correlation function (cross-map skill) is preferable to (linear) Pearson correlation. 
+
+## The permute-match test’s false positive rate depends on the process tested 
+
+The permute-match test is conservative – meaning that its false positive rate can fall below the significance level – because both the permutation test and perfect match test are conservative. As discussed elsewhere [29], the permutation test is conservative when α is not one of its possible p-values and when ties may occur between the original correlation and shuffled correlations. Checking for a perfect match is similarly conservative. The actual probability of a false-alarm perfect match event can vary depending on the process being tested. To see this consider the permute-match (Y ▶X) test in the setting where n = 3 , where α = 0 .05 , and where 
+
+rX,Y = 0 (independent X and Y ). Note that in this case, obtaining a Y -perfect match (and thus p = 1 /n n)is necessary and sufficient to detect dependence since α is too low for detection by either the permutation test or the p = 2 /n n leg of the permute-match test. In the linear system of Fig 2, we observed among 5000 simulations a detection rate of 0.0148 , significantly below the upper bound of 1/33 (Figure 2 - Source data 1; one-tailed exact binomial test, p < 10 −20 ). Conversely, in the nonlinear system of Fig S2, this same event ( Y -perfect match under n = 3 and rX,Y = 0 ) occurs with a detection rate of 0.0328 , not significantly 9
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+below the upper bound of 1/33 (Figure S2 - Source data 1; one-tailed exact binomial test, p = 0 .059 ). Thus, depending on the underlying process studied, the actual chance of a perfect match happening under independence may be near or significantly below the theoretical upper bound. 
+
+Figure 2: Statistical power of various permutation test variants as illustrated using a simple nonstationary system. ( A) Summary of test power as a function of the significance level α and the number of replicates n.(B, C) System equations and example dynamics. The processes X and Y are given by a linear trend with additive noise on a time grid t = 1 , 2, ..., 100 . The noise terms ϵX,i (t) and ϵY,i (t) are drawn from a bivariate normal distribution with a mean of 0, variance of 1, and covariance of rX,Y . The chart shows an example pair of time series where X and Y are dependent ( rX,Y = 0 .3). ( D) Statistical power for the permutation test and various permute-match tests as a function of the replicate number n, significance level α, and strength of dependence rX,Y . Power was estimated as the proportion of simulations in which dependence was detected, calculated from 5000 simulations at each value of rX,Y between rX,Y = 0 and 0.54 in steps of size 0.01 . At 
+
+rX,Y = 0 , there is no dependence, so the curve at that point indicates the false positive rate rather than power. We chose the Pearson correlation coefficient as our correlation function ρ. See ( A) for the color legend. 
+
+## An example from animal behavior science 
+
+Living in groups is a common experience among animals. For example, at least half of fish species are thought to form groups at some stage of life [30, 31]. The properties of these groups can impart a variety of important fitness effects [32]. In groups of fish, coordinated swimming may facilitate foraging (e.g., by enabling fish to “communicate” the location of food to others) and predator escape (e.g., by confusing predators) [33, 31]. One study [31] observed, in videos of small groups of zebrafish (8 fish per group), that the fish swam faster when in a high-polarization state (i.e. directionally aligned) than when in a low-polarization state. A correlation between polarization and speed might indicate statistical dependence between the two variables, or it might just be a consequence of temporal trends (e.g., polarization and swimming speed both happen to decrease with time). 10 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Using a publicly available dataset [34] containing fish trajectories from 3 replicate 10-minute videos of small groups of juvenile Danio rerio zebrafish (10 fish per group), we performed a permute-match test of dependence between polarization and fish swimming speed. As we will see, although swimming speed and the extent of polarization are potentially nonstationary, the permute-match test nevertheless detects a statistical dependence between them. Directional polarization is quantified as the mean resultant length Ct of fish velocity [35]. We represent the swimming direction of each fish by a unit vector, and then define Ct as the length of the average unit vector (Fig. 4; Eq. 2). The mean resultant length is bounded between 0 (e.g., two opposite vectors) and 1
+
+(e.g., two parallel vectors). To quantify speed, we took the “average individual speed”, which is a term we use to denote an average across individuals, not across time. More precisely, the average individual speed of a 10-fish group at time t is (s1,t + s2,t + · · · + s10 ,t )/10 where si,t is the speed of fish i at time t. Note that average individual speed is distinct from the speed of the group center, which has also been studied in 
+
+Danio fish [32]. Neither the average individual speed nor the mean resultant length is obviously stationary (Fig 3A). By visual inspection, the average individual speed seems to decrease across time, and all time series are deemed nonstationary by a Kwiatkowski-Phillips-Schmidt-Shin test ( p < 0.01 ), and so we may be on shaky ground to use methods that require stationarity. Additionally, since only 3 trials are available, the permutation test and the simultaneous permute-match test cannot detect dependence at the 0.05 level, so we perform a sequential permute-match test. We arbitrarily started with average individual speed and identified a “speed”-perfect match, indicating a significant correlation between average individual speed and mean resultant length (Fig 3B; p = 1 /33 ≈ 0.04 ). Significance does not depend on the choice of which match is tested, since both a “speed”-perfect and a “mean resultant length”-perfect match are obtained. Note that although trials are independent of each other, all between-trial correlations from the full dataset are positive (off-diagonal elements in Fig 3B), illustrating the danger in applying naive data analysis methods to data that are autocorrelated or even nonstationary. To try a parametric alternative, for each trial we time-averaged the average individual speed and mean resultant length over the full 10 minutes (Fig 3C; where each point is one trial). The sample Pearson correlation of the time-averaged variables is 0.99996 , and a one-tailed test of significance (using the function stats.pearsonr from the Python package Scipy [36]) also detects dependence ( p ≈ 0.003 ), consistent with the permute-match tests. This test has the null hypothesis that the two variables shown in Fig 3C (time-averaged average individual speed and time-averaged mean resultant length) are independent and Gaussian. We view this test as comparable to the permute-match tests because although it requires a distributional assumption, it can be valid even when the time series are nonstationary. 11 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Since data are limited in many scientific applications, we explored whether the results of the sequential permute-match tests and the parametric Pearson correlation test were consistent across different time series lengths. We truncated time series to various lengths (from 20 seconds to 10 minutes), and checked whether each test reported a significant ( p ≤ 0.05 ) correlation (Fig 3D). Both sequential permute-match tests re-ported a significant correlation at all lengths tested, whereas the parametric test was inconsistent, finding a significant correlation for about one third of lengths. 12 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Figure 3: A sequential permute-match test detects dependence between average individual speed and align-ment (as measured by mean resultant length) in small groups of zebrafish. (A) Time series of average individual speed and mean resultant length for the three replicate videos. Black curves show original time series, and red curves show a 30-second moving average. Average individual speed appears to decrease with time in all trials. All 12 time series (2 variables × 3 trials × 2 smoothing conditions) were deemed non-stationary by a Kwiatkowski-Phillips-Schmidt-Shin (KPSS; [37]) test ( p < 0.01 ). Note that the KPSS test seeks to reject a stationary null hypothesis in contrast to other common tests, whose null hypotheses are nonstationary. ( B) Pearson correlation between alignment and average individual speed, both within trials and between trials, using all frames up to the length of the shortest speed and alignment time series (19308 frames; 10.06 minutes). Table entries are shaded by correlation. We observe a speed-perfect match (and an alignment-perfect match), and thus detect dependence with p = 1 /33 ≈ 0.04 . (C) A parametric test also detects dependence. As a parametric alternative, for each trial we averaged values of speed and mean resultant length over the complete time series (visualized in the scatter plot shown, where each point is one trial). The sample Pearson correlation of the time-averaged variables is 0.99996 , and a one-tailed test of significance gives p ≈ 0.003 . ( D) Permute-match tests detected a significant correlation between speed and alignment more consistently than the parametric test. For a grid of lengths between 20 and 600 seconds we sampled 500 random segments of each length, each drawn from the first 600 seconds, and determined for each segment whether the parametric test and/or the two possible permute-match tests detected a significant (p ≤ 0.05 ) correlation. In the edge case of the maximum 600-second length, all 500 “random” segments were identical. We used the Pearson correlation as the correlation function ρ in the permute-match tests, and a one-tailed parametric test, reflecting the alternative hypothesis of correlation being positive (not merely nonzero). 
+
+# Discussion 
+
+Outside the context of time series, permutation tests have been celebrated because they require only minimal assumptions [38]. To satisfy the requirements of permutation tests, it is sufficient (see Corollary 4 in Appendix 13 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+1) to collect data from exchangeable replicates. Data in each trial can be autocorrelated (e.g., temporally or spatially) and nonstationary. No distributional assumptions are required, and the correlation function 
+
+ρ can be completely arbitrary. For instance, ρ could include a lag to detect delayed dependence, or even evaluate the correlation strength at several lags and report the strongest among them [39]. Moreover, the ρ
+
+can be asymmetric so that ρ(X, Y )̸ = ρ(Y, X ) as occurs when correlations are based on techniques that use one time series to predict values of another (e.g., Appendix 4). Such freedom from assumptions stands in contrast to the situation in the analysis of single-replicate time series, where the practitioner may be forced to make assumptions that are difficult to verify. For example, statistical tests of correlation between two time series often require stationary data at a minimum [40]. Yet, it is difficult to verify that a single time series is stationary because stationarity is a property of an entire ensemble of time series [40], so checking for stationarity in a single time series is similar in spirit to checking whether a single data point is drawn from a Gaussian distribution. However, applying a trial-swapping permutation test to check for significant correlations requires that a sufficient number of trials be available to permute amongst one another. When only small numbers of trials are available, the permutation test is severely limited by mathematics. The minimum p-value that can possibly be achieved by a permutation test is 1/n !, which will provide only modest evidence against a null hypothesis when n = 4 and is essentially useless when n = 3 , regardless of how strong the true dependence may be. This limitation is particularly severe for researchers testing several related hypotheses, as this ideally requires a test that can produce p-values sufficiently low to maintain significance even after a multiple-testing correction. Here we have described modified permutation tests – the sequential and simultaneous permute-match tests – that have access to lower p-values. In the sequential permute-match test, if the first variable does not display a perfect match, this test falls back to the simultaneous permute-match test. Thus, the sequential permute-match test is more powerful than the simultaneous test. However, the sequential test requires the arbitrary choice of checking for an X- or Y -perfect match first, making it potentially less reproducible between studies than the simultaneous test, which does not involve an arbitrary choice. If neither an X- nor 
+
+Y -perfect match is obtained, both tests default to a permutation test. This step is valid because the tests are nested in the sense that a perfect match can only occur when the permutation p-value takes on its lowest possible value (Lemma 9 in Appendix 2). The test appears computationally tractable for relevant sample sizes: Our implementation of the permute-match (X▶Y ) procedure completed a single test of dependence in the setting of Fig 2 with an average runtime of 3 seconds when n = 10 on a 2023 14-inch MacBook Pro with an M2 Pro processor and 16 GB RAM (see Source data 1). For n > 10 , a standard permutation test already can report a p-value below 3 × 10 −8, so 14 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+the perfect match test is likely unnecessary for typical applications. It seems likely that the tests could be further modified to report an even lower p-value when an X- and 
+
+Y -perfect match occur simultaneously, as in Fig 3B. However, we have not investigated further and this problem is left for future efforts. Although here we focused on time series, the permute-match test can in principle be applied to other scenarios where iid replicates are available, but data within each replicate are dependent. One example is spatial data in brain imaging, where the permutation test has been performed using multiple scanned brains [22]. Beyond spatial processes, dependent data also appear in nucleotide sequences and natural language text. Overall, advances in methods that take advantage of multiple replicates may facilitate statistical testing without requiring assumptions that are difficult to verify. 
+
+# Methods 
+
+## Data preprocessing 
+
+We obtained fish trajectory data [34] from the web address at https://drive.google.com/drive/folders/ 1UmzlX-yJhzQ5KX5rGry8wZgXvcz6HefD . For the first trial we used the file at the path “10/1/trajecto-ries_wo_gaps.npy” (where “10” indicates the number of fish and “1” indicates the first trial). For the second and third trials, the file path was the same except it began with “10/2/” and “10/3/” respectively. These files contain sequences of fish positions indexed by video frame, as well as constants such as the frame rate (32 frames per second) and approximate fish body length. We estimated the velocity of each fish as 
+
+−→v i,t =
+
+−→p i,t +1 − −→p i,t −1
+
+2 R
+
+where −→p i,t is a 2-dimensional column vector specifying the position of the ith fish in units of body length at video frame t, −→v i,t is a 2-dimensional column vector specifying the fish velocity in units of body length per second at video frame t, and R is the frame rate ( 32 frames per second). The 3 trials contained similar but slightly different numbers of frames. We truncated the −→v i,t time series to the shortest among them (19308 frames ≈ 10.06 minutes) so they could be compared before downstream analyses. A group’s average individual speed at each time was then given by 
+
+1
+
+N
+
+> N
+
+X
+
+> i=1
+
+|−→v i,t |
+
+15 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+where N is the number of fish. The mean resultant length Ct of a group at each time was given by the formula 
+
+Ct = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+−→v i,t 
+
+|−→v i,t | (2) 
+
+Figure 4: The mean resultant length is a measure of alignment among angles. Consider three unit vectors colored blue, yellow, and red. The length of net vector (dashed) divided by the number of vectors is defined as the mean resultant length. Compared to less-aligned angles (i), strongly aligned angles (ii) produce a longer net vector, and thus a greater mean resultant length. Velocity vectors −→v i,t covering missing tracking data (fewer than 0.02% of such vectors in any trial) were excluded from calculations of average individual speed and mean resultant length. When calculating mean resultant length, fish with speed of exactly zero (whose direction of motion is undefined) were also excluded. Instances of zero speed were rare, occurring in at most 1 fish-frame in any trial. Average individual speed and mean resultant length were determined from the remaining fish (always at least 8 of 10), so no time point was dropped from any trial. 
+
+## Statistical analysis 
+
+The permute-match test is described in Fig 1 and its validity is proved in Appendix 2. For the KPSS test, we used the function “statsmodels.tsa.stattools.kpss” in the Python package Statsmodels (ver. 0.10.1) [41]. We set the “regression” argument to “c” (which tests the null hypothesis of stationarity rather than trend-stationarity), and we set the “lags” argument to “auto” (which means that the number of lags used for testing 16 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+stationarity is automatically chosen by a data-dependent method). 
+
+## Artificial intelligence 
+
+ChatGPT 5.2 was used while constructing the proof of Lemma 15, particularly in the application of the “taking out what is known” property. Claude Opus 4.8 was used to review code, mathematical arguments, and article text for errors and unclear language. Claude Opus was also used to edit some parts of the manuscript for brevity. Corrections suggested by Claude Opus were reviewed by the authors and incorporated where appropriate. 
+
+# Acknowledgements 
+
+We thank Yunyi Zhang (CUHK-Shenzen) as well as members of the Shou Lab and two anonymous reviewers for valuable critiques. The University College London Computer Science High Performance Computational Cluster (https://hpc.cs.ucl.ac.uk/) provided computational resources and support that contributed to the completion of this research. 
+
+# Additional files 
+
+Figure 2 - Source data 1: Numerical values shown in Figure 2D 
+
+Figure 3 - Source data 1: Numerical values shown in Figure 3D 
+
+Figure S2 - Source data 1: Numerical values shown in Figure S2D 
+
+Figure S3 - Source data 1: Numerical values shown in Figure S3 
+
+Source data 1: Permute-match test run time as a function of the number of replicates 
+
+Source code 1: Python scripts used to produce the results shown in Figures 2, 3, S2, and S3 as well as Source data 1. 
+
+# References 
+
+[1] Granger CW, Newbold P. Spurious regressions in econometrics. Journal of econometrics. 1974;2(2):111-20. [2] Yule GU. Why do we sometimes get nonsense-correlations between Time-Series?–a study in sampling and the nature of time-series. Journal of the royal statistical society. 1926;89(1):1-63. [3] Weiss S, Van Treuren W, Lozupone C, Faust K, Friedman J, Deng Y, et al. Correlation detection strate-gies in microbial data sets vary widely in sensitivity and precision. The ISME journal. 2016;10(7):1669-81. [4] Coenen AR, Weitz JS. Limitations of correlation-based inference in complex virus-microbe communities. MSystems. 2018;3(4):e00084-18. [5] Rosenthal JS. First Look At Rigorous Probability Theory, A. World Scientific Publishing Company; 2006. [6] Ross SM. A first course in probability. Pearson; 2014. [7] Peters J, Janzing D, Schölkopf B. Elements of causal inference: foundations and learning algorithms. MIT press; 2017. 17 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+[8] Hitchcock C, Rédei M. Reichenbach’s Common Cause Principle. In: Zalta EN, editor. The Stanford Encyclopedia of Philosophy. spring 2020 ed. Metaphysics Research Lab, Stanford University; 2020. . [9] Chan KH, Hayya JC, Ord JK. A note on trend removal methods: The case of polynomial regression versus variate differencing. Econometrica: Journal of the Econometric Society. 1977:737-44. [10] Isliker H, Kurths J. A test for stationarity: finding parts in time series apt for correlation dimension estimates. International Journal of Bifurcation and Chaos. 1993;3(06):1573-9. [11] Guarin D, Orozco A, Delgado E. A new surrogate data method for nonstationary time series. arXiv; 2010. Available from: https://arxiv.org/abs/1008.1804 .[12] Greene WH. Econometric Analysis. Pearson; 2012. [13] Iatsenko D, Bernjak A, Stankovski T, Shiogai Y, Owen-Lynch PJ, Clarkson P, et al. Evolution of car-diorespiratory interactions with age. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences. 2013;371(1997):20110622. [14] Lancaster G, Iatsenko D, Pidde A, Ticcinelli V, Stefanovska A. Surrogate data for hypothesis testing of physical systems. Physics Reports. 2018;748:1-60. [15] Moulder RG, Boker SM, Ramseyer F, Tschacher W. Determining synchrony between behavioral time series: An application of surrogate data generation for establishing falsifiable null-hypotheses. Psycho-logical methods. 2018;23(4):757. [16] Schreiber T, Schmitz A. Surrogate time series. Physica D: Nonlinear Phenomena. 2000;142(3-4):346-82. [17] Yuan AE, Shou W. Data-driven causal analysis of observational biological time series. Elife. 2022;11:e72518. [18] Martin DC, Buffington V, Becker J. Randomization test of paired data: Application to evoked responses. Psychophysiology. 1981;18(5):524-8. [19] Ernst MD. Permutation methods: a basis for exact inference. Statistical Science. 2004:676-85. [20] Buffington V, Martin DC, Becker J. VER similarity between alcoholic probands and their first-degree relatives. Psychophysiology. 1981;18(5):529-33. [21] Albert M, Bouret Y, Fromont M, Reynaud-Bouret P. Surrogate data methods based on a shuffling of the trials for synchrony detection: the centering issue. Neural Computation. 2016;28(11):2352-92. [22] Weinstein SM, Vandekar SN, Adebimpe A, Tapera TM, Robert-Fitzgerald T, Gur RC, et al. A simple permutation-based test of intermodal correspondence. Human brain mapping. 2021;42(16):5175-87. [23] Bacchetti P, Deeks SG, McCune JM. Breaking free of sample size dogma to perform innovative trans-lational research. Science translational medicine. 2011;3(87):87ps24-4. [24] Vesterinen HV, Egan K, Deister A, Schlattmann P, Macleod MR, Dirnagl U. Systematic survey of the design, statistical analysis, and reporting of studies published in the 2008 volume of the Journal of Cerebral Blood Flow and Metabolism. Journal of Cerebral Blood Flow & Metabolism. 2011;31(4):1064-72. [25] Ristić-Djurović JL, Ćirković S, Mladenović P, Romčević N, Trbovich AM. Analysis of methods com-monly used in biomedicine for treatment versus control comparison of very small samples. Com-puter Methods and Programs in Biomedicine. 2018;157:153-62. Available from: https://www. sciencedirect.com/science/article/pii/S0169260717307344 .[26] Frasch MG, Walter B, Herry CL, Bauer R. Multimodal pathophysiological dataset of gradual cerebral ischemia in a cohort of juvenile pigs. Scientific Data. 2021;8(1):4. 18 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+[27] Vega ML, Willemoes M, Thomson RL, Tolvanen J, Rutila J, Samaš P, et al. First-time migration in juvenile common cuckoos documented by satellite tracking. PLoS One. 2016;11(12):e0168940. [28] Greene CS, Garmire LX, Gilbert JA, Ritchie MD, Hunter LE. Celebrating parasites. Nature genetics. 2017;49(4):483-4. [29] Hemerik J, Goeman J. Exact testing with random permutations. Test. 2018;27(4):811-25. [30] Shaw E. Schooling fishes. American Scientist. 1978;66(2):166-75. [31] Miller N, Gerlai R. From schooling to shoaling: patterns of collective motion in zebrafish (Danio rerio). PloS one. 2012;7(11):e48865. [32] Viscido SV, Parrish JK, Grünbaum D. Individual behavior and emergent properties of fish schools: a comparison of observation and theory. Marine Ecology Progress Series. 2004;273:239-49. [33] Lopez U, Gautrais J, Couzin ID, Theraulaz G. From behavioural analyses to models of collective motion in fish schools. Interface focus. 2012;2(6):693-707. [34] Romero-Ferrero F, Bergomi MG, Hinz RC, Heras FJ, De Polavieja GG. Idtracker. ai: tracking all individuals in small or large collectives of unmarked animals. Nature methods. 2019;16(2):179-82. [35] Berens P. CircStat: a MATLAB toolbox for circular statistics. Journal of statistical software. 2009;31:1-21. [36] Virtanen P, Gommers R, Oliphant TE, Haberland M, Reddy T, Cournapeau D, et al. SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python. Nature Methods. 2020;17:261-72. [37] Kwiatkowski D, Phillips PC, Schmidt P, Shin Y. Testing the null hypothesis of stationarity against the alternative of a unit root: How sure are we that economic time series have a unit root? Journal of econometrics. 1992;54(1-3):159-78. [38] Kulkarni RU, Wang CL, Bertozzi CR. Analyzing nested experimental designs-A user-friendly resampling method to determine experimental significance. PLoS computational biology. 2022;18(5):e1010061. [39] Cannistra C, Hoang L, Yuan AE, Shou W. Subtle methodological variations substantially impact correlation test results in ecological time series. bioRxiv. 2024. Available from: https://www.biorxiv. org/content/early/2024/10/15/2024.10.11.617506 .[40] Yuan AE, Shou W. An exactly valid and distribution-free statistical significance test for correlations between time series. bioRxiv. 2022. [41] Seabold S, Perktold J. Statsmodels: Econometric and statistical modeling with python. In: Proceedings of the 9th Python in Science Conference. vol. 57. Austin, TX; 2010. p. 10-25080. [42] Lehmann EL, Romano JP. Testing statistical hypotheses. vol. 3. Springer; 2005. [43] Steele JM. The Cauchy-Schwarz Master Class: An Introduction to the Art of Mathematical In-equalities. MAA problem books series. Cambridge University Press; 2004. Available from: https: //books.google.com/books?id=7GDyRMrlgDsC .[44] Durrett R. Probability: theory and examples. vol. 49. Cambridge university press; 2019. [45] Blitzstein JK, Hwang J. Introduction to probability. Chapman and Hall/CRC; 2019. [46] Sugihara G, May R, Ye H, Hsieh Ch, Deyle E, Fogarty M, et al. Detecting causality in complex ecosystems. Science. 2012;338(6106):496-500. [47] Ye H, Deyle ER, Gilarranz LJ, Sugihara G. Distinguishing time-delayed causal interactions using convergent cross mapping. Scientific reports. 2015;5:14750. 19 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# Appendix 
+
+In Appendix 1, we review the basic permutation test of independence and a proof of its validity. This is because, although these results are known to the statistical community, they are often presented in an abstract form whose connection to independence testing may not be obvious to the nonspecialist, or parts of the argument are simply left as an exercise to the reader. In Appendix 2, we provide the theoretical justification for the permute-match test, which is the main topic of this work. Appendix 3 expands on a brief claim made in the main text about p-values of sequential statistical tests, and Appendix 4 contains supplementary figures. 
+
+# Contents 
+
+1 Justification of the permutation test of independence 21 2 Validity of the permute-match test 25 3 The sequential permute-match test versus a seemingly similar flawed procedure 32 4 Illustration of permute-match test with logistic map system 35 
+
+20 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# 1 Justification of the permutation test of independence 
+
+In this section we provide a proof that the permutation test of independence is valid. No major novelty is claimed in this subsection. For instance, the results of Lemma 3 can be mostly reconstructed by piecing together various theorems, examples, and homework problems from section 15.2.1 of Lehmann and Romano [42]. Nevertheless, we present the complete argument here as a courtesy to the reader. Related proofs or proof sketches of various kinds of permutation tests can be found in [19, 29]. The following lemma describes a general rank-based method to test whether the distribution of a random variable changes upon applying a set of transformations. This lemma and proof are based on Theorem 15.2.1 in Lehmann and Romano [42]. We begin with this result because it comes first in the chain of logical steps that justify the permutation test, but it is somewhat abstract, and so the reader who prefers to start out with concrete concepts may wish to skip to Def 2 and return to this lemma when its necessity becomes apparent later. As a notational clarification, note that for the transformation hi, to denote “ hi applied to 
+
+Z” we write hiZ rather than the more traditional hi(Z).
+
+Lemma 1 
+
+Let Z ∈ Z be a random variable. Let H = {h1, ..., h m} be a set of functions from Z to Z such that: 1. the probability distributions of Z and hiZ are the same for all functions hi in H, and 2. the unordered sets {h1Z, ..., h mZ} and {h1hiZ, ..., h mhiZ} are equal for all hi in H.Let the statistic T be a function from Z to R. Given some z ∈ Z , let the ordered values of {T (h1z), ..., T (hmz)}
+
+be 
+
+T (1) (z) ≤ T (2) (z) ≤ · · · ≤ T (m)(z).
+
+Choose some significance level α ∈ [0 , 1] and let the rank k be 
+
+k = m − ⌊ mα ⌋ (S1) where ⌊mα ⌋ is the largest integer less than or equal to mα . Then, 
+
+P (T (Z) > T (k)(Z)) ≤ α
+
+where P (·) denotes the probability of an event. 
+
+Remark: Before proceeding to the proof, let us walk through the lemma, using a concrete example to help with the most abstract aspects. Suppose that random variable Z is the result of a fair coin flip. That is, 
+
+Z = 0 with 50% chance and Z = 1 with 50% chance. Then Z (the set of valid Z values) is the set {0, 1},and z can take on the value of 0 or 1. Next the lemma introduces H, which is a set of functions that need to satisfy certain requirements with respect to Z. Let’s choose H = {h1, h 2} where h1 “turns the coin over” and h2 leaves the coin as it is. That is, h1z = 1 − z and h2z = z. To check that H satisfies requirement (1), note that flipping the fair coin over does not change the probability distribution of its outcome, and neither does leaving it alone. To see that H satisfies requirement (2), we need to check that 
+
+{h1Z, h 2Z} = {h1h1Z, h 2h1Z} = {h1h2Z, h 2h2Z}
+
+If Z = 0 , then the above expression becomes 
+
+{1, 0} = {0, 1} = {1, 0}
+
+and if Z = 1 , then it is 
+
+{0, 1} = {1, 0} = {0, 1}
+
+and since these are unordered sets, they are all equal, so we have verified that H satisfies requirement (2). Next, we need a function T . For example, choose T (z) = z +10 . Thus, for z = 0 we have {T (h1z), T (h2z)} =
+
+{11 , 10 }. The lemma then introduces a ranking notation where T (i)(Z) is the ith smallest term in the 21 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+sequence. This notation is useful as we will be dealing with the set {T (h1Z), ..., T (hmZ)} for potentially large values of m. Returning to our example, if z = 0 , then T (1) (0) = 10 and T (2) (0) = 11 . Similarly for 
+
+z = 1 , T (1) (1) = 10 and T (2) (1) = 11 . Also, in the statement of the lemma, T (i) is defined as a function of 
+
+z, not Z. This is to emphasize that the ordering depends on the particular outcome of the random variable and is not fixed. Finally, the lemma makes a claim about the probability that T (Z) exceeds T (k)(Z), which is the kth lowest statistic in the set. In the example, if α = 0 .05 , then k = 2 − ⌊ 0.1⌋ = 2 . T (2) (Z) is always going to be the second smallest, i.e. the largest, element of T (h1z), T (h2z), which is 11. Of course, the probability of T (Z) being even greater than the largest number is 0, and since 0 is less than α = 0 .05 we have verified the lemma in this case. As another example, suppose α = 0 .5. Then k = 2 − ⌊ 1⌋ = 1 . T (k)(Z)
+
+is then T (1) (Z), the smallest element of {T (h1z), T (h2z)}. The probability of T (Z) being greater than the smallest number is 0.5 ≤ α = 0 .5, which verifies the lemma for α = 0 .5.
+
+Proof of Lemma 1: Let I(A) be the indicator function for the event A (meaning that I(A) = 1 if A
+
+occurs and I(A) = 0 otherwise). First suppose that T (k)(Z) is not tied with any other T (i)(Z). Then Eq. S1 implies that there are ⌊mα ⌋
+
+values of T (i)(Z) that are greater than T (k)(Z). That is, 
+
+⌊mα ⌋ =
+
+> m
+
+X
+
+> i=1
+
+I(T (hiZ) > T (k)(Z)) =
+
+> m
+
+X
+
+> i=1
+
+I(T (hiZ) > T (k)(hiZ)) .
+
+To arrive at the second equality, we used the fact that T (k)(Z) = T (k)(hiZ), which follows from the second requirement of the lemma (i.e. {h1Z, ..., h mZ} = {h1hiZ, ..., h mhiZ}). Alternatively, if there is possibly a tie for T (k)(Z) (meaning that there may be some j̸ = k such that 
+
+T (j)(Z) = T (k)(Z)), then we have a similar formula, but with an inequality instead of an equality: 
+
+⌊mα ⌋ ≥ 
+
+> m
+
+X
+
+> i=1
+
+I(T (hiZ) > T (k)(hiZ)) .
+
+This version with the inequality is of course general since it is true under both cases. Using this formula, 
+
+mα ≥ ⌊ mα ⌋ = E[⌊mα ⌋] ≥
+
+> m
+
+X
+
+> i=1
+
+E
+
+h
+
+I(T (hiZ) > T (k)(hiZ)) 
+
+i
+
+.
+
+Since Z and hiZ have the same distribution, we may remove the hi in the above formula, and we have 
+
+mα ≥
+
+> m
+
+X
+
+> i=1
+
+E
+
+h
+
+I(T (Z) > T (k)(Z)) 
+
+i
+
+= mE 
+
+h
+
+I(T (Z) > T (k)(Z)) 
+
+i
+
+.
+
+Dividing through by m gives 
+
+α ≥ E
+
+h
+
+I(T (Z) > T (k)(Z)) 
+
+i
+
+= P (T (Z) > T (k)(Z)) 
+
+as required. Next we give a definition of the permutation test. The definition here is somewhat more general than in the main text. As with hi, we will denote “ gi applied to Z” by writing giZ.
+
+Definition 2 The permutation test of independence 
+
+22 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of random variables. Let G = {g1, ..., g n!} be the complete set of functions that permute a sequence of length n. For example, if Y is (2 , 7, 4) , then giY might be (2 , 4, 7) . Define the statistic T (X, Y ) to be a function that returns a real number, typically interpreted as the overall correlation strength. Repeatedly compute the statistic after permuting the elements of Y . That is, compute 
+
+{T (X, g 1Y ), T (X, g 2Y ), ..., T (X, g n!Y )}.
+
+Let N≥ be the number of permuted statistic values that are at least as large as the original statistic value. That is, 
+
+N≥ =
+
+> n!
+
+X
+
+> i=1
+
+I(T (X, g iY ) ≥ T (X, Y )) 
+
+where I(A) is the indicator function for the event A (meaning that I(A) = 1 if A occurs and I(A) = 0 
+
+otherwise). Then the p-value of the test is given by 
+
+pperm = N≥/n !
+
+We now prove the validity of the permutation test. 
+
+Lemma 3 The permutation test of independence is valid when Y is exchangeable. 
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of random variables such that Y is exchangeable and where X is independent of Y . Perform the permutation test of independence (Def. 2) to obtain pperm .Then, P (pperm ≤ α) ≤ α for any α ∈ [0 , 1] .
+
+Proof: Here we use the symbols gi and T with their meanings from Def. 2. We first set up the problem in a way that allows us to apply Lemma 1. To construct the random variable 
+
+Z and transformation set H for Lemma 1, we choose Z = ( X, Y ) and hiZ = ( X, g iY ). Lemma 1 has two requirements. First, Z and hiZ must have the same distribution. This requirement is satisfied: Since Y is exchangeable and X is independent of Y , it follows that (X, Y ) has the same distribution as (X, g iY ). The second requirement is that {h1Z, ..., h mZ} = {h1hiZ, ..., h mhiZ}. This requirement is also satisfied: The set of permutations of Y is the same as the set of permutations of giY . Since both requirements are satisfied, we may apply Lemma 1. We now prove the result directly. Below, A ↔ B means “ A if and only if B”. 
+
+pperm ≤ α ↔ N≥ ≤ n!α ↔
+
+> n!
+
+X
+
+> i=1
+
+I(T (X, g iY ) ≥ T (X, Y )) ≤ n!α
+
+↔
+
+> n!
+
+X
+
+> i=1
+
+(1 − I(T (X, g iY ) ≥ T (X, Y ))) ≥ n! − n!α
+
+↔
+
+> n!
+
+X
+
+> i=1
+
+(I(T (X, g iY ) < T (X, Y ))) ≥ n! − n!α
+
+↔
+
+> n!
+
+X
+
+> i=1
+
+(I(T (X, g iY ) < T (X, Y ))) ≥ n! − ⌊ n!α⌋ .
+
+As in Eq. S1, let us define k = m − ⌊ mα ⌋, where n! = m. Then, the final line above says “the number of permuted Y s that produce a smaller T than the original Y is greater than or equal to k.” Said another way, “when we rank the T s from least to greatest, the T from the original Y will have a higher rank than 
+
+k”. This in turn is equivalent to T (X, Y ) > T (k)(X, Y ). Thus, we may directly apply Lemma 1, thereby obtaining 
+
+P (pperm ≤ α) = P (T (X, Y ) > T (k)(X, Y )) ≤ α
+
+23 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+as required. Lemma 3 is “asymmetric” in that it requires Y to be exchangeable and says nothing about X. It is possible to write down a variant of this lemma where either an exchangeable Y or an exchangeable X
+
+is sufficient, but this requires an extra condition on T . Specifically, it is required that applying the same permutation to both X and Y must leave the value of T (X, Y ) unchanged. That is, T (X, Y ) = T (giX, g iY )
+
+for any permutation function gi. Importantly, the form of T that is used for the permute-match test (i.e. 
+
+T (X, Y ) = 1
+
+> n
+
+Pni=1 ρ(Xi, Y i)) satisfies this requirement because in this case, T (giX, g iY ) simply rearranges the order of the terms in the summation, which clearly has no effect on the value of T . We establish this formally in the corollary below. 
+
+Corollary 4 If T is “nice”, then the permutation test is valid when either X or Y is exchangeable. 
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of random variables such that at least one of 
+
+(X, Y ) is exchangeable and where X is independent of Y . Perform the permutation test of independence (Def. 2) using a correlation function with the “nice” property that 
+
+T (X, Y ) = T (giX, g iY ) (S2) for any permutation function gi. Then, P (pperm ≤ α) ≤ α for any α ∈ [0 , 1] .
+
+Proof: Lemma 3 already covers the case where Y is exchangeable. We now consider the case where X is exchangeable, but not Y .We proceed by showing that the permutation test where Y is permuted is equivalent to the permutation test where X is permuted. Notice that to show this equivalence it is sufficient to establish that 
+
+{T (X, g 1Y ), ..., T (X, g n!Y )} = {T (g1X, Y ), ..., T (gn!X, Y )}
+
+where the left and right sides both denote unordered sets. It will be useful to refer to the inverse permutation g−1 
+
+> i
+
+, which is the permutation that “undoes” gi. More precisely, g−1 
+
+> i
+
+is defined by the relation 
+
+g−1 
+
+> i
+
+giZ = Z. Using Eq. S2, we have: 
+
+T (X, g iY ) = T (g−1 
+
+> i
+
+X, g −1 
+
+> i
+
+giY ) (S3) 
+
+= T (g−1 
+
+> i
+
+X, Y ).
+
+Note that the inverse permutation g−1 
+
+> i
+
+is guaranteed to exist because any permutation gi can be “undone” by some other permutation ( g−1 
+
+> i
+
+). In the edge case where gi is the trivial identity permutation, g−1 
+
+> i
+
+is also the identity permutation. Additionally, the set of permutation functions is the same as the set of inverse permutation functions, meaning that 
+
+{g1, ..., g n!} = {g−11 , ..., g −1 
+
+> n!
+
+} (S4) because each permutation is an inverse permutation (because gi inverts g−1 
+
+> i
+
+), and each inverse permuta-tion is a permutation. It follows that 
+
+{T (X, g 1Y ), ..., T (X, g n!Y )} = {T (g−11 X, Y ), ..., T (g−1 
+
+> n!
+
+X, Y )}
+
+= {T (g1X, Y ), ..., T (gn!X, Y )}
+
+where the first equality follows from Eq. S3 and the second equality follows from Eq. S4. This shows that the permutation test where Y is permuted is equivalent to the permutation test where X is permuted. From Def. 2 and Lemma 3 it is clear that a permutation test where X is permuted instead of Y would be valid (i.e. P (pperm ≤ α) ≤ α) if X is exchangeable. Since we have just now shown that the present procedure is equivalent to a permutation test where X is permuted instead of Y , it follows that this procedure is valid when X is exchangeable, which completes the proof. 24 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# 2 Validity of the permute-match test 
+
+We now justify the validity of the permute-match test, which is the primary contribution of the present work. Recall from the main text that the null hypothesis of this test is that X1, ..., X n are iid, Y1, ..., Y n are iid and Y is independent of X.
+
+Definition 5 The perfect match events ( MX and MY )
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of random variables. Let ρ (the “correlation function”) be a function that maps a pair (Xi, Y j ) to a real number. We say that the event MY (also called a “ Y -perfect match”) occurs if and only if: 
+
+ρ(Xi, Y i) > ρ (Xj , Y i)
+
+for all pairs (i, j ) such that i̸ = j.Similarly, the event MX (also called an “ X-perfect match”) occurs if and only if 
+
+ρ(Xi, Y i) > ρ (Xi, Y j )
+
+for all pairs (i, j ) such that i̸ = j.
+
+Lemma 6 
+
+Let X = ( X1, ..., X n) be a sequence of random variables and let Y = ( Y1, ..., Y n) be a sequence of iid random variables. Let X and Y be independent. Then, the probability of a Y -perfect match is at most 
+
+1/n n.
+
+Proof: Let X and Y be the sample spaces of X and Y (i.e. X ∈ X and Y ∈ Y). Let c be a function that maps from X × Y to Nn. Specifically, c(x, y) = ( c1(x, y), ..., c n(x, y)) , where each ci is given as follows: 
+
+ci(x, y) = argmax 
+
+> j
+
+(ρ(xj , y i)) 
+
+That is, ci(x, y) ∈ { 1, ..., n } is defined to be the index j that maximizes ρ(xj , y i). In the case of a multi-way tie, ci is the lowest from among the maximizing index values. (For example, if j = 3 and j = 7 both produced the greatest value of ρ(xj , y i), then ci would be 3 since 3 < 7.) Note that if a Y -perfect match occurs, then 
+
+c1(X, Y ) = 1 , ..., c n(X, Y ) = n. 
+
+Consider c(x, Y ) for a fixed x ∈ X . Notice that 
+
+c1(x, Y ), ..., c n(x, Y )
+
+are iid because each ci(x, Y ) depends only on Yi. Since the ci(x, Y ) terms are identically distributed across i, we have: 
+
+P (ci(x, Y ) = i) = P (c1(x, Y ) = i)
+
+for all i. Therefore we have 
+
+> n
+
+X
+
+> i=1
+
+P (ci(x, Y ) = i) = 
+
+> n
+
+X
+
+> i=1
+
+P (c1(x, Y ) = i) = 1 .
+
+By dividing through by n, we may write 
+
+1
+
+n = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+P (ci(x, Y ) = i) ≥
+
+> n
+
+Y
+
+> i=1
+
+P (ci(x, Y ) = i)
+
+!1/n 
+
+(S5) 25 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+where the inequality comes from the AM-GM inequality (e.g., [43] pg. 20). Since the ci(x, Y ) terms are independent, 
+
+> n
+
+Y
+
+> i=1
+
+P (ci(x, Y ) = i) = P (c1(x, Y ) = 1 , ..., c n(x, Y ) = n)
+
+Substituting this fact into inequality S5 and raising both sides to the nth power gives us 
+
+1
+
+nn ≥ P (c1(x, Y ) = 1 , ..., c n(x, Y ) = n) = P (c(x, Y ) = [1 , ..., n ]) (S6) Since the above inequality holds for all x ∈ X , and since X and Y are independent, Lemma 7 (given immediately following this proof) implies 
+
+P (c(X, Y ) = [1 , ..., n ]) ≤ 1
+
+nn (S7) Since a Y -perfect match implies c(X, Y ) = [1 , ..., n ], the left side of this inequality has a lower bound of 
+
+P (MY ), giving us 
+
+P (MY ) ≤ P (c(X, Y ) = [1 , ..., n ]) ≤ 1
+
+nn
+
+as required. We now justify the step from Equation S6 to Equation S7 in the proof above. That is, we explain why a bound that holds for every fixed x continues to hold when x is replaced by the random variable X, provided 
+
+X and Y are independent. 
+
+Lemma 7 
+
+Let X ∈ X and Y ∈ Y be independent random variables. Let f be a function whose domain is the product space X × Y and let v be a member of the range of f . Assume that there exists a constant p ∈ [0 , 1] 
+
+such that 
+
+P (f (x, Y ) = v) ≤ p for all x ∈ X 
+
+Then, 
+
+P (f (X, Y ) = v) ≤ p. 
+
+Proof: Let Iv (x, y ) denote the indicator function for the event where f (x, y ) = v. That is, Iv (x, y ) = 1 if 
+
+f (x, y ) = v and otherwise Iv (x, y ) = 0 .From the law of total expectation we have 
+
+P (f (X, Y ) = v) = E[Iv (X, Y )] = E[E(Iv (X, Y )|X)] (S8) Let g(x) be a function given by 
+
+g(x) = E[Iv (x, Y )] 
+
+Since X and Y are independent, it follows (e.g., see Example 4.1.7 in [44]) that g(X) = E(Iv (X, Y )|X).Substituting this fact into equation S8 gives 
+
+P (f (X, Y ) = v) = E[g(X)] .
+
+26 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Note that it follows from the conditions of this lemma that g(x) ≤ p for all x ∈ X . Thus, monotonicity of the expected value implies E[g(X)] ≤ E[p] = p. Combining this fact with the above equation, we obtain 
+
+P (f (X, Y ) = v) ≤ p
+
+as required. 
+
+Lemma 8 
+
+Let X = ( X1, ..., X n) be a sequence of iid random variables and let Y = ( Y1, ..., Y n) be a sequence of random variables. Let X and Y be independent. Then, the probability of an X-perfect match is at most 
+
+1/n n.
+
+Proof: The argument is analogous to that of Lemma 6. The main differences are that in this case we define ci(x, y) = argmax 
+
+> j
+
+(ρ(xi, y j )) instead of ci(x, y) = argmax 
+
+> j
+
+(ρ(xj , y i)) , and here we condition on Y = y
+
+instead of X = x.
+
+Lemma 9 A perfect match implies pperm = 1 /n !
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of random variables. Let ρ be a function that maps a pair (Xi, Y j ) to a real number. Define the average correlation 
+
+T (X, Y ) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ρ(Xi, Y i). (S9) Perform the permutation test of independence (Def. 2) using T as the statistic, and obtain the p-value 
+
+pperm . Also check for an X-perfect and Y -perfect match test (Def. 5) using ρ as the correlation function. Then, the occurrence of either an X-perfect match or a Y -perfect match implies that pperm = 1 /n !.
+
+Proof: This claim is shown by a visual argument in Fig 1C. Here we walk through the same logic in prose. Suppose a Y -perfect match occurs, meaning that 
+
+ρ(Xi, Y i) > ρ (Xj , Y i) ∀ (i̸ = j).
+
+In other words, for each Yi, its correlation term ρ(·, Y i) is strictly maximized when Yi is paired with Xi.Applying a permutation to Y (other than the trivial identity permutation) means that for at least one choice of i, the ρ(Xi, Y i) term in Eq. S9 becomes replaced with ρ(Xj , Y i) for some j̸ = i. But ρ(Xi, Y i) > ρ (Xj , Y i).Therefore, T (X, Y ) must be strictly greater than all permuted versions T (X, g iY ) (other than when gi is the identity permutation). It follows that pperm = 1 /n !.Suppose now that an X-perfect match occurs. It follows that for each Xi its correlation term ρ(Xi, ·)
+
+is strictly maximized when Xi is paired with Yi. Applying a permutation to X (other than the identity permutation) means that for at least one choice of i, the ρ(Xi, Y i) term in Eq. S9 becomes replaced with 
+
+ρ(Xi, Y j ) for some j̸ = i. Therefore, T (X, Y ) is strictly greater than all permuted versions T (giX, Y )
+
+whenever gi is not the identity permutation. So pperm = 1 /n !.
+
+Lemma 10 
+
+1/n ! ≥ 2/n n for all integers n > 1, with equality only when n = 2 .27 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Proof: When n = 2 it is clear that 1/n ! = 2 /n n = 1 /2.For n > 2, we establish 1/n ! > 2/n n by an inductive argument. For the base case, suppose n = 3 . Then, 
+
+1/n ! > 2/n n becomes 1/6 > 2/27 , which is true. For the inductive step, suppose the target inequality 1/n ! > 2/n n holds. Multiplying the target inequality on both sides by 1/(n + 1) , we obtain 
+
+1(n + 1)! > 2
+
+nn
+
+ 1
+
+n + 1 
+
+
+
+> 2(n + 1) n
+
+ 1
+
+n + 1 
+
+
+
+= 2(n + 1) n+1 
+
+This shows that 1/n ! > 2/n n implies 1/(n + 1)! > 2/(n + 1) n+1 . We conclude by the inductive principle that the target inequality is true for n > 2.
+
+Theorem 11 The permute-match X▶Y test is valid. 
+
+Let X = ( X1, ..., X n) and Y = ( Y1, ..., Y n) be sequences of iid random variables. Let X and Y be independent. Let the correlation function ρ be a function that maps a pair (Xi, Y j ) to a real number. Define the average correlation 
+
+T (X, Y ) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ρ(Xi, Y i).
+
+Perform the permutation test of independence (Def. 2) using T as the statistic, and obtain the p-value 
+
+pperm . Also check for an X-perfect match test and a Y -perfect match test (Def. 5) using ρ as the correlation function. Let 
+
+p =
+
+
+
+1/n n
+
+2/n n
+
+pperm 
+
+if an X−perfect match occurs if a Y −perfect match occurs , but not an X−perfect match if neither occurs 
+
+Then P (p ≤ α) ≤ α for α ∈ [0 , 1] and n > 1.
+
+Proof: For notational convenience, we denote the events of an X-perfect match and Y -perfect match as 
+
+MX and MY .There are four cases to consider. Either (case i) α ≥ 1/n !, or (case ii) 1/n ! > α ≥ 2/n n, or (case iii) 
+
+2/n n > α ≥ 1/n n, or (case iv) α < 1/n n. Note that Lemma 10 tells us that 1/n ! ≥ 2/n n.Case i: Suppose α ≥ 1/n !. In this case, p ≤ α if MX occurs or MY occurs or pperm ≤ α.
+
+P (p ≤ α) = P (pperm ≤ α or MX or MY )= P (pperm ≤ α or ( MX or MY )) 
+
+This may be split into 3 terms via the identity P (A or B) = P (A and B)+ P (A and not B)+ P ((not A) and B),as follows: 
+
+P (p ≤ α) = P (pperm ≤ α and ( MX or MY )) + P (pperm ≤ α and not ( MX or MY )) + P (pperm > α and ( MX or MY )) 
+
+However, by Lemma 9, if either MX or MY occurs, then pperm = 1 /n !, which would in turn imply 
+
+pperm ≤ α under case i. That is, the term P (pperm > α and ( MX or MY )) in the above summation is zero. Removing this term, we have 
+
+P (p ≤ α) = P (pperm ≤ α and ( MX or MY )) + P (pperm ≤ α and not ( MX or MY )) = P (pperm ≤ α) ≤ α
+
+28 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+where the final inequality is due to Lemma 3. This establishes the claim for case i. Case ii: Suppose 1/n ! > α ≥ 2/n n. In this case, pperm > α since pperm cannot be less than 1/n !, so we have 
+
+P (p ≤ α) = P (MX or MY )
+
+≤ P (MX ) + P (MY )
+
+From Lemmas 6-8 we know P (MX ) ≤ 1/n n and P (MY ) ≤ 1/n n. Thus the above inequality becomes 
+
+P (p ≤ α) ≤ P (MX ) + P (MY ) ≤ 1/n n + 1 /n n ≤ α
+
+which establishes the claim in case ii. Case iii: Suppose 2/n n > α ≥ 1/n n. In this case, only MX will give us p ≤ α. So we have 
+
+P (p ≤ α) = P (MX ) ≤ 1/n n ≤ α
+
+which verifies the claim in case iii. Case iv: If α < 1/n n, then, p ≤ α is impossible so P (p ≤ α) = 0 ≤ α, so the claim is trivially satisfied in case iv. Having been shown in all four cases, the claim has been proven. 
+
+Theorem 12 The permute-match Y ▶X test is valid. 
+
+Consider the same setting as Theorem 11, except that now 
+
+p =
+
+
+
+1/n n
+
+2/n n
+
+pperm 
+
+if a Y −perfect match occurs if an X−perfect match occurs , but not a Y −perfect match if neither occurs 
+
+Then, P (p ≤ α) ≤ α for α ∈ [0 , 1] and n > 1.
+
+Proof: The proof is analogous to that of Theorem 11. In fact, all we need to change here is that in case iii, we use the fact that P (MY ) ≤ 1/n n instead of that P (MX ) ≤ 1/n n.
+
+Theorem 13 The simultaneous permute-match (X;Y ) test is valid. 
+
+Consider the same setting as Theorem 11, except that now 
+
+q =
+
+(
+
+2/n n
+
+pperm 
+
+if an X−perfect match or Y −perfect match occurs if neither occurs 
+
+Then, P (q ≤ α) ≤ α for α ∈ [0 , 1] and n > 1.
+
+Proof: We first show by cases that p of Theorem 11 is always less than or equal to q. First, if an X-perfect match occurs, then p = 1 /n n < 2/n n = q. Second, if there is a Y -perfect match but not an X-perfect match, then p = 2 /n n = q. Third, if neither an X-perfect nor a Y -perfect match occurs, then p = pperm = q.Overall, p ≤ q. It follows that q ≤ α implies p ≤ α.Then it follows from Theorem 11 that 
+
+P (q ≤ α) ≤ P (p ≤ α) ≤ α
+
+so P (q ≤ α) ≤ α as required. 29 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+We have seen that 1/n n is a universal upper bound on P (X−perfect match) . Here, we give an intuitive explanation for why this probability can be far smaller than 1/n n, and also why it is still possible to construct examples where P (X−perfect match) comes arbitrarily close to 1/n n.To see why P (X−perfect match) can fall well below 1/n n, recall the analogy of students and advisors, where ρ(Xi, Y j ) measures how well a student i likes advisor j and an X-perfect match occurs if each student prefers their own advisor over all the others. Suppose that all the students value essentially the same qualities in an advisor. In the most extreme instance, ρ(Xi, Y j ) depends only on Yj and not Xi at all. Then all students will rank advisors in the same way, so they will all prefer the same advisor, making an X-perfect match impossible. This suggests that to maximize the chance of an X-perfect match, different students must care about different “dimensions” of their advisors. However, under the null hypothesis, the Xi variables are independent and identically distributed, so we cannot deterministically assign different advisor dimensions to different students. Instead, the key trick in our construction is to introduce an enormous number of possible dimen-sions. By allowing the number of advisor dimensions ( k in the following formal construction) to be arbitrarily large, we make the probability that two students happen to care about the same dimension arbitrarily small. And, if indeed each student cares about a different (and independent) dimension, all the students will rank advisors independently, so that the probability of an X-perfect match approaches 1/n n.
+
+The following formalizes the above intuition, establishing a scenario where under the null hypothesis, the probability of an X-perfect match can be made arbitrarily close to 1/n n. An analogous example could be constructed for a Y -perfect match. 
+
+Construction Let k be a positive integer whose value will be chosen later. For each i ∈ { 1, ..., n }, let Xi
+
+be drawn uniformly at random from among {1, ..., k }, and let X1, ..., X n be independent. For each j ∈ { 1, ..., n } and each l ∈ { 1, ..., k }, let 
+
+Yj,l ∼ Uniform(0 , 1) 
+
+where all Yj,l terms are independent of each other and of the Xi terms. Define Yj = [ Yj, 1, ..., Y j,k ]. In the story above, Xi is the dimension that student i cares about, and Yj,l is the quality of advisor j along dimension l.Let the correlation function be 
+
+ρ(Xi, Y j ) = Yj,X i
+
+In this case, we say that an X-perfect match occurs if and only if 
+
+Yi,X i > Y j,X i for all pairs ( i, j ) such that j̸ = i
+
+Proposition 14 
+
+Let q be a number such that 0 ≤ q < 1. Then, for the construction above, when H0 is satisfied (i.e., the 
+
+Xi are iid, the Yi are iid, and X and Y are independent), the probability of an X-perfect match is > q/n n.
+
+Proof: Fix x ∈ { 1, ..., k } and let Aj,x be the event that Yj,x is the strictly largest element from the sequence 
+
+Y[: ,x ] = [ Y1,x , ..., Y n,x ]. Since the elements of Y[: ,x ] are iid continuous random variables, the probability of a “tie” for largest is zero, and so it follows from symmetry that P (Aj,x ) = 1 /n for all j. Now, fix {x1, ..., x n}
+
+where each xi is unique. Then, Ai,x i are all independent of one another because each Ai,x i depends only on 
+
+Y[: ,x i], and the Y[: ,x i] are independent. Thus 
+
+P
+
+> n
+
+\
+
+> i=1
+
+Ai,x i
+
+!
+
+=
+
+> n
+
+Y
+
+> i=1
+
+P (Ai,x i ) = 1 /n n
+
+30 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Notice that for X = x, an X-perfect match occurs if and only if all the Ai,x i events occur. Let us formalize this further. Let MX be a set in the product sample space of X and Y such that (x, y ) ∈ M X if and only if yi,x i > y j,x i for all pairs i̸ = j. Moreover, let us denote an X-perfect match by the symbol MX .Notice that MX occurs if and only if (X, Y ) ∈ M X . Now, we may rewrite the above equation as 
+
+P (( x, Y ) ∈ M X ) = 1 /n n
+
+for all x whose entries are unique. Applying Lemma 15 (given just after the present proof) to the above result, we see that 
+
+P (( X, Y ) ∈ M X |X1̸ = · · ·̸ = Xn) = 1 /n n
+
+We are now ready to complete the result. We start with 
+
+P (( X, Y ) ∈ M X ) ≥ P
+
+
+
+(X1̸ = · · ·̸ = Xn) \(X, Y ) ∈ M X
+
+
+
+Substituting MX ⇐⇒ (X, Y ) ∈ M X , we now obtain: 
+
+P (MX ) ≥ P
+
+
+
+(X1̸ = · · ·̸ = Xn) \ MX
+
+
+
+(S10) 
+
+P (MX ) ≥ P (X1̸ = · · ·̸ = Xn)P (MX |X1̸ = · · ·̸ = Xn) (S11) 
+
+P (MX ) ≥ P (X1̸ = · · ·̸ = Xn)/n n (S12) Since X1, ..., X n are uniformly distributed, we have 
+
+P (X1̸ = · · ·̸ = Xn) = 
+
+> n−1
+
+Y
+
+> i=0
+
+k − ik >
+
+
+
+1 − n − 1
+
+k
+
+n
+
+(S13) We have not yet specified k; we do so now. Choose k to be any integer with: 
+
+k ≥ n − 11 − q1/n 
+
+Then, combining this choice of k with inequality S13, we have P (X1̸ = · · ·̸ = Xn) > q , which we may substitute into inequality S12 to obtain P (MX ) > q/n n, as required. 
+
+Lemma 15 
+
+Let X and Y be independent random variables. Let A be a set in the sample space of X with P (X ∈
+
+A) > 0. Let B be a set in the product space of X and Y . Assume that there exists a constant p ∈ [0 , 1] such that 
+
+P (( x, Y ) ∈ B) = p for all x ∈ A
+
+Then, 
+
+P (( X, Y ) ∈ B|X ∈ A) = p. 
+
+Proof: Let IB (x, y ) denote the indicator function for the event where (x, y ) ∈ B. That is, IB (x, y ) = 1 if 
+
+(x, y ) ∈ B and otherwise IB (x, y ) = 0 . Let g(x) be a function given by 
+
+g(x) = E[IB (x, Y )] = P (( x, Y ) ∈ B).
+
+Note that it follows from the conditions of this lemma that g(x) = p for all x ∈ A.Consider the joint probability 
+
+P (( X, Y ) ∈ B, X ∈ A) = E[IB (X, Y )IA(X)] 
+
+31 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+where IA(x) is the indicator function for x ∈ A. From the law of total expectation, the above is equal to 
+
+= E[E(IB (X, Y )IA(X)|X)] 
+
+since IA(X) is a function of X only, we may pull it out of the inner conditional expectation (“taking out what is known”; see for instance Theorem 9.3.2 in [45]): 
+
+= E[IA(X)E(IB (X, Y )|X)] (S14) Since X and Y are independent, it follows from Example 4.1.7 in [44] that g(X) = E(IB (X, Y )|X).Substituting this result into Eq. S14 gives 
+
+= E[IA(X)g(X)] 
+
+Notice that IA(x)g(x) = IA(x)p because both evaluate to p for all x ∈ A, and evaluate to 0 for all x / ∈ A.Thus the above becomes 
+
+= pE [IA(X)] 
+
+To summarize this chain of equalities, we now have 
+
+P (( X, Y ) ∈ B, X ∈ A) = pE [IA(X)] = pP (X ∈ A)
+
+Finally, by substituting this result into the definition of conditional probability, we have 
+
+P (( X, Y ) ∈ B|X ∈ A) = P (( X, Y ) ∈ B, X ∈ A)
+
+P (X ∈ A)= pP (X ∈ A)
+
+P (X ∈ A) = p
+
+as required. 
+
+# 3 The sequential permute-match test versus a seemingly similar flawed procedure 
+
+In the main text we briefly noted that the sequential permute-match test superficially resembles the flawed practice of conducting additional tests merely because earlier tests did not result in a detection. Here we provide a detailed explanation of why this practice generally results in an invalid p-value, and point out that the sequential permute-match test does not have this problem. To spell out the flawed practice, suppose a researcher runs one test (test X) and obtains a p-value, pX .If pX is below their desired significance level α, they stop there and report pX . Conversely, if pX > α , this researcher performs another test (test Y ) that assesses the same biological hypothesis in a slightly different way, obtaining a second p-value, pY . However, the researcher has a vague understanding that if one conducts multiple tests, a correction is required, so at this point they perform a Bonferroni correction to account for two tests and report 2pY . Overall, the p-value obtained from this series of steps is: 
+
+p =
+
+(
+
+pX
+
+2pY
+
+if pX ≤ α
+
+otherwise (S15) One may ask whether this overall procedure has the desired property (known as ’validity’) that it prevents the false positive rate from exceeding the significance level. Unfortunately, this procedure is generally not valid, meaning that it commonly leads to P (p ≤ α) > α under the null hypothesis. To demonstrate this fact mathematically, we make three assumptions. First, we assume that the null hypothesis of independence is true for both tests X and Y so that P (p ≤ α) is the false positive rate. Second, we assume that pX and pY are both random variables following a uniform distribution between 0 and 1. Finally, we assume that the significance level α is less than 1/2.32 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+The false positive rate of the procedure in Eq S15 depends on the relationship between the two tests. If tests X and Y tend to report the same result, they will behave more like a single test and the false positive rate of Eq S15 will be lower; if the tests frequently report different results, they will behave like two genuinely distinct tests, and the false positive rate will be greater. This relationship is quantified in Table S1, which describes the joint and marginal distributions of the X and Y test outcomes. We write the probability that test X is significant (or not) along the bottom row, and the probability that test Y is significant (or not) along the rightmost column. We then define a parameter ( P ′) which is the probability that test Y is significant while test X is not. We then fill out the rest of the table, corresponding to the probabilities of the other possible test results, by ensuring that the rows and columns of the 2 × 2 “Joint probability” table sum to the entries in the “Total probability” row and column. Joint probability Total probability Test X is significant (pX ≤ α)Test X not significant (pX > α )Joint probability Test Y not significant (2pY > α ) α/ 2 + P ′ 1 − α − P ′ 1 − α/ 2
+
+Test Y is significant (2pY ≤ α) α/ 2 − P ′ P ′ α/ 2
+
+Total probability α 1 − α
+
+Table S1: Joint and marginal probabilities of the outcomes of tests X and Y , assuming that pX and pY both follow Unif(0 , 1) . We first fill the total probability row and column, and define P ′ as the probability that test Y is significant but test X is not. The remaining entries can then be deduced. Each joint probability is of course bounded between 0 and 1. Thus, moving clockwise from the upper left of the 2 × 2 inner table we have the following constraints on P ′:
+
+0 ≤ α/ 2 + P ′ ≤ 10 ≤ 1 − α − P ′ ≤ 10 ≤ P ′ ≤ 10 ≤ α/ 2 − P ′ ≤ 1
+
+Among these constraints, since α < 1/2, the tightest bounds on P ′ are 0 ≤ P ′ ≤ α/ 2. Notice that the false positive rate of the overall procedure is given by: 
+
+P (p ≤ α) = 1 − P (pX > α and 2 pY > α )= α + P ′ (S16) Fig S1 plots Eq S16 within the allowed bounds of P ′, noting the extreme cases of P ′ = 0 and P ′ = α/ 2,as well as the case of independence in which P ′ = P (2 pY ≤ α) × (pX > α ). Other than the extreme case of P ′ = 0 , in which a significant Y test result deterministically ensures that the X test is also significant, the false positive rate of the overall procedure, P (p ≤ α), will be greater than α. Thus the procedure is not valid. The approach for the sequential permute-match test (Fig 1F) is different because it is based on discrete events, not continuous random variables. Perhaps counterintuitively, we can actually get away with a similar recipe while producing a valid p-value. To best compare our approach to the flawed procedure above, we presently leave out the permutation part and focus only on the matching test component in the following proposition: 
+
+Proposition 16 
+
+33 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Figure S1: The procedure of Eq S15 produces a false positive rate that generally exceeds α, and depends on the relationship between tests X and Y . This relationship between X and Y can be quantified by P ′, the probability that test Y is significant (i.e. 2pY ≤ α) but test X is not significant (i.e. pX > α ). The false positive rate is shown over the full range of P ′, from 0 to α/ 2. The only way for the overall procedure of Eq S15 to be valid is when P ′ = 0 , where tests X and Y are so tightly coupled that a significant result in test 
+
+Y deterministically ensures that test X is also significant. Other than this edge case, the false positive rate of the overall procedure will exceed α.Let MX and MY be events with P (MX ) ≤ 1/n n and P (MY ) ≤ 1/n n. Let 
+
+p =
+
+
+
+1/n n
+
+2/n n
+
+1if MX occurs if MY occurs , but not MX
+
+neither occurs 
+
+(S17) Then, P (p ≤ α) ≤ α for 0 ≤ α ≤ 1 and for all integers n ≥ 2.
+
+Proof: We consider four cases, each corresponding to possible values of α.First, if α = 1 , then P (p ≤ α) ≤ α trivially because probability does not exceed 1. Second is the case 1 > α ≥ 2/n n. In this case, either MX or MY is sufficient to achieve p ≤ α. So we have: 
+
+P (p ≤ α) = P (MX or MY )
+
+≤ P (MX ) + P (MY ) ≤ 2/n n ≤ α
+
+as required. Third, consider the case 2/n n > α ≥ 1/n n. In this case, only MX will give us p ≤ α. So we have 
+
+P (p ≤ α) = P (MX ) ≤ 1/n n ≤ α
+
+as required. Finally consider the case α < 1/n n. In this case p ≤ α is impossible so P (p ≤ α) = 0 ≤ α, as required. Since the claim holds under our (exhaustive) set of cases, the proof is complete. The same argument holds if 1/n n and 2/n n are replaced by q and 2q for an arbitrary q between 0 and 1, but we use 1/n n and 2/n n to highlight the connection to the permute-match test. Our complete proof (Theorem 11) followed largely the same steps as shown here. Overall, we hope that readers of this section now have a deeper understanding of why the sequential permute-match test is valid, and an appreciation of why similar approaches are invalid in the more standard context where statistical tests are not simply binary event checks. 34 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+# 4 Illustration of permute-match test with logistic map system 
+
+Figure S2: Statistical power of permute-match tests and the permutation test in a nonlinear and nonstation-ary system. ( A) System equations. ( B) Example dynamics. The processes X and Y are given by a coupled logistic map on a time grid t = 1 , 2, ..., 100 . The system is nonstationary because the parameter r(t) varies with time from 3.72 when t = 1 to 3.82 when t = 99 . ( C) To see the nonstationarity clearly, we plot Xi(t)
+
+against Xi(t + 1) and color points by time, showing that the parabola that the points lie on is drifting over time. To better show the trend, 10 replicates are shown simultaneously in this chart. ( D) Statistical power of the permutation test and permute-match tests as a function of the number of replicates, the significance level, and rX,Y . Power was estimated from 5000 simulations at each value of rX,Y between rX,Y = 0 and 
+
+rX,Y = 0 .2 in steps of size 0.005 . The correlation statistic ( ρ) was cross-map skill, which is known to readily detect dependence between X and Y in this system [46]. For the cross-map skill calculation, we used Y
+
+to estimate X, which corresponds to a scenario where the data analyst hypothesizes that X influences Y .Cross-map skill requires two parameters, the embedding dimension and the embedding lag, and these were set to 2 and 1 respectively following prior works that used the logistic map for benchmarking [46, 47]. 35 
+
+> .CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint
+
+Figure S3: Pearson correlation has lower power than cross-map skill for the logistic map. Shown here is the same result as in Fig S2D, except now the correlation statistic ( ρ) is Pearson correlation as in Fig 2. 36 
+
+.CC-BY 4.0 International license available under a was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint (which this version posted July 1, 2026. ;https://doi.org/10.1101/2023.03.13.531689 doi: bioRxiv preprint

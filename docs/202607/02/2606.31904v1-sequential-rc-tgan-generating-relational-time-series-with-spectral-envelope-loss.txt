@@ -1,0 +1,1128 @@
+Title: Sequential RC-TGAN: Generating Relational Time Series with Spectral Envelope Loss
+
+URL Source: https://arxiv.org/pdf/2606.31904v1
+
+Published Time: Wed, 01 Jul 2026 01:37:44 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Sequential RC-TGAN: Generating Relational Time Series with Spectral Envelope Loss 
+
+Mohamed Gueye 1,2 , Yazid Attabi 1, Manuel Morales 2, and Maxime Dumas 1
+
+> 1
+
+Croesus Lab, Croesus , Laval, Québec, Canada 
+
+> 2
+
+Dept. of Mathematics and Statistics, University of Montreal , Montréal, Canada {mohamed.gueye, yazid.attabi, maxime.dumas}@croesus.com, {mohamed.gueye, manuel.morales}@umontreal.ca 
+
+Abstract —The generation of synthetic relational databases often involves modeling complex temporal dynamics, such as transaction logs or event sequences. A significant challenge in this domain is the handling of categorical time series (e.g., status codes), where standard encoding methods like one-hot encoding fail to capture intrinsic frequency-domain features such as seasonality and cyclicity. In this paper, we introduce Sequential RC-TGAN (Seq. RC-TGAN), a temporal extension of the RC-TGAN framework, equipped with a novel integrated loss func-tion based on the Spectral Envelope Theory . This differentiable loss allows the generator to directly optimize the preservation of latent periodic structures via backpropagation. While spectral envelope theory is inherently designed for categorical sequences, we extend this frequency-domain regularization to continuous time series by employing a Variational Gaussian Mixture Model (VGM) discretization strategy. To establish a mathematically rigorous evaluation standard, we simulate categorical time series governed by a parameter α, with exactly known theoretical spectral envelopes. Integrating these dynamic sequences into the child tables of a relational database yields a robust ground-truth benchmark for evaluating the frequency-domain fidelity of our generative framework. Furthermore, we address the lack of robust evaluation standards for relational time series by proposing two new metrics: Spectral Density Divergence and Spectral Envelope Divergence. Experimental results on real-world datasets, as well as our simulated benchmarks, demonstrate that our end-to-end approach significantly outper-forms state-of-the-art systems in reproducing cyclic patterns and long-term seasonality across both categorical and continuous features. 
+
+Index Terms —synthetic data generation, time series, spectral envelope, categorical data, generative adversarial networks 
+
+I. I NTRODUCTION 
+
+# SYnthetic data generation has rapidly evolved from a niche privacy-preserving technique into a foundational pillar of modern machine learning, addressing critical bottle-necks related to data scarcity and algorithmic fairness while circumventing stringent privacy regulations. Early generative paradigms primarily focused on static, single-table tabular data [1]–[3]. Architectures such as TabGPT [4] and Tabular Transformer GAN (TT-GAN) [5] adapted NLP techniques to generate tabular rows via autoregressive next-token predic-tion. In practice, contemporary enterprise data is predominantly structured within complex Relational Databases (RDBs), consisting of interconnected networks of tables governed by 
+
+This work was supported by Mitacs through the Mitacs Accelerate program. 
+
+strict primary key (PK) and foreign key (FK) constraints. Consequently, multi-table generation models have emerged to address this structural complexity. Early approaches to relational data generation relied on statistical baselines, such as the Synthetic Data Vault (SDV) [6], which utilized hier-archical Gaussian copulas to model cross-table distributions. The transition to deep learning in this domain was pioneered by the Row Conditional Tabular GAN (RC-TGAN) [7], which leveraged Generative Adversarial Networks (GANs) to explicitly maintain referential integrity between parent and child tables. More recently, diverse architectures have been introduced, including transformer-based sequence-to-sequence models like REaLTabFormer [8], standard tabular diffusion models like ClavaDDPM [9], and graph-based diffusion frameworks such as RelDiff [10]. Despite their structural sophistication, these relational models are fun-damentally static. They treat data as fixed snapshots and obliterate the complex longitudinal dynamics of multivariate time series (e.g., financial transaction logs) embedded within these schemas. Synthesizing dynamic temporal sequences that are struc-turally embedded within a relational database requires con-ditioning child time series trajectories on the static parent table. Models such as TimeGAN [11] and DoppelGANger [12] pioneered this domain. However, these methods operate strictly in the time domain and are not focused on categorical time series, which are ubiquitous in real-world relational tables. Because standard representations like one-hot encod-ing map categories to orthogonal, equidistant vectors (where the Euclidean distance is always √2), the neural network becomes completely blind to ordinal, hierarchical, or periodic relationships, preventing the generator from understanding the cyclical nature of categorical states. Apprehending these complex cyclical patterns in the time domain is inherently difficult, often leading to models missing crucial structural amplitudes. Consequently, enriching this sequence analysis with the frequency domain provides a significantly better approach, allowing the model to explicitly uncover and optimize the latent periodic structures underlying the discrete categories. To overcome the intersecting limitations of time-domain optimization and categorical data modeling, we propose a profound paradigm shift by directly integrating Spectral En-velope Theory [13]–[15] into a relational generative architec-
+
+> arXiv:2606.31904v1 [cs.LG] 30 Jun 2026
+
+ture. We introduce Sequential RC-TGAN (Seq. RC-TGAN), equipped with a novel, differentiable spectral envelope loss that explicitly exploits the frequency domain to optimize the generator’s ability to model the complex pattern of categori-cal time series. The principle of spectral envelope in this con-text is to find an optimal scalar transformation that maximizes the spectral density of categorical time series; through this principle, we successfully translate discrete categories into continuous numerical representations. While recent literature has also pivoted toward frequency-domain regularization with architectures such as the Frequency-Markov Diffusion GAN (FMD-GAN) [16], FDEDiff [17], and TIFO [18] introducing highly innovative frequency-aware denoising, these methods are primarily designed for single-table generation and con-tinuous time series, processing categorical time series us-ing standard one-hot encoding representations. Consequently, they fail to resolve the challenge of categorical periodicity, as they cannot natively assign spectral meaning to orthogonal vectors without extensive feature engineering. Our main contributions are as follows:  
+
+> •
+
+We integrate spectral envelope theory into a conditional sequential GAN framework by introducing a novel spec-tral loss term ( Lspec ). This loss explicitly minimizes the distance between the spectral envelopes of real and synthetic data, overcoming the orthogonality of one-hot encodings to preserve latent periodic structures in categorical time series.  
+
+> •
+
+We extend this spectral methodology to continuous numerical features by employing beforehand a dis-cretization strategy based on Gaussian Mixture Models (GMM) [1], allowing the spectral envelope to capture and enforce frequency-domain features across mixed data types simultaneously.  
+
+> •
+
+We analytically derive the exact theoretical spectral envelope for Markov chains governed by circulant tran-sition matrices. This provides a mathematically tractable and rigorous "gold standard" benchmark simulated dataset to evaluate the frequency-domain fidelity of se-quential generative models without relying on empirical periodograms.  
+
+> •
+
+We propose a new set of evaluation metrics rooted in spectral analysis : Spectral Density Divergence ( Dspec )and Spectral Envelope Divergence ( Denv ). These met-rics are designed to rigorously assess the temporal fidelity and cyclic consistency of generated continuous and categorical time series, addressing the blindspots of traditional time-domain metrics. The remainder of this paper is organized as follows. Section II provides the necessary background on spectral analysis. Section III formulates spectral envelopes within a metric space. Section IV introduces the proposed GAN framework for multi-table time series synthesis. Section V outlines the design of simulated data for our experiments. Section VI defines the new evaluation metrics based on spec-tral analysis. Finally, Section VII presents the experimental setup and results, followed by concluding remarks. II. B ACKGROUND ON SPECTRAL ANALYSIS 
+
+A. Spectral Density 
+
+Let {St, t ∈ Z} be a weakly stationary process with value on R, with mean μ ∈ R and autocovariance function γ(h) = 
+
+cov (St+h, S t). The spectral density f (ω) describes how the variance of the process is distributed across frequencies ω ∈
+
+[−1/2, 1/2] . The spectral density is defined as the Fourier transform of the autocovariance: 
+
+f (ω) = 
+
+> ∞
+
+X
+
+> h=−∞
+
+γ(h)e−2πiωh . (1) Inversely : γ(h) = R 1/2 
+
+> −1/2
+
+f (ω)e2πiωh dω. 
+
+In practice, for a finite time series {s1, . . . , s T }, the spectral density is estimated using the periodogram I(ωk),calculated at Fourier frequencies ωk = k/T :
+
+I(ωk) = |d(ωk)|2 = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+ste−2πiω k t
+
+> 2
+
+,
+
+where d(ωk) = 1√T
+
+P′ 
+
+> t=1
+
+ste−2πiω k t, the Discrete Fourier Transform (DFT). The concept of spectral density can be extended to the multivariate case. Let {St}t∈Z be a weakly stationary process in Rq with mean μ and autocovariance matrix Γ( h) =
+
+E[( St+h − μ)( St − μ)′]. The (j, p )-th entry of this matrix is the cross-covariance function γjp (h) = cov (Sj,t +h, Sp,t ),which measures the covariance between component j at time 
+
+t + h and component p at time t.The spectral density matrix f(ω) ∈ Cq×q is defined as the Fourier transform of Γ( h):
+
+f(ω) = 
+
+> ∞
+
+X
+
+> h=−∞
+
+Γ( h)e−2πiωh , ω ∈ [−1/2, 1/2] .
+
+The diagonal elements fjj (ω) represent the univariate spectral densities, while the off-diagonal elements fjp (ω) denote the cross-spectral densities. For a finite observation {s1, . . . , sT }, the spectral density is estimated using the periodogram. Let d(ωk) ∈ Cq be the Discrete Fourier Transform (DFT) at frequency ωk = k/T :
+
+d(ωk) = 1
+
+√T
+
+> T
+
+X
+
+> t=1
+
+ste−2πiω k t.
+
+The multivariate periodogram matrix I(ωk) is defined as the outer product: 
+
+I(ωk) = d(ωk)d(ωk)∗, (2) where ∗ denotes the conjugate transpose. While I(ωk) is an asymptotically unbiased estimator of f(ωk), it is not consis-tent; its variance does not vanish as T → ∞ . Consequently, consistent estimation requires smoothing techniques, such as windowing or averaging over frequency bands. B. Spectral Envelope for Categorical Time Series 
+
+Consider a categorical time series Xt taking values in a finite set a = {a0, . . . , a K−1} that is stationary. Because standard frequency-domain tools cannot be directly applied to discrete qualitative symbols, we assign a vector of numerical scaling values β = ( β0, . . . , β K−1)′ ∈ RK to the categories in a. This transformation results in a real-valued numerical process, denoted Xt(β) ∈ R, where Xt(β) = βk whenever the original series is in state Xt = ak. By explicitly mapping the qualitative categories to quantitative scalars, we convert the discrete sequence into a standard univariate continuous-state time series. This mathematical conversion is a strict prerequisite, as it enables the calculation of autocovariance functions and the subsequent computation of the spectral density via the Fourier transform. Instead of assigning arbitrary numbers to categories, the spectral envelope framework systematically derives optimal numerical values that expose hidden periodicities within a categorical time series. The primary objective is to find a scaling vector β that maximizes the spectral density relative to the total variance at each specific frequency ω. Formally, the Spectral Envelope λ(ω) is defined as: 
+
+λ(ω) = sup  
+
+> β̸∝1
+
+ f (ω; β)
+
+σ2(β)
+
+
+
+, ∀ω ∈ [−1/2, 1/2] , (3) where f (ω; β) and σ2(β) represent the spectral density and the variance of the transformed numerical process Xt(β),respectively [13]. The condition β̸ ∝ 1 explicitly excludes trivial scalings where every category is assigned the exact same numerical value. If β is proportional to a vector of all ones ( β ∝ 1), the transformed sequence Xt(β) would merely become a flat, constant series. This would result in a variance of zero ( σ2(β) = 0 ), thereby rendering the objective ratio undefined. This optimization problem can be solved by representing the categorical process as a multivariate point process Yt ∈
+
+RK (using one-hot vectors). Let fY (ω) be the spectral density matrix and VY be the variance matrix of stationary process 
+
+Yt. The optimization problem in (3) can be re-written : 
+
+λ(ω) = sup  
+
+> β̸∝1
+
+ β′fY (ω)ββ′VY β
+
+
+
+, ∀ω ∈ [−1/2, 1/2] . (4) This expression is a generalized Rayleigh quotient. The solution λ(ω) is the largest eigenvalue of fY (ω) in the metric of VY . The corresponding eigenvector β(ω) is called the optimal scaling at frequency ω.The value λ(ω) is called the spectral envelope because it envelopes the normalized spectrum of any scaled process 
+
+Xt(β). In other words, for any normalized scaling β (such that σ2(β) = 1 ), we have f (ω; β) ≤ λ(ω), with equality achieved if and only if β is proportional to the optimal scaling 
+
+β(ω).While the spectral envelope provides a robust mechanism for uncovering the latent periodicities of a single categorical time series, leveraging this concept within a deep generative framework requires systematically comparing the structural properties of real and synthesized processes. To formulate a differentiable objective that minimizes the frequency-domain discrepancy between these temporal dynamics, we cannot merely view λ(ω) as a collection of point-wise maxima. Instead, we must formalize the spectral envelope as a distinct mathematical object residing within a well-defined functional space. This theoretical shift naturally motivates the con-struction of a metric space for spectral envelopes, providing the foundational distance metrics required to optimize our generative model via backpropagation. III. A M ETRIC SPACE FORMULATION FOR SPECTRAL 
+
+ENVELOPES 
+
+Consider a stationary categorical process Xt taking values in the finite set a with spectral envelope λ(ω). Let X(θ) 
+
+> t
+
+be a parametric stationary categorical process (e.g., a synthetic process generated by a model) with values in a, parameters 
+
+θ, and spectral envelope λ(θ)(ω).In a generative context, the goal is to ensure that the synthetic process X(θ) 
+
+> t
+
+approximates the real process Xt. A fundamental question arises: how can we quantify the dis-crepancy between these processes in the frequency domain? By defining a metric distance between λ(ω) and λ(θ)(ω),we can formulate an optimization problem where minimizing this distance with respect to θ forces the synthetic process to recover the latent periodic structures of the real data. We first formalize the space in which these spectral envelopes reside. 
+
+Definition 1. Let SK be the set of spectral envelopes corresponding to stationary categorical processes with K
+
+categories that possess a continuous spectral density matrix associated with their one-hot encoding representation (i.e. 
+
+fY (ω)). 
+
+Lemma 1. Every element λ ∈ S K is a continuous function on the interval [−1/2, 1/2] .The proof of this lemma is in the appendix. 
+
+Consequently, SK is a subset of C0 ([ −1/2, 1/2]) , the space of continuous functions on the fundamental frequency domain. This inclusion implies that SK resides within the Hilbert space L2 ([ −1/2, 1/2]) .The Hilbert space L2 ([ −1/2, 1/2]) consists of square-integrable functions defined on [−1/2, 1/2] equipped with the inner product: 
+
+⟨h, g ⟩ =
+
+Z 1/2
+
+> −1/2
+
+h(ω)g(ω)dω, ∀h, g ∈ L2.
+
+This induces the L2 norm, representing the total energy of the function: 
+
+∥h∥2 = p⟨h, h ⟩ =
+
+sZ 1/2
+
+> −1/2
+
+h(ω)2dω. 
+
+From this functional space definition, we derive metrics to measure the distance between the real spectral envelope λ
+
+and the synthetic spectral envelope λ(θ):
+
+∥λ − λ(θ)∥2 =
+
+sZ 1/2
+
+> −1/2
+
+ λ(ω) − λ(θ)(ω)2 dω (5) The L2 distance in (5) aggregates the error over the entire frequency domain. It is differentiable (assuming λ(θ) is dif-ferentiable with respect to θ) and provides non-zero gradients for deviations across all frequencies simultaneously. This "smoothness" makes the L2 metric significantly tractable as a loss function for backpropagation in deep neural networks. Therefore, we adopt the square of the L2 distance as our objective function to minimize the divergence between the real and synthetic spectral envelopes. 
+
+Lemma 2. For all λ ∈ S K , the following norm properties hold: (i) 1 ≤ ∥ λ∥1 ≤ K − 1.(ii) 1 ≤ ∥ λ∥2 < ∞.The proof of this lemma is in the appendix. 
+
+The L1 upper bound ( ∥λ∥1 ≤ K − 1) reflects the dimen-sionality constraint of a categorical variable with K states, where the rank of the associated variance-covariance matrix is at most K − 1. Regarding the lower bound ∥λ∥2 ≥ 1, this property constitutes a fundamental energy constraint for any non-trivial stationary process. Because the spectral density 
+
+f (ω) decomposes the total variance of the process across frequencies, the integral of f (ω) must equal the variance 
+
+γ(0) . Given that λ(ω) is defined as the supremum that envelopes the normalized spectrum of any scaled process, its integral (the L1 norm) cannot be less than the variance of a standardized process ( σ2 = 1 ). By the relationship between norms on a compact domain of length 1, we have ∥λ∥2 ≥∥λ∥1 ≥ 1. This lower bound represents the "white noise" baseline where the spectral mass is uniformly distributed. In the context of deep learning, this ensures the loss function is anchored; the generator cannot minimize the spectral distance by simply reducing the synthetic process to a trivial or zero-variance state, as it must maintain the minimum spectral energy inherent to a categorical distribution. IV. C ONDITIONAL GAN FOR MULTI -TABLE TIME SERIES 
+
+SYNTHESIS 
+
+A. Formalization and Notation 
+
+Our formulation is grounded in the Probabilistic Relational Model (PRM) framework [19]. We consider a relational schema S = {W, U } containing two classes (tables) W and 
+
+U , where W acts as the parent entity and U as the child entity. Let A(U ) denote the set of attributes for table 
+
+U . This set is partitioned into continuous attributes 
+
+Acont (U ) = {c1, . . . , c I } and categorical attributes 
+
+Acat (U ) = {d1, . . . , d J }. The attribute space (or domain) for U is defined as the Cartesian product of the domains of its individual attributes: V(U ) = N  
+
+> A∈A (U)
+
+V(A). Similarly, we define V(W ) as the attribute space for the parent table 
+
+W .In this relational structure, specific dependencies exist between instances of W and U . Let w ∈ W denote a specific row (instance) in the parent table, with feature values 
+
+w. A ∈ V (W ). We define Children (w) ⊂ U as the set of child rows in table U that reference the parent w.In the context of time series synthesis, the set Children (w)
+
+is not merely a bag of rows but an ordered sequence associated with the parent entity. We denote this sequence as Children (w).A = ( u1, . . . , u T ), where each ut ∈ V (U )
+
+represents the state of the child entity at time step t, and T
+
+is the sequence length. Thus, the dataset consists of tuples 
+
+(w. A, Children (w).A), pairing static parent features with dynamic child sequences. 
+
+B. Sequential RC-TGAN Architecture 
+
+To address the challenge of generating relational time series, we introduce the Sequential RC-TGAN (see Fig. 1), an extension of the Row Conditional-TGAN (RC-TGAN) [7] model enhanced by the temporal dimension modeling. The original RC-TGAN primarily focused on modeling inter-table relationships, employing a generator G to model the conditional distribution of a single child row given its parent: 
+
+P(u|w. A).The Sequential RC-TGAN adapts this paradigm to support inter-row relationships modeling inside a tabular data. Rather than mapping parent feature values w. A and a noise vector 
+
+z to a static point in the feature space V(U ), our generator learns to map them to a temporal trajectory within V(U )T .Formally, the model approximates the conditional joint dis-tribution of the child sequence given the parent attributes: 
+
+P(Children (w).A| w. A) = P(u1, . . . , u T |w. A). (6) This formulation ensures that the generation process is ex-plicitly conditioned on the static characteristics of the parent entity, thereby guaranteeing that the synthesized temporal dynamics remain consistent with their relational context. 
+
+1) Conditional Recurrent Generator: To capture temporal dependencies effectively, we replace the fully connected layers of the original RC-TGAN with a Recurrent Neural Network (RNN) generator [20]. The generation process is conditioned on the static parent attributes w. A at every time step, ensuring the generated se-quence adheres to the specific constraints of the parent entity. At each time step t, the generator receives a concatenated input consisting of a random noise vector zt ∼ N (0 , I ) and the parent vector w. A:
+
+ht = RNN (ht−1, [zt ⊕ w. A]) (7) 
+
+ˆut = MLP (ht) (8) where ⊕ denotes concatenation, ht represents the hidden state, and ˆut is the generated attribute vector at time t. By reinjecting w. A at each step, this architecture ensures that the static relational constraints (e.g., Store Type, Location) exert a persistent influence over the entire dynamic trajectory of the child sequence. 
+
+2) Conditional Discriminator: In contrast to the generator, the discriminator Dϕ is implemented as a fully connected network (MLP) designed to assess the global coherence of the sequence. It models the joint probability of the entire sequence conditioned on the parent attributes. Assuming a fixed sequence length T during training, the input to the discriminator is constructed by flattening the Fig. 1: Architecture schema of the Sequential RC-TGAN with Spectral Loss. The diagram illustrates the generation process conditioned on parent attributes, and the dual opti-mization setup where the generator receives adversarial feed-back from the discriminator and frequency-domain feedback via the spectral envelope loss ( Lspec ). sequence {u1, . . . , u T } into a single vector and concatenating it with the parent attributes w. A. The discriminator then maps this joint representation [u1 ⊕ · · · ⊕ uT ⊕ w. A] to a validity score, determining whether the complete temporal trajectory constitutes a plausible instance given the specific parent context. 
+
+C. Spectral Adaptation for Continuous Features 
+
+The spectral envelope theory in [13] is inherently designed for categorical time series. However, relational datasets fre-quently contain continuous numerical attributes Acont (U ) = 
+
+{c1, . . . , c I } that exhibit significant periodic behavior (e.g., sales volume, temperature). To incorporate these attributes into our frequency-domain regularization, we first employ a discretization strategy based on Variational Gaussian Mixture Models (VGM) [1]. For each continuous attribute ci ∈ A cont (U ), we fit a VGM to the training data to estimate the optimal number of modes Kci and their parameters. The probability distribution of a value ut,c i is modeled as a mixture of Gaussians: 
+
+P(ut,c i ) = 
+
+> Kci
+
+X
+
+> k=1
+
+τkN (ut,c i ; μk, σ k). (9) To compute the spectral envelope for a continuous se-quence uci = ( u1,c i , . . . , u T,c i ), we transform it into a dis-crete sequence of mode indicators mci = ( m1,c i , . . . , m T,c i ).At each time step t, the value ut,c i is assigned to the mode 
+
+k that maximizes the posterior probability: 
+
+mt,c i = arg max  
+
+> k
+
+(τkN (ut,c i ; μk, σ k)) . (10) This process effectively maps the continuous domain V(ci)
+
+to a finite categorical set {1, . . . , K ci }. Consequently, we can calculate the spectral envelope λ(ω; ci) on this discretized sequence, allowing the spectral loss Lspec to enforce peri-odic consistency across both naturally categorical attributes 
+
+Acat (U ) and discretized continuous attributes Acont (U ).Beyond this discrete mode assignment, each continuous value is concurrently represented by a normalized scalar that captures its relative position within the assigned mode. Specifically, if the value ut,c i is assigned to mode k, we com-pute an intra-mode scalar vt,c i = ut,c i −μk 
+
+> 4σk
+
+. By concatenating the one-hot encoded discrete mode indicator mt,c i with this normalized continuous scalar vt,c i , the model retains the complete information necessary to fully reconstruct the orig-inal continuous feature ut,c i . Therefore, while the categorical mode sequence mci explicitly drives the frequency-domain regularization via the spectral envelope, the supplementary scalar sequence vt,c i ensures no loss of localized continuous variance in the time domain. Note that another way to incorporate the continuous at-tributes into frequency domain is to use the power spectrum of the signal. However as it will be shown in the ablation study section, we find that the discretization method is more effective. 
+
+D. Generator Losses 
+
+The training of the generator is guided by a hybrid objective function designed to satisfy two complementary requirements: global statistical realism (via adversarial feed-back) and frequency-domain fidelity (via spectral envelope matching). 
+
+1) Adversarial Loss ( Ladv ): The primary objective of the generator is to produce relational sequences that are indistin-guishable from real data. To achieve stable training dynamics, we employ the Wasserstein GAN (WGAN) objective. Let Pr denote the real data distribution and Pg the gen-erator distribution conditioned on parent attributes w. A. The discriminator D (or critic) aims to maximize the divergence between its scoring of real and synthetic sequences. Con-versely, the generator G minimizes this divergence. The adversarial loss for the generator is defined as: 
+
+Ladv = −Ez∼p(z),w. A∼ p(w. A) [Dϕ(Gθ (z, w ), w. A)] . (11) Minimizing this term encourages the generator to capture general temporal correlations and the joint distribution of the sequence conditioned on the parent w.
+
+2) Spectral Envelope Loss ( Lspec ): Standard adversarial losses often fail to capture frequency patterns in categorical time series because discriminators tend to focus on local transitions rather than global frequency structures. To remedy this, we introduce a regularization term based on the spectral envelope. 
+
+Sequence-wise Spectral Estimation: Since the spectral envelope is a statistical property, we estimate it over mini-batches to ensure stability. Let B = {u(1) , . . . , u(B)} be a mini-batch of B sequences. For a specific categorical feature dj , we compute the spectral envelope λ
+
+
+
+ω; u(b)
+
+> dj
+
+
+
+for the b-th sequence at frequency ω (as defined in (3)). We calculate the mean spectral envelope for the real batch, 
+
+¯λ(real ), and the synthetic batch, ¯λ(synth ), by averaging the envelopes across the batch dimension: 
+
+¯λ(real )(ω; dj ) = 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+λ
+
+
+
+ω; u(b)
+
+> dj
+
+
+
+. (12) This batch-averaging step reduces the variance of the peri-odogram estimator and provides a robust target frequency profile for the generator. We adapt this estimation for the continuous numerical features ci by relying on their discrete mode indicators (as detailed in Section IV-C). Let m(b)
+
+> ci
+
+denote the discretized sequence for the b-th instance of feature ci. The mean spectral envelope is correspondingly calculated as: 
+
+¯λ(real )(ω; ci) = 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+λ
+
+
+
+ω; m(b)
+
+> ci
+
+
+
+. (13) The synthetic counterparts, ¯λ(synth )(ω; dj ) and 
+
+¯λ(synth )(ω; ci), are computed analogously over the generated batch. 
+
+Loss Formulation: To enforce periodic consistency across the entire relational dataset, we partition our frequency-domain objective into two components. The categorical spec-tral loss, L(cat ) 
+
+> spec
+
+, minimizes the average L2 distance between the real and synthetic mean spectral envelopes across all J
+
+categorical features: 
+
+L(cat ) 
+
+> spec
+
+= 1
+
+J
+
+> J
+
+X
+
+> j=1
+
+¯λ(real )(·; dj ) − ¯λ(synth )(·; θ, d j ) 2
+
+. (14) Likewise, the continuous spectral loss, L(cont ) 
+
+> spec
+
+, computes the average L2 distance across the I discretized numerical features: 
+
+L(cont ) 
+
+> spec
+
+= 1
+
+I
+
+> I
+
+X
+
+> i=1
+
+¯λ(real )(·; ci) − ¯λ(synth )(·; θ, c i) 2
+
+. (15) The total spectral envelope loss, Lspec , is constructed as the weighted sum of these two terms, distributed proportionally to the number of features of each type: 
+
+Lspec = JJ + I L(cat ) 
+
+> spec
+
++ IJ + I L(cont ) 
+
+> spec
+
+. (16) Minimizing this unified term explicitly forces the generator to align the latent periodicities (e.g., seasonality, cyclic trends) of the synthetic sequences with the ground truth across both mixed data types (see Fig. 2). 
+
+E. Training Loop 
+
+The training procedure employs an alternating optimiza-tion strategy to balance the competing objectives. In each epoch, we execute the following three distinct phases: 1) Discriminator Update: First, we optimize the discrim-inator D to distinguish between real sequences and the current synthetic output. We perform ncritic updates to 
+
+Fig. 2: Detailed training flow of the generator via the Spectral Envelope Loss. Categorical sequences from both real and synthetic mini-batches undergo one-hot encoding to estimate their respective multivariate spectral density and variance matrices. The spectral envelopes are derived by solving the generalized eigenvalue problem. The loss explicitly mini-mizes the L2 distance between the batch-averaged envelopes, providing continuous, differentiable frequency-domain gradi-ents ( ∇θ Lspec ) to update the recurrent generator. the discriminator for every generator update to main-tain an optimal gradient approximation for the WGAN objective. 2) Adversarial Generator Update: Second, we update the generator G by minimizing Ladv . In this step, the generator weights are adjusted to fool the discriminator, ensuring global statistical coherence and adherence to the parent conditioning. 3) Spectral Generator Update: Finally, we perform a spe-cialized refinement step focused on frequency-domain fidelity. We update the generator by minimizing Lspec .This update is repeated nsteps _f or _spec times per epoch. V. D ESIGN OF SIMULATED DATA FOR EXPERIMENTS 
+
+Validating generative models on real-world categorical time series is inherently difficult. Because real-world data lacks a definitive "ground truth" for its underlying stochastic frequencies, evaluations often rely on noisy periodogram estimates. To rigorously evaluate whether a generative model genuinely learns complex frequency-domain features, rather than merely memorizing local transitions, it is crucial to employ benchmark time series where the spectral properties are known beforehand. To this end, we turn to stationary Markov chains. These stochastic processes provide a controlled, "gold standard" evaluation environment for two primary reasons: first, they can be easily and exactly simulated to generate massive, customized datasets for model training; second, they allow for the exact analytical derivation of their theoretical spectral envelope. By comparing the empirical spectral envelope of the generated sequences against this mathematically known ground truth, we can accurately measure the frequency fi-delity of our synthetic approximations. We map the categorical series Xt into the multivariate point process Yt (one-hot vector). Specifically, Yt takes values in the set of standard basis vectors {e0, . . . , e K−1} ⊂ 
+
+RK . In this one-hot encoded representation, ej is a vector with a 1 at the j + 1 -th position and 0 everywhere else, corresponding exactly to the event that Xt is in state aj . The process is characterized by the Transition Matrix Function ,denoted as T (h). This matrix-valued function describes the conditional probability of the process transitioning from one basis state to another over a given time lag h ≥ 1.For a stationary categorical process, the entry (i, j ) of the transition matrix function at lag h, Tij (h), represents the probability of transitioning from state ei to state ej after h
+
+steps: 
+
+Tij (h) = P[Yt+h = ej | Yt = ei]. (17) This matrix captures the "flow" of probability mass across the state space over time. In the context of a first-order Markov chain, the behavior of the transition matrix function T (h) is strictly governed by the immediate 1-step transitions. Consequently, the transition probabilities at any lag h are entirely determined by the h-th power of the 1-step transition matrix P = T (1) :
+
+T (h) = P h.
+
+This transition relationship is the key to computing the temporal covariance of the process. For a stationary cate-gorical process Yt characterized by a stationary distribution vector π (row vector), let Π = diag (π) denote the diagonal matrix of its marginal probabilities. The autocovariance ma-trix function, Γ( h), is directly related to the transition matrix function T (h) by the following equation: 
+
+Γ( h) = Π T (h) − π′π, for h ≥ 0. (18) By substituting the property established above for a first-order Markov chain where the multi-step transition is simply the matrix power T (h) = P h, this general relation simplifies significantly. The autocovariance matrix function reduces to a geometric decay governed entirely by the 1-step transition matrix P :
+
+Γ( h) = Π P h − π′π. 
+
+Equation (18) reveals that the spectral properties of the process are entirely governed by the relaxation of the transi-tion mechanism T (h).For the remainder of this section, we assume that the sta-tionary categorical process Xt is a first-order Markov chain characterized by the one-step transition matrix P = T (1) .
+
+A. Spectral Properties of Circulant Transitions 
+
+Deriving the spectral envelope for a general transition matrix requires numerically solving the eigenvalue problem at every frequency. For the class of circulant transition matrices, we can derive an exact analytical form that links the stochastic parameters directly to the spectral shape. A transition matrix P is circulant if every row is acyclic right shift of the preceding row. Consequently, the entire matrix is fully characterized by its first row vector 
+
+b = [ b0, b 1, . . . , b K−1], where bj = P(Yt+1 = ej | Yt = e0).The general form of such a matrix is: 
+
+P =
+
+
+
+b0 b1 b2 . . . bK−1
+
+bK−1 b0 b1 . . . bK−2
+
+bK−2 bK−1 b0 . . . bK−3
+
+... ... ... . . . ...
+
+b1 b2 b3 . . . b0
+
+
+
+. (19) This structural symmetry serves as a mathematical bridge between the time domain and the frequency domain: circulant matrices are diagonalized by the Inverse Discrete Fourier Transform matrix [21], a property we leverage to derive analytical spectral envelopes. Then, the eigenvalues γk of the circulant matrix in (19) is given by: 
+
+γk =
+
+> K−1
+
+X
+
+> j=0
+
+bj ei 2πjk K for k = 0 , . . . , K − 1. (20) The magnitude ( |γk|) is determined by the concentration of the probability mass in b. If b is highly concentrated (low entropy), the magnitude approaches 1 ( |γk| ≈ 1), implying long memory, whereas a uniform b (high entropy) yields 
+
+|γk| ≈ 0, which is characteristic of a white noise process. 
+
+Lemma 3 (Spectral Envelope of Circulant Chains) . Let Xt
+
+be a stationary categorical process with K states governed by a circulant transition matrix P . Let γk = rkeiϕ k be the eigenvalues of P expressed in polar form i.e. rk = |γk|
+
+and ϕk = arg( γk). The spectral envelope λ(ω) is the upper boundary of the spectral densities of the K − 1 non-trivial eigenmodes: 
+
+λ(ω) = max 
+
+> k∈{ 1,...,K −1}
+
+ 1 − r2
+
+> k
+
+1 − 2rk cos(2 πω − ϕk) + r2
+
+> k
+
+
+
+.
+
+(21) 
+
+The proof of this lemma is in the appendix. 
+
+Using this lemma, we analyze two types of circulant chains representing distinct temporal dynamics: periodicity and inertia. 
+
+B. The Noisy Cyclic Process (Periodicity) 
+
+This process models periodic behavior with phase noise, serving as a robust benchmark for capturing seasonality and cyclic constraints. A Noisy Cyclic Process (NCP) is defined by the transition matrix: 
+
+Pij =
+
+(
+
+α if j ≡ (i + 1) (mod K)1 − α if j = iwhere α ∈ (0 .5, 1) is the switching state parameter. An NCP is a circulant chain where b = [1 − α, α, 0, . . . ]. Its spectral envelope is given by equation (21) where : 
+
+rk =
+
+s
+
+1 − 2α(1 − α)
+
+
+
+1 − cos 
+
+ 2πk K
+
+ 
+
+,ϕk = arctan 
+
+ α sin(2 πk/K )(1 − α) + α cos(2 πk/K )
+
+
+
+.
+
+The NCP serves as a robust benchmark for modeling periodic behavior and cyclic constraints under varying degrees of phase noise. Its temporal dynamics are primarily controlled by the switching state parameter α ∈ (0 .5, 1) , which dictates the strictness of the cycle. Figure 3 visualizes the spectral envelope of the NCP with a state space of K = 7 for different values of α. As shown, the process naturally exhibits distinct resonant peaks clustered around the fundamental frequency of 1/7 ≈ 0.14 and its associated harmonics. When the cycle strength α approaches 1 (represented by the darker lines), the system mimics a deterministic cycle, concentrating the spectral energy into very sharp, Dirac-like peaks. Conversely, as α decreases toward its lower bound, the process introduces greater phase noise, which progressively broadens these sharp harmonic peaks into wide spectral hills, reflecting a more stochastic and relaxed periodic progression. 
+
+C. The Symmetric Sticky Process (Inertia) 
+
+This process models systems with inertia, where the state tends to persist over time with no preferred direction of change. A Symmetric Sticky Process (SSP) is defined by the transition matrix: 
+
+Pij =
+
+(
+
+α if i = j 
+
+> 1−αK−1
+
+if i̸ = j
+
+where α ∈ (1 /K, 1) is the switching state parameter. We can remark that the transition matrix of the SSP is circulant such that the first row b = [ α, 1−αK−1 , . . . ]. We can derive the spectral envelope of the SSP from equation (21): 
+
+λ(ω) = 1 − γ2
+
+1 − 2γ cos(2 πω ) + γ2 ,
+
+where γ = αK −1 
+
+> K−1
+
+. The non-trivial eigenvalues are identical and real corresponding to γ.The asymptotic behavior of the process is highly sensitive to the switching state parameter α. As α → 1, the eigenvalue 
+
+γ → 1, causing the process to become extremely "sticky" and rarely switch states. In this regime, the spectral envelope forms a sharp peak at ω = 0 , ultimately approaching a Dirac delta. Conversely, as α → 1/K , the eigenvalue γ → 0,which reduces the process to pure random noise (see Figure 3). Consequently, the spectral energy becomes uniformly distributed, and the envelope flattens to a constant line where 
+
+λ(ω) ≈ 1.
+
+Fig. 3: Spectral envelopes of the benchmark Markov chains (K = 7) on a logarithmic scale. Upper: The NCP exhibits peaks close to the fundamental frequency (1/7 ≈ 0.14 ) and its harmonics. As the cycle strength α → 1
+
+(darker lines), the process approaches a deterministic clock with Dirac-like peaks. Lower α values introduce phase noise, broadening the peaks into wide spectral hills. The log scale is used to visualize the large dynamic range between stochastic and near-deterministic regimes. Bottom: The SSP acts as a low-pass filter. As the persistence α → 1 (darker lines), the spectral energy concentrates strictly at ω = 0 , representing system inertia. Lower α values result in a flat, white-noise-like spectrum. 
+
+D. Bayesian Hierarchical Sampling for generating simulated relational databases 
+
+To rigorously evaluate the conditional generation capabil-ities of our model, we elaborate a method for building a synthetic relational database using a Bayesian hierarchical framework. Unlike using a single fixed parameter for the entire dataset, we model the switching parameter α as a random variable associated with each parent entity. This setup forces the generative model to learn the mapping 
+
+α 7 → Spectral Envelope (α) rather than memorizing a static distribution. Following the relational schema S introduced in Section IV, we construct a framework where the parent table W
+
+governs the stochastic dynamics of the child time series in table U . Note that for any single simulated database, we select only one of these two types of circulant chains (either the Symmetric Sticky or the NCP) and fix the total number of categorical states K to drive the temporal dynamics. Because both processes are fully parameterized by the switching parameter α for a given K, we apply a Bayesian hierarchical modeling to each choice: first, we sample and store N values of α in the parent table; second, we generate a corresponding categorical time series for each of these N values using the chosen Markov process. For the NCP, where α represents the probability of advanc-ing the cycle, we use a uniform prior over the valid range of directed cycles: 
+
+αi ∼ U (0 .5, 1.0) ,
+
+where αi is the random variable illustrating the value of α
+
+for the i-th row in the parent table. For the Symmetric Sticky, we simply replace U(0 .5, 1.0) distribution by U(1 /K, 1.0) .For each parent row i, we generate a categorical time series 
+
+u(i) = {u(i)1 , . . . , u (i) 
+
+> T
+
+} of length T , which acts as part of the child table X. The dynamics of this series are conditioned strictly on the parent’s parameter αi.The sequence is generated via the transition matrix Pαi
+
+specific to the chosen type of circulant chain (Symmetric Sticky or Noisy Cyclic): 
+
+P(u(i)
+
+> t+1
+
+|u(i) 
+
+> t
+
+, α i) = [ Pαi ]u(i) 
+
+> t,u (i)
+> t+1
+
+. (22) This hierarchical construction provides a "gold standard" dataset for conditional generative modeling. Since the true spectral envelope λ(ω; αi) is analytically known for every parent i (via Lemma 3), we can compute the exact expected spectral error. A successful generative model must produce synthetic children ˆu(i) such that their empirical spectral envelopes match the theoretical envelopes dictated by their sampled parent attributes ˆαi.VI. N EW METRICS BASED ON SPECTRAL ANALYSIS 
+
+Evaluating the fidelity of synthetic relational time series requires going beyond simple marginal distributions or static correlations. Standard metrics often fail to accurately detect if the synthetic data preserves the specific frequency-domain characteristics (such as seasonality and cyclic constraints) inherent to the real process. To address this, we propose two metrics rooted in spectral analysis. Let {w1, . . . , w M } be the set of parent instances in the real database, and { ˆw1, . . . , ˆwM ′ } be the set of parent in-stances in the synthetic database. Each parent wm (or ˆwm′ )identifies a specific sub-population of children rows forming a multivariate time series. For a numerical attribute ci, let f (ω; ci, w m) denote the spectral density of the series associated with parent wm. For a categorical attribute dj , let λ(ω; dj , w m) denote its spectral envelope. We define the mean spectral densities and mean spectral envelopes for the real data as: 
+
+¯f (real )(ω; ci) = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+f (ω; ci, w m), (23) 
+
+¯λ(real )(ω; dj ) = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+λ(ω; dj , w m). (24) The synthetic counterparts, ¯f (synth ) and ¯λ(synth ), are defined analogously over the M ′ synthetic parents. 
+
+A. Spectral Density Divergence ( Dspec )
+
+To evaluate the temporal fidelity of continuous features, we measure the divergence between the average power spectrums. We first normalize the spectral densities so that R 1/2 
+
+> −1/2
+
+f (ω)dω = 1 , considering them as probability distribu-tions over the frequency domain. The individual divergence div (·, ·) for an attribute ci is defined as the divergence (e.g., Wasserstein or Kullback-Leibler) between the real and synthetic mean densities. The global Spectral Density Divergence (SDD) is the average over all continuous attributes: 
+
+Dspec = 1
+
+I
+
+> I
+
+X
+
+> i=1
+
+Dspec (ci), (25) where Dspec (ci) = div   ¯f (real )(·; ci), ¯f (synth )(·; ci). It is worth noting that the aggregated quantities ¯f (real )(·; ci) and 
+
+¯f (synth )(·; ci) constitute well-defined normalized spectral densities. Mathematically, the set of valid normalized spectral densities is closed under convex combinations; since each individual f (ω; ci, w m) is a non-negative, real-valued, its integral under interval [−1/2, 1/2] is equal to one, and even function (for real-valued processes), their arithmetic mean preserves these fundamental properties. Consequently, 
+
+¯f (real ) effectively represents the spectral density of a "rep-resentative" process for the class U , averaging out local idiosyncrasies to reveal the global frequency structure of the population. This validity allows us to treat these patterns as probability distributions and rigorously apply divergence metrics div such as Kullback-Leibler (KL) or Wasserstein distance. 
+
+B. Spectral Envelope Divergence ( Denv )
+
+For categorical attributes, we assess the preservation of latent periodicities using the spectral envelope. The diver-gence for a single attribute dj is calculated as the L2 distance between the mean envelopes: 
+
+Denv (dj ) = 
+
+¯λ(real )(·; dj ) − ¯λ(synth )(·; dj ) 2
+
+K − 1 . (26) The global Spectral Envelope Divergence (SED) is the mean over all categorical attributes: 
+
+Denv = 1
+
+J
+
+> J
+
+X
+
+> j=1
+
+Denv (dj ). (27) The aggregated spectral envelope ¯λ(real )(ω; dj ) inherits the fundamental algebraic properties of its constituents. Since 
+
+¯λ(real ) is constructed as a finite linear combination of indi-vidual envelopes, and given that each component λ(·; dj , w m)
+
+is continuous on the compact interval [−1/2, 1/2] (Lemma 1), the mean envelope itself is necessarily a continuous function in C0([ −1/2, 1/2]) . Furthermore, the fundamental norm constraints established in Lemma 2 are preserved under this averaging operation. Specifically, by the convexity of the norm, the mean envelope satisfies the dimensionality constraint 1 ≤ ∥¯λ(real )(·; dj )∥1 ≤ K − 1 (If K is the number of categories of dj ) and maintains finite energy 1 ≤ ∥ ¯λ(real )(·; dj )∥2 < ∞. These properties ensure that 
+
+¯λ(real ) remains a well-defined term within the functional 
+
+L2 ([ −1/2, 1/2]) and verify important properties of spectral envelopes, guaranteeing that the divergence metric Denv is both bounded and mathematically stable. VII. E XPERIMENTS 
+
+In this section, we empirically evaluate the performance of our proposed generative framework. The primary objective is to demonstrate that integrating the spectral envelope loss into a sequential GAN architecture significantly improves the preservation of latent periodicities and temporal dynamics in both continuous and categorical time series conveyed by rows of child tables of relational databases. To this end, we conduct comprehensive experiments on both simulated data and real-world transactional datasets. We compare our model against several state-of-the-art generative approaches, followed by an ablation study to evaluate the contribution of specific components within our proposed model. 
+
+A. Experimental setup 1) Simulated Data (Bayesian Hierarchical Benchmarks): 
+
+We first evaluate our models on simulated relational databases generated via our Bayesian Hierarchical Bench-marking framework. We simulate two distinct categorical Markov processes:  
+
+> •
+
+NCP: Tests the model’s ability to capture periodic behaviors of categorical time series. The transition pa-rameter is sampled from the prior α ∼ U (0 .5, 1.0) . 
+
+> •
+
+SSP: Tests the model’s ability to capture low-frequency, high-inertia dynamics (low-pass filter behavior). The transition parameter is sampled from the prior α ∼U(1 /K, 1.0) .Specifically, we synthesize a parent table comprising 100 independent entities (rows), where each entity’s attribute α
+
+is drawn from the corresponding uniform prior. For each parent row, we simulate a sequence of 10,000 child rows, generated using the Markov transition matrix governed by that specific α. This hierarchical construction dictates the exact theoretical spectral envelope of the generated child sequences, providing a rigorous "gold standard" to isolate and evaluate frequency-domain fidelity across varying state space sizes ( K = 7 , 12 , 21 ). 
+
+2) Real-World Datasets: We also evaluate our method on two real-world relational databases containing com-plex temporal dynamics: Rossmann [22] and Walmart [23]. Each database adheres to a two-level hierarchical relational schema. The parent table contains static metadata represent-ing the set of individual stores (e.g., store type, location), while the child table contains the multivariate time series for each store, encompassing both continuous numerical features (e.g., daily or weekly sales volume) and highly periodic categorical features (e.g., day of the week, promotional events). 
+
+3) Baseline models: We compare our proposed method (Seq. RC-TGAN) against state-of-the-art systems spanning standard relational generation and dedicated time series gen-erative adversarial networks:  
+
+> •
+
+SDV [6]: A standard probabilistic relational model that builds generative models of relational databases by computing statistics at the intersection of related tables.  
+
+> •
+
+ClavaDDPM [9]: A recent diffusion-based approach for multi-relational data synthesis.  
+
+> •
+
+DoppelGANger [12]: A state-of-the-art GAN designed for networked time series that tackles mode collapse and long-term dependencies.  
+
+> •
+
+TimeGAN [11]: A time series GAN that combines the unsupervised adversarial paradigm with the control of supervised training through a jointly optimized latent embedding space. 
+
+4) Metrics: To rigorously assess both temporal fidelity and the preservation of complex temporal patterns conveyed by child tables rows structures, we employ the following metrics:  
+
+> •
+
+MSE (ACF): The Mean Squared Error between the autocorrelation of the real and synthetic data. This measures the model’s ability to preserve time-domain dependencies and localized temporal structures.  
+
+> •
+
+SDD ( Dspec ): Defined in (25), we specifically use the KL divergence as div function to evaluate categorical time series.  
+
+> •
+
+SED ( Denv ): Defined in (27), used to evaluate numerical time series. 
+
+B. Experimental Results 
+
+The results are summarized in Tables II and I, alongside visual analyses in Figures 5 and 4. To assess model perfor-mance, we highlight relative improvements over the second-best baselines and evaluate statistical significance using a two-sample t-test ( p < 0.05 ). 
+
+1) Performance on Simulated Data: Table I demonstrates that Seq. RC-TGAN achieves statistically significant reduc-tions in SED (Denv ) across all tested state space sizes (K = 7 , 12 , 21 ). For the NCP, our proposed method yields relative improvements of 45.8%, 43.3%, and 28.2% over the next best baselines at K = 7 , 12 , and 21 , respectively. This trend holds for the SSP, where Seq. RC-TGAN significantly outperforms the second-best models by 32.7% ( K = 7 ), 52.8% ( K = 12 ) and 37.48% ( K = 21 ). Figure 4 provides a qualitative spectral analysis of the generated sequences against the mathematical ground truth (black dashed line). A rigorous visual evaluation of synthetic categorical time series in the frequency domain necessitates assessing two critical criteria: (1) frequency localization ,ensuring the synthetic envelope successfully exhibits peaks at all theoretical fundamental and harmonic frequencies; (2) 
+
+spectral purity , verifying that every peak in the synthetic envelope corresponds to a true theoretical peak without introducing spurious periodic artifacts. Our proposed model consistently satisfies both criteria. For the SSP (top row), it accurately captures the theoretical low-pass filter behavior, concentrating the precise magnitude of spectral mass exactly at ω = 0 without hallucinating higher-frequency artifacts as the persistence parameter α approaches 1. For the NCP (bottom row), the model successfully isolates the true fundamental harmonic peaks (e.g., near ω ≈ 0.14 
+
+for K = 7 ), maintains strict spectral purity by avoiding false peaks, and faithfully reproduces the theoretical amplitudes to accurately model the phase noise. In stark contrast, compet-ing baselines universally fail these criteria, failing to detect true periodicities and typically collapsing into flat, white-noise-like representations. 
+
+2) Performance on Real-World Data: Table II details the performance of the generative models on the Rossmann and Walmart databases. The proposed framework establishes state-of-the-art performance across multiple facets of tem-poral generation. Most notably, it demonstrates a unique ability to model complex categorical time series, yielding statistically significant divergence reductions in SED ( Denv )compared to the second-best baselines: 37.8% and 59.3% relative gain on the Rossmann and Walmart databases, re-spectively ( p < 0.05 ). Furthermore, although the spectral envelope theory de-scribed in section II is inherently designed for categorical se-quences, our framework extends this frequency-domain regu-larization to continuous numerical attributes by employing a Variational Gaussian Mixture Model (VGM) discretization strategy. By mapping continuous values to discrete mode indicators, the spectral loss successfully enforces periodic consistency across all feature types. This adaptation directly contributes to our model achieving a statistically significant 33.7% relative improvement in continuous SDD ( Dspec ) on the Rossmann dataset, as well as a relative gain of 24.8% over DoppelGANger on the Walmart dataset ( p < 0.05 for both). SDV, ClavaDDPM, and TimeGAN consistently demon-strate the weakest performance, struggling to capture both local time-domain structures and global frequency distribu-tions. In contrast, DoppelGANger proves to be a highly competitive state-of-the-art baseline for numerical data. On the Walmart dataset, DoppelGANger and our proposed model are statistically tied for the best time-domain performance (MSE ACF of 0.012 vs. 0.013, respectively; p > 0.05 ). However, despite DoppelGANger’s proficiency with contin-uous variables, it struggles significantly when tasked with modeling the periodic dynamics of categorical time series. Our proposed method overcomes this important limitation via our unified spectral envelope regularization. This dynamic is visually corroborated by the Autocor-relation Function (ACF) analysis of numerical time series presented in Figure 5. As seen in the top row (a, b), static tabular models like SDV and ClavaDDPM completely fail to capture temporal dependencies, resulting in flat ACF curves. This visual analysis highlights a critical limitation of the com-monly used MSE (ACF) metric. On the Rossmann dataset, the static SDV model achieves a nominally better MSE (ACF) compared to the sequential DoppelGANger model (0.0700 vs. 0.0868). However, visual inspection reveals that SDV merely produces a flat line near zero; this mathematically minimizes the mean squared error across all lags by "playing it safe," but fails entirely to capture underlying temporal dynamics. DoppelGANger successfully reproduces the oscil-lating shape of the sales autocorrelation but misses the exact amplitude of certain peaks, resulting in a harsher point-wise MSE penalty. The spectral metrics ( Dspec and Denv ) correct this incom-pleteness by evaluating the global frequency structure rather than local point-wise errors. Ultimately, our proposed Seq. RC-TGAN framework bridges all these gaps, demonstrating the ability to accurately capture local point-wise dependen-cies, global continuous periodicities via VGM adaptation, and crucially, the complex structural harmonics inherent to categorical time series. TABLE I: Perfomance on simulated datasets: Comparison of Denv between our proposed method and baselines across different state space sizes ( K). Lower is better.                                                                                              
+
+> State Space Size ( K)Model K=7 K=12 K=21
+> Noisy Cyclic
+> SDV 0.7830 ±0.0582 0.9459 ±0.1804 0.8418 ±0.0794
+> ClavaDDPM 0.8729 ±0.0660 0.8922 ±0.1036 0.9101 ±0.1797
+> DoppelGANger 0.9467 ±0.0579 0.8786 ±0.1071 0.8336 ±0.0452
+> TimeGAN 0.9100 ±0.1302 0.9135 ±0.1427 0.9076 ±0.0860
+> Seq. RC-TGAN 0.4246 ±0.0117 0.4984 ±0.0319 0.5988 ±0.0202
+> Symmetric Sticky
+> SDV 0.2182 ±0.0297 0.1012 ±0.0144 0.0661 ±0.0112
+> ClavaDDPM 0.1873 ±0.0266 0.0949 ±0.0050 0.0569 ±0.0065
+> DoppelGANger 0.7691 ±0.1404 0.2123 ±0.0240 0.1258 ±0.0173
+> TimeGAN 0.1813 ±0.0208 0.1007 ±0.0069 0.0555 ±0.0074
+> Seq. RC-TGAN 0.1221 ±0.0023 0.0448 ±0.0018 0.0347 ±0.0009
+
+TABLE II: Performance Metrics on real-world datasets: MSE (ACF), Dspec , and Denv                                                                                               
+
+> Dataset Model MSE (ACF) Dspec Denv
+> Rossmann
+> SDV 0.0700 ±0.0000 50 .00% ±0.00% 0.7359 ±0.0000
+> ClavaDDPM 0.0702 ±0.0001 50 .30% ±0.08% 0.7407 ±0.0006
+> DoppelGANger 0.0868 ±0.0293 46 .22% ±4.34% 0.7792 ±0.5640
+> TimeGAN 0.0951 ±0.0317 57 .20% ±5.21% 1.2507 ±0.3600
+> Seq. RC-TGAN 0.0340 ±0.0072 30 .66 %±3.86 %0.4578 ±0.1630
+> Walmart
+> SDV 0.1223 ±0.0000 50 .99% ±0.00% 0.0757 ±0.0000
+> ClavaDDPM 0.1195 ±0.0015 45 .04% ±0.40% 0.0727 ±0.0008
+> DoppelGANger 0.0120 ±0.0052 6.88% ±0.89% 0.0118 ±0.0028
+> TimeGAN 0.1250 ±0.0208 16 .32% ±2.90% 0.1446 ±0.0108
+> Seq. RC-TGAN 0.0130 ±0.0112 5.17 %±0.58 %0.0048 ±0.0023
+
+C. Ablation Study 
+
+To rigorously isolate the contributions of our architectural design choices, specifically the recurrent temporal generation and the proposed frequency-domain loss, we conducted an ablation study. We compared four variants of our framework: RC-TGAN [7] (no temporal dimension modeling), the Seq. RC-TGAN (w\o Lspec ) that is the recurrent baseline without any spectral loss, the Seq. RC-TGAN (psd) which models based on the spectral density loss for the numerical columns instead of the spectral envelope loss (based on VGM), and our proposed full model, Seq. RC-TGAN. The necessity of the defined spectral loss is most starkly evident in our highly controlled simulated environments (Table III). While the model Seq. RC-TGAN (w\o Lspec )demonstrates improvements on empirical real-world data, it (a) Symmetric Sticky ( α = 0 .9) (b) Symmetric Sticky ( α = 0 .98 )   
+
+> (c) Noisy Cyclic ( α= 0 .9)(d) Noisy Cyclic ( α= 0 .98 )
+
+Fig. 4: Spectral Envelope Evaluation on Simulated Data ( K = 7 ). The black dashed line represents the theoretical ground truth. Top Row (Sticky): The proposed Seq. RC-TGAN (blue) accurately captures the low-pass behavior, with spectral mass concentrating at ω = 0 as persistence ( α) increases. Bottom Row (Cyclic): Seq. RC-TGAN successfully aligns with the fundamental harmonic peaks (e.g., ω ≈ 0.14 ) and their sharpening as cycle strength ( α) increases. Conversely, sequential baselines—including DoppelGANger (purple), TimeGAN (brown), and the unregularized Seq. RC-TGAN (no 
+
+Lspec ) (red)—fail to capture these periodic structures, collapsing into flat or erratic noise.   
+
+> (a) Rossmann Store Sales: Baseline comparison (b) Walmart Fuel Price: Baseline comparison
+> (c) Rossmann Store Sales: Ablation Study (d) Walmart Fuel Price: Ablation Study
+
+Fig. 5: Autocorrelation Function (ACF) Analysis. The dashed black line represents the ground truth. Top Row (a, b): 
+
+Comparison against baselines. Static models like SDV (pink) and ClavaDDPM (green) fail to capture seasonality (recurring peaks at lag 7 for Rossman and lag 12 for Walmart). Bottom Row (c, d): Ablation study. The static RC-TGAN (orange) produces a flat line, and the unregularized Seq. RC-TGAN (no Lspec ) (red) captures local transitions but underestimates global amplitudes. The proposed Seq. RC-TGAN (blue) accurately reproduces the overarching seasonal correlation structure. completely fails to reproduce pure mathematical periodicities. The results show that without explicit frequency-domain guidance, the recurrent baseline performs almost identically to the static RC-TGAN model on both the NCP and SSP across all state space sizes. This reveals that standard adversarial training in the time domain, even with an RNN-based architecture, is insufficient to prevent white-noise-like spectra when faced with periodic constraints. By incorporating the spectral envelope loss, the divergence ( Denv ) is reduced by approximately 50% across almost all configurations (e.g., a statistically significant diver-gence drop from 0.8483 to 0.4246 for the NCP at K = 7 ). These results confirm that the proposed spectral loss is not merely an incremental tuning parameter for real-world data, but a fundamentally essential component for generative mod-els to successfully reconstruct latent harmonics and system inertia in categorical time series. Table IV details the performance of these variants on the Rossmann and Walmart datasets. Transitioning from a static generator (RC-TGAN) to a recurrent architecture (Seq. RC-TGAN (w/o Lspec )) yields statistically significant improvements ( p < 0.05 ) across both time and frequency domains on real-world data. For instance, on the Walmart dataset, introducing the recurrent structure reduces the time-domain MSE (ACF) by 54.6% (from 0.1200 to 0.0545) and drastically reduces the continuous frequency divergence (Dspec ) by 81.8% (from 45.26% to 8.22%). Evaluating the progression of our ablation study highlights the fundamental necessity of the spectral envelope loss for mixed-type columns in relational databases. First, comparing the unregularized recurrent baseline (Seq. RC-TGAN (w\o 
+
+Lspec )) to the Seq. RC-TGAN (psd) variant demonstrates the advantage of the latter, as applying a standard spectral den-sity loss successfully provides frequency-domain guidance for continuous numerical columns. However, this approach remains fundamentally insufficient for reliably capturing the complex periodic dynamics inherent to categorical data. Subsequently, comparing the Seq. RC-TGAN (psd) variant to our full model (Seq. RC-TGAN) illustrates the critical impact of our proposed approach. Implementing the full Spectral Envelope loss forces the generator to comprehensively learn overarching periodic patterns across all data types natively. This yields a statistically significant 23.9% relative reduction in categorical SED ( Denv ) compared to the psd variant on the Rossmann dataset (dropping from 0.6014 to 0.4578). Further-more, on the Walmart dataset, the full model drives the SED down to 0.0048, outperforming the PSD-only variant and achieving a massive 93.4% overall improvement compared to the initial recurrent baseline (dropping from 0.0732 to 0.0048). These findings are visually confirmed by the Autocor-relation Function (ACF) analysis (Figure 5, bottom row). The static RC-TGAN completely fails to capture temporal dependencies, resulting in a flat ACF line. While the Seq. RC-TGAN (w\o Lspec ) successfully begins to capture local-ized temporal transitions, it still misses the global structural amplitudes. The integration of the full spectral loss acts as the definitive catalyst, enabling the generator to accurately reproduce long-range seasonal correlations rather than just step-by-step localized transitions. VIII. C ONCLUSION 
+
+In this paper, we addressed the critical challenge of gen-erating high-fidelity time series within relational databases by introducing Seq. RC-TGAN, a sequential generative ad-versarial network enhanced with a novel, integrated spectral envelope loss. Rather than relying solely on static encodings, our framework explicitly optimizes the network to preserve the complex frequency-domain features of both categorical and continuous time series during training. Furthermore, we established a mathematically rigorous evaluation paradigm TABLE III: Ablation study on simulated datasets: Compar-ison of Denv between RC-TGAN variants across different state space sizes ( K). Lower is better.                                                            
+
+> State Space Size ( K)Model K=7 K=12 K=21
+> Benchmark: Noisy Cyclic
+> RC-TGAN 0.8215 ±0.0864 0.9719 ±0.1127 0.9652 ±0.3088
+> Seq. RC-TGAN (w\o Lspec )0.8483 ±0.1094 0.9775 ±0.1155 0.8260 ±0.0261
+> Seq. RC-TGAN 0.4246 ±0.0117 0.4984 ±0.0319 0.5988 ±0.0202
+> Benchmark: Symmetric Sticky
+> RC-TGAN 0.1962 ±0.0159 0.0957 ±0.0049 0.0546 ±0.0065
+> Seq. RC-TGAN (w\o Lspec )0.1988 ±0.0169 0.0926 ±0.0086 0.0588 ±0.0029
+> Seq. RC-TGAN 0.1221 ±0.0023 0.0448 ±0.0018 0.0347 ±0.0009
+
+TABLE IV: Ablation study on real-world datasets: MSE (ACF), Dspec , and Denv                                                                               
+
+> Dataset Model MSE (ACF) Dspec Denv
+> Rossmann
+> RC-TGAN 0.0703 ±0.0002 50 .29% ±0.06% 0.7404 ±0.0003
+> Seq. RC-TGAN (w\o Lspec )0.0687 ±0.0037 43 .72% ±2.54% 0.5790 ±0.1574
+> Seq. RC-TGAN (psd) 0.0681 ±0.0322 43 .99% ±4.78% 0.6014 ±0.1771
+> Seq. RC-TGAN 0.0340 ±0.0072 30 .66 %±3.86 %0.4578 ±0.1630
+> Walmart
+> RC-TGAN 0.1200 ±0.0012 45 .26% ±0.58% 0.0833 ±0.0017
+> Seq. RC-TGAN (w\o Lspec )0.0545 ±0.0227 8.22% ±0.96% 0.0732 ±0.0016
+> Seq. RC-TGAN (psd) 0.0389 ±0.0212 16 .23% ±8.16% 0.0067 ±0.0102
+> Seq. RC-TGAN 0.0130 ±0.0112 5.17 %±0.58 %0.0048 ±0.0023
+
+by analytically deriving the spectral envelope for circulant Markov chains, providing a "gold standard" for categorical time series alongside two novel spectral divergence metrics. Extensive experiments on these simulated data and real-world datasets (Rossmann and Walmart) demonstrate that our approach significantly outperforms state-of-the-art baselines in capturing latent periodicities, strict cyclic constraints, and long-term seasonality. REFERENCES [1] L. Xu, M. Skoularidou, A. Cuesta-Infante, and K. Veeramachaneni, “Modeling Tabular data using Conditional GAN,” arXiv:1907.00503 [cs, stat] , Oct. 2019, arXiv: 1907.00503. [Online]. Available: http://arxiv.org/abs/1907.00503 [2] A. Kotelnikov, D. Baranchuk, I. Rubachev, and A. Babenko, “TabD-DPM: Modelling Tabular Data with Diffusion Models,” Oct. 2024, arXiv:2209.15421. [Online]. Available: http://arxiv.org/abs/2209.15421 [3] R. Shi, Y. Wang, M. Du, X. Shen, and X. Wang, “A Comprehen-sive Survey of Synthetic Tabular Data Generation,” arXiv preprint arXiv:2504.16506 , 2025. [4] I. Padhi, Y. Schiff, I. Melnyk, M. Rigotti, Y. Mroueh, P. Dognin, J. Ross, R. Nair, and E. Altman, “Tabular transformers for modeling multivariate time series,” in ICASSP 2021-2021 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) .IEEE, 2021, pp. 3565–3569. [5] H. Y. J. Kang, M. Ko, and K. S. Ryu, “Tabular transformer genera-tive adversarial network for heterogeneous distribution in healthcare,” 
+
+Scientific Reports , vol. 15, no. 1, p. 10254, 2025. [6] N. Patki, R. Wedge, and K. Veeramachaneni, “The Synthetic Data Vault,” 2016 IEEE International Conference on Data Science and Advanced Analytics (DSAA) , vol. 2016, pp. 399–410, Oct. 2016. [7] M. Gueye, Y. Attabi, and M. Dumas, “Row conditional-TGAN for generating synthetic relational databases,” in ICASSP 2023-2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) . IEEE, 2023, pp. 1–5. [8] A. V. Solatorio and O. Dupriez, “REaLTabFormer: Generating Realistic Relational and Tabular Data using Transformers,” Feb. 2023, arXiv:2302.02041. [Online]. Available: http://arxiv.org/abs/2302.02041 [9] W. Pang, M. Shafieinejad, L. Liu, S. Hazlewood, and X. He, “ClavaDDPM: Multi-relational Data Synthesis with Cluster-guided Diffusion Models,” Nov. 2024, arXiv:2405.17724. [Online]. Available: http://arxiv.org/abs/2405.17724 [10] V. Hudovernik, M. Xu, J. Shi, L. Šubelj, S. Ermon, E. Štrumbelj, and J. Leskovec, “Reldiff: Relational data generative modeling with graph-based diffusion models,” arXiv preprint arXiv:2506.00710 , 2025. [11] J. Yoon, D. Jarrett, and M. Van der Schaar, “Time-series generative adversarial networks,” Advances in neural information processing systems , vol. 32, 2019. [12] Z. Lin, A. Jain, C. Wang, G. Fanti, and V. Sekar, “Using gans for sharing networked time series data: Challenges, initial promise, and open questions,” in Proceedings of the ACM internet measurement conference , 2020, pp. 464–483. [13] D. S. Stoffer, D. E. Tyler, and A. J. McDougall, “Spectral analysis for categorical time series: Scaling and the spectral envelope,” Biometrika ,vol. 80, no. 3, pp. 611–622, 1993. [14] D. S. Stoffer, D. E. Tyler, and D. A. Wendt, “The spectral envelope and its applications,” Statistical Science , pp. 224–253, 2000. [15] R. H. Shumway and D. S. Stoffer, Time series analysis and its applications: with R examples . Springer, 2006. [16] Y. Ma, D. Qu, and Y. Wang, “Dynamic community detection using class preserving time series generation with fourier markov diffusion,” 
+
+Scientific Reports , 2026. [17] Z. Zhang, Q. Ouyang, Z. Yu, D. Pei, and T. Xiao, “Frequency decom-position and enhancement for time series generation using diffusion models.” [18] X. Piao, Z. Chen, L. Zhu, Y. Dong, Y. Matsubara, and Y. Sakurai, “Tifo: Time-invariant frequency operator for stationarity-aware representation learning in time series,” arXiv preprint arXiv:2602.17122 , 2026. [19] D. Koller, “Probabilistic relational models,” in International Confer-ence on Inductive Logic Programming . Springer, 1999, pp. 3–13. [20] L. R. Medsker, L. Jain et al. , “Recurrent neural networks,” Design and applications , vol. 5, no. 64-67, p. 2, 2001. [21] I. Kra and S. R. Simanca, “On circulant matrices,” Notices of the AMS ,vol. 59, no. 3, pp. 368–377, 2012. [22] “Rossmann Store Sales.” [Online]. Available: https://www.kaggle.com/c/rossmann-store-sales [23] T. Wilczek, “Walmart.” [Online]. Available: https://data.world/tommywilczek/walmart 
+
+APPENDIX 
+
+PROOF OF LEMMA 1By assumption, the spectral density matrix of the one-hot encoded process, fY (ω), is continuous. Because the categories are mutually exclusive and exhaustive, the co-variance matrix V has rank K − 1. We can apply any 
+
+K × (K − 1) -dim projection matrix Q to obtain a full-rank covariance matrix V = Q′V Q and a projected spectral density matrix f Y (ω) = Q′fY (ω)Q.The spectral envelope λ(ω) is given by the largest eigen-value of the matrix C(ω) = V −1/2f Y (ω)V −1/2. Since 
+
+fY (ω) is continuous with respect to ω, the matrix C(ω) is also continuous. The eigenvalues of C(ω) are the roots of its characteristic polynomial, which can be defined as P (x, ω ) = det( xI −
+
+C(ω)) . The coefficients of this polynomial are continuous functions of the entries of C(ω) which are continuous func-tions of ω. Then, polynomial P (x, ω ) is continuous function of ω.According to standard mathematical theorem in [?]regarding the roots of polynomials, the roots of a polynomial are continuous functions of its coefficients. Consequently, the largest root, λ(ω), is a continuous function on the fundamental frequency domain [−1/2, 1/2] .PROOF OF LEMMA 2We prove the two properties sequentially based on the definitions of the spectral envelope and the norms. Let f Y (ω) be the projected spectral density matrix of dimension (K −1) ×(K −1) , and let V be the corresponding full-rank covariance matrix. The integral of the spectral density matrix over the fundamental frequency domain yields the covariance matrix: 
+
+Z 1/2
+
+> −1/2
+
+f Y (ω)dω = V . 
+
+Recall that the spectral envelope is defined as λ(ω) =
+
+μmax (C(ω)) , where μmax (·) is the highest eigenvalue func-tion and C(ω) = V −1/2f Y (ω)V −1/2.
+
+Upper Bound: Integrating C(ω) over the frequency domain yields: 
+
+Z 1/2
+
+> −1/2
+
+C(ω)dω = V −1/2
+
+Z 1/2
+
+> −1/2
+
+f Y (ω)dω 
+
+!
+
+V −1/2
+
+= IK−1.
+
+Taking the trace of both sides, we get: 
+
+Z 1/2
+
+> −1/2
+
+tr (C(ω)) dω = tr 
+
+Z 1/2
+
+> −1/2
+
+C(ω)dω 
+
+!
+
+= tr (IK−1) = K − 1.
+
+Since C(ω) is positive semi-definite, its maximum eigenvalue is bounded by its trace, μmax (C(ω)) ≤ tr (C(ω)) for all ω.Therefore: 
+
+∥λ∥1 =
+
+Z 1/2
+
+> −1/2
+
+λ(ω)dω ≤
+
+Z 1/2
+
+> −1/2
+
+tr (C(ω)) dω = K − 1.
+
+Lower Bound: Using the variational characterization of the spectral envelope, for any non-zero vector ¯β0 ∈ RK−1, we have: 
+
+λ(ω) = sup 
+
+> ¯β∈RK−1
+
+¯β′f Y (ω) ¯β
+
+¯β′V ¯β ≥ ¯β′
+
+> 0
+
+f Y (ω) ¯β0
+
+¯β′
+
+> 0
+
+V ¯β0
+
+.
+
+Integrating this inequality over the frequency domain gives: 
+
+∥λ∥1 =
+
+Z 1/2
+
+> −1/2
+
+λ(ω)dω 
+
+≥
+
+Z 1/2
+
+> −1/2
+
+¯β′
+
+> 0
+
+f Y (ω) ¯β0
+
+¯β′
+
+> 0
+
+V ¯β0
+
+dω 
+
+=¯β′
+
+> 0
+
+R 1/2 
+
+> −1/2
+
+f Y (ω)dω 
+
+ ¯β0
+
+¯β′
+
+> 0
+
+V ¯β0
+
+= ¯β′
+
+> 0
+
+V ¯β0
+
+¯β′
+
+> 0
+
+V ¯β0
+
+= 1 .
+
+Thus, 1 ≤ ∥ λ∥1 ≤ K − 1.From Lemma 1, λ(ω) is a continuous function on the compact interval [−1/2, 1/2] . Therefore, it is bounded, which implies λ ∈ L∞([ −1/2, 1/2]) and consequently λ ∈
+
+L2([ −1/2, 1/2]) , meaning ∥λ∥2 < ∞.For the lower bound, we apply Jensen’s inequality (or the Cauchy-Schwarz inequality) on the probability space defined by the interval [−1/2, 1/2] with length 1: 
+
+∥λ∥22 =
+
+Z 1/2
+
+> −1/2
+
+λ(ω)2dω ≥
+
+Z 1/2
+
+> −1/2
+
+λ(ω)dω 
+
+!2
+
+= ∥λ∥21.Since we established in Part (i) that ∥λ∥1 ≥ 1, it strictly follows that ∥λ∥2 ≥ 1.PROOF OF LEMMA 3Because P is a circulant matrix, it is a normal matrix (P P ′ = P ′P ). A fundamental property of circulant matrices is that they are diagonalized by the Discrete Fourier Transform (DFT) matrix. Therefore, the eigenvectors 
+
+vk are the fixed, orthogonal Fourier basis vectors. This orthogonality allows us to project the multivariate one-hot encoded categorical process Yt into K uncorrelated scalar processes, defined as Z(k) 
+
+> t
+
+= v∗
+
+> k
+
+Yt.The conditional expectation of each projected scalar process is exactly governed by its corresponding eigenvalue: 
+
+E[Z(k) 
+
+> t+1
+
+| Z(k) 
+
+> t
+
+] = γkZ(k) 
+
+> t
+
+. This equation defines acomplex Autoregressive Process of order 1 (AR(1)). For such an AR(1) process, the temporal dependence decays geometrically. Consequently, the normalized autocorrelation function at lag h is given exactly by the corresponding eigenvalue raised to the absolute lag: Rk(h) = γ|h| 
+
+> k
+
+.By the Wiener-Khinchin theorem, the spectral density 
+
+fk(ω) of a stationary discrete-time process is the Discrete-Time Fourier Transform (DTFT) of its autocorrelation se-quence. Substituting the geometric autocorrelation Rk(h) = 
+
+γ|h| 
+
+> k
+
+into the Fourier sum yields an explicitly solvable infinite geometric series: 
+
+fk(ω) = 
+
+> ∞
+
+X
+
+> h=−∞
+
+Rk(h)e−2πiωh 
+
+=
+
+> ∞
+
+X
+
+> h=−∞
+
+γ|h| 
+
+> k
+
+e−2πiωh = 1 − | γk|2
+
+|1 − γke−2πiω |2 .
+
+Using the polar representation of the eigenvalue γk =
+
+rkeiϕ k , we can expand the squared norm in the denominator: 
+
+|1 − rkei(ϕk −2πω )|2 = 1 − 2rk cos(2 πω − ϕk) + r2
+
+> k
+
+This yields the explicit polar form for the spectral density: 
+
+fk(ω) = 1−r2  
+
+> k
+> 1−2rkcos(2 πω −ϕk)+ r2
+> k
+
+.The spectral envelope is defined as the supremum of the normalized spectral density over all possible projection vec-tors β: λ(ω) = sup βfZ (ω;β) 
+
+> Var (Z)
+
+. Because the scalar modes Z(k)
+
+> t
+
+are mutually uncorrelated (their cross-covariance is zero for all lags), the total spectral density of any linear combination is simply the sum of the individual mode densities. To maximize a weighted average of independent compo-nents at any specific frequency ω, the optimal strategy is to assign all weight to the single component with the largest value. Thus, evaluating the envelope simplifies to finding the point-wise maximum of the individual harmonic densities (excluding the trivial stationary DC component k = 0 ): 
+
+λ(ω) = max  
+
+> k∈{ 1,...,K −1}
+
+fk(ω)
