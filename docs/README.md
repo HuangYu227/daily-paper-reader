@@ -6,53 +6,49 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-02
-- 运行时间：2026-07-02 21:59:05 UTC
+- 最新运行日期：2026-07-04
+- 运行时间：2026-07-04 21:41:15 UTC
 - 运行状态：成功
-- 本次总论文数：11
+- 本次总论文数：9
 - 精读区：2
-- 速读区：9
+- 速读区：7
 
 ### 今日简报（AI）
-今日11篇论文中，精读聚焦时序生成与表征调试，最高分10/10的Sequential RC-TGAN提出谱包络损失来生成关系型时间序列，8/10的Aionoscope则关注潜状态可访问性调试。最值得深入的两个方向是时序数据生成与潜表征分析。建议读者优先精读这两篇高分论文，并结合速读中的时序表示学习（如LeNEPA）进行系统梳理。
-- 详情：[/202607/02/README](/202607/02/README)
+1) 今日日报聚焦风险投资决策的因果图时序建模与智能因果发现工具，9篇论文中两篇精读均高分突破8.0。
+2) 最值得关注：FinInvest-GTCN将图神经网络与因果时序建模结合实现可解释投资优化（9.0分），CausalSteward提供智能体化因果发现协作框架（8.0分）。
+3) 普通读者可以优先深入理解因果先验如何提升金融时间序列预测的稳健性，并尝试将因果发现工具应用于自身数据中的隐变量识别。
+- 详情：[/202607/04/README](/202607/04/README)
 
 ### 精读区论文标签
-1. [Sequential RC-TGAN: Generating Relational Time Series with Spectral Envelope Loss](/202607/02/2606.31904v1-sequential-rc-tgan-generating-relational-time-series-with-spectral-envelope-loss)  
-   标签：评分：10.0/10、query:tsc
-   evidence：使用GAN和谱包络损失生成关系型时间序列
-2. [Aionoscope: Debugging Latent-State Accessibility in Time-Series Representations](/202607/02/2607.00956v1-aionoscope-debugging-latent-state-accessibility-in-time-series-representations)  
-   标签：评分：8.0/10、query:fe
-   evidence：基于生成器的诊断工具，用于冻结时间序列表示
+1. [FinInvest-GTCN: Explainable Graph-Temporal-Causal Modeling for Risk-Aware Investment Decision Optimization](/202607/04/2606.28933v1-fininvest-gtcn-explainable-graph-temporal-causal-modeling-for-risk-aware-investment-decision-optimization)  
+   标签：评分：9.0/10、query:tsc
+   evidence：图-时序-因果网络用于风险感知投资决策优化
+2. [CausalSteward: An Agentic Divide-Conquer-Combine Copilot for Causal Discovery](/202607/04/2607.01936v1-causalsteward-an-agentic-divide-conquer-combine-copilot-for-causal-discovery)  
+   标签：评分：8.0/10、query:tsc
+   evidence：分治策略的因果发现框架
 
 ### 速读区论文标签
-1. [Latent Bridges for Multi-Table Question Answering](/202607/02/2606.28916v1-latent-bridges-for-multi-table-question-answering)  
-   标签：评分：7.0/10、query:fe
-   evidence：冻结大语言模型，可训练的编码器和桥接用于表格问答
-2. [Fractional Stochastic Neural Networks](/202607/02/2606.29438v1-fractional-stochastic-neural-networks)  
+1. [EVOTS: Evolutionary Transformer Search for Time Series Forecasting](/202607/04/2607.00154v1-evots-evolutionary-transformer-search-for-time-series-forecasting)  
    标签：评分：7.0/10、query:tsc
-   evidence：使用分数随机神经网络进行时间序列生成
-3. [LeNEPA: No-Augmentation Next-Latent Prediction for Time-Series Representation Learning](/202607/02/2607.00958v1-lenepa-no-augmentation-next-latent-prediction-for-time-series-representation-learning)  
+   evidence：时间序列预测的进化架构搜索
+2. [Data-Adaptive Learning of Dynamical Systems by Matching Transfer Operators and Invariant Measures](/202607/04/2607.00391v1-data-adaptive-learning-of-dynamical-systems-by-matching-transfer-operators-and-invariant-measures)  
    标签：评分：7.0/10、query:fe
-   evidence：用于特征提取的时间序列表示学习
-4. [A Lightweight Self-Supervised Learning Framework for Multivariate Time Series using Hierarchical-JEPA on ECG Data](/202607/02/2607.01145v1-a-lightweight-self-supervised-learning-framework-for-multivariate-time-series-using-hierarchical-jepa-on-ecg-data)  
-   标签：评分：7.0/10、query:fe
-   evidence：多元时间序列自监督学习框架
-5. [Permute-match tests detect significant correlations between time series despite nonstationarity and limited replicates](/202607/02/biorxiv-10-1101-2023-03-13-531689-v5-permute-match-tests-detect-significant-correlations-between-time-series-despite-nonstationarity-and-limited-replicates)  
-   标签：评分：7.0/10、query:fe
-   evidence：非平稳时间序列相关性检测方法
-6. [Mechanisms Matter: Transportability of Cellular Perturbation Effects](/202607/02/biorxiv-10-64898-2026-05-08-723625-v2-mechanisms-matter-transportability-of-cellular-perturbation-effects)  
+   evidence：从轨迹数据学习动力系统，匹配转移算子和不变测度
+3. [Decision-Aware Training for Sample-Based Generative Models](/202607/04/2607.01171v1-decision-aware-training-for-sample-based-generative-models)  
    标签：评分：7.0/10、query:tsc
-   evidence：因果可迁移性与细胞扰动因果模拟器
-7. [Signed-XOR Error and Sparse Coding in a Dale-Complaint Substrate for Sequence Memorization](/202607/02/biorxiv-10-64898-2026-06-24-734176-v1-signed-xor-error-and-sparse-coding-in-a-dale-complaint-substrate-for-sequence-memorization)  
+   evidence：面向概率预测的样本生成模型的决策感知训练
+4. [Zeus: Towards Tuning-Free Foundation Model for Time Series Analysis](/202607/04/2607.01918v1-zeus-towards-tuning-free-foundation-model-for-time-series-analysis)  
    标签：评分：7.0/10、query:fe
-   evidence：冻结的稀疏随机投影编码器
-8. [PMDformer: Patch-Mean Decoupling Information Transformer for Long-term Forecasting](/202607/02/2606.26549v1-pmdformer-patch-mean-decoupling-information-transformer-for-long-term-forecasting)  
-   标签：评分：6.0/10、query:tsc
-   evidence：提出补丁均值解耦用于长期时间序列预测
-9. [Improving Coherence in Hierarchical Time Series Forecasting using Structured Temporal Fusion](/202607/02/2606.28553v1-improving-coherence-in-hierarchical-time-series-forecasting-using-structured-temporal-fusion)  
-   标签：评分：6.0/10、query:tsc
-   evidence：扩展Temporal Fusion Transformer用于一致的层次时间序列预测
+   evidence：统一无调优时间序列基础模型，支持包括特征提取在内的多种分析任务
+5. [Performance Attribution in pLM-Based Biological Relation Prediction](/202607/04/biorxiv-10-64898-2026-06-28-735130-v1-performance-attribution-in-plm-based-biological-relation-prediction)  
+   标签：评分：7.0/10、query:fe
+   evidence：使用冻结蛋白质语言模型进行生物关系预测
+6. [Evolutionary Feature Engineering for Structured Data](/202607/04/2607.01548v1-evolutionary-feature-engineering-for-structured-data)  
+   标签：评分：6.0/10、query:fe
+   evidence：面向结构化数据的进化特征工程方法，应用于时间序列预测
+7. [Optical flow reveals motility signatures for inferring pathogenic bacterial mixture compositions via temporal convolutional networks](/202607/04/biorxiv-10-64898-2026-06-29-735172-v1-optical-flow-reveals-motility-signatures-for-inferring-pathogenic-bacterial-mixture-compositions-via-temporal-convolutional-networks)  
+   标签：评分：6.0/10、query:fe
+   evidence：利用时间卷积网络从运动数据中提取时间序列特征
 
 
 <div class="dpr-home-promo-card">

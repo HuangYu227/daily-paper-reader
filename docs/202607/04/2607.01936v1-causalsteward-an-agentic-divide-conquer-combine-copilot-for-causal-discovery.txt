@@ -1,0 +1,1430 @@
+Title: CausalSteward: An Agentic Divide-Conquer-Combine Copilot for Causal Discovery
+
+URL Source: https://arxiv.org/pdf/2607.01936v1
+
+Published Time: Fri, 03 Jul 2026 00:49:14 GMT
+
+Number of Pages: 61
+
+Markdown Content:
+# CAUSAL STEWARD : AN AGENTIC DIVIDE -C ONQUER -COMBINE COPILOT FOR CAUSAL DISCOVERY 
+
+Nicholas Tagliapietra 1,2,†,B, Gian Lorenzo Marchioni 5,†,⋆ , Moritz Willig 1, Juergen Luettin 2,Lavdim Halilaj 2, Kristian Kersting 1,3,41 : Computer Science Department, TU Darmstadt, Germany  
+
+> 2
+
+: Bosch Center for Artificial Intelligence, Renningen, Germany  
+
+> 3
+
+: Hessian Center for AI (hessian.AI), Germany  
+
+> 4
+
+: German Research Center for AI (DFKI), Germany  
+
+> 5
+
+: LUISS University, Rome, Italy 
+
+# ABSTRACT 
+
+Learning causal models from high-dimensional data is a significant challenge, particularly in real-world settings where violations of core assumptions lead to causal identifiability issues. Although massive amounts of prior knowledge are available, and contain valu-able causal information, effectively integrating this knowledge into the causal discovery process remains an open problem. We introduce Causal ST eward (C AST), a novel human-in-the-loop framework for interactively assembling large causal models. CausalSteward is a multi-agent collaborative system that tackles high-dimensional causality through a divide-and-conquer approach where large clusters of variables are iteratively partitioned and then separately analyzed. Our framework fuses prior knowledge with a data-driven approach by using tailored tools such as retrieval augmented generation and conditional independence tests. Finally, we use this work to examine the capabilities and limitations of causal reasoning in multi-agent frameworks, and how the human-in-the-loop can con-tribute to accurate and trustworthy results. 
+
+# 1 INTRODUCTION 
+
+Modern science and engineering increasingly demand for causal models (Pearl, 2009) that move beyond purely statistical correlation to predict the outcomes of manipulations on the system (interventions) and rea-soning about hypothetical scenarios (counterfactuals). Performing such inferences often requires a causal graph representing the network of cause-and-effect relationships, however the true causal graph is rarely known. Existing approaches (Spirtes et al., 2001; Shimizu et al., 2011; Spirtes, 2001) commonly attempt to learn this graph from data by relying on causal discovery methods. However, causal discovery from obser-vational data is fundamentally limited by the assumptions required for causal identifiability (Shimizu et al., 2011; Zhang & Hyvarinen, 2012; Jaber et al., 2018). Violations of these assumptions can result in multi-ple causal graphs being statistically undistinguishable, which leads to non-identifiable causal relationships and limits accurate causal discovery. These limitations can be overcome by integrating prior knowledge (O’Donnell et al., 2006). Domain experts can manually incorporate their knowledge by imposing edge con-straints, but this has limited utility in high-dimensional settings (Constantinou et al., 2023). In particular, 
+
+> †
+
+Equal Contribution. 
+
+> B
+
+Correspondence to: tagliapietra.nicholas@gmail.com 
+
+> ⋆
+
+Work carried on during an internship at the Bosch Center for Artificial Intelligence. 
+
+1
+
+> arXiv:2607.01936v1 [cs.MA] 2 Jul 2026 Observational Data
+> Domain Knowledge
+
+# CaST Explainer User Explainer 1. Divide Divider         
+
+> Still unsure, what does ‘X‘ mean? It means that the patient had an Xray. Done. Here is a detailed description of the dataset: …. I will make groups of variables based on my research :Conquer
+> Processing Group 1 ... I am still unsure:
+> •Do you con fi rm that X causes E ?
+> •Is it always valid ?
+> Combine
+> Here are edges bridging
+> Group 1 and Group 2 :
+
+2. Conquer 3. Combine User 
+
+> Yes, I con fi rm!
+> User
+> Yes, those connections are valid!
+
+123   
+
+> Researching…
+> :XE
+
+?Researching… Researching… Researching… 0. Explain Figure 1: CausalSteward (C AST) : This paper develops and showcases the utility of a human-in-the-loop, multi-agent system for causal discovery, leveraging the combined strength of automated discovery from data and prior knowledge of LLM, together with human-expert feedback to incorporate domain specific knowledge. unstructured text is a rich source of prior knowledge that is dense of causal information, while being mas-sively available in the web, documents, and more. Recent works using Large Language Models (LLMs) show a promising outlook for automating the extraction of causal information (Ban et al., 2023; Antonucci et al., 2023; Sheth et al., 2025), offering a great tool for the construction of large causal graphs (Abdulaal et al., 2024; Chen et al., 2023). Furthermore, a Human-in-the-Loop (HITL) approach enables domain ex-perts to guide the LLM reasoning process and obtain accurate solutions without requiring tedious manual specification. In this paper we introduce Causal ST eward (C AST), a multi-agent causal copilot that discovers large causal graphs by combining human interaction, retrieval augmented generation (RAG), and data-driven methods. Our approach is human-first , and C AST has the duty of assisting the human in building a causal model while automating the collection of prior knowledge. C AST adopts a Divide-and-Conquer approach where agents iteratively partition the variable set based on their likelihood of being causally connected until the right level of granularity is reached. Successively, C AST estimates a local causal graph for each partition based on prior knowledge (retrieved from HITL and RAG), and observational data. Finally, the local causal graphs are merged together, obtaining the global causal graph. We apply C AST to a diverse set of challenging datasets in the domains of manufacturing, neuropathic pain and the CausalChambers benchmark (Gamella et al., 2024). Our experiments evaluate C AST with LLMs of varying capabilities and compare against a set of seven other LLM- and data-driven baselines. Our ablations, which disable the RAG and human-in-the-loop components, demonstrate that only the joint use of both components leads to the strong performance of C AST. 
+
+Contribution: In this paper we present C AST, a Human-in-the-Loop (HITL) framework for joint collab-orative causal discovery integrating tabular data, LLM prior knowledge and RAG search, together with human-feedback back domain specific questions. To the best of our knowledge, we are first to present an interactive multi-agentic framework with a Divide-and-Conquer paradigm that has the ability to discover causal graphs in high-dimensional causal settings. 
+
+# 2 PRELIMINARIES AND RELATED WORK 
+
+Notation: We denote sets with bold V and variables in lowercase vi. Causal Models: Within the framework of Pearlian causality (Pearl, 2009), the most common class of causal models are Structural Causal Models ,which we define as a 4-tuple M := ( U, V, P U, F) where U is the set of exogenous variables, V is the set 2of endogenous variables, PU is the probability density function of the exogenous variables U, and F =
+
+{f1, f 2, . . . , f n} is the set of Structural Equations , where each element is a mapping such that fi : ui ∪
+
+P a i → Vi, with ui ⊆ U and vi ⊆ V. Every endogenous variable vi ∈ V is coupled to a structural equation that determines its values, i.e. vi = fi(ui, P a i).Structural equations induce a set of dependencies between endogenous variables. Those dependencies can be organized in a directed acyclic graph (DAG) G(V, E), where V are nodes and E ⊆ V × V are directed edges. We say that vi is a parent of vj if and only if (vi, v j ) ∈ E, and denote as P a i the parents of vi. In most cases, the true causal graph is unknown, and the task of extracting a causal graph is called causal discovery .When all variables are observable, we say there is causal sufficiency . Otherwise, if hidden variables are present, we have causal insufficiency . In causally insufficient scenarios it might not be possible to establish the direction of causation, and we can use a Maximal Ancestral Graph (MAG) (Zhang, 2008) to account for those ambiguities by using undirected edges. Before defining a MAG, we first recall what is an inducing path . Given a subset L ⊂ V, we say that a path is inducing relative to L if every vertex not in L is a collider on the path (apart from its endpoints), and every collider is an ancestor of at least one of the endpoints. 
+
+Definition 1 (Maximally Ancestral Graph (Zhang, 2008)) . A mixed graph is called a maximal ancestral graph (MAG) if: 1) the graph does not contain any directed or almost directed cycles (i.e. it is Ancestral), and 2) there is no inducing path between any two non-adjacent vertices. 
+
+A MAG can be obtained by marginalizing hidden variables in a DAG (Verma & Pearl, 2013). The resulting MAG describes a group of causal models preserving ancestral and independence relations between observ-able variables. An additional challenge is causal identifiability : When specific assumptions on the structural mechanisms are not fulfilled (Shimizu et al., 2011; Hoyer et al., 2008), multiple causal graphs become statistically undis-tinguishable, unless prior knowledge (Zheng et al., 2024) or interventional data (Brouillard et al., 2020; Li et al., 2023) is available. When only observational data is available, it is often not possible to identify a unique causal graph (Mooij et al., 2016). In that case, we are limited to a set of plausible causal models called the Markov Equivalence Class (MEC), which is an equivalence class containing all causal graphs sharing the same set of conditional independencies. Consequently, causal discovery on causally insufficient scenarios using observational data often results in an equivalence class of MAGs (Spirtes, 2001; Rohekar et al., 2022), which can be graphically represented with a Partially Ancestral Graph (PAG), that we define below. 
+
+Definition 2 (Partially Ancestral Graph) . Let M be an arbitrary MAG. We can represent the MEC associated to M with a (PAG) P, which is a partial mixed graph such that: (1) P shares the same adjacencies as M,(2) An edge has an arrowhead ( ▶) in P iff it is shared by all MAGs in the MEC, (3) An edge has a tail (—) in 
+
+P iff it is shared by all MAGs in the MEC, and (4) An edge has a circle ◦ in P iff it is neither an arrowhead or a tail. 
+
+Classic algorithms yielding a PAG in causally insufficient scenarios are the Fast-Causal-Inference (FCI) (Spirtes, 2001) and the Iterative Causal Discovery (ICD) (Rohekar et al., 2022) algorithms. Both algorithms are constraint-based methods which iteratively remove edges when a conditioning set is found. That is, we can remove u → v when a conditioning set Z making them independent exists ( ∃Z : u ⊥⊥ v|Z with 
+
+u,v, and Z disjoint). Inconveniently, the number of possible conditioning sets grows exponentially with the number of variables, and many constraint-based methods present severe scaling limitations (Feigenbaum et al., 2023). A valid approach for tackling high-dimensional data is to split variables into groups to be analyzed separately (Wu et al., 2025). A mathematically rigorous way of grouping variables is the one of 
+
+Causal Partitionings , defined in (Zhang et al., 2022) and reported below. 
+
+Definition 3 (Causal Partitioning) . Let G(V, E) be a graph with variable set V and edges E ⊆ V × V. A partitioning P = {P1, . . . , PM } of V is a causal partitioning if and only if the following holds: 
+
+3Divide FCI 
+
+# 1
+
+> Combine
+
+# 3 Conquer 2    
+
+> 𝓓 𝓓 𝒉𝒚𝒑 𝓓 𝓓 𝒄𝒓𝒊𝒕𝒊𝒄 𝓒 𝓒 𝒄𝒓𝒊𝒕𝒊𝒄 𝓜 𝒄𝒓𝒊𝒕𝒊𝒄 𝓜 𝒉𝒚𝒑 𝓒 𝓒 𝒉𝒚𝒑
+> Variable Domain Partition Merging Causal Graphs
+
+Figure 2: Phases of the C AST Approach . 1) Divide phase: Causal variables (circles) are iteratively splitted into partitions (rectangles) that are likely causally connected. 2) Conquer phase: A local causal graph is derived for each partition. 3) Combine phase: Local causal graphs are merged. 
+
+1. SMi=1 Pi = V,2. ∀u, v ∈ V, if u and v are in separate partitions, then u and v are nonadjacent, 3. ∀u, v ∈ V that are nonadjacent in G, they can be either: 
+
+• Contained on separate partitions, i.e., u ∈ Pi and v ∈ Pj with i̸ = j,
+
+• Contained on the same partition Pk which also contains their d-separating set Z, such that 
+
+u ⊥⊥ v|Z with Z ⊂ Pk and u,v, and Z are disjoint. 
+
+The intuition behind causal partitionings is that variables are grouped in partitions reflecting how they are causally connected: If two variables are within the same partition, then they are causal neighbors. Impor-tantly, a partition in a Causal partitioning can be further causally partitioned. Nested causal partitions can be arranged in a (causal) partition tree. In the ideal case, a causal partitioning can be computed exactly (Zhang et al., 2022). In practice, computing a causal partitioning is intractable, which forces heuristic estimates as in Zhang et al. (2022). 
+
+Divide-and-Conquer: The Divide-and-Conquer paradigm (Cormen et al., 2009) relies on recursively split-ting problems into smaller sub-problems, and successively merging their solutions. Algorithms in this class are typically executed in 3 separate phases: 1) Divide phase, during which the problem is iteratively par-titioned in sub-problems until they are easy enough to be solved, 2) a Conquer step during which each sub-problem is individually solved, 3) a Combine step where the solutions of the sub-problems are merged following the order of sub-division in reverse. The power of this class of algorithms is that, upon satisfying a set of mathematical properties, we have guarantees on the accuracy of the solution, and sometimes even on its optimality. Recently, Divide-and-Conquer strategies have been applied to prompting (Zhang et al., 2024). RELATED WORK 
+
+LLMs for Causality: Formal causal reasoning of LLMs has been investigated in several studies (Willig et al., 2022; Kiciman et al., 2024; Jin et al., 2023; Zeˇ cevi´ c et al., 2023). While generally being able to perform simple causal reasoning tasks, studies generally find shortcomings, such as memorization and lack 4of generalization, in the causal reasoning capabilities of LLM. Further, Vashishtha et al. (2024) and An-tonucci et al. (2023) explore to which extent LLMs can be taught causal reasoning, and show their capacity of extracting causal information from text. For practical applications, LLMs have been applied for causal discovery and in the design of randomized-control trials (Jiralerspong et al., 2024; Abdulaal et al., 2024; Tu et al., 2023; Kiciman et al., 2024; Le et al., 2025; Takayama et al., 2025). However, challenges persist in high-dimensional settings due to finite context windows and long edge-lists representing causal relation-ships, which motivates our divide-and-conquer approach. 
+
+High-dimensional causality: Real world data can exhibit high dimensionality and non-identifiable causal relationships, making most causal models computationally prohibitive and inaccurate (Tagliapietra et al., 2025). Consequently, researchers explored gradient-based methods (Zheng et al., 2018; Sanchez et al., 2023), cluster-DAGs (Niu et al., 2022), divide-and-conquer approaches (Wu et al., 2025; Dong et al., 2025), and new variants of classic methods (Nazaret & Blei, 2024; Andrews et al., 2023). Further, Human-in-the-Loop systems are studied in Wang et al. (2025), da Silva et al. (2024) and Kitson & Constantinou (2023). 
+
+# 3 CAUSAL STEWARD : A MULTI -AGENTIC CAUSAL COPILOT FOR CAUSAL DISCOVERY 
+
+In this section we describe the architecture and core principles of C AST, which are further highlighted in Fig.1. First, we present the core components of C AST. Next, we dive into our Explain-Divide-Conquer-Combine approach. Lastly, we describe how C AST retrieves causal information. 
+
+Human-in-the-Loop Causal Discovery: CAST is a framework for interactive causal discovery. It assists the experts in building a causal graph through a Human-in-the-Loop system, while automating the retrieval of prior knowledge from external sources. Our approach enables a more natural interaction, overcoming the limitations of manual methods. For example, instead of tediously enumerating edge constraints, which is unfeasible with high-dimensional data, humans can specify patterns of causal relationship or provide only partial causal information. Moreover, C AST is responsible for translating human-provided information into the language of causality, and also for complementing the human when it is uncertain. 
+
+Causal Discovery through Divide-and-Conquer: One of the main challenges in causal discovery is deal-ing with high-dimensional data (Brouillard et al., 2024). CAST tackles high-dimensional causality with a divide-and-conquer approach, where variables are recursively assigned to smaller and more manageable partitions. To do so, C AST employs LLM agents to decompose the variables into separate smaller and causally-coherent clusters of variables. The clustering of variables is dynamic and iterative: clusters can be subdivided multiple times until the right level of granularity is reached. In 3.2 we define the criterion that allows C AST to adapt to the complexity of the task. Following, each sub-problem consists of estimating a local causal graph for each partition of variables. The core intuition is that LLMs perform better on smaller and more targeted tasks (Khot et al., 2023). In practice, variables within each group should be single-themed and refer to a single causal phenomenon. This facilitates the agents during the conquer step, as they can reflect more in detail and perform more targeted RAG (or human) queries to retrieve the necessary causal in-formation. As we will show in the Sec.5, variable partitioning makes the individual sub-tasks more intuitive for the agents. In practice, C AST is executed in four phases: Explain , Divide , Conquer , and Combine . These phases are carried out by a set of specialized agents, each one responsible for a specific task in the causal discovery process. First, during the (1) Explain phase , C AST gathers all necessary information before start-ing any discovery process, then the (2) Divide phase repeatedly partitions the variable set V. Afterwards, the (3) Conquer phase produces a local causal graph for every partition. Finally, the (4) Combine phase 
+
+merges all the local causal graphs. In Fig.2 we provide a graphic depiction of C AST. We highlight that all our agents can be provided with RAG tools and human interaction to dynamically retrieve all the necessary causal information. 53.1 EXPLAIN PHASE 
+
+Prior to the divide-conquer-combine phases, C AST implements an explanation step where an Explainer agent E gathers information about the task and complements the information provided by the user. By doing so, it decreases the ambiguity about the meaning of each variable. First, the available meta-data (variable labels and dataset description) is provided to the agent. Next, E outputs an expanded description with details on every single variable. We denote this new information as I and write this step as 
+
+I = E(Xlabels , pexplain ), (1) where X labels are the variable labels, and pexplain is a prompt containing the directions for the agent plus a task description provided by the user. 3.2 DIVIDE PHASE 
+
+The Divide phase recursively partitions the variable set V with the aim of grouping causally related and semantically similar variables together. This step is carried out by two agents: the Divide-hypothesis agent 
+
+Dhyp and the Divide-critic agent Dcritic . Both agents leverage the information gathered by the explainer agent to estimate a causal partitioning of V. Mathematically, given a partition Pi ⊆ V and a divide prompt 
+
+pdiv.hyp. , the Divide-hypothesis agent Dhyp first proposes a possible partitioning, 
+
+{Pi, 1, . . . , Pi,N } = Dhyp (Pi, pdiv.hyp. ), (2) where Pi,k denotes the k-th partition of Pi, such that S 
+
+> k
+
+Pi,k = Pi. Different partitions can overlap, i.e. 
+
+Pi,k ∩ Pi,l might be non-empty for some k and l. Following, a second Divide-critic agent is tasked to review (using the prompt pdiv.critic ) the partitioning and apply corrections if necessary, 
+
+{˜Pi, 1, . . . , ˜Pi,N } = Dcritic ({Pi, 1, . . . , Pi,K }, pdiv.critic ). (3) The causal partitioning process continues recursively until Dhyp stops partitioning further and concludes that the right level of granularity for causal discovery has been reached. In detail, Dhyp and Dcritic are queried again on every partition with more than a number k of variables, and they have to decide whether to partition further or not. This iterative causal partitioning of the general task in simpler sub-tasks can be arranged into a partition tree, where each node describes a partition and its children are sub-partitions (Fig 2). 3.3 CONQUER PHASE 
+
+The conquer phase performs LLM-aided causal discovery. Once the divide phase estimates a causal parti-tioning, a conquer step derives a local causal graph for the variables within each partition that is a leaf in the causal partition tree. First, C AST employs two LLM agents to formulate a causal hypothesis in form of a graph. Next, a data-driven discovery step utilizes the causal hypothesis as a constraint to improve causal discovery. 
+
+1) Hypothesis Generation: After being provided with a description of the dataset, a hypothesis agent H
+
+formulates an initial causal hypothesis Chyp for the variables within the partition. Given a partition Pi, we have 
+
+Ghyp i = Chyp (Pi, phyp ). (4) 
+
+2) Critic Evaluation: A critic agent C evaluates the causal hypothesis Ghyp and refines it based on its internal prior and available external information. Additionally, the agent is prompted to focus on being right at the interventional and at the counterfactual level. 
+
+Gcritic i = Ccritic (Ghyp i , pcritic ) (5) 63) Data-Driven Discovery: A causal discovery algorithm is used to insert additional edges to Gcritic i . In practice, we use the edges in Gcritic i to bootstrap a constraint-based causal discovery algorithm F. Mathe-matically, 
+
+˜Gcritic i = F(Di, Gcritic i ), (6) where Di is a subset of the input dataset corresponding to the variables in Pi, and ˜Gcritic i is the causal graph discovered by F. This discovery process complements the prior information provided by LLMs. In real scenarios, causal relationships can be non-identifiable, and prior constraints improve identifiability and overall performance (Zheng et al., 2024). In turn, the discovery process may find valid relationships that the LLM failed to extract from knowledge sources. 3.4 COMBINE PHASE 
+
+The Combine phase merges the local causal graphs generated during the Conquer phase into a single global causal graph. Since edges within a partition are already estimated, the combine phase is responsible for merging those graphs. As written in Sec.4, if the Divide phase yielded a correct causal partitioning, per-forming the union of all local causal graphs is sufficient to obtain a consistent global causal graph. However, a practical challenge persists: if the causal partitioning operation during the divide phase is not accurate, the local causal graphs might not overlap, leading to disconnected components. Therefore, when merging two or more subgraphs, it is important to assess for edges between nodes in one group and another. For this phase, we adopt a procedure similar to the conquer step. This time, a merge-hypothesis agent Mhyp is given a description of the groups, and is queried to generate a causal hypothesis for the missing edges that connect the local causal graphs, which we call merging causal hypothesis . Similarly to before, once a first merging causal hypothesis is obtained, a merge-critic agent Mcritic has the task to refine it. Given M local subgraphs, we have 
+
+Ghyp comb = Mhyp (G1, . . . , GM , pcomb ),
+
+Gcritic comb = Mcritic (Ghyp comb , pcomb ), (7) where Ghyp comb and Gcritic comb are graphs with nodes Vcomb = SMi=1 Vi. The combine operation is iterated by following the order of subdivision in reverse. In other words, we follow the structure of the partition tree from its leaves to the root. 3.5 RETRIEVAL OF EXTERNAL KNOWLEDGE 
+
+An ideal human-in-the-loop copilot can efficiently acquire information by balancing RAG for general knowl-edge and targeted queries to the human for context-specific information. Therefore, every agent in C AST can gather external knowledge either via retrieval-augmented generation (RAG) or via human interaction. For the Human-in-the-loop , all the agents have the capacity to query a human for additional information. The interaction is made on-demand, and takes the form of a tool-call. Similarly, we also provide to our agents the capacity to dynamically summon an Agentic RAG system on demand. Our RAG system can perform a web search and retrieve relevant information from the internet. We describe the system in detail in appendix C and present an exemplary application of C AST on the ASIA dataset (Lauritzen & Spiegelhalter, 2018) in Fig. 3. 
+
+# 4 THEORETICAL ANALYSIS 
+
+We first study the ideal case. Next we analyze a general scenario. Throughout our analysis, we will always assume Causal Faithfulness .7Dataset Small Medium Method F1 ↑ Prec. ↑ SHD ↓ F1 ↑ Prec. ↑ SHD ↓                                                                                              
+
+> FCI 0.028(0.012) 0.021(0.005) 221.4(3.36) Intractable XGES 0.056(0.009) 0.037(0.006) 448.8(14.89) 0.014(0) 0.211(0) 547(0) GranDAG 0.002(0.003) 0.018(0.040) 113.4(2.51) 0(0) 0(0) 544.4(5.77)
+> CausalCopilot 0.078(0.012) 0.260(0.100) 117.4(6.4) 0.014(0) 0.211(0) 547(0) BOSS 0.054(0.004) 0.029(0.002) 864.20(18.60) 0.057(0.005) 0.030(0.002) 1,817.4(48.3) LLM-BFS(o3-mini) 0.283(0.000) 1.000(0.000) 315.2(0.0) ———Pairwise(Qwen3-14B) 0.153(0.008) 0.093(0.005) 583.50(11.1) ———o3-mini  CS (HITL+RAG) 0.303(0.076) 0.454(0.123) 118.4(11.35) 0.141(0.064) 0.357(0.119) 579.6(25.01) CS (HITL) 0.304(0.062) 0.485(0.101) 112.2(10.40) 0.175(0.084) 0.499(0.127) 558.8(15.498) CS (RAG) 0.235(0.093) 0.373(0.118) 121.4(6.34) 0.209(0.089) 0.518(0.201) 571.6(45.845) o4-mini  CAST (HITL+RAG) 0.142(0.027) 0.217(0.063) 140.4(13.00) 0.086(0.042) 0.271(0.113) 568.2(20.71) CAST (HITL) 0.139(0.056) 0.326(0.149) 126.8(15.93) 0.103(0.039) 0.392(0.083) 547.0(6.89) CAST (RAG) 0.113(0.039) 0.169(0.047) 145.0(14.35) 0.113(0.049) 0.296(0.094) 594.2(81.69)
+> Qw.3 14B  CAST (HITL+RAG) 0.424(0.082) 0.724(0.169) 103.00(10.07) 0.274(0.052) 0.656(0.110) 558.0(21.86) CAST (HITL) 0.483(0.062) 0.608(0.069) 102.4(17.27) 0.266(0.019) 0.508(0.222) 610.80(68.00) CAST (RAG) 0.426(0.033) 0.656(0.176) 111.4(14.44) 0.211(0.106) 0.485(0.129) 568.4(23.64)
+
+Table 1: Results on CausalMan Small and Medium. CAST variants largely outperform other baselines on Small and strong competitive results are achieved on Medium. CausalCopilot executed FCI on Small and XGES on Medium. FCI, LLM-BFS and LLM-Pairwise could not run on Medium. Assuming that Dhyp and Dcritic derive a partitioning that is causal by Def.3, we can prove that C AST can reach asymptotically the correct MEC. 
+
+Theorem 1 (Consistency for an ideal causal partitioning) . Let Gi be the local PAG obtained after performing the conquer phase on variables in partition Pi, and denote with G the graph obtained by performing the union of all local causal graphs Gi, ∀i. If all conquer phase is consistent, then also G is a PAG representing the MEC entailed by the observational data. 
+
+In our case, since FCI is consistent in the large-sample limit, Th.1 implies that C AST inherits said asymptotic consistency. In general applications, however, Divide agents might not yield a correct causal partitioning and the conquer agents might have inaccuracies. Therefore, we provide a general analysis on how the total SHD is influenced by each component in non-ideal scenarios. 
+
+Theorem 2. Let P be a partitioning induced by Dhyp and Dcritic . Define SA as the number of spurious adjacencies, Ecut and NN otIntra the number of inter-partition edges present resp. absent in the ground truth. Let F P R C denote the false-positive rate of Conquer agents, and let Rec M and F DR M denote respectively the recall and false-discovery rate of Merge agents. Then, as n → ∞ , the expected total structural Hamming distance satisfies 
+
+E[SHD total ] ≈ (SA + NN otIntra · F P R C ) + ( Ecut (1 − Rec M) + m · F DR M). (8) We observe above how the performance of C AST is linked to the accuracy of Dhyp &Dcritic to derive a correct causal partitioning. Still, merge agents Mhyp &Mcritic provide a safety-net that recover edges lost during the partitioning operation. Further, the performance of C AST is tied to the capacity of LLMs to pro-vide the correct edge constraints to the causal discovery algorithm F during the conquer phase. Therefore, it is crucial for C AST to access clear and reliable sources of information, which is why our agents lever-age RAG and HITL, as described in Sec.3.5. We remark that the human-in-the-loop influences all agents performance. All our proofs are in appendix A. 8?
+
+# ? E  
+
+> XD
+> A
+> TL
+> S
+> B
+> T
+> Explain
+
+0 Divide 1 Conquer 2 Combine 3
+
+> What is
+> Visits
+> to Asia
+> AWhat is
+> Tubercolosis
+
+# ?
+
+# ? A      
+
+> T
+> E
+> L
+> S
+> B
+> EB
+> XD
+> A
+> T
+> E
+> L
+> S
+> B
+> EB
+> XD
+> XD
+> LE
+
+Figure 3: Illustration for C AST on the ASIA dataset (Lauritzen & Spiegelhalter, 2018). First, the Divide phase partitions the variable set V in P1 = {A, T, E, L, S, B } and P2 = {E, X, D, B }. Next, during the Conquer phase , a local causal graph is estimated. Further, agents query the human to check whether 
+
+L → E, and if X → D. After confirming the first and denying the latter, a causal discovery algorithm finalizes a local causal graph G1 for P1 and G2 for P2. Next, the Combine phase merges G1 and G2 into the global graph G.
+
+# 5 EXPERIMENTS 
+
+We benchmark on the CausalMan dataset (Tagliapietra et al., 2025) and on the Neuropathic-Pain dataset (Tu et al., 2019). We evaluate F1, precision, and Structural Hamming Distance (SHD). We repeat experiments with 5 different seeds, and compute mean and standard deviation for every metric. We also count the number of tool calls to RAG and HITL. HITL experiments on CausalMan have been carried on with the support of real domain experts in manufacturing. Extended tables in E. 
+
+Large-Language Models: We test three different LLMs: GPT 4o-mini (OpenAI, 2024a), o3-mini (OpenAI, 2024b), and Qwen3-14B (Qwen, 2025). Prompt templates are in appendix G. Graphs are encoded in form of node- and edge-lists (Fatemi et al., 2023). No fine-tuning is performed. 
+
+Ablations: We analyze the contribution of human interaction by testing three variants of C AST. One with both HITL and RAG active (HITL+RAG), and two with only either HITL or RAG enabled. C AST(RAG) features no human interaction, and is thus completely automatic. We additionally ablate with respect to the Divide&Conquer approach, with respect to the Critic mechanism. In appendix B we also include an ablation with respect to the partitioning hyperparameter k.
+
+Baselines: We compare with XGES (Nazaret & Blei, 2024), GranDAG (Lachapelle et al., 2020), (Andrews et al., 2023), FCI (Spirtes, 2001), BOSS (Andrews et al., 2023). We include also LLM-based approaches as CausalCopilot (Wang et al., 2025), LLM-BFS (Jiralerspong et al., 2024), and LLM-Pairwise (Kiciman et al., 2024). 
+
+# 6 EMPIRICAL ANALYSIS 
+
+We focus our analysis on the performance, scalability and capacity to use prior knowledge from RAG and HITL. Therefore, we assess C AST with the following research questions: (Q1) Can C AST tackle causal discovery?; and (Q2) Can C AST scale?; and (Q3) Do computational requirements scale tractably with the size of the graph?; and finally (Q4) How beneficial are RAG and HITL to C AST? 9RAG RAG+HITL HITL 
+
+100 
+
+120 
+
+140                                 
+
+> SHD
+> GPT4o-mini o3-mini Qwen3-14B Method F1↑Prec. ↑SHD ↓
+> Small  CAST 0.42(0.08) 0.72(0.17) 103.0(10.1)
+> no D&C/FCI 0.34(0.06) 0.34(0.08) 199.0(20.3) no Critic 0.29(0.09) 0.38(0.16) 139.6(20.9) no Explainer 0.239(0.107) 0.45(0.12) 120.20(16.94) Medium  CAST 0.27(0.05) 0.66(0.11) 558.0(21.9) no D&C/FCI ———No Critic 0.31(0.02) 0.56(0.13) 588.0(43.2) No Explainer 0.15(0.04) 0.59(0.16) 540.00(19.89)
+
+Figure 4: 1) SHD on CausalMan Small for different LLMs (left). Models good at instruction-following (Qwen3 or GPT4o-mini) can use RAG and HITL to increase their performance. 2) Ablations of D&C and Critic agents (right). Removing D&C prevents scaling: without partitioning, inference slows and accuracy drops. Without Critic agents, precision and SHD degrade because wrong causal edges remain uncorrected. Results on Qwen3-14B. 6.1 RESULTS ON MANUFACTURING AND NEUROPATHIC PAIN DATA 
+
+Setup: We test on 2 variants of the CausalMan benchmark (Tagliapietra et al., 2025): CausalMan Small (53 nodes, 108 edges), and CausalMan Medium (186 nodes, 553 edges), which exhibit causal insufficiency, mixed data-types, and diversified causal mechanisms. We also test on the Neuropathic-Pain dataset (222 nodes, 770 edges), which is causally sufficient with binary variables. All those benchmarks have an expres-sive variable naming where valuable information can be extracted with LLMs. Further, they have repeated causal sub-structures. More details in appendix F. 
+
+Results: See Table 1 (extended in appendix B). C AST considerably improves over purely data-driven base-lines, outperforming for precision and F1. Improvements for SHD are not as significant, and GranDAG is close. Overall, results answer (Q1) positively, with margin for improvement in terms of recall, which signals that C AST tends to discover sparse graphs. Regarding scalability, the F1 decrease in performance from CausalMan Small to Medium is only sub-linear (by a factor of ≈ 2) for C AST, whereas most data-driven baselines (XGES, GranDAG, CausalCopilot) degrade by several times. BOSS exhibits stronger ro-bustness, but absolute metrics are still inferior with respect to C AST. Overall, results indicate that C AST scales robustly while keeping good performance, affirming (Q2) . We also attribute this to the redundancy in CausalMan Medium: It contains many repeated patterns in variable naming/metadata, which are easy for LLMs to detect. The (HITL+RAG) variant provides a good trade-off between automation and control, which becomes more evident when using models with good instruction-following capabilities. Although they are prompted to make use of tools and balance HITL with RAG, we see how o3-mini struggles to follow those directions. For Qwen3-14B, instead, we see a significant improvement when the Human is inserted into the system, supporting (Q4) if the right LLMs are used. We notice that the closest baselines are the LLM-based. For LLM-BFS we observe a perfect precision, which is counterbalanced by low recall and high SHD, signaling a very conservative approach in inserting causal edges. On the computational side, most classic methods (e.g. FCI) are intractable in high-dimensional settings. Our divide-and-conquer approach main-tains a sub-quadratic growth from CausalMan Small to Medium both in token usage and runtime. Runtime indeed stays under 2 hours for all LLMs (Sec.B.3). Therefore, we confirm (Q3) . LLM-based baselines are limited in large-scale settings: LLM-pairwise requires O(D2) queries (with D = number of variables), which makes it applicable on CausalMan Small, but unfeasible on other benchmarks. LLM-BFS has similar scaling behavior, and is also stopped by the limited context window. 
+
+Ablation for Divide&Conquer In Fig.4, we ablate with respect to the divide&Conquer mechanism. By disabling the Divide phase, we encounter two major limitations: 1) The agents Chyp and Ccritic must now estimate a causal graph for the whole variable set V, which leads to context overflows and slower inference, 10 Method F1 ↑ Prec. ↑ SHD ↓
+
+DAGMA 0.1(0.3) 0.1(0.3) 4.5(1.8) DAGMA+Agents 0.6(0.3) 0.4(0.4) 3.1(2.9) 
+
+FCI 0 0 4.6(4.7) FCI+Agents 0.3(0.4) 0.4(0.5) 4.3(5.3)                     
+
+> Method F1↑Prec. ↑SHD ↓
+> FCI 0.059(0.011) 0.054(0.009) 84.4(3.6) GranDAG 0.032(1e-4) 0.233(0.037) 59.4(0.9)
+> XGES 0.053(1e-4) 0.091(1e-4) 81(0.0) BOSS 0.091(1e-4) 0.081(1e-4) 82(0.0) CAST 0.411(0.086) 0.315(0.059) 96.6(11.81)
+
+Figure 5: 1) Ablation with respect to tha Causal Discovery algorithm used during the Conquer Phase. ”+Agents” indicates that the edge constraints obtained by Chyp. and Ccritic are used. Using the agents constraints improved performance both for FCI and DAGMA. 2) Results on CausalChambers real-world dataset. and 2) FCI is also required to estimate a causal graph for V as well, which is computationally prohibitive. To carry on the ablation, therefore, we deactivated also FCI, resulting in a Conquer phase solely based on LLMs. Still, without Divide&Conquer, experiments on CausalMan Medium and Neuropathic were not feasible, similarly to LLM-BFS and LLM-Pairwise. On CausalMan Small, the Divide&Conquer approach is still beneficial for SHD and precision. 
+
+Ablation for Critic Agents By removing Dcritic , Ccritic , and Mcritic , we see in Table 4 that precision and SHD drop consistently on all datasets. Hypothesis agents Dhyp , Chyp , or Mhyp alone tend to generate denser graphs with higher recall (coverage), but lower precision. We deduce that critic agents enable the control of false positives (better F P R C ), acting as a filter that improves factuality. 
+
+Ablation for Causal Discovery Algorithm During the Conquer Phase, Ccritic outputs a set of edges that are used as constraints to a causal discovery algorithm. To validate our approach, we ablated with respect to the Causal Discovery algorithm, and now we test also the gradient-based DAGMA (Bello et al., 2022). We ad-ditionally test both DAGMA and FCI with and without edge constraints. For DAGMA, those constraints are inserted post-training. Metrics are evaluated for each individual partition, and averaged across all partitions and across all runs. Results in Table 5 show that both algorithms improve upon using the agents’ constraints. 6.2 REAL -W ORLD CASE -S TUDIES 
+
+Finally, we apply C AST (with GPT-5) to the CausalChambers benchmarks (Gamella et al., 2024), and focus on the light-tunnel device. Results are in 5. We obtained a True-Positive-Ratio of 0.89 and a False-Positive-Ratio of 0.04, showing that C AST can valuably support experts during causal discovery. During execution, it performed multiple HITL queries, focused (at explain-phase) on clarifying some cryptic naming of variables, and later (during conquer-phase) on gathering details on the physical system. Interestingly, the resulting graph this time is denser than the ground truth, and the conquer agents often provide coherent arguments for those additional links. This leads to higher SHD (76), which occurs because the model proposes additional causal sub-structures related to the electronics of the device, whose are absent in the ground truth graph. Those edges might either be unmodeled effects of the system, or overly detailed hypotheses (i.e. negligible causal relationships), which in both cases highlight C AST’s capacity to retrieve potential relevant domain mechanisms that expert can then evaluate afterwards. Additional case study on the Earthquake dataset is reported in Appendix B. 
+
+# 7 CONCLUSIONS 
+
+CAST is an AI copilot and to our knowledge it is the first one combining a Human-In-The-Loop approach, a multi-agent architecture, and the Divide-and-Conquer paradigm for causal discovery. In our experiments we 11 demonstrated considerable performance improvements over existing data-driven methods and empirically showed how C AST can integrate human feedback into causal discovery. 
+
+Limitations and future Work: The performance of C AST is limited by the availability and quality of prior information. Additionally, C AST could integrate retrieval-augmented generation (RAG) from more varied sources of prior knowledge, which could further enhance its capabilities. Indeed, C AST can be extended to use a wider set of tools and different LLM agents. Finally, this work could be extended beyond causal graphs, aiming towards more general causal reasoning tasks. 
+
+# ETHICS STATEMENT 
+
+We acknowledge that the behavior of C AST , being LLM-based, is sensible to data-leaks and/or bias in the content retrieved from the internet. Further, human accountability is necessary for who uses such systems, who need to be aware of the privacy risks of providing sensible data to agents. 
+
+LLM-Usage for writing We acknowledge that LLM-based tools were used to improve the writing of this manuscript. The usage was limited to grammatical suggestions, phrase structure, and word choice. The design of the method or the experimental setting, instead, were not aided by any LLM. 
+
+# REPRODUCIBILITY STATEMENT 
+
+We provide the complete code-base to run each experiment that is present in this manuscript, and we report in Appendix E the computational resources that were used including hardware, runtime and token-count. For HITL experiments, attempts to reproduce results should take into account that we conducted such ex-periments with the help of human domain experts. This is a necessary requirement to be as close as possible to how C AST is used in new real world applications. 
+
+# REFERENCES 
+
+Ahmed Abdulaal, Adamos Hadjivasiliou, Nina Montana-Brown, Tiantian He, Ayodeji Ijishakin, Ivana Drob-njak, Daniel C. Castro, and Daniel C. Alexander. Causal modelling agents: Causal graph discovery through synergising metadata- and data-driven reasoning. In The Twelfth International Conference on Learning Representations , 2024. URL https://openreview.net/forum?id=pAoqRlTBtY .Bryan Andrews, Joseph Ramsey, Ruben Sanchez Romero, Jazmin Camchong, and Erich Kummerfeld. Fast scalable and accurate discovery of DAGs using the best order score search and grow shrink trees. In Thirty-seventh Conference on Neural Information Processing Systems , 2023. URL https://openreview. net/forum?id=80g3Yqlo1a .Alessandro Antonucci, Gregorio Piqu´ e, and Marco Zaffalon. Zero-shot causal graph extrapolation from text via llms, 2023. URL https://arxiv.org/abs/2312.14670 .Taiyu Ban, Lyvzhou Chen, Xiangyu Wang, and Huanhuan Chen. From query tools to causal architects: Harnessing large language models for advanced causal discovery from data, 2023. URL https:// arxiv.org/abs/2306.16902 .Kevin Bello, Bryon Aragam, and Pradeep Ravikumar. DAGMA: Learning DAGs via M-matrices and a Log-Determinant Acyclicity Characterization. In Advances in Neural Information Processing Systems ,2022. 12 Philippe Brouillard, S´ ebastien Lachapelle, Alexandre Lacoste, Simon Lacoste-Julien, and Alexandre Drouin. Differentiable causal discovery from interventional data, 2020. URL https://arxiv.org/abs/ 2007.01754 .Philippe Brouillard, Chandler Squires, Jonas Wahl, Konrad P. Kording, Karen Sachs, Alexandre Drouin, and Dhanya Sridhar. The landscape of causal discovery data: Grounding causal discovery in real-world applications, 2024. URL https://arxiv.org/abs/2412.01953 .Lyuzhou Chen, Taiyu Ban, Xiangyu Wang, Derui Lyu, and Huanhuan Chen. Mitigating prior errors in causal structure learning: Towards llm driven prior knowledge, 2023. URL https://arxiv.org/ abs/2306.07032 .Anthony C. Constantinou, Zhigao Guo, and Neville K. Kitson. The impact of prior knowledge on causal structure learning. Knowledge and Information Systems , 65(8):3385–3434, August 2023. ISSN 0219-3116. doi: 10.1007/s10115-023-01858-x. URL https://doi.org/10.1007/ s10115-023-01858-x .Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, and Clifford Stein. Introduction to Algorithms, Third Edition . The MIT Press, 3rd edition, 2009. ISBN 0262033844. Tiago da Silva, Eliezer Silva, Ant´ onio G´ ois, Dominik Heider, Samuel Kaski, Diego Mesquita, and Ad` ele Ribeiro. Human-in-the-loop causal discovery under latent confounding using ancestral gflownets, 2024. URL https://arxiv.org/abs/2309.12032 .Shuyu Dong, Mich` ele Sebag, Kento Uemura, Akito Fujii, Shuang Chang, Yusuke Koyanagi, and Koji Maruhashi. Dcilp: A distributed approach for large-scale causal structure learning, 2025. URL 
+
+https://arxiv.org/abs/2406.10481 .Bahare Fatemi, Jonathan Halcrow, and Bryan Perozzi. Talk like a graph: Encoding graphs for large language models, 2023. URL https://arxiv.org/abs/2310.04560 .Itai Feigenbaum, Huan Wang, Shelby Heinecke, Juan Carlos Niebles, Weiran Yao, Caiming Xiong, and Devansh Arpit. On the unlikelihood of d-separation, 2023. URL https://arxiv.org/abs/2303. 05628 .Juan L. Gamella, Jonas Peters, and Peter B¨ uhlmann. The causal chambers: Real physical systems as a testbed for ai methodology, 2024. URL https://arxiv.org/abs/2404.11341 .Wassily Hoeffding. Probability inequalities for sums of bounded random variables. Journal of the American Statistical Association , 58(301):13–30, 1963. ISSN 01621459, 1537274X. URL http: //www.jstor.org/stable/2282952 .Patrik Hoyer, Dominik Janzing, Joris M Mooij, Jonas Peters, and Bernhard Sch¨ olkopf. Nonlin-ear causal discovery with additive noise models. In D. Koller, D. Schuurmans, Y. Bengio, and L. Bottou (eds.), Advances in Neural Information Processing Systems , volume 21. Curran Asso-ciates, Inc., 2008. URL https://proceedings.neurips.cc/paper_files/paper/2008/ file/f7664060cc52bc6f3d620bcedc94a4b6-Paper.pdf .Amin Jaber, Jiji Zhang, and Elias Bareinboim. Causal identification under markov equivalence, 2018. URL 
+
+https://arxiv.org/abs/1812.06209 .Zhijing Jin, Yuen Chen, Felix Leeb, Luigi Gresele, Ojasv Kamal, Zhiheng Lyu, Kevin Blin, Fernando Gon-zalez Adauto, Max Kleiman-Weiner, Mrinmaya Sachan, et al. Cladder: Assessing causal reasoning in language models. Advances in Neural Information Processing Systems , 36:31038–31065, 2023. 13 Thomas Jiralerspong, Xiaoyin Chen, Yash More, Vedant Shah, and Yoshua Bengio. Efficient causal graph discovery using large language models, 2024. URL https://arxiv.org/abs/2402.01207 .Tushar Khot, Harsh Trivedi, Matthew Finlayson, Yao Fu, Kyle Richardson, Peter Clark, and Ashish Sabharwal. Decomposed prompting: A modular approach for solving complex tasks, 2023. URL 
+
+https://arxiv.org/abs/2210.02406 .Emre Kiciman, Robert Ness, Amit Sharma, and Chenhao Tan. Causal reasoning and large language models: Opening a new frontier for causality. Transactions on Machine Learning Research , 2024. ISSN 2835-8856. URL https://openreview.net/forum?id=mqoxLkX210 . Featured Certification. Neville K Kitson and Anthony C Constantinou. Causal discovery using dynamically requested knowledge, 2023. URL https://arxiv.org/abs/2310.11154 .S´ ebastien Lachapelle, Philippe Brouillard, Tristan Deleu, and Simon Lacoste-Julien. Gradient-based neural DAG learning. In 8th International Conference on Learning Representations, ICLR 2020, Addis Ababa, Ethiopia, April 26-30, 2020 . OpenReview.net, 2020. URL https://openreview.net/forum? id=rklbKA4YDS .S. L. Lauritzen and D. J. Spiegelhalter. Local computations with probabilities on graphical structures and their application to expert systems. Journal of the Royal Statistical Society: Series B (Methodological) ,50(2):157–194, 12 2018. ISSN 0035-9246. doi: 10.1111/j.2517-6161.1988.tb01721.x. URL https: //doi.org/10.1111/j.2517-6161.1988.tb01721.x .Hao Duong Le, Xin Xia, and Zhang Chen. Multi-agent causal discovery using large language models, 2025. URL https://arxiv.org/abs/2407.15073 .Adam Li, Amin Jaber, and Elias Bareinboim. Causal discovery from observational and interventional data across multiple environments. In Thirty-seventh Conference on Neural Information Processing Systems ,2023. URL https://openreview.net/forum?id=C9wTM5xyw2 .Joris M. Mooij, Jonas Peters, Dominik Janzing, Jakob Zscheischler, and Bernhard Sch¨ olkopf. Distinguishing cause from effect using observational data: Methods and benchmarks. Journal of Machine Learning Research , 17(32):1–102, 2016. URL http://jmlr.org/papers/v17/14-518.html .Achille Nazaret and David Blei. Extremely greedy equivalence search. In The 40th Conference on Uncertainty in Artificial Intelligence , 2024. URL https://openreview.net/forum?id= 2gIMX9UxRN .Xueyan Niu, Xiaoyun Li, and Ping Li. Learning cluster causal diagrams: An information-theoretic approach. In Lud De Raedt (ed.), Proceedings of the Thirty-First International Joint Conference on Artificial Intelli-gence, IJCAI-22 , pp. 4871–4877. International Joint Conferences on Artificial Intelligence Organization, 7 2022. doi: 10.24963/ijcai.2022/675. URL https://doi.org/10.24963/ijcai.2022/675 .Main Track. R. T. O’Donnell, A. E. Nicholson, B. Han, K. B. Korb, M. J. Alam, and L. R. Hope. Causal discovery with prior information. In Abdul Sattar and Byeong-ho Kang (eds.), AI 2006: Advances in Artificial Intelligence , pp. 1162–1167, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg. ISBN 978-3-540-49788-2. OpenAI. Gpt-4o system card, 2024a. URL https://arxiv.org/abs/2410.21276 .OpenAI. o3-mini system card, 2024b. URL https://cdn.openai.com/ o3-mini-system-card-feb10.pdf .14 Judea Pearl. Causality . Cambridge University Press, 2 edition, 2009. Qwen. Qwen3: Think deeper, act faster, April 2025. URL https://qwenlm.github.io/blog/ qwen3/ .Raanan Y. Rohekar, Shami Nisimov, Yaniv Gurwicz, and Gal Novik. Iterative causal discovery in the possible presence of latent confounders and selection bias, 2022. URL https://arxiv.org/abs/ 2111.04095 .Pedro Sanchez, Xiao Liu, Alison Q O’Neil, and Sotirios A. Tsaftaris. Diffusion models for causal discovery via topological ordering. In The Eleventh International Conference on Learning Representations , 2023. URL https://openreview.net/forum?id=Idusfje4-Wq .Ivaxi Sheth, Bahare Fatemi, and Mario Fritz. Causalgraph2llm: Evaluating llms for causal queries, 2025. URL https://arxiv.org/abs/2410.15939 .Shohei Shimizu, Takanori Inazumi, Yasuhiro Sogawa, Aapo Hyvarinen, Yoshinobu Kawahara, Takashi Washio, Patrik O. Hoyer, and Kenneth Bollen. Directlingam: A direct method for learning a linear non-gaussian structural equation model, 2011. URL https://arxiv.org/abs/1101.2489 .Peter Spirtes. An anytime algorithm for causal inference. In Thomas S. Richardson and Tommi S. Jaakkola (eds.), Proceedings of the Eighth International Workshop on Artificial Intelligence and Statis-tics , volume R3 of Proceedings of Machine Learning Research , pp. 278–285. PMLR, 04–07 Jan 2001. URL https://proceedings.mlr.press/r3/spirtes01a.html . Reissued by PMLR on 31 March 2021. Peter Spirtes, Clark Glymour, and Richard Scheines. Causation, Prediction, and Search . The MIT Press, 01 2001. ISBN 9780262284158. doi: 10.7551/mitpress/1754.001.0001. URL https://doi.org/10. 7551/mitpress/1754.001.0001 .Nicholas Tagliapietra, Juergen Luettin, Lavdim Halilaj, Moritz Willig, Tim Pychynski, and Kristian Kerst-ing. Causalman: A physics-based simulator for large-scale causality, 2025. URL https://arxiv. org/abs/2502.12707 .Masayuki Takayama, Tadahisa Okuda, Thong Pham, Tatsuyoshi Ikenoue, Shingo Fukuma, Shohei Shimizu, and Akiyoshi Sannai. Integrating large language models in causal discovery: A statistical causal approach, 2025. URL https://arxiv.org/abs/2402.01454 .Ruibo Tu, Kun Zhang, Bo Christer Bertilson, Hedvig Kjellstr¨ om, and Cheng Zhang. Neuropathic pain diagnosis simulator for causal discovery algorithm evaluation, 2019. URL https://arxiv.org/ abs/1906.01732 .Ruibo Tu, Chao Ma, and Cheng Zhang. Causal-discovery performance of chatgpt in the context of neuro-pathic pain diagnosis, 2023. URL https://arxiv.org/abs/2301.13819 .Aniket Vashishtha, Abhinav Kumar, Abbavaram Gowtham Reddy, Vineeth N Balasubramanian, and Amit Sharma. Teaching transformers causal reasoning through axiomatic training, 2024. URL https:// arxiv.org/abs/2407.07612 .Tom S. Verma and Judea Pearl. On the equivalence of causal models, 2013. URL https://arxiv. org/abs/1304.1108 .Xinyue Wang, Kun Zhou, Wenyi Wu, Har Simrat Singh, Fang Nan, Songyao Jin, Aryan Philip, Saloni Patnaik, Hou Zhu, Shivam Singh, Parjanya Prashant, Qian Shen, and Biwei Huang. Causal-copilot: An autonomous causal analysis agent, 2025. URL https://arxiv.org/abs/2504.13263 .15 Moritz Willig, Matej Zeˇ cevi´ c, Devendra Singh Dhami, and Kristian Kersting. Can foundation models talk causality?, 2022. URL https://arxiv.org/abs/2206.10591 .Menghua Wu, Yujia Bao, Regina Barzilay, and Tommi Jaakkola. Sample, estimate, aggregate: A recipe for causal discovery foundation models, 2025. URL https://arxiv.org/abs/2402.01929 .Matej Zeˇ cevi´ c, Moritz Willig, Devendra Singh Dhami, and Kristian Kersting. Causal parrots: Large lan-guage models may talk causality but are not causal, 2023. URL https://arxiv.org/abs/2308. 13067 .Hao Zhang, Shuigeng Zhou, Chuanxu Yan, Jihong Guan, Xin Wang, Ji Zhang, and Jun Huan. Learning causal structures based on divide and conquer. IEEE Transactions on Cybernetics , 52(5):3232–3243, 2022. doi: 10.1109/TCYB.2020.3010004. Jiji Zhang. Causal reasoning with ancestral graphs. Journal of Machine Learning Research , 9(47):1437– 1474, 2008. URL http://jmlr.org/papers/v9/zhang08a.html .Kun Zhang and Aapo Hyvarinen. On the identifiability of the post-nonlinear causal model, 2012. URL 
+
+https://arxiv.org/abs/1205.2599 .Yizhou Zhang, Lun Du, Defu Cao, Qiang Fu, and Yan Liu. An examination on the effectiveness of divide-and-conquer prompting in large language models, 2024. URL https://arxiv.org/abs/2402. 05359 .Qingyuan Zheng, Yue Liu, and Yangbo He. Local causal discovery with background knowledge, 2024. URL 
+
+https://arxiv.org/abs/2408.07890 .Xun Zheng, Bryon Aragam, Pradeep K Ravikumar, and Eric P Xing. Dags with no tears: Continuous optimization for structure learning. In S. Bengio, H. Wallach, H. Larochelle, K. Grauman, N. Cesa-Bianchi, and R. Garnett (eds.), Advances in Neural Information Processing Systems , volume 31. Curran Associates, Inc., 2018. URL https://proceedings.neurips.cc/paper_files/paper/ 2018/file/e347c51419ffb23ca3fd5050202f9c3d-Paper.pdf .16 APPENDIX FOR “C AUSAL STEWARD : A N AGENTIC DIVIDE -C ONQUER -C OMBINE 
+
+# COPILOT FOR CAUSAL DISCOVERY ”A THEORY 
+
+We first provide a theory describing the ideal case, i.e. what happens when we have perfect agents which can derive a causal partitioning satisfying Def.3 without any error, while also having a perfect conquer phase. Next, we provide a generalization, where we provide error bounds and also an expression for the final SHD in terms of the performance of each agent. A.1 IDEAL CASE OF PERFECT CAUSAL PARTITIONING 
+
+We start from the assumption that the conquer phase is consistent in the infinite data limit. 
+
+Assumption 1 (Consistency of the Conquer phase) . In the infinite data limit, for n → +∞, the conquer phase yields a PAG representing the local MEC Mi for the variables within Pi.
+
+Assumption 1 is valid for algorithms such as FCI, and is still valid if edge constraints provided by the LLMs are correct. When consistency of the conquer phase is assumed, then consistency of the overall method follows, as we prove in the next theorem. 
+
+Theorem 3 (Consistency of the Combine phase) . Let Gi be the local causal graph (a PAG) obtained after performing the conquer phase on variables in partition Pi, and denote with G the graph obtained by per-forming the union of all local causal graphs Gi, ∀i. Under assumption 1, G is a PAG representing the MEC entailed by the observational data. Proof. First, we study how the MEC of two partitions P1 and P2 can be decomposed. Next, we need to show that a causal partitioning is sufficient, i.e. it includes all those c.i. statement in the MEC. Extensions to multiple partitions automatically follows by studying all possible pairs. First, we show that the set of c.i. statements of P1 ∪ P2 can be partitioned into 3 (possibly overlapping) sets: • C1 : All c.i. statements within P1, such as u ⊥ v | Z, ∀u, v, Z ∈ P1.• C2 : All c.i. statements within P2, such as u ⊥ v | Z, ∀u, v, Z ∈ P2.• C1−2 : All c.i. statements between variables in separate partitions, such as u ⊥ v | Z, u ∈ P1, v ∈
+
+P2, and u / ∈ P2, v / ∈ P1, with Z ⊂ P1 ∪ P2.In other words, we can rewrite the set of conditional independencies as C = C1 ∪ C2 ∪ C1−2. To complete the proof, we need to show that all those sets follow from a Causal Partitioning. For all valid causal partitionings obeying def.3, all those C.I. statements described in (1), (2), and (3) are conserved. Indeed, for C1 and C2, it follows from def.3, point (3b): ∀u, v ∈ Pi then also Z ⊂ P1. For C1−2,those c.i. statements are ”encoded” in def.3. In point (3a), two nodes u and v in separate partitions are not connected → u and v are conditionally (or marginally) independent, i.e. ∃Z ⊂ P1 ∪ P2.Since the sets C1, C2, and C1−2 are all entailed by the definitions of causal partitioning, it follows that all c.i. statements of P1 ∪ P2 are conserved under a causal partitioning. 17 Can C 1, C 2, and C 1−2 overlap? C1 and C2 can overlap in those cases where both variables and their conditioning set are contained in the intersection P1 ∩ P2, i.e., u ⊥ v|Z with u, v, Z ∈ P1, P2.
+
+Example 1. A partitioning for the graph A → B → C into two partitions would be P1 = {A, B } and 
+
+P2 = {B, C }. The conditional independence A ⊥ C|B, as written above, follows from the partitioning itself i.e. from having A and C in separate partitions. 
+
+A.2 ERROR -B OUNDS FOR APPROXIMATIONS OF CAUSAL PARTITIONINGS 
+
+Given the Divide&Conquer approach, C AST can be analysed in 2 parts: Inter-Partition level, and Intra-Partition level. The former is associated with edges between nodes in separate partitions, and the latters with edges within a partition, that belong to the individual sub-graphs. 
+
+Inter-Partition Analysis To analyze how errors are generated during the partitioning operation, we define the Causal-Cut as 
+
+Ecut = |{ (u, v ) ∈ E|∃ Pi, Pj ∈ P with i̸ = j such that u ∈ Pi and v ∈ Pj }| (9) where Ecut is the number of causal edges ”severed” by the partitioning operation, i.e. the size the cut. The causal cut measures the number of edges bridging partitions that are lost during the partitioning operation. We remark that Ecut is computed between a partitioning and a causal graph, therefore it ignores eventual merging heuristics. Still, our analysis must include the effect of Merge agents Mhyp and Mcritic , which are responsible for inserting additional edges between partitions. Those results in added edges which might increase the number of true positives, but also the number of false positives in case of bad guesses. We define with Hcorrect the number of true positives (TP) guessed by the heuristic, and with Hincorrect the sum of false negatives (FN) and false positives (FP) guessed by the merge agents. In the following, we assume Ecut , H correct , Hincorrect 
+
+to be random variables that count such quantities. Our first result characterizes the partitioning operation itself, which models the number of false positives in the learned graph. 
+
+Theorem 4 (Partitioning-induced False Positives) . Let P be a partitioning generated by the divide agents 
+
+Dhyp and Dcritic , and denote with Glearned and G⋆ respectively the PAG discovered by CAST and the ground truth PAG. Further, let ¯p be the average probability of Mhyp and Mcritic discovering an inter-partition edge. Then, the inter-partition SHD in Glearned can be written as 
+
+SHD inter = Ecut − Hcorrect + F P inter (10) 
+
+Further, if we assume that the bernoulli probabilities of guessing an inter-partition edge are equal and independent, it also holds in expectation that 
+
+E[SHD inter ] = E[Ecut ](1 − ¯p) + E[F P inter ]. (11) 
+
+Proof. First of all, we model the probability of guessing an inter-partition edge with pe, and assume that each edge discovery is independent from the other. It follows that a random variable counting the discovered inter-partition edges can be modeled as a sum of independent bernoulli random variables. In other words, we have 
+
+¯p =
+
+P 
+
+> e∈Ecut
+
+pe
+
+Ecut 
+
+= E
+
+"
+
+Hcorrect 
+
+Ecut 
+
+#
+
+. (12) Next, we study which kind of errors arise from the partitioning operation. Since there is no ”intra-partition” discovery phase during which we learn causal edges, there is no possibility to insert False Negatives besides 18 the Merge Heuristic, which acts as a corrective mechanism. Therefore, we can quantify the number of false negatives with Ecut (which are the false negatives derived from the partitioning), minus those edges recovered by the heuristic, which are Hcorrect . So, we have 
+
+F N inter = Ecut − Hcorrect (13) By adding F P inter at both sides, it yields 
+
+F N inter + F P inter = Ecut − Hcorrect + F P inter (14) 
+
+SHD inter = Ecut − Hcorrect + F P inter (15) The expected value of Hcorrect is the sum of the expectations of Ecut individual bernoulli variables pe.Assuming that pe = p ∈ R, we have E[Hcorrect ] = E[Ecut ] · p. By substitution, and by linearity of expectations, we have 
+
+E[SHD inter ] = E[Ecut − Hcorrect + F P inter ], (16) 
+
+E[SHD inter ] = E[Ecut ] − E[Ecut ] · p + E[F P inter ] (17) 
+
+E[SHD inter ] = E[Ecut ](1 − ¯p) + E[F P inter ] (18) which terminates our proof. The intuition behind Th.4 is that the partitioning operation, besides constraining the search for a causal graph, also induces a number of false negatives, which are recovered by the merge heuristic. It is also trivial that F P inter can only be identical to Hincorrect since the partitioning operation is not adding any other edge. From empirical experiments, typically LLMs excel in precision while having limited recall, implying that the term Hincorrect tends to be small and often negligible. We can extend it to a concentration lemma by applying H¨ oeffding’s inequality, which we recall below. 
+
+Theorem 5 (H¨ oeffding’s Inequality (Hoeffding, 1963)) . Let X1, X 2, . . . , X n be independent random vari-ables such that ai ≤ Xi ≤ bi, and let their sum be Si = Pni=0 Xi and its expected value be μ = E[Sn].Then, ∀t > 0 we have 
+
+P (Sn − μ ≥ t) ≤ exp − 2t2
+
+Pni=0 (bi − ai)2
+
+!
+
+By applying the above-mentioned inequality, we have the following theorem. 
+
+Theorem 6. For a confidence level δ ∈ (0 , 1) , the inter-partition SHD inter satisfies the following inequality with probability of at least 1 − δSHD inter ≤ E[SHD inter ] + 
+
+r Ecut · ln(2 /δ )2 +
+
+r m · ln(2 /δ )2 , (19) 
+
+where m is the total number of edges proposed during the merge phase. Proof. From Th.4 we know that SHD inter = Ecut − Hcorrect + F P inter . To continue, we model Hcorrect 
+
+as a sum of Ecut independent bernoullis, and similarly for F P inter = Hincorrect , which we assume to be a sum of m independent bernoullis. First, we bound F N inter and F P inter in the same way by applying H¨ oeffding’s inequality. In both cases, being bernoulli variables, we have ai = 0 and bi = 1 ∀i.1. ∀t > 0 it holds that 
+
+P r (Hcorrect − E[Hcorrect ] ≥ t) ≤ exp 
+
+
+
+− 2t2
+
+Ecut 
+
+
+
+, (20) 19 where, by setting the probability on the r.h.s. to δ/ 2 yields 
+
+exp 
+
+
+
+− 2t2
+
+Ecut 
+
+
+
+= δ
+
+2 =⇒ tF N =
+
+r Ecut · ln(2 /δ )2 . (21) This implies that, with probability ≥ 1 − δ/ 2 it holds that 
+
+Hcorrect − E[Hcorrect ] ≤
+
+r Ecut · ln(2 /δ )2 (22) which can be substituted into F P inter = Ecut − Hcorrect , resulting into a bound for inter-partition false negatives 
+
+F N inter ≤ E[F N inter ] + 
+
+r Ecut · ln(2 /δ )2 (23) 2. Similarly, for false positives we have that ∀t > 0 it holds that 
+
+P r (F P inter − E[F P inter ] ≥ t) ≤ exp 
+
+
+
+− 2t2
+
+m
+
+
+
+, (24) which, with a procedure completely identical to the one above, we can obtain, 
+
+F P inter ≤ E[F P inter ] + 
+
+r m · ln(2 /δ )2 , (25) holding with probability ≥ 1 − δ/ 2.We know that 23 and can be violated with probability δ/ 2, and by union bound it holds that if P (A) < δ/ 2
+
+and P (B) < δ/ 2, then P (A ∪ B) ≤ P (A) + P (B) < δ/ 2 + δ/ 2 = δ. Therefore we have that with probability δF P inter + F N inter ≤ E[F P inter ] + E[F N inter ] + 
+
+r Ecut · ln(2 /δ )2 +
+
+r m · ln(2 /δ )2 (26) 
+
+SHD inter ≤ E[SHD inter ] + 
+
+r Ecut · ln(2 /δ )2 +
+
+r m · ln(2 /δ )2 (27) which concludes our proof. Further, in real-world and large-scale settings where no ground-truth is available, this lower bound can be estimated by drawing a subset of the inter-partition edges, and checking with a domain expert how many were correctly estimated. With this procedure, it is possible to draw an estimate of F P inter , F N inter and 
+
+Ecut to evaluate the real performance of C AST. 
+
+Intra-Partition Analysis We hereby show that under the assumptions of sound and completeness, errors during the Conquer phase appear mainly as False Positives. In case a partitioning is incorrect, some d-separating sets might end being scattered across partitions, making it impossible to find those sets within a partition . This results in FCI being impeded to remove certain edges, which we call spurious adjacencies (SA). 
+
+Definition 4 (Spurious Adjacency) . Let Pi be a subset of V, and let G be a graph such that (u, v ) /∈ E
+
+with u, v ∈ V. We define a Spurious Adjacency between u and v as an additional edge appearing when all possible conditioning sets are in V, but are not in Pi. Formally, for a partition Pi
+
+SA i = X SA (28) 20 Further, for a whole partitioning P, we denote the number of all spurious adjacencies that occurred as 
+
+SA (P, G) = X SA (Pi, Gi) (29) In other words, the performance of FCI during the conquer step is hindered by the quality of the partitioning operation, as a bad partitioning might result in breaking the d-separating set across partitions (a d-separation failure), which results in false positives i.e. Spurious Adjacencies. From this observation, we can derive an hard lower error-bound for the Conquer step 
+
+Theorem 7 (Intra-Partition Expected error) . Given a causal discovery algorithm F which is sound and complete given the conditional independencies observable within a partition, we have 
+
+SHD intra = SA + F P LLM + F N intra (30) 
+
+where F P LLM are false positives derived from the LLM. In expectation, 
+
+E[SHD intra ] = SA + E[F P LLM ] + E[F N intra ]. (31) 
+
+Proof. The expected intra-partition SHD can be decomposed into the sum of E[SHD intra ] = E[F P intra ]+ 
+
+E[F N intra ].We study first the F P intra term. Within a partition, if F is sound and complete, an edge is kept if and only if no d-separating set Z ∈ Pi s.t. u ⊥ v|Z is found. At the same time, in every occasion where a d-separating set is present, the edge will be removed. Therefore, F P intra can either be caused by: 1. The conditioning set Z not being present within the partition due to a bad partitioning. This pro-duces a spurious adjacencies. 2. The LLM agents Chyp and Ccritic choosing a wrong prior constraint. This results in a F P LLM term. Therefore we have F P intra = SA + E[F P LLM ]. For the By summing those terms, we get 
+
+SHD intra = SA + F P LLM + F N intra , (32) and by linearity of expectation, we also have 
+
+E[SHD intra ] = SA + E[F P LLM ] + E[F N intra ], (33) which terminates our proof. The precision of the LLMs is crucial for achieving good intra-partition performance. From our experiments, the intra-partition precision of LLMs it typically very close to 1, which is enabled by the critic mechanism that helps filtering out unwanted edges. 
+
+Theorem 8 (Upper Bound for SHD intra ). The following holds with probability 1 − δSHD intra < SA + E[F P LLM ] + F N intra +
+
+r (Nmax − Nedges ) ln(1 /δ )2 (34) 
+
+Proof. Given the maximum number of edges that the ground truth graph can have Nmax , and the actual number of edges |E| = Nedges , we see that the difference Nmax − Nedges represents the maximum number of false positives possible, i.e. Nmax − Nedges ≤ F P . We model every potential false positive as an independent bernoulli trial that models the probability of the LLM inserting an edges. With this modeling assumption, it follows that F P LLM is the sum of Nmax − Nedges bernoulli variables, and its expected value 21 is E[F P LLM ] = PNmax −Nedges  
+
+> e=0
+
+pe. Similarly to other theorems, we can apply H¨ oeffding’s inequality to bound F P LLM from above: 
+
+P r (F P LLM − E[F P LLM ] ≥ t) ≤ exp 
+
+
+
+− 2t2
+
+Nmax − Nedges 
+
+
+
+, (35) where, by setting the probability on the r.h.s. to δ yields 
+
+exp 
+
+
+
+− 2t2
+
+Nmax − Nedges 
+
+
+
+= δ =⇒ tF P =
+
+r (Nmax − Nedges ) · ln(1 /δ )2 . (36) It follows that F P LLM ≥ E[F P LLM ] + tF P holds with probability ≤ δ. Inversely, with probability of at least 1 − δ we have that 
+
+F P LLM ≥ E[F P LLM ] + tF P (37) which can be substituted into SHD intra = SA + F P LLM + F N intra to obtain 
+
+SHD intra = SA + F P LLM + F N intra ≤ SA + E[F P LLM ] + tF P + F N intra (38) We remark that this identity is improved further in the asymptotic limit as FCI removes all false negatives in the infinite-data limit. 
+
+Theorem 9. Theorem 8 in the infinite-data limit becomes 
+
+SHD intra =≤ SA + E[F P LLM ] + + 
+
+r (Nmax − Nedges ) ln(1 /δ )2 (39) 
+
+Proof. For n → +∞ and under the causal faithfulness assumption, we know that FCI is capable to remove all false negatives, i.e. F N intra → 0+, from which the result. 
+
+General Results After analyzing what happens within partitions, and between partitions, we aggregate all the past results in order to obtain general estimate on the most important drivers for C AST’s performance. 
+
+Theorem 10. Let P be a partitioning induced by Dhyp and Dcritic . Define SA as the number of spurious adjacencies, Ecut and NN otIntra the number of inter-partition edges present resp. absent in the ground truth. Let F P R C denote the false-positive rate of Conquer agents, and let Rec M and F DR M denote respectively the recall and false-discovery rate of Merge agents. Then, as n → ∞ , the expected total structural Hamming distance satisfies 
+
+E[SHD total ] ≈ (SA + NN otIntra · F P R C ) + ( Ecut (1 − Rec M) + m · F DR M). (40) 
+
+Proof. We start from the following decomposition 
+
+E[SHD total ] = E[SHD inf ra ] + E[SHD inter ] (41) From previous theorems we know that, in the infinite data limit and under faithfulness, E[SHD inf ra ] →
+
+E[F P inf ra ]. Further, we know that previous analysis that E[F P inf ra ] = SA + E[F P LLM ]. How are 
+
+F P inf ra generated? Given how FCI works, in the asymptotic limit those can only be generated by the LLM inserting them as prior constraints. All other possible false-positives can only be spurious adjacencies, since all other kinds of false-positives are asymptotically removed by FCI. Therefore, we have 
+
+E[F P R LLM ] = E[F P LLM ]
+
+NN otIntra 
+
+=⇒ E[F P LLM ] = NN otIntra · E[F P R LLM ]. (42) 22 For the inter-partition SHD, we can conduct a similar analysis. We start with the decomposition 
+
+E[SHD inter ] = E[F N inter ] + E[F P inter ]. We observe that the number of false negatives corresponds to the number of edges seved by the partitioning minus the ones recovered by the heuristic, so we have 
+
+E[F N inter ] = Ecut − E[Hcorrect ]. (43) The recall of the merge heuristic is defined as E[Rec LLM ] = E[Hcorrect ] 
+
+> Ecut
+
+which implies that E[Hcorrect ] = 
+
+Ecut · Rec LLM . By sustitution, we get E[F N inter ] = Ecut (1 − Rec LLM ). For F P inter , it can only be identical to Hincorrect since only the Merge heuristic can add new edges during the merge step. We can then develop an expression for F DR M as 
+
+E[F P inter ] = m · F DR M (44) where m is the number of edges proposed by the heuristic. By aggregating all those expression together, we get our general result, 
+
+E[SHD total ] ≈ (SA + NN otIntra · F P R C ) + ( Ecut (1 − Rec M) + m · F DR M). (45) where we let F P R LLM = F P R C and Rec LLM = Rec M to highlight the importance of conquer and merge phases. In essence, we can now see more clearly how the total SHD depends on: 1) The quality of the partitioning, as the number of spurious adjacencies might increase under bad partitioning, 2) The quality of the heuristic, as merge agents act as a safety-net to recover edges lost due to partitioning, and 3) The quality of the LLM’s prior constraints within each partition. A.3 CONFLICT MANAGEMENT 
+
+Conflicts might arise when, after performing causal discovery on two partitions that are overlapping, we observe different edges in different partitions. From a theoretical standpoint, the exact/most rigorous way of managing conflicts is to search for condition-ing sets on the merged graph, but that is not applicable to large-size graphs due to computational reasons. Therefore, we need a tractable criterion, and for CausalSteward we adopted what follows. Let u, v ∈ P1 ⊆ V and u, v ∈ P2 ⊆ V, i.e. both nodes belong to the overlap P1 ∩ P2. Further, denote with 
+
+G1 the graph derived from P1 and with G2 the graph derived from P2.We identify 3 cases: 1. An edge (any type) is present in G1 but not in G2: In this case, it means there exist a conditioning set s.t. u ⊥ v | Z with Z ∈ P2 and Z /∈ P1. Since Z ⊂ P2 ⊂ V =⇒ u ⊥ v |Z with u, v, Z ∈ V =⇒
+
+No edge between u and v.2. For all other cases, we ”overlap” the causal relationship: If the edge u → v is present in G1, but the opposite one v → u is also present in G2, we insert a bi-directed edge. If the edge u → v is present in G1, but the edge v ◦ − ◦ u is present in G2, we insert the u ◦ − > v edge. Also other available methods leveraging Divide&Conquer adopt approximations to manage conflicts tractably: For example, DCDILP (Dong et al. 2025) manages conflicts via Linear Programming, and other methods maximize a BIC score greedily. 
+
+# B ADDITIONAL RESULTS 
+
+Hereby, we present a more complete exposition of our results which also includes additional metrics. 23 B.1 CASE -S TUDY ON EARTHQUAKES DATASET 
+
+The Earthquakes dataset contains 7 variables that describe occurences of earthquakes by date, geographic location, and power. It contains the variables V = {richter, deaths, day, month, year, area, region }.Given the small graph size, CAST partitioned the nodes into three groups: P1 = {richter, deaths }, P2 =
+
+{day, month, year }, and P3 = {area, region }.We observed that, during the explain phase, it understood correctly the variable meaning without the need of the domain expert. During the conquer phase: • On the first cluster, LLMs correctly establish that richter → deaths. • On the second, the hypothesis agent suggests year → month → day, which is discarded by the critic agent, showing a nice corrective mechanism. • On the third, it correctly suggests that region → area, as an area is contained within a region, and some regions are more susceptible to earthquakes. During the merge-phase, CAST reflects on possible connections between clusters. Here is an extract: Conquer Agent on CausalChambers 
+
+”[...] the time an event occurs does not cause it to occur in a particular area – and intervening on the date would not change the location of the earthquake. [...] The location (area, region) doesn’t “cause” the earthquake’s measurable magnitude or human toll. Instead, geographic factors might correlate with differences (for example, construction practices or terrain might affect death tolls) but they do not cause the energy release (richter) of the earthquake. So edges like (area, richter) or (region, deaths) are poorly characterized as direct causal effects.” 
+
+Overall, we have more meaningful causal relations compared to prior works. CAST is more conservative, and removes connections when uncertain. 24 B.2 CAUSAL MAN SMALL 
+
+Dataset CausalMan Small Method F1 ↑ Prec. ↑ Recall ↑ SHD ↓ Runtime ↓
+
+FCI 0.028(0.012) 0.021(0.005) 0.043(0.012) 221.4(3.36) 9.37(0.21) XGES 0.056(0.009) 0.037(0.006) 0.114(0.159) 448.8(14.89) 25,173.80(7,813.26) GranDAG 0.002(0.003) 0.018(0.040) 0.002(0.004) 113.4(2.51) 333.43(5.22) CausalCopilot 0.078(0.012) 0.260(0.100) 0.048(0.012) 117.4(6.4) -BOSS 0.054(0.004) 0.029(0.002) - 864.20(18.60) -LLM-BFS(o3-mini) 0.283(0.000) 1.000(0.000) - 315.2(0.0) -Pairwise(Qwen3-14B) 0.153(0.008) 0.093(0.005) - 583.50(11.1) -Pairwise(o3-mini) 0.126(0.004) 0.074(0.003) 0.421(0.017) 710(6.2) -o3-mini CAST (HITL+RAG) 0.303(0.076) 0.454(0.123) 0.228(0.055) 118.4(11.35) 316.65(40.26) CAST (HITL) 0.304(0.062) 0.485(0.101) 0.224(0.053) 112.2(10.40) 254.66(18.54) 
+
+CAST (RAG) 0.235(0.093) 0.373(0.118) 0.178(0.080) 121.4(6.34) 455.31(115.65) gpt 4o-mini CAST (HITL+RAG) 0.142(0.027) 0.217(0.063) 0.105(0.018) 140.4(13.00) 1,630.19(614.08) CAST (HITL) 0.139(0.056) 0.326(0.149) 0.096(0.042) 126.8(15.93) 1,456.33(580.47) CAST (RAG) 0.113(0.039) 0.169(0.047) 0.089(0.038) 145.0(14.35) 913.15(231.66) Qwen 3 14B CAST (HITL+RAG) 0.424(0.082) 0.724(0.169) 0.307(0.070) 103.00(10.07) 1,064.03(231.38) CAST (HITL) 0.483(0.062) 0.608(0.069) 0.402(0.059) 102.4(17.27) 1,856.65(477.45) CAST (RAG) 0.426(0.033) 0.656(0.176) 0.335(0.072) 111.4(14.44) 944.92(164.78) 
+
+Table 2: Results on CausalMan Small. Different C AST variants largely outperform other baselines on Small. CausalCopilot executed FCI for Small. CausalMan Small LLM #Tokens #HITL Calls #RAG Calls HITL+RAG Qwen3-14B 161,500.8(38,975.15) 3.6(2.88) 0o3-mini 148,650.8 (23,167.15 ) 0 0GPT 4o-mini 692,451.4(161,356.91 ) 1.60(2.07) 85.20(21.67) HITL Qwen3-14B 141,070.2(15,844.65) 5.6(3.21) -o3-mini 132,012.6(15,839.26) 0 -GPT 4o-mini 126,612.8(43,272.24) 61.00(29.86) -RAG Qwen3-14B 146,948.4 (23,176.93 ) - 2.00(1.58) o3-mini 161,193.0(37,013.54 ) - 0GPT 4o-mini 440,740.2(115,599.65 ) - 69.4(16.38) Table 3: CAST . Ablation for different LLMs on CausalMan Small. 25 B.3 CAUSAL MAN MEDIUM 
+
+Dataset CausalMan Medium Method F1 ↑ Prec. ↑ Recall ↑ SHD ↓ Runtime ↓
+
+FCI Intractable XGES 0.014(0) 0.211(0) 0.007() 547(0) -GranDAG 0(0) 0(0) 0(0) 544.4(5.77) 1061.17(18.91) CausalCopilot 0.014(0) 0.211(0) 0.007(0) 547(0) -BOSS 0.057(0.005) 0.030(0.002) - 1,817.4(48.3) -o3-mini CAST (HITL+RAG) 0.141(0.064) 0.357(0.119) 0.089(0.043) 579.6(25.01) 1,370.25(222.84) CAST (HITL) 0.175(0.084) 0.499(0.127) 0.108(0.057) 558.8(15.498) 1,052.11(87.07) 
+
+CAST (RAG) 0.209(0.089) 0.518(0.201) 0.131(0.057) 571.6(45.845) 1,321.15(264.94) gpt 4o-mini CAST (HITL+RAG) 0.086(0.042) 0.271(0.113) 0.051(0.023) 568.2(20.71) 2,488.79(2234.79) CAST (HITL) 0.103(0.039) 0.392(0.083) 0.056(0.023) 547.0(6.89) 1,929.17(859.52) CAST (RAG) 0.113(0.049) 0.296(0.094) 0.072(0.035) 594.2(81.69) 1,241.17(627.636) Qwen 3 14B CAST (HITL+RAG) 0.274(0.052) 0.656(0.110) 0.175(0.036) 558.0(21.86) 4,179.19(327.94) CAST (HITL) 0.266(0.019) 0.508(0.222) 0.191(0.021) 610.80(68.00) 5,905.02(1139.03) CAST (RAG) 0.211(0.106) 0.485(0.129) 0.139(0.082) 568.4(23.64) 4,901.53(518.27) 
+
+Table 4: Results on CausalMan Medium. Different C AST variants achieve strong competitive results on Medium. CausalCopilot executed XGES for Medium. FCI could not run for Medium. CausalMan Medium LLM #Tokens #HITL Calls #RAG Calls HITL+RAG Qwen3-14B 585,953.4(36,933.9) 10.6(4.8) 2.0(0.71) o3-mini 563,568.2(81,608.5) 0 0GPT 4o-mini 588,292.4(280,373.52) 8.60(11.57) 58.00(17.82) HITL Qwen3-14B 525,285(115,550.9) 15.2(5.39) -o3-mini 482,419.2(51,456.2 ) 0.87(0.52) -GPT 4o-mini 218,590.4(69,261.0) 40.07(17.74) -RAG Qwen3-14B 668,371.4(61,898.7) - 13.2(2.91) o3-mini 544,760.0(96,936.4) - 0GPT 4o-mini 749,905.2(356,113.73 ) - 85.2(42.05) Table 5: CAST . Ablation for different LLMs on CausalMan Medium. 26 B.4 NEUROPATHIC PAIN DATASET 
+
+Dataset Neuropathic Pain Dataset Method F1 ↑ Prec. ↑ Recall ↑ SHD ↓ Runtime ↓
+
+FCI Intractable XGES 0.309(0.003) 0.442(0.005) 0.238(0.003) 786.40(5.177) 520.24(6.57) GranDAG 0.004(0.000) 0.009(0.000) 0.003(0.000) 993.60(2.88) 30.59(0.182) 
+
+CausalCopilot 0.334(0) 0.457(0) 0.264(0) 778(0) 769(12) o3-mini CAST (HITL+RAG) 0.104(0.032) 0.572(0.183) 0.057(0.018) 758.80(26.84) 1,663(1,283.45) CAST (HITL) 0.125(0.002) 0.674(0.041) 0.069(0.002) 742.67(4.04) 801.87(13.69) CAST (RAG) 0.095(0.038) 0.552(0.447) 0.053(0.022) 762.00(21.55) 790.77(137.81) gpt 4o-mini CAST (HITL+RAG) 0.030(0.019) 0.145(0.090) 0.017(0.010) 831.40(13.76) 4,115.49(2,306.32) CAST (HITL) 0.027(0.026) 0.235(0.249) 0.014(0.014) 797.67(27.46) 4,763.00(1,949.63) CAST (RAG) 0.043(0.031) 0.151(0.091) 0.026(0.018) 850.20(28.99) 3,543.94(2,202.961) Qwen3-14B CAST (HITL+RAG) 0.013(0.002) 0.152(0.008) 0.007(0.001) 795.00(1.41) 3,250.408(1,412.83) CAST (HITL) 0.012(0.002) 0.126(0.046) 0.006(0.001) 802.67(13.32) 6,214.86(5,231.01) CAST (RAG) 0.064(0.051) 0.465(0.183) 0.035(0.029) 776.60(16.18) 4,672.66(760.25) 
+
+Table 6: Results on Neuropathic Dataset. The data is causally sufficient, binary, and the causal graph is sparse. For this reason, XGES is less in disadvantage on this dataset with respect to CausalMan. C AST is still above the baselines in terms of precision and SHD for o3-mini. When necessary, CausalCopilot was steered towards XGES, as it often preferred intractable methods such as FCI. Neuropathic Pain Dataset LLM #Tokens #HITL Calls #RAG Calls HITL+RAG Qwen3-14B 264,932.00(5,334.41) 4(0.2) 9.5(0.71) o3-mini 379,389.2(147,545.47) 0 0GPT 4o-mini 1,041,107.6(318,067.42) 3.40(3.36) 225.0(73.73) HITL Qwen3-14B 480,190.00(372,857.35) 23.33(33.49) -o3-mini 314,726.33(6,386.65) 0 -GPT 4o-mini 449,445.00(241,653.30) 148.00(101.38) -RAG Qwen3-14B 696,260.8(118,152.04 ) - 35.00(7.35) o3-mini 330,736(44,927.24) - 0GPT 4o-mini 831,541.8(73,133.23) - 186.60(25.71) Table 7: CAST . Ablation for different LLMs on the Neuropathic Pain Dataset. B.5 EXTENDED DISCUSSION 
+
+Tool usage across LLMs: Ablating with respect to RAG and HITL, we can evaluate the impact of prior knowledge during the discovery process. However, we see that different LLMs respond differently to having 27 Variant F1 ↑ Precision ↑ Recall ↑ SHD ↓
+
+CAST (k = 5) 0.152(0.017) 0.409(0.125) 0.096(0.016) 598.67(26.25) CAST (k = 10) 0.141(0.064) 0.357(0.119) 0.089(0.043) 579.60(25.01) CAST (k = 20) 0.115(0.022) 0.445(0.015) 0.067(0.014) 544.00(5.65) Figure 6: Ablation for partitioning hyperparameter k on CausalMan Medium. Experiments conducted with C AST(RAG+HITL) using o3-mini. those new tools available. For Qwen3 and GPT4o-mini, the number of human queries is linked to an increase in performance. However, we observe that GPT 4o-mini is very prone to forget past interactions, and fre-quently asks multiple times for the same information. Other LLMs, in particularly o3-mini, exhibit a smaller increase in performance. Although prompts encourage human interaction, o3-mini shows a scarce amount of HITL calls, even in instances where it is necessary. From this, we deduce that the best fit for C AST are those LLMs that have good instruction-following capabilities. Finally, results show how C AST(HITL+RAG) pro-vides a viable trade-off between automatization and human control, and is consistently better than using just RAG. Again, this holds only for those models which follow the prompted instructions. 
+
+Ablation for Partitioning Hyperparameter k: In C AST, the divide agents Dhyp and Dcritic are queried every time a group has a number of variables bigger than k, which is an integer hyperparameter to choose. We remark that this partitioning is not enforced: Divide agents can choose to not partition further even if the partition-size is bigger than k. In Table 6, we varied this hyperparameter and observed how performance varied. We see how increasing the partition size reduces SHD but also recall, while increasing precision. Overall F1 also degrades. As partitions get bigger, it becomes harder to get a good coverage, and LLMs tend to act more conservatively. 
+
+Performance on Neuropathic-Pain diagnosis data: Although high-dimensional, data from the Neuro-pathic Pain dataset is binary and causally sufficient, which results in less limitations from a causal identi-fiability point of view. Indeed, purely data-driven methods tend to be less in disadvantage with respect to CAST. Still, it is evident that the impact of prior knowledge permits C AST to achieve high precision and lower SHD. We still observe, again, that other LLM baselines could not run due to slow inference (LLM-Pairwise grows O(D2)) and limited context window. 
+
+# C AGENTIC RAG 
+
+One of the pillars of C AST is the capacity to dynamically query an agentic RAG system on demand. In detail, it takes the form of a tool-call, and every agent can decide when to query the RAG system. In this way, agents can use their own internal prior for trivial tasks, and retrieve further prior information when it is necessary. C.1 ARCHITECTURE 
+
+The system is composed by a a set of agents which, upon receiving a query Q, are responsible for performing a web search to retrieve relevant causal knowledge. 
+
+Web-search agents: The system is composed by a set of agents which perform a web search. The steps are: 1. A Query agent receives the query Q, and translates it into keywords to be used on a search engine. 28 2. A web-search API is executed with the keywords, and we extract the 5 best results. 3. A summary agent aggregates all results by writing a summary. 4. A reflection agent reflects on the summary and extrapolate further causal information. 5. A final summary agent provides a conclusive answer with a comprehensive explanation. 
+
+# D DIVIDE -C ONQUER -C OMBINE ALGORITHM 
+
+Before detailing the logic of the process, we clarify the organization of variable partitions and their local causal graphs. Each partition is represented as Pi, with its corresponding local causal graph defined as 
+
+Gi := G(Pi, Ei),
+
+where Ei is the edge list for that partition. Partitions are stored as nodes within a Partition Tree, denoted by T, whose structure has the following key aspects. 
+
+Attributes of each partition node: 
+
+• Variable list (Pi): the subset of variables in the partition. • Edge list (Ei): the edges defining the local causal graph. • Description : specific information about the partition, used together with the general description I
+
+to write prompts p for the agents. • Solved flag (solved ): a boolean indicating whether the partition has been processed by the Con-quer or Merge operations. 
+
+Functions of the Partition Tree: 
+
+• Remove node: deletes a partition node from T.• Retrieve children: obtains the list of child partitions for a given node. For example, for a partition 
+
+Pi, its subpartitions {Pi, 1, . . . , Pi,N } are stored as its children. • Find unsolved leaves: identifies the leaf nodes (nodes without children) that have not yet been marked as solved .• Find ready parents: identifies parent nodes for which all children have been marked as solved .The root node of T stores the full variable set V.
+
+# E BENCHMARKING SETTING 
+
+In this section we provide additional details on the benchmarking setting, including details on the implemen-tation and how each dataset has been pre-processed. 
+
+Hardware: Experiments for C AST using GPT 4o-mini and o3-mini were performed through Azure Ope-nAI. For Qwen3-14B, experiments were performed by using an A100 GPU (80GB VRAM) and an AMD EPYC 7643 CPU. Identically, also GranDAG used the same GPU. XGES instead has been run as a CPU-only job. 29 Algorithm 1 Agentic Divide Operation 
+
+Input: partition Pi ⊂ V, partition tree T
+
+Output: updated partition tree T
+
+function DI V I D E (Pi, T)
+
+if |Pi| < K then return ▷ Partition size is acceptable 
+
+else 
+
+{Pi, 1, . . . , Pi,N }hyp ← D hyp (Pi, I, pdiv.hyp ) ▷ If not, invoke agents again 
+
+{Pi, 1, . . . , Pi,N }critic ← D critic ({Pi, 1, . . . , Pi,N }hyp , I, pdiv.critic )
+
+if N > 1 then ▷ Agents do not always propose subpartitions Add {Pi, 1, . . . , Pi,N }critic as children of Pi in T
+
+for all Pi,j ∈ { Pi, 1, . . . , Pi,N }critic do 
+
+DI V I D E (Pi,j , T) ▷ Apply recursively to subpartitions 
+
+end for end if end if return T
+
+end function Algorithm 2 Key Operations on Partition Tree data structure 
+
+function RE M O V E NO D E (Pi, T) ▷ Remove partition node Pi, pruning T
+
+end function function CH I L D R E N OF(Pi, T) ▷ Find all children nodes, i.e. sub-partitions, of Pi in T
+
+end function function FI N D UN S O L V E D LE A V E S (T) ▷ Find all leaf nodes in T not marked ” solved ”
+
+end function function FI N D RE A D Y PA R E N T S (T) ▷ Find all nodes in T whose children are all marked ” solved ”
+
+end function Algorithm 3 Agentic Conquer Operation 
+
+Input: leaf partition node Pi ⊂ V, partition tree T, extended description I made by explainer agent E.
+
+Output: T with Pi ”solved”, i.e. with a local causal graph Gi
+
+function CO N Q U E R (Pi, T)
+
+Ghyp i ← C hyp (Pi, I, phyp ) ▷ Local graph Gi := G(Pi, Ei) hypothesis 
+
+Gcritic i ← C hyp (Ghyp i , I, phyp ) ▷ Local graph revision 
+
+˜Gcritic i ← F (Di, Gcritic i ) ▷ Run FCI on data subset Di, with Gi as prior knowledge Store ˜Gcritic i in T
+
+Mark Pi with a ” solved ” flag 
+
+return T
+
+end function 
+
+30 Algorithm 4 Agentic Combine Operation 
+
+Input: parent partition node Pi ⊂ V, partition tree T
+
+Output: T with Pi ”solved”, i.e. with a local causal graph Gi
+
+function CO M B I N E (Pi, T)
+
+C ←CHILDREN OF(Pi, T) ▷ Defined in 2 Initialize Ei ← ∅ 
+
+for all Pi,j in C do 
+
+Ei ← Ei ∪ Ei,j ▷ Unite edge lists of local graphs 
+
+RE M O V E NO D E (Pi,j , T) ▷ Defined in 2 
+
+end for 
+
+Ghyp comb ← M hyp (G1, . . . , GM , I, pcomb ) ▷ Hypothesis for bridging edges 
+
+Gcritic comb ← M hyp (Ghyp i , I, pcomb ) ▷ Revised bridging edges 
+
+Gi ← G critic comb ∪ G (Pi, Ei) ▷ Unite bridging and local edges Store Gi in T
+
+Mark Pi as ” solved ” in T
+
+return T
+
+end function Algorithm 5 Agentic Explain, Divide, Conquer and Combine Phases 
+
+Input: Data D with variable set V, integer threshold K
+
+Output: Causal graph G(V, E)
+
+I ← E (Dlabels , pexplain ) ▷ Generate description I
+
+Initialize T with root node V
+
+{P1, . . . , PN }hyp ← D hyp (V, I, pdiv.hyp ) ▷ Hypothesis partition of V
+
+{P1, . . . , PN }critic ← D critic ({P1, . . . , PN }, I, pdiv.critic ) ▷ Revised partition of V
+
+Add {P1, . . . , PN } as children of V in T ▷ Store partitions in T
+
+for Pi in {P1, . . . , PN } do ▷ Repeat recursively 
+
+DI V I D E (Pi, T) ▷ Defined in 1 
+
+end for while V is not marked ” solved ” in T do L ← FI N D UN S O L V E D LE A V E S (T) ▷ Defined in 2 
+
+while L ̸ = ∅ do for all Pleaf in L do ▷ Solve the leaf nodes of T
+
+CO N Q U E R (Pleaf , T) ▷ Defined in 3 
+
+end for R ← FI N D RE A D Y PA R E N T S (T) ▷ Defined in 2 
+
+while R ̸ = ∅ do for all Pparent in R do ▷ Combine the local graphs of solved partitions 
+
+CO M B I N E (Pparent , T) ▷ Defined in 4 
+
+end for R ← FI N D RE A D Y PA R E N T S (T)
+
+end while L ← FI N D UN S O L V E D LE A V E S (T)
+
+end while end while return G(V, E) from T
+
+31 E.1 NEUROPATHIC PAIN DATASET :We perform our experiments on the Neuropathic pain dataset (222 nodes). All variables are binary and we do not perform any normalization. We remark that the data-driven FCI algorithm within the Conquer phase is executed by extracting the relevant columns from the dataset (related to the nodes in the sub-graph to refine). However, this dataset contains a number of constant columns, therefore we added a small gaussian noise ϵ ∼ N (0 , σ ) with σ = 0 .0001 to the dataset, with the goal of maintaining the correlation matrix always non-singular. This is necessary, as the X 2 conditional independence tests require it. This dataset is publicly available at Link E.2 CAUSAL MAN DATASET :We perform our experiments on CausalMan Small (53 nodes) and Medium (186 nodes) with 50.000 samples. Data has been normalized between -1 and 1. Categorical variables have been embedded on an equally spaced grid, still between -1 and 1. Further details on the data in the next section F. 
+
+# F MANUFACTURING DATA : C AUSAL MAN DATASET 
+
+The CausaMan Dataset (Tagliapietra et al., 2025) is modeled after a real world production line performing a press-fitting process. It presents two variants, namely CausalMan Small and CausalMan Medium , which feature respectively 53 and 186 variables. From the evaluations present in Tagliapietra et al. (2025), we observe how classic data-driven methods are limited due to limitations arising from causal identifiability. F.1 DATA DESCRIPTION 
+
+Data from the CausalMan Dataset features different characteristics which makes it a challenging benchmark. Importantly, it exhibits a large amount of confounding effects and non-identifiable causal relationships, which bounds the efficacy of purely data-driven methods. We recall here the main characteristics: • Causal Insufficiency: A large SCM where half of the variables are hidden, implying an high level of confounding effects. • Hybrid Data-types: Continuous, discrete, categoricals and binary variables are all present. • Non-linear Causal Mechanisms and non-additive noise models: Causal mechanisms are often non-linear and the noise is not treated additively. • Discrete-to-Continuous relationships: Relationships from discrete variables to continuous ones are present. They take the form of switching mechanisms, where the noise distribution of certain continuous nodes varies depending on the discrete values of its parents. F.1.1 
+
+# G PROMPTS 
+
+We present in this section all the prompt templates that have been used. We remark that every phase -except for the explain phase - adopts an Hypothesis-Critic approach, where an agent proposes an hypothesis for the solution, and a critic agent follows with a refined version. We recall our notation: E is the explainer agent, 
+
+Dhyp is the Divide-Hypothesis agent, Dcritic is the Divide-Critic agent, Chyp is the Conquer-Hypothesis 32 agent, Ccritic is the Conquer-Critic agent, Mhyp is the Merge-Hypothesis agent, and finally Mcritic is the Merge-Critic agent. We follow with every prompt template that has been used. We additionally concatenate to those prompts a number of few-shot examples on how to efficiently use the provided tool (RAG and HITL), which we omit for brevity. Explainer Agent (System Prompt) You are an expert in the domain domain tasked with explaining a dataset and its variables. Your goal is to provide a clear and concise description of the dataset, including the meaning of each variable and their potential relationships. You will receive a list of variables and, optionally, a dataset description. Utilize the available tools to look up the meanings of variable names. Employ an iterative thought-action-observation approach to gather evidence, validate your reasoning, and refine both the description of variables. Explainer Agent (User Prompt) You are tasked with analyzing the following dataset: Variable names: {variable names }
+
+Dataset description: {dataset description }
+
+Your objectives are: (1) Refine and expand the Dataset description, if present. (2) Provide an informative description of the dataset labels, clarifying the meaning of acronyms and context of each variable. Preserve all information in the above description, if present. (3) Include both above results within <general description >< /general description > tags. IMPORTANT: Web search cannot understand acronyms. If variale names are acronyms, do not use those acronyms for a web search. Instead, make the query in natural language. IMPOR-TANT: Variable labels in output should be the same as in the input. G.1 DIVIDE PHASE 
+
+G.1.1 DIVIDE -H YPOTHESIS AGENT 
+
+First, the Divide hypothesis agent Dhyp received the following system prompt. 33 Divide-Hypothesis Agent (System Prompt) 
+
+You are an expert in the domain domain tasked with partitioning a dataset’s variables into groups that might share causal relationships. Each variable represents a node in a causal graph. Your goal is, given a list of variables, to divide them into groups. Reason on: • Pairs of variables that are directly causally related (“A” causes “B”). If they are, they belong in the same group. • If they are not likely to be directly causally related, they either: Case 1) Belong in separate groups, meaning they are likely independent. Case 2) Are indirectly related through common causes (“C” causes both “A” and “B”) or mediators (“A” causes “C”, “C” causes “B”). In this case, you can form a group by also including the common causes or mediators. • If two variables have semantically similar names or describe similar things, it does not necessarily mean they belong in the same group. Additional requirements: • The groups may overlap. • Each variable in the dataset should be assigned to at least one group. • You may form any number of groups. • Include detailed information on each variable within each group. Your process: • Available tools should be used to gather information and validate your reasoning. Use them to to confirm variable meanings and assess relationships. • Utilize an iterative thought-action-observation approach to gather evidence, validate your reasoning and refine your groups. 
+
+Following, at every iteration of the Divide phase, Dhyp adopts the following user prompt. Divide-Hypothesis Agent (User Prompt) You are tasked with analyzing the following dataset: Dataset description: {dataset description }
+
+For your partitioning task, focus on the following variables: {variable names }
+
+IMPORTANT: Web search cannot understand acronyms. If variable names are acronyms, do not use those acronyms for a web search. Instead, make the query in natural language. IMPORTANT: Variable labels in output should be the same as in the input. Each input variable should be assigned to a group. Double check as to not introduce new variables by accident. IMPORTANT: Output a list of variables and their descriptions for each group. Ensure that each list is enclosed within <nodes > tags. For example: <group >< nodes >[Variable1, Vari-able2] </nodes >< description >Description of the group </description >< /group >
+
+34 G.1.2 DIVIDE -C RITIC AGENT 
+
+The Divide hypothesis agent Dcritic receives the following system prompt. Divide-Critic Agent (System Prompt) You are an expert in the {domain } domain tasked with partitioning a dataset’s variables into groups that might share causal relationships. Each variable represents a node in a causal graph. Your goal is to analyze groups proposed by another agent and and modify them if necessary. Reason on: • If a pair of variables are in the same group, they are either: Case 1) Directly causally related (“A” causes ”B”). Case 2) They are indirectly related through common causes (“C” causes both “A” and “B”) or mediators (“A” causes “C”, “C” causes “B”). In this case, the common causes or media-tors should also be in the group. • If two variables have semantically similar names or describe similar things, review whether they really belong in the same group. Additional requirements: • The groups may overlap. • Each variable in the dataset should be assigned to at least one group. • You may edit any number of groups or even create new ones. • Include detailed information on each variable within each group, preserve any relevant information that is already present. Your process: • Available tools should be used to gather information and validate your reasoning. Use them to to confirm variable meanings and assess relationships. • Utilize an iterative thought-action-observation approach to gather evidence, validate your reasoning and refine your groups. Following, at every iteration of the Divide phase, Dcritic adopts the following user prompt. 35 Divide-Critic Agent (User Prompt) 
+
+You are tasked with analyzing the following dataset: Dataset description: {dataset description }
+
+For your partitioning task, focus on the following variables: {variable names }
+
+The groups proposed by the previous agent are: {proposed groups }
+
+IMPORTANT: Web search cannot understand acronyms. If variable names are acronyms, do not use those acronyms for a web search. Instead, make the query in natural language. IMPORTANT: Variable labels in output should be the same as in the input. Each input variable should be assigned to a group. Double check as to not introduce new variables by accident. IMPORTANT: Output a list of variables and their descriptions for each group. Ensure that each list is enclosed within <nodes > tags. For example: <group >< nodes >[Variable1, Vari-able2] </nodes >< description >Description of the group </description >< /group >
+
+G.2 CONQUER PHASE 
+
+G.2.1 CONQUER -H YPOTHESIS AGENT 
+
+Conquer-Hypothesis Agent (System Prompt) 
+
+You are an expert in the {domain } domain tasked with identifying cause-effect relationships from data. Your goal is to construct a causal graph where nodes represent variables, and directed edges represent hypothesized cause-effect relationships. You will receive a list of variables and, optionally, a dataset description. You have access to tools to assist in gathering prior knowledge, helping you to refine your hypothesis. Use these tools iteratively to gather relevant knowledge, and refine your causal graph. Reason through each step and leveraging the tools to support your conclusions. Try to understand what each variable means. You can the tools available in case additional information is needed. IMPORTANT: In some cases you might have access to a human expert. In that case, use it to gather contextual knowledge, and balance it between knowledge from RAG and human expert. IMPORTANT: Do not be conservative in putting a causal relationship. It is better to put an edge in case you are in doubt even after using your tools. 
+
+36 Conquer-Hypothesis Agent (User Prompt) 
+
+Reason to get a causal graph from the following dataset. Dataset description: {general description }
+
+You will focus on the following variables: Variable names: {variable names }
+
+Description of variables: {variable description }
+
+Successively, you will perform the following points until you are confident about a final an-swer: 1. Understand the context, about what are the variables modeling at a causal level. You can use the tools to search for more information. 2. Reason on which might be the root nodes which are not influenced by other variables. Suc-cessively, reason on the relationships between those root nodes and the other child variables. Then reason between children of children, and so on... 3. Output a preliminary list of all edges that COULD POTENTIALLY be present between those variables. DO NOT BE TOO CONSERVATIVE. AN EDGE MORE IS BETTER THAN AN EDGE LESS. 4. Reflect and improve your estimate. Finally, output a cumulative list of directed edges between the provided variables. IMPORTANT: Make sure the the list of edges are within the <edges > tags. For example: 
+
+<edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+IMPORTANT: ABSOLUTELY RESPECT THE FORMAT. DO NOT USE ARROWS OR ANY-THING SIMILAR TO REPRESENT EDGES. ONLY USE THIS FORMAT, AND USE THE COMMA TO SEPARATE VARIABLE NAMES: <edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+G.2.2 CONQUER -C RITIC AGENT 
+
+Conquer-Critic Agent (System Prompt) 
+
+You are an expert in the domain domain tasked with critically evaluating proposed causal rela-tionships between variables in a dataset. Your goal is to analyze a hypothesized causal graph and suggest modifications, particularly focusing on identifying edges that are in the wrong anti-causal direction, or that do not hold true. You will receive a list of variables, a dataset description, and a proposed causal graph. Use a thought-action-observation process for your reasoning. You have access to tools to assist in verifying relationships by gathering prior knowledge. Be systematic in your approach, reasoning through each step and leveraging the tools to support your conclusions. First, assess the validity of each edge in the proposed graph and consider potential confound-ing relationships which might have been missed. Use the tools available to gather additional information as needed. 
+
+37 Conquer-Critic Agent (User Prompt) 
+
+Your task is to critically analyze the hypothesized causal graph based on the provided dataset. Here is the hypothesis you need to evaluate: Dataset description: {general description }
+
+You will focus on the following variables: Variable names: {variable names }
+
+Description of variables: {variable description }
+
+Hypothesis graph: {causal graph }
+
+You will perform the following steps until you reach a confident conclusion: 1. Evaluate the proposed relationships between the variables. 2. Assess whether any edges are in the anti-causal direction (i.e., (effect, cause) instead of (cause, effect)). Consider that intervening on the effect should not change the cause, but not the viceversa. 3. Do those causal relationships always hold, or only on some context? Think about counter-factual scenarios. 4. Utilize the available tools to gather additional information and evidence to support your analysis. If available, use the human expert for confirmation or for contextual knowledge. Finally, provide a cumulative list of directed edges identified at each iteration for every group of variables. IMPORTANT: Ensure that the list of edges is enclosed within <edges > tags. For example: 
+
+<edges >(Variable1, Variable2), (Variable2, Variable3) </edges > IMPORTANT: ABSO-LUTELY RESPECT THE FORMAT. DO NOT USE ARROWS OR ANYTHING SIMILAR TO REPRESENT EDGES. ONLY USE THIS FORMAT, AND USE THE COMMA TO SEPARATE VARIABLE NAMES: <edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+G.3 COMBINE PHASE 
+
+G.3.1 COMBINE -H YPOTHESIS 
+
+Combine-Hypothesis Agent (System Prompt) 
+
+You are a {domain } domain expert responsible for evaluating causal relationships. In this context, each variable in a dataset represents a node in a causal graph. You will receive different groups of variables, each accompanied by a description. The causal relationships within each group have already been assessed. Your objective is to analyze the relationships between these groups to hy-pothesize potential connections bridging the graphs. The goal is to merge them into a larger causal graph. Specifically, you will propose potential directed edges (cause, effect) between variables from different groups. Utilize the available tools to verify and refine your hypotheses iteratively. Ap-proach this task systematically, reasoning through each step and leveraging the tools to support your conclusions. 
+
+38 Combine-Hypothesis Agent (User Prompt) 
+
+Your task is to establish connections between variables from the following groups, which will introduce new edges in a directed causal graph. Output pairs of variables from different groups, ensuring that the relationships are consistent. Dataset description: {general description }
+
+You will now focus on these specific groups: {groups }
+
+Follow these steps until you are confident in your final answer: 1. Understand the context, about what is each group of variables modeling at a causal level. Understand how each groups is related to each other. You can use the tools to search for more information. 2. Output a preliminary list of bridging edges that COULD POTENTIALLY be present be-tween those groups of variables. DO NOT BE TOO CONSERVATIVE. AN EDGE MORE IS BETTER THAN AN EDGE LESS. 3. Reflect and improve your estimate. Finally, present a single list of directed edges that connect the groups. IMPORTANT: Ensure the list of edges is enclosed within <edges > tags. For example: 
+
+<edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+IMPORTANT: ABSOLUTELY RESPECT THE FORMAT. DO NOT USE ARROWS OR ANY-THING SIMILAR TO REPRESENT EDGES. ONLY USE THIS FORMAT, AND USE THE COMMA TO SEPARATE VARIABLE NAMES: <edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+G.3.2 COMBINE -C RITIC 
+
+Combine-Critic Agent (System Prompt) 
+
+You are a {domain } domain expert tasked with critically analyzing the proposed connections between variable groups in a causal graph. Your role is to evaluate the validity of the directed edges (cause, effect) and suggest modifications, particularly focusing on identifying edges that are in the wrong anti-causal direction, or that do not hold true. You will receive a list of separate groups of variables, each with its description. You will also be provided with a set of causal edges bridging those groups. You need to understand how those groups are related. Use a thought-action-observation process for your reasoning. You have access to tools to assist in verifying relationships by gathering prior knowledge. 
+
+39 Combine-Critic Agent (User Prompt) 
+
+Your task is to critically evaluate the proposed connections between the following groups of vari-ables. Dataset description: {general description }
+
+You will now focus on these specific groups: {groups }
+
+Proposed connections: {group connections }
+
+Follow these steps to analyze the connections: 1. Evaluate the proposed relationships between the variables. 2. Assess whether any edges are in the anti-causal direction (i.e., (effect, cause) instead of (cause, effect)). Consider that intervening on the effect should not change the cause, but not the viceversa. 3. Do those causal relationships always hold, or only on some context? Think about counter-factual scenarios. 4. Utilize the available tools to gather additional information and evidence to support your analysis. If available, use the human expert for confirmation or for contextual knowledge. Provide a summary of your findings, including any necessary revisions to the proposed connections. IMPORTANT: Ensure the list of edges is enclosed within <edges > tags. For example: 
+
+<edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+IMPORTANT: ABSOLUTELY RESPECT THE FORMAT. DO NOT USE ARROWS OR ANY-THING SIMILAR TO REPRESENT EDGES. ONLY USE THIS FORMAT, AND USE THE COMMA TO SEPARATE VARIABLE NAMES: <edges >(Variable1, Variable2), (Variable2, Variable3) </edges >
+
+# H COMPLETE END -TO -E ND INTERACTION 
+
+To illustrate how C AST’s execution flows, we report here a complete interaction on the Earthquakes dataset. To keep it readable, we omit to repeat the system and user prompt templates (already provided in Sec.G), and only report the LLM answers, HITL Calls, and User responses. An additional end-to-end interaction on the CausalChambers dataset is provided in the supplementary materials. 
+
+Main Takeaways Some interesting insights into the behavior of C AST are: • As it is shown in the HITL calls, it is not necessary to provide ”explicit” causal information of the kind ”A implies B” as the interaction happens in natural language, and the extraction of causal information from user feedback is managed by the agents (Antonucci et al., 2023). • Often, we intentionally provided high-level, partial, or even ”I don’t know” responses to the agents. This highlights CAST’s ability to handle realistic, imperfect user input. • You may observe occasional repeated queries. This results from the current design choice to keep agents separate and without a global shared memory. While this ensures modularity, we acknowl-edge that adding shared memory is a straightforward engineering optimization for future work to reduce token usage and enhance scalability further. 40 H.1 EXPLAIN PHASE 
+
+Upon being given a first user-description and the dataset, the Explain phase employs an explainer agent that extends the provided information and builds a more extensive description of the whole dataset. In case of ambiguities in the variable naming, the Explainer agent will reach the Human via a call to the HITL tool. Explainer Agent (Part 1 of 2) 
+
+# REFINED DATASET DESCRIPTION 
+
+This dataset contains records of earthquake events, including their occurrence date, location, seismic magnitude, and the number of recorded fatalities. It is intended for analyses of seismic activity and its human impact across different regions and time periods. Each record corresponds to a single earthquake, with fields that capture when it happened, where it was observed or affected, how strong it was (by a magnitude scale commonly referred to as the “Richter” scale), and how many deaths were attributed to that event. VARIABLE DESCRIPTIONS 
+
+year Calendar year in which the earthquake occurred. Typically a four-digit integer (e.g., 1999, 2015). Useful for temporal trend analyses and aggregations. 
+
+month Calendar month of occurrence, usually as an integer from 1–12. Enables seasonal or monthly pattern analysis when combined with year and day. 
+
+day Calendar day of occurrence, usually as an integer from 1–31. Together with year and month, can be combined to form a full event date. 
+
+region The broader geographic region associated with the earthquake (e.g., country, multi-country region, or seismic region label). This is a categorical/location descriptor useful for grouping events and comparing regional risk and impacts. 
+
+area A more specific locality within the region, such as a province/state, district, city, or named seismic/epicentral area. This typically offers finer spatial granularity than region; depend-ing on the data source, it may denote the epicenter vicinity or the administrative area most affected. 
+
+richter The earthquake’s magnitude, labeled as “richter.” In many historical datasets, this refers to magnitude reported on the Richter/local magnitude scale ( ML). Note that modern cata-logs often report magnitudes on the moment magnitude scale ( Mw); if the source uses Mw
+
+but retains the “richter” label, values are still logarithmic magnitudes where each unit in-crease reflects ∼ 10 × increase in ground-motion amplitude and ∼ 32 × increase in released energy. Units: dimensionless magnitude. 
+
+deaths Number of recorded fatalities attributable to the earthquake event. Typically a non-negative integer. Be aware that zero can mean “no deaths recorded,” while missing values may indicate “unknown.” Interpretation may require scrutiny of reporting practices. 41 Explainer Agent (Part 2 of 2) 
+
+CONTEXT AND POTENTIAL RELATIONSHIPS 
+
+• Temporal structure: year , month , and day define the event date; analyses often aggre-gate by year or month to examine temporal trends in seismic activity or impact. • Spatial structure: region and area are hierarchical, with area nested within region 
+
+in many datasets; this supports spatial aggregation (e.g., counts by region) and finer local analyses. • Magnitude-impact linkage: richter (magnitude) is a primary predictor of potential damage and deaths, but actual fatalities also depend on depth, proximity to population centers, building standards, and secondary hazards (e.g., tsunamis, landslides). • Reporting considerations: deaths may be influenced by data completeness and post-event updates; magnitudes can be revised as more data becomes available. 
+
+Preserved information: This dataset describes data with records about earthquakes, such as their location, date, magnitude, and recorded fatalities. 
+
+H.2 DIVIDE PHASE 
+
+During this phase, the Divide agent takes the description built by the explainer agent, and we first have Dhyp 
+
+that proposes a possible partitioning of the variables, which is later refined by Dcritic . In case partitions are too large (by choosing a maximum partition size k), this process is iterated on the individual partitions. The result is a partition tree. Divide Hypothesis Agent (Part 1 of 2) 
+
+# VARIABLE GROUPS AND STRUCTURAL RELATIONSHIPS 
+
+Nodes: {year, month, day } Temporal structure variables that jointly define the earthquake’s calendar date. 
+
+• year: The calendar year of occurrence (four-digit integer). It constrains valid month/day combinations and is used for trend analyses (e.g., long-term changes in seismic activity or impacts). • month: Calendar month (1–12). Nested within year; together with year, it sets sea-sonal context (e.g., monsoon, winter), which can indirectly affect vulnerability or sec-ondary hazards. • day: Calendar day (1–31). Dependent on year and month for validity (e.g., leap years). When combined with year and month, it forms the full event date and can capture fine-grained timing effects (e.g., holidays) that may indirectly affect exposure and impact. 42 Divide Hypothesis Agent (Part 2 of 2) 
+
+Nodes: {region, area } Spatial hierarchy describing where the earthquake occurred or was most impactful. 
+
+• region: Broader geographic descriptor (e.g., country or multi-country seismic region). Used for coarser spatial aggregation and comparison across regions. • area: More specific locality within region (e.g., state/province, district, city, or named epicentral area). Typically nested in region; directly linked via administrative or ge-ographic hierarchy. Differences in local population density and building stock at the area level can strongly influence observed impacts. 
+
+Nodes: {richter, deaths } Magnitude–impact linkage. 
+
+• richter: Earthquake magnitude (often labeled on the “Richter”/local magnitude scale; values are logarithmic). Directly influences expected ground-motion amplitude and energy release, which in turn drive potential damage. • deaths: Recorded fatalities attributed to the event. Causally downstream of shaking and damage, but also shaped by mediators such as local vulnerability, building codes, depth, proximity to population centers, and secondary hazards. The relationship is typically positive but highly modulated by context and reporting practices. 
+
+Nodes: {year, month, day, region, area, richter, deaths } Integrated impact pathway combin-ing temporal, spatial, and physical drivers of human consequences. 
+
+Pathways: 
+
+• richter → deaths (direct effect): Larger magnitudes tend to produce stronger shaking and, absent mitigation, more casualties. • region /area → deaths (contextual mediators): Regional/area characteristics (population density, construction practices, enforcement of building codes, terrain, tsunami/landslide susceptibility) modulate how shaking translates into fatalities. • year /month /day → deaths (temporal mediators): Year captures secular changes (e.g., evolving building standards, emergency response capacity, and reporting com-pleteness). Month and day provide seasonal/contextual timing that can affect exposure (e.g., tourism seasons, weather conditions) and secondary hazards. 
+
+Variable details: 
+
+• year: Event year; useful for temporal trend and policy-era analyses. • month: Event month; supports seasonal pattern analysis. • day: Event day; completes the date and allows alignment to specific calendar effects. • region: Broad location for cross-region comparisons. • area: Fine-grained locality reflecting exposure heterogeneity within regions. • richter: Physical intensity driver of potential damage. • deaths: Outcome reflecting human impact, downstream of the above determinants. 
+
+43 Divide Critic Agent (Part 1 of 2) 
+
+# VARIABLE GROUPS AND STRUCTURAL RELATIONSHIPS 
+
+Nodes: {year, month, day } Temporal structure variables that jointly define the earthquake’s calendar date. 
+
+• year: Calendar year of occurrence (four-digit integer). Constrains valid month/day combinations and supports trend analyses (e.g., long-term changes in seismic activity or impacts). • month: Calendar month (1–12). Nested within year; provides seasonal context (e.g., monsoon, winter), which can indirectly affect vulnerability or secondary hazards. • day: Calendar day (1–31). Dependent on year and month for validity (e.g., leap years). Combined with year and month to form the full event date; fine-grained timing can capture context (e.g., holidays) that may indirectly affect exposure and impact. 
+
+Nodes: {region, area } Spatial hierarchy describing where the earthquake occurred or was most impactful. 
+
+• region: Broader geographic descriptor (e.g., country or multi-country seismic region). Useful for coarser spatial aggregation and comparison across regions. • area: More specific locality within region (e.g., state/province, district, city, or named epicentral area). Typically nested within region; local population density and building stock at the area level strongly influence observed impacts. 
+
+Nodes: {richter, deaths } Magnitude–impact linkage. 
+
+• richter: Earthquake magnitude (logarithmic scale). Directly influences expected ground-motion amplitude and energy release, driving potential damage. • deaths: Recorded fatalities attributed to the event. Causally downstream of shaking and damage; the relationship with magnitude is typically positive but modulated by context (e.g., vulnerability, secondary hazards, reporting practices). 
+
+Nodes: {year, month, day, region, area, richter, deaths } Integrated impact pathway combin-ing temporal, spatial, and physical drivers of human consequences. 
+
+Pathways: 
+
+• richter → deaths (direct effect): Larger magnitudes tend to produce stronger shaking and, absent mitigation, more casualties. • region /area → deaths (contextual mediators): Regional/area characteristics (population density, construction practices, enforcement of building codes, terrain, tsunami/landslide susceptibility) modulate how shaking translates into fatalities. • year /month /day → deaths (temporal mediators): Year captures secular changes (e.g., evolving building standards, emergency response capacity, reporting complete-ness). Month and day provide seasonal/contextual timing that can affect exposure (e.g., tourism seasons, weather conditions) and secondary hazards. 
+
+44 Divide Critic Agent (Part 2 of 2) 
+
+Variable details: • year: Event year; useful for temporal trend and policy-era analyses. • month: Event month; supports seasonal pattern analysis. • day: Event day; completes the date and allows alignment to specific calendar effects. • region: Broad location for cross-region comparisons. • area: Fine-grained locality reflecting exposure heterogeneity within regions. • richter: Physical intensity driver of potential damage. • deaths: Outcome reflecting human impact, downstream of the above determinants. 
+
+Nodes: {year, deaths } Secular trends and reporting-era effects on impact. 
+
+• year: Captures changes over time in building codes, urbanization, emergency response capacity, and reporting completeness. • deaths: Fatalities recorded for the event; trends by year can reflect true changes in vulnerability and exposure as well as improvements in data collection. 
+
+Nodes: {region, area, month, deaths } Seasonal–spatial vulnerability pathway. 
+
+• region: Broad spatial context affecting hazard environment (e.g., monsoon-prone re-gions, tsunami exposure). • area: Localized exposure and vulnerability (population density, terrain, construction quality). • month: Seasonal timing influencing secondary hazards (e.g., rainfall-triggered land-slides, storm seasons) and exposure (tourism seasons, agricultural cycles). • deaths: Fatalities as an outcome modulated by seasonal conditions and local vulnera-bility, even for similar magnitudes. 
+
+Nodes: {region, area, richter, deaths } Spatial moderation of magnitude–impact. 
+
+• region: Coarse spatial unit shaping typical building practices, enforcement, and haz-ard profiles. • area: Fine spatial unit determining proximity to population centers and local site ef-fects (e.g., basin amplification). • richter: Physical intensity driver; higher magnitudes raise the potential for severe shaking. • deaths: Impact outcome; the effect of magnitude on deaths is moderated by region and area characteristics. 
+
+H.3 CONQUER PHASE 
+
+This phase is executed for every partition that is a leaf in the partition tree (that has never been partitioned further). On each one of those partitions, the Conquer agents Chyp and Ccritic propose and refine a candidate causal graph. That causal graph is then used as a constraint for a causal discovery algorithm. During this phase, we can see (in the red and green boxes) that multiple HITL calls are made in those cases where the conquer agents are uncertain. 45 Conquer Hypothesis Agent for variables Year/Month/Day 
+
+# STRUCTURAL EDGES 
+
+• year → day 
+
+• month → day 
+
+Conquer Critic Agent for variables Year/Month/Day 
+
+# EVALUATION OF TEMPORAL CONSTRAINT EDGES 
+
+1. E VALUATION OF PROPOSED RELATIONSHIPS 
+
+(year, day) Valid as a structural constraint in the Gregorian calendar. The year affects whether certain days are valid (e.g., February 29 exists only in leap years), so the permissible values of day depend on year for some months. 
+
+(month, day) Valid as a structural constraint. The month determines the range of valid days (e.g., 30 vs. 31 days, and February’s length), independent of other variables except for leap year effects that involve year .2. A NTI -CAUSAL DIRECTION ASSESSMENT 
+
+Neither edge is in the anti-causal direction. Intervening on day does not change year or month ,whereas intervening on year or month can change which day values are valid. Thus, the direction from year → day and month → day is appropriate. 3. C ONTEXTUAL VALIDITY AND COUNTERFACTUALS 
+
+These relationships hold under the Gregorian calendar and similar systems where day validity de-pends on month and sometimes year. 
+
+Counterfactual examples: 
+
+• If we set month = February and intervene to change year from a leap year to a non-leap year, the set of valid day values changes (29 becomes invalid). • If we set year fixed and intervene to change month from April to May, the valid day set changes (30 vs. 31 days). Outside this calendar context (e.g., non-Gregorian calendars), the specific constraints might differ. However, the dataset description implies standard calendar usage. 4. A DDITIONAL CONSIDERATIONS 
+
+No additional confounders among year , month , and day are necessary for validity constraints. The relationships are deterministic constraints rather than causal mechanisms in the physical sense, but they are directionally correct for data-generating validity. FINAL CUMULATIVE EDGES 
+
+(year , day ), (month , day )
+
+46 Conquer Hypothesis Agent for variables Region/Area 
+
+# SPATIAL HIERARCHY EDGES 
+
+• region → area 
+
+• area → region 
+
+Conquer Critic Agent for variables Region/Area 
+
+# EVALUATION OF SPATIAL HIERARCHY EDGES 
+
+1. E VALUATION OF PROPOSED RELATIONSHIPS 
+
+The dataset defines a spatial hierarchy where area is typically nested within region . In a gener-ative sense (e.g., administrative structure or modeling of where events occur), region constrains the set of possible areas. This supports (region , area ).The reverse edge (area , region ) implies a causal effect of the specific locality on the broader region, which does not reflect the hierarchical causation. It more closely represents a deterministic data derivation (region can be inferred from area), not a causal influence. 2. A SSESSMENT OF ANTI -C AUSAL DIRECTIONS 
+
+The edge (area , region ) is anti-causal under intervention semantics. Intervening on area (e.g., selecting a different locality within the same region) does not change the region ; however, inter-vening on region (e.g., focusing on a different country) changes the set of permissible areas. Thus, 
+
+(area , region ) is an effect-to-cause edge and should be removed from the causal graph. 3. C ONTEXTS AND COUNTERFACTUALS 
+
+In practice, region can be algorithmically derived from area due to hierarchical coding. This yields a functional dependency that may appear as (area , region ) in a data-processing DAG. However, causally, the broader spatial context constrains the finer one; therefore, the correct causal direction is (region , area ) across typical earthquake datasets. 
+
+Counterfactual examples: 
+
+• If we change region (e.g., from Country A to Country B), the distribution of areas changes (available areas differ). • If we change area within the same region, region remains the same; choosing an area outside the current region effectively implies changing the region first. Hence, the causal arrow from region to area is robust. 4. M ETHODOLOGICAL NOTE 
+
+No additional human input required beyond the dataset’s provided hierarchy; the conclusion follows from the spatial nesting and intervention logic. FINAL CUMULATIVE EDGES 
+
+(region , area )
+
+47 Conquer Hypothesis Agent for Partition Richter/Deaths 
+
+# ANALYSIS OF MAGNITUDE –D EATH RELATIONSHIP 
+
+1. C ONTEXT UNDERSTANDING 
+
+• richter: Represents earthquake magnitude on a logarithmic scale, which determines ground-motion amplitude and released energy. Higher magnitude tends to cause stronger shaking and more potential damage. • deaths: Represents recorded fatalities due to each event. Fatalities occur downstream of shaking and damage, and are modulated by many contextual factors (population density, building codes, proximity to epicenter, depth, secondary hazards like tsunamis/landslides, time of day, and reporting practices). 2. R OOT NODES AND RELATIONSHIPS 
+
+Among the provided variables, richter is a root cause in the physical sense: the magnitude of the event is generated by tectonic processes and is not influenced by the number of deaths. 
+
+deaths is downstream of richter . The causal pathway is: 
+
+richter → shaking intensity/damage → casualties (Note: Many mediators/moderators are not in the provided variable list). 3. P RELIMINARY EDGES 
+
+Potential edge: (richter , deaths ). Larger magnitudes generally increase the risk and extent of damage, increasing fatalities. 4. R EFLECTION AND IMPROVEMENT 
+
+• Reverse causation (deaths → richter ) is not plausible because fatalities do not de-termine physical magnitude. • Confounding exists (e.g., population density, building standards, depth), but those are not provided variables; the best graph over the two variables is richter → deaths .• Measurement/reporting biases can affect deaths but do not causally impact magnitude; they would be separate variables if present. FINAL EDGE DETERMINATION 
+
+(richter , deaths )
+
+48 Conquer Critic Agent for Partition Richter/Deaths 
+
+# CAUSAL ANALYSIS OF RICHTER → DEATHS 
+
+STEP 1: E VALUATE PROPOSED RELATIONSHIP 
+
+Edge (richter , deaths ): Plausible and consistent with seismological understanding. Earth-quake magnitude reflects energy release and correlates with expected shaking and potential damage. Higher magnitude tends to increase risk of fatalities, all else equal. STEP 2: A NTI -C AUSAL DIRECTION CHECK 
+
+No evidence that deaths cause magnitude. Intervening on deaths (e.g., improving emergency response) would not change the magnitude of the earthquake; intervening on magnitude (hypothet-ically reducing energy release) would affect expected fatalities. Therefore, the proposed direction 
+
+(richter → deaths ) is not anti-causal. STEP 3: C ONTEXT DEPENDENCE AND COUNTERFACTUALS 
+
+The relationship is not deterministic and holds only under certain contexts due to strong effect mod-ification: • Population exposure and vulnerability: Dense urban areas with poor building standards can have high deaths even for moderate magnitudes; remote areas may have low deaths for large magnitudes. • Depth and proximity: Shallow earthquakes near population centers produce stronger ground shaking at the surface; deeper events can have high magnitude but lower surface intensity. • Secondary hazards: Tsunamis, landslides, fires, and aftershocks can substantially increase fatalities beyond what magnitude alone would predict. • Time of day and preparedness: Nighttime events or inadequate early warning increase risk. • Reporting practices: Death counts can be underreported or revised; magnitude estimates can be updated post-event, but these do not reverse causality. 
+
+Counterfactuals: 
+
+• Holding magnitude fixed and improving building codes or reducing exposure would reduce deaths. • Increasing magnitude while holding other conditions constant would generally increase expected deaths. • Changing deaths does not change the realized magnitude. STEP 4: A DDITIONAL INFORMATION AND EVIDENCE 
+
+Within seismology, magnitude is an exogenous geophysical variable relative to human impact vari-ables; common “confounders” of deaths (e.g., population density, building quality, secondary hazards) do not cause magnitude. They primarily act as moderators or mediators along the damage pathway. Thus, while the edge is valid, it is incomplete without adding other parent variables to 
+
+deaths .FINAL CUMULATIVE EDGES 
+
+(richter , deaths )
+
+49 Conquer Hypothesis Agent for Partition Year/Month/Day/Region/Area/Richter/Deaths (Part 1 of 2) 
+
+# CAUSAL GRAPH CONSTRUCTION AND EDGE LIST 
+
+STEP 1: C ONTEXT UNDERSTANDING 
+
+The variables describe individual earthquake events with their occurrence date ( year , month ,
+
+day ), location ( region , area ), physical intensity ( richter magnitude), and human impact (deaths ). • Causally: Magnitude drives shaking and potential harm; spatial context ( region , area )modulates exposure and vulnerability; temporal context ( year , month , day ) affects vul-nerability, exposure, and reporting. • Non-physical mechanisms: Catalog completeness and measurement practices change over time ( year → richter ), seasonal/tidal stresses can weakly modulate earthquake tim-ing ( month /day → richter ), and reporting of deaths evolves over time ( year →
+
+deaths ). STEP 2: R OOT NODES AND HIERARCHICAL RELATIONS 
+
+• Root-like exogenous drivers: year , month , day (calendar), region (broad location). • Hierarchies and nesting: – region determines area (area is nested within region ). 
+
+– year → month ; month → day ; and year → day due to leap-year effects. • Physical context: region and area influence typical magnitude distributions due to tectonic setting ( region /area → richter ). • Impact: – richter → deaths is a primary physical causal link. 
+
+– region /area → deaths via population density, building codes, terrain, sec-ondary hazards (landslides, tsunamis). 
+
+– year /month /day → deaths via preparedness, exposure patterns, weather, tourism seasons, work/school schedules, and reporting differences. STEP 3: P RELIMINARY LIST OF POTENTIAL EDGES 
+
+(Intentionally not conservative) 
+
+• region → area (Spatial hierarchy). • region → richter (Tectonic setting influences magnitude distribution). • area → richter (Local fault characteristics). • richter → deaths (Physical impact). • region → deaths (Vulnerability, exposure, secondary hazards). • area → deaths (Finer-grained vulnerability, exposure). • year → deaths (Preparedness, building codes, reporting). • month → deaths (Seasonal exposure, weather, tourism). • day → deaths (Day-of-week/time-related exposure; reporting logistics; tidal/secondary hazard timing). 
+
+50 Conquer Hypothesis Agent for Partition Year/Month/Day/Region/Area/Richter/Deaths(Part 2 of 2) 
+
+• year → richter (Catalog completeness/measurement practices over time). • month → richter (Seasonal hydrological loading; weak but plausible). • day → richter (Earth tides/timing effects; weak but plausible). • year → month (Calendar hierarchy). • month → day (Calendar hierarchy). • year → day (Leap-year structure). STEP 4: R EFLECTION AND IMPROVEMENTS 
+
+The physical causation of earthquake magnitude is not driven by calendar time, but small sea-sonal/tidal modulations and catalog/reporting biases justify including year /month /day →
+
+richter as potential edges. Spatial context strongly affects both magnitude distributions and human impact, so region /area links to both richter and deaths are retained. Calendar hi-erarchy edges are included to reflect structured temporal variables which can influence downstream variables. The final graph emphasizes direct physical causation ( richter → deaths ) and multiple contex-tual mediators/modulators ( region /area , year /month /day ). FINAL ANSWER : C UMULATIVE EDGES 
+
+(region , area ), (region , richter ), (area , richter ),
+
+(richter , deaths ), (region , deaths ), (area , deaths ),
+
+(year , deaths ), (month , deaths ), (day , deaths ),
+
+(year , richter ), (month , richter ), (day , richter ),
+
+(year , month ), (month , day ), (year , day )
+
+51 Conquer Critic Agent for Partition Year/Month/Day/Region/Area/Richter/Deaths (Part 1 of 2) 
+
+# CRITICAL EVALUATION AND EDGE REVISION 
+
+STEP 1: E VALUATION OF PROPOSED RELATIONSHIPS 
+
+Hierarchy (region , area ) As a data hierarchy, area is nested within region . Deterministi-cally, the area label implies its region . The direction (region → area ) is ques-tionable because changing the region label does not causally determine the specific area; rather, the area determines which region it belongs to. Recommendation: Reverse to 
+
+(area , region ).
+
+Location → Magnitude (region , richter ) and (area , richter ): Location (tectonic set-ting, fault characteristics) influences the distribution of magnitudes and the likelihood of large events. These edges are plausible as structural causes of magnitude for a given event. 
+
+Magnitude → Deaths (richter , deaths ): This is a primary physical driver of potential fatali-ties; higher magnitude generally increases shaking severity, which increases risk of casual-ties, all else equal. Valid. Context → Deaths (region , deaths ) and (area , deaths ): Contextual mediators like popu-lation density, building codes, terrain, and secondary hazards vary by location and modulate the translation of shaking into fatalities. Valid. Time → Deaths (year , deaths ), (month , deaths ), (day , deaths ): Time can influence ex-posure and vulnerability (e.g., secular improvements in building standards over years; sea-sonal tourism; weather conditions that affect landslides/tsunami impacts). These edges are plausible as temporal mediators/proxies. 
+
+Time → Magnitude (year , richter ), (month , richter ), (day , richter ): Calendar time generally does not causally drive earthquake magnitude. While some weak seasonal signals may exist due to hydrological loading or anthropogenic activities, for natural tectonic earth-quakes the causal direction is wrong in most contexts. These edges are likely anti-causal and should be removed .
+
+Calendar Structure (year , month ), (month , day ), (year , day ): These encode calendar structure. As deterministic relationships of an event timestamp, the directions are accept-able for a data-generating graph ( year determines valid months; month and year to-gether determine valid days including leap years). STEP 2: A NTI -C AUSAL DIRECTION CHECKS 
+
+• (region , area ): More defensible as (area , region ) because area implies region .Intervening on area (choosing a locality) changes region ; intervening on region does not uniquely determine area .• Time → Richter: Anti-causal for tectonic events. Intervening on calendar date does not change the physical magnitude of a specific earthquake. 
+
+52 Conquer Critic Agent for Partition Year/Month/Day/Region/Area/Richter/Deaths (Part 2 of 2) 
+
+STEP 3: C ONTEXTUAL VALIDITY AND COUNTERFACTUALS 
+
+• region /area → richter : Holds in the sense of geological control on possible magnitudes and frequency distributions. Counterfactual changes in location (different faults/tectonic regimes) change magnitude distribution. • richter → deaths : Generally holds but can be overridden by counterfactuals with strong mitigation (e.g., high magnitude with few deaths in sparsely populated areas or where buildings are resilient). • region /area → deaths : Context-specific; strong in regions with high expo-sure/vulnerability; weaker where resilience is high. • year → deaths : Context-specific; secular improvements or degradations over time affect vulnerability and reporting. Counterfactual changes in year (as a proxy for era) can change expected deaths via evolving codes and emergency response. • month /day → deaths : Seasonal exposure and secondary hazards can modulate fatali-ties (e.g., monsoon-related landslides, tourist seasons). Context-dependent. STEP 4: A DDITIONAL CONSIDERATIONS 
+
+Important missing drivers of deaths include hypocentral depth, distance to populated areas, build-ing code enforcement, time of day (occupancy), and secondary hazards (tsunami/landslide triggers). These confound richter → deaths and region /area → deaths pathways. Reporting completeness may also vary by region and year, confounding deaths .EDGE LIST EVOLUTION 
+
+Iteration 1 (Original Hypothesis): 
+
+(region , area ), (region , richter ), (area , richter ), (richter , deaths ),
+
+(region , deaths ), (area , deaths ), (year , deaths ), (month , deaths ),
+
+(day , deaths ), (year , richter ), (month , richter ), (day , richter ),
+
+(year , month ), (month , day ), (year , day )
+
+Iteration 2 (Revised Edges): Reversed hierarchical direction; removed anti-causal time → magni-tude edges; retained contextual and temporal mediators. 
+
+(area , region ), (region , richter ), (area , richter ), (richter , deaths ),
+
+(region , deaths ), (area , deaths ), (year , deaths ), (month , deaths ),
+
+(day , deaths ), (year , month ), (month , day ), (year , day )
+
+53 Conquer Hypothesis Agent for Partition Year/Deaths 
+
+# CAUSAL ANALYSIS : Y EAR VS . D EATHS 
+
+1. C ONTEXT UNDERSTANDING 
+
+• year : Represents the calendar time of the earthquake event. At a causal level, year is a proxy for secular changes such as urbanization, exposure, building codes, enforcement, infrastructure resilience, emergency response capacity, and reporting completeness. These time-varying factors can influence the number of recorded deaths per event. • deaths : Represents fatalities attributed to the specific earthquake event. It is affected by many unobserved event-specific and context-specific factors (magnitude, depth, proximity to population, building vulnerability, secondary hazards, response quality), many of which evolve over time and are partially captured via year .2. R OOT NODES AND RELATIONSHIPS 
+
+• year is a root node in this two-variable system: it is exogenous and not caused by 
+
+deaths .• year can influence deaths via: 
+
+– True vulnerability/exposure changes over time (population growth, urbanization pat-terns). 
+
+– Improvements in building codes and enforcement reducing fatalities. 
+
+– Changes in emergency response capacity and medical care reducing fatalities. 
+
+– Changes in reporting completeness potentially increasing recorded deaths even if true deaths are stable. • deaths does not influence year . The calendar date is determined independently of the outcome. While reporting practices might make certain events more likely to be recorded, that does not causally change the year variable of an event. 3. P RELIMINARY LIST OF POTENTIAL EDGES 
+
+(Being expansive) 
+
+• (year , deaths ): Plausible and expected. • (deaths , year ): Considered but likely implausible because outcomes do not set calendar time. 4. R EFLECTION AND IMPROVEMENT 
+
+The only defensible causal direction between these two variables is year → deaths . Year func-tions as a surrogate for multiple evolving causal mechanisms that affect fatalities and for reporting-era effects that change recorded deaths. There is no credible mechanism whereby deaths would cause the year of occurrence. FINAL EDGE DETERMINATION 
+
+(year , deaths )
+
+54 HITL Call 
+
+In your earthquake dataset, do you expect reporting completeness and exposure (population/building density) to have changed over time, making year a proxy for such secular trends? Or is the dataset already harmonized to control for these factors? 
+
+User Response 
+
+This dataset just contains raw measurements and recorded data. No preprocessing was made. 
+
+Conquer Critic Agent for Partition Year/Deaths (Part 1 of 2) 
+
+# EVALUATION OF THE RELATIONSHIP : Y EAR → DEATHS 
+
+STEP 1: E VALUATE PROPOSED RELATIONSHIP 
+
+Plausibility year itself does not directly cause fatalities, but it is a proxy for secular changes that do influence earthquake mortality. Over time, urbanization (exposure), building codes and construction quality (vulnerability), emergency response capacity, and reporting complete-ness tend to change. Because the dataset is raw (no harmonization), year can capture these trends, making an association between year and recorded deaths plausible. 
+
+Mechanisms • Exposure: Urbanization increases population density near fault zones, poten-tially increasing deaths for similar magnitudes. • Vulnerability and resilience: Improved building standards and response capacity can reduce deaths over time in some regions. • Reporting completeness: Later years often have more complete death counts; earlier years may underreport, inflating an apparent temporal trend. 
+
+Conclusion Modeling year → deaths is reasonable as a shorthand for unobserved time-varying causes and measurement processes. STEP 2: A SSESS ANTI -C AUSAL DIRECTION 
+
+The proposed edge (year , deaths ) is not in the anti-causal direction. Intervening on deaths 
+
+would not change the calendar year, while interventions on time-varying factors aligned with year (e.g., building codes) can change deaths. 
+
+Note: year itself is not manipulable, but it indexes manipulable processes. So year → deaths 
+
+is a proxy relationship rather than a direct causal mechanism. STEP 3: C ONTEXT DEPENDENCE AND COUNTERFACTUALS 
+
+• Context dependence: The relationship may vary by region and era. In some contexts, mod-ernization reduces deaths; in others, rapid urbanization without adequate codes increases deaths. Thus, the sign and magnitude of the year effect are not uniform. • Narrow windows: Within short time spans or within homogeneous regions with stable exposure/vulnerability, the year → deaths association may be weak or negligible. • Counterfactuals: Holding magnitude, region, and exposure constant, deaths could change over calendar time due to building code improvements; conversely, if exposure increases faster than safety measures, deaths could rise with year. 
+
+55 Conquer Critic Agent for Partition Year/Deaths (Part 2 of 2) 
+
+STEP 4: A DDITIONAL EVIDENCE AND CONSIDERATIONS 
+
+Since the dataset is raw with no harmonization, reporting completeness and exposure likely change with year . This supports treating year as a proxy cause of recorded deaths via measurement error and secular trends. 
+
+Potential confounding and omitted variables: 
+
+• Magnitude ( richter ): Strongly affects deaths. • Region/Area: Determine exposure and vulnerability. • Event depth, distance, secondary hazards: Further mediate deaths (not present in dataset). Without controlling for these, the estimated year → deaths effect may be biased. FINAL CONCLUSION AND EDGE LIST 
+
+The edge (year , deaths ) is directionally reasonable as a proxy for time-varying causes and re-porting changes, but it is context-dependent and should be interpreted as capturing secular trends rather than a direct physical cause. No anti-causal issues are identified with the proposed direction. 
+
+(year , deaths )
+
+Conquer Hypothesis Agent for Partition Region/Area/Months/Deaths 
+
+# SPATIAL AND TEMPORAL CONTEXT EDGES 
+
+• region → area 
+
+• region → deaths 
+
+• area → deaths 
+
+• month → deaths 
+
+HITL Call 
+
+In your experience with earthquake impacts, does seasonal timing (month) significantly modulate fatalities via secondary hazards (e.g., monsoon-triggered landslides, winter cold, tourist seasons) across regions, or is its effect typically negligible compared to magnitude and proximity? 
+
+User Response 
+
+I don’t know. 
+
+HITL Call 
+
+Beyond local area characteristics (population density, building standards), do broader regional fac-tors (e.g., tsunami exposure, monsoon regimes, disaster preparedness) exert a direct influence on earthquake fatalities, or are they mostly mediated through the specific area-level conditions? 
+
+56 User Response 
+
+They likely have an influence, as for example certain areas might just be more densely populated. 
+
+Conquer Critic Agent for Partition Region/Area/Month/Deaths (Part 1 of 2) 
+
+# EVALUATION OF SPATIAL AND TEMPORAL EDGES 
+
+STEP 1: E VALUATE PROPOSED RELATIONSHIPS 
+
+Hierarchy (region , area ) Valid. area is hierarchically nested within region ; regional con-text determines which areas exist and their hazard environment. Intervening on area 
+
+(choosing a different locality) does not retroactively change the higher-level region defi-nition; conversely, changing region necessarily changes the set of possible areas. 
+
+Region Effect (region , deaths ) Plausible but largely mediated by area . Regional charac-teristics (tsunami exposure, monsoon regimes, governance and preparedness) can influence fatalities, but in most practical analyses, these act through local area-level conditions (pop-ulation density, construction quality, terrain, emergency response capabilities). Without additional variables, including a direct region → deaths edge risks conflating media-tion with a direct effect. 
+
+Local Effect (area , deaths ) Valid. Local vulnerability and exposure strongly modulate fatali-ties (building standards, terrain-related secondary hazards, proximity to population). 
+
+Seasonal Effect (month , deaths ) Context-dependent. Seasonal timing can affect fatalities via secondary hazards (e.g., rainfall-triggered landslides) and exposure (tourist season peaks), but its effect magnitude varies by region and hazard profile. It is exogenous and can causally influence conditions that modulate death tolls. STEP 2: A NTI -C AUSAL DIRECTION ASSESSMENT 
+
+None of the proposed edges are anti-causal in orientation. Intervening on deaths will not change 
+
+region , area , or month . region → area is correctly oriented (not area → region ). 
+
+month → deaths is correctly oriented given month is exogenous calendar timing. STEP 3: D O RELATIONSHIPS ALWAYS HOLD ?• (region , area ): Holds universally as a definitional/hierarchical relation. • (area , deaths ): Holds broadly; there are counterfactuals where even high-vulnerability areas see low deaths (e.g., deep, offshore events), but within this variable set, area remains a causal determinant of deaths. • (month , deaths ): Holds in contexts with strong seasonal secondary hazards or expo-sure cycles; may be negligible in tectonically dominated, arid, or less seasonally variable regions. • (region , deaths ): Often mediated by area ; may hold directly in contexts where region-level policies or hazard exposures are not captured by the area variable (e.g., coastal tsunami belts spanning multiple areas, uniform regional building codes). Other-wise, it should be treated as indirect via area .
+
+57 Conquer Critic Agent for Partition Region/Area/Month/Deaths (Part 2 of 2) 
+
+STEP 4: T OOL -S UPPORTED EVIDENCE AND RECOMMENDATIONS 
+
+Human input indicates uncertainty about the magnitude of the effect of month and suggests broader regional influences are often expressed via area-level characteristics, supporting mediation of (region , deaths ).
+
+Recommended modifications: 
+
+• Retain (region , area ), (area , deaths ), (month , deaths ).• Treat (region , deaths ) as primarily mediated by area ; include it only if analysis in-tends to capture region-level effects not encoded in area (e.g., preparedness or hazard regime differences spanning areas). Otherwise, remove to avoid over-specification and double-counting. FINAL ACCEPTED EDGES 
+
+(region , area ), (area , deaths ), (month , deaths )
+
+H.4 MERGE PHASE 
+
+In the final merge phase, the merge agents Mhyp and Mcritic respectively propose and refine the causal connections between partitions. In the partition tree, this procedure consists in collapsing the partition tree bottom-up by merging the leaves into their respective parent. In case of iterated partitioning during the Divide phase, also the Merge phase will be iterated in the same way. Once the root-node of the partition tree is reached, CAST finishes. Merge Hypothesis Agent 
+
+# DIRECTED EDGES 
+
+• (year , deaths )
+
+• (month , deaths )
+
+• (day , deaths )
+
+• (region , deaths )
+
+• (area , deaths )
+
+• (richter , deaths )
+
+• (region , richter )
+
+• (area , richter )
+
+• (year , richter )
+
+58 Merge Critic Agent (Part 1 of 2) 
+
+# ANALYSIS OF CAUSAL RELATIONSHIPS 
+
+RELATIONSHIP EVALUATION 
+
+Time → Deaths • (year , deaths ): Plausible. Secular changes (building codes, emergency response, urbanization, reporting) can change fatality risk and documentation over time. • (month , deaths ): Plausible. Seasonal conditions (e.g., monsoon, winter storms) and exposure patterns can modulate secondary hazards and vulnerability. • (day , deaths ): Weak/context-dependent. Day-of-month alone is a crude proxy; without day-of-week/holiday information, its causal influence is limited, though spe-cific calendar effects could exist in some contexts. 
+
+Location → Deaths (region , deaths ) and (area , deaths ): Plausible. Spatial context (pop-ulation density, construction quality, site effects, terrain, tsunami/landslide exposure) mod-ulates fatalities given shaking. 
+
+Magnitude → Deaths (richter , deaths ): Strong and well-supported. Larger magnitude gen-erally increases shaking potential and risk of casualties, though the effect is moderated by location and context. 
+
+Location → Magnitude (region , richter ) and (area , richter ): Not appropriate as direct causal edges for event-level data. Region/area are descriptors of where the event occurred; the underlying tectonic setting influences both where earthquakes occur and the distribution of magnitudes, but the recorded “region/area” label does not cause an event’s magnitude. A more accurate structure would include an unobserved tectonic/structural variable causing both location and magnitude, or treat region/area as stratifying variables rather than direct causes of magnitude. 
+
+59 Merge Critic Agent (Part 2 of 2) 
+
+Time → Magnitude (year , richter ): Generally not causal. Calendar year does not cause the physical magnitude of an earthquake. Apparent temporal trends in recorded magnitudes can reflect reporting/instrumentation changes (selection/measurement effects), but the true magnitude of an event is not determined by year. Modeling this as a direct causal edge risks conflating catalog biases with physical causation. ANTI -C AUSAL DIRECTION ASSESSMENT 
+
+Edges into richter from region , area , and year are in an anti-causal or non-causal direction for event-level causality. Intervening on these labels would not change the physical magnitude of a given event. CONTEXT -D EPENDENCE 
+
+• (year , deaths ) and (month , deaths ) hold in many contexts but are mediated by evolving vulnerability, exposure, and seasonal hazards. • (day , deaths ) is especially context-dependent and likely weak unless coupled with addi-tional information (e.g., day-of-week, holidays). • region /area → deaths and richter → deaths are broadly applicable, though moderated by unobserved factors (e.g., depth, distance to population centers). REVISED EDGES 
+
+• Keep: (year , deaths ), (month , deaths ), (region , deaths ), (area , deaths ),
+
+(richter , deaths ).• Optionally keep: (day , deaths ) with the caveat that it is weak/context-dependent. • Remove: (region , richter ), (area , richter ), (year , richter ).
+
+# FINAL RECOMMENDED EDGE SET 
+
+• (year , deaths )
+
+• (month , deaths )
+
+• (day , deaths )
+
+• (region , deaths )
+
+• (area , deaths )
+
+• (richter , deaths )
+
+H.5 FINAL RESULT 
+
+After combining the all edges discovered during the conquer and merge phase, the final causal graph is reported in 7. 60 year 
+
+day 
+
+deaths 
+
+richter 
+
+month 
+
+region 
+
+area Figure 7: Causal Graph Discovered by C AST for the Earthquakes dataset. 61

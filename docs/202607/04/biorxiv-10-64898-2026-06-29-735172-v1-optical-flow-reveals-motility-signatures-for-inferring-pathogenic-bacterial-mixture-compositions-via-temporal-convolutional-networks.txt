@@ -1,0 +1,1381 @@
+Title: Optical flow reveals motility signatures for inferring pathogenic bacterial mixture compositions via temporal convolutional networks
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.06.29.735172v1.full.pdf
+
+Published Time: Sat, 04 Jul 2026 20:00:51 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Optical flow reveals motility signatures for inferring pathogenic bacterial mixture compositions via temporal convolutional networks 
+
+Yuki Fujita 1, Yuki Nagase 1, Sarthak Pathak 2, Alessandro Moro 3, Hiroaki Suzuki 4‡, Keiichiro Koiwai 5, Kazunori Umeda 4‡*,
+
+1 Precision Engineering Course, Graduate School of Science and Engineering, Chuo University, Tokyo, Japan 
+
+2 The College of Engineering, Shibaura Institute of Technology, Tokyo, Japan 
+
+3 RITECS Inc., 3-5-11 Shibasaki, Tachikawa-shi, Tokyo, Japan 
+
+4 School of Science and Engineering, Chuo University, Tokyo, Japan 
+
+5 Laboratory of Genome Science, Tokyo University of Marine Science and Technology, Tokyo, Japan 
+
+‡These authors jointly supervised this work. * umeda@mech.chuo-u.ac.jp 
+
+# Abstract 
+
+With the rapid expansion of global food demand, aquaculture has become a critical pillar for future food security. However, aquaculture systems remain highly vulnerable to pathogenic bacteria, and rapid identification of antagonistic microbes is essential for sustainable disease control. Conventional evaluation approaches rely on fluorescence labeling or post-culture assays, limiting the ability to quantify dynamic interactions in mixed microbial populations in a real-time and label-free manner. Here, we propose a computational framework for classifying the mixing ratio of Vibrio harveyi and environmental bacteria using time-series motion features extracted from microscopy videos. We defined 24 interpretable motility descriptors and employed a Temporal Convolutional Network (TCN) to learn their temporal structure. The proposed method achieved a classification accuracy of 93.3%, outperforming conventional static statistical approaches and alternative machine learning models. These findings indicate that mixture discrimination in microbial communities is governed not by absolute motility magnitude, but by collective alignment and its temporal stability. Our study establishes a time-resolved computational framework for quantifying dynamic collective order in mixed microbial populations and highlights its potential for label-free automated screening and robotic microbiological applications. 
+
+# Author summary 
+
+Bacterial infections pose a major threat to aquaculture, and rapid identification of antagonistic microbes is essential for sustainable disease management. Existing screening approaches often require fluorescent labeling or post-culture analysis, making real-time evaluation of mixed bacterial populations difficult. In this study, we show that mixture ratios of Vibrio harveyi and environmental bacteria can be accurately classified from time-series motion features extracted from microscopy videos. By applying TCN to 24 interpretable motility descriptors, we achieved high classification accuracy without relying on fluorescent markers. Our analysis demonstrates that collective directional alignment and its temporal stability, rather than absolute swimming speed, are the key determinants of mixture discrimination. This work introduces a computational June 26, 2026 1/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+strategy for quantifying dynamic collective order in microbial communities and supports the development of label-free, automated screening platforms for microbiological applications. 
+
+# Introduction 1
+
+In recent years, global food demand has expanded rapidly due to population growth and changes 2
+
+in dietary patterns. According to estimates by the Food and Agriculture Organization (FAO), the 3
+
+world population is projected to reach approximately 9.3 billion by 2050, and food production 4
+
+will need to increase by nearly 60% to meet this demand [1]. Under these circumstances, 5
+
+aquaculture has emerged as a critical pillar for ensuring future food security. However, 6
+
+aquaculture systems are highly vulnerable to infections caused by pathogenic bacteria, and 7
+
+climate change—particularly rising sea temperatures—further increases the risk of emerging 8
+
+pathogens. To ensure the development of sustainable aquaculture systems, rapid pathogen 9
+
+detection methodologies must be established. While traditional diagnostic 10 
+
+frameworks—including microbial culture and molecular techniques such as PCR—remain the 11 
+
+gold standard, they are frequently constrained by significant time delays, high operational costs, 12 
+
+and a heavy reliance on specialized laboratory infrastructure [2]. 13 
+
+Cell identification based on imaging has been widely explored because it offers a simple and 14 
+
+accessible approach that does not require complex molecular biological procedures or specialized 15 
+
+analytical instruments. Such image-based methods enable rapid and non-invasive analysis, 16 
+
+making them attractive for a variety of biological and clinical applications [3]. In recent years, 17 
+
+there has been a notable increase in studies employing machine learning techniques to improve 18 
+
+the accuracy and automation of cell identification, leveraging advances in computational power 19 
+
+and data-driven modeling [4]. However, compared to eukaryotic cells, bacteria are significantly 20 
+
+smaller, posing a fundamental challenge for image-based identification. Under conventional 21 
+
+optical microscopy, bacterial cells often lack sufficiently distinct morphological features, making 22 
+
+reliable classification from static images difficult [5 –7]. As a result, image-based approaches for 23 
+
+bacterial identification remain limited in their performance, highlighting the need for alternative 24 
+
+strategies or additional sources of information beyond static imaging. 25 
+
+Vibrio harveyi is a widely distributed marine pathogen characterized by high flagellar 26 
+
+motility and collective gene regulation via quorum sensing, making its rapid identification 27 
+
+crucial for sustainable disease management in aquaculture [8]. Therefore, we hypothesized that 28 
+
+analyzing time-lapse microscopy videos of microbial motility—rather than static images—would 29 
+
+enable the identification of V. harveyi from diverse environmental bacterial populations without 30 
+
+the need for fluorescent labeling or culture-based cloning. 31 
+
+Conventional analyses of single-cell motility predominantly rely on human-defined statistical 32 
+
+descriptors, such as mean velocity, mean squared displacement, directional distributions, and 33 
+
+velocity histograms [9, 10]. While these hand-crafted metrics provide useful summaries of 34 
+
+fundamental motion characteristics [11], they inherently compress temporal information by 35 
+
+averaging or aggregating measurements over time. As a consequence, sustained changes in 36 
+
+motion and the sequential context of trajectories are not explicitly preserved, leading to the loss 37 
+
+of dynamic structural information [12]. In heterogeneous microbial populations, this limitation 38 
+
+becomes particularly critical, as the temporal dependencies and continuous evolution of motion 39 
+
+provide essential information reflecting underlying behavioral differences. Static, pre-defined 40 
+
+descriptors are therefore insufficient to fully capture these complex dynamics. In contrast, 41 
+
+leveraging automated motion feature extraction allows for the direct modeling of temporal 42 
+
+sequences, enabling the spontaneous discovery of hidden, non-intuitive motility patterns that 43 
+
+human observers might overlook, and utilizing them as robust metrics for classification. 44 
+
+Furthermore, deep learning methods have recently demonstrated strong performance in 45 
+
+image and time-series analysis [13, 14]; however, their application to microbial motility analysis 46 
+
+remains limited. [15, 16] Convolutional neural networks (CNNs) are well-suited for extracting 47 
+
+spatial features [14] but are not inherently designed to model long-range temporal dependencies. 48 
+
+June 26, 2026 2/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Recurrent neural networks (RNNs), although theoretically capable of handling sequential data, 49 
+
+are known to suffer from gradient instability and difficulty in learning long-term 50 
+
+dependencies [17]. Furthermore, computational frameworks that explicitly represent motility 51 
+
+descriptors as structured time-series inputs and learn their temporal dynamics in mixed microbial 52 
+
+systems have not been sufficiently established. Therefore, there is a clear need for computational 53 
+
+approaches that preserve and learn the temporal structure of motility features, enabling 54 
+
+identification of dynamically evolving collective order in mixed microbial populations. 55 
+
+In this study, we propose a computational framework for analyzing motility dynamics in 56 
+
+mixed microbial populations while preserving temporal structure. Specifically, we extract 57 
+
+motion features of cell populations from time-series microscopy images using optical flow. This 58 
+
+representation captures velocity fields and their spatiotemporal variations, including directional 59 
+
+tendencies, spatial organization, and temporal fluctuations of collective motion. By transforming 60 
+
+raw image sequences into a motion-based representation, our approach enables analysis within a 61 
+
+physically interpretable feature space, facilitating the interpretation of learned representations in 62 
+
+terms of biologically meaningful motility characteristics. We then employ a Temporal 63 
+
+Convolutional Network (TCN) [18] to learn temporal patterns in the extracted motion features. 64 
+
+TCN [18] leverages dilated causal convolutions, enabling efficient modeling of long-range 65 
+
+temporal dependencies while maintaining stable training dynamics. By operating on motion 66 
+
+representations derived from optical flow, the model captures subtle temporal signatures of 67 
+
+bacterial motility that are not readily discernible from individual frames or by human 68 
+
+observation. As a result, our approach enables the estimation of the relative abundance of V. 69 
+
+harveyi within heterogeneous bacterial populations from microscopy image sequences. 70 
+
+Although the present study focuses on estimating the abundance of V. harveyi in mixed 71 
+
+populations, the proposed framework is generalizable and has the potential to be extended to the 72 
+
+detection and characterization of other bacterial species. 73 
+
+# Methods 74 
+
+## Dataset 75 
+
+In this study, we analyzed images of bacterial samples consisting of the marine pathogen V. 76 
+
+harveyi and environmental bacteria. V. harveyi was provided by Prof. K. Koiwai [19]. 77 
+
+Environmental bacteria were collected from soil sampled from a flower bed at the Korakuen 78 
+
+Campus of Chuo University (Bunkyo, Tokyo, Japan). The bacteria were isolated through 79 
+
+dilution, centrifugation, and filtration. Both bacterial strains were stored as glycerol stocks in a 80 
+
+freezer. For experimental use, a small aliquot was inoculated into a culture medium (2.5% Brain 81 
+
+Heart Infusion medium; Becton & Dickinson, Cat#211065, supplemented with 1.5% NaCl) and 82 
+
+incubated overnight with shaking at 25 ◦C. The cell concentrations of both bacterial populations 83 
+
+were then estimated from microscopy images and diluted to the desired concentration 84 
+
+(5 × 10 8 cells/mL). The mixing ratio between V. harveyi and environmental bacteria was 85 
+
+systematically varied from 0:10 to 10:0 in increments of 0.5, resulting in 21 distinct mixture 86 
+
+conditions. For each mixture ratio, independent mixing and imaging experiments were 87 
+
+conducted. 88 
+
+Microscopic observations were performed using an inverted microscope (Nikon Ti [20]). 89 
+
+Time-lapse images were recorded with a CCD camera under the bright-field conditions (Fig 1). 90 
+
+Each video was captured at a spatial resolution of 1920 × 1200 pixels. For each sample, 27 91 
+
+consecutive frames were acquired at a frame rate of 9 fps. For each mixture condition, imaging 92 
+
+was repeated 10 times while varying the field of view in order to account for spatial 93 
+
+heterogeneity and diverse distribution patterns of bacterial populations. To reduce spatial bias 94 
+
+and increase the number of independent training samples, each 1920 × 1200 frame was 95 
+
+subdivided into six non-overlapping regions of 640 × 600 pixels. This preprocessing step 96 
+
+generated six sub-sequences from each original images. Across all mixture conditions, a total of 97 
+
+June 26, 2026 3/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 1. Snapshots of original images with mixing ratios of (a) 10:0, (b) 5:5, and (c) 0:10 ( V. harveyi : environmental bacteria). 1,260 time-series samples were constructed (21 mixture ratios with 60 samples per condition). 98 
+
+For deep learning analysis, the dataset was divided into training and testing subsets. For each 99 
+
+mixture condition, 50 samples were randomly selected for training, and the remaining 10 100 
+
+samples were reserved for testing. This balanced sampling strategy ensured an equal number of 101 
+
+samples across mixture ratios, preventing bias toward specific conditions and enabling fair 102 
+
+evaluation of mixture classification performance. 103 
+
+## Motion Feature Extraction 104 
+
+In the following, we describe the proposed motion feature extraction framework, illustrating each 105 
+
+step with concrete examples from the experimental data. Pixel-wise motion between consecutive 106 
+
+frames was estimated using the dense optical flow method proposed by Farneb¨ ack [21]. This 107 
+
+approach approximates local image neighborhoods with quadratic polynomials and estimates 108 
+
+displacement by analyzing changes in polynomial coefficients across frames, enabling dense 109 
+
+estimation of subtle and continuous motion. In microscopy videos, both individual-level 110 
+
+micro-movements and population-level collective flows can coexist; thus, obtaining dense 111 
+
+motion information at the pixel level is essential. Fig 1 shows snapshots from the original 112 
+
+consecutive images at three different mixing ratios of V. harveyi and environmental bacteria. 113 
+
+The bacteria appear as black dots or rods, making it virtually impossible to identify their species 114 
+
+from still images alone. From the estimated flow field (𝑢, 𝑣 ), we extracted motility descriptors to 115 
+
+represent collective dynamics in a low-dimensional yet interpretable manner. In this study, the 116 
+
+features were grouped into the following six categories: (i) velocity statistics, (ii) directional 117 
+
+statistics, (iii) motion diversity indices, (iv) frequency-domain features, (v) spatial gradient and 118 
+
+autocorrelation indices, and (vi) local motion pattern indices. These categories were designed to 119 
+
+quantify collective motion from complementary perspectives, including motion intensity, 120 
+
+directional order, distributional complexity, temporal fluctuation structure, spatial continuity, and 121 
+
+local deformation patterns. The 24 motility features used in this study were designed to 122 
+
+systematically and comprehensively characterize the motion state of bacterial populations from a 123 
+
+physical perspective. The above six categories—covering velocity, direction, temporal variation, 124 
+
+and spatial order—were organized by referring to physically meaningful quantities commonly 125 
+
+used in active matter research and collective motion analysis (e.g., order parameters and 126 
+
+alignment statistics) [22–24], as well as standard frequency-domain and statistical measures 127 
+
+widely used in signal processing [25]. Therefore, the proposed feature space is not an empirical 128 
+
+collection of arbitrary statistics but a structured representation grounded in theoretical 129 
+
+frameworks of collective motion. 130 
+
+Velocity statistics Velocity statistics were computed from the magnitude of the optical flow to 131 
+
+quantify the overall motility and velocity distribution of bacterial motion. Let 𝑢 and 𝑣 denote the 132 
+
+June 26, 2026 4/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+horizontal and vertical components of the optical flow, respectively. The flow magnitude at each 133 
+
+pixel is defined as 134 
+
+𝑚 =√︁ 𝑢 2 + 𝑣 2. (1) Using the magnitude values of all pixels in a frame, several statistical measures were 135 
+
+computed to characterize the distribution of motion intensity. First, the mean flow magnitude, 136 
+
+𝑚 = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+𝑚 𝑖 , (2) represents the average activity level of bacterial motion across the entire image. To capture the 137 
+
+heterogeneity of motion intensity, the standard deviation of the flow magnitude was calculated as 138 
+
+𝑠 𝑚 =
+
+vut 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+(𝑚 𝑖 − 𝑚 )2. (3) This quantity reflects the degree to which fast and slow movements coexist within the observed 139 
+
+population. To obtain a robust representation of the distribution, the median value of the flow 140 
+
+magnitude, 141 
+
+𝑞 50 = Quantile (𝑚, 0.50 ), (4) was used as a representative statistic that is less sensitive to extreme values. 142 
+
+In addition, higher-order quantiles were computed 𝑞 75 , 𝑞 90 , 𝑞 95 , 𝑞 99 , which capture the 143 
+
+tail structure of the velocity distribution. These statistics are particularly useful for detecting 144 
+
+localized regions exhibiting strong motion. To further analyze the characteristics of high-velocity 145 
+
+regions, pixel sets corresponding to the top 25%, 10%, 5%, and 1% of flow magnitudes were 146 
+
+defined as S25 , S10 , S5, and S1, respectively. The average velocity within each subset was 147 
+
+calculated as 148 
+
+𝑚 𝑝 = 1
+
+|S 𝑝 |∑︁ 𝑖 ∈ S 𝑝 
+
+𝑚 𝑖 . (5) This measure enables the detection of highly motile regions even when the overall average 149 
+
+motion level is low. Fig 2 shows an example of the spatial distribution of the flow magnitude. 150 
+
+To evaluate the spatial extent of active motion, the proportion of moving pixels was also 151 
+
+calculated. Let 𝑚 𝑡 𝑖 𝑗 denote the flow magnitude at pixel (𝑖, 𝑗 ) between frame 𝑡 and 𝑡 + 1. A 152 
+
+motion threshold 𝜏 𝑡 was defined as 153 
+
+𝜏 𝑡 = median (𝑚 𝑡 𝑖 𝑗 ) + 1.5 × MAD (𝑚 𝑡 𝑖 𝑗 ), (6) where MAD denotes the median absolute deviation, a robust statistic against outliers. Given an 154 
+
+image of height 𝐻 and width 𝑊 , the proportion of pixels exceeding the threshold is computed as 155 
+
+𝑟 𝑡 = 1
+
+𝐻𝑊 
+
+> 𝐻
+
+∑︁ 
+
+> 𝑖 =1
+> 𝑊
+
+∑︁ 
+
+> 𝑗 =1
+
+(1, 𝑚 𝑡 𝑖 𝑗 > 𝜏 𝑡 
+
+0, otherwise . (7) Finally, the average proportion of moving pixels over the entire video sequence was 156 
+
+calculated as 157 
+
+Proportion of moving pixels = 1
+
+𝑇 − 1 
+
+> 𝑇 −1
+
+∑︁ 
+
+> 𝑡 =1
+
+𝑟 𝑡 . (8) June 26, 2026 5/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 2. Magnitude of the velocity vector for each pixel at a mixing ratio of 5:5. 
+
+Fig 3. Mask image of moving pixels with a mixing ratio of 5:5. Unlike simple velocity averaging, this measure evaluates the spatial prevalence of fast-moving 158 
+
+regions and is therefore effective for detecting localized populations of highly motile bacteria. 159 
+
+An example of the motion mask for the mixture ratio 5:5 is shown in Fig 3. 160 
+
+Directional statistics Directional statistics were used to quantify the degree of alignment and 161 
+
+randomness in the motion directions of bacterial populations. The direction of motion at each 162 
+
+pixel was computed from the optical flow components as 163 
+
+𝜃 = arctan 2 (𝑣, 𝑢 ), (9) where 𝑢 and 𝑣 denote the horizontal and vertical components of the flow vector, respectively. To 164 
+
+characterize the dispersion of motion directions, the entropy of the directional histogram was 165 
+
+calculated as 166 
+
+𝐻 = −
+
+> 𝐵
+
+∑︁ 
+
+> 𝑏 =1
+
+𝑝 𝑏 log 𝑝 𝑏 , (10) where 𝑝 𝑏 represents the probability of directions falling into the 𝑏 -th bin of the histogram with 𝐵 167 
+
+bins. To capture temporal characteristics of directional variability, the mean entropy and its 168 
+
+temporal fluctuation were computed as 169 
+
+𝐻 = 1
+
+𝑇 
+
+> 𝑇
+
+∑︁ 
+
+> 𝑡 =1
+
+𝐻 𝑡 , 𝑠 𝐻 =
+
+vut 1
+
+𝑇 
+
+> 𝑇
+
+∑︁ 
+
+> 𝑡 =1
+
+(𝐻 𝑡 − 𝐻 )2. (11) These quantities enable the distinction between motion patterns in which directions remain 170 
+
+consistently aligned and those in which directional disorder varies over time. In addition to 171 
+
+entropy-based measures, the concentration of motion directions was evaluated using the circular 172 
+
+mean vector defined as 173 
+
+𝐶 = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+(cos 𝜃 𝑖 , sin 𝜃 𝑖 ) . (12) The temporal mean and temporal variation of this quantity, denoted by 𝐶 and 𝑠 𝐶 , were also 174 
+
+calculated. These measures quantify the degree of collective alignment in the motion field: 175 
+
+June 26, 2026 6/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 4. HSV color visualization chart of direction and magnitude of velocity. 
+
+Fig 5. Polar coordinate histogram of angular distribution for a mixing ratio of 5:5. higher values indicate coherent motion toward a common direction, whereas lower values 176 
+
+correspond to more dispersed or disordered motion patterns. 177 
+
+Motion diversity indices Motion diversity indices were introduced to quantify the complexity 178 
+
+of motion intensity and directional distributions within the bacterial population. Since simple 179 
+
+statistical measures such as the mean or variance are often insufficient to capture differences in 180 
+
+distribution shapes, entropy-based measures were employed to evaluate the diversity of motion. 181 
+
+Specifically, the entropy of the motion magnitude distribution was calculated as 182 
+
+𝐻 𝑚 = −
+
+> 𝐵
+
+∑︁ 
+
+> 𝑏 =1
+
+𝑝 𝑏 log 𝑝 𝑏 , (13) where 𝑝 𝑏 represents the probability of motion magnitudes falling into the 𝑏 -th bin of a histogram 183 
+
+with 𝐵 bins. This measure allows the distinction between motion fields concentrated around a 184 
+
+single velocity level and those composed of multiple distinct motion components. In other 185 
+
+words, it characterizes the complexity and irregularity of the motion field. Higher entropy values 186 
+
+indicate that diverse motion magnitudes and directions coexist within the population, whereas 187 
+
+lower values suggest more uniform and ordered motion patterns. Thus, this index provides a 188 
+
+quantitative criterion for distinguishing between relatively homogeneous motion patterns and 189 
+
+more diverse collective behaviors. Fig 4 shows a color visualization of the flow field in the HSV 190 
+
+color space, where hue represents the motion direction and brightness represents the magnitude 191 
+
+of velocity. Fig 5 shows a polar histogram of motion directions for the mixture ratio 5:5 . These 192 
+
+visualizations provide an intuitive representation of the distribution of motion magnitude and 193 
+
+direction in the bacterial population. 194 
+
+Frequency-Domain Features Frequency-domain features were introduced to characterize 195 
+
+temporal variations in the motion field, including periodic fluctuations and fine-scale temporal 196 
+
+dynamics. In this study, power spectrum analysis was performed by applying the Fast Fourier 197 
+
+Transform (FFT) to a temporal scalar sequence derived from frame-to-frame motion information. 198 
+
+Given a temporal sequence 𝑥 𝑡 (𝑡 = 0, 1, . . . , 𝑇 − 1 ), the discrete Fourier transform was computed 199 
+
+as 200 
+
+June 26, 2026 7/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 6. FFT log power spectrum and cutoff circle of difference images with a mixing ratio of 5:5. 
+
+𝑋 𝑘 = 
+
+> 𝑇 −1
+
+∑︁ 
+
+> 𝑡 =0
+
+𝑥 𝑡 𝑒 − 𝑗 2 𝜋 𝑘𝑡 /𝑇 , (14) where 𝑋 𝑘 represents the complex Fourier coefficient for frequency index 𝑘 . The corresponding 201 
+
+power spectrum was then obtained as 202 
+
+𝑃 𝑘 = |𝑋 𝑘 |2. (15) To separate large-scale smooth motion from fine and rapid fluctuations, the frequency spectrum 203 
+
+was divided into low-frequency and high-frequency components. A cutoff radius was defined in 204 
+
+the frequency domain to separate the low-frequency set L and high-frequency set H . The 205 
+
+proportion of high-frequency components was computed as 206 
+
+𝑅 =
+
+Í𝑘 ∈ H 𝑃 𝑘 
+
+Í𝑘 ∈ K 𝑃 𝑘 
+
+, (16) where K denotes the set of all frequency components. To capture temporal characteristics of the 207 
+
+motion dynamics, the temporal mean and temporal standard deviation of this ratio were 208 
+
+calculated as 𝑅 , 𝑠 𝑅 . A higher value of the high-frequency ratio indicates that rapid and fine-scale 209 
+
+motion fluctuations dominate the motion field, whereas lower values suggest smoother and more 210 
+
+coherent large-scale motion. This feature therefore quantifies the balance between local rapid 211 
+
+movements and globally smooth motion patterns. Fig 6 shows the logarithmic power spectrum 212 
+
+obtained from the FFT of the frame-difference images. The cutoff circle used to separate the 213 
+
+low-frequency and high-frequency regions is also illustrated. 214 
+
+Spatial gradient and autocorrelation indices Spatial gradient and autocorrelation indices 215 
+
+were introduced to quantify the spatial continuity and granularity of the motion field. These 216 
+
+features characterize whether motion is smoothly distributed over space or composed of locally 217 
+
+heterogeneous structures. The magnitude of the spatial gradient was computed as 218 
+
+𝐺 =√︄  𝜕𝑥 𝜕𝑥 
+
+2
+
++
+
+ 𝜕𝑥 𝜕𝑦 
+
+2
+
+, (17) which measures the rate of spatial change in the motion field. Large gradient values indicate 219 
+
+abrupt spatial variations, while smaller values correspond to smoother motion distributions. To 220 
+
+June 26, 2026 8/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+capture temporal characteristics of the spatial variation, the temporal mean and temporal 221 
+
+standard deviation of the gradient magnitude were calculated as 𝐺 , 𝑠 𝐺 . In addition, spatial 222 
+
+autocorrelation was computed to quantify the degree of spatial coherence in the motion field. 223 
+
+The autocorrelation function was defined as 224 
+
+𝜌 (Δ) =
+
+Íx 𝑥 (x)𝑥 (x + Δ)
+
+Íx 𝑥 (x)2 , (18) where Δ denotes the spatial displacement vector and x represents the spatial coordinates. The 225 
+
+mean autocorrelation value 𝜌 was used as a summary statistic. These measures reflect the spatial 226 
+
+organization of the motion field. High autocorrelation values indicate spatially coherent motion 227 
+
+that extends over larger regions, whereas low values correspond to fragmented motion patterns 228 
+
+with strong local variations. Thus, these features enable discrimination between smooth 229 
+
+collective motion and locally irregular motion structures. 230 
+
+Local motion pattern indices Local motion pattern indices were introduced to characterize 231 
+
+localized structures and deformation patterns in the motion field. These features capture spatial 232 
+
+flow behaviors such as expansion, contraction, rotation, and the formation of coherent motion 233 
+
+domains. 234 
+
+First, divergence and vorticity were computed from the spatial derivatives of the optical flow 235 
+
+field. The divergence of the flow field was defined as 236 
+
+div = 𝜕𝑢 𝜕𝑥 + 𝜕𝑣 𝜕𝑦 , (19) where 𝑢 and 𝑣 denote the horizontal and vertical components of the flow vector. The mean and 237 
+
+standard deviation of the divergence values were calculated to quantify the degree of local 238 
+
+expansion and contraction. Positive divergence indicates locally divergent motion, where the 239 
+
+flow spreads outward, whereas negative divergence indicates convergent motion. Fig 7 shows an 240 
+
+example divergence map for the mixture ratio 5:5. 241 
+
+Next, local rotational motion was quantified using the vorticity defined as 242 
+
+𝜔 = 𝜕𝑣 𝜕𝑥 − 𝜕𝑢 𝜕𝑦 . (20) The mean and standard deviation of the vorticity were computed to evaluate the strength of 243 
+
+rotational structures in the motion field. Larger vorticity values indicate the presence of strong 244 
+
+rotational flow patterns, whereas smaller values correspond to primarily translational or diffusive 245 
+
+motion. An example vorticity map for the mixture ratio 5:5 is shown in Fig 8. 246 
+
+In addition, coherent motion regions were extracted by binarizing the flow magnitude and 247 
+
+performing connected-component analysis. Let 𝐾 𝑡 denote the number of connected motion 248 
+
+components in frame 𝑡 . The temporal mean of the component count was calculated as 249 
+
+𝐾 = 1
+
+𝑇 
+
+> 𝑇
+
+∑︁ 
+
+> 𝑡 =1
+
+𝐾 𝑡 . (21) For each connected component, the area was computed, and the mean and standard deviation of 250 
+
+the component areas were obtained as 𝑎 ,𝑠 𝑎 . Furthermore, the 95th percentile of the component 251 
+
+area distribution, 𝑞 95 (𝑎 ), was used to emphasize the presence of large motion domains. These 252 
+
+indices characterize whether motion occurs as numerous small fragmented regions or as large 253 
+
+coherent clusters. Consequently, they enable discrimination between dispersed motion patterns 254 
+
+and coordinated collective motion structures. 255 
+
+June 26, 2026 9/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 7. Divergence map with a mixing ratio of 5:5. 
+
+Fig 8. Vorticity map for a mixing ratio of 5:5. 
+
+## Temporal Convolutional Network 256 
+
+To classify bacterial mixture ratios from the extracted motion feature sequences, we employed a 257 
+
+TCN [18]. TCN models temporal dependencies using one-dimensional convolutions and can 258 
+
+efficiently capture long-range temporal relationships through dilated convolutions [18, 26]. 259 
+
+Compared with RNNs, TCNs allow parallel computation and are less susceptible to gradient 260 
+
+vanishing or exploding problems. Fig 9 illustrates the overall processing flow of the proposed 261 
+
+TCN-based classification workflow. The input to the network is a time series of 24-dimensional 262 
+
+motion features. Each sample consists of 27 frames, and the input sequence is represented as 263 
+
+𝑋 = {𝑥 1, 𝑥 2, . . . , 𝑥 𝑇 }, 𝑥 𝑡 ∈ R24 , 𝑇 = 27 . (22) The first layer of the network is a 1 × 1 convolutional projection layer that maps the 24 input 264 
+
+features to a 128-dimensional channel space. This layer learns linear combinations of the motion 265 
+
+descriptors while providing a higher-dimensional representation suitable for subsequent 266 
+
+convolutional processing. The projection layer is followed by three residual TCN blocks. Each 267 
+
+block contains two dilated convolution layers with batch normalization, ReLU activation, and 268 
+
+dropout, together with a residual connection. Let ℎ(𝑙 ) denote the input to the 𝑙 -th block and 𝐹 (·) 269 
+
+the nonlinear transformation within the block. The residual output is expressed as 270 
+
+ℎ(𝑙 +1) = 𝐹 (ℎ(𝑙 ) ) + ℎ(𝑙 ) . (23) The residual connections stabilize gradient propagation and improve optimization in deeper 271 
+
+architectures. To capture temporal dependencies at multiple scales, dilated convolutions with 272 
+
+increasing dilation factors were employed. In this study, the dilation factors were set to 273 
+
+𝑑 = 1, 2, 4. With a kernel size of 𝐾 = 3, this configuration yields an effective receptive field of 274 
+
+approximately 15 frames. This enables the model to capture both short-term fluctuations and 275 
+
+mid-range temporal structures in bacterial collective motion. The temporal feature 276 
+
+representation produced by the TCN [18] blocks was aggregated using global max pooling along 277 
+
+the time dimension. Max pooling emphasizes the most prominent motion patterns observed 278 
+
+within each sequence. Finally, the pooled representation was passed to a fully connected layer 279 
+
+that outputs classification scores for the 21 mixture-ratio classes. The model was trained using 280 
+
+the cross-entropy loss 281 
+
+June 26, 2026 10/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 9. Flow diagram of the motion feature extraction and TCN-based classification workflow. 
+
+L = −
+
+> 𝐶
+
+∑︁ 
+
+> 𝑐 =1
+
+𝑡 𝑐 log 𝑝 𝑐 , (24) where 𝑡 𝑐 denotes the ground-truth label and 𝑝 𝑐 the predicted probability for class 𝑐 . In this study, 282 
+
+𝐶 = 21 corresponds to the number of mixture conditions. Model parameters were optimized 283 
+
+using the AdamW optimizer. The main hyperparameters included a kernel size of 3, 128 284 
+
+channels, dropout rate of 0.2, learning rate of 0.002, and batch size of 8. These settings allow the 285 
+
+model to learn both short-term fluctuations and the temporal evolution of collective motion 286 
+
+patterns. 287 
+
+## Comparative Models 288 
+
+To evaluate the effectiveness of the proposed TCN [18], we conducted comparative experiments 289 
+
+using several machine learning models. The baseline methods included Support Vector Machine 290 
+
+(SVM) [27], a one-dimensional convolutional neural network (1D-CNN) [28], and 291 
+
+XGBoost [29]. For the SVM [27] model, the time-series motion features were first converted 292 
+
+into fixed-length feature vectors using temporal statistics. Specifically, the mean, standard 293 
+
+deviation, quartiles (25%, 50%, and 75%), and maximum value were computed for each feature 294 
+
+channel across time. These statistics were concatenated to form a fixed-length representation for 295 
+
+each sample. The resulting vectors were then used as inputs to an SVM [27] classifier with a 296 
+
+radial basis function (RBF) kernel. SVM [27] performs maximum-margin classification in a 297 
+
+high-dimensional feature space and is widely used as a robust baseline model for nonlinear 298 
+
+classification problems. To compare with deep learning approaches, 1D-CNN [28] was also 299 
+
+implemented. The input consisted of the 24-dimensional motion feature sequences. First, a 1 × 1 300 
+
+convolution layer was used to project the feature channels into a higher-dimensional 301 
+
+representation. Subsequently, one-dimensional convolutional layers were applied to capture local 302 
+
+temporal patterns in the motion features. The resulting feature maps were aggregated using 303 
+
+global max pooling along the temporal dimension and fed into a fully connected layer to perform 304 
+
+mixture-ratio classification. 1D-CNNs are widely used for modeling sequential data and have 305 
+
+been successfully applied to time-series analysis. 306 
+
+In addition, we evaluated XGBoost [29], a gradient-boosted decision tree algorithm designed 307 
+
+for efficient learning from tabular data. Unlike TCN [18] and 1D-CNN [28], XGBoost [29] does 308 
+
+not directly model temporal order; instead, it learns nonlinear decision boundaries from 309 
+
+aggregated motion descriptors. In this study, the extracted 24 motion features were used as input 310 
+
+for multi-class classification. The hyperparameters of XGBoost [29] were determined by 311 
+
+five-fold cross-validation, and the final model was trained using the selected configuration. The 312 
+
+optimized hyperparameters were a maximum tree depth of 5, 800 boosting trees, a learning rate 313 
+
+of 0.05, a subsampling ratio of 0.8, a feature subsampling ratio of 0.8, an 𝐿 2 regularization term 314 
+
+June 26, 2026 11/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+𝜆 = 3.0, and a minimum child weight of 1.0. These settings were adopted for the final 315 
+
+XGBoost [29] model used in the comparative experiments. 316 
+
+All models were trained and evaluated using the same dataset splits and feature 317 
+
+representations to ensure fair comparison. 318 
+
+## Feature Importance Analysis 319 
+
+To analyze which motion features contributed most to the classification of bacterial mixture 320 
+
+ratios, we conducted a feature importance analysis using permutation importance. Permutation 321 
+
+importance evaluates the contribution of each feature by measuring the decrease in model 322 
+
+performance when the relationship between that feature and the target variable is disrupted. In 323 
+
+this study, the importance of each motion feature was evaluated using the trained TCN [18]. 324 
+
+Specifically, the motion feature sequences consisted of 24 feature channels extracted from 325 
+
+optical flow fields. For each feature channel, the temporal order of the feature values within each 326 
+
+sample was randomly shuffled while keeping all other features unchanged. This operation 327 
+
+destroys the temporal structure of the selected feature while preserving its statistical distribution. 328 
+
+The permuted feature sequences were then input into the trained TCN [18] model, and the 329 
+
+classification accuracy was recalculated using the test dataset. The importance score of each 330 
+
+feature was defined as the decrease in classification accuracy caused by the permutation. To 331 
+
+reduce the influence of randomness, the permutation procedure was repeated multiple times for 332 
+
+each feature channel, and the mean and standard deviation of the accuracy drop were computed. 333 
+
+In this study, five repetitions were performed for each feature. Features that produced larger 334 
+
+decreases in classification accuracy were interpreted as having greater contributions to the 335 
+
+classification of bacterial mixture ratios. The resulting permutation importance values provide 336 
+
+insights into which physical aspects of bacterial collective motion are most informative for 337 
+
+mixture-ratio estimation. 338 
+
+# Results 339 
+
+## Overall Classification Performance 340 
+
+To evaluate the effectiveness of the proposed approach, the extracted 24 motion features were 341 
+
+input to TCN [18] to classify the mixture ratios of V. harveyi and environmental bacteria. The 342 
+
+resulting confusion matrix is shown in Fig 10. The proposed model achieved an overall 343 
+
+classification accuracy of 93.3%, demonstrating that the mixture ratios can be reliably identified 344 
+
+from the motion features. 345 
+
+To further analyze the performance across individual classes, precision, recall, and F1 score 346 
+
+were calculated for each mixture condition. These metrics are defined as follows. Precision is 347 
+
+defined as the ratio of true positives to all samples predicted as positive for a given class, 348 
+
+expressed as Precision = TP /( TP + FP ), where TP denotes true positives and FP denotes false 349 
+
+positives. A high precision value indicates that when the model predicts a sample as belonging 350 
+
+to a particular mixture-ratio class, this prediction is likely to be correct, meaning the model 351 
+
+generates few false alarms. Recall is defined as the ratio of true positives to all samples that 352 
+
+actually belong to a given class, expressed as Recall = TP /( TP + FN ), where FN denotes false 353 
+
+negatives. A high recall value indicates that the model successfully identifies the majority of 354 
+
+samples belonging to a particular mixture-ratio class, meaning few true instances are missed. 355 
+
+The F1 score is the harmonic mean of precision and recall, defined as 356 
+
+F1 = 2 · ( Precision × Recall )/( Precision + Recall ). This metric provides a balanced evaluation 357 
+
+that accounts for both false positives and false negatives, and is particularly informative when 358 
+
+the performance trade-off between precision and recall needs to be summarized in a single value. 359 
+
+The results are summarized in Fig 11, Fig 12, and Fig 13. 360 
+
+June 26, 2026 12/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Most mixture-ratio classes exhibited consistently high values for all three metrics, indicating 361 
+
+stable classification performance without strong bias toward particular classes. In many 362 
+
+intermediate mixture conditions, both precision and recall reached values close to 0.9, suggesting 363 
+
+that the model effectively suppressed both false positives and false negatives. The 364 
+
+correspondingly high F1 scores confirm that this balance was maintained simultaneously, rather 365 
+
+than being achieved at the expense of one metric over the other. However, several classes showed 366 
+
+relatively lower recall and F1 scores. This behavior can be attributed to the similarity of 367 
+
+temporal motion patterns between neighboring mixture ratios. Because the TCN [18] learns 368 
+
+temporal dependencies across the entire sequence, the boundaries between adjacent mixture 369 
+
+conditions can become ambiguous when their motion dynamics are similar. In particular, classes 370 
+
+near the 5:5 ratio—where V. harveyi and environmental bacteria coexist in comparable 371 
+
+proportions—exhibited slightly reduced recall, suggesting that intermediate compositions are 372 
+
+inherently harder to discriminate than extreme ratios dominated by a single species. In addition, 373 
+
+V. harveyi exhibits temporally variable motility, including intermittent bursts of active motion 374 
+
+and transient stationary periods. Such local fluctuations may influence the temporal feature 375 
+
+representation learned by the model, occasionally leading to misclassification into neighboring 376 
+
+mixture classes. 377 
+
+Overall, the results demonstrate that the proposed 24-feature representation combined with 378 
+
+TCN [18] provides highly accurate classification performance. This indicates that temporal 379 
+
+patterns of bacterial collective motion contain sufficient information to distinguish different 380 
+
+mixture ratios with high reliability. 381 
+
+June 26, 2026 13/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 10. Confusion matrix of mixture-ratio classification using the 24 motion features with TCN. 
+
+Fig 11. Class-wise accuracy of mixture-ratio classification using the 24 motion features with TCN. 
+
+Fig 12. Class-wise recall of mixture-ratio classification using the 24 motion features with TCN. June 26, 2026 14/21 
+
+.CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint Fig 13. Class-wise F1 score of mixture-ratio classification using the 24 motion features with TCN. 
+
+Table 1. Classification accuracy of different models for mixture-ratio prediction 
+
+Model Accuracy 
+
+TCN 0.933 
+
+XGBoost 0.857 SVM 0.848 1D-CNN 0.842 
+
+## Comparison with Alternative Models 382 
+
+To evaluate the effectiveness of the proposed TCN [18], its performance was compared with 383 
+
+several baseline models, including XGBoost [29], SVM [27], and 1D-CNN [28]. The 384 
+
+classification accuracies of the models are summarized in Table 1. Among the evaluated models, 385 
+
+the proposed TCN [18] achieved the highest accuracy of 0.933. XGBoost [29] obtained an 386 
+
+accuracy of 0.857, followed by SVM [27] (0.848) and 1D-CNN [28] (0.842). 387 
+
+As shown in Fig 10, the TCN [18] model correctly classifies most mixture-ratio conditions, 388 
+
+with predictions concentrated along the diagonal of the confusion matrix, indicating that the 389 
+
+proposed model can reliably distinguish different bacterial mixture ratios. Confusion matrices of 390 
+
+the baseline models are provided in the Supporting Information (Figs. S1–S3). Compared with 391 
+
+TCN [18], the baseline models show increased misclassifications, particularly between 392 
+
+neighboring mixture ratios, suggesting that models without explicit temporal modeling have 393 
+
+difficulty capturing subtle differences in motion dynamics. While XGBoost [29] and SVM [27] 394 
+
+treat each sample as a static feature vector and cannot fully utilize temporal structure, the 395 
+
+1D-CNN [28] model captures local temporal patterns but has a limited receptive field. 396 
+
+Overall, the superior performance of the TCN [18] suggests that explicit modeling of 397 
+
+temporal structures is essential for accurately distinguishing mixture ratios from motion features. 398 
+
+These results support the hypothesis that temporal patterns of bacterial collective motion contain 399 
+
+discriminative information that cannot be fully captured by static feature models. 400 
+
+## Feature Importance Reveals possible Biological Mechanisms 401 
+
+To investigate which motion features contributed most to mixture-ratio classification, a feature 402 
+
+importance analysis was conducted using permutation importance. The importance scores of all 403 
+
+24 motion features are shown in Fig 14. 404 
+
+Among the evaluated features, directional concentration showed the highest importance 405 
+
+score. Directional concentration is a metric that quantifies the degree of alignment in the 406 
+
+movement directions of a bacterial population, measuring how uniformly the individual motion 407 
+
+directions are oriented. The outstanding importance of this feature suggests that, in 408 
+
+distinguishing mixture ratios, the collective directionality and the presence or absence of 409 
+
+oriented motion across the bacterial population serve as more dominant discriminative criteria 410 
+
+than the absolute magnitude of displacement or velocity. 411 
+
+June 26, 2026 15/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Fig 14. Permutation importance of the 24 motion features for mixture-ratio classification using TCN. In addition, several features representing temporal variability of motion patterns also 412 
+
+exhibited relatively high importance scores. Temporal fluctuation of directional concentration 413 
+
+quantifies the temporal variability of alignment, capturing how much the degree of directional 414 
+
+coherence within the bacterial population changes over time. Temporal fluctuation of spatial 415 
+
+autocorrelation represents the temporal variability of spatial coherence, reflecting how stably the 416 
+
+spatial consistency of motion patterns is maintained across time. Temporal fluctuation of 417 
+
+high-frequency motion represents the temporal variability of the high-frequency ratio, capturing 418 
+
+how much the proportion of high-frequency components in the motion fluctuates over time. 419 
+
+These features collectively serve as indicators of short-term fluctuations and instability in motion 420 
+
+characteristics, reflecting whether bacterial motion is temporally stable or irregularly varying. 421 
+
+Since TCN [18] is a model capable of explicitly learning temporal structures, it is considered 422 
+
+that these temporally varying features were effectively utilized for classification. In contrast, 423 
+
+features derived from simple velocity statistics, such as the mean velocity magnitude, the 424 
+
+standard deviation of velocity magnitude, and other velocity quantile features, exhibited very low 425 
+
+importance scores. This indicates that the overall magnitude of motion provides limited 426 
+
+discriminative information for distinguishing mixture ratios in the present dataset. Furthermore, 427 
+
+some features exhibited negative importance scores. A negative importance score indicates that 428 
+
+including the feature degrades classification accuracy, implying that such features function as 429 
+
+noise and adversely affect the discriminative performance of the model. 430 
+
+Overall, the results shown in Fig 14 suggest that mixture-ratio classification is primarily 431 
+
+determined by the structure of collective motion rather than by simple activity intensity. In 432 
+
+particular, directional alignment and temporal variability of motion patterns play key roles in 433 
+
+characterizing bacterial population dynamics under different mixture conditions. These findings 434 
+
+suggest that the collective organization of bacterial motion encodes richer information about 435 
+
+population composition than simple measures of motility strength. 436 
+
+June 26, 2026 16/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Table 2. Classification accuracy of TCN using different feature sets 
+
+Case Features Used Accuracy 
+
+All features All 24 motion features 0.933 Top 4 features Directional concentration, Temporal fluctuation of directional alignment, Temporal fluctuation of spatial autocorrelation, Temporal fluctuation of high-frequency motion 0.657 Top 1 feature Directional concentration 0.591 
+
+## Reduced Feature Model 437 
+
+To examine how classification performance changes with a reduced number of motion features, 438 
+
+experiments were conducted using the most important feature and the four most important 439 
+
+features identified by permutation importance. The confusion matrices for these reduced feature 440 
+
+models are provided in the Supporting Information (Figs. S4 and S5). Using only the most 441 
+
+important feature, directional concentration, the classification accuracy was 0.591. When the top 442 
+
+four features were used, the accuracy improved to 0.657. A quantitative comparison of 443 
+
+classification performance is summarized in Table 2. These results indicate that key 444 
+
+characteristics of bacterial collective motion can be captured by a small number of features, 445 
+
+while integrating multiple complementary descriptors improves classification performance. In 446 
+
+particular, directional organization of bacterial motion provides primary discriminative 447 
+
+information, and additional features refine classification by capturing subtle differences between 448 
+
+similar mixture conditions. Reducing the number of required features while maintaining 449 
+
+reasonable performance is important for practical applications, as it reduces computational cost 450 
+
+and facilitates real-time implementation in automated screening systems. 451 
+
+## Regression Perspective 452 
+
+To further investigate the relationship between motion features and mixture ratios, a 453 
+
+regression-based analysis was conducted. The predicted values generally follow the overall trend 454 
+
+of the true mixture ratios, indicating that the model captures the correspondence between motion 455 
+
+features and mixture ratios. Quantitatively, the regression achieved an 𝑅 2 score of 0.807 and a 456 
+
+mean squared error of approximately 8.62%, demonstrating that the model can represent the 457 
+
+global structure of mixture-ratio variation. However, deviations from the ideal relationship are 458 
+
+observed, particularly in intermediate mixture conditions, indicating limited precision in 459 
+
+distinguishing similar motion patterns. Compared with regression, the classification framework 460 
+
+provides more stable and consistent discrimination, suggesting that classification is more 461 
+
+suitable for mixture-ratio analysis in this study. Nevertheless, the regression results confirm that 462 
+
+motion features contain continuous information about population composition, supporting the 463 
+
+validity of the proposed feature representation. 464 
+
+# Discussion & Conclusion 465 
+
+In this study, we demonstrated that a TCN based on optical flow can accurately classify the 466 
+
+abundance ratio of mixed bacterial populations, a task that is virtually impossible using static 467 
+
+bright-field images. The combination of optical flow and TCN proved highly suitable for this 468 
+
+approach. Optical flow captures dense, pixel-level spatiotemporal variations in velocity fields 469 
+
+without the heavy computational burden of tracking individual cells, while the TCN effectively 470 
+
+learns the long-range temporal dependencies and hierarchical structures inherent in these 471 
+
+continuous motion features. 472 
+
+June 26, 2026 17/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+Permutation importance analysis revealed that the “collectiveness” of motion, specifically 473 
+
+directional concentration, made the highest contribution to the classification performance. It is 474 
+
+widely known in the field of active matter physics that bacterial populations can give rise to 475 
+
+emergent collective behaviors—such as swarms, vortices, and active turbulence—driven by 476 
+
+hydrodynamic interactions and steric collisions, particularly at high cell densities or near phase 477 
+
+interfaces. Although careful verification is required to determine the exact physical relationship 478 
+
+between our classification metrics and the well-documented bacterial collective motion, it is 479 
+
+highly intriguing that our model identified macroscopic collective alignment as a key 480 
+
+discriminator. Furthermore, features related to temporal fluctuations in bacterial motion were 481 
+
+ranked among the most important contributors. This result likely reflects the highly motile and 482 
+
+temporally variable swimming behavior characteristic of Vibrio species. In this pilot study, we 483 
+
+validated the classification of specific pathogenic bacteria against a heterogeneous and undefined 484 
+
+mixture of environmental bacteria. To clarify the biological significance of these motion metrics 485 
+
+and their direct relationship to actual bacterial kinematics, systematic investigations using 486 
+
+defined bacterial mixtures with known motility profiles are necessary. This remains a fascinating 487 
+
+theme for future research. 488 
+
+Regardless, the present workflow, which can classify the characteristics of bacterial 489 
+
+populations directly from bright-field time-lapse images, holds great promise for various 490 
+
+applications. Beyond the simple detection of specific microorganisms, such as pathogens, this 491 
+
+approach could be applied to evaluate drug responses and antibiotic resistance using motility 492 
+
+indicators, or to screen bacteria using microcompartments, such as microchambers or droplets. 493 
+
+Because this approach relies on standard bright-field microscopy and imposes a much lower 494 
+
+computational burden than single-cell tracking, it demonstrates significant potential, especially 495 
+
+in low-resource environments, as it circumvents the need for expensive analytical equipment or 496 
+
+complex molecular techniques such as fluorescent labeling or genetic manipulation. Moreover, 497 
+
+this framework is not limited to swimming motility; it can handle any biological features that 498 
+
+exhibit temporal changes. For example, it could be applied to monitor critical microbial 499 
+
+indicators, such as cell proliferation dynamics or the degradation of microscopic substrates (e.g., 500 
+
+cellulose), significantly broadening its utility. 501 
+
+As this study serves as a pilot validation of the combination of optical flow and TCN, 502 
+
+continuous and detailed verification is required to determine its universal applicability for 503 
+
+identifying or classifying a broader range of microorganisms or their communities. In particular, 504 
+
+the effects of cell density, imaging conditions, time-lapse intervals, and frame rates on the 505 
+
+classification accuracy must be rigorously evaluated in future studies. Nevertheless, because 506 
+
+optical flow can capture a diverse array of kinematic and temporal features, it is highly likely to 507 
+
+accurately capture subtle, non-obvious dynamic signatures that might be missed by human 508 
+
+observers or by conventional methods that rely on predefined, static evaluation axes. This study 509 
+
+represents the first attempt to classify using machine learning the temporal dynamics of 510 
+
+microbial population images, and we anticipate significant developments and broad applications 511 
+
+based on this label-free, time-resolved framework in the future. 512 
+
+# Supporting information 513 
+
+S1 Fig. Confusion matrix of XGBoost. Confusion matrix obtained using the XGBoost model. 514 
+
+Compared with TCN, more misclassifications are observed, particularly between neighboring 515 
+
+mixture ratios. 516 
+
+S2 Fig. Confusion matrix of SVM. Confusion matrix obtained using the SVM model. The 517 
+
+results show increased confusion among adjacent mixture classes compared to the proposed 518 
+
+method. 519 
+
+June 26, 2026 18/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+S3 Fig. Confusion matrix of 1D-CNN. Confusion matrix obtained using the 1D-CNN model. 520 
+
+The model captures local temporal patterns but shows reduced performance compared with TCN. 521 
+
+S4 Fig. Confusion matrix using the most important feature. Confusion matrix obtained 522 
+
+using only the directional concentration feature. The results show limited classification 523 
+
+performance with substantial misclassifications across mixture ratios. 524 
+
+S5 Fig. Confusion matrix using the top four features. Confusion matrix obtained using the 525 
+
+four most important features identified by permutation importance. Compared with the 526 
+
+single-feature model, predictions are more concentrated around the diagonal. 527 
+
+S6 Fig. Prediction versus true mixture ratios in the regression model. Scatter plot of 528 
+
+predicted versus true mixture ratios. The regression model captures the overall trend but shows 529 
+
+deviations from the ideal diagonal line. 530 
+
+S1 Table. List of motion features used in this study. Summary of the 24 motion features, 531 
+
+including descriptors related to velocity, directional alignment, spatial organization, and 532 
+
+temporal variability. 533 
+
+S1 Text. Detailed description of motion feature extraction. Detailed definitions and 534 
+
+computational procedures for all motion features. 535 
+
+S1 Appendix. Model architecture and training details. Additional details on the TCN 536 
+
+model [18], hyperparameters, and training procedures are provided below. All experiments were 537 
+
+implemented in Python using PyTorch [30], and optical flow was computed using the Farneb ¨ack 538 
+
+method [21] implemented in OpenCV [31]. Optimization was performed using the AdamW 539 
+
+optimizer [32]. ReLU activation functions [33] were used throughout the network. 540 
+
+# Acknowledgments 541 
+
+This work was supported by the Japan Keirin Association (JKA) through its Promotion of Keirin 542 
+
+(Grant numbers: 2023M-385 and 2025M-484). 543 
+
+# References 
+
+1. United Nations. Feeding the World, Sustainably; 2025. United Nations Chronicle, Accessed 22 February 2026. 
+
+https://www.un.org/en/chronicle/article/feeding-world-sustainably .2. Rieder J, Berezenko A, Meziti A, Adrian-Kalchhauser I. The Future of Pathogen Detection in Aquaculture: Miniature Labs, Field-Compatible Assays, environmental DNA and RNA, CRISPR and Metatranscriptomics. Aquaculture, Fish and Fisheries. 2025;5:e70062. doi:10.1002/aff2.70062. 3. Pratapa A, Doron M, Caicedo JC. Image-based cell phenotyping with deep learning. Current Opinion in Chemical Biology. 2021;65:9-17. doi:10.1016/j.cbpa.2021.04.001. 4. Shen Y, et al. A survey of deep learning-based microscopic cell image understanding. Displays. 2025;87:102968. doi:10.1016/j.displa.2025.102968. June 26, 2026 19/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+5. Liu J, Dazzo FB, Glagoleva O, Yu B, Jain AK. CMEIAS: A Computer-Aided System for the Image Analysis of Bacterial Morphotypes in Microbial Communities. Microbial Ecology. 2001;41(3):173-94. doi:10.1007/s002480000004. 6. Khan MSR, Khan I, Bag MAS, Uddin M, Hassan MR, Hassan J. Deep learning-based bacterial genus identification. Journal of Advanced Veterinary and Animal Research. 2022;9(4):573-82. doi:10.5455/javar.2022.i626. 7. Rashid J, et al. Machine Learning and Deep Learning Based Hybrid Feature Extraction and Classification Model Using Digital Microscopic Bacterial Images. SN Computer Science. 2023;4:828. doi:10.1007/s42979-023-02138-9. 8. Defoirdt T, Boon N, Bossier P. Can bacteria evolve resistance to quorum sensing disruption? PLoS Pathogens. 2010 Jul;6(7):e1000989. doi:10.1371/journal.ppat.1000989. 9. Berg HC, Brown DA. Chemotaxis in Escherichia coli analysed by three-dimensional tracking. Nature. 1972;239:500-4. doi:10.1038/239500a0. 10. Howard J. Mechanics of Motor Proteins and the Cytoskeleton. Sinauer Associates; 2001. 11. Balaban NQ, Merrin J, Chait R, Kowalik L, Leibler S. Bacterial persistence as a phenotypic switch. Science. 2004;305(5690):1622-5. doi:10.1126/science.1099390. 12. Bray D. Cell Movements: From Molecules to Motility. 2nd ed. New York: Garland Science; 2000. doi:10.4324/9780203833582. 13. LeCun Y, Bengio Y, Hinton G. Deep learning. Nature. 2015;521:436-44. doi:10.1038/nature14539. 14. Krizhevsky A, Sutskever I, Hinton GE. ImageNet classification with deep convolutional neural networks. In: Advances in Neural Information Processing Systems; 2012. p. 1097-105. 15. Yu H, Jing W, Iriya R, Yang Y, Syal K, Mo M, et al. Phenotypic Antimicrobial Susceptibility Testing with Deep Learning Video Microscopy. Analytical Chemistry. 2018;90(10):6314-22. doi:10.1021/acs.analchem.8b01128. 16. Iriya R, Jing W, Syal K, Mo M, Chen C, Wang S, et al. Rapid Antibiotic Susceptibility Testing Based on Bacterial Motion Patterns With Long Short-Term Memory Neural Networks. IEEE Sensors Journal. 2020;20(9):4940-50. doi:10.1109/JSEN.2020.2967058. 17. Bengio Y, Simard P, Frasconi P. Learning long-term dependencies with gradient descent is difficult. IEEE Transactions on Neural Networks. 1994;5(2):157-66. doi:10.1109/72.279181. 18. Lea C, Flynn MD, Vidal R, Reiter A, Hager GD. Temporal Convolutional Networks for Action Segmentation and Detection. In: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR). Honolulu, HI, USA; 2017. p. 1003-12. doi:10.1109/CVPR.2017.113. 19. Yuasa H, Koiwai K, Konishi K, Furukawa M, Nozaki R, Kondo H, et al. Genome sequence of Vibrio harveyi strain TUMSAT-2019, isolated from kuruma shrimp, Penaeus japonicus. Microbiology Resource Announcements. 2025;14(2):e00746-24. doi:10.1128/mra.00746-24. 20. Nikon Instruments Inc . ECLIPSE Ti Series Inverted Microscopes; 2026. Accessed Feb. 24, 2026. https://www.microscope.healthcare.nikon.com/products/ inverted-microscopes/eclipse-ti-series .June 26, 2026 20/21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 29, 2026. ;https://doi.org/10.64898/2026.06.29.735172 doi: bioRxiv preprint
+
+21. Farneb ¨ack G. Two-Frame Motion Estimation Based on Polynomial Expansion. In: Bigun J, Gustavsson T, editors. Image Analysis. vol. 2749 of Lecture Notes in Computer Science. Berlin, Heidelberg: Springer; 2003. p. 363-70. doi:10.1007/3-540-45103-X 50. 22. Vicsek T, Zafeiris A. Collective motion. Physics Reports. 2012;517(3–4):71-140. doi:10.1016/j.physrep.2012.03.004. 23. Marchetti MC, Joanny JF, Ramaswamy S, Liverpool TB, Prost J, Rao M, et al. Hydrodynamics of soft active matter. Reviews of Modern Physics. 2013;85(3):1143-89. doi:10.1103/RevModPhys.85.1143. 24. Toner J, Tu Y. Long-Range Order in a Two-Dimensional Dynamical XY Model. Physical Review Letters. 1995;75:4326-9. doi:10.1103/PhysRevLett.75.4326. 25. Oppenheim AV, Schafer RW. Discrete-Time Signal Processing. Prentice Hall; 1999. 26. Bai S, Kolter JZ, Koltun V. An Empirical Evaluation of Generic Convolutional and Recurrent Networks for Sequence Modeling. arXiv preprint arXiv:180301271. 2018. Available from: https://arxiv.org/abs/1803.01271 .27. Cortes C, Vapnik V. Support-vector networks. Machine Learning. 1995 Sep;20(3):273-97. doi:10.1007/BF00994018. 28. Kiranyaz S, Ince T, Gabbouj M. Real-Time Patient-Specific ECG Classification by 1-D Convolutional Neural Networks. IEEE Transactions on Biomedical Engineering. 2016 Mar;63(3):664-75. doi:10.1109/TBME.2015.2468589. 29. Chen T, Guestrin C. XGBoost: A Scalable Tree Boosting System. In: Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. ACM; 2016. p. 785-94. doi:10.1145/2939672.2939785. 30. Paszke A, Gross S, Massa F, Lerer A, Bradbury J, Chanan G, et al. PyTorch: An Imperative Style, High-Performance Deep Learning Library. In: Advances in Neural Information Processing Systems (NeurIPS); 2019. . 31. Bradski G. The OpenCV Library. Dr Dobb’s Journal of Software Tools. 2000. 32. Loshchilov I, Hutter F. Decoupled Weight Decay Regularization. International Conference on Learning Representations (ICLR). 2019. 33. Nair V, Hinton GE. Rectified Linear Units Improve Restricted Boltzmann Machines. In: International Conference on Machine Learning (ICML); 2010. . June 26, 2026 21/21

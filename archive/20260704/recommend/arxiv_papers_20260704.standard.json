@@ -1,0 +1,383 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-04T21:33:16.183392+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 7,
+    "quick_skim_target": 12,
+    "quick_selected": 7
+  },
+  "deep_dive": [
+    {
+      "id": "2606.28933v1",
+      "source": "arxiv",
+      "title": "FinInvest-GTCN: Explainable Graph-Temporal-Causal Modeling for Risk-Aware Investment Decision Optimization",
+      "abstract": "Venture capital (VC) investment decisions face distinct challenges, such as multi-source heterogeneous data, non-stationary time series, and the demand for explainable predictions in high-stakes, low-data settings. To overcome these issues, we introduce \\textbf{FinInvest-GTCN}, a Graph-Temporal-Causal Network that redefines the task from content recommendation to quantitative risk-return assessment. This architecture combines a relational graph encoder to capture the investment ecosystem's topology, a multi-scale temporal fusion module to handle long-term dependencies and non-stationarity, and a causal decision head that generates risk-adjusted predictions with interpretable causal attributions. A core innovation is the Meta-Causal Adaptation (MCA) strategy, which facilitates robust fine-tuning for new, data-scarce sectors by aligning updates with causally-plausible structures derived from meta-pretraining. Comprehensive experiments on proprietary VC datasets show that FinInvest-GTCN delivers state-of-the-art results, markedly lowering the primary Risk-Adjusted Mean Squared Error (RA-MSE) to 2.51 from a baseline of 3.05 and boosting the cumulative return of a simulated portfolio by 18.7\\%. Ablation studies underscore the essential role of each component, while additional analyses confirm the model's stability, interpretability, and enhanced adaptability. This work pioneers a data-driven, explainable framework for investment decision support.",
+      "authors": [
+        "Junyan Tan",
+        "Yifan Li",
+        "Minghao Wang",
+        "Zihan Chen",
+        "Haoyu Zhang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-06-27T14:09:57+00:00",
+      "link": "https://arxiv.org/pdf/2606.28933v1",
+      "tags": [
+        "keyword:tsc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "graph-temporal-causal network for risk-aware investment decision optimization",
+      "llm_evidence_cn": "图-时序-因果网络用于风险感知投资决策优化",
+      "llm_evidence": "图-时序-因果网络用于风险感知投资决策优化",
+      "canonical_evidence": "图-时序-因果网络用于风险感知投资决策优化",
+      "llm_tldr_en": "Proposes FinInvest-GTCN, a Graph-Temporal-Causal Network combining relational graph encoder, multi-scale temporal fusion, and causal decision head for explainable causal time series forecasting.",
+      "llm_tldr_cn": "风险投资决策面临多源异构、非平稳时序和可解释性需求。本文提出FinInvest-GTCN，融合关系图编码器、多尺度时序融合模块和因果决策头，生成具有可解释因果归因的风险调整预测。核心创新在于将因果结构学习融入投资决策流程，在低数据量下仍能提供稳健预测。",
+      "llm_tldr": "风险投资决策面临多源异构、非平稳时序和可解释性需求。本文提出FinInvest-GTCN，融合关系图编码器、多尺度时序融合模块和因果决策头，生成具有可解释因果归因的风险调整预测。核心创新在于将因果结构学习融入投资决策流程，在低数据量下仍能提供稳健预测。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal time series forecasting",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.01936v1",
+      "source": "arxiv",
+      "title": "CausalSteward: An Agentic Divide-Conquer-Combine Copilot for Causal Discovery",
+      "abstract": "Learning causal models from high-dimensional data is a significant challenge, particularly in real-world settings where violations of core assumptions lead to causal identifiability issues. Although massive amounts of prior knowledge are available, and contain valuable causal information, effectively integrating this knowledge into the causal discovery process remains an open problem. We introduce CausalSTeward (CAST), a novel human-in-the-loop framework for interactively assembling large causal models. CausalSteward is a multi-agent collaborative system that tackles high-dimensional causality through a divide-and-conquer approach where large clusters of variables are iteratively partitioned and then separately analyzed. Our framework fuses prior knowledge with a data-driven approach by using tailored tools such as retrieval augmented generation and conditional independence tests. Finally, we use this work to examine the capabilities and limitations of causal reasoning in multi-agent frameworks, and how the human-in-the-loop can contribute to accurate and trustworthy results.",
+      "authors": [
+        "Nicholas Tagliapietra",
+        "Gian Lorenzo Marchioni",
+        "Moritz Willig",
+        "Juergen Luettin",
+        "Lavdim Halilaj",
+        "Kristian Kersting"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-07-02T09:29:10+00:00",
+      "link": "https://arxiv.org/pdf/2607.01936v1",
+      "tags": [
+        "keyword:tsc",
+        "query:tsc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "causal discovery framework with divide-and-conquer",
+      "llm_evidence_cn": "分治策略的因果发现框架",
+      "llm_evidence": "分治策略的因果发现框架",
+      "canonical_evidence": "分治策略的因果发现框架",
+      "llm_tldr_en": "CausalSteward is a multi-agent collaborative framework that partitions high-dimensional variables into clusters for separate causal analysis, integrating prior knowledge.",
+      "llm_tldr_cn": "CausalSteward是一个多智能体协作的因果发现框架，采用分治方法将高维变量迭代划分并分别分析，融合先验知识以提升因果识别的可识别性。该工作为大规模因果模型构建提供了有效工具。",
+      "llm_tldr": "CausalSteward是一个多智能体协作的因果发现框架，采用分治方法将高维变量迭代划分并分别分析，融合先验知识以提升因果识别的可识别性。该工作为大规模因果模型构建提供了有效工具。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "causal learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.00154v1",
+      "source": "arxiv",
+      "title": "EVOTS: Evolutionary Transformer Search for Time Series Forecasting",
+      "abstract": "Evolutionary neural architecture design for multivariate time-series forecasting remains underexplored, with most approaches relying on fixed Transformer architectures despite substantial variation across tasks and forecasting settings. This paper introduces an evolutionary neural architecture search framework for discovering task-adaptive Transformer-like models for time-series forecasting (EVOTS). Architectures are encoded using a modular genome representation that enables flexible composition of attention, feed-forward, and projection components, while a repair mechanism enforces structural validity throughout the evolutionary process. This formulation allows effective exploration of a diverse architecture space without relying on hand-crafted design rules. The proposed approach is evaluated on four benchmark datasets from the ETT family (ETTh1, ETTh2, ETTm1, and ETTm2) under multiple forecasting settings, including univariate-to-univariate, multivariate-to-univariate, and multivariate-to-multivariate prediction, with horizons of 96, 192, 336, and 720. In the multivariate-to-multivariate setting, the evolved architectures achieve competitive and, in several cases, improved mean squared error relative to a strong Transformer-based baseline. Additional analyses examine performance differences across forecasting settings and report wall-clock training time to provide a coarse indication of computational cost. Overall, the results demonstrate that evolutionary search can effectively discover flexible and high-performing Transformer-like architectures for multivariate time-series forecasting within practical runtime constraints.",
+      "authors": [
+        "AbdElRahman ElSaid",
+        "Damir Pulatov"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.NE"
+      ],
+      "published": "2026-06-30T20:29:34+00:00",
+      "link": "https://arxiv.org/pdf/2607.00154v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "evolutionary architecture search for time series forecasting",
+      "llm_evidence_cn": "时间序列预测的进化架构搜索",
+      "llm_evidence": "时间序列预测的进化架构搜索",
+      "canonical_evidence": "时间序列预测的进化架构搜索",
+      "llm_tldr_en": "Proposes EVOTS, an evolutionary framework to automatically design task-adaptive Transformer architectures for multivariate time-series forecasting, outperforming fixed architectures.",
+      "llm_tldr_cn": "现有时间序列预测模型多依赖固定Transformer架构，无法适应不同任务。本文提出EVOTS，一种进化神经架构搜索框架，通过模块化基因组表示和修复机制自动发现任务自适应Transformer模型。实验表明，EVOTS在多个预测基准上优于手工设计架构，证明了进化搜索在时间序列预测中的有效性。",
+      "llm_tldr": "现有时间序列预测模型多依赖固定Transformer架构，无法适应不同任务。本文提出EVOTS，一种进化神经架构搜索框架，通过模块化基因组表示和修复机制自动发现任务自适应Transformer模型。实验表明，EVOTS在多个预测基准上优于手工设计架构，证明了进化搜索在时间序列预测中的有效性。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.01548v1",
+      "source": "arxiv",
+      "title": "Evolutionary Feature Engineering for Structured Data",
+      "abstract": "Large language models are increasingly used as open-ended search operators in evolutionary optimization. We introduce Evolutionary Feature Engineering (EFE), a framework for using LLM-based evolution to discover preprocessing transformations for structured data. EFE represents transformations as Python programs with a standardized fit/transform interface, allowing them to be inserted directly into existing machine learning pipelines. During evolution, candidate programs are refined using dataset context, summary statistics, and downstream performance feedback on validation set. We instantiate EFE in two settings. For time-series forecasting, EFE-Time learns invertible, dataset-specific normalizations that improve off-the-shelf time-series foundation models. It reduces forecasting errors (MASE, WQL, MAE) 3% or more when averaged across datasets and improvements are as much as 19% on the COVID-Deaths dataset. Notably, these improvements occur with recent TSFMs such as Chronos-2. For tabular prediction, EFE-Tab evolves compact feature programs that add useful interpretable features and remove redundant ones, improving or matching existing LLM-based feature-engineering methods. We found EFE-Tab to be particularly effective on classical decision trees, where small sets of evolved features yield competitive accuracy while preserving interpretability. Overall, EFE demonstrates that LLM-based evolution can improve both accuracy and interpretability when automatically tackling structured data.",
+      "authors": [
+        "Ege Onur Taga",
+        "Yilin Zhuang",
+        "M. Emrullah Ildiz",
+        "Petros Mol",
+        "Abhimanyu Das",
+        "Karthik Duraisamy",
+        "Samet Oymak"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-02T00:11:29+00:00",
+      "link": "https://arxiv.org/pdf/2607.01548v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "evolutionary feature engineering for structured data, with application to time series forecasting",
+      "llm_evidence_cn": "面向结构化数据的进化特征工程方法，应用于时间序列预测",
+      "llm_evidence": "面向结构化数据的进化特征工程方法，应用于时间序列预测",
+      "canonical_evidence": "面向结构化数据的进化特征工程方法，应用于时间序列预测",
+      "llm_tldr_en": "Proposes Evolutionary Feature Engineering (EFE) using LLM-based evolution to discover preprocessing transforms for structured data, with applications to time-series forecasting where it learns invertible dataset-specific normalizations.",
+      "llm_tldr_cn": "本文提出进化特征工程（EFE）框架，利用大语言模型驱动的进化搜索自动发现结构化数据的预处理变换。EFE将变换表示为Python程序，通过数据集上下文和验证集性能反馈进行迭代优化。在时间序列预测场景中，EFE-Time能够学习可逆的、数据集特定的归一化方法，提升现有时序基础模型的性能。",
+      "llm_tldr": "本文提出进化特征工程（EFE）框架，利用大语言模型驱动的进化搜索自动发现结构化数据的预处理变换。EFE将变换表示为Python程序，通过数据集上下文和验证集性能反馈进行迭代优化。在时间序列预测场景中，EFE-Time能够学习可逆的、数据集特定的归一化方法，提升现有时序基础模型的性能。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.00391v1",
+      "source": "arxiv",
+      "title": "Data-Adaptive Learning of Dynamical Systems by Matching Transfer Operators and Invariant Measures",
+      "abstract": "Trajectory-based learning of dynamical systems is often fragile in the presence of noise, chaos, or sparse observations, as small pointwise errors can rapidly amplify. We introduce a transition-statistics approach to system identification that learns dynamics by matching the induced motion of probability mass across a data-adaptive mesh. Given trajectory data, we build an unstructured partition of state space and approximate the Perron--Frobenius operator with a regularized Ulam transition matrix. We replace hard cell indicators with continuous, piecewise-smooth partition-of-unity weights, yielding a Markov matrix supporting gradient-based optimization with respect to the parameters of a learned vector field. This enables two related training objectives: matching invariant measures through the stationary eigenvectors of the transition matrices, and matching the full transition matrices to capture transport between regions of state space. Numerical experiments on Lorenz-63, Lorenz-96, and a reduced-order NOAA sea surface temperature forecasting problem show that transition-statistics matching gives more reliable long-time dynamics than pointwise trajectory matching, particularly under measurement noise and sparse sampling. The approach provides a robust operator-theoretic alternative to trajectory-level losses for learning chaotic and partially observed dynamical systems.",
+      "authors": [
+        "Yinong Huang",
+        "Jonah Botvinick-Greenhouse",
+        "Yunan Yang"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA",
+        "math.DS"
+      ],
+      "published": "2026-07-01T03:34:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.00391v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "learning dynamical systems from trajectory data matching operators and measures",
+      "llm_evidence_cn": "从轨迹数据学习动力系统，匹配转移算子和不变测度",
+      "llm_evidence": "从轨迹数据学习动力系统，匹配转移算子和不变测度",
+      "canonical_evidence": "从轨迹数据学习动力系统，匹配转移算子和不变测度",
+      "llm_tldr_en": "A transition-statistics approach learns dynamics by matching the induced motion of probability mass using a data-adaptive mesh and regularized Ulam transition matrix.",
+      "llm_tldr_cn": "该论文提出一种基于转移统计的系统辨识方法，通过匹配概率质量在数据自适应网格上的运动来学习动力学。利用连续分片光滑的权函数替换硬细胞指示器，得到支持梯度优化的马尔可夫矩阵。从轨迹数据中隐式挖掘了时间序列的动力系统性质，为时间序列性质挖掘提供了新视角。",
+      "llm_tldr": "该论文提出一种基于转移统计的系统辨识方法，通过匹配概率质量在数据自适应网格上的运动来学习动力学。利用连续分片光滑的权函数替换硬细胞指示器，得到支持梯度优化的马尔可夫矩阵。从轨迹数据中隐式挖掘了时间序列的动力系统性质，为时间序列性质挖掘提供了新视角。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series property mining",
+      "matched_requirement_id": "req-13",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-29-735172-v1",
+      "source": "biorxiv",
+      "title": "Optical flow reveals motility signatures for inferring pathogenic bacterial mixture compositions via temporal convolutional networks",
+      "abstract": "With the rapid expansion of global food demand, aquaculture has become a critical pillar for future food security. However, aquaculture systems remain highly vulnerable to pathogenic bacteria, and rapid identification of antagonistic microbes is essential for sustainable disease control. Conventional evaluation approaches rely on fluorescence labeling or post-culture assays, limiting the ability to quantify dynamic interactions in mixed microbial populations in a real-time and label-free manner. Here, we propose a computational framework for classifying the mixing ratio of Vibrio harveyi and environmental bacteria using time-series motion features extracted from microscopy videos. We defined 24 interpretable motility descriptors and employed a Temporal Convolutional Network (TCN) to learn their temporal structure. The proposed method achieved a classification accuracy of 93.3%, outperforming conventional static statistical approaches and alternative machine learning models. These findings indicate that mixture discrimination in microbial communities is governed not by absolute motility magnitude, but by collective alignment and its temporal stability. Our study establishes a time-resolved computational framework for quantifying dynamic collective order in mixed microbial populations and highlights its potential for label-free automated screening and robotic microbiological applications.\n\nAuthor summaryBacterial infections pose a major threat to aquaculture, and rapid identification of antagonistic microbes is essential for sustainable disease management. Existing screening approaches often require fluorescent labeling or post-culture analysis, making real-time evaluation of mixed bacterial populations difficult. In this study, we show that mixture ratios of Vibrio harveyi and environmental bacteria can be accurately classified from time-series motion features extracted from microscopy videos. By applying TCN to 24 interpretable motility descriptors, we achieved high classification accuracy without relying on fluorescent markers. Our analysis demonstrates that collective directional alignment and its temporal stability, rather than absolute swimming speed, are the key determinants of mixture discrimination. This work introduces a computational strategy for quantifying dynamic collective order in microbial communities and supports the development of label-free, automated screening platforms for microbiological applications.",
+      "authors": [
+        "Fujita, Y.",
+        "Nagase, Y.",
+        "Pathak, S.",
+        "Moro, A.",
+        "Suzuki, H.",
+        "Koiwai, K.",
+        "Umeda, K."
+      ],
+      "primary_category": "microbiology",
+      "categories": [
+        "microbiology"
+      ],
+      "published": "2026-06-29T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.29.735172v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "time series feature extraction from motion data using TCN",
+      "llm_evidence_cn": "利用时间卷积网络从运动数据中提取时间序列特征",
+      "llm_evidence": "利用时间卷积网络从运动数据中提取时间序列特征",
+      "canonical_evidence": "利用时间卷积网络从运动数据中提取时间序列特征",
+      "llm_tldr_en": "This paper extracts time-series motion features from microscopy videos using temporal convolutional networks to classify bacterial mixture ratios, demonstrating time series feature extraction.",
+      "llm_tldr_cn": "该论文从显微视频中提取时间序列运动特征，使用时序卷积网络分类病原细菌混合比例，展示了时间序列特征提取在生物医学中的应用。",
+      "llm_tldr": "该论文从显微视频中提取时间序列运动特征，使用时序卷积网络分类病原细菌混合比例，展示了时间序列特征提取在生物医学中的应用。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.01171v1",
+      "source": "arxiv",
+      "title": "Decision-Aware Training for Sample-Based Generative Models",
+      "abstract": "Sample-based generative models are increasingly used for probabilistic forecasting in high-stakes decision settings, yet their training objectives are blind to the decision maker's cost structure. These models are commonly trained with strictly proper scoring rules, such as the energy score, which allocate their training signal in proportion to data density, with no awareness of where forecast errors are most costly for downstream decisions. We therefore propose decision-aware training for sample-based generative models, augmenting the energy score objective with a differentiable decision loss that directly penalises the cost incurred by acting on the model's forecast. This combined loss is theoretically grounded, as the decision loss is itself a proper scoring rule. We validate our method on one synthetic and two real-world tasks, showing targeted improvements in cost-sensitive regions while retaining full probabilistic forecasts.",
+      "authors": [
+        "Kornelius Raeth",
+        "Nicole Ludwig"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-07-01T17:02:23+00:00",
+      "link": "https://arxiv.org/pdf/2607.01171v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "decision-aware training for sample-based generative models used in probabilistic forecasting",
+      "llm_evidence_cn": "面向概率预测的样本生成模型的决策感知训练",
+      "llm_evidence": "面向概率预测的样本生成模型的决策感知训练",
+      "canonical_evidence": "面向概率预测的样本生成模型的决策感知训练",
+      "llm_tldr_en": "Proposes decision-aware training that augments energy score with a differentiable decision loss to directly penalize forecast error cost, improving sample-based generative models for probabilistic forecasting in high-stakes settings.",
+      "llm_tldr_cn": "现有样本生成模型通常使用严格适当的评分规则（如能量得分）进行训练，但这些目标对下游决策的成本结构不敏感。本文提出决策感知训练，通过在能量得分基础上增加一个可微决策损失项，直接惩罚基于模型预测采取行动时产生的成本。该组合损失在理论上成立，且实验表明能显著提升高决策风险场景下的预测表现。",
+      "llm_tldr": "现有样本生成模型通常使用严格适当的评分规则（如能量得分）进行训练，但这些目标对下游决策的成本结构不敏感。本文提出决策感知训练，通过在能量得分基础上增加一个可微决策损失项，直接惩罚基于模型预测采取行动时产生的成本。该组合损失在理论上成立，且实验表明能显著提升高决策风险场景下的预测表现。",
+      "llm_tags": [
+        "query:tsc"
+      ],
+      "matched_query_tag": "query:tsc",
+      "matched_query_text": "generative models for time series",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.01918v1",
+      "source": "arxiv",
+      "title": "Zeus: Towards Tuning-Free Foundation Model for Time Series Analysis",
+      "abstract": "We present Zeus, a unified tuning-free Time Series Foundation Model (TSFM) that delivers superior performance across diverse analysis tasks without any task-specific fine-tuning. Unlike prior studies that primarily focus on zero-shot forecasting but require task-specific tuning for other tasks, Zeus bridges this gap by addressing two fundamental challenges in multi-task generalization. First, to reconcile point-level granularity with long-sequence scalability, Zeus incorporates a multi-scale Transformer featuring point-wise tokenization and a U-shaped hierarchy, effectively balancing fine-grained fidelity with computational efficiency. Second, to accommodate varying inductive biases across different tasks, Zeus introduces Multi-Objective Temporal Masking (MOTM), a unified strategy that supports heterogeneous tasks (e.g., extrapolation, interpolation, and global abstraction) within a single framework. Extensive experiments across five representative tasks demonstrate that Zeus consistently achieves competitive results in tuning-free settings, underscoring its potential as a general-purpose TSFM.",
+      "authors": [
+        "Yisong Fu",
+        "Zezhi Shao",
+        "Chengqing Yu",
+        "Yujie Li",
+        "Yongjun Xu",
+        "Xueqi Cheng",
+        "Fei Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-02T09:16:51+00:00",
+      "link": "https://arxiv.org/pdf/2607.01918v1",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe",
+        "query:tsc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "unified tuning-free time series foundation model for diverse analysis tasks including feature extraction",
+      "llm_evidence_cn": "统一无调优时间序列基础模型，支持包括特征提取在内的多种分析任务",
+      "llm_evidence": "统一无调优时间序列基础模型，支持包括特征提取在内的多种分析任务",
+      "canonical_evidence": "统一无调优时间序列基础模型，支持包括特征提取在内的多种分析任务",
+      "llm_tldr_en": "Zeus is a multi-task time series foundation model that achieves state-of-the-art zero-shot performance across forecasting, classification, and anomaly detection without task-specific tuning.",
+      "llm_tldr_cn": "现有时间序列基础模型大多需要针对不同任务微调。本文提出Zeus，一个多尺度Transformer结合多目标时态掩码的统一基础模型，在不微调的情况下在多个时间序列分析任务上取得最优结果，包括预测、分类和异常检测，有效提取通用特征。",
+      "llm_tldr": "现有时间序列基础模型大多需要针对不同任务微调。本文提出Zeus，一个多尺度Transformer结合多目标时态掩码的统一基础模型，在不微调的情况下在多个时间序列分析任务上取得最优结果，包括预测、分类和异常检测，有效提取通用特征。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "time series feature extraction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-28-735130-v1",
+      "source": "biorxiv",
+      "title": "Performance Attribution in pLM-Based Biological Relation Prediction",
+      "abstract": "Protein language models (pLMs) have enabled strong benchmark performance in biological relation-prediction tasks, but aggregate metrics do not identify which sources of information support that performance. We examined three case studies-MetaESI, DeepGNHV, and SAGEPhos-using frozen pLM full-input baselines, endpoint- or site-restricted controls, clean train-derived prior controls, and a restriction-matched selector control. Frozen pLM-derived inputs coupled to generic downstream learners reached AUROC/AUPRC of 0.827/0.703 for the current MetaESI full-input rerun, 0.922/0.708 for a DeepGNHV two-endpoint baseline, and 0.896/0.893 for SAGEPhos. Restricted controls retained task-dependent signal. Most notably, a self-label-excluding MetaESI endpoint-frequency control reached 0.846/0.676 under the row split, numerically close to the frozen ESM2 full-input reference despite using no sequence embeddings. Clean full-catalog DeepGNHV endpoint priors and SAGEPhos kinase/substrate/site-window priors provided supplementary diagnostics rather than direct architecture-contribution estimates. In a separate fixed frozen-pooling LightGBM experiment, GARD-selected pooling did not show higher observed performance than count-matched random token pooling. Endpoint-cold diagnostics showed performance degradation, while train-label shuffling returned discrimination to approximately chance; hard- or matched-negative and family- or homology-aware evaluations were not available across the case studies. These findings do not diagnose leakage, imply memorization, exclude biological learning, or invalidate the evaluated models. Rather, they show that benchmark utility and performance attribution are distinct: architecture-specific, relation-specific, selector-specific, and generalization claims require controls matched to the interpretation being made.",
+      "authors": [
+        "Zhu, K.",
+        "Zhao, W.",
+        "Zhang, Y.",
+        "Xia, Z."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-02T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.28.735130v1.full.pdf",
+      "tags": [
+        "keyword:fe",
+        "keyword:tsc",
+        "query:fe"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Frozen pLM used for biological relation prediction",
+      "llm_evidence_cn": "使用冻结蛋白质语言模型进行生物关系预测",
+      "llm_evidence": "使用冻结蛋白质语言模型进行生物关系预测",
+      "canonical_evidence": "使用冻结蛋白质语言模型进行生物关系预测",
+      "llm_tldr_en": "This paper uses frozen protein language models (pLMs) to analyze performance attribution in biological relation prediction, demonstrating that frozen pLM-derived inputs achieve strong AUROC/AUPRC scores across three case studies.",
+      "llm_tldr_cn": "该论文针对蛋白质语言模型在生物关系预测中的性能归因问题，提出了使用冻结pLM的基线分析框架。通过在MetaESI、DeepGNHV和SAGEPhos三个案例上构建冻结pLM全输入基线及多种控制实验，发现冻结pLM提取的特征结合通用下游学习器可达到AUROC 0.827-0.922、AUPRC 0.703-0.893。该工作揭示了不同信息源对预测性能的贡献，为理解pLM的决策机制提供了方法。",
+      "llm_tldr": "该论文针对蛋白质语言模型在生物关系预测中的性能归因问题，提出了使用冻结pLM的基线分析框架。通过在MetaESI、DeepGNHV和SAGEPhos三个案例上构建冻结pLM全输入基线及多种控制实验，发现冻结pLM提取的特征结合通用下游学习器可达到AUROC 0.827-0.922、AUPRC 0.703-0.893。该工作揭示了不同信息源对预测性能的贡献，为理解pLM的决策机制提供了方法。",
+      "llm_tags": [
+        "query:fe"
+      ],
+      "matched_query_tag": "query:fe",
+      "matched_query_text": "frozen encoder",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

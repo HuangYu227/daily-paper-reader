@@ -1,0 +1,1741 @@
+Title: FinInvest-GTCN: Explainable Graph-Temporal-Causal Modeling for Risk-Aware Investment Decision Optimization
+
+URL Source: https://arxiv.org/pdf/2606.28933v1
+
+Published Time: Tue, 30 Jun 2026 00:40:14 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# FinInvest-GTCN: Explainable Graph-Temporal-Causal Modeling for Risk-Aware Investment Decision Optimization 
+
+Junyan Tan 
+
+Department of Computer Science Zhejiang University 
+
+Yifan Li 
+
+Department of Computer Science Zhejiang University 
+
+Minghao Wang 
+
+Department of Computer Science Zhejiang University 
+
+Zihan Chen 
+
+Department of Computer Science Zhejiang University 
+
+Haoyu Zhang 
+
+Department of Computer Science Zhejiang University 
+
+Abstract 
+
+Venture capital (VC) investment decisions face distinct challenges, such as multi-source heterogeneous data, non-stationary time series, and the demand for explain-able predictions in high-stakes, low-data settings. To overcome these issues, we introduce FinInvest-GTCN , a Graph-Temporal-Causal Network that redefines the task from content recommendation to quantitative risk-return assessment. This architecture combines a relational graph encoder to capture the investment ecosys-tem’s topology Luo et al. [2025], Mungari et al. [2025], a multi-scale temporal fusion module to handle long-term dependencies and non-stationarity Oganesian et al. [2025], Chen et al. [2025d], and a causal decision head that generates risk-adjusted predictions with interpretable causal attributions Mahadevan [2025], Ál-varo Parafita et al. [2025]. A core innovation is the Meta-Causal Adaptation (MCA) strategy, which facilitates robust fine-tuning for new, data-scarce sectors by aligning updates with causally-plausible structures derived from meta-pretraining. Com-prehensive experiments on proprietary VC datasets show that FinInvest-GTCN delivers state-of-the-art results, markedly lowering the primary Risk-Adjusted Mean Squared Error (RA-MSE) to 2.51 from a baseline of 3.05 and boosting the cumulative return of a simulated portfolio by 18.7%. Ablation studies under-score the essential role of each component, while additional analyses confirm the model’s stability, interpretability, and enhanced adaptability. This work pioneers a data-driven, explainable framework for investment decision support. 
+
+1 Introduction 
+
+Financial investment decision-making, particularly in venture capital (VC), constitutes a high-stakes sequential prediction problem characterized by multi-source heterogeneous data and complex inter-asset relationships Akinfaderin and Subramanian [2025], Li et al. [2025a], Yin et al. [2025]. Practi-tioners must analyze time-series data encompassing financial metrics, team dynamics, and market signals, while simultaneously accounting for the broader ecosystem topology—including competitive overlaps and shared investor networks—to forecast risk-adjusted returns for potential assets. Despite the abundance of historical data, accurately modeling these sequential, relational, and non-stationary 
+
+> Preprint.
+> arXiv:2606.28933v1 [cs.CL] 27 Jun 2026
+
+patterns to support robust and explainable decisions remains a formidable challenge.Zhang et al. [2025b,e,c,d,a], Mo et al. [2026], Yu et al. [2026], Zhang et al. [2026b] Prior work in sequential recommendation and financial modeling exhibits critical limitations when applied to this domain. Traditional tree-based approaches rely heavily on manual feature engineering, which is labor-intensive and fails to capture dynamic temporal dependencies Wang et al. [2025b], Kemper and Rostam-Afschar [2025], Hsieh et al. [2024]. Standard neural sequence models, such as LSTMs or Transformers, process observation histories but neglect the rich relational structure among assets Choi et al. [2025], Zeng et al. [2025], Ren et al. [2025], Peng et al. [2025], Chen et al. [2025a], You et al. [2026], Chen et al. [2025c], Zhang et al. [2026a], Zhao et al. [2026], Huang et al. [2026], Chen et al. [2025b]. Moreover, existing methods often optimize for simplistic objectives such as click-through or conversion rates, which fundamentally misalign with the investment goal of maximizing risk-adjusted returns. These approaches also typically lack mechanisms for explainability and struggle to adapt to new sectors with scarce data, thereby hindering practical deployment in evolving markets. 
+
+Figure 1: Paradigm shift from traditional investment decision methods to the proposed FinInvest-GTCN framework. Left: Existing methods suffer from fragmented approaches—manual feature engineering, isolated temporal modeling that ignores relational context, and lack of explainability. Right: Our unified framework integrates graph-based ecosystem topology modeling, multi-scale temporal fusion, and causal attribution, with Meta-Causal Adaptation (MCA) for robust fine-tuning, directly aligning with the goal of maximizing risk-adjusted returns. To address these gaps, we propose FinInvest-GTCN , a novel Graph-Temporal-Causal Network for quantitative investment decision optimization. Our framework introduces three key innovations: (1) a relational graph encoder that captures the investment ecosystem’s topology via Graph Attention Networks; (2) a multi-scale temporal fusion module that learns patterns across different horizons using parallel Transformers; and (3) a causal decision head that predicts risk-adjusted returns while enabling approximate causal attribution for model explanations. Furthermore, we introduce a Meta-
+
+Causal Adaptation (MCA) strategy that regularizes fine-tuning towards causally-plausible structures, thereby enhancing robustness in low-data scenarios. Collectively, these contributions provide a principled, end-to-end solution that transcends traditional recommendation paradigms to directly address the core challenges of investment analysis. 2Extensive experiments on proprietary and simulated venture capital datasets demonstrate the effec-tiveness of our approach. FinInvest-GTCN achieves a state-of-the-art Risk-Adjusted MSE of 2.51, substantially outperforming strong baselines including repurposed sequential recommenders and financial factor models. Ablation studies confirm the importance of each architectural component, and our MCA strategy reduces RA-MSE by 16% compared to standard fine-tuning on a new, data-scarce sector. In a simulated online A/B test, a portfolio constructed using our model’s rankings yields an 18.7% cumulative return with lower volatility, underscoring its practical utility for real-world deployment. The remainder of this paper is organized as follows. Section 2 reviews related work. Section 3 details the FinInvest-GTCN architecture. Section 4 presents the experimental setup and results. Section 5 provides comprehensive ablation studies. Section 6 offers supplementary experiments, and Section 7 concludes the paper. 
+
+2 Related Work 
+
+Our work lies at the intersection of three major research areas: graph-based financial modeling, temporal sequence learning for investment analysis, and causal inference for explainable predictions. We review each area and position our contributions accordingly. 
+
+2.1 Graph Neural Networks in Finance 
+
+Graph neural networks (GNNs) have emerged as powerful tools for modeling relational structures in financial data Ma et al. [2025], Lee et al. [2025], Xu et al. [2025], Ye et al. [2025], Hu et al. [2025]. Early applications focused on stock market prediction by constructing graphs based on industry sectors or correlation matrices. More recent works have extended GNNs to model complex inter-company relationships, including supply chains, competitive dynamics, and shared investor networks Li and Fan [2025], Kim et al. [2025], Kempinski and Kachman [2025], Duan and Ji [2025], Ashrafi and Kabir [2025]. Graph Attention Networks (GATs) have proven particularly effective by learning adaptive edge weights that capture varying relationship strengths Shit and Subudhi [2025], Zhang et al. [2025f], Wang et al. [2025c], Liu et al. [2025c]. However, existing approaches predominantly target public equity markets and short-term price prediction Perekhodko and ´ Slepaczuk [2025], Beniwal [2025], Chiu et al. [2025], leaving the venture capital domain—characterized by sparse, irregular observations and longer investment horizons—largely unexplored. 
+
+2.2 Temporal Modeling for Financial Time Series 
+
+Sequential modeling has long been central to financial forecasting. Traditional approaches relied on autoregressive models and handcrafted technical indicators. The advent of deep learning in-troduced LSTM and GRU architectures capable of capturing long-range dependencies in price sequences Chirukiri et al. [2025], Perekhodko and ´ Slepaczuk [2025]. More recently, Transformer-based models have demonstrated superior performance by leveraging self-attention mechanisms to model complex temporal patterns Chen et al. [2025d], Chapariniya et al. [2025], Kiu et al. [2025], Yao et al. [2025], Wang et al. [2025a]. Multi-scale temporal modeling, which processes time series at different granularities simultaneously, has shown promise in capturing both short-term fluctuations and long-term trends Feng and Xue [2025], Ding et al. [2025b], Oganesian et al. [2025]. Despite these advances, most methods focus on single-asset prediction and do not integrate the relational context essential for venture capital analysis, where an asset’s prospects depend heavily on its ecosystem position Alduais et al. [2025], Yin et al. [2025]. 
+
+2.3 Causal Inference and Explainability in Machine Learning 
+
+As machine learning models are increasingly deployed in high-stakes financial decisions, the demand for explainability has intensified. Post-hoc explanation methods such as SHAP and LIME provide feature attributions but lack causal grounding Álvaro Parafita et al. [2025], Zhang and Cai [2025]. Causal inference frameworks offer principled approaches to understanding model behavior through interventional reasoning Akbar et al. [2025], Kubota and Sugasawa [2025], Compton et al. [2025], Byambadalai et al. [2025], Jin et al. [2025]. Recent work has explored integrating causal structures 3into neural networks to improve both robustness and interpretability Liu et al. [2025b], Mahadevan [2025], Liu et al. [2025a]. In the investment domain, explainability is particularly critical for regula-tory compliance and building investor trust. However, existing financial models rarely incorporate causal reasoning, and methods for generating causal-style explanations for complex graph-temporal architectures remain underdeveloped. 
+
+2.4 Transfer Learning and Domain Adaptation in Finance 
+
+Adapting pre-trained models to new domains with limited data is a persistent challenge. Meta-learning approaches, which learn to learn from a distribution of tasks, have shown success in few-shot scenarios Guan et al. [2025], Jiang et al. [2025], Yun et al. [2025], Hong et al. [2025]. In finance, transfer learning has been applied to adapt models across markets or asset classes Vu et al. [2025], Li et al. [2025c], but standard fine-tuning often leads to overfitting when target domain data is scarce. Parameter-efficient fine-tuning methods like LoRA reduce this risk but do not explicitly preserve domain-invariant structures Jeon et al. [2025a,b], Ding et al. [2025a]. Our Meta-Causal Adaptation strategy addresses this gap by regularizing adaptation towards causally-plausible structures learned during pre-training. In summary, while significant progress has been made in graph-based modeling, temporal sequence learning, and causal inference individually, no existing framework integrates these capabilities for venture capital decision optimization. Our work addresses this gap by proposing FinInvest-GTCN, which synergistically combines relational graph encoding, multi-scale temporal fusion, and causal attribution within a unified architecture specifically designed for risk-aware, explainable investment analysis. 
+
+3 Methodology 
+
+We introduce FinInvest-GTCN , a novel Graph-Temporal-Causal Network designed for robust venture capital decision optimization. Our approach fundamentally reframes the task from con-tent recommendation to quantitative investment analysis, systematically addressing the challenges posed by multi-source heterogeneous data, non-stationary financial time series, and the need for explainability in high-stakes, low-data environments. The design of FinInvest-GTCN is guided by three core principles: (i) Structural Awareness : Investment outcomes are governed not only by intrinsic asset features but also by the topological position of an asset within the broader ecosystem. Our architecture must explicitly encode and reason over this relational structure. (ii) Multi-Horizon Temporal Coherence : Financial time series are inherently non-stationary, exhibiting patterns at disparate scales—from quarterly earnings fluctuations to multi-year industry cycles. An effective model must simultaneously capture and adaptively fuse these multi-scale temporal signals. (iii) Causal Interpretability under Uncertainty : In high-stakes investment contexts, both regu-lators and practitioners demand explanations grounded in causal reasoning rather than mere statistical correlation. The model must natively provide risk-calibrated predictions alongside interpretable causal attributions. Below, we first formalize the problem (§3.1), then present the three core architectural modules (§3.2–§3.4), followed by the joint training objective (§3.5), the Meta-Causal Adaptation strategy (§3.6), and a theoretical analysis (§3.7). 
+
+3.1 Problem Formulation & Data Representation 
+
+We begin by formalizing the investment decision task as a structured prediction problem over a dynamic heterogeneous information network. 
+
+Definition 1 (Investment Decision Environment) . An investment decision environment is defined by the tuple E = ⟨I , J , G, O, Y⟩ , where I is the set of investor entities, J is the universe of investable assets, G is a dynamic relational graph, O denotes multi-source observation streams, and Y captures the risk-return outcome space. 
+
+4Dynamic Asset-Relation Graph. The relational structure is represented as a dynamic graph 
+
+Gt = (Vt, Et, R) at time step t. The node set Vt = {vj }j∈J t represents active assets, and the edge set Et ⊂ Vt × R × V t encodes typed relational contexts. The relation type set 
+
+R = {rcompete , r supply , r invest , r sector } captures competitive overlaps, supply-chain linkages, shared investor ties, and sector co-membership, respectively. Each node vj carries an initial feature vector 
+
+vj ∈ Rdv derived from static firmographic attributes (e.g., founding year, geography, patent count). This multi-relational graph formulation, inspired by recent advances in heterogeneous graph repre-sentation learning Ma et al. [2025], Lee et al. [2025], Xu et al. [2025], enables the model to capture the rich, typed topology of real-world investment ecosystems that homogeneous graph approaches fail to represent. 
+
+Multi-Source Observation Sequence. For each asset j observed by investor i, we compile a time-ordered sequence of multi-source feature vectors up to decision time τ :
+
+Oi,j = [ xj,τ −L+1 , xj,τ −L+2 , . . . , xj,τ ] ∈ RL×dx (1) where L is the lookback window length. Each feature vector is a concatenation of heterogeneous source embeddings: 
+
+xj,t =
+
+ f fin 
+
+> j,t
+
+|{z} 
+
+> financial
+
+∥ f team 
+
+> j,t
+
+|{z} 
+
+> human capital
+
+∥ f mkt 
+
+> j,t
+
+|{z} 
+
+> market signal
+
+∥ mt
+
+|{z} 
+
+> macro
+
+ (2) Here, f fin  
+
+> j,t
+
+∈ Rdf encodes financial metrics (revenue growth, burn rate, unit economics), f team  
+
+> j,t
+
+∈ Rdh
+
+captures human capital dynamics (executive changes, hiring velocity, key-person dependencies), 
+
+f mkt  
+
+> j,t
+
+∈ Rdm represents market-level signals (competitor activity, sector momentum, deal flow volume), and mt ∈ Rdμ denotes exogenous macroeconomic factors (interest rates, public market indices, credit spreads). To handle the heterogeneity and variable dimensionality of raw sources, each sub-vector is first processed through a source-specific projection layer ϕs : Rdraw  
+
+> s
+
+→ Rds before concatenation. 
+
+Risk-Adjusted Outcome Space. The prediction target for each investor-asset-time triplet (i, j, τ )
+
+is a bivariate outcome capturing both the expected return and the associated uncertainty over the investment horizon [τ, τ + ∆ T ]:
+
+ˆyi,j = (ˆ ri,j , ˆσi,j ) ∈ R × R>0 (3) where ˆri,j is the predicted return (e.g., an IRR proxy or valuation uplift) and ˆσi,j is the predicted risk score (aleatoric volatility). This bivariate formulation represents a fundamental departure from conventional recommendation systems that output scalar relevance scores (e.g., CTR/CVR), directly aligning the model output with the Markowitz mean-variance optimization paradigm that underpins modern portfolio theory. 
+
+Remark 1 (Connection to Heteroscedastic Regression) . Our formulation can be viewed as a het-eroscedastic Gaussian regression model ri,j ∼ N (ˆ ri,j , ˆσ2 
+
+> i,j
+
+), which naturally leads to the negative log-likelihood training objective presented in §3.5. This probabilistic interpretation ensures that the model not only predicts what the return will be, but also quantifies how confident it is—a critical requirement for risk-aware decision-making. 
+
+3.2 Module I: Relational Graph Encoder 
+
+The first core module of FinInvest-GTCN embeds each asset within the context of its relational ecosystem. The central insight is that an asset’s investment potential depends critically on its position 
+
+in the broader network: a startup facing concentrated competition from well-funded incumbents occupies a fundamentally different risk profile than one in a nascent, under-served niche—even if their intrinsic financial metrics are identical. The overall architecture of FinInvest-GTCN is illustrated in Figure 2. 
+
+3.2.1 Multi-Relational Graph Attention Mechanism 
+
+Given the typed nature of edges in Gt, we extend the standard Graph Attention Network (GAT) to a multi-relational variant that computes relation-specific attention coefficients Duan and Ji [2025], Shit and Subudhi [2025]. For a target asset node vj , the graph-informed representation is computed via multi-head, relation-aware attention: 5Figure 2: High-level architecture of FinInvest-GTCN. The framework integrates three core modules: (1) Relational Graph Encoder (GAT) for modeling the investment ecosystem topology, (2) Multi-Scale Temporal Fusion (MST-Former) with parallel encoders for different temporal scales, and (3) Causal Decision Head for risk-adjusted return prediction with causal attribution. The Meta-Causal Adaptation (MCA) module enables robust fine-tuning for new sectors via KL-divergence regularization on causal structure priors. 
+
+hGj = MG
+
+> m=1
+
+σ
+
+X
+
+> r∈R
+
+X 
+
+> k∈N r(j)
+
+α(r,m ) 
+
+> jk
+
+W(m) 
+
+> r
+
+vk
+
+ (4) where ∥ denotes multi-head concatenation across MG attention heads, and Nr (j) is the set of neighbors of j connected by relation type r. Crucially, each relation type r ∈ R is assigned a dedicated projection matrix W(m) 
+
+> r
+
+∈ RdG/M G×dv , enabling the model to learn distinct transformation semantics for competitive, supply-chain, investor, and sector relationships. The multi-relational attention coefficient is computed as: 
+
+α(r,m ) 
+
+> jk
+
+=exp 
+
+
+
+LeakyReLU  a(m)⊤ 
+
+> r
+
+[W(m) 
+
+> r
+
+vj ∥ W(m) 
+
+> r
+
+vk]P
+
+> r′∈R
+
+P  
+
+> l∈N r′(j)
+
+exp 
+
+
+
+LeakyReLU  a(m)⊤ 
+
+> r′
+
+[W(m) 
+
+> r′
+
+vj ∥ W(m) 
+
+> r′
+
+vl] (5) where a(m) 
+
+> r
+
+∈ R2dG/M G is a relation-specific attention vector for head m. Notably, the normalization in Eq. (5) operates across all relation types jointly , inducing a natural competition between different relational channels and enabling the model to learn which relationship types are most informative for a given asset. 
+
+3.2.2 Neighborhood Normalization and Self-Loop Augmentation 
+
+To ensure numerical stability and prevent the graph encoder from over-smoothing representations in densely connected subgraphs, we augment the message-passing procedure with two additional mechanisms. First, each node vj includes a self-loop of a special identity relation type, guaranteeing that the original node features are preserved: 
+
+˜N (j) =  N (j) × R  ∪ { (j, r self )} (6) 6Second, we apply a symmetric normalization factor ˆD−1/2 
+
+> jk
+
+based on node degrees to prevent gradient explosion in high-degree nodes, following Li and Fan [2025], Kim et al. [2025]: 
+
+˜α(r,m ) 
+
+> jk
+
+= α(r,m )
+
+> jk
+
+q
+
+| ˜N (j)| · | ˜N (k)|
+
+(7) 
+
+3.2.3 Stacked Graph Encoding with Residual Connections 
+
+We stack KG layers of the multi-relational GAT with residual connections to allow information propagation across multi-hop neighborhoods while mitigating the over-smoothing problem Zhang et al. [2025f], Wang et al. [2025c]: 
+
+hG, (ℓ+1)  
+
+> j
+
+= LayerNorm 
+
+
+
+hG, (ℓ) 
+
+> j
+
++ Dropout  GAT (ℓ)(hG, (ℓ) 
+
+> j
+
+, Gt)
+
+, ℓ = 0 , . . . , K G − 1 (8) where hG, (0)  
+
+> j
+
+= Linear (vj ) and the final graph representation is hGj := hG, (KG) 
+
+> j
+
+∈ RdG . The residual-LayerNorm design ensures stable gradient flow while the multi-hop aggregation enables the model to capture indirect ecosystem effects (e.g., a competitor’s supplier receiving major funding). 
+
+3.3 Module II: Multi-Scale Temporal Fusion (MST-Former) 
+
+Financial time series are inherently non-stationary and exhibit patterns at multiple temporal scales: short-term momentum signals (e.g., recent quarterly revenue acceleration), medium-term cyclical pat-terns (e.g., annual hiring cycles), and long-term structural trends (e.g., multi-year market positioning shifts). A single-scale temporal encoder conflates these disparate dynamics, limiting its capacity to disentangle actionable signals from noise. Our MST-Former module addresses this by processing the observation sequence at multiple granularities through parallel, scale-specialized Transformer encoders, followed by an adaptive gating mechanism that fuses the multi-scale representations. 
+
+3.3.1 Scale-Specific Input Preparation 
+
+Given the observation sequence Oi,j = [ xj, 1, . . . , xj,L ] (we omit the offset τ − L + 1 for notational clarity), we construct S scale-specific input sequences. For scale s ∈ { 1, . . . , S }, the input is derived by selecting the most recent Ls time steps ( L1 < L 2 < · · · < L S = L): 
+
+O(s) 
+
+> i,j
+
+= [ xj,L −Ls+1 , . . . , xj,L ] ∈ RLs×dx (9) In our implementation, we employ S = 3 scales corresponding to approximately 4-quarter (short-term), 8-quarter (medium-term), and full-history (long-term) lookback windows, i.e., L1 = 4 , L 2 =8, L 3 = L. This design ensures that the short-term encoder focuses on recent dynamics without being diluted by distant, potentially obsolete signals, while the long-term encoder captures the full evolutionary trajectory of the asset. 
+
+3.3.2 Positional Encoding with Temporal Awareness 
+
+Unlike standard NLP tasks where token positions are uniformly spaced, financial observations may have irregular temporal spacing (e.g., missing quarterly reports). We augment standard sinusoidal positional encodings with a learnable temporal embedding that encodes the absolute calendar time of each observation: 
+
+˜x(s) 
+
+> j,t
+
+= xj,t + PE (trel )
+
+| {z }
+
+> relative position
+
++ MLP cal (ct)
+
+| {z }
+
+> calendar embedding
+
+(10) where trel denotes the relative position within the scale-specific window, PE (·) is the standard sinusoidal positional encoding, and ct = [ quarter (t), year (t), is_crisis (t)] is a calendar feature vector that embeds seasonal effects and macroeconomic regime indicators. This temporal-aware positional encoding enables the model to distinguish between, e.g., a revenue drop in Q4 (a known seasonal pattern) and the same drop in Q1 (a potentially alarming signal), thereby improving non-stationarity handling. 73.3.3 Scale-Specialized Transformer Encoders 
+
+Each scale s is processed by an independent Transformer encoder with its own parameter set Θ(s),consisting of KT layers of multi-head self-attention and position-wise feed-forward networks Kiu et al. [2025], Wang et al. [2025a]: 
+
+H(s) 
+
+> j
+
+= TransformerEncoder (s)  ˜O(s) 
+
+> i,j
+
+; Θ (s) ∈ RLs×dT (11) To further specialize each encoder to its designated temporal resolution, we introduce a scale-specific causal attention mask M(s). For scale s with window Ls, the attention mask restricts each query position to attend only to positions within its effective window: 
+
+M (s) 
+
+> pq
+
+=
+
+0 if 0 ≤ p − q ≤ Ws
+
+−∞ otherwise (12) where Ws is the effective local attention span of scale s. For the short-term encoder, Ws is set to a small value (e.g., W1 = 4 ) to enforce local focus; for the long-term encoder, WS = L (i.e., full attention). This inductive bias explicitly prevents the short-term encoder from “leaking” attention to distant, potentially irrelevant history, and ensures that each encoder specializes in its intended temporal resolution. The summary representation for each scale is obtained through attentive pooling rather than simple mean pooling, yielding a more expressive aggregation: 
+
+¯H(s) 
+
+> j
+
+=
+
+> Ls
+
+X
+
+> t=1
+
+β(s) 
+
+> t
+
+H(s) 
+
+> j,t
+
+, β(s) 
+
+> t
+
+= exp  q⊤ 
+
+> s
+
+H(s) 
+
+> j,t
+
+/√dT
+
+PLs 
+
+> t′=1
+
+exp  q⊤ 
+
+> s
+
+H(s) 
+
+> j,t ′
+
+/√dT
+
+ (13) where qs ∈ RdT is a learnable query vector for scale s. This mechanism allows the model to attend selectively to the most informative time steps at each scale. 
+
+3.3.4 Adaptive Gated Fusion 
+
+The S scale-specific summary representations are fused via a learned gating mechanism that adaptively weights each temporal scale based on the current input Feng and Xue [2025], Yao et al. [2025]: 
+
+hTj =
+
+> S
+
+X
+
+> s=1
+
+gs · ¯H(s) 
+
+> j
+
+, g = softmax 
+
+
+
+Wg CONCAT   ¯H(1)  
+
+> j
+
+, . . . , ¯H(S)
+
+> j
+
+ + bg
+
+
+
+(14) where Wg ∈ RS×Sd T and bg ∈ RS are learnable parameters. The gate vector g ∈ ∆S−1 (the probability simplex) acts as a soft attention over temporal scales , enabling the model to dynamically prioritize short-term signals during volatile market conditions and long-term trends during stable periods—a behavior we empirically observe and validate in §5. 
+
+Remark 2 (Relation to Mixture-of-Experts) . Our gated fusion mechanism can be viewed as a 
+
+temporal mixture-of-experts architecture, where each scale-specific Transformer acts as a specialized expert. The gating network performs input-dependent routing, ensuring that the fused representation 
+
+hTj ∈ RdT optimally balances information from different temporal horizons. This design is computa-tionally efficient: the parallel Transformer encoders can be executed simultaneously, and the gating overhead is negligible. 
+
+3.4 Module III: Causal Decision Head 
+
+The Causal Decision Head constitutes the final, and arguably most distinctive, module of FinInvest-GTCN. It integrates the graph-topological and temporal representations into a unified prediction space, producing both risk-adjusted return forecasts and interpretable causal attributions. This design addresses two critical demands simultaneously: the quantitative need for accurate, risk-calibrated predictions and the qualitative need for explanations that support human decision-making and regulatory compliance. 83.4.1 Cross-Modal Fusion via Gated Residual Connection 
+
+Rather than simply adding or concatenating the graph and temporal representations, we employ a 
+
+gated residual fusion mechanism that learns the optimal integration of structural ecosystem knowledge and temporal dynamics: 
+
+hj = LayerNorm 
+
+
+
+γ · WGhGj + (1 − γ) · WT hTj
+
+
+
+(15) where WG ∈ Rd×dG and WT ∈ Rd×dT are projection matrices, and γ ∈ (0 , 1) is a learned scalar gate computed as: 
+
+γ = σ
+
+
+
+w⊤
+
+> γ
+
+hGj ∥ hTj
+
+ + bγ
+
+
+
+(16) This gate allows the model to adaptively balance the relative importance of topological and temporal signals on a per-sample basis. For assets in highly interconnected ecosystems (e.g., platform compa-nies), the model may upweight the graph representation; for assets with strong intrinsic time-series signals (e.g., revenue-focused SaaS), it may prioritize the temporal encoding. 
+
+3.4.2 Risk-Adjusted Return Prediction with Heteroscedastic Uncertainty 
+
+The fused representation is passed through a dual-head MLP to produce the bivariate prediction: 
+
+ˆri,j = MLP r (hj ) = w⊤ 
+
+> r
+
+ReLU (Wr, 1hj + br, 1) + br (17) 
+
+ˆσi,j = softplus  MLP σ (hj ) = log 
+
+
+
+1 + exp  w⊤ 
+
+> σ
+
+ReLU (Wσ, 1hj + bσ, 1) + bσ
+
+
+
+(18) where the softplus activation in Eq. (18) ensures strict positivity of the predicted risk ˆσi,j > 0.Critically, the return and risk heads share the fused representation hj but have independent parameters, enabling the model to capture the nuanced relationship between expected return and uncertainty (i.e., an asset may have high expected return and high risk). 
+
+3.4.3 Interventional Causal Attribution for Explainability 
+
+To provide explanations that go beyond correlational feature importance (as in SHAP or LIME), we introduce an Interventional Causal Attribution (ICA) mechanism grounded in the potential outcomes framework Zhang and Cai [2025], Akbar et al. [2025]. The core idea is to estimate the causal effect 
+
+of a hypothesized factor z on the model’s prediction by constructing a counterfactual representation. 
+
+Step 1: Factor-Aligned Attention. For a given causal factor z (e.g., a regulatory event, a key competitor’s funding round, or a macroeconomic shock), we first compute a factor-aligned attention score over the temporal representation: 
+
+αz = sigmoid 
+
+ hT ⊤ 
+
+> j
+
+· Embed (z)
+
+√dT
+
+
+
+(19) where Embed (z) ∈ RdT maps the factor identifier to the temporal representation space. The scalar 
+
+αz ∈ (0 , 1) quantifies the degree to which the temporal representation encodes information related to factor z.
+
+Step 2: Counterfactual Representation Construction. We construct a counterfactual fused representation by surgically removing the component of the representation that is aligned with factor 
+
+z:
+
+hCF (z) 
+
+> j
+
+= hj − αz · CrossAttn  hj , Embed (z), Embed (z)| {z }
+
+> factor-aligned subspace projection
+
+(20) where CrossAttn (Q, K, V ) = softmax (QK ⊤/√d)V is a standard cross-attention operator. This construction can be interpreted as an approximate do-calculus intervention : we estimate ˆr(do (z := 
+
+absent )) by projecting out the factor-aligned subspace from the learned representation. 9Step 3: Approximate Causal Effect Estimation. The Approximate Causal Effect (ACE) of factor 
+
+z on the predicted return is computed as the difference between the factual and counterfactual predictions: 
+
+∆ˆ r(z) 
+
+> i,j
+
+= MLP r (hj ) − MLP r (hCF (z) 
+
+> j
+
+) (21) A large positive ∆ˆ r(z) 
+
+> i,j
+
+indicates that the model’s favorable prediction is causally attributable to factor 
+
+z; conversely, a large negative value signals that z drives a pessimistic forecast. For a set of candidate factors Z = {z1, z 2, . . . , z P }, the model produces a full causal attribution profile: 
+
+∆ˆ ri,j = ∆ˆ r(z1) 
+
+> i,j
+
+, . . . , ∆ˆ r(zP )
+
+> i,j
+
+ ∈ RP (22) This profile serves as a human-readable explanation for each investment recommendation, enabling portfolio managers to understand why the model favors or disfavors a particular asset Mahadevan [2025], Álvaro Parafita et al. [2025]. 
+
+Proposition 1 (Completeness of Causal Attribution) . Under the assumption that the factor embed-dings {Embed (zp)}Pp=1 span the full representation space RdT , the sum of individual causal effects converges to the total prediction: PPp=1 ∆ˆ r(zp) 
+
+> i,j
+
+≈ ˆri,j − ˆr(∅) 
+
+> i,j
+
+, where ˆr(∅) 
+
+> i,j
+
+is the prediction under a null baseline representation. 
+
+This completeness property ensures that the causal attributions collectively “explain” the model’s entire prediction, analogous to the efficiency property of Shapley values but with a causal rather than purely game-theoretic foundation. 
+
+3.5 Joint Training Objective 
+
+The model is trained end-to-end with a composite loss function comprising three terms that collec-tively enforce accurate risk-calibrated predictions, high-quality causal explanations, and structural regularization: 
+
+Ltotal = Lreturn 
+
+| {z } 
+
+> prediction
+
++μ Lcausal 
+
+| {z } 
+
+> explanation
+
++ν Lgraph 
+
+| {z } 
+
+> regularization
+
+(23) 
+
+Risk-Adjusted Return Loss (Primary). The primary objective derives from the negative log-likelihood of a heteroscedastic Gaussian model, penalizing prediction errors inversely proportional to the model’s predicted confidence: 
+
+Lreturn = 1
+
+|D| 
+
+X
+
+> (i,j )∈D
+
+"
+
+(ri,j − ˆri,j )2
+
+ˆσ2
+
+> i,j
+
++ log ˆ σ2
+
+> i,j
+
+#
+
+(24) This loss naturally balances two competing forces: the squared-error numerator encourages accuracy, while the log-variance term prevents the model from trivially inflating ˆσi,j to minimize the first term. This aligns the training objective with the Markowitz risk-return trade-off at the core of portfolio optimization. 
+
+Causal Alignment Loss (Auxiliary). To improve the quality of causal attributions, we introduce a supervision signal that encourages alignment between model-attributed causal effects and ground-truth factor impacts derived from ex-post analysis: 
+
+Lcausal = 1
+
+|D z |
+
+X
+
+> (i,j )∈D z
+> P
+
+X
+
+> p=1
+
+
+
+∆ˆ r(zp) 
+
+> i,j
+
+− ∆r(zp)∗
+
+> i,j
+
+2
+
+(25) where ∆r(zp)∗ 
+
+> i,j
+
+denotes the ground-truth effect of factor zp on asset j’s outcome, estimated from ex-post ablation studies or domain expert labels. This loss is applied to a subset Dz ⊂ D for which ground-truth factor effects are available. 10 Graph Structure Regularization (Auxiliary). To prevent the graph attention weights from de-generating into uniform distributions (thereby losing structural information), we impose an entropy regularization on the attention distribution: 
+
+Lgraph = − 1
+
+|V t|
+
+X
+
+> j∈V t
+
+X
+
+> r∈R
+
+X 
+
+> k∈N r(j)
+
+˜α(r) 
+
+> jk
+
+log ˜ α(r) 
+
+> jk
+
+(26) This negative-entropy penalty encourages sparse , informative attention weights, promoting inter-pretable graph aggregation where each asset attends primarily to its most relevant neighbors rather than diffusing attention uniformly. 
+
+3.6 Meta-Causal Adaptation (MCA) for New Investment Sectors 
+
+Adapting to emerging investment sectors (e.g., quantum computing, synthetic biology) with extremely limited historical data represents a critical practical challenge Guan et al. [2025], Jiang et al. [2025]. Standard fine-tuning approaches suffer from catastrophic overfitting in such low-data regimes, while parameter-efficient methods like LoRA Jeon et al. [2025b], Hong et al. [2025] reduce overfitting risk but do not explicitly leverage the structural invariances that transfer across sectors—namely, the causal mechanisms linking ecosystem dynamics to investment outcomes. We address this gap with Meta-Causal Adaptation (MCA) , a two-phase adaptation strategy that combines meta-learning with causal structural regularization. 
+
+3.6.1 Phase I: Episodic Meta-Pretraining 
+
+During meta-pretraining, the model learns a shared initialization θmeta that enables rapid adaptation to any sector. We adopt a MAML-style episodic framework Yun et al. [2025], Jeon et al. [2025a]: at each meta-iteration, a source sector Sk is sampled, and the model is adapted via Ninner gradient steps on a support set Dsup  
+
+> Sk
+
+, then evaluated on a query set Dqry  
+
+> Sk
+
+. The meta-objective is: 
+
+θmeta = arg min 
+
+> θ
+
+X 
+
+> Sk∼p(S)
+
+Lreturn 
+
+ Dqry  
+
+> Sk
+
+; θ − ηin ∇θ Lreturn (Dsup  
+
+> Sk
+
+; θ) (27) where ηin is the inner-loop learning rate. Critically, during meta-pretraining, we additionally extract and store the causal structure prior P (ϕG | θmeta ), a distribution over plausible causal graph structures inferred from the converged GAT attention weights and causal attribution scores. Concretely, ϕG is parameterized as a Bernoulli adjacency distribution over potential causal edges: 
+
+P (ϕG | θmeta ) = Y
+
+> (j,k )∈E causal
+
+Bernoulli  σ(w⊤ 
+
+> ϕ
+
+[¯ αmeta  
+
+> jk
+
+∥ ¯∆meta  
+
+> jk
+
+])  (28) where ¯αmeta  
+
+> jk
+
+is the mean attention weight between nodes j and k and ¯∆meta  
+
+> jk
+
+aggregates the causal attribution scores over the meta-pretraining trajectories. This prior encodes the domain-invariant causal structure that persists across sectors: the general principle that, e.g., a competitor’s funding event causally affects an asset’s risk, regardless of the specific sector. 
+
+3.6.2 Phase II: Causally-Regularized Adaptation 
+
+When adapting to a new target sector T with limited data DT (e.g., |D T | = 200 samples), we fine-tune from θmeta by minimizing: 
+
+LMCA = Lreturn (DT ; θ)
+
+| {z }
+
+> task-specific fit
+
++λ D KL 
+
+
+
+P (ϕG | θ) ∥ P (ϕG | θmeta )
+
+| {z }
+
+> causal structure preservation
+
+(29) The KL-divergence term acts as a structural regularizer : it penalizes adaptations that cause the model’s inferred causal graph to deviate significantly from the meta-learned prior Compton et al. [2025], Liu et al. [2025a]. Intuitively, this allows the model’s predictions to adapt freely to the new sector’s data distribution, while constraining the causal reasoning mechanism to remain consistent with the transferable structural knowledge learned across many sectors. 11 Remark 3 (Distinction from Standard Regularization) . Unlike weight-decay or L2 regularization (which penalize deviation in parameter space ) or LoRA (which constrains the rank of parameter updates), MCA operates in causal structure space . This is a fundamentally more meaningful inductive bias: it preserves the “grammar” of causal relationships while allowing the “vocabulary” (sector-specific feature weights) to adapt freely. This distinction is empirically validated in §5, where MCA significantly outperforms both parameter-space regularization approaches. 
+
+The hyperparameter λ ≥ 0 controls the strength of causal regularization. Setting λ = 0 recovers standard fine-tuning; increasing λ strengthens the prior constraint. We analyze sensitivity to λ in §6 and find that a moderate value ( λ ≈ 0.3) optimally balances adaptability and robustness. 
+
+3.7 Theoretical Analysis 
+
+We provide theoretical results that motivate key architectural choices and characterize the generaliza-tion properties of FinInvest-GTCN. 
+
+Theorem 2 (Generalization Bound for FinInvest-GTCN) . Let FGTCN denote the hypothesis class of FinInvest-GTCN with KG-layer graph encoder, S-scale temporal fusion, and dual-head prediction. For a training set D of size N drawn i.i.d. from the investment outcome distribution, the expected risk of the empirical risk minimizer ˆf ∈ F GTCN satisfies: 
+
+ELreturn ( ˆf ) − ˆLreturn ( ˆf ) ≤ O 
+
+ dG · |R| · KG
+
+√N
+
+| {z }
+
+> graph complexity
+
++ O
+
+ S · dT · KT · log L
+
+√N
+
+| {z }
+
+> temporal complexity
+
++ O
+
+r log(1 /δ )2N
+
+!| {z }
+
+> confidence term
+
+(30) 
+
+with probability at least 1 − δ over the draw of D.Proof sketch. The bound follows from a decomposition of the Rademacher complexity of FGTCN 
+
+into graph encoder, temporal encoder, and prediction head components, combined with standard concentration inequalities. The graph term scales with the product of the number of relation types, embedding dimension, and depth. The temporal term includes a log L factor from the self-attention mechanism’s effective VC dimension. The parallel multi-scale architecture contributes an additive S
+
+factor rather than multiplicative, confirming its computational efficiency. A detailed proof is provided in the Appendix. This bound reveals two key insights. First, the graph module’s complexity is controlled by the number of relation types |R| rather than the graph size |V| , confirming that our multi-relational attention mechanism generalizes well even on large graphs. Second, the multi-scale design contributes only linearly in S (the number of scales), validating that the parallel architecture does not incur the exponential complexity that a single model processing all scales jointly would exhibit. 
+
+Lemma 3 (MCA Regularization Effect) . For a target sector T with NT adaptation samples, the MCA-regularized estimator ˆfMCA satisfies: 
+
+ELreturn ( ˆfMCA ) ≤ ELreturn ( ˆfFT ) − Ω
+
+
+
+λ · dϕ
+
+NT
+
+
+
+(31) 
+
+where ˆfFT is the standard fine-tuned estimator and dϕ is the dimension of the causal structure space. That is, MCA reduces expected risk by an amount proportional to λ/N T , with the improvement being most pronounced in data-scarce regimes (small NT ). 
+
+This lemma formalizes the intuition that MCA is most beneficial when data is scarce, providing a principled explanation for the large performance gains observed in the Quantum Computing adaptation experiments (§4). 
+
+3.8 Computational Complexity Analysis 
+
+We analyze the computational cost of each module to confirm scalability to real-world deployment. 
+
+Graph Encoder. Each GAT layer requires O(|E t| · |R| · dG/M G) for attention computation and 
+
+O(|V t| · d2
+
+> G
+
+/M G) for the projection. With KG layers, the total is O(KG · |E t| · |R| · dG).12 MST-Former. Each scale-s Transformer encoder requires O(L2 
+
+> s
+
+· dT ) per layer for self-attention and 
+
+O(Ls · d2 
+
+> T
+
+) for the feed-forward network. With S parallel encoders and KT layers each, the total is O(KT · PSs=1 (L2 
+
+> s
+
+· dT + Ls · d2 
+
+> T
+
+)) , which simplifies to O(S · KT · L2 · dT ) in the worst case. Importantly, the S encoders operate in parallel , so wall-clock time scales as O(KT · L2 · dT ).
+
+Causal Attribution. Computing the ACE for P candidate factors requires P forward passes through the return MLP, costing O(P · d2). Since P is typically small ( P ≤ 20 candidate factors) and the MLP is lightweight, this overhead is negligible relative to the encoder costs. 
+
+Overall. The total training complexity per sample is dominated by the Transformer encoders: 
+
+O(KT · L2 · dT + KG · |E t| · |R| · dG), which remains manageable for the financial sequence lengths (L ≤ 40 quarters) and graph sizes ( |V t| ∼ 5000 ) encountered in practice. 
+
+4 Experiments 
+
+4.1 Experimental Setup 
+
+We adapt the experimental setup from prior work to our investment decision optimization task. The core dataset is constructed from proprietary venture capital databases and public sources Li et al. [2025a], Akinfaderin and Subramanian [2025], simulating an investor’s observation history. For each investor i, we construct sequential observation windows for assets j, employing an 80%-10%-10% chronological split for training, validation, and testing. The study encompasses sequences from over 10,000 simulated investors, 5,000 unique assets, and 2 million simulated investment decision points across eight primary sectors. 
+
+Evaluation Metrics. We adopt metrics aligned with the risk-return prediction paradigm. The primary evaluation metric is the Risk-Adjusted Mean Squared Error (RA-MSE) , defined as 
+
+> 1
+> N
+
+P
+
+> (i,j )
+
+(ri,j − ˆri,j )2/ˆσ2 
+
+> i,j
+
+, corresponding directly to our training loss Lreturn (Eq. (24) ). This metric penalizes overconfident errors. For ranking performance, we report the Cumulative Return (Cum. Ret.) of a simulated portfolio that invests in the top-K assets ranked by the model’s predicted risk-adjusted return ( ˆri,j /ˆσi,j ) at each decision point. We also report standard MSE for return prediction and Accuracy for a binary “investment-worthy” classification derived from a return threshold. 
+
+Baselines & Our Method: We compare our method against several strong baselines. • RF Baseline: A Random Forest model using handcrafted financial and firmographic fea-tures. • LSTM: A standard LSTM network processing the temporal observation sequence Oi,j .• Transformer: A Transformer encoder processing Oi,j .• FinTRec: A baseline model adapted from prior work to predict a scalar return. • FinInvest-GTCN (Ours): Our proposed Graph-Temporal-Causal Network. We also report an ablated version, Ours w/o Graph , which removes the Relational Graph Encoder module (§3.2). 
+
+Implementation Details. All neural models were implemented in PyTorch and trained on NVIDIA A100 GPUs Ding et al. [2025a], Zou et al. [2025]. Each model was trained for 100 epochs using the AdamW optimizer with a learning rate of 1 × 10 −4, weight decay of 1 × 10 −5, and a batch size of 32. The model achieving the lowest validation RA-MSE was selected. For FinInvest-GTCN, the meta-pretraining for the MCA module (§3.6) was conducted on a separate set of five source sectors. Table 1 summarizes the key architectural and training hyperparameters. 
+
+4.2 Offline Results Main Results. The main results on the hold-out test set are summarized in Table 2. Our proposed FinInvest-GTCN achieves the best performance across all key metrics. It significantly outperforms all baselines on the primary RA-MSE metric (2.51), demonstrating superior capability in making accurate, risk-calibrated predictions. The Transformer and FinTRec baselines show competitive but lower performance. Notably, the ablated version Ours w/o Graph exhibits a clear performance drop (RA-MSE of 3.15), underscoring the critical contribution of the relational graph 13 Table 1: Key hyperparameters of the FinInvest-GTCN architecture and training configuration. 
+
+Module Hyperparameter Value 
+
+Graph Encoder Graph embedding dim dG 128 Attention heads MG 4GAT layers KG 3Relation types 4MST-Former Temporal embedding dim dT 128 Transformer layers KT 4Number of scales S 3Scale windows (4, 8, Full) Attention heads per scale 8Causal Head Fused dim d 256 Causal factors P 15 MLP hidden dim 128 Training Learning rate 1 × 10 −4
+
+Weight decay 1 × 10 −5
+
+Causal loss weight μ 0.1 Graph reg. weight ν 0.01 MCA strength λ 0.3 RF Baseline LSTM Transformer FinTRec Ours w/o Graph FinInvest-GTCN 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Performance Value
+> 0.42
+> 0.38
+> 0.35
+> 0.28
+> 0.19
+> 0.15
+> 0.12
+> 0.10
+> 0.08
+> 0.07
+> 0.04
+> 0.02
+> 0.48
+> 0.55
+> 0.62
+> 0.73
+> 0.82
+> 0.91
+> 0.68
+> 0.72
+> 0.76
+> 0.81
+> 0.86
+> 0.92
+
+Model Performance Comparison Across Metrics        
+
+> RA-MSE (lower )MSE (lower )Cumulative Return Top-10 (higher )Accuracy (higher )
+
+Figure 3: Overall performance comparison across all models. FinInvest-GTCN achieves the best scores on all metrics (RA-MSE, MSE, Cumulative Return Top-10, and Accuracy), demonstrating clear superiority over baselines. The ablated version (Ours w/o Graph) shows a noticeable performance drop, emphasizing the importance of the graph encoder. encoder Zhang et al. [2025f], Kempinski and Kachman [2025]. The RF baseline performs the weakest, highlighting the limitation of static, handcrafted features for this dynamic sequence prediction task. 
+
+Performance Across Sectors. To assess model robustness, we analyze RA-MSE performance broken down by the primary sector of the target asset. As shown in Table 3 and visualized in Figure 4, 
+
+FinInvest-GTCN achieves the best performance in five of six major sectors and remains competitive in the AI/ML sector, exhibiting overall stable and superior performance. The model shows particular strength in complex, network-dependent sectors like FinTech and Plat-forms Lee et al. [2025], Gressel et al. [2025]. The FinTRec baseline performs well but is less consistent, especially in HealthTech . The standard LSTM and Transformer models show greater performance variance across sectors. 
+
+Ablation Study. A detailed ablation study isolates the contribution of each core component in FinInvest-GTCN, with results presented in Table 4. The full model achieves the best RA-MSE (2.51). 14 Table 2: Overall predictive performance on the test set. Lower values are better for RA-MSE and MSE. Higher values are better for Cumulative Return (Top-10) and Accuracy. Best results are bold ;second best are underlined. 
+
+Model RA-MSE ↓ MSE ↓ Cum. Ret. (Top-10) ↑ Accuracy ↑
+
+RF Baseline 5.89 1.24 1.58 61.2% LSTM 4.37 0.98 2.01 67.5% Transformer 3.42 0.83 2.45 71.8% FinTRec 3.05 0.79 2.67 73.4% 
+
+Ours w/o Graph 3.15 0.81 2.59 72.9% 
+
+FinInvest-GTCN (Ours) 2.51 0.74 3.02 76.1% 
+
+Figure 4: Heatmap of RA-MSE performance across six asset sectors. Cooler colors indicate lower (better) RA-MSE values. FinInvest-GTCN achieves consistently low RA-MSE across most sectors, with particular strength in network-dependent sectors like FinTech and Platforms. Table 3: RA-MSE performance breakdown by asset sector (lower is better). Best per sector is bold ;second best is underlined. 
+
+Sector RF LSTM Transformer FinTRec Ours 
+
+FinTech 5.67 4.12 3.38 2.87 2.35 
+
+HealthTech 6.32 4.89 3.78 3.45 2.68 
+
+AI/ML 5.45 4.01 3.05 2.92 3.11 Consumer 6.01 4.55 3.55 3.11 2.79 
+
+Enterprise 5.78 3.98 3.21 3.34 2.97 
+
+Platforms 5.72 4.27 3.65 3.02 2.45 
+
+Removing the Causal Attribution module leads to a slight performance drop (RA-MSE: 2.63) and eliminates explainability. Replacing the Multi-Scale Temporal Fusion with a single-scale Transformer causes a more significant drop (RA-MSE: 2.89), validating the need to capture multi-horizon patterns. As noted earlier, removing the Graph Encoder substantially harms performance (RA-MSE: 3.15). Using a standard MSE loss instead of the risk-adjusted loss results in the worst RA-MSE (3.42), confirming the specialized loss function’s importance for risk-calibrated prediction. Transformer 
+
+> FT
+> FinTRec
+> FT
+> FinInvest
+> Std FT
+> FinInvest
+> LoRA
+> FinInvest
+> MCA
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> RA-MSE
+> 0.85
+> 0.82
+> 0.78
+> 0.75
+> 0.68
+> Adaptation Performance on Quantum Computing Sector
+
+Figure 5: RA-MSE after adaptation. FinInvest-GTCN achieves the lowest 
+
+Meta-Causal Adaptation Effectiveness. To evaluate our model’s robustness in low-data scenarios, we simulate adap-tation to a new investment domain. We hold out all data from a “Quantum Computing” sector during initial training, then fine-tune models on a very small sample ( N = 200 ) from 15 Table 4: Ablation study of FinInvest-GTCN components (RA-MSE, lower is better). 
+
+Variant Description RA-MSE ↓
+
+1. Full Model FinInvest-GTCN as proposed 2.51 
+
+2. w/o Causal Attribution Remove ACE calculation module 2.63 3. w/o Multi-Scale Fusion Single-scale Transformer only 2.89 4. w/o Graph Encoder (Identical to “Ours w/o Graph”) 3.15 5. w/ MSE Loss Replace Lreturn with standard MSE 3.42 
+
+this new sector. Table 5 and Figure 5 present the RA-MSE after adaptation. 
+
+FinInvest-GTCN with MCA significantly outperforms all baselines and our own model fine-tuned with standard full-parameter fine-tuning or LoRA Jeon et al. [2025b], Hong et al. [2025]. The MCA strategy, which regularizes updates towards causally-plausible structures learned during meta-pretraining, effectively prevents overfitting and leverages prior knowledge, making it uniquely suited for data-scarce domains. Table 5: Performance on a new, data-scarce sector (“Quantum Computing”) after fine-tuning on 
+
+N = 200 samples. Lower RA-MSE is better. 
+
+Model & Adaptation Strategy RA-MSE ↓
+
+Transformer (Fine-Tuned) 5.12 FinTRec (Fine-Tuned) 4.67 FinInvest-GTCN (Standard FT) 4.05 FinInvest-GTCN (LoRA FT) 3.88 
+
+FinInvest-GTCN (MCA - Ours) 3.41 
+
+4.3 Online Simulation & A/B Test Results 
+
+Following standard methodology, we conduct offline simulations to assess the po-tential impact of deploying FinInvest-GTCN on a simulated investment portfo-lio. We compare the cumulative return of a portfolio constructed using rankings from our model against the production baseline over a simulated 12-month period. Cumulative Return Annualized Volatility Sharpe Ratio 
+
+> 0
+> 5
+> 10
+> 15
+> 20
+> Value  14.5%
+> 16.8%
+> 0.89
+> 18.7%
+> 14.2%
+> 1.31
+> Online Portfolio Performance Comparison (12-month simulation)
+> FinTRec Baseline
+> FinInvest-GTCN
+
+Figure 6: Online portfolio comparison. FinInvest-GTCN improves return, volatility, and Sharpe ratio. 
+
+Simulated Portfolio Performance. The results are summarized in Table 6 and Figure 6. The portfolio based on FinInvest-GTCN rank-ings achieves a significantly higher cumulative return (+18.7%) compared to the baseline port-folio. It also exhibits lower volatility (14.2% vs. 16.8%), resulting in a superior Sharpe Ratio (1.31 vs. 0.89). This demonstrates that the supe-rior offline risk-return predictions of our model translate directly into better simulated investment outcomes. The improvement is attributed to our model’s integrated graph-temporal modeling Ald-uais et al. [2025], Wang et al. [2025c] and explicit risk estimation, which lead to more stable and high-conviction asset rankings. 
+
+Summary. The comprehensive experiments confirm that our proposed FinInvest-GTCN method establishes a new state-of-the-art for quantitative investment decision support. It consistently ranks first in predictive accuracy, demonstrates robust performance across diverse sectors, effectively lever-ages its architectural components, and shows exceptional adaptability to new, data-scarce domains via MCA. Critically, these offline gains translate into superior simulated portfolio performance, underscoring its practical utility. The results validate our core design principles: integrating relational 16 Table 6: Simulated online A/B test results over a 12-month period. The portfolio selects top-10 assets monthly based on model rankings. 
+
+Model Cum. Ret. Vol. (Ann.) Sharpe 
+
+FinTRec (Baseline) +14.5% 16.8% 0.89 
+
+FinInvest-GTCN (Ours) +18.7% 14.2% 1.31 
+
+graph context, modeling multi-scale temporal dynamics, and employing a risk-adjusted objective with causal regularization. 
+
+5 Ablation Studies 
+
+To rigorously evaluate the contribution of each core component in our proposed FinInvest-GTCN 
+
+architecture and its adaptation strategy, we conduct a comprehensive suite of ablation experiments. These studies systematically test fundamental module necessity, evaluate adaptation strategies, and analyze specific design choices. The results consistently demonstrate the superiority of the full model and validate the critical role of each designed component, providing empirical support for the theoretical insights in §3.7. Full Model   
+
+> (G+T+C)
+> w/o G w/o T
+> (Multi-Scale)
+> w/o C
+> Model Variant
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> RA-MSE
+> 0.082
+> 0.245
+> 0.115
+> 0.198
+> Ablation Study on Core Architectural Modules
+> RA-MSE (Lower is Better) Cumulative Return (Higher is Better)
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Cumulative Return
+> 0.942
+> 0.658
+> 0.835
+> 0.703
+
+Figure 7: Ablation study on core archi-tectural modules. 
+
+1. Ablation on Core Architectural Modules: We first isolate the impact of the three main modules of FinInvest-GTCN: the Relational Graph Encoder (G, §3.2), the Multi-Scale Temporal Fusion (T, §3.3), and the Causal Decision Head with its risk-adjusted loss (C, §3.4). As shown in Ta-ble 7, the complete model achieves the best performance across both primary predictive metrics (RA-MSE: 2.51) and the downstream investment metric (Cumulative Return: 3.02). Removing the Graph Encoder ( w/o G ) causes the most significant performance drop (RA-MSE increases to 3.15), underscoring the indispensable value of multi-relational at-tention (Eq. (4) ) for modeling the topological relationships within the investment ecosystem Xu et al. [2025], Ye et al. [2025]. Table 7: Ablation study on the core modules of FinInvest-GTCN. The full model integrates Graph (G), Multi-scale Temporal fusion (T), and Causal/Risk-adjusted loss (C). 
+
+Variant Description RA-MSE ↓ Cum. Ret. ↑
+
+Full Model (G+T+C) FinInvest-GTCN as proposed 2.51 3.02 
+
+w/o G Remove Graph Encoder 3.15 2.59 
+
+w/o T (Multi-Scale) Single-scale Transformer only 2.89 2.73 
+
+w/o C Use MSE loss, no causal attribution 3.42 2.48 No Fine-Tuning Standard F-FT LoRA FT MCA (Ours) 
+
+> Adaptation Strategy
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> RA-MSE (Lower is better)
+> 0.85
+> 0.72
+> 0.48
+> 0.35
+> Adaptation Strategy Comparison on Quantum Computing (N=2)
+
+Figure 8: Comparison of adaptation strategies for a new, data-scarce sector (Quantum Computing, N = 200 ). Replacing the Multi-Scale Temporal Fusion with a single-scale Transformer encoder ( w/o T (Multi-Scale) ) also leads to notable degradation (RA-MSE: 2.89), confirming the ne-cessity of the adaptive gated fusion mechanism (Eq. (14) ) for capturing financial patterns across different horizons Ding et al. [2025b], Loganathan et al. [2025]. Removing the causal attribution and using a standard MSE loss ( w/o C )results in the worst RA-MSE (3.42), validating that the het-eroscedastic loss Lreturn (Eq. (24) ) is crucial for producing well-calibrated, risk-aware predictions. 
+
+2. Ablation on Adaptation Strategies for New Sectors: 
+
+We evaluate the effectiveness of the Meta-Causal Adaptation (MCA) strategy against standard fine-tuning techniques. As shown in Table 8, after fine-tuning on only 200 samples from a held-out “Quantum Computing” sector, our MCA strategy achieves the lowest RA-MSE (3.41), significantly outperforming other strategies. Full parameter 17 fine-tuning (F-FT) leads to overfitting (RA-MSE: 4.05) Wu et al. [2025], Prabhune et al. [2025]. Parameter-efficient fine-tuning via LoRA performs better (3.88) but does not match MCA Arora et al. [2025], Fu et al. [2025], as it lacks the causal structural regularization. Notably, without any fine-tuning , our model performs poorly on the new sector (5.87) due to distributional shifts, as illustrated in Figure 8. Table 8: Ablation on adaptation strategies for a new, data-scarce sector (“Quantum Computing”, N=200). Lower RA-MSE is better.       
+
+> Model & Adaptation Strategy RA-MSE ↓
+> FinInvest-GTCN (No Fine-Tuning) 5.87 FinInvest-GTCN (Standard F-FT) 4.05 FinInvest-GTCN (LoRA FT) 3.88
+> FinInvest-GTCN (MCA - Ours) 3.41
+
+This ablation confirms that MCA (Eq. (29) ) is a principled approach that balances rapid adaptation with robustness by preserving causal insights from meta-pretraining Byambadalai et al. [2025], Jin et al. [2025], consistent with the theoretical prediction of Lemma 3. 
+
+3. Analysis of Multi-Scale Temporal Configurations: We ablate the choice of temporal scales (context windows) in the Multi-Scale Temporal Fusion module. Table 9 reports the RA-MSE for models trained with different scale combinations. The configuration “Q4 + Q8 + Full” (4-quarter, 8-quarter, and full-history scales, as defined in Eq. (9) ), used in our full model, delivers the best performance Long et al. [2025], Muneer et al. [2025]. Using only a single scale, whether short (“Q4 only”) or long (“Full only”), results in suboptimal performance. The combination “Q4 + Q8” performs better than single scales but worse than the full three-scale model, indicating that the full history provides unique, non-redundant signals. This empirically justifies our multi-scale design for capturing the complex, multi-horizon nature of financial time series Guo et al. [2025], Sekar and Nezamoddini [2025], as visualized in Figure 9. 
+
+Figure 9: Effect of different multi-scale temporal configurations on RA-MSE. Performance improves as more complementary scales are combined, with the three-scale configuration (Q4+Q8+Full) achieving optimal performance, validating the multi-scale design. 
+
+4. Utility of Causal Attribution for Explanation Fidelity: We evaluate the practical utility of the Causal Attribution module for model explainability. For a set of test samples, we use the module to identify the top hypothesized causal factor. We then retrain a surrogate model using only the temporal steps where this factor was active, according to the attribution scores. As shown in Table 10, the performance of this surrogate model (RA-MSE: 2.90) is close to that of the full model trained 18 Table 9: Ablation on the configuration of scales in the Multi-Scale Temporal Fusion module. “Q4”, “Q8”, “Full” refer to 4-quarter, 8-quarter, and full-history attention spans. 
+
+Temporal Scale Configuration RA-MSE ↓
+
+Q4 only 2.96 Q8 only 3.08 Full only 3.11 Q4 + Q8 2.74 Q4 + Full 2.69 Q8 + Full 2.72 
+
+Q4 + Q8 + Full (Ours) 2.51 
+
+on the entire sequence (RA-MSE: 2.51), and it significantly outperforms a surrogate model trained on randomly selected time steps (RA-MSE: 3.55). This indicates that the Interventional Causal Attribution mechanism (§3.4.3, Eq. (21) ) successfully isolates the most predictive, semantically meaningful segments of the input sequence Liu et al. [2025b], Kubota and Sugasawa [2025], providing high-fidelity explanations that could be invaluable for regulatory compliance and investor trust, as demonstrated in Figure 10. Table 10: Evaluating the fidelity of explanations from the Causal Attribution module. The surrogate model is trained only on input slices identified as important by the module. 
+
+Model / Training Data RA-MSE ↓
+
+Full Model (All data) 2.51 
+
+Surrogate Model (Causal-Attributed slices) 2.90 Surrogate Model (Random time slices) 3.55 Full Model 
+
+> (All data)
+> Surrogate
+> (Causal)
+> Surrogate
+> (Random)
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> RA-MSE (Lower is better)
+> 0.12
+> 0.18
+> 0.42
+> Causal-attributed slices
+> preserve fidelity
+> Causal Attribution Fidelity Evaluation
+> Full Model
+> Surrogate (Causal)
+> Surrogate (Random)
+> Baseline
+
+Figure 10: Evaluation of causal attribution fidelity. In summary, the ablation studies provide a multi-faceted validation of the FinInvest-GTCN architec-ture Arasteh et al. [2025], B et al. [2025]. They demonstrate that: (1) every core module is essential for peak performance; (2) the novel MCA adaptation strategy is superior for data-scarce domains; (3) the multi-scale temporal design is optimally configured; and (4) the causal attribution provides faithful expla-nations. Collectively, these experiments solidify the rationale behind our design choices. 
+
+6 Supplementary Experiments 
+
+To provide deeper insights into the behavior and ro-bustness of FinInvest-GTCN , we conduct supple-mentary analyses Dvoretskii et al. [2025], Kukanov and Ng [2025], including examining training dynam-ics, performing case studies, and analyzing sensitivity to key hyperparameters. These experiments further validate the model’s stability, interpretability, and practical utility beyond the aggregate metrics. 
+
+1. Training Dynamics and Convergence Analysis. We analyze the training and validation curves for the primary risk-adjusted loss ( Lreturn ) across epochs for FinInvest-GTCN and two key baselines: the Transformer and the ablated Ours w/o Graph . FinInvest-GTCN achieves lower validation loss more rapidly and maintains a stable gap between training and validation loss, indicating effective generalization without severe overfitting Chen et al. [2025e], Kemper and Rostam-Afschar [2025]. In contrast, the Transformer baseline shows higher validation loss and greater variance, while Ours w/o Graph exhibits a slower convergence rate and a higher final plateau. To quantify this, we report the epoch at which each model’s validation RA-MSE first falls below 3.0 and the standard deviation of the last 10 epochs’ validation loss: FinInvest-GTCN (epoch 28, std 0.08), Transformer (epoch 41, std 0.15), Ours w/o Graph (epoch 35, std 0.12). This analysis confirms that the integration of the graph 19 encoder and multi-scale temporal fusion not only improves final performance but also leads to more stable and efficient optimization Li et al. [2025b], Vu et al. [2025]. 20 40 60 80 100              
+
+> Epoch
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> Validation RA-MSE
+> (a) Validation Loss Convergence (±1.5 )
+> FinInvest-GTCN
+> Ours w/o Graph
+> Transformer
+> FinTRec
+> 20 40 60 80 100
+> Epoch
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Val  Train Gap
+> (b) Generalization Gap (Overfitting Monitor)
+> FinInvest-GTCN
+> Ours w/o Graph
+> Transformer
+> FinTRec
+> 20 40 60 80 100
+> Epoch
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Gradient L2 Norm
+> (c) Gradient Norm Dynamics
+> FinInvest-GTCN
+> Ours w/o Graph
+> Transformer
+> FinTRec
+> 20 40 60 80 100
+> Epoch
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Learning Rate (×1e-4)
+> (d) Learning Rate Schedule & Effective Update
+> LR Schedule (×1e-4)
+> Effective Update Mag.
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Effective Update (×1e-4)
+
+Figure 11: Training and validation loss curves for FinInvest-GTCN compared with the Transformer baseline and the ablated variant (Ours w/o Graph). Our full model converges faster and exhibits smaller generalization gap. 
+
+2. Case Study: Model Predictions and Explanations for Exemplar Assets. To illustrate the model’s explanatory capability via Interventional Causal Attribution (§3.4.3), we present a qualitative case study on three diverse assets from the test set. For each asset, Table 11 shows the model’s predicted return ( ˆr) and risk ( ˆσ), the actual realized return ( r), and the top causal factor identified by the Causal Attribution module along with its estimated effect ( ∆ˆ r). For instance, for a FinTech startup, the model correctly predicted a high return (8.2%) with moderate risk, attributing a significant portion of the positive signal to a recent “regulatory approval” event. For a HealthTech asset that underperformed, the model assigned a high risk score and attributed a negative effect to a “key competitor funding round.” These case-specific explanations demonstrate how FinInvest-GTCN can provide actionable insights beyond a scalar prediction Mahadevan [2025], Álvaro Parafita et al. [2025]. Table 11: Case study on three test assets, showing predictions, outcomes, and top causal explanations from the Causal Attribution module. 
+
+Asset (Sector) ˆri,j ˆσi,j ri,j RA-MSE Top Causal Factor (Effect ∆ˆ r)
+
+FinTech Startup +8.2% 0.15 +7.9% 0.85 Regulatory approval (+4.9%) HealthTech Company +3.1% 0.22 -1.5% 3.21 Competitor funding round (-2.8%) AI/ML Platform +12.5% 0.18 +11.8% 1.12 Enterprise partnership (+5.1%) 
+
+3. Sensitivity Analysis of Meta-Causal Adaptation Hyperparameter. The Meta-Causal Adaptation (MCA) strategy introduces a regularization strength λ (Eq. (29) ) that balances task-specific fine-tuning against causal structural priors. To assess sensitivity, we vary λ from 0 (no regularization) to 
+
+1 (strong prior) when adapting to the held-out “Quantum Computing” sector ( N = 200 ). Table 12 reports the resulting RA-MSE. Performance peaks at λ = 0 .3, with significant degradation if λ is too low (overfitting) or too high (underfitting). The optimal λ yields a 12% improvement over no regularization ( λ = 0 ) and a 10% improvement over very strong regularization ( λ = 1 ). This analysis provides practical guidance for deploying MCA to new sectors: a moderate λ around 0.3 effectively 20 leverages the meta-learned causal structures while allowing necessary adaptation to domain-specific signals Guan et al. [2025], Jiang et al. [2025]. Table 12: Sensitivity of MCA performance to the regularization strength λ on the “Quantum Comput-ing” sector adaptation task (lower RA-MSE is better). 
+
+Regularization Strength λ RA-MSE ↓
+
+0.0 (No regularization) 3.88 0.1 3.59 0.2 3.48 
+
+0.3 3.41 
+
+0.5 3.52 0.8 3.70 1.0 3.81 0.0 0.2 0.4 0.6 0.8 1.0                                      
+
+> Regularization Strength λ
+> 3.4
+> 3.5
+> 3.6
+> 3.7
+> 3.8
+> 3.9
+> RA-MSE
+> Optimal: =0.3
+> (a) MCA Hyperparameter Sensitivity
+> Sweet spot
+> 10 210 3
+> Number of Training Samples N
+> 2.5
+> 3.0
+> 3.5
+> 4.0
+> 4.5
+> 5.0
+> 5.5
+> 6.0
+> RA-MSE
+> MCA advantage
+> (b) Data Efficiency Curve (Low-Data Regime)
+> No FT
+> Full FT
+> LoRA FT
+> MCA (Ours)
+> Q4
+> only
+> Q8
+> only
+> Full
+> only
+> Q4+Q8 Q4+Full Q8+Full Q4+Q8
+> +Full
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+> RA-MSE
+> 2.96
+> 3.08 3.11
+> 2.74 2.69 2.72
+> 2.51
+> (c) Temporal Scale Configuration Ablation
+> 0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5
+> RA-MSE
+> Full Model
+> Causal-Attr.
+> Surrogate
+> Random-Slice
+> Surrogate
+> 2.51
+> 2.90
+> 3.55
+> =0.39
+> High Fidelity
+> =1.04
+> Low Fidelity
+> (d) Causal Attribution Explanation Fidelity
+> Graph (G)
+> Multi-Scale (T)
+> Causal Loss (C)
+> MCA
+> Graph (G)
+> Multi-Scale (T)
+> Causal Loss (C)
+> MCA
+> 1.00 0.82 0.71 0.65
+> 0.82 1.00 0.68 0.58
+> 0.71 0.68 1.00 0.79
+> 0.65 0.58 0.79 1.00
+> (e) Component Interaction Synergy Heatmap
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Synergy Score
+> 30 35 40 45 50 55
+> Epoch to RA-MSE < 3.0
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> 0.18
+> 0.20
+> 0.22
+> Std of Last 10 Epochs Val. Loss
+> LSTM
+> Transformer
+> FinTRec
+> w/o Graph
+> FinInvest-GTCN
+> (f) Convergence Speed vs Stability (Bubble=Perf.)
+> Bubble Size
+> RA-MSE 2.5
+> RA-MSE 3.5
+> RA-MSE 4.5
+
+Figure 12: Sensitivity analysis of key hyperparameters. Performance remains robust within moderate ranges, with sharp degradation at extremes. 
+
+4. Multi-Metric Radar Comparison. To holistically compare model capabilities across multiple evaluation dimensions, Figure 13 presents a radar chart showing all methods on five core metrics. FinInvest-GTCN achieves the largest coverage area, indicating balanced superiority rather than improvement on a single metric at the expense of others. 
+
+5. Sector-Wise Error Distribution. To understand performance variation within each sector, Figure 14 presents violin plots of per-asset RA-MSE across the six sectors. FinInvest-GTCN not only achieves lower median error but also exhibits tighter distributions, suggesting consistent performance regardless of asset-specific characteristics within each sector. 
+
+6. Residual Analysis. To verify that our model does not exhibit systematic prediction biases, Figure 15 shows a scatter plot of predicted vs. actual returns with residual distributions. The residuals are centered near zero with no discernible pattern, confirming that FinInvest-GTCN produces well-calibrated predictions without systematic over- or under-estimation across different return magnitudes. 
+
+7 Conclusion 
+
+In this work, we introduce a paradigm shift in venture capital decision support by reframing it from a content recommendation task to a quantitative risk-adjusted return prediction problem. To address the 21 RA-MSE 
+
+(inv.) 
+
+MSE 
+
+(inv.) 
+
+Cum. Ret. 
+
+Top-10 
+
+Accuracy 
+
+(%) 
+
+Sharpe 
+
+Ratio 
+
+Convergence 
+
+Speed 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+(a) Multi-Dimensional Performance Radar 
+
+1.0 1.2 1.4 1.6 1.8 2.0 2.2 
+
+Performance Ratio τ
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Fraction of Sectors Solved
+
+Optimal zone 
+
+(b) Performance Profile Across Sectors 
+
+RF 
+
+LSTM 
+
+Transformer 
+
+FinTRec 
+
+Ours w/o G 
+
+FinInvest-GTCN Figure 13: Multi-metric radar profile comparing FinInvest-GTCN with baselines across five evaluation dimensions. Our model achieves the largest coverage area, reflecting balanced superiority. RF LSTM Transformer FinTRec FinInvest-GTCN 
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+> RA-MSE Distribution
+
+(a) Cross-Sector RA-MSE Distribution (Violin + Box) 
+
+FinTech 
+
+HealthTech 
+
+AI/ML 
+
+Consumer 
+
+Enterprise 
+
+Platforms 
+
+2
+
+3
+
+4
+
+5
+
+6
+
+> RA-MSE
+
+(b) Per-Sector Model Comparison (with Error Bars) 
+
+RF 
+
+LSTM 
+
+Transformer 
+
+FinTRec 
+
+FinInvest-GTCN 
+
+Figure 14: Violin plots of per-asset RA-MSE across six sectors. FinInvest-GTCN demonstrates lower median errors and tighter distributions compared to baselines. 5 0 5 10 15 
+
+Actual Return (%) 
+
+5.0 
+
+2.5 
+
+0.0 
+
+2.5 
+
+5.0 
+
+7.5 
+
+10.0 
+
+12.5 
+
+15.0 
+
+> Predicted Return (%)
+
+LSTM 
+
+y=x 
+
+R²=0.680 
+
+0.0025 
+
+0.0050 
+
+0.0075 
+
+0.0100 
+
+0.0125 
+
+0.0150 
+
+0.0175 
+
+0.0200 
+
+> Density
+
+5 0 5 10 15 
+
+Actual Return (%) 
+
+5.0 
+
+2.5 
+
+0.0 
+
+2.5 
+
+5.0 
+
+7.5 
+
+10.0 
+
+12.5 
+
+15.0 
+
+> Predicted Return (%)
+
+FinTRec 
+
+y=x 
+
+R²=0.808 
+
+0.005 
+
+0.010 
+
+0.015 
+
+0.020 
+
+0.025 
+
+0.030 
+
+> Density
+
+5 0 5 10 15 
+
+Actual Return (%) 
+
+5.0 
+
+2.5 
+
+0.0 
+
+2.5 
+
+5.0 
+
+7.5 
+
+10.0 
+
+12.5 
+
+15.0 
+
+> Predicted Return (%)
+
+FinInvest-GTCN 
+
+y=x 
+
+R²=0.900 
+
+0.01 
+
+0.02 
+
+0.03 
+
+0.04 
+
+> Density
+
+7.5 5.0 2.5 0.0 2.5 5.0 7.5 
+
+Residual (Actual Predicted) 
+
+0.00 
+
+0.05 
+
+0.10 
+
+0.15 
+
+0.20 
+
+0.25 
+
+0.30 
+
+0.35 
+
+0.40 
+
+> Kernel Density
+
+(d) Residual Distribution Comparison 
+
+LSTM 
+
+Transformer 
+
+FinTRec 
+
+FinInvest-GTCN 
+
+3 2 1 0 1 2 3
+
+Theoretical Quantiles 
+
+3
+
+2
+
+1
+
+0
+
+1
+
+2
+
+3
+
+> Sample Quantiles
+
+(e) FinInvest-GTCN Residual Q-Q Plot 
+
+R²=0.9983 
+
+0.0 0.1 0.2 0.3 0.4 
+
+Predicted Uncertainty 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Actual Absolute Error
+
+(f) Risk Estimation Calibration Plot 
+
+Perfect Calibration 
+
+FinInvest-GTCN 
+
+Figure 15: Scatter plot of predicted vs. actual returns with marginal residual distributions. Residuals are centered near zero with no systematic bias. 22 inherent challenges of multi-source heterogeneous data, non-stationary time series, and the need for explainability in low-data scenarios Yin et al. [2025], Li et al. [2025c], we propose FinInvest-GTCN ,a novel Graph-Temporal-Causal Network. Our architecture synergistically integrates a multi-relational graph encoder with relation-specific attention to model the investment ecosystem’s topology Li and Fan [2025], Kim et al. [2025], a multi-scale temporal fusion module with scale-specific causal attention masks and adaptive gated fusion for capturing long-term dependencies Chirukiri et al. [2025], Oganesian et al. [2025], and a causal decision head featuring interventional causal attribution that generates both risk-return predictions and post-hoc causal explanations grounded in the potential outcomes framework Akbar et al. [2025], Zhang and Cai [2025]. Theoretical analysis provides generalization bounds confirming favorable scaling properties and formalizes the regularization benefits of our Meta-Causal Adaptation strategy. Comprehensive experiments on proprietary venture capital data demonstrate the effectiveness of our approach. Our model achieves state-of-the-art performance, with a superior Risk-Adjusted MSE of 2.51 and the highest cumulative return in simulated portfolios, outperforming strong baselines. Ablation studies confirm the critical contribution of each core component: the graph encoder, the multi-scale temporal fusion module, the causal attribution module, and the specialized risk-adjusted loss. Furthermore, the proposed Meta-Causal Adaptation (MCA) strategy enables robust performance in data-scarce new sectors Yun et al. [2025], Hong et al. [2025], significantly surpassing standard fine-tuning methods. The offline predictive gains translate into tangible benefits in online simulation, where a portfolio based on our model’s rankings achieves a higher cumulative return (+18.7%) and a superior Sharpe Ratio (1.31) compared to the baseline. In summary, FinInvest-GTCN offers a robust, explainable, and adaptable framework for optimizing data-driven investment decisions Akinfaderin and Subramanian [2025], Li et al. [2025a] by effectively integrating relational context, temporal dynamics, and causal reasoning. 
+
+Declarations 
+
+• Funding: Not applicable. • Conflict of interest: The authors declare no conflict of interest. • Data availability: The datasets analyzed during the current study are available from the corresponding author on reasonable request. • Code availability: Code will be made available upon publication. • Author contribution: Not applicable. 
+
+References 
+
+Uzair Akbar, Niki Kilbertus, Hao Shen, Krikamol Muandet, and Bo Dai. An analysis of causal effect estimation using outcome invariant data augmentation. arXiv preprint arXiv:2510.25128 , 2025. Adewale Akinfaderin and Shreyas Subramanian. Verafi: Verified agentic financial intelligence through neurosymbolic policy generation. arXiv preprint arXiv:2512.14744 , 2025. Mohammed Alduais, Xinming Li, and Qipei Mei. Trajgatformer: A graph-based transformer approach for worker and obstacle trajectory prediction in off-site construction environments. arXiv preprint arXiv:2510.22205 , 2025. Fazel Arasteh, Arian Haghparast, and Manos Papagelis. Network-constrained policy optimization for adaptive multi-agent vehicle routing. arXiv preprint arXiv:2510.26089 , 2025. Vinam Arora, Divyansha Lachi, Ian J. Knight, Mehdi Azabou, Blake Richards, Cole L. Hurwitz, Josh Siegle, and Eva L. Dyer. Know thyself by knowing others: Learning neuron identity from population context. arXiv preprint arXiv:2512.01199 , 2025. Adnan Ferdous Ashrafi and Hasanul Kabir. Enhanced graph convolutional network with chebyshev spectral graph and graph attention for autism spectrum disorder classification. arXiv preprint arXiv:2511.22178 , 2025. 23 Sangeeth B, Serena Nicolazzo, Deepa K., and Vinod P. Protecting deep neural network intellectual property with chaos-based white-box watermarking. arXiv preprint arXiv:2512.16658 , 2025. Mohit Beniwal. Adaptive weighted genetic algorithm-optimized svr for robust long-term forecasting of global stock indices for investment decisions. arXiv preprint arXiv:2512.15113 , 2025. Undral Byambadalai, Tomu Hirata, Tatsushi Oka, and Shota Yasui. Beyond the average: Distributional causal inference under imperfect compliance. arXiv preprint arXiv:2509.15594 , 2025. Masoumeh Chapariniya, Teodora Vukovic, Sarah Ebling, and Volker Dellwo. Beyond appear-ance: Transformer-based person identification from conversational dynamics. arXiv preprint arXiv:2510.04753 , 2025. Huiyi Chen, Jiawei Peng, Dehai Min, Changchang Sun, Kaijie Chen, Yan Yan, Xu Yang, and Lu Cheng. Mvi-bench: A comprehensive benchmark for evaluating robustness to misleading visual inputs in lvlms. arXiv preprint arXiv:2511.14159 , 2025a. Kaijie Chen, Zihao Lin, Zhiyang Xu, Ying Shen, Yuguang Yao, Joy Rimchala, Jiaxin Zhang, and Lifu Huang. R2i-bench: Benchmarking reasoning-driven text-to-image generation. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pages 12606–12641, 2025b. Kaijie Chen, Zhiyang Xu, Ying Shen, Zihao Lin, Yuguang Yao, and Lifu Huang. Superflow: Training flow matching models with rl on the fly. arXiv preprint arXiv:2512.17951 , 2025c. Kevin Chen, Kenneth W. Parker, and Anish Arora. Mocap2radar: A spatiotemporal transformer for synthesizing micro-doppler radar signatures from motion capture. arXiv preprint arXiv:2511.11462 ,2025d. Rick Chen, Joseph Ternasky, Aaron Ontoyin Yin, Xianling Mu, Fuat Alican, and Yigit Ihlamur. Llm-ar: Llm-powered automated reasoning framework. arXiv preprint arXiv:2510.22034 , 2025e. Varun Teja Chirukiri, Udaya Bhasker Cheerala, Sandeep Kanta, Abdul Karim, and Praveen Damacharla. Ftt-gru: A hybrid fast temporal transformer with gru for remaining useful life prediction. arXiv preprint arXiv:2511.00564 , 2025. Wei-Ning Chiu, Yu-Hsiang Wang, Andy Hsiao, Yu-Shiang Huang, and Chuan-Ju Wang. Financial risk relation identification through dual-view adaptation. arXiv preprint arXiv:2509.18775 , 2025. Jeongwhan Choi, Seungjun Park, Sumin Park, Sung-Bae Cho, and Noseong Park. Are graph transformers necessary? efficient long-range message passing with fractal nodes in mpnns. arXiv preprint arXiv:2511.13010 , 2025. Spencer Compton, Kristjan Greenewald, Dmitriy Katz, and Murat Kocaoglu. Entropic causal inference: Graph identifiability. arXiv preprint arXiv:2509.16463 , 2025. Kaixin Ding, Yang Zhou, Xi Chen, Miao Yang, Jiarong Ou, Rui Chen, Xin Tao, and Hengshuang Zhao. Alchemist: Unlocking efficiency in text-to-image model training via meta-gradient data selection. arXiv preprint arXiv:2512.16905 , 2025a. Ning Ding, Keisuke Fujii, and Toru Tamaki. Shot2tactic-caption: Multi-scale captioning of badminton videos for tactical understanding. arXiv preprint arXiv:2510.14617 , 2025b. Chenghao Duan and Chuanyi Ji. Graph attention network for predicting duration of large-scale power outages induced by natural disasters. arXiv preprint arXiv:2511.10898 , 2025. Stefan Dvoretskii, Anwai Archit, Constantin Pape, Josh Moore, and Marco Nolden. Bioimageaipub: a toolbox for ai-ready bioimaging data publishing. arXiv preprint arXiv:2512.15820 , 2025. Dingya Feng and Dingyuan Xue. Spatiotemporal transformers for predicting avian disease risk from migration trajectories. arXiv preprint arXiv:2510.15254 , 2025. Changzeng Fu, Shiwen Zhao, Yunze Zhang, Zhongquan Jian, Shiqi Zhao, and Chaoran Liu. Personality-guided public-private domain disentangled hypergraph-former network for multimodal depression detection. arXiv preprint arXiv:2511.12460 , 2025. 24 Gilad Gressel, Rahul Pankajakshan, Shir Rozenfeld, Ling Li, Ivan Franceschini, Krishnahsree Achuthan, and Yisroel Mirsky. Love, lies, and language models: Investigating ai’s role in romance-baiting scams. Usenix Security Symposium 2026 , 2025. Yunchuan Guan, Yu Liu, Ke Zhou, Zhiqi Shen, Jenq-Neng Hwang, Serge Belongie, and Lei Li. Is meta-learning out? rethinking unsupervised few-shot classification with limited entropy. arXiv preprint arXiv:2509.13185 , 2025. Qiming Guo, Bishal Khatri, Wenbo Sun, Jinwen Tang, Hua Zhang, and Wenlu Wang. Aquasentinel: Next-generation ai system integrating sensor networks for urban underground water pipeline anomaly detection via collaborative moe-llm agent architecture. arXiv preprint arXiv:2511.15870 ,2025. Qian Hong, Cheng Bian, Xiao Zhou, Xiaoyu Li, Yelei Li, and Zijing Zeng. Lost in time? a meta-learning framework for time-shift-tolerant physiological signal transformation. arXiv preprint arXiv:2511.21500 , 2025. Weiche Hsieh, Ziqian Bi, Keyu Chen, Benji Peng, Sen Zhang, Jiawei Xu, Jinlang Wang, Caitlyn Heqi Yin, Yichao Zhang, Pohsun Feng, Yizhu Wen, Tianyang Wang, Ming Li, Chia Xin Liang, Jintao Ren, Qian Niu, Silin Chen, Lawrence K. Q. Yan, Han Xu, Hong-Ming Tseng, Xinyuan Song, Bowen Jing, Junjie Yang, Junhao Song, Junyu Liu, and Ming Liu. Deep learning, machine learning, advancing big data analytics and management, 2024. URL https://arxiv.org/abs/2412.0 2187 .Jun Hu, Shangheng Chen, Yufei He, Yuan Li, Bryan Hooi, and Bingsheng He. Echoless label-based pre-computation for memory-efficient heterogeneous graph learning. arXiv preprint arXiv:2511.11081 , 2025. Yixu Huang, Bo Li, Na Li, Zhe Wang, Kaijie Chen, Haonan Ge, Qingyi Si, Yuanzhe Shen, Rui-han Yang, Guangjing Wang, et al. Gui agents for continual game generation. arXiv preprint arXiv:2605.28258 , 2026. Insu Jeon, Minui Hong, Junhyeog Yun, and Gunhee Kim. Federated learning via meta-variational dropout. Jeon, I., Hong, M., Yun, J., Kim, G. (2023). Federated Learning via Meta-Variational Dropout. Advances in Neural Information Processing Systems 36 (NeurIPS 2023) , 2025a. Insu Jeon, Youngjin Park, and Gunhee Kim. Neural variational dropout processes. arXiv preprint arXiv:2510.19425 , 2025b. Linlian Jiang, Rui Ma, Li Gu, Ziqiang Wang, Xinxin Zuo, and Yang Wang. Pointmac: Meta-learned adaptation for robust test-time point cloud completion. arXiv preprint arXiv:2510.10365 , 2025. Jikai Jin, Lester Mackey, and Vasilis Syrgkanis. It’s hard to be normal: The impact of noise on structure-agnostic estimation. arXiv preprint arXiv:2507.02275 , 2025. Jan Kemper and Davud Rostam-Afschar. Inference for batched adaptive experiments. arXiv preprint arXiv:2512.10156 , 2025. Benjamin Kempinski and Tal Kachman. Going with the flow: Approximating banzhaf values via graph neural networks. arXiv preprint arXiv:2510.13391 , 2025. Hyunsung Kim, Sangwoo Seo, Hoyoung Choi, Tom Boomstra, Jinsung Yoon, and Chanyoung Park. Better prevent than tackle: Valuing defense in soccer based on graph neural networks. arXiv preprint arXiv:2512.10355 , 2025. Yu Kiu, Lau, Chao Chen, Ge Jin, and Chen Feng. Flexible and efficient spatio-temporal transformer for sequential visual place recognition. arXiv preprint arXiv:2510.04282 , 2025. Kohsuke Kubota and Shonosuke Sugasawa. Causal inference under threshold manipulation: Bayesian mixture modeling and heterogeneous treatment effects. arXiv preprint arXiv:2509.19814 , 2025. Ivan Kukanov and Jun Wah Ng. Klassify to verify: Audio-visual deepfake detection using ssl-based audio and handcrafted visual features. arXiv preprint arXiv:2508.07337 , 2025. 25 Uisang Lee, Changhoon Chung, Junmo Lee, and Soo-Mook Moon. Bugsweeper: Function-level detec-tion of smart contract vulnerabilities using graph neural networks. arXiv preprint arXiv:2512.09385 ,2025. Bangyu Li, Boping Gu, and Ziyang Ding. Llm-based personalized portfolio recommender: Integrating large language models and reinforcement learning for intelligent investment strategy optimization. 
+
+arXiv preprint arXiv:2512.12922 , 2025a. Harrison H. Li, Medhanie Irgau, Nabil Janmohamed, Karen Solveig Rieckmann, and David B. Lobell. Scalable vision-guided crop yield estimation. arXiv preprint arXiv:2511.12999 , 2025b. Xiangyu Li, Yawen Zeng, Xiaofen Xing, Jin Xu, and Xiangmin Xu. Quantagents: Towards multi-agent financial system via simulated trading. arXiv preprint arXiv:2510.04643 , 2025c. Zan Li and Rui Fan. Crisis-resilient portfolio management via graph-based spatio-temporal learning. 
+
+arXiv preprint arXiv:2510.20868 , 2025. Anjie Liu, Jianhong Wang, Samuel Kaski, Jun Wang, and Mengyue Yang. A principle of targeted intervention for multi-agent reinforcement learning. arXiv preprint arXiv:2510.17697 , 2025a. Bo Liu, Qiao Qin, and Qinghui He. Causalclip: Causally-informed feature disentanglement and filtering for generalizable detection of generated images. arXiv preprint arXiv:2512.13285 , 2025b. Wenlong Liu, Jiahua Pan, Xingyu Zhang, Xinxin Gong, Yang Ye, Xujin Zhao, Xin Wang, Kent Wu, Hua Xiang, Houmin Yan, and Qingpeng Zhang. Cross-platform product matching based on entity alignment of knowledge graph with raea model. World Wide Web, vol. 26. no. 4, pp.2215-2235, 2023 , 2025c. Parthiban Loganathan, Elias Zea, Ricardo Vinuesa, and Evelyn Otero. Deep learning-driven down-scaling for climate risk assessment of projected temperature extremes in the nordic region. arXiv preprint arXiv:2511.03770 , 2025. Jiangkai Long, Yanran Zhu, Chang Tang, Kun Sun, Yuanyuan Liu, and Xuesong Yan. When genes speak: A semantic-guided framework for spatially resolved transcriptomics data clustering. arXiv preprint arXiv:2511.11380 , 2025. Jiayi Luo, Qingyun Sun, Yuecen Wei, Haonan Yuan, Xingcheng Fu, and Jianxin Li. Privacy auditing of multi-domain graph pre-trained model under membership inference attacks. arXiv preprint arXiv:2511.17989 , 2025. Xueqi Ma, Xingjun Ma, Sarah Monazam Erfani, Danilo Mandic, and James Bailey. Coarse-to-fine open-set graph node classification with large language models. arXiv preprint arXiv:2512.16244 ,2025. Sridhar Mahadevan. Large causal models from large language models. arXiv preprint arXiv:2512.07796 , 2025. Mingqiao Mo, Yunlong Tan, Hao Zhang, Heng Zhang, and Yangfan He. Shieldedcode: Learning robust representations for virtual machine protected code. arXiv preprint arXiv:2601.20679 , 2026. Amgad Muneer, Kai Zhang, Ibraheem Hamdi, Rizwan Qureshi, Muhammad Waqas, Shereen Fouad, Hazrat Ali, Syed Muhammad Anwar, and Jia Wu. Foundation models in biomedical imaging: Turning hype into reality. arXiv preprint arXiv:2512.15808 , 2025. Simone Mungari, Albert Bifet, Giuseppe Manco, and Bernhard Pfahringer. Ares: Anomaly recogni-tion model for edge streams. arXiv preprint arXiv:2511.22078 , 2025. Lucine L. Oganesian, Saba Hashemi, and Maryam M. Shanechi. Barista: Brain scale informed spatiotemporal representation of human intracranial neural activity. NeurIPS 2025 , 2025. Benji Peng, Xuanhe Pan, Yizhu Wen, Ziqian Bi, Keyu Chen, Ming Li, Ming Liu, Qian Niu, Junyu Liu, Jinlang Wang, Sen Zhang, Jiawei Xu, Xinyuan Song, Zekun Jiang, Tianyang Wang, and Pohsun Feng. Deep learning and machine learning, advancing big data analytics and management: Handy appetizer, 2025. URL https://arxiv.org/abs/2409.17120 .26 Anna Perekhodko and Robert ´ Slepaczuk. Stochastic volatility modelling with lstm networks: A hybrid approach for s&p 500 index volatility forecasting. arXiv preprint arXiv:2512.12250 , 2025. Sonal Prabhune, Balaji Padmanabhan, and Kaushik Dutta. Information-consistent language model recommendations through group relative policy optimization. arXiv preprint arXiv:2512.12858 ,2025. Jintao Ren, Ziqian Bi, Qian Niu, Xinyuan Song, Zekun Jiang, Junyu Liu, Benji Peng, Sen Zhang, Xuanhe Pan, Jinlang Wang, Keyu Chen, Caitlyn Heqi Yin, Pohsun Feng, Yizhu Wen, Tianyang Wang, Silin Chen, Ming Li, Jiawei Xu, and Ming Liu. Deep learning and machine learning – object detection and semantic segmentation: From theory to applications, 2025. URL https: //arxiv.org/abs/2410.15584 .Manonmani Sekar and Nasim Nezamoddini. Optimizing multi-lane intersection performance in mixed autonomy environments. arXiv preprint arXiv:2511.02217 , 2025. Rathin Chandra Shit and Sharmila Subudhi. Hierarchical federated graph attention networks for scalable and resilient uav collision avoidance. arXiv preprint arXiv:2511.11616 , 2025. Manh Chien Vu, Thang Le Dinh, Manh Chien Vu, Tran Duc Le, and Thi Lien Huong Nguyen. A conceptual model for ai adoption in financial decision-making: Addressing the unique challenges of small and medium-sized enterprises. arXiv preprint arXiv:2512.04339 , 2025. Sirui Wang, Zhou Guan, Bingxi Zhao, and Tongjia Gu. Castformer: Causal spatio-temporal trans-former for driving intention prediction. arXiv preprint arXiv:2507.13425 , 2025a. Xin Wang, Pietro Lodi Rizzini, Sourav Medya, and Zhiling Lan. Smart: A surrogate model for predicting application runtime in dragonfly systems. arXiv preprint arXiv:2511.11111 , 2025b. Zhiyu Wang, Suman Raj, and Rajkumar Buyya. Airfed: A federated graph-enhanced multi-agent reinforcement learning framework for multi-uav cooperative mobile edge computing. arXiv preprint arXiv:2510.23053 , 2025c. Tianxing Wu, Shutong Zhu, Jingting Wang, Ning Xu, Guilin Qi, and Haofen Wang. Uncertain knowledge graph completion via semi-supervised confidence distribution learning. arXiv preprint arXiv:2510.16601 , 2025. Jinfeng Xu, Zheyu Chen, Shuo Yang, Jinze Li, Hewei Wang, Yijie Li, and Edith C. H. Ngai. Learning and editing universal graph prompt tuning via reinforcement learning. arXiv preprint arXiv:2512.08763 , 2025. Wendong Yao, Binhua Huang, and Soumyabrata Dev. Multi-modal spatio-temporal transformer for high-resolution land subsidence prediction. arXiv preprint arXiv:2509.25393 , 2025. Zhenqiang Ye, Jinjie Lu, Tianlong Gu, Fengrui Hao, and Xuemin Wang. Fairgse: Fairness-aware graph neural network without high false positive rates. arXiv preprint arXiv:2511.12132 , 2025. Ziqing Yin, Xuanjing Chen, and Xi Zhang. Ai-integrated decision support system for real-time market growth forecasting and multi-source content diffusion analytics. arXiv preprint arXiv:2511.09962 ,2025. Mingjie You, Kaijie Chen, and Dawei Cheng. Drdgrl: Dual-relational dynamic graph representation learning for delay-sensitive stock trend prediction. In International Conference on Database Systems for Advanced Applications , pages 35–50. Springer, 2026. Wenhao Yu, Shaohang Wei, Jiahong Liu, Yifan Li, Minda Hu, Aiwei Liu, Hao Zhang, and Irwin King. Probability-entropy calibration: An elastic indicator for adaptive fine-tuning. arXiv preprint arXiv:2602.01745 , 2026. Junhyeog Yun, Minui Hong, and Gunhee Kim. Fedmenf: Privacy-preserving federated meta-learning for neural fields. arXiv preprint arXiv:2508.06301 , 2025. Guangjie Zeng, Hao Peng, Angsheng Li, Li Sun, Chunyang Liu, Shengze Li, Yicheng Pan, and Philip S. Yu. Hyperbolic continuous structural entropy for hierarchical clustering. arXiv preprint arXiv:2512.00524 , 2025. 27 Hao Zhang, Bo Huang, Zhenjia Li, Xi Xiao, Hui Yi Leong, Zumeng Zhang, Xinwei Long, Tianyang Wang, and Hao Xu. Sensitivity-lora: Low-load sensitivity-based fine-tuning for large language models. arXiv preprint arXiv:2509.09119 , 2025a. Hao Zhang, Zhenjia Li, Runfeng Bao, Yifan Gao, Xi Xiao, Heng Zhang, Shuyang Zhang, Bo Huang, Yuhang Wu, Tianyang Wang, et al. Hyperadalora: Accelerating lora rank allocation during training via hypernetworks without sacrificing performance. arXiv preprint arXiv:2510.02630 , 2025b. Hao Zhang, Mengsi Lyu, Zhuo Chen, Xingrun Xing, Yulong Ao, and Yonghua Lin. Pdtrim: Targeted pruning for prefill-decode disaggregation in inference. arXiv preprint arXiv:2509.04467 , 2025c. Hao Zhang, Mengsi Lyu, Chenrui He, Yulong Ao, and Yonghua Lin. Trimtokenator: Towards adaptive visual token pruning for large multimodal models. arXiv preprint arXiv:2509.00320 ,2025d. Hao Zhang, Mengsi Lyu, Bo Huang, Yulong Ao, and Yonghua Lin. Trimtokenator-lc: Towards adaptive visual token pruning for large multimodal models with long contexts. arXiv preprint arXiv:2512.22748 , 2025e. Haobo Zhang, Xutao Mao, Guangyuan Dong, Ziwei Li, Xuanbo Su, Kaijie Chen, Jing Yang, and Zheng Lin. Memmark: State-evolution attribution watermarking for agent long-term memory systems. arXiv preprint arXiv:2605.25002 , 2026a. Heng Zhang, Haochen You, Zijian Zhang, Lubin Gan, Hao Zhang, Wenjun Huang, and Jin Huang. Mitigating generic token dominance in cross-domain foundation model for text-attributed graphs. In International Conference on Database Systems for Advanced Applications , pages 251–265. Springer, 2026b. Jiaxin Zhang, Zehong Zhu, Junye Deng, Yunqin Li, , and Bowen Wang. Multi-modal feature fusion for spatial morphology analysis of traditional villages via hierarchical graph neural networks. arXiv preprint arXiv:2510.27208 , 2025f. Lijinghua Zhang and Hengrui Cai. Text rationalization for robust causal effect estimation. arXiv preprint arXiv:2512.05373 , 2025. Qinjian Zhao, Zhihao Dou, Dinggen Zhang, Xiangyu Li, Chaoda Song, Zhongwei Wan, Xinpeng Li, Yanyan Zhang, Kaijie Chen, Qingtao Pan, et al. Stride: Strategic trajectory reasoning via discriminative estimation for verifiable reinforcement learning. arXiv preprint arXiv:2606.15866 ,2026. Yipeng Zou, Qin Liu, Jie Wu, Yu Peng, Guo Chen, Hui Zhou, and Guanghui Ye. Boosting adversarial transferability via ensemble non-attention. arXiv preprint arXiv:2511.08937 , 2025. Álvaro Parafita, Tomas Garriga, Axel Brando, and Francisco J. Cazorla. Practical do-shapley explanations with estimand-agnostic causal inference. arXiv preprint arXiv:2509.20211 , 2025. 28
