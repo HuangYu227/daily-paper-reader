@@ -1,0 +1,4450 @@
+Title: Multiscale Dynamic Dependence Estimation over Networks
+
+URL Source: https://arxiv.org/pdf/2606.30399v1
+
+Published Time: Tue, 30 Jun 2026 02:44:41 GMT
+
+Number of Pages: 53
+
+Markdown Content:
+## Multiscale Dynamic Dependence Estimation over Networks 
+
+Cristian F. Jim´ enez-Var´ on *1 , Marina I. Knight 1, and Matthew A. Nunes 21Department of Mathematics, University of York, UK 
+
+> 2
+
+Department of Mathematical Sciences, University of Bath, UK June 30, 2026 
+
+Abstract 
+
+In numerous scientific and industrial settings, observed multivariate time series are often non-stationary in nature, i.e., comprise data whose second order properties vary over time. An addi-tional feature of many modern datasets is that the cross-dependencies of such series are structured by an underlying network, giving rise to complex interactions between temporal dynamics and network topology. In this article we propose Locally Stationary Wavelet processes on Networks (Net-LSW), a new framework for modelling multiscale, time-varying dependencies that explicitly incorporates the network structure. Unlike traditional multivariate approaches, the Net-LSW pro-cess encodes the graph directly in the covariance structure of the process’s random increments. We also introduce the concept of the local partial correlation graph , which connects edges in the graph to non-zero entries in the time- and scale- dependent dependence structure of a nonsta-tionary process. For inference on the local cross-nodal (partial) dependence, we develop a novel subprocess-based estimation scheme and establish its desirable consistency properties. Simulation studies further demonstrate that the proposed framework accurately recovers evolving dependence structures whilst respecting the underlying graph topology. Finally, we apply our framework to daily stock price volatilities across a global bank network, demonstrating its ability to capture multiscale, highly nonstationary dependencies and identify time-varying systemic shifts during major financial shocks, including Brexit and the COVID-19 pandemic. 
+
+KEYWORDS : graphs; networks; nonstationary time series; spectral estimation; wavelets 
+
+> *
+
+Department of Mathematics, Ian Wand Building, University of York, Deramore Lane, York YO10 5GH, United King-dom; Corresponding author: cristian.jimenezvaron@york.ac.uk 
+
+1
+
+> arXiv:2606.30399v1 [stat.ME] 29 Jun 2026
+
+1 Introduction 
+
+Many modern datasets comprise multivariate time series whose cross-dependencies are structured by an underlying, known network topology. In such settings, the information recorded at each node is often a (second order) nonstationary process, giving rise to complex interactions between time-evolving temporal dynamics and the network configuration. Examples of this rich paradigm span a wide array of domains, including structural connections across localised regions in brain networks (Achard and Bullmore, 2007; Fiecas and Ombao, 2011), geographical links in climate monitoring topologies, and multi-channel transaction streams in financial systems (Demirer et al., 2018). Because these systems change dynamically over time, modelling them requires robust statistical frameworks capable of capturing the intricate interactions between time-varying temporal mechanics, multi-scale structural behaviours, and the network’s spatial constraints. To model time-varying systems with evolving spectral properties, the literature on nonstation-ary time series has traditionally relied on the foundational concept of evolutionary spectra intro-duced by Priestley (1965). This paradigm was subsequently revolutionised by Dahlhaus (1997) (see also Dahlhaus (2012)) through the mathematical formalisation of locally stationary processes , which model time series whose statistical properties change smoothly over time, allowing them to be approx-imated locally by stationary processes. While these classical models operate in the Fourier domain, wavelet-based models have emerged as an invaluable tool for extracting highly localised features si-multaneously across both time and frequency. The foundation for time-varying spectrum modelling using wavelets is the Locally Stationary Wavelet (LSW) process introduced by Nason et al. (2000) This univariate formulation was extended to model localised linear dependencies between pairs of nonstationary series by Sanderson et al. (2010), and later generalised to larger, unconstrained systems via the Multivariate Locally Stationary Wavelet (MvLSW) framework by Park et al. (2014). Recently, a research direction in the statistical literature has been focussed on modelling multi-variate time series structured by a known graph topology. In particular, parsimonious time-domain models—most notably Generalised Network Autoregressive (GNAR) processes (Knight et al., 2016, 2020)—regularise high-dimensional interactions via node neighbourhood parametrisations, a paradigm recently extended to accommodate time-varying parameters and latent groupings (Chen et al., 2025; Li et al., 2026). However, models for nonstationary time series which explicitly capturing time-varying, scale-dependent cross dependencies while honouring the underlying graph topology are lacking. To bridge this gap, this article introduces Locally Stationary Wavelet processes on Networks ( Net-LSW ), a new framework for modelling multi-scale, time-varying dependencies that explicitly incor-porates the network structure. Unlike traditional unconstrained multivariate approaches, the Net-LSW process restricts the node-specific amplitudes to a diagonal transfer function matrix and encodes the graph architecture into the covariance structure of the process’s random innovation increments. By embedding the network topology into these internal innovation mechanics, our framework perfectly aligns the time-varying, scale-dependent spectral properties of the system with the physical network architecture. A primary theoretical contribution of this article is the formal connection between these network-structured innovations and the foundational time-series graphical modelling literature established by Dahlhaus (2000a). By shifting from the classical stationary Fourier paradigm to our localised wavelet domain model, we introduce a generalised notion of a local partial correlation graph . This multi-scale network formulation complements recent process-wide conditional specifications designed for stationary series (Bhattacharya et al., 2025), as well as infinite-dimensional operator representations used to study nonstationary graph structures (Basu and Rao, 2023). Crucially, we establish a funda-mental structural equivalence under the Net-LSW framework: the absence of an edge between nodes 2in the underlying physical network exactly corresponds to a structural zero entry in the associated localised network precision matrix across all wavelet scales and rescaled time points. This direct mathematical alignment allows the inverse evolutionary wavelet spectral domain to be uniquely inter-preted as the time-varying reflection of the graph architecture. To estimate the local cross-nodal dependence quantities under the proposed model, our approach differs fundamentally from both traditional time series graphical models and conventional multivari-ate wavelet estimation. In the classical time and Fourier domains, tracking nonstationary conditional dependencies requires inverting infinite-dimensional covariance operators (e.g., Basu and Rao, 2023; Krampe and Rao, 2024), a task that is intractable in practice. Conversely, traditional estimation meth-ods for (unconstrained) nonstationary wavelet models apply a joint linear matrix correction across all scales simultaneously (Park et al., 2014). However, this multi-scale mixing contaminates the net-work’s topology constraints, meaning that enforced structural zeros in the raw parameters do not map to structural zeros in the final inverse evolutionary spectrum. Drawing intuition from Wu et al. (2026), who introduced a subprocess-based approach in the context of multi-scale wavelet coherence estima-tion, we resolve this topological misalignment by developing a network-constrained scale-by-scale estimation procedure. This approach enables us to formulate a finite-dimensional, convex, network-penalised optimisation problem for each individual scale. We establish the asymptotic mean-squared consistency of our local smoothed subprocess spectral estimators and prove that optimisation via graphical covariance selection (Hastie et al., 2009) yields unique, consistent network topology estima-tors. Finally, since latent subprocesses are unobservable in practice, we introduce a robust projection method to reconstruct them from the aggregate observed coefficients, proving that (asymptotically) their underlying covariance structures match. We illustrate the utility of our proposed framework by analysing the time-scale dependency struc-tures of daily stock price volatilities across a high-dimensional network of major international bank-ing institutions. In this context, financial networks are conventionally defined by computing direc-tional spillovers via generalised forecast error variance decompositions (GFEVD) in the time domain (Diebold and Yilmaz, 2009; Demirer et al., 2018). Using our framework with a GFEVD connected-ness graph, we show that direct, cross-bank dependencies shift dynamically across both time windows and wavelet scales, capturing clear structural changes during the Brexit referendum, the COVID-19 pandemic, and global macro-financial shocks. The remainder of this article is organised as follows. In Section 2, we establish our network notation and provide a review of the necessary LSW and MvLSW background material. Section 3 details the formal mathematical formulation of the novel Net-LSW process and its essential properties. In Section 4, we propose the wavelet-domain Local Partial Correlation Graph and prove the structural equivalence between missing network edges and zeros in the localised precision matrix. Section 5 presents our subprocess-based inference framework and establishes its asymptotic consistency theory. Section 6 evaluates finite-sample performance via controlled numerical simulations, and Section 7 demonstrates an application of the framework to real-world data. All technical proofs and auxiliary derivations are deferred to the Appendix. 
+
+2 Background 
+
+In this section we introduce the pertinent theoretical background for the techniques proposed in this article. We start by providing an overview of the locally stationary wavelet modelling framework. 32.1 Network and Data Framework 
+
+In what follows, we assume that the data are observed on a network, here understood as a connected, static graph. We denote the node set as N = {1, . . . , n } with n ∈ N nodes connected by a set of 
+
+m edges, denoted by E. Let the neighbourhood or connection set of node p be denoted by ne (p) = 
+
+{q ∈ N : ( p, q ) ∈ E} . The entire network is formally characterised by the graph G = ( N , E), where 
+
+E = ∪p∈N ne (p).The primary scope of this work is to build a framework for the modelling and subsequent analysis of second-order nonstationary processes recorded through time at each node of this known, fixed network G. We denote these localised time series as {X(p) 
+
+> t
+
+}T −1 
+
+> t=0
+
+, where p ∈ N indexes the network nodes and t = 0 , . . . , T − 1 represents discrete time. The complete collection of these process observations across the network nodes is written as 
+
+{XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+, where the vector XN 
+
+> t
+
+collects the observed values across all nodes N at a specific time index t. We drop the superscript ( N ) when the time series are treated simply as a standard multivariate process, where no explicit (network) structure is assumed. 
+
+2.2 Brief Review of Locally Stationary Wavelet (LSW) Processes 
+
+The foundation for multivariate time-varying dependence modelling using wavelets lies in the bi-variate locally stationary wavelet process, introduced by Sanderson et al. (2010). This model ex-tended the univariate LSW framework of Nason et al. (2000) to a pair of nonstationary time series, 
+
+{(X(p) 
+
+> t
+
+, X (q) 
+
+> t
+
+)}T −1 
+
+> t=0
+
+, for the purpose of estimating time- and scale-dependent linear dependence be-tween the series. The process is defined such that its second-order structure is characterised by the evo-lutionary wavelet cross-spectrum {S(p,q ) 
+
+> j
+
+(z)}j and the evolutionary wavelet spectra (EWS) {S(p) 
+
+> j
+
+(z)}j
+
+and {S(q) 
+
+> j
+
+(z)}j for the individual series, across scales j = 1 , . . . , J = log 2(T ) and rescaled times 
+
+z = kT ∈ (0 , 1) .A key dependence measure between channels p and q was introduced in the bivariate LSW setting (Sanderson et al., 2010) to be the locally stationary wavelet coherence at scale j and rescaled time z,
+
+ρ(p,q ) 
+
+> j
+
+(z) = S(p,q ) 
+
+> j
+
+(z)
+
+n
+
+S(p) 
+
+> j
+
+(z) S(q) 
+
+> j
+
+(z)
+
+o1/2 .
+
+This measure provides the correlation between the innovations of the two processes at a given time and scale, taking values in [−1, 1] and having the usual linear dependence interpretation. The multivariate locally stationary wavelet (MvLSW) framework was developed by Park et al. (2014) as a generalisation to model a collection of n nonstationary signals, {Xt}T −1 
+
+> t=0
+
+, where Xt is an 
+
+n × 1 vector of observations. The MvLSW process {Xt} has a representation 
+
+Xt = X
+
+> j
+
+X
+
+> k
+
+Vj
+
+ kT
+
+
+
+ψj,k (t)ξj,k ,
+
+where Vj ( kT ) is an n×n matrix of transfer functions that embeds the spectral and cross-spectral struc-ture; {ξj,k }j,k is a multivariate vector of zero-mean, unit variance, uncorrelated random increments, and {ψj,k }j,k is a set of discrete non-decimated wavelets of Nason et al. (2000). The second-order structure is governed by the collection across scales j and rescaled times z = kT
+
+of n × n Local Wavelet Spectral (LWS) matrices, Sj (z), defined as 
+
+Sj (z) = Vj (z) Vj (z)⊤ , (1) 4and whose diagonal elements, S(p,p ) 
+
+> j
+
+(· ), are the EWS for channel p, and the off-diagonal elements, 
+
+S(p,q ) 
+
+> j
+
+(· ), are the evolutionary wavelet cross-spectra between channels p and q. The spectral quantities are in a one-to-one correspondence with their time-domain counterparts, namely the localised process covariance. The localised (cross-)covariance between channels p and q at rescaled time z and lag τ is 
+
+c(p,q ) (z, τ ) = X
+
+> j
+
+S(p,q ) 
+
+> j
+
+(z) Ψ j (τ ), ∀z, τ, (2) where Ψjl (· ) = P 
+
+> n∈Z
+
+ψj (n)ψl(n+· ) is the cross-scale autocorrelation wavelet, here expressed at single scale j = l (see Killick et al. (2020) for their detailed properties). When p = q, (2) gives the channel p localised autocovariance. Unlike the bivariate LSW framework of Sanderson et al. (2010), which partitions the dependence structure between the transfer functions and the process innovations, the MvLSW framework of Park et al. (2014) encapsulates the entire spectral structure (including cross-channel dependence) within the transfer function matrices of process ‘amplitudes’, {Vj ( kT )}j,k . This key distinction permits the straightforward estimation of a wavelet partial coherence and leads to a computationally efficient estimation scheme. The MvLSW framework provides two key spectral-domain measures of cross-channel dependence (n × n matrices) derived from the wavelet spectrum in (1): 1. Wavelet coherence, {ρj ( kT )}j,k : This is a direct extension of the bivariate coherence and cap-tures the overall linear dependence between any pair of signals, potentially including indirect associations. 2. Wavelet partial coherence, {ηj ( kT )}j,k : This measure quantifies the direct linear association between two channels, p and q, by removing the linear effects of all other observed signals. We next propose the Net-LSW process that, unlike the MvLSW model of Park et al. (2014), defines diagonal transfer function matrices, WN 
+
+> j
+
+( kT ), coupled with a non-identity covariance of the random increments , ξN
+
+> j,k
+
+. This allows for the natural embedding of the known graph topology and directly translates the cross-nodal dependence structure in the edge set. 
+
+3 Novel Nonstationary Process over the Nodes of a Network (Net-LSW) 
+
+We now give details of our modelling approach for the nonstationary process observed on a network. We represent nonstationarities in the data by adopting a locally stationary wavelet (LSW) modelling approach, as introduced by Nason et al. (2000), and adapt it to acknowledge the correlational structure between processes at different nodes. (See also Dahlhaus (2012) for a summary of locally stationary wavelet modelling, Sanderson et al. (2010) for bivariate LSW processes and Park et al. (2014) for multivariate LSW processes.) 
+
+Definition 3.1 (Net-LSW process). A sequence of stochastic processes {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+is a zero-mean network locally stationary wavelet process over the nodes of a network G (Net-LSW), if it admits the following representation in mean-square sense 
+
+XN 
+
+> t
+
+= X
+
+> j≥1
+
+X
+
+> k∈Z
+
+WN
+
+> j
+
+ kT
+
+
+
+ψj,k (t)ξN
+
+> j,k
+
+, (3) 
+
+where 
+
+5• {ψj,k (t)}j,k is a discrete non-decimated wavelet family with elements across scales j = 1 , . . . , J =log 2(T ) and times k,
+
+• WN 
+
+> j
+
+(z) = 
+
+h
+
+diag 
+
+
+
+W (p,p ) 
+
+> j
+
+(z)
+
+i  
+
+> p∈N
+
+is an n × n diagonal matrix of individual-node ampli-tude (transfer) functions at scale j and rescaled time z = kT . The transfer functions are as-sumed to be Lipschitz continuous in z, with Lipschitz constants {L(p,p ) 
+
+> j
+
+}j collectively admitting 
+
+> ∞
+
+P
+
+> j=1
+
+2j L(p,p ) 
+
+> j
+
+< ∞ for each node p.
+
+• {ξN
+
+> j,k
+
+}j,k is a jointly multivariate normal random sequence of n × 1 (column) zero-mean inno-vation vectors satisfying Properties 3.1, 3.2 and 3.3 below. 
+
+Property 3.1. As the proposed model seeks to concomitantly reflect the nonstationarity in the process at each node and the multiscale cross-correlation between signals recorded at different nodes, we define the covariance structure of the increments {ξN
+
+> j,k
+
+}j,k to be for any nodes p, q ∈ N and time k,
+
+cov( ξ(p) 
+
+> j,k
+
+, ξ (p) 
+
+> j′,k ′
+
+) = δj,j ′ δk,k ′ , for any scales j, j ′,
+
+cov( ξ(p) 
+
+> j,k
+
+, ξ (q) 
+
+> j′,k ′
+
+) = δj,j ′ δk,k ′ λ(p,q )
+
+> j
+
+ kT
+
+
+
+,
+
+where the functions of rescaled time λ(p,q ) 
+
+> j
+
+(· ) are assumed to be Lipschitz continuous through time, and |λ(p,q ) 
+
+> j
+
+(· )| ≤ 1 with λ(p,p ) 
+
+> j
+
+(· ) = 1 ensuring unit nodal increment variance, across all scales j.
+
+Property 3.2. At each scale j and rescaled time z, we define the n × n process increment covariance matrix ΛN 
+
+> j
+
+(z) = 
+
+h
+
+λ(p,q ) 
+
+> j
+
+(z)
+
+i 
+
+> p,q ∈N
+
+, whose diagonal elements are by convention λ(p,p ) 
+
+> j
+
+(z) = 1 , ∀p ∈N . We denote the n × n increment concentration matrix by ΓN 
+
+> j
+
+(z) = 
+
+
+
+ΛN 
+
+> j
+
+(z)
+
+−1
+
+.The following property formally links the network topology to the concentration matrix of the process increments, providing a multiscale characterization of the graph. 
+
+Property 3.3. The process structure reflects the underlying network graph G such that the absence of an edge, (p, q ) /∈ E , corresponds directly to a zero entry in the increment concentration matrix, 
+
+ΓN 
+
+> j
+
+(z) 
+
+> p,q
+
+= 0 , for all j, z. (4) We now introduce a time–scale specific edge decomposition of process dependence in our network time series, to which we will refer as the network cross-spectrum .
+
+Definition 3.2. We define the evolutionary Net-LSW cross-spectrum at scale j and rescaled time z as the n × n symmetrical and positive semi-definite matrix SN 
+
+> j
+
+(z) = 
+
+h
+
+S(p,q ) 
+
+> j
+
+(z)
+
+i 
+
+> p,q ∈N
+
+, as 
+
+SN 
+
+> j
+
+(z) = WN 
+
+> j
+
+(z) ΛN 
+
+> j
+
+(z) WN 
+
+> j
+
+(z) . (5) Using the diagonal structure of the amplitude matrix, we explicitly obtain the Net-LSW cross-spectrum associated to nodes p and qS(p,q ) 
+
+> j
+
+(z) = W (p,p ) 
+
+> j
+
+(z) λ(p,q ) 
+
+> j
+
+(z) W (q,q ) 
+
+> j
+
+(z) . (6) It is sometimes convenient in our methodological development in Section 5 to consider a trans-formed version of the spectrum, to exploit its theoretical properties. We introduce this rephrased spectrum next. 6Definition 3.3. We define the evolutionary Net-LSW β-spectrum at scale j and rescaled time z = kT ,as the n × n matrix βN 
+
+> j
+
+(z) = 
+
+h
+
+β(p,q ) 
+
+> j
+
+(z)
+
+i 
+
+> p,q ∈N
+
+, given by 
+
+βN 
+
+> j
+
+(z) = 
+
+> J
+
+X
+
+> ℓ=1
+
+Aj,ℓ SN 
+
+> ℓ
+
+(z) , (7) where the matrix A is the discrete autocorrelation wavelet inner product matrix as defined in Nason et al. (2000). In a similar fashion to (2) for the standard MvLSW model, we can quantify the dependence be-tween series at two nodes in a network as follows. 
+
+Definition 3.4. We define the localised cross-covariance between processes at nodes p and q at rescaled time z and lag τ , as 
+
+c(p,q ) (z, τ ) = X
+
+> j
+
+S(p,q ) 
+
+> j
+
+(z) Ψ j (τ ), ∀k, τ. 
+
+Proposition 3.1. For a Net-LSW process {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+as in Definition 3.1, the localised cross-covariance quantity above is connected to the process cross-covariance through 
+
+c(p,q ) (z, τ ) = cov 
+
+
+
+X(p)  
+
+> ⌊zT ⌋,T
+
+, X (q) 
+
+> ⌊zT ⌋+τ,T
+
+
+
++ O(T −1).
+
+The proof makes use of similar techniques to those in the proof of Proposition 1 in Sanderson et al. (2010), and is thus omitted here. This relationship captures node dependence not only across time, but also across the network nodes. Our main focus in this work is the (wavelet-domain) time-varying normalised dependence across the network, namely the local Net-LSW cross-coherence which we next define. 
+
+Definition 3.5. We define the local Net-LSW cross-coherence at scale j and rescaled time z, as the 
+
+n × n matrix 
+
+ρN 
+
+> j
+
+(z) = diag  SN 
+
+> j
+
+(z)−1/2 (z) SN 
+
+> j
+
+(z) diag  SN 
+
+> j
+
+(z)−1/2 .
+
+Property 3.4. For a Net-LSW process {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+as in Definition 3.1, the process coherence and increment covariance matrices coincide across all scales and times, specifically 
+
+ρN 
+
+> j
+
+(· ) = ΛN 
+
+> j
+
+(· ) , ∀j. (8) 
+
+Proof. See Appendix A. 
+
+Definition 3.6. Let ΘN 
+
+> j
+
+(z) = 
+
+
+
+SN 
+
+> j
+
+(z)
+
+−1
+
+and Hj (z) be a diagonal matrix whose pth diagonal entry is 
+
+
+
+Θ(p,p ) 
+
+> j
+
+(z)
+
+−1/2
+
+. The local Net-LSW partial coherence at scale j and rescaled time z is defined as the n × n matrix, 
+
+ηN 
+
+> j
+
+(z) = −Hj (z) ΘN 
+
+> j
+
+(z) Hj (z) . (9) The off-diagonal elements of this matrix, [ηN 
+
+> j
+
+(z)] p,q , p ̸ = q, correspond to the localised (at rescaled time z) scale-dependent wavelet partial coherence between the process at nodes p and node 
+
+q. By the definition of the partial coherence, this is the coherence between the given nodes after the linear effects of all other nodes have been removed. 7Property 3.5. For a Net-LSW process {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+as in Definition 3.1, the process partial coherence and increment concentration matrices are connected as follows at all scales j and rescaled times z,
+
+ηN 
+
+> j
+
+(z) = − eHj (z) ΓN 
+
+> j
+
+(z) eHj (z) , (10) where eHj (z) = Hj (z)
+
+
+
+WN 
+
+> j
+
+(z)
+
+−1/2
+
+.
+
+Proof. See Appendix A. 
+
+Remark 1 (Implication for inverse Spectrum). Property 3.5 establishes a direct, entry-wise link between the process partial coherence and the increment concentration matrix, revealing that: 
+
+ΓN 
+
+> j
+
+(z) 
+
+> p,q
+
+= 0 ⇐⇒ ηN 
+
+> j
+
+(z) 
+
+> p,q
+
+= 0 , for all j, z. 
+
+To formalise how structural constraints or the absence of network dependencies map directly onto these zero-valued matrix entries, we introduce our proposed graphical model in the next section. Note that to avoid notational clutter, in the remainder of the paper we drop the N superscript for Net-LSW process-derived quantities, whenever there is no potential confusion. 
+
+4 Proposed Local Partial Correlation Graph 
+
+We next propose a generalised notion for the partial correlation graph of Dahlhaus (2000a) suitable for cases when (i) the multivariate process observed over the network is no longer stationary; and we characterise (ii) cross-nodal dependencies in the wavelet domain rather than in the Fourier domain. The proofs of the results in this section can be found in Appendix B. 
+
+Remark 2 (Notation convention). Throughout this development, we shall follow the locally station-ary paradigm that enhances the process quantities by localising them at rescaled times. As in Section 3, for any Net-LSW process {XN 
+
+> t
+
+}, we shall use notation such as c(p,q )(z, τ ) and {S(p,q ) 
+
+> j
+
+(z)}j for the lo-cal (cross-) covariance and spectrum between any pair of nodes p and q, respectively, where z denotes rescaled time, τ denotes lag, and j is the wavelet scale (see (6) for their one-to-one connection). To emphasise the graphical aspect of the data and model, we also establish a matrix-based nota-tion. For any fixed nodal pair (a, b ) that may, or may not, correspond to an edge in the network, we 
+
+block-partition the n × n process localised covariance matrix C(z, τ ) = c(p,q )(z, τ ) 
+
+> p,q ∈N
+
+as 
+
+C(z, τ ) = 
+
+ A(z, τ ) B(z, τ )
+
+B(z, τ )⊤ D(z, τ )
+
+
+
+, (11) where (i) the upper-left block is the 2 × 2 matrix A(z, τ ) = c(p,q )(z, τ ) 
+
+> p,q ∈{ a,b }
+
+containing the localised auto- and cross-covariances between the specific nodes a and b,(ii) the upper-right block is the 2 × (n − 2) localised cross-covariance matrix 
+
+B(z, τ ) = c(a,p )(z, τ ), c (b,q )(z, τ )
+
+> p∈{ a,b },q / ∈{ a,b }
+
+,(iii) D(z, τ ) = c(p,q )(z, τ ) 
+
+> p,q / ∈{ a,b }
+
+encompasses the localised cross-covariance information at all nodes other than a and b.8Definition 4.1. For a Net-LSW process {XN 
+
+> t
+
+} observed over a network node set and for fixed nodes 
+
+a and b, we define the bivariate residual locally stationary process {ϵt}T −1 
+
+> t=0
+
+as 
+
+ϵt := 
+
+h
+
+ϵ(p) 
+
+> t
+
+= X(p) 
+
+> t
+
+− Proj sp {X−ab t }(X(p) 
+
+> t
+
+)
+
+i 
+
+> p∈{ a,b }
+
+∈ R2.
+
+The residual process is obtained by removing the linear dependencies attributed to the remaining nodes in the network, via the usual projection operator subject to minimising the corresponding mean squared error (Brockwell and Davis, 2016). 
+
+To ensure clarity of exposition, whenever necessary, we enhance the Remark 2 notation by intro-ducing a superscript to indicate which process the quantity refers to, e.g., CX (z, τ ) for the original process local covariance n × n matrix and Cϵ(z, τ ) for the residual local covariance 2 × 2 matrix. 
+
+Definition 4.2. Let {XN 
+
+> t
+
+= ( X(p) 
+
+> t
+
+)p∈N }T −1 
+
+> t=0
+
+be an n-dimensional locally stationary process as in Definition 3.1, observed over the nodes p ∈ N of a network G = ( N , E).We define the graph G = ( N , E ) to be the local partial correlation graph of {XN 
+
+> t
+
+} if the absence of an edge between two specific nodes, say (a, b ) /∈ E, is equivalent to the (symmetrical) local residual covariance matrix Cϵ(z, τ ) being diagonal, i.e., [Cϵ(z, τ )] a,b = 0 , ∀z, τ .
+
+Remark 3 (Local stationarity equivalence). As in the classical stationary setup, the condition that specific nodes a and b are not connected via an edge in the graph G is equivalent to the conditional covariance of the processes {X(a) 
+
+> t
+
+} and {X(b) 
+
+> t
+
+} given the information at the remaining (n − 2) nodes, 
+
+{X−ab t }, being zero for all times t and lags τ . The use of the word ‘local’ in Definition 4.2 reflects the time-localisation inherent to the Net-LSW framework – recall that as shown in Proposition 3.1, a unique localised covariance structure asymptotically characterises the process covariance. 
+
+Remark 4 (Covariance connection to Schur complement). From Definition 4.2 coupled with Re-mark 3, the local process conditional covariance is given by the localised counterpart of the Schur complement of the (n − 2) × (n − 2) covariance matrix, cov( X−ab t , X−ab t+τ ), of the process that ex-cludes all information from nodes a, b , in the n × n full process covariance matrix, cov( XN 
+
+> t
+
+, XN 
+
+> t+τ
+
+),namely 
+
+Cϵ(z, τ ) := CX (z, τ )/D(z, τ ) = A(z, τ ) − B(z, τ ) ( D(z, τ )) −1 B(z, τ )⊤.
+
+It is this connection that we shall follow through into the wavelet spectral domain (see also Dahlhaus, 2000a; Songsiri et al., 2009, for related Fourier-based developments). In what follows, we establish the expression for the spectral structure of the residual process, and show that node (a, b )-unconnectedness in G is reflected by the presence of a zero-valued entry in the corresponding inverse spectral matrix, [Sϵj (z)] −1 
+
+> a,b
+
+for all scales j and rescaled times z.
+
+Proposition 4.1. The spectral matrices {Sϵj (z)}j of the residual process {ϵt} in Definition 4.1 have the following structure inherited from the original process {XN 
+
+> t
+
+}:
+
+Sϵj (z) = ASj (z) − BSj (z)  DSj (z)−1 BSj (z)⊤, (12) 
+
+= SXj (z)/DSj (z), ∀j, z, (13) 9where the scale- and time-dependent matrices ASj (z), BSj (z) and DSj (z) denote respectively the 2×2,
+
+2 × (n − 2) and (n − 2) × (n − 2) dimensional blocks that partition the spectral matrix of the process 
+
+{XN 
+
+> t
+
+} as 
+
+SXj (z) = 
+
+ ASj (z) BSj (z)
+
+BSj (z)⊤ DSj (z)
+
+
+
+. (14) 
+
+Proof. The proof appears in Appendix B.1 and exploits the properties of Schur decompositions in conjunction with the locally stationary covariance and spectral wavelet matrix connections. As an aside, let B1,j (z) and B2,j (z) denote the first and second rows of the 2 × (n − 2) cross-spectral block 
+
+BSj (z) corresponding to nodes a and b, respectively. A diagonal structure of the Schur complement of DSj (z) in SXj (z) implies that the original cross-spectral entry satisfies 
+
+S(a,b ) 
+
+> j
+
+(z) = B1,j (z)  DSj (z)−1 (B2,j (z)) ⊤ , ∀j, z. (15) The residual spectral equation (12) is the localised wavelet counterpart of the Fourier result in Brillinger (1981) that forms the essence of the edge identifiability proposal in Dahlhaus (2000b, equa-tion (2.3)), as well as in our framework, as described next. 
+
+Proposition 4.2. For a Net-LSW process as in Definition 3.1 observed over a graph G, its local partial correlation graph G coincides with G. That is, an edge (a, b ) is absent from E if and only if 
+
+[SXj (z)] −1 
+
+> a,b
+
+= 0 for all scales j and locations z. Equivalently, (a, b ) /∈ E if and only if the local partial spectral coherence satisfies ηXj (z) = 0 for all j, z .Proof. The proof appears in Appendix B.2 and uses the spectral representation established in Propo-sition 4.1 as well as the properties of the autocorrelation wavelet family {Ψj (· )}j .This explicit linkage between the zero pattern of the increment concentration matrix Γj (z) and the missing edges of the conditional graph G aligns perfectly with classic time series graphical model theory (Dahlhaus, 2000a; Basu and Rao, 2023), extending the equivalence of conditional uncorrelat-edness and innovation precision structure directly into the nonstationary wavelet spectrum. In other words, the graph G over which the process is observed is in fact its associated local partial correlation graph. Section 5 next introduces a new framework for the time-localised estimation of multiscale (cross) nodal dependencies intrinsic to a Net-LSW process and formally characterises their desirable asymp-totic behaviour. 
+
+5 Net-LSW (Partial) Coherence Estimation: a Subprocess Approach 
+
+To establish an estimation methodology for the Net-LSW process, we exploit the fact that the network structure is encoded in the inverse spectral density matrix Θ = S−1, as established in Section 4.2. Since the network G is assumed to be known, the locations of the zero entries in Θ corresponding to the complement of the edge set E are known a priori . This information can, in principle, be incorporated into the estimation procedure via appropriate regularization. An initial natural approach to network-agnostic estimation amounts to relying on the associated wavelet coefficients {dj,k }j,k of the observed multivariate process {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+. Under a multivari-ate MvLSW framework with Gaussian innovations and uniformly absolutely summable covariance 10 functions, these coefficients satisfy asymptotically in T → ∞ (Knight et al., 2024) 
+
+dj,k ˙∼Nn(0, βj (k/T )) , (16) where {βj (k/T )}j denotes the scale-dependent rephrased wavelet spectra, obtained as in equation (7) and (uniquely) connected to the wavelet spectra {Sj (k/T )}j through 
+
+Sj (k/T ) = 
+
+> J
+
+X
+
+> ℓ=1
+
+A−1 
+
+> j,ℓ
+
+βℓ (k/T ) , (17) where A−1 
+
+> j,ℓ
+
+is the (j, l ) entry of the inverse inner product operator matrix of Nason et al. (2000). Stemming from the distribution of the wavelet coefficients in (16), one might envisage directly using a typical likelihood-based constrained optimisation formulation with the aim of enforcing the known edge set pattern E (see Hastie et al. (2009) for the a multivariate version lacking the time-series aspect; Jim´ enez-Var´ on and Knight (2026) for a Fourier spectral-domain version for stationary time series). However, such an approach would instead yield the known zeroes in the rephrased inverse spectrum, β−1 
+
+> j
+
+(k/T ), and (17) highlights that these enforced zero entries would not map to zero entries in the target inverse spectral matrix, S−1 
+
+> j
+
+(k/T ), as needed and indicated by the theoretical evidence in Proposition 4.2. Hence we propose a subprocess-based estimation strategy which offers a spectrum S-targeted approach, as we shall next see. The proofs of the results in this section appear in Appendix C. 
+
+5.1 Subprocess-based Construction 
+
+The subprocess construction has been introduced by Wu et al. (2026) in the context of a locally station-ary multivariate process augmented with cross-scale interactions. From a multivariate viewpoint, such cross-scale interactions are absent in our setup here, but the interactions between series in our mod-elling setup is network-informed. For our model, the subprocesses and their corresponding wavelet coefficients are defined in a scale-by-scale manner, as follows. Rather than operating on the full process, we focus on scale-specific subprocesses, substantially simplifying the relationship between their associated β- and S-spectra. As a result, the Gaussian likelihood (Friedman et al., 2007) remains convex when augmented with network-informed penalties on S−1 
+
+> j
+
+(k/T ), yielding a tractable and stable estimation procedure. 
+
+Definition 5.1. Let {XN 
+
+> t
+
+} be a Net-LSW process as in Definition 3.1. The scale-j Net-LSW subpro-cess {Xj,t } is the component of the signal that exists exclusively at resolution j, defined by 
+
+Xj,t = X
+
+> k∈Z
+
+WN 
+
+> j
+
+(k/T ) ψj,k (t) ξN
+
+> j,k
+
+.
+
+Viewed as a process itself, the scale-j subprocess {Xj,t }t has a local covariance function that is defined as c(p,q ) 
+
+> j
+
+(z, τ ) = S(p,q ) 
+
+> j
+
+(z)Ψ j (τ ), and using techniques akin to Wu et al. (2026), it can be shown to approximate the process covariance, cov( X(p) 
+
+> j, [zT ]
+
+, X (q)  
+
+> j, [zT ]+ τ
+
+) − c(p,q ) 
+
+> j
+
+(z, τ ) = O(2 −j T −1).
+
+Definition 5.2. The scale j-subprocess wavelet coefficient {djℓ,k }ℓ,k is the vector obtained by ap-plying the non-decimated wavelet transform at scales ℓ = 1 , . . . , J and time-location k ∈ Z to the isolated subprocess {Xj,t }, namely 
+
+djℓ,k = X
+
+> t
+
+Xj,t ψℓ,k (t), ∀ℓ, k. 
+
+11 Remark 5. The superscript j identifies the subprocess corresponding to resolution j, while the sub-scripts (ℓ, k ) denote the scale and location indices of the wavelet transform applied to that subprocess. 
+
+Remark 6. Note that XN 
+
+> t
+
+= P 
+
+> j≥1
+
+Xj,t follows naturally from the Net-LSW process and subprocess definitions. Hence the non-decimated wavelet coefficient of the full process at scale ℓ and location k
+
+satisfies dℓ,k = P 
+
+> j≥1
+
+djℓ,k due to the linearity of the wavelet transform. 
+
+5.1.1 Distribution of Subprocess Wavelet Coefficients 
+
+To establish a tractable likelihood for the Net-LSW process, we derive the distribution of the subpro-cess wavelet coefficients for each scale j. The scale-j subprocess in Definition 5.1 is analysed using a non-decimated wavelet transform, and combining this with the formal Definition 5.2 we obtain the coefficients at an arbitrary analysis scale ℓ and location k, re-written as 
+
+djℓ,k = X
+
+> k′
+
+ Ψj,ℓ (k′ − k)WN 
+
+> j
+
+(k′/T ) ξN 
+
+> j,k ′
+
+. (18) The statistical properties and asymptotic distribution of these coefficients are formalised in the fol-lowing proposition. 
+
+Proposition 5.1. Let {Xj,t } be the scale-j subprocess of a Net-LSW process satisfying Definition 3.1. Then, the subprocess wavelet coefficients djℓ,k have mean zero, 
+
+E
+
+h
+
+djℓ,k 
+
+i
+
+= 0, ∀ℓ, k, (19) 
+
+and a covariance structure given by Cov (djℓ,k , djℓ,k +ν ) = A(ν) 
+
+> j,ℓ
+
+Sj (k/T ) + O(T −1), (20) 
+
+where A(ν) 
+
+> j,ℓ
+
+= P 
+
+> τ
+
+Ψj (τ )Ψ ℓ(τ + ν) is the (j, ℓ )-element of the shifted wavelet inner product matrix 
+
+A(ν) (Sanderson et al., 2010; Killick et al., 2020), and Sj (· ) is the wavelet spectral matrix of the original process {XN 
+
+> t
+
+}, at scale j.Furthermore, the contemporaneous subprocess wavelet coefficients at the matching scale ( ℓ = j,
+
+ν = 0 ) asymptotically follow the multivariate normal distribution as T → ∞ for all (j, k ) pairs 
+
+djj,k ˙∼Nn (0, A j,j Sj (k/T )) . (21) 
+
+Proof. See Appendix C.1 for the proof, which manipulates the scale-j subprocess definition coupled with the random vector increment properties. This result highlights that the spectral matrix Sj (k/T )
+
+can now be viewed as a (scaled) covariance matrix, a key property we shall use in Section 5.4. 
+
+5.2 Subprocess-based Wavelet Periodogram 
+
+For a given scale j, we define the raw subprocess wavelet periodogram at time k as 
+
+Ij,k = djj,k 
+
+
+
+djj,k 
+
+⊤
+
+, (22) where we note that since the scale-j subprocess is active at resolution level j, the corresponding wavelet coefficients have been chosen to match that level. 12 5.3 Smoothing and Consistency 
+
+To obtain a consistent estimator for the local wavelet spectrum Sj (k/T ), we reduce the variance of the raw periodogram in (22) by smoothing over a local temporal neighbourhood. We define the smoothed subprocess periodogram estimator at scale j and rescaled time z = k/T as 
+
+bSj (k/T ) = 1
+
+Aj,j (2 MT + 1) 
+
+> MT
+
+X
+
+> m=−MT
+
+Ij,k +m, (23) where MT is a smoothing bandwidth chosen such that MT → ∞ and MT /T → 0 as T → ∞ .Denoting the scale-j subprocess wavelet coefficient entry corresponding to node p and scale-time pair j, k by dj, (p)
+
+> j,k +m
+
+, the cross-nodal spectral activity for any two nodes p, q ∈ N is given by the 
+
+(p, q )-element of this matrix, explicitly written as 
+
+bS(p,q ) 
+
+> j
+
+(k/T ) = 1
+
+Aj,j (2 MT + 1) 
+
+> MT
+
+X
+
+> m=−MT
+
+dj, (p)
+
+> j,k +m
+
+dj, (q)
+
+> j,k +m
+
+.
+
+Proposition 5.2 (Consistency and Boundedness in Probability). Let {XN 
+
+> t
+
+} be a Net-LSW process as in Definition 3.1. Under the further assumption of local subprocess (auto- and cross-) covariance summability, specifically sup 
+
+> z∈(0 ,1)
+
+P
+
+> τ
+
+|c(p,q ) 
+
+> j
+
+(z, τ )| = O(1) for each scale j and node pair (p, q ), the estimator in (23) is consistent in the sense that 
+
+bS(p,q ) 
+
+> j
+
+(z) − S(p,q ) 
+
+> j
+
+(z) = oP (1) and 
+
+bS(p,q ) 
+
+> j
+
+(z) − S(p,q ) 
+
+> j
+
+(z) = OP
+
+
+
+M −1/2 
+
+> T
+
+∨ (MT T −1)1/2
+
+, ∀j, z, 
+
+for a smoothing bandwidth MT such that MT → ∞ and MT T −1 → 0 as T → ∞ .Proof. The proof in Appendix C.2 shows the proposed smoothed wavelet periodogram is asymptoti-cally mean-squared consistent for the true spectrum. 
+
+5.4 Constrained Likelihood and Node-Wise Estimation 
+
+Using the distributional property of the true wavelet subprocess coefficients in (21), the Gaussian log-likelihood for the scale-j, location-z subprocess precision is (up to a proportionality constant) 
+
+L(Θj (z)) = log det Θj (z) − Tr ( bSj (z)Θj (z)) .
+
+Under the Net-LSW framework, the sparsity of Θj (z) = S−1 
+
+> j
+
+(z) follows the edge set E. Thus, to enforce the network structure, we define the constrained objective function that employs the spectral estimator in (23), as 
+
+L(Θj (z)) = log det Θj (z) − Tr ( bSj (z)Θj (z)) − X 
+
+> (p,q )/∈E
+
+l(p,q ) 
+
+> j
+
+Θ(p,q ) 
+
+> j
+
+(z), (24) which will be optimised using the paradigm proposed by Hastie et al. (2009) in order to obtain the final network-constrained estimators, bΘ∗ 
+
+> j
+
+(z) and the corresponding bS∗ 
+
+> j
+
+(z) at each (j, k ) pair. 13 Proposition 5.3. Let {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+be an n-dimensional Net-LSW process as in Definition 3.1. Let 
+
+bSj (z) be the initial symmetric, positive-definite spectral matrix estimator at scale j and rescaled time 
+
+z, given in (23) . Then the network-constrained precision matrix estimator bΘ∗ 
+
+> j
+
+(z) that maximises the constrained log-likelihood in (24) exists, is unique, and is consistent for the true localised precision structure, i.e., bΘ∗ 
+
+> j
+
+(z) − Θj (z) = oP (1) , hence bS∗ 
+
+> j
+
+(z) − Sj (z) = oP (1) , (25) 
+
+for all scales j ≥ 1 and rescaled time points z ∈ (0 , 1) as T → ∞ .Proof. Theoretical properties of this network-localised estimator, including its fundamental connec-tion to maximum likelihood theory for graphical covariance selection, are detailed in Appendix C.3. 
+
+5.5 Subprocess Approximation via Wavelet projection 
+
+In practice, the latent subprocesses {Xj,t } introduced in Definition 5.1 are not directly observable. Instead, the available data consists of the multivariate process {XN 
+
+> t
+
+}T −1 
+
+> t=0
+
+which, under the Net-LSW structural assumption, connected to its scale-specific components by XN 
+
+> t
+
+= P 
+
+> j≥1
+
+Xj,t . Conse-quently, performing scale-dependent network inference requires a robust approximation of these latent components from the observed signal. To isolate the subprocess in practice, an approximation eXj,t is constructed via a synthesis of raw analysis coefficients dj,m = P 
+
+> s
+
+XN 
+
+> s
+
+ψj,m (s). Specifically, we approximate the subprocess Xj,t by 
+
+eXj,t = X
+
+> m
+
+2−j dj,m ψj,m (t).
+
+By reordering the summations, the internal term collapses into the autocorrelation wavelet, yielding 
+
+eXj,t = X
+
+> s
+
+2−j XN
+
+> s
+
+X
+
+> m
+
+ψj,m (s)ψj,m (t)
+
+!
+
+= X
+
+> s
+
+2−j XN 
+
+> s
+
+Ψj (t − s). (26) Recalling that the network process may be additively recovered from the (true) subprocesses, i.e. 
+
+XN 
+
+> t
+
+= P 
+
+> j
+
+Xj,t , we note that this property also holds for the approximated subprocesses, since 
+
+X
+
+> j
+
+eXj,t = X
+
+> s
+
+XN
+
+> s
+
+X
+
+> j
+
+ 2−j Ψj (t − s) = X
+
+> s
+
+XN 
+
+> s
+
+δt−s, 0 = XN 
+
+> t
+
+,
+
+using the property P 
+
+> j
+
+2−j Ψj (τ ) = δτ, 0 (Nason et al., 2000). We subsequently obtain the wavelet coefficients of the approximated subprocess, denoted edjℓ,k , by re-analysing the approximated subprocess at analysis scale ℓ
+
+edjℓ,k = 
+
+> T−1
+
+X
+
+> t=0
+
+eXj,t ψℓ,k (t). (27) 
+
+Proposition 5.4. Let {XN 
+
+> t
+
+} be a Net-LSW process as in Definition 3.1, whose subprocess approx-imation and corresponding wavelet coefficients are constructed at every scale as detailed in equa-tions (26) and (27) , respectively. Under the assumptions of uniform local process and subprocess (auto- and cross-) covariance absolute summability, and with T → ∞ , we have 
+
+edjj,k ˙∼Nn (0, A j,j Sj (k/T )) . (28) 14 Proof. See Appendix C.4. The property in (28) suggests the use of the smoothed approximated subprocess periodogram estimator at scale j and rescaled time z = k/T , namely 
+
+eSj (k/T ) = 1
+
+Aj,j (2 MT + 1) 
+
+> MT
+
+X
+
+> m=−MT
+
+edjj,k +m
+
+edjj,k +m
+
+⊤
+
+, (29) with desirable limiting behaviour, as we next show. 
+
+Proposition 5.5 (Consistency and boundedness in probability using approximated subprocesses). 
+
+Let {XN 
+
+> t
+
+} be a Net-LSW process as in Definition 3.1. Under the further assumptions detailed in Proposition 5.4, for each scale j and node pair (p, q ), the estimator in (29) is consistent for the true spectrum in the sense that 
+
+eS(p,q ) 
+
+> j
+
+(z) − S(p,q ) 
+
+> j
+
+(z) = oP (1) and 
+
+eS(p,q ) 
+
+> j
+
+(z) − S(p,q ) 
+
+> j
+
+(z) = OP
+
+
+
+M −1/2 
+
+> T
+
+∨
+
+
+
+2−j MT T −1/21/2
+
+, ∀j, z, 
+
+for a smoothing bandwidth MT such that MT → ∞ and MT T −1/2 → 0 as T → ∞ .Proof. See Appendix C.5 for the proof. Note that the use of approximated subprocesses results in a weaker convergence rate when compared to that obtained in Proposition 5.2. Consequently, our choice of smoothing bandwidth departs from the usual choice in the multivariate local stationary environment ( MT = ⌊√T ⌋ of Park et al. (2014)), and using empirical guidance we propose to use 
+
+MT = ⌊log 22(T )/2⌋.This convergence result provides the theoretical justification for utilising the approximated estimator in (29) within the constrained optimization framework detailed in Section 5.4 at each (j, k ), yielding the network-constrained estimators for the wavelet spectral matrix, eS∗ 
+
+> j
+
+(k/T ), and its corresponding precision matrix, eΘ∗ 
+
+> j
+
+(k/T ). The complete estimation procedure is summarised in Algorithm 1. Fur-ther scale-specific dependence measures, such as coherence and partial coherence, can then be directly derived by plugging these estimators into Definitions 3.5 and 3.6. 
+
+Corollary 5.1 (Consistency of network dependence measures). Let eS∗ 
+
+> j
+
+(z) and eΘ∗ 
+
+> j
+
+(z) be the network-constrained spectral and precision estimators obtained as detailed in Algorithm 1. For any pair of nodes (p, q ), let the plug-in estimators for the localised coherence ρ(p,q ) 
+
+> j
+
+(z) and partial coherence 
+
+η(p,q ) 
+
+> j
+
+(z) be defined as 
+
+bρ(p,q ) 
+
+> j
+
+(z) = 
+
+h eS∗ 
+
+> j
+
+(z)
+
+i
+
+> p,q
+
+rh eS∗ 
+
+> j
+
+(z)
+
+i
+
+> p,p
+
+rh eS∗ 
+
+> j
+
+(z)
+
+i
+
+> q,q
+
+(30) 
+
+and 
+
+bη(p,q ) 
+
+> j
+
+(z) = −
+
+h eΘ∗ 
+
+> j
+
+(z)
+
+i
+
+> p,q
+
+rh eΘ∗ 
+
+> j
+
+(z)
+
+i
+
+> p,p
+
+rh eΘ∗ 
+
+> j
+
+(z)
+
+i
+
+> q,q
+
+. (31) 15 Then, these estimators are consistent such that 
+
+bρ(p,q ) 
+
+> j
+
+(z) − ρ(p,q ) 
+
+> j
+
+(z) = oP (1) and bη(p,q ) 
+
+> j
+
+(z) − η(p,q ) 
+
+> j
+
+(z) = oP (1) , (32) 
+
+for all scales j ≥ 1 and rescaled time points z ∈ (0 , 1) as T → ∞ .Proof. Coupling the consistency of the spectral estimator that employs the approximated subprocess construction from Proposition 5.5 with the result in Proposition 5.3, the resulting spectral and preci-sion estimators are consistent for their corresponding true quantities, namely eS∗ 
+
+> j
+
+(z) − Sj (z) = oP (1) 
+
+and eΘ∗ 
+
+> j
+
+(z)−Θj (z) = oP (1) . Then the desired result follows by a direct application of the continuous mapping theorem (Billingsley, 1999). 16 Algorithm 1: Subprocess-based network spectral estimation via wavelet projection. 
+
+Input : Observed multivariate process {Xt}T −1 
+
+> t=0
+
+; network G = ( N , E) where ne (p) = {q ∈ N : ( p, q ) ∈ E} is the neighbourhood of node p; smoothing window MT .
+
+Output: Estimated network-constrained spectral matrices {eS∗ 
+
+> j
+
+(k/T )} and network-constrained precision matrices { eΘ∗ 
+
+> j
+
+(k/T )}.
+
+Assume {Xt}T −1 
+
+> t=0
+
+is a Net-LSW process with T = 2 J .
+
+// Stage 1: Subprocess Approximation via Wavelet Projection 
+
+for j = 1 to J do 
+
+Extract observed coefficients: dj,k = PT −1 
+
+> t=0
+
+Xtψj,k (t)
+
+Project to time domain: eXj,t = P 
+
+> k
+
+2−j dj,k ψj,k (t)
+
+Compute approximated coefficients: edjℓ,k = PT −1 
+
+> t=0
+
+eXj,t ψℓ,k (t)
+
+end 
+
+// Stage 2: Initial Local Spectral Estimation 
+
+for j = 1 to J do 
+
+eSj (k/T ) = 1  
+
+> Aj,j (2 MT+1)
+
+PMT
+
+> m=−MT
+
+edjj,k +m
+
+edjj,k +m
+
+⊤
+
+end 
+
+// Stage 3: Node-wise Optimization (Hastie et al., 2009) 
+
+for scale j ∈ { 1, . . . , J } and time k ∈ { 0, . . . , T − 1} do 
+
+Initialise working covariance matrix: W = eSj (k/T )
+
+repeat for node p = 1 to n do 
+
+Partition W into Part 1 (all rows/columns except node p, denoted W11 ) and Part 2 (the current working row and column for node p, denoted wp)Isolate Part 2 (the target row and column vector for node p) from the fixed initial matrix 
+
+eSj (k/T ), denoted esp
+
+// Solve the neighbourhood-constrained regression system 
+
+Solve for active neighbour weights ˆℓ∗
+
+> ne (p)
+
+:
+
+Wne (p),ne (p) ˆℓ∗ 
+
+> ne (p)
+
+− esp, ne (p) = 0 
+
+// Enforce network structure constraints 
+
+Construct full vector ˆℓ ∈ Rn−1 by setting active positions to ˆℓ∗ 
+
+> ne (p)
+
+and forcing ˆℓq = 0 for all non-neighbors q / ∈ ne (p)
+
+// Update Part 2 of the working matrix 
+
+Update working row and column for node p: wp = W11 ˆℓ
+
+// Extract sparse precision elements during the final cycle 
+
+if final iteration cycle then 
+
+h eΘ∗ 
+
+> j
+
+(k/T )
+
+i
+
+> p,p
+
+=
+
+heSj (k/T )
+
+i
+
+> p,p
+
+− w⊤ 
+
+> p
+
+ˆℓ
+
+−1
+
+h eΘ∗ 
+
+> j
+
+(k/T )
+
+i
+
+> −p,p
+
+= − ˆℓ
+
+h eΘ∗ 
+
+> j
+
+(k/T )
+
+i
+
+> p,p
+
+end end until convergence of W
+
+Invert optimised precision matrix to obtain final constrained spectrum: 
+
+eS∗ 
+
+> j
+
+(k/T ) = 
+
+ eΘ∗ 
+
+> j
+
+(k/T )
+
+−1
+
+end 
+
+17 6 Simulation Study 
+
+To evaluate the finite-sample performance of the proposed Net-LSW framework, we conduct a com-prehensive simulation study. The objective is twofold: (1) to assess the model’s ability to recover multi-scale, nonstationary dependence structures constrained by a network topology, and (2) to eval-uate the scalability and robustness of our framework under several configurations. 
+
+6.1 Data Generating Process 
+
+To simulate a Net-LSW process, a time-series realisation bXN 
+
+> t
+
+is synthesised through a hierarchical multi-scale procedure. Here, bXN 
+
+> t
+
+denotes a finite realisation of a true underlying Net-LSW process 
+
+XN 
+
+> t
+
+as specified by the properties in Section 3.1. Using the subprocess-based representation described in Section 5.1, the simulated Net-LSW process bXN 
+
+> t
+
+is a superposition of independent subprocesses across a set of active scales J (Remark 6), 
+
+bXN 
+
+> t
+
+= X
+
+> j∈J
+
+bXj,t .
+
+To thoroughly examine the flexibility of our setup, we consider different numbers of active resolution levels and nonstationary parameter modulations. The generation of each scale-specific component 
+
+bXj,t follows a four-stage simulation pipeline: 1. Network-constrained precision dynamics: Let G = ( N , E) be a network topology under consideration. For each scale j and rescaled time z = k/T , we define a time-varying spectral precision matrix bΘj (z). The sparsity pattern of bΘj (z) is strictly constrained by the network’s adjacency, ensuring that [ bΘj (z)] p,q = 0 if (p, q ) /∈ E for p̸ = q.We allocate different nonstationary activity types to control the temporal evolution of the off-diagonal strength parameter θj (z) at each scale j ∈ J :• Transient burst (Type 1): 
+
+θj (z) = 
+
+(
+
+0.8 if 0.3 ≤ z ≤ 0.40.1 otherwise • Changepoint (Type 2): 
+
+θj (z) = 
+
+(
+
+0.1 if z < 0.50.6 if z ≥ 0.5
+
+• Linear trend (Type 3): 
+
+θj (z) = 0 .2 + 0 .3z z ∈ [0 , 1] 
+
+• Piecewise constant step function (Type 4): 
+
+θj (z) = 
+
+(
+
+−0.7 if z ≤ 0.50.4 if z > 0.5
+
+• Uniform CDF (linear transition) (Type 5): 
+
+θj (z) = 
+
+
+
+0 if z < 0.25 2z − 0.5 0.25 ≤ z ≤ 0.75 1 if z > 0.75 
+
+• Cosine wave (Type 6): 
+
+θj (z) = 0 .2 [1 + 0 .5 cos(2 πz )] 
+
+The functional forms of these time-varying modulations are illustrated in Figure 1. 18 0.1           
+
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> (z)
+> Type 1: Step Window (0.3 - 0.4)
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> (z)
+> Type 2: Changepoint (at 0.5)
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> (z)
+> Type 3: Linear Trend (0.2 to 0.5)
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> (z)
+> Type 4: Alternating Constant Step
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> z
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> (z)
+> Type 5: Uniform CDF (Linear Transition)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> z
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> (z)
+> Type 6: Cosine Wave
+
+Figure 1: Time-varying profiles for the off-diagonal strength parameter θj (z) across different nonsta-tionary modulation types. In multiple-scale configurations, we mix these behaviors across active scales to test the model’s capacity to decouple distinct, overlapping dynamics. 2. Generation of correlated innovations: The local spectral density matrix is derived as the inverse of the simulated precision matrix, bSj (z) = 
+
+ bΘj (z)
+
+−1
+
+. From this matrix, we extract the innovation correlation structure, 
+
+bΛj (z) = diag 
+
+bSj (z)
+
+−1/2 bSj (z)diag 
+
+bSj (z)
+
+−1/2
+
+. (33) At each scale j and time point k, we sample a multivariate Gaussian innovation vector bξj,k ,
+
+bξj,k ∼ Nn
+
+
+
+0, bΛj (z)
+
+
+
+.
+
+3. Latent subprocess construction: The innovations are modulated by both the local spectral amplitude and a dyadic scaling factor. Let cWj (z) = diag 
+
+bSj (z)
+
+1/2
+
+. For each network node 
+
+p ∈ N , the scaled innovations serve as the inputs to the synthesis step. The subprocess bX(p)
+
+j,t is reconstructed using the average basis inverse transform (Nason and Silverman, 1995) 
+
+bX(p)
+
+j,t =
+
+T −1X
+
+k=0 
+
+cW(p, ·)
+
+j (k/T ) bξj,k ψj,k (t).
+
+19 The simulated Net-LSW process bXN 
+
+> t
+
+is then constructed by subprocess aggregation 
+
+bXN 
+
+> t
+
+= X
+
+> j∈J
+
+bXj,t .
+
+This formulation guarantees that the simulated power at each resolution level matches the the-oretical target spectrum while respecting the structural zeros imposed by E.
+
+Remark 7 (Notational conventions). Throughout this section, bXN 
+
+> t
+
+refers exclusively to a simulated realisation of the Net-LSW process. This must be conceptually distinguished from the approximated subprocesses eXj,t in Section 5.5. This distinction forms the basis of our assessment framework: in practice, we treat the realised process bXN 
+
+> t
+
+as the sole observed quantity. The estimation task consists of using bXN 
+
+> t
+
+to isolate eXj,t and recover spectral precision estimates, eΘj (z), under the structural zeros of the fixed network G. This is subsequently validated against the generative truth, bΘj (z).
+
+6.2 Performance Evaluation Framework 
+
+To evaluate the finite-sample performance of the proposed estimation procedure (summarised in Al-gorithm 1), we track its estimation fidelity against the truth. For a given active scale j and time-series length T , let R denote the total number of independent simulation replicates. Let φ(p,q ) 
+
+> j
+
+(k/T ) represent a localised target dependence structure at scale j
+
+and time position k—denoting either the true local coherence ρ(p,q ) 
+
+> j
+
+(k/T ) or the true local partial coherence η(p,q ) 
+
+> j
+
+(k/T ) between node pair (p, q ). The corresponding estimator obtained from the r-th simulation replicate is denoted by eφ(r);( p,q ) 
+
+> j
+
+(k/T ).We assess the quality of the localised dependency measures using three statistical criteria calcu-lated over the network topology: Mean Squared Error ( MSE ), Squared Bias ( Bias 2), and Variance (Var ) at each scale j ∈ J . To evaluate the accuracy across the entire network topology and time grid, the summary metrics are defined in a multi-scale manner, using the spatial-temporal expectation over all node paths p, q ∈ N and discrete time points k = 0 , . . . , T − 1, namely, 1. Mean Squared Error ( MSE ): 
+
+MSE j = 1
+
+n2 · T
+
+> n
+
+X
+
+> p=1
+> n
+
+X 
+
+> q=1
+> T−1
+
+X
+
+> k=0
+
+"
+
+1
+
+R
+
+> R
+
+X
+
+> r=1
+
+eφ(r);( p,q ) 
+
+> j
+
+(k/T ) − φ(p,q ) 
+
+> j
+
+(k/T )
+
+2
+
+#
+
+.
+
+2. Squared Bias ( Bias 2): 
+
+Bias 2 
+
+> j
+
+= 1
+
+n2 · T
+
+> n
+
+X
+
+> p=1
+> n
+
+X 
+
+> q=1
+> T−1
+
+X
+
+> k=0
+
+"
+
+1
+
+R
+
+> R
+
+X
+
+> r=1
+
+eφ(r);( p,q ) 
+
+> j
+
+(k/T )
+
+!
+
+− φ(p,q ) 
+
+> j
+
+(k/T )
+
+#2
+
+.
+
+3. Variance ( Var ): 
+
+Var j = MSE j − Bias 2 
+
+> j
+
+.
+
+Across all settings, we evaluate the proposed Net-LSW framework against standard unconstrained multivariate LSW ( MvLSW ) estimation (Park et al., 2014), as well as benchmark performance against the Oracle that uses true subprocess information. 20 Remark 8 (Implementation details and limitations). The MvLSW estimates are obtained using the MvLSW R package (Taylor et al., 2019), while the constrained optimisation step of the Net-LSW framework (described in Section 5.4) is performed via the glasso package in R (Friedman et al., 2007; Hastie et al., 2009). A naive approach might also directly apply the constrained optimisation step to the MvLSW network-agnostic estimates. However, due to the cross-scale bias correction inherent to the multivariate locally stationary wavelet framework, their estimates in practice often suffer from non-positive definiteness (although theoretically this should hold). Consequently, the 
+
+glasso function cannot accept these matrices as valid empirical covariance inputs (recall the un-derlying glasso algorithm relies on recursively partitioning the target matrix by iteratively isolating rows and columns to solve regression problems, as detailed in Algorithm 1). Hence a non-positive-definite input matrix breaks the optimisation routine, making direct constrained optimisation on the MvLSW estimator impossible in practice. In contrast, the simple form of our proposed estimator that does not require correction renders it always positively definite, both theoretically and practically. 12345                          
+
+> −3 −2 −1 012
+> 010 20 30 40 50
+> Time
+> X1,t
+> −2 −1 012
+> 010 20 30 40 50
+> Time
+> X 2,t
+> −2 −1 0123
+> 010 20 30 40 50
+> Time
+> X3,t
+> −2 02
+> 010 20 30 40 50
+> Time
+> X 4,t
+> −3 −2 −1 012
+> 010 20 30 40 50
+> Time
+> X5,t 12345678910 12345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+
+Figure 2: Example network topologies used within the simulation setup: the 5-node fiveNet con-figuration from the GNAR package in R (left), alongside randomly generated Erd¨ os-Renyi network structures with 10 nodes (center) and 25 nodes (right). 
+
+6.3 Estimation Accuracy under Fixed Network Topologies 
+
+We first investigate estimation performance under two explicit network dimensions represented in Figure 2: the 5-node fiveNet configuration from the GNAR package in R (left panel) and the 10-node randomly generated Erd¨ os-Renyi network (central panel). We evaluate these graphs across three distinct scenarios corresponding to different activity types as represented in Figure 1: • Scenario 1 (single scale): J = {1}, where scale 1 follows Type 1 dynamics. • Scenario 2 (two scales): J = {1, 4}, where scale 1 follows Type 1 dynamics and scale 4 follows Type 6 dynamics. • Scenario 3 (multiple-scales): J = {1, 2, 3, 4, 5}, mapping respectively to parameter activity Types 1, 2, 3, 4, and 6. 21 For each scenario, data are generated over M = 50 independent replicates for sample sizes T ∈{512 , 1024 , 2048 }. In what follows, we provide a detailed comparative analysis highlighting the relative strengths and asymptotic properties of the competing frameworks. The full empirical results supporting these observations are consolidated in Table 1 (coherence) and Table 2 (partial coherence), which present MSE and Bias 2 across all simulated configurations (with variance inferred as their difference). Across both tables, our proposed estimation procedure consistently outperforms the baseline MvLSW approach. For instance, in Table 1 (Scenario 1, N = 5 , j = 1 , T = 512 ), the proposed method records an MSE improvement of 59% when compared to MvLSW. This efficiency gap widens further in the partial coherence setting of Table 2 ( N = 10 , j = 1 , T = 2048 ), where the proposed framework achieves a highly precise MSE of .00272 compared to .03681 for that of Park et al. (2014), representing an error reduction of over 92%. When handling structural scale-localised behaviour at scale j = 4 (Scenario 2), MvLSW exhibits severe structural deficiencies; as seen in Table 1 ( N = 5 , j = 4 , T = 512 ), MvLSW has an MSE 
+
+of .12697 driven heavily by a Bias 2 of .07963 , while our proposed method maintains an MSE of just .04832 . A similar trend occurs in Table 2 ( N = 10 , j = 4 , T = 1024 ), where our estimation technique achieves a substantial reduction in MSE compared to MvLSW ( .01230 versus .02444 ). As the series length T increases, our technique demonstrates strong consistency across both tables, as seen in Table 1 (Scenario 1, N = 5 , j = 1 ) where its MSE drops cleanly from .01862 to .01261 to 
+
+.00964 for T ∈ { 512 , 1024 , 2048 }. Conversely, the asymptotics completely break down for MvLSW in complex environments; in Table 2 (Scenario 3, N = 10 , j = 1 ), its MSE actually degrades from 
+
+.04066 to .09408 as T increases. Furthermore, doubling the network size highlights the scaling power of the proposed framework; in Table 2 (Scenario 1, j = 1 , T = 512 ), expanding the network drops the MSE for our framework from .01117 (N = 5 ) down to .00448 (N = 10 ), whereas MvLSW has its error increase with larger network dimensions, with its MSE climbing from .06262 to .11981 .While MvLSW never beats our proposed method in both metrics simultaneously, there are settings in which it can achieve a lower bias under large samples at low scales (e.g., Table 1, N = 5 , Scenario 1, j = 1 , T = 2048 , where MvLSW achieves a lower Bias 2 compared to our estimation scheme, though its variance renders its MSE uncompetitive). Our method is most challenged by Scenario 3 at coarse scales ( j = 5 , T = 512 ), leading to its highest overall MSE of .10784 in Table 1, which is, however, stabilised to .07125 under the partial coherence framework of Table 2. Table 1: Coherence accuracy metrics ( MSE and Bias 2) for the N = 5 and N = 10 node networks across Scenarios 1, 2, and 3.                                                                              
+
+> MSE Bias 2
+> Scenario Scale Method T= 512 T= 1024 T= 2048 T= 512 T= 1024 T= 2048
+> N = 5 Scenario 1 j= 1 Oracle .01524 .01026 .00765 .00628 .00350 .00220 Proposed .01862 .01261 .00964 .00635 .00352 .00228 MvLSW .04537 .03049 .02177 .00336 .00248 .00183
+> Scenario 2 j= 1 Oracle .01524 .01026 .00765 .00628 .00350 .00220 Proposed .01854 .01287 .00987 .00655 .00398 .00258 MvLSW .05341 .03473 .02450 .00474 .00274 .00188
+> j= 4 Oracle .03483 .02751 .02396 .00125 .00075 .00067 Proposed .04832 .03796 .03335 .00186 .00117 .00099 MvLSW .12697 .11069 .09686 .07963 .05205 .02340 Continued on next page
+
+22 Table 1: Coherence accuracy metrics ( MSE and Bias 2) for the N = 5 and N = 10 node networks across Scenarios 1, 2, and 3. – Continued from previous page 
+
+MSE Bias 2
+
+Scenario Scale Method T = 512 T = 1024 T = 2048 T = 512 T = 1024 T = 2048 
+
+Scenario 3 j = 1 Oracle .01524 .01026 .00765 .00628 .00350 .00220 Proposed .01839 .01425 .01188 .00890 .00671 .00597 MvLSW .08356 .06638 .04955 .02471 .01627 .01221 
+
+j = 2 Oracle .01043 .00724 .00580 .00217 .00127 .00085 Proposed .02067 .01841 .01647 .01056 .00999 .00987 MvLSW .18876 .16512 .14514 .12491 .11061 .09826 
+
+j = 3 Oracle .01419 .01192 .00940 .00036 .00034 .00023 Proposed .03903 .03627 .03111 .01890 .01937 .01812 MvLSW .24416 .23151 .19657 .15834 .15271 .13163 
+
+j = 4 Oracle .03184 .02567 .01956 .00335 .00209 .00084 Proposed .06442 .05537 .04499 .02102 .01965 .01695 MvLSW .28555 .27019 .24264 .18920 .18067 .16828 
+
+j = 5 Oracle .07373 .05746 .04564 .00349 .00150 .00151 Proposed .10784 .08670 .07847 .01718 .01430 .01877 MvLSW .22199 .19317 .18302 .12341 .11223 .10626 
+
+N = 10 Scenario 1 j = 1 Oracle .01024 .00708 .00513 .00492 .00285 .00175 Proposed .01220 .00861 .00634 .00499 .00292 .00178 MvLSW .05388 .03811 .02674 .00485 .00229 .00145 
+
+Scenario 2 j = 1 Oracle .01024 .00708 .00513 .00492 .00285 .00175 Proposed .01225 .00877 .00657 .00514 .00320 .00205 MvLSW .05884 .04891 .03331 .01737 .00919 .00314 
+
+j = 4 Oracle .02613 .02033 .01652 .00072 .00047 .00040 Proposed .03675 .02840 .02312 .00104 .00070 .00067 MvLSW .06061 .05895 .05743 .05748 .05600 .05365 
+
+Scenario 3 j = 1 Oracle .01024 .00708 .00513 .00492 .00285 .00175 Proposed .01239 .00977 .00775 .00645 .00512 .00396 MvLSW .04765 .05108 .04878 .03558 .02731 .02133 
+
+j = 2 Oracle .00798 .00577 .00464 .00157 .00098 .00057 Proposed .01522 .01355 .01141 .00791 .00757 .00647 MvLSW .09494 .09127 .08811 .08854 .08625 .08343 
+
+j = 3 Oracle .01272 .01034 .00845 .00022 .00025 .00022 Proposed .02672 .02295 .02037 .01096 .01038 .01022 MvLSW .11151 .10625 .10125 .09875 .09664 .09395 
+
+j = 4 Oracle .02867 .02064 .01694 .00353 .00169 .00095 Proposed .04433 .04086 .03521 .01413 .01575 .01417 MvLSW .13524 .13212 .12670 .11931 .11895 .11723 
+
+j = 5 Oracle .04979 .03957 .03321 .00166 .00116 .00096 Proposed .07027 .06056 .05195 .00982 .01130 .00910 MvLSW .07334 .07008 .06654 .06222 .06163 .05973 
+
+Table 2: Partial coherence accuracy metrics ( MSE and Bias 2) for the N = 5 and N = 10 node networks across Scenarios 1, 2, and 3. 
+
+MSE Bias 2
+
+Scenario Scale Method T = 512 T = 1024 T = 2048 T = 512 T = 1024 T = 2048 
+
+N = 5 
+
+Continued on next page 
+
+23 Table 2: Partial coherence accuracy metrics ( MSE and Bias 2) for the N = 5 and N = 10 node networks across Scenarios 1, 2, and 3. – Continued from previous page 
+
+MSE Bias 2
+
+Scenario Scale Method T = 512 T = 1024 T = 2048 T = 512 T = 1024 T = 2048 
+
+Scenario 1 j = 1 Oracle .00838 .00617 .00485 .00044 .00029 .00018 Proposed .01117 .00813 .00648 .00050 .00033 .00021 MvLSW .06262 .03856 .02564 .00134 .00088 .00052 
+
+Scenario 2 j = 1 Oracle .00838 .00617 .00485 .00044 .00029 .00018 Proposed .01076 .00790 .00625 .00049 .00032 .00020 MvLSW .07889 .04885 .03183 .00189 .00119 .00068 
+
+j = 4 Oracle .02777 .02188 .01774 .00070 .00058 .00047 Proposed .03886 .02995 .02465 .00102 .00090 .00072 MvLSW .10730 .12187 .14376 .03249 .02196 .01103 
+
+Scenario 3 j = 1 Oracle .00838 .00617 .00485 .00044 .00029 .00018 Proposed .00864 .00670 .00527 .00057 .00052 .00046 MvLSW .13022 .10332 .06877 .00963 .00546 .00331 
+
+j = 2 Oracle .00689 .00533 .00461 .00022 .00020 .00012 Proposed .00891 .00728 .00605 .00068 .00070 .00061 MvLSW .17873 .14960 .13389 .04532 .03560 .02933 
+
+j = 3 Oracle .01164 .00945 .00766 .00028 .00028 .00018 Proposed .02081 .01727 .01403 .00347 .00335 .00323 MvLSW .20431 .19149 .16983 .06401 .05803 .04891 
+
+j = 4 Oracle .02823 .02212 .01826 .00117 .00093 .00045 Proposed .03792 .03165 .02558 .00386 .00381 .00266 MvLSW .20493 .19982 .18574 .06378 .06018 .05288 
+
+j = 5 Oracle .05149 .04235 .03467 .00263 .00132 .00111 Proposed .07125 .05794 .05043 .00550 .00347 .00491 MvLSW .19325 .16852 .17373 .06635 .05645 .05458 
+
+N = 10 Scenario 1 j = 1 Oracle .00337 .00260 .00204 .00022 .00013 .00009 Proposed .00448 .00345 .00272 .00025 .00016 .00012 MvLSW .11981 .06296 .03681 .00334 .00140 .00076 
+
+Scenario 2 j = 1 Oracle .00337 .00260 .00204 .00022 .00013 .00009 Proposed .00433 .00335 .00265 .00025 .00016 .00011 MvLSW .12318 .08912 .05112 .00658 .00337 .00136 
+
+j = 4 Oracle .01114 .00905 .00752 .00045 .00032 .00025 Proposed .01494 .01230 .01036 .00067 .00052 .00040 MvLSW .02541 .02444 .02419 .02312 .02234 .02130 
+
+Scenario 3 j = 1 Oracle .00337 .00260 .00204 .00022 .00013 .00009 Proposed .00378 .00284 .00225 .00033 .00024 .00020 MvLSW .04066 .08374 .09408 .01437 .01087 .00759 
+
+j = 2 Oracle .00309 .00236 .00193 .00013 .00008 .00006 Proposed .00385 .00322 .00267 .00036 .00037 .00031 MvLSW .03568 .03120 .02984 .02632 .02447 .02318 
+
+j = 3 Oracle .00467 .00383 .00311 .00012 .00012 .00009 Proposed .00962 .00776 .00657 .00233 .00201 .00191 MvLSW .05648 .04835 .04173 .03435 .03224 .03012 
+
+j = 4 Oracle .01198 .00904 .00753 .00067 .00030 .00027 Proposed .01562 .01298 .01102 .00153 .00128 .00121 MvLSW .05162 .04698 .04078 .02961 .02859 .02699 
+
+j = 5 Oracle .01994 .01668 .01394 .00110 .00078 .00062 Proposed .02716 .02382 .02069 .00307 .00304 .00250 MvLSW .04055 .03742 .03323 .02774 .02685 .02536 
+
+24 6.4 Effect of Network Sparsity 
+
+In this section, we study how varying levels of edge density in the underlying network affect estimation stability. We isolate this structural effect by fixing the dimension of the network to N = 25 nodes (as exemplified in Figure 2, right panel) and varying the underlying edge generation probability ℘ ∈{10% , 30% , 50% }. To achieve this, the underlying topologies are generated as Erd¨ os-Renyi random graphs using the igraph package in R.The experimental design for this simulation is organised as follows: 1. For each sparsity level ℘, we randomly generate K = 30 independent Erd¨ os-Renyi network topologies. 2. For each network, we simulate R = 50 independent time-series replicates according to the data generating process detailed in Section 6.1. 3. For each of the 30 network graphs, we compute its MSE and Bias 2 averaged over its R = 50 
+
+runs. The impact of network sparsity is studied across the same series of scenarios (Scenarios 1, 2, and 3) and sample lengths ( T ∈ { 512 , 1024 , 2048 }) used in the previous section. To visually analyse the distributional performance and sensitivity under changing edge configurations, the results across the 30 random graphs for Scenario 2 are presented as boxplots in Figures 3 and 4. For completeness, the corresponding boxplots for Scenarios 1 and 3 are presented in Appendix D. For both the squared bias ( Bias 2) and mean squared error ( MSE ), the proposed Net-LSW es-timator (red) consistently achieves lower median errors and narrower interquartile ranges than the network-agnostic MvLSW of Park et al. (2014) (purple) across both scales 1 and 4, tracking the true subprocess benchmark (blue). As the sample size T increases from 512 to 2048, both the proposed estimator and the blue benchmark exhibit a clear downward shift in their error distributions alongside a visible tightening of the boxplots, highlighting empirical consistency. Conversely, the network-agnostic MvLSW fails to show a clear systematic error reduction and maintains wide distributional spreads across sample sizes. Crucially, as the network density increases from ℘ = 10% to ℘ = 50% ,although the overall error baseline shifts slightly upward for all cases, our proposed estimator retains its performance and tracking stability over the network-agnostic alternative, confirming its robustness even under denser network topologies. 
+
+7 Empirical Application: High-Dimensional Global Banking Dynamics 
+
+In the previous section, we evaluated the performance of our proposed dependence estimation method-ology against the baseline mvLSW alternative for a variety of simulated scenarios. We now consider an application related to modelling financial equity dynamics. In particular, we study the localised de-pendence structure of global banks under the Net-LSW framework introduced in Section 3. Because our framework takes an underlying network topology as a given input, we incorporate a pre-specified banking connectedness graph directly into the estimation of local spectral quantities. This allows us to examine how direct cross-bank dependencies evolve jointly across rescaled time and wavelet scales while strictly preserving the network’s structural zero constraints. 25 T = 512 T = 1024 T = 2048                                 
+
+> p10  p30  p50
+> S 1 S 4 S 1 S 4 S 1 S 4
+> 10 −3 10 −2 10 −1
+> 10 −2 10 −1
+> 10 −2 10 −1
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 2: Coherence T = 512 T = 1024 T = 2048
+> p10  p30  p50
+> S 1 S 4 S 1 S 4 S 1 S 4
+> 10 −4 10 −3 10 −2
+> 10 −4 10 −3 10 −2
+> 10 −4 10 −3 10 −2
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 2: Partial Coherence
+
+Figure 3: Empirical Bias 2 distributions under Scenario 2 over K = 30 random network topologies for edge densities ℘ ∈ { 10% , 30% , 50% } (rows) under varying sample sizes T . Top panel: the 3 × 3
+
+evaluation grid for coherence; Bottom panel: the corresponding grid for partial coherence. 
+
+7.1 Data and Volatility Measure 
+
+The data we analyse consists of daily equity prices for n = 83 major global banking institutions observed from August 13, 2015 through December 29, 2023, with a sample size of T = 2048 obser-vations. For each institution i and time index t, volatility is proxied using the range-based estimator 26 T = 512 T = 1024 T = 2048                          
+
+> p10  p30  p50
+> S 1 S 4 S 1 S 4 S 1 S 4
+> 10 −2
+> 10 −2 10 −1
+> 10 −2 10 −1
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 2: Coherence T = 512 T = 1024 T = 2048
+> p10  p30  p50
+> S 1 S 4 S 1 S 4 S 1 S 4
+> 10 −3 10 −2
+> 10 −2
+> 10 −2
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 2: Partial Coherence
+
+Figure 4: Empirical MSE distributions under Scenario 2 over K = 30 random network topologies for edge densities ℘ ∈ { 10% , 30% , 50% } (rows) under varying sample sizes T . Top panel: the 3 × 3
+
+evaluation grid for coherence; Bottom panel: the corresponding grid for partial coherence. of Garman and Klass (1980) 
+
+eσ2
+
+it = 0 .511( Hit −Lit )2−0.019 
+
+h
+
+(Cit −Oit )( Hit +Lit −2Oit )−2( Hit −Oit )( Lit −Oit )
+
+i
+
+−0.383( Cit −Oit )2,
+
+where Hit , L it , O it , C it are the logarithmic high, low, open, and close prices (Demirer et al., 2018). The multivariate time series Xt = ( X1,t , . . . , X n,t )⊤ is constructed by setting each element 
+
+Xi,t = eσ2
+
+it . Applying the stationarity test of Nason (2013) via the R locits package in rejects 27 the null hypothesis of second-order stationarity for all nodal volatility series and justifies treating the resulting vector as a realisation from a multivariate locally stationary process. 
+
+7.2 The Global Banking Connectedness Network 
+
+Because the Net-LSW framework operates conditional on a known graph topology, an underlying network must be specified prior to spectral estimation. For this application, we obtain our input network by adopting the variance spillover framework of Demirer et al. (2018). More specifically, the time-domain vector autoregressive (VAR) procedure outlined below is used to construct the network. It aggregates historical directional spillovers to form a time-invariant graph architecture, separating the generation of the static graph input from the actual localised time-scale modelling of the nonstationary signals. Following Demirer et al. (2018), the centered volatility time series are modelled using a high-dimensional regularised VAR, namely 
+
+Xt =
+
+> pVAR
+
+X
+
+> l=1
+
+ΦlXt−l + εt, εt ∼ N (0 , Σ), (34) estimated via Elastic Net regularization to accommodate the high dimensionality of the panel. Using the moving average (MA (∞)) representation Xt = P∞ 
+
+> h=0
+
+Ξhεt−h implied by the esti-mated VAR parameters, the generalised forecast error variance decomposition (GFEVD) is computed following Pesaran and Shin (1998) and computed using the ConnectednessApproach R pack-age of Gabauer (2025). For a forecast horizon H, the pairwise directional connectedness from bank q
+
+to bank p is 
+
+ϑ(p,q )(H) = (σq,q )−1 PH−1
+
+> h=0
+
+ e⊤ 
+
+> p
+
+ΞhΣeq
+
+2
+
+PH−1 
+
+> h=0
+
+e⊤ 
+
+> p
+
+ΞhΣΞ⊤ 
+
+> h
+
+ep
+
+, (35) where ep and eq are selection vectors, and σq,q is the qth diagonal element of Σ. These directional measures are normalised row-wise to represent relative spillover proportions 
+
+eϑ(p,q ) = ϑ(p,q )(H)
+
+Pnq=1 ϑ(p,q )(H) . (36) By construction, the GFEVD yields a dense matrix where almost all elements eϑ(p,q ) > 0, implying a fully connected network. Rather than attempting to estimate a network data-generation process, our goal is to extract an informative, sparse subgraph that keeps the network connected but removes the weakest links. We achieve this by varying the threshold cutoff τ and sequentially retaining edges in descending order of spillover intensity until the graph forms a connected giant component. The critical threshold τcrit is defined as the maximum cutoff that prevents the graph from fragmenting, ensuring every pair of bank nodes can reach one another through intermediate pathways. The adjacency matrix is then defined as 
+
+[A]p,q = I(eϑ(p,q ) ≥ τcrit ). (37) The resulting graph G = ( N , E) prescribes the structural network constraints (see Figure 5) over whose nodes we model the data {Xt} as a Net-LSW process and whose subsequent nonstationary local time-scale partial coherence structures are analysed. 28 HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA HSBA Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi Mitsubishi BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP BNP JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM JPM Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Deutsche Bank Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Barclays Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Credit Agricole Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Bank of America Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Citigroup Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Mizuho Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Societe Generale Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Sumitomo Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Banco Santander Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo Wells Fargo ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep ING Groep LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS LLOYDS Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit Unicredit UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS UBS Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Credit Suisse Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Goldman Sachs Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Nordea Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Intesa San Paolo Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Morgan Stanley Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Toronto−Dominion Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Royal Bank of Canada Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Banco Bilbao Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank Commerzbank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank National Australia Bank Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Bank of Nova Scotia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Commonwealth Bank of Australia Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Standard Chartered Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Westpac banking Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Danske Bank Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii Sberbank Rossii China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng China Minsheng Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Bank of Montreal Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Itau Unibanco Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Resona Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Nomura Holding Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui Sumitomo Mitsui State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India State Bank of India DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA DNB ASA Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Svenska Handelsbanken Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Skandinaviska Enskilda Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Canadian Bank of Commerce Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon Bank of New York Mellon U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp U.S. Bancorp Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco Banco Bradesco KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe KBC Groupe PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group PNC Financial Services Group DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings DBS Group Holdings Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Ping An Bank Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Capital One Financial Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Shinhan Financial Group Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Swedbank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Hua Xia Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Erste Group Bank Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi Monte Dei Paschi State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation State Street Corporation Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell Banco de Sabadell United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank United Overseas Bank Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Industrial bank of korea Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland Bank of Ireland National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada National Bank of Canada SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks SunTrust Banks Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Malayan Banking Berhad Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group Standard Bank Group American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express American Express National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece National Bank of Greece Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Macquarie group Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fukuoka Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Fifth Third Bancorp Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Regions Financial Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Chiba Bank Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Unipol Gruppo Finanziario Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues Banco Comercial Portugues CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding CIMB Group Holding Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Bank of Baroda Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Turkiye is bankasi Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Hokuhoku Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Shizuoka Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Mediobanca Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Yamaguchi Figure 5: Global banking connectedness network constructed following Demirer et al. (2018). Each node represents a financial institution, with directed edges reflecting institutional links. Node colours indicate regional origin: • North America, • Europe, • Asia, • Australia, and • South America. 
+
+7.3 Localised Time-Scale Dependence Structures 
+
+To evaluate how the nonstationary time series behave across this banking network, we focus on se-lected institutional pairs that capture distinct systemic, regional, and cross-border transmission mech-anisms. We contrast network-informed coherence and network-informed partial coherence to distin-guish direct dependence channels from broader, market-wide comovement. Throughout this analysis, we plot the absolute values of the respective (partial) coherence metrics. 
+
+The COVID-19 Shock and US Money-Center Banks 
+
+We first examine the dependence dynamics between JPMorgan Chase and Citigroup , two central nodes in global dollar funding markets. Figure 6 shows the estimated dependence across scales around the COVID-19 shock period. Both the coherence and its version that conditions on the information in the other nodes, the partial coherence, reveal the similar dynamic features and scales, albeit of different intensities. There is a notable sharply localised feature around the early 2020 period, concentrated at high-to-medium frequencies ( j = 1 to 7). The strongest conditioned effect occurs at the finest scale (j = 1 ), where partial coherence reaches its peak magnitude for this pair. This indicates that the significant COVID-19 event resulted in a direct stress transmission between these two institutions that was primarily short-horizon, reflecting rapid liquidity and balance-sheet adjustments during the onset of the pandemic shock. 29 Network Coherence: JPM <−−> Citigroup 
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.11 0.22 0.33 0.44
+
+(a) Network-Informed Coherence Network Partial Coherence: JPM <−−> Citigroup  
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.06 0.11 0.17 0.22
+
+(b) Network-Informed Partial Coherence 
+
+Figure 6: Estimated dependence structure for the JPMorgan Chase–Citigroup pair: note the early 2020 systemic shock period. 
+
+Brexit and UK Banking Dependence Dynamics 
+
+We next consider manifest localised dependence within European and UK banking channels following the Brexit referendum, focusing on HSBC , Soci´ et´ e G´ en´ eral , Lloyds , and Standard Chartered .Network Partial Coherence: HSBC <−−> Societe Generale 
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.06 0.12 0.18 0.24
+
+(a) HSBC ↔ Soci´ et´ e G´ en´ eral Network Partial Coherence: LLOYDS <−−> Standard Chartered  
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.02 0.05 0.07 0.09
+
+(b) Lloyds ↔ Standard Chartered 
+
+Figure 7: Network-informed partial coherence across European and UK banking channels: note the strong, fast response to Brexit (left) and its high-to-medium frequencies counterpart (right), followed by a prolonged COVID-19 impact (right). For the HSBC–Soci´ et´ e G´ en´ eral pair shown in Figure 7 (left), the estimated partial coherence dis-plays a strong and highly localised burst at the finest scales ( j = 1 , 2) during the June 2016 Brexit referendum. This pronounced spike isolates an immediate cross-border transmission mechanism as-sociated with sterling funding and liquidity reallocation. By contrast, the Lloyds–Standard Chartered 
+
+pair shown in Figure 7 (right) exhibits short-to-medium horizon dependence associated to the Brexit period, as well as dependence during, and following, the COVID-19 period. A strong localised fine-scale feature appears around the referendum period, while a second dependence region emerges from the early 2020 until roughly the end of 2021 and propagates co-movement at medium-coarser scales 30 (j = 4 to 8). This upward scale transmission captures a longer-horizon restructuring effect than associated with the later stages of Brexit implementation. 
+
+Asian Regional Banking Corridor 
+
+To study regional transmission dynamics in East Asia, we illustrate the Japanese banking corridor formed by Mitsubishi and Sumitomo Mitsui . Figure 8 shows weak co-movement across the finest scale for about one year, starting in the second half of 2015, while the second occurs around early 2020 and dependence propagates from fine to intermediate scales ( j ≤ 6), demonstrating that regional banking synchronization intensifies temporarily during major systemic shocks. Network Coherence: Mitsubishi <−−> Sumitomo Mitsui 
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.02 0.05 0.07 0.10
+
+(a) Network-Informed Coherence Network Partial Coherence: Mitsubishi <−−> Sumitomo Mitsui  
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.02 0.03 0.05 0.06
+
+(b) Network-Informed Partial Coherence 
+
+Figure 8: Localised dependency profiles for the Mitsubishi–Sumitomo Mitsui case. 
+
+Disconnected Pairs and Constraint Illustration 
+
+To show how the network constraints operate, we examine the pairs HSBC–Barclays and JPMorgan Chase–Deutsche Bank . These institutions share no direct edge in the fixed network topology in Figure 5. Figure 9 reports their coherence estimates. The local coherence displays bouts of strong uncondi-tional co-movement driven by shared global factors, punctuated by local- and world-events. Because no direct edge connects these pairs in the underlying graph, the framework sets their partial coherence uniformly to zero. This demonstrates how the model filters out common market factors and enforces the network structure. 
+
+8 Discussion 
+
+In this article, we have addressed the challenge of capturing multi-scale, time-varying linear cross-dependencies in nonstationary multivariate time series, structured by an underlying network topology. While traditional frameworks allow for (unconstrained) dependence estimation, they are network-agnostic and computationally expensive—estimating all pairwise dependencies as if the system were fully connected—thus leading to severe over-parametrization in high dimensions. In contrast, our Locally Stationary Wavelet process on Networks (Net-LSW) framework accommodates the network-induced topological constraints by encoding the existing edge connections directly into the formula-tion of our proposed model. 31 Network Coherence: HSBC <−−> Barclays 
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.03 0.06 0.10 0.13
+
+(a) HSBC–Barclays: Coherence Network Coherence: JPM <−−> Deutsche Bank  
+
+> Time Wavelet Scale (j)
+> 08/15 06/16 05/17 03/18 02/19 12/19 11/20 09/21 08/22 06/23 12345678910 11
+> 0.00 0.04 0.08 0.12 0.17
+
+(b) JPMorgan Chase–Deutsche Bank: Coherence 
+
+Figure 9: Comparison of network-informed coherence for disconnected banking pairs. Left panel corresponds to HSBC–Barclays; Right panel: JPMorgan Chase–Deutsche Bank. Note the Brexit impact (left) and well-aligned COVID-19 market effects of different intensities. The theoretical contributions of this work are twofold. Firstly, we propose a local partial correla-tion graph which is able to characterise the graphical structure underpinning the observed nonstation-ary signal in the wavelet domain, in a way that mirrors the classical Fourier partial correlation graphs of Dahlhaus (2000a) in the stationary setting. Specifically, the absence of a physical edge corresponds exactly to a structural zero in the network time-localised precision matrix Θj (z) across all scales j
+
+and rescaled times z. Secondly, we develop a computationally tractable scale-by-scale subprocess-based estimation procedure. By projecting the observed signal to (approximate) latent subprocesses, we are able to form a time-localised, multi-scale, convex network-penalised objective function. We establish that optimizing this objective via graphical covariance selection yields unique, mean-squared consistent estimators, extending classical estimation schemes to the locally stationary wavelet setting. The consistency properties of our estimators are strongly validated by our simulation studies. In our modelling framework, the network topology is known and fixed across time. A direction for future research would relax the static network assumption, to facilitate time-varying edge inclusion, which would pose theoretical and computational challenges, e.g., requiring complex penalisation. 
+
+Supplementary Materials 
+
+Code Reproducibility. The R code used to reproduce the simulation studies described in this article will be made publicly available in the unblinded version of the manuscript. 
+
+Funding 
+
+Jim´ enez-Var´ on, Knight, and Nunes gratefully acknowledge support from the EPSRC NeST Pro-gramme Grant EP/X002195/1. 32 References 
+
+Achard, S. and E. Bullmore (2007). Efficiency and cost of economical brain functional networks. 
+
+PLoS Computational Biology 3 (2), e17. Basu, S. and S. S. Rao (2023). Graphical models for nonstationary time series. The Annals of Statis-tics 51 (4), 1453 – 1483. Bhattacharya, A., J. Johannes, and S. S. Rao (2025). Conditionally specified graphical modeling of stationary multivariate time series. Billingsley, P. (1999). Convergence of Probability Measures . New York: Wiley. Brillinger, D. R. (1981). Time Series: Data Analysis and Theory . Society for Industrial and Applied Mathematics. Brockwell, P. J. and R. A. Davis (2016). Introduction to Time Series and Forecasting (Third ed.). Switzerland: Springer International Publishing. Chen, J., D. Li, Y.-N. Li, and O. Linton (2025). Estimating time-varying networks for high-dimensional time series. Journal of Econometrics 249 , 105941. Dahlhaus, R. (1997). Fitting time series models to nonstationary processes. The Annals of Statis-tics 25 (1), 1 – 37. Dahlhaus, R. (2000a). Graphical interaction models for multivariate time series. Metrika 51 (2), 157– 172. Dahlhaus, R. (2000b). A likelihood approximation for locally stationary processes. The Annals of Statistics 28 (6), 1762–1794. Dahlhaus, R. (2012). Locally stationary processes. In T. Subba Rao, S. Subba Rao, and C. R. Rao (Eds.), Time Series Analysis: Methods and Applications , Volume 30 of Handbook of Statistics , pp. 351–413. Elsevier. Demirer, M., F. X. Diebold, L. Liu, and K. Yilmaz (2018). Estimating global bank network connect-edness. Journal of Applied Econometrics 33 (1), 1–15. Dempster, A. P. (1972). Covariance selection. Biometrics 28 (1), 157–175. Diebold, F. X. and K. Yilmaz (2009). Measuring financial asset return and volatility spillovers, with application to global equity markets. The Economic Journal 119 (534), 158–171. Fiecas, M. and H. Ombao (2011, June). The generalized shrinkage estimator for the analysis of functional connectivity of brain signals. The Annals of Applied Statistics 5 (2A), 1102–1125. Friedman, J., T. Hastie, and R. Tibshirani (2007). Sparse inverse covariance estimation with the graphical lasso. Biostatistics 9 (3), 432–441. Gabauer, D. (2025). ConnectednessApproach: Connectedness Approach . CRAN. R package version 1.0.4. 33 Garman, M. B. and M. J. Klass (1980). On the estimation of security price volatilities from historical data. The Journal of Business 53 (1), 67–78. Hastie, T., R. Tibshirani, J. H. Friedman, and J. H. Friedman (2009). The elements of statistical learning: data mining, inference, and prediction , Volume 2. Springer. Isserlis, L. (1918). On a formula for the product-moment coefficient of any order of a normal fre-quency distribution in any number of variables. Biometrika 12 (1/2), 134–139. Jim´ enez-Var´ on, C. F. and M. I. Knight (2026). Frequency-domain analysis of time series with network-structured dependence: Application to global bank connectedness. Killick, R., M. I. Knight, G. P. Nason, and I. A. Eckley (2020). The local partial autocorrelation function and some applications. Electronic Journal of Statistics 14 , 3268–3314. Knight, M. I., K. Leeming, G. P. Nason, and M. A. Nunes (2020). Generalized network autoregressive processes and the GNAR package. Journal of Statistical Software 96 , 1–36. Knight, M. I., M. A. Nunes, and J. K. Hargreaves (2024). Adaptive wavelet domain principal com-ponent analysis for nonstationary time series. Journal of Computational and Graphical Statis-tics 33 (3), 941–954. Knight, M. I., M. A. Nunes, and G. P. Nason (2016). Modelling, detrending and decorrelation of network time series. Available at: https://arxiv.org/abs/1603.03221 .Krampe, J. and S. S. Rao (2024). Inverse covariance operators of multivariate nonstationary time series. Bernoulli 30 (2), 1177 – 1196. Lauritzen, S. (1996). Graphical Models . Oxford Statistical Science Series. Clarendon Press. Li, D., B. Peng, S. Tang, and W. Wu (2026). Estimation of grouped time-varying network vector autoregressive models. The Annals of Statistics 54 (2), 621–646. Nason, G. P. (2013). A test for second-order stationarity and approximate confidence intervals for localized autocovariances for locally stationary time series. Journal of the Royal Statistical Society Series B: Statistical Methodology 75 (5), 879–904. Nason, G. P. and B. W. Silverman (1995). The stationary wavelet transform and some statistical applications. In A. Antoniadis and G. Oppenheim (Eds.), Wavelets and Statistics , Volume 103 of 
+
+Lecture Notes in Statistics , pp. 281–300. New York, NY: Springer New York. Nason, G. P., R. Von Sachs, and G. Kroisandt (2000). Wavelet processes and adaptive estimation of the evolutionary wavelet spectrum. J. Roy. Stat. Soc. B 62 (2), 271–292. Park, T., I. A. Eckley, and H. C. Ombao (2014). Estimating time-evolving partial coherence between signals via multivariate locally stationary wavelet processes. IEEE Transactions on Signal Process-ing 62 , 5240–5250. Pesaran, H. and Y. Shin (1998). Generalized impulse response analysis in linear multivariate models. 
+
+Economics Letters 58 (1), 17–29. Priestley, M. B. (1965). Evolutionary spectra and non-stationary processes. Journal of the Royal Statistical Society: Series B (Methodological) 27 (2), 204–229. 34 Sanderson, J., P. Fryzlewicz, and M. W. Jones (2010). Estimating linear dependence between nonsta-tionary time series using the locally stationary wavelet model. Biometrika 97 (2), 435–446. Songsiri, J., J. Dahl, and L. Vandenberghe (2009). Graphical models of autoregressive processes. In D. P. Palomar and Y. C. Eldar (Eds.), Convex Optimization in Signal Processing and Communica-tions , pp. 89–116. Cambridge: Cambridge University Press. Taylor, S. A. C., T. Park, and I. A. Eckley (2019). Multivariate locally stationary wavelet analysis with the mvlsw r package. Journal of Statistical Software 90 (11), 1–19. Wu, H., M. I. Knight, and H. Ombao (2026). Dynamic cross-scale wavelet coherence. Available at 
+
+https://arxiv.org/abs/2305.10878 .
+
+A Technical proofs for Section 3 (Net-LSW) 
+
+Proof of Property 3.4. The element corresponding to a pair of nodes p and q of the wavelet coherence matrix ρN 
+
+> j
+
+(· ) at rescaled time z = kT , is written as 
+
+ρ(p,q ) 
+
+> j
+
+(z) = S(p,q ) 
+
+> j
+
+(z)
+
+q
+
+S(p,p ) 
+
+> j
+
+(z)
+
+q
+
+S(q,q ) 
+
+> j
+
+(z)
+
+,
+
+and simple manipulations show 
+
+ρ(p,q ) 
+
+> j
+
+(z) = W (p,p ) 
+
+> j
+
+(z)λ(p,q ) 
+
+> j
+
+(z)W (q,q ) 
+
+> j
+
+(z)
+
+W (p,p ) 
+
+> j
+
+(z)W (q,q ) 
+
+> j
+
+(z) ,
+
+= λ(p,q ) 
+
+> j
+
+(z) = [ Λj (z)] p,q ,
+
+where we have used the definition of the Net-LSW spectrum in equation (6) and process specifications in Definition 3.1. 
+
+Proof of Property 3.5. Similar to the (cross-)coherence, the partial coherence turns out to be con-nected to the increment inverse covariance ΓN 
+
+> j
+
+(z), since 
+
+ηN 
+
+> j
+
+(z) = −Hj (z) ΘN 
+
+> j
+
+(z) Hj (z) ,
+
+= −Hj (z)  WN (z)−1/2  ΛN (z)−1  WN (z)−1/2 Hj (z) ,
+
+where we have used the definition of the Net-LSW cross-spectrum, and the pth diagonal element of the eHj (z) diagonal matrix is eH(p,p ) 
+
+> j
+
+(z) = H(p,p ) 
+
+> j
+
+(z)  W (p,p )(z)−1/2.
+
+B Technical proofs for Section 4 (Local Partial Correlation Graph) 
+
+Preliminary notation. Suppose we have a (p+q)×(p+q) matrix M assumed to be (semi-) positive definite, which can be represented as a block partitioned matrix as 
+
+M =
+
+ E FF⊤ H
+
+
+
+, (38) 35 where E, F, and H are p × p, p × q, and q × q matrices, respectively. Recall that if H is invertible and symmetric, then the Schur complement of H with respect to M is given by 
+
+M/H = E − FH −1F⊤. (39) Then we have 
+
+y⊤My = x⊤
+
+ M/H 00 H
+
+
+
+x, (40) where 
+
+y =
+
+ I 0
+
+−H−1F⊤ I
+
+
+
+x
+
+=
+
+ I 0
+
+−H−1F⊤ I
+
+
+
+(x⊤ 
+
+> l
+
+, x⊤ 
+
+> r
+
+)⊤
+
+= ( x⊤ 
+
+> l
+
+, (xr − H−1F⊤xl)⊤)⊤,
+
+for any x ∈ Rp+q, xl ∈ Rp, and xr ∈ Rq. Equivalently, 
+
+x =
+
+ I 0H−1F⊤ I
+
+
+
+y. (41) 
+
+B.1 Proof of Proposition 4.1 
+
+Proof. For any n-dimensional vector y = ( ya:b, y−ab )⊤ partitioned with the first two components corresponding to nodes a and b, and the remaining entries to all other nodes, using (41) we take 
+
+y⊤CX (z, τ ) y = x⊤
+
+ CX (z, τ )/D(z, τ ) 02×(n−2) 
+
+0(n−2) ×2 D(z, τ )
+
+
+
+x, (42) where 
+
+y =
+
+ I2 02×(n−2) 
+
+−D(z, τ )−1B(z, τ )⊤ In−2
+
+
+
+x, (43) so that 
+
+ya:b = xa:b and y−ab = x−ab − D(z, τ )−1B(z, τ )⊤ xa:b. (44) Denoting the spectral domain matrix block DSj (z) = 
+
+h
+
+S(p,q ) 
+
+> j
+
+(z)
+
+i
+
+> p,q / ∈{ a,b }
+
+, we have 
+
+y⊤CX (z, τ ) y = x⊤
+
+ Cϵ(z, τ ) 02×(n−2) 
+
+0(n−2) ×2 D(z, τ )
+
+
+
+x from (42) 
+
+= x⊤
+
+ P  
+
+> j
+
+Sϵj (z)Ψ j (τ ) 02×(n−2) 
+
+0(n−2) ×2
+
+P 
+
+> j
+
+DSj (z)Ψ j (τ )
+
+
+
+x
+
+= X
+
+> j
+
+
+
+x⊤
+
+ Sϵj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+x
+
+
+
+Ψj (τ )= X
+
+> j
+
+n
+
+(xa:b)⊤Sϵj (z)xa:b + ( x−ab )⊤DSj (z)x−ab o
+
+Ψj (τ ),
+
+36 where in the second line we have used the definition of the cross-covariance and the partition (11), noting that Sϵj (z) is a diagonal matrix if (a, b ) /∈ E.We also have that 
+
+y⊤CX (z, τ ) y = y⊤
+
+X
+
+> j
+
+SXj (z)Ψ j (τ )
+
+ y (45) 
+
+= X
+
+> j
+
+n
+
+y⊤SXj (z) y
+
+o
+
+Ψj (τ ) (46) 
+
+= X
+
+> j
+
+
+
+(xSj )⊤
+
+ SXj (z)/DSj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+xSj
+
+
+
+Ψj (τ ) (47) 
+
+= X
+
+> j
+
+n
+
+(xS;a:bj )⊤ SXj (z)/DSj (z) xS;a:bj + ( xS;−ab j )⊤DSj (z) xS;−ab j
+
+o
+
+Ψj (τ ), (48) where we recall that we partitioned the spectral matrix as 
+
+SXj (z) = 
+
+ ASj (z) BSj (z)
+
+BSj (z)⊤ DSj (z)
+
+
+
+,
+
+and 
+
+y =
+
+ I2 02×(n−2) 
+
+−DSj (z)−1BSj (z)⊤ In−2
+
+
+
+xSj ,
+
+so that 
+
+ya:b = xS;a:bj and y−ab = xS;−ab j − DSj (z)−1BSj (z)⊤xS;a:bj .
+
+Equation (48) coupled with the linear independence of {Ψj (τ )}j yields for any y and for any j, z :
+
+y⊤SXj (z) y = x⊤
+
+ Sϵj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+x = ( xSj )⊤
+
+ SXj (z)/DSj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+xSj .
+
+We now exploit the first equality above, coupled with (43) that connects the vectors y and x,whose inverse allows us to write: 
+
+y⊤SXj (z) y = x⊤
+
+ Sϵj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+x
+
+= y⊤
+
+"
+
+I2
+
+ D(z, τ )−1B(z, τ )⊤⊤
+
+0(n−2) ×2 In−2
+
+#  Sϵj (z) 02×(n−2) 
+
+0(n−2) ×2 DSj (z)
+
+
+
+x
+
+= y⊤
+
+"
+
+Sϵj (z)  D(z, τ )−1B(z, τ )⊤⊤ DSj (z)
+
+0(n−2) ×2 DSj (z)
+
+#  I2 02×(n−2) 
+
+D(z, τ )−1B(z, τ )⊤ In−2
+
+
+
+y.
+
+Therefore, for any n-dimensional vector y, the quadratic form corresponding to the spectral matrix 
+
+SXj (z) can be re-written as: 
+
+y⊤
+
+ Sϵj (z) +  D(z, τ )−1B(z, τ )⊤⊤ DSj (z)  D(z, τ )−1B(z, τ )⊤  D(z, τ )−1B(z, τ )⊤⊤ DSj (z)
+
+ D(z, τ )−1B(z, τ )⊤⊤ DSj (z)
+
+⊤
+
+DSj (z)
+
+ y,
+
+(49) 37 which leads directly to the matrix equalities: 
+
+ASj (z) = Sϵj (z) + 
+
+
+
+D(z, τ )−1B(z, τ )⊤⊤
+
+DSj (z)
+
+
+
+D(z, τ )−1B(z, τ )⊤
+
+, and (50) 
+
+BSj (z) = 
+
+
+
+D(z, τ )−1B(z, τ )⊤⊤
+
+DSj (z). (51) Using the symmetry and invertibility of DSj (z) and substituting (51) into (50) yields: 
+
+Sϵj (z) = ASj (z) − BSj (z)DSj (z)−1BSj (z)⊤,
+
+= SXj (z)/DSj (z), ∀j, z, 
+
+which concludes the proof. 
+
+B.2 Proof of Proposition 4.2 
+
+Proof. In our locally stationary wavelet setup, the fact that two nodes (a, b ) /∈ E are not connected via an edge means [Cϵ(z, τ )] a,b = P 
+
+> j
+
+[Sϵj (z)] a,b Ψj (τ ) = 0 . Due to the linear independence of {Ψj (· )}j ,this condition translates into a corresponding zero-value in the cross-spectrum of the residual process: 
+
+Sϵ;( a,b ) 
+
+> j
+
+(z) = 0 for any scale j and rescaled time z.Hence, from (13), the Schur complement matrix [SXj (z)/DSj (z)] has a diagonal structure, which means its inverse is also a diagonal matrix, i.e., [SXj (z)/DSj (z)] a,b = 0 and 
+
+
+
+SXj (z)/DSj (z)
+
+−1
+
+> a,b
+
+=0.Classical linear algebra inversion of the matrix SXj (z) partitioned as in equation (14) yields its left-upper block to be: h SXj (z)−1i 
+
+> a,b
+
+:= 
+
+h SXj (z)/DSj (z)−1i 
+
+> a,b
+
+,
+
+which must be part of a diagonal structure, directly implying that 
+
+
+
+SXj (z)
+
+−1
+
+> a,b
+
+= 0 when (a, b ) /∈
+
+E. This concludes the proof. 
+
+C Technical proofs for Section 5 (Subprocess-Based Estimation) 
+
+C.1 Proof of Proposition 5.1 
+
+Proof. 
+
+Expectation 
+
+Since the random increments {ξj,m }j,m are assumed to be zero-mean by Definition 3.1, it follows from the linearity of the wavelet transform and the inherited mean-zero property of the subprocess (E[Xj,t ] = 0) that at each scale j,
+
+E
+
+h
+
+djℓ,k 
+
+i
+
+= X
+
+> t
+
+E [Xj,t ] ψℓ,k (t) = 0, ∀ℓ, k. 
+
+38 Covariance 
+
+By definition, the covariance matrix of the subprocess wavelet coefficients is expressed as: Cov (djℓ,k , djℓ,k +η) = E
+
+" X
+
+> t
+
+Xj,t ψℓ,k (t)
+
+! X
+
+> t′
+
+X⊤ 
+
+> j,t ′
+
+ψℓ,k +η(t′)
+
+!# 
+
+= X
+
+> t
+
+X
+
+> t′
+
+ψℓ,k (t)ψℓ,k +η(t′)E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+. (52) We evaluate the inner expectation E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+by substituting the Net-LSW subprocess expansion for a fixed scale j, Xj,t = P 
+
+> m
+
+WN 
+
+> j
+
+(m/T )ψj,m (t)ξj,m :
+
+E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+= E
+
+" X
+
+> m
+
+WN 
+
+> j
+
+(m/T )ψj,m (t)ξj,m 
+
+! X
+
+> m′
+
+ξ⊤ 
+
+> j,m ′
+
+ψj,m ′ (t′)WN 
+
+> j
+
+(m′/T )
+
+!# 
+
+= X
+
+> m
+
+X
+
+> m′
+
+WN 
+
+> j
+
+(m/T )E
+
+h
+
+ξj,m ξ⊤
+
+> j,m ′
+
+i
+
+WN 
+
+> j
+
+(m′/T )ψj,m (t)ψj,m ′ (t′).
+
+Using that E[ξj,m ξ⊤ 
+
+> j,m ′
+
+] = δm,m ′ ΛN 
+
+> j
+
+(m/T ) (Property 3.1), the double sum collapses because terms are non-zero only when m = m′, yielding 
+
+E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+= X
+
+> m
+
+WN 
+
+> j
+
+(m/T )ΛN 
+
+> j
+
+(m/T )WN 
+
+> j
+
+(m/T )ψj,m (t)ψj,m (t′).
+
+Recalling the definition of the Net-LSW Local Wavelet Spectral (LWS) matrix 
+
+Sj (m/T ) = WN 
+
+> j
+
+(m/T )ΛN 
+
+> j
+
+(m/T )WN 
+
+> j
+
+(m/T ) from (5) and utilising the assumption from Defini-tion 3.1 that the transfer functions are slowly varying, we can apply the Taylor expansion approxi-mation Sj (m/T ) = Sj (k/T ) + O(|m − k|/T ). Since the wavelet filter has compact support, this permits the localisation approximation 
+
+E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+= Sj (k/T ) X
+
+> m
+
+ψj,m (t)ψj,m (t′) + O(T −1).
+
+Noting that the sum P 
+
+> m
+
+ψj,m (t)ψj,m (t′) is the autocorrelation wavelet Ψj (t − t′), where Ψj (τ ) = P 
+
+> m
+
+ψj,m (0) ψj,m (τ ) (Nason et al., 2000), we obtain 
+
+E
+
+h
+
+Xj,t X⊤
+
+> j,t ′
+
+i
+
+= Sj (k/T )Ψ j (t − t′) + O(T −1).
+
+Substituting this result back into equation (52) gives: Cov (djℓ,k , djℓ,k +ν ) = Sj (k/T ) X
+
+> t
+
+X
+
+> t′
+
+ψℓ,k (t)ψℓ,k +ν (t′)Ψ j (t − t′) + O(T −1). (53) To evaluate the scalar double sum I = P
+
+> t
+
+P 
+
+> t′
+
+ψℓ,k (t)ψℓ,k +ν (t′)Ψ j (t − t′), we change variables by setting τ = t − t′:
+
+I = X
+
+> τ
+
+Ψj (τ ) X
+
+> t
+
+ψℓ,k (t)ψℓ,k +ν (t − τ )
+
+!
+
+.
+
+39 By the shift-invariance property of the non-decimated wavelet transform, ψℓ,k (t) = ψℓ, 0(t − k).Letting s = t − k, the inner sum becomes 
+
+I = X
+
+> τ
+
+Ψj (τ ) X
+
+> s
+
+ψℓ, 0(s)ψℓ, 0(s − τ − ν)
+
+!
+
+.
+
+Recognizing the inner summation over s as the shifted autocorrelation wavelet Ψℓ(τ + ν), the scalar term simplifies directly to the inner product matrix element: 
+
+I = X
+
+> τ
+
+Ψj (τ )Ψ ℓ(τ + ν) = A(ν) 
+
+> j,ℓ
+
+.
+
+Combining this last expression with (53) yields the final covariance form Cov (djℓ,k , djℓ,k +ν ) = A(ν) 
+
+> j,ℓ
+
+Sj (k/T ) + O(T −1).
+
+Asymptotic Distribution 
+
+Under the assumption of joint Gaussianity for the innovation sequence, any linear combination re-mains Gaussian, hence the subprocesses in Definition 5.1 are Gaussian and their corresponding wavelet coefficients in (18) are also normally distributed. As T → ∞ , the O(T −1) error vanishes and evalu-ating the covariance at matching scales ( ℓ = j) and contemporaneous locations ( ν = 0 ), noting that 
+
+A(0)  
+
+> j,j
+
+= Aj,j , we obtain the form shown in equation (21). 
+
+C.2 Proof of Proposition 5.2 
+
+Proof. For notational simplicity, in what follows we drop the index T from the smoothing bandwidth 
+
+MT . Recalling that the subprocess wavelet coefficients are zero-mean, together with equation (20) and the definition of the smoothed periodogram in (23) , yields the first-order moment 
+
+E
+
+ bS(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+= S(p,q ) 
+
+> j
+
+(k/T ) + O(A−1 
+
+> j,j
+
+M T −1).
+
+Using the definition of the smoothed periodogram, we have for the second-order moment 
+
+E
+
+
+
+( bS(p,q ) 
+
+> j
+
+(k/T )) 2
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+> M
+
+X
+
+> m=−MM
+
+X
+
+> m′=−M
+
+E
+
+
+
+I(p,q )
+
+> j, (k+m)( k+m)
+
+I(p,q )
+
+> j, (k+m′)( k+m′)
+
+
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+> M
+
+X 
+
+> m=−MM−m
+
+X  
+
+> τ=−M−m
+
+E
+
+
+
+dj, (p)
+
+> j,k +m
+
+dj, (q)
+
+> j,k +m
+
+dj, (p) 
+
+> j,k +m+τ
+
+dj, (q)
+
+> j,k +m+τ
+
+
+
+,
+
+where τ = m′ − m. With an application of Isserlis’ Theorem (Isserlis, 1918), the above becomes 
+
+var 
+
+ bS(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+ MX
+
+> m=−M
+
+X
+
+> τ
+
+E
+
+
+
+dj, (p)
+
+> j,k +m
+
+dj, (p)
+
+> j,k +m+τ
+
+
+
+× E
+
+
+
+dj, (q)
+
+> j,k +m
+
+dj, (q)
+
+> jj,k +m+τ
+
+
+
++
+
+> M
+
+X
+
+> m=−M
+
+X
+
+> τ
+
+E
+
+
+
+dj, (p)
+
+> j,k +m
+
+dj, (q)
+
+> j,k +m+τ
+
+
+
+× E
+
+
+
+dj, (p) 
+
+> j,k +m+τ
+
+dj, (q)
+
+> j,k +m
+
+
+
+,
+
+40 and using equation (20) from Proposition 5.1, this further reduces to 
+
+A−2
+
+> j,j
+
+(2 M + 1) 2
+
+> M
+
+X
+
+> m=−M
+
+ X
+
+> τ
+
+
+
+A(τ ) 
+
+> jj
+
+S(p,p ) 
+
+> j
+
+(k/T )
+
+
+
+×
+
+
+
+A(τ ) 
+
+> jj
+
+S(q,q ) 
+
+> j
+
+(k/T )
+
+
+
++ X
+
+> τ
+
+
+
+A(τ ) 
+
+> jj
+
+S(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+×
+
+
+
+A(−τ ) 
+
+> jj
+
+S(p,q ) 
+
+> j
+
+(k/T )
+
+
+
++ X
+
+> τ
+
+(|m| + 1) O(T −1) + X
+
+> τ
+
+(|m| + 1) 2O(T −2)
+
+
+
+.
+
+Using the subprocess absolute covariance summability, sup z
+
+P 
+
+> n
+
+|c(p,q ) 
+
+> j
+
+(z, n )| = O(1) and the auto-correlation wavelet property P
+
+> τ
+
+|Ψj (τ )| = O(2 j ) (Nason et al., 2000), we obtain 
+
+X
+
+> τ
+
+|A(τ ) 
+
+> jj
+
+S(p,q ) 
+
+> j
+
+(k/T )| = X
+
+> τ
+
+| X
+
+> n
+
+c(p,q ) 
+
+> j
+
+(k/T, n )Ψ j (n + τ )|,
+
+≤ X
+
+> n
+
+|c(p,q ) 
+
+> j
+
+(k/T, n )| X
+
+> τ
+
+|Ψj (n + τ )| = O(2 j ),
+
+and further retaining the highest order terms we obtain 
+
+var 
+
+ bS(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+= O(2 2j A−2 
+
+> j,j
+
+M −1) + O(A−2 
+
+> j,j
+
+M T −1).
+
+Since Aj,j = O(2 j ), the proposed smoothed wavelet periodogram is asymptotically mean-squared consistent for the true spectrum as T → ∞ , M → ∞ , M T −1 → 0.
+
+C.3 Proof of Proposition 5.3 
+
+Proof. To establish the consistency of our network-constrained localised precision estimator, we adapt the classical foundational results of graphical covariance selection (Dempster, 1972; Lauritzen, 1996) to the scale-isolated Gaussian wavelet subprocess framework. Recall from equation (21) that isolating resolution level j yields localised subprocess wavelet coefficients following a multivariate normal distribution. This structure aligns the Gaussian likelihood with the target localised spectral matrix 
+
+Sj (k/T ), allowing us to map the network constraints of G onto its precision structure, Θj (k/T ).In order to prove consistency, we first establish the following intermediate result for each scale j
+
+and rescaled time z.
+
+Proposition C.1. Let bSj (z) be the symmetric, positive-definite estimator defined in (23) . Then: 1. There exists a unique network-constrained estimator bΘ∗ 
+
+> j
+
+(z) that maximises the objective func-tion in (24) and a corresponding bS∗ 
+
+> j
+
+(z) := 
+
+ bΘ∗ 
+
+> j
+
+(z)
+
+−1
+
+satisfying 
+
+bS∗(p,q ) 
+
+> j
+
+(z) = bS(p,q ) 
+
+> j
+
+(z), ∀(p, q ) ∈ E or p = q, 
+
+and the constraint bΘ∗(p,q ) 
+
+> j
+
+(z) = 0 , ∀(p, q ) /∈ E .
+
+41 2. Among all multivariate normal models meeting the restrictions specified in item 1, the matrix 
+
+bS∗ 
+
+> j
+
+(z) acts as the unique localised maximum likelihood estimator (MLE) of Sj (z) under the subprocess log-likelihood. Proof of Proposition C.1. 
+
+1. For clarity of the matrix calculus steps, we temporarily suppress the scale subscript j and lo-calised time index k/T , writing Θ = Θj (k/T ), bS = bSj (k/T ), and Θ(p,q ) = Θ (p,q ) 
+
+> j
+
+(k/T ).The constrained log-likelihood function defined in (24) can be explicitly parametrised over the complement of the network edge set E using Lagrange multipliers 
+
+L(Θ) = log det Θ − Tr( bSΘ ) − X 
+
+> {(p,q )|(p,q )/∈E}
+
+l(p,q )Θ(p,q ), (54) where l(p,q ) are the Lagrange multipliers restricting Θ(p,q ) = 0 for non-adjacent node pairs. Differentiating the Lagrangian objective (54) with respect to each independent parameter ele-ment Θ(p,q ) of the symmetric precision matrix yields the first-order operational conditions for any pair of nodes p and q.
+
+For diagonal entries where p = q:
+
+∂L
+
+∂Θ(p,p ) = 12
+
+∂ log det Θ
+
+∂Θ(p,p ) − 12 bS(p,p ), (55) since the structural network configuration enforces no penalty on the individual node variance boundaries. 
+
+For off-diagonal entries where p̸ = q, we evaluate based on the structural graph configuration: • If (p, q ) ∈ E :
+
+∂L
+
+∂Θ(p,q ) = 12
+
+∂ log det Θ
+
+∂Θ(p,q ) − bS(p,q ). (56) • If (p, q ) /∈ E :
+
+∂L
+
+∂Θ(p,q ) = 12
+
+∂ log det Θ
+
+∂Θ(p,q ) − bS(p,q ) − l(p,q ). (57) Utilising symmetric matrix calculus derivative properties for log-determinants, we recall that: 
+
+∂ log det Θ
+
+∂Θ(p,q ) = Tr 
+
+
+
+Θ−1 ∂Θ
+
+∂Θ(p,q )
+
+
+
+.
+
+Since the partial derivative matrix ∂Θ 
+
+> ∂Θ(p,q )
+
+is an indicator matrix containing a value of 1 on the diagonal element (p, p ) if p = q, or a value of 1 at both symmetric locations (p, q ) and (q, p ) if 
+
+p̸ = q, the trace expression evaluates to 
+
+∂ log det Θ
+
+∂Θ(p,p ) = Θ−1 
+
+> p,p
+
+, for diagonal entries ,∂ log det Θ
+
+∂Θ(p,q ) = 2 Θ−1 
+
+> p,q
+
+, for off-diagonal entries .
+
+42 Substituting these matrix algebraic simplifications back into equations (55), (56), and (57), and setting the partial derivatives to zero, we obtain the maximizing system of equations: For p = q: Θ−1 
+
+> p,p
+
+= bS(p,p ). (58) For p̸ = q, with (p, q ) ∈ E : Θ−1 
+
+> p,q
+
+= bS(p,q ). (59) For p̸ = q, with (p, q ) /∈ E :
+
+Θ(p,q ) = 0 . (60) Restoring the scale index j and rescaled localised time index k/T , equations (58), (59), and (60) replicate the structural conditions specified under item 1, defining the optimised matrices 
+
+bΘ∗ 
+
+> j
+
+(k/T ) and bS∗ 
+
+> j
+
+(k/T ).2. Since the smoothed input matrix bSj (k/T ) is positive-definite, and the objective function L(Θ)
+
+is strictly concave over the network-constrained parameter subspace, a unique global maxi-mum exists and satisfies the zero-sparsity constraints encoded by the network G for a localised graphical Gaussian MLE (Lauritzen, 1996, Theorem 5.3). By application of Proposition C.1, the network-constrained estimators bΘ∗ 
+
+> j
+
+(k/T ) and bS∗ 
+
+> j
+
+(k/T )
+
+represent the unique localised maximum likelihood solutions, hence 
+
+bΘ∗ 
+
+> j
+
+(k/T ) − Θj (k/T ) = oP (1) and bS∗ 
+
+> j
+
+(k/T ) − Sj (k/T ) = oP (1) .
+
+C.4 Proof of Proposition 5.4 
+
+Proof. Following the proof of (Wu et al., 2026, Proposition 4) applied to our setup, it follows that for every scale j, time k and node p, the wavelet coefficient of the approximated scale j-subprocess converges in mean square to its true subprocess counterpart, namely E| edj, (p) 
+
+> j,k
+
+− dj, (p) 
+
+> j,k
+
+|2 = O(T −1).Coupling the consequent edj,k − dj,k = oP (1) with the distributional property of the true wavelet subprocess coefficients in (21), edjj,k ˙∼Nn (0, A j,j Sj (k/T )) ,
+
+we obtain our desired conclusion. 
+
+C.5 Proof of Proposition 5.5 
+
+Proof. For notational simplicity, in what follows we drop the index T from the smoothing bandwidth 
+
+MT . We denote by ζjj,k = edjj,k − djj,k for each time k and scale j, and express the terms in equa-tion (29) using the newly formed ζjj,k terms, as well as the true subprocess wavelet coefficients, djj,k .43 The spectral estimator at z = k/T can then be expressed as 
+
+beS(p,q ) 
+
+> j
+
+(k/T ) = 1
+
+Aj,j (2 M + 1) 
+
+> M
+
+X
+
+> m=−M
+
+edj, (p) 
+
+> j,k +m
+
+edj, (q)
+
+> j,k +m
+
+= 1
+
+Aj,j (2 M + 1) 
+
+> M
+
+X
+
+> m=−M
+
+(ζj, (p) 
+
+> j,k +m
+
++ dj, (p)
+
+> j,k +m
+
+)( ζj, (q) 
+
+> j,k +m
+
++ dj, (q)
+
+> j,k +m
+
+)= 1
+
+Aj,j (2 M + 1) 
+
+> M
+
+X
+
+> m=−M
+
+(ζj, (p)
+
+> j,k +m
+
+ζj, (q) 
+
+> j,k +m
+
++ dj, (p)
+
+> j,k +m
+
+dj, (q) 
+
+> j,k +m
+
++ ζj, (q)
+
+> j,k +m
+
+dj, (p) 
+
+> j,k +m
+
++ ζj, (p)
+
+> j,k +m
+
+dj, (q)
+
+> j,k +m
+
+)= B1 + B2 + B3 + B4.
+
+The proof of Proposition 5.4 shows that ζj, (p) 
+
+> j,k
+
+= oP (1) at any node p, hence the first term is B1 = 
+
+oP (1) . Observe that the second term term is in fact B2 = bS(p,q ) 
+
+> j
+
+(k/T ), hence by Proposition 5.2 we have B2 = S(p,q ) 
+
+> j
+
+(k/T ) + oP (1) as T → ∞ .Let us now turn to the third and fourth terms. We consider 
+
+|E(ζj, (q) 
+
+> j,k
+
+dj, (p) 
+
+> j,k
+
+)|2 ≤ E(ζj, (q) 
+
+> j,k
+
+)2E(dj, (p) 
+
+> j,k
+
+)2 from the Cauchy-Schwarz inequality, and there exists K > 0
+
+≤ KT −1E(dj, (p) 
+
+> j,k
+
+)2 since E|ζj, (q) 
+
+> j,k
+
+|2 = O(T −1),
+
+= KT −1 
+
+Aj,j S(p,p ) 
+
+> j
+
+(k/T )) + O(T −1)
+
+
+
+= O(2 j T −1), as Aj,j = O(2 j ), (61) where in the penultimate expression we used the result in (20), then collected the maximum order terms. Thus ζj, (q) 
+
+> j,k
+
+dj, (p) 
+
+> j,k
+
+= oP (1) , from which the terms B3 = oP (1) and B4 = oP (1) .Collecting the results for all four terms, we conclude beS(p,q ) 
+
+> j
+
+(z) = S(p,q ) 
+
+> j
+
+(z) + oP (1) .Let us now investigate 
+
+E(beS(p,q ) 
+
+> j
+
+(k/T )) = E(B1) + E(B2) + E(B3) + E(B4) . (62) For the first term in (62), using the proof of Proposition 5.4, we have seen that E |ζj, (p) 
+
+> j,k
+
+|2 =
+
+O(T −1) at every node p. An application of the Cauchy-Schwarz inequality at nodes p, q therefore yields E(ζj, (p) 
+
+> j,k
+
+ζj, (q) 
+
+> j,k ′
+
+) = O(T −1) at every time k, hence we have E(B1) = O  2−j T −1.Since B2 = bS(p,q ) 
+
+> j
+
+(k/T ), the second term is E(B2) = S(p,q ) 
+
+> j
+
+(k/T ) + O  2−j M T −1 from Proposition 5.2. Let us now turn to the last two terms of (62). From equation (61), we have 
+
+E(ζj, (q) 
+
+> j,k
+
+dj, (p) 
+
+> j,k
+
+) = O(2 j/ 2T −1/2) hence E(B3) = O(2 −j/ 2T −1/2) and similar for E(B4) . Substituting these terms back into (62), we obtain 
+
+E(beS(p,q ) 
+
+> j
+
+(k/T )) = S(p,q ) 
+
+> j
+
+(k/T ) + O(M ′ 
+
+> T
+
+), (63) where M ′ 
+
+> T
+
+= 2 −j M T −1 ∨ 2−j/ 2T −1/2 → 0 when M, T → ∞ with M T −1 → 0.44 Moving onto second order quantities, the general terms that contribute to the variance of beS(p,q ) 
+
+> j
+
+(k/T )
+
+are of the form 
+
+E
+
+
+
+( bS(p,q ) 
+
+> j
+
+(k/T )) 2
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+> M
+
+X 
+
+> m=−MM−m
+
+X  
+
+> τ=−M−m
+
+E
+
+ edj, (p) 
+
+> j,k +m
+
+edj, (q) 
+
+> j,k +m
+
+edj, (q) 
+
+> j,k +m+τ
+
+edj, (q)
+
+> j,k +m+τ
+
+
+
+.
+
+Following Isserlis (1918), the above becomes 
+
+var 
+
+beS(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+ MX
+
+> m=−M
+
+X
+
+> τ
+
+E
+
+ edj, (p) 
+
+> j,k +m
+
+edj, (p)
+
+> j,k +m+τ
+
+
+
+× E
+
+ edj, (q) 
+
+> j,k +m
+
+edj, (q)
+
+> jj,k +m+τ
+
+
+
++
+
+> M
+
+X
+
+> m=−M
+
+X
+
+> τ
+
+E
+
+ edj, (p) 
+
+> j,k +m
+
+edj, (q)
+
+> j,k +m+τ
+
+
+
+× E
+
+ edj, (p) 
+
+> j,k +m+τ
+
+edj, (q)
+
+> j,k +m
+
+
+
+, then akin to (63) 
+
+= A−2
+
+> j,j
+
+(2 M + 1) 2
+
+> M
+
+X
+
+> m=−M
+
+ X
+
+> τ
+
+
+
+A(τ ) 
+
+> jj
+
+S(p,p ) 
+
+> j
+
+(k/T )
+
+
+
+×
+
+
+
+A(τ ) 
+
+> jj
+
+S(q,q ) 
+
+> j
+
+(k/T )
+
+
+
++ X
+
+> τ
+
+
+
+A(τ ) 
+
+> jj
+
+S(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+×
+
+
+
+A(−τ ) 
+
+> jj
+
+S(p,q ) 
+
+> j
+
+(k/T )
+
+
+
++ X
+
+> τ
+
+(|m| + 1) O(M ′′  
+
+> T
+
+) + X
+
+> τ
+
+(|m| + 1) 2O(( M ′′  
+
+> T
+
+)2)
+
+
+
+,
+
+where the last equality followed using edj, (p) 
+
+> j,k
+
+= ζj, (p) 
+
+> j,k
+
++dj, (p) 
+
+> j,k
+
+coupled with the properties E
+
+
+
+dj, (p) 
+
+> j,k
+
+dj, (q)
+
+> j,k +τ
+
+
+
+=
+
+A(τ ) 
+
+> j,j
+
+S(p,q ) 
+
+> j
+
+(k/T )+ O(T −1) in (20), E(ζj, (q) 
+
+> j,k
+
+dj, (p) 
+
+> j,k +τ
+
+) = O(A1/2 
+
+> j,j
+
+T −1/2) and E(ζj, (p) 
+
+> j,k
+
+ζj, (q) 
+
+> j,k +τ
+
+) = O(T −1)
+
+above, thus leading to E
+
+ edj, (p) 
+
+> j,k
+
+edj, (q)
+
+> j,k +τ
+
+
+
+= A(τ ) 
+
+> j,j
+
+S(p,q ) 
+
+> j
+
+(k/T ) + O(M ′′  
+
+> T
+
+), with M ′′  
+
+> T
+
+= 2 j/ 2T −1/2.Similar arguments to those in the proof of Proposition 5.2 and retaining highest order terms yield 
+
+var 
+
+beS(p,q ) 
+
+> j
+
+(k/T )
+
+
+
+= O(M −1 ∨ 2−3j/ 2M T −1/2 ∨ 2−j M 2T −1),
+
+thus the proposed smoothed wavelet periodogram beS(p,q ) 
+
+> j
+
+(k/T ) is asymptotically mean-squared con-sistent for the true spectrum as T → ∞ , M → ∞ , M T −1/2 → 0.
+
+D Further Simulation Study Results 
+
+This appendix presents additional empirical simulation results complementing the performance analy-sis reported in Section 6.4. In particular, we provide the additional results for Scenario 1 and Scenario 3 evaluated across K = 30 random network topologies under varying edge probabilities ℘ and sample horizons T ∈ { 512 , 1024 , 2048 }.
+
+D.1 Scenario 1 Results 
+
+Figures 10 through 13 present the empirical tracking accuracy metrics under one single active scale. Scenario 1, where a single scale ( j) is evaluated, the Oracle (Subprocess (True)) and proposed Net-LSW (Subprocess (Approx)) estimators demonstrate a clear performance advantage over the 45 MvLSW framework, producing narrower error distributions that sit consistently lower on the ver-tical axis across all three edge probability levels ( ℘). The MvLSW framework exhibits noticeably wider boxplots and higher median errors in comparison, though all three methods follow a shared pattern of reduction in error magnitude as T increases, less evident for MvLSW. T = 512 T = 1024 T = 2048           
+
+> p10  p30  p50
+> S 1 S 1 S 1
+> 10 −3 10 −2
+> 10 −2 10 −1
+> 10 −2 10 −1
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 1: Coherence
+
+Figure 10: Empirical Bias 2 distributions for Coherence under Scenario 1 over K = 30 random network topologies for edge probabilities ℘ ∈ { 10% , 30% , 50% } (rows) across varying sample sizes 
+
+T . Note our proposed method (red) displays only a very slight departure from the Oracle (blue), and outperforms MvLSW (purple). The asymptotic regime is more pronounced for our method. 46 T = 512 T = 1024 T = 2048          
+
+> p10  p30  p50
+> S 1 S 1 S 1
+> 10 −4 10 −3
+> 10 −4 10 −3
+> 10 −3
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 1: Partial Coherence
+
+Figure 11: Empirical Bias 2 distributions for Partial Coherence under Scenario 1 over K = 30 ran-dom network topologies for edge probabilities ℘ ∈ { 10% , 30% , 50% } (rows) across varying sample sizes T . Note our proposed method (red) displays only slight departures from the Oracle (blue), and outperforms MvLSW (purple). The asymptotic regime is clearly visible. 47 T = 512 T = 1024 T = 2048          
+
+> p10  p30  p50
+> S 1 S 1 S 1
+> 10 −2
+> 10 −2 10 −1
+> 10 −2 10 −1
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 1: Coherence
+
+Figure 12: Empirical MSE distributions for Coherence under Scenario 1 over K = 30 random net-work topologies for edge probabilities ℘ ∈ { 10% , 30% , 50% } (rows) across varying sample sizes T .Note our proposed method (red) displays slight departures from the Oracle (blue), and outperforms MvLSW (purple). The MvLSW asymptotic regime does not function for sparser graphs (top row). 48 T = 512 T = 1024 T = 2048         
+
+> p10  p30  p50
+> S 1 S 1 S 1
+> 10 −3 10 −2
+> 10 −2
+> 10 −2
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 1: Partial Coherence
+
+Figure 13: Empirical MSE distributions for Partial Coherence under Scenario 1 over K = 30 random network topologies for edge probabilities ℘ ∈ { 10% , 30% , 50% } (rows) across varying sample sizes 
+
+T . Note our proposed method (red) displays slight departures from the Oracle (blue), and outperforms MvLSW (purple) for large T . The MvLSW asymptotic regime does not function regardless of the graph density. 49 D.2 Scenario 3 Results 
+
+Figures 14 through 17 display the empirical tracking accuracy metrics under the full multiple-scale setting. Under the multiple-scale environment of Scenario 3, the performance gap widens significantly across scales j = 1 through 4, where both the true and approximate subprocess estimators maintain much lower medians and tighter error bounds than the standard MvLSW framework. This distinction is particularly pronounced in the partial coherence metrics, where the MvLSW boxplots remain highly elevated on the vertical axis across both ℘ = 10% and ℘ = 30% . However, at the coarsest scale (j = 5 ), the standard MvLSW framework produces lower MSE values compared to the subprocess estimators. Crucially, as reported in Figure 15, MvLSW displays a very high squared bias at this same scale. Because its MSE remains low despite this large bias, it implies that the MvLSW estimator operates with an artificially low variance at scale 5, tightly tracking an incorrect signal trajectory. As a specific example, Figure 18 displays the partial coherence trajectory averaged across the simulations for a representative node pair. Here, it is evident that the MvLSW framework fails to accurately capture the true underlying energy profile at this scale, flatlining along an incorrect path despite its low variance. T = 512 T = 1024 T = 2048                        
+
+> p10  p30
+> S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5
+> 10 −4 10 −3 10 −2 10 −1
+> 10 −3 10 −2 10 −1
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+> Scenario 3: Coherence
+
+Figure 14: Empirical Bias 2 distributions for Coherence under Scenario 3 over K = 30 random network topologies for edge probabilities ℘ ∈ { 10% , 30% } (rows) across varying sample sizes T .50 T = 512 T = 1024 T = 2048                      
+
+> p10  p30
+> S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5
+> 10 −4 10 −3 10 −2
+> 10 −4 10 −3
+> Squared Bias (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+
+Scenario 3: Partial Coherence Figure 15: Empirical Bias 2 distributions for Partial Coherence under Scenario 3 over K = 30 random network topologies for edge probabilities ℘ ∈ { 10% , 30% } (rows) across varying sample sizes T .51 T = 512 T = 1024 T = 2048                     
+
+> p10  p30
+> S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5
+> 10 −2 10 −1
+> 10 −2 10 −1
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+
+Scenario 3: Coherence Figure 16: Empirical MSE distributions for Coherence under Scenario 3 over K = 30 random net-work topologies for edge probabilities ℘ ∈ { 10% , 30% } (rows) across varying sample sizes T .52 T = 512 T = 1024 T = 2048                    
+
+> p10  p30
+> S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5 S 1 S 2 S 3 S 4 S 5
+> 10 −3 10 −2
+> 10 −2
+> MSE (Log10 scale)
+> Subprocess (True) Subprocess (Approx) MvLSW
+
+Scenario 3: Partial Coherence Figure 17: Empirical MSE distributions for Partial Coherence under Scenario 3 over K = 30 random network topologies for edge probabilities ℘ ∈ { 10% , 30% } (rows) across varying sample sizes T .0 500 1000 1500 2000 0.00  0.05  0.10  0.15  0.20  0.25 
+
+> p30: Node 1 −− Node 4 Scen3 | T=2048 | Scale 5 | PC
+> Time (T) PC
+> True xsub net2 mvlsw
+
+Figure 18: Time-varying partial coherence between Node 1 and Node 4 under Scenario 3 ( ℘ = 30% ,
+
+T = 2048 ) at scale j = 5 . The averaged trajectories highlight that the MvLSW (purple dotted curve) framework fails to follow the true signal (black curve) path despite exhibiting low variability. 53

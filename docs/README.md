@@ -6,44 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-05
-- 运行时间：2026-07-05 20:58:20 UTC
+- 最新运行日期：2026-07-06
+- 运行时间：2026-07-06 21:59:11 UTC
 - 运行状态：成功
-- 本次总论文数：8
-- 精读区：3
-- 速读区：5
+- 本次总论文数：2
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读3篇、速读5篇，聚焦因果推断与序列建模两大前沿方向。最值得关注《Non-parametric recovery of causal diffusion》提出从稳态数据恢复因果机制的通用方法，以及《CausalMix》将数据混合转化为因果推断问题优化语言模型训练。建议优先阅读精读文章，深入理解非参数因果推断与数据混合策略的实际应用。
-- 详情：[/202607/05/README](/202607/05/README)
+今天精读蛋白预测高分论文，速读网络依赖性分析，推荐聚焦结构信息驱动的多任务蛋白属性预测方法。
+- 详情：[/202607/06/README](/202607/06/README)
 
 ### 精读区论文标签
-1. [Non-parametric recovery of causal diffusion mechanisms from steady-state observations](/202607/05/2606.30467v1-non-parametric-recovery-of-causal-diffusion-mechanisms-from-steady-state-observations)  
-   标签：评分：9.0/10、query:tsc
-   evidence：因果扩散机制恢复
-2. [CausalMix: Data Mixture as Causal Inference for Language Model Training](/202607/05/2607.01104v1-causalmix-data-mixture-as-causal-inference-for-language-model-training)  
-   标签：评分：8.0/10、query:tsc
-   evidence：将数据混合优化形式化为因果推断用于LLM训练
-3. [Autorelevance function and other feature relevance measures for univariate time series](/202607/05/2607.01959v1-autorelevance-function-and-other-feature-relevance-measures-for-univariate-time-series)  
-   标签：评分：8.0/10、query:fe
-   evidence：单变量时间序列的特征相关性度量，支持时间序列性质提取
+1. [Prot2Prop: Structure-informed multitask protein property prediction](/202607/06/biorxiv-10-64898-2026-06-28-735009-v1-prot2prop-structure-informed-multitask-protein-property-prediction)  
+   标签：评分：9.0/10、query:fe
+   evidence：使用冻结的ProstT5编码器进行多任务蛋白质性质预测
 
 ### 速读区论文标签
-1. [MuonSSM: Orthogonalizing State Space Models for Sequence Modeling](/202607/05/2606.30461v1-muonssm-orthogonalizing-state-space-models-for-sequence-modeling)  
-   标签：评分：7.0/10、query:tsc
-   evidence：状态空间模型用于序列建模，可应用于时间序列生成
-2. [StateFlow: Dual-State Recurrent Modeling for Long-Horizon Time Series Forecasting](/202607/05/2607.00197v1-stateflow-dual-state-recurrent-modeling-for-long-horizon-time-series-forecasting)  
-   标签：评分：7.0/10、query:tsc
-   evidence：长时序预测的双状态循环模型
-3. [TiRex-2: Generalizing TiRex to Multivariate Data and Streaming](/202607/05/2607.01204v1-tirex-2-generalizing-tirex-to-multivariate-data-and-streaming)  
-   标签：评分：7.0/10、query:tsc
-   evidence：多变量时间序列基础模型用于预测，属于时间序列生成模型
-4. [Doubly Robust Adaptive Conformal Inference for Causal Effects Under Temporal Dependence](/202607/05/2606.30500v1-doubly-robust-adaptive-conformal-inference-for-causal-effects-under-temporal-dependence)  
-   标签：评分：6.0/10、query:tsc
-   evidence：时间依赖下的因果效应与自适应共形推断
-5. [Efficient Temporal Point Processes via Monotone Alternating Splines](/202607/05/2607.01752v1-efficient-temporal-point-processes-via-monotone-alternating-splines)  
-   标签：评分：6.0/10、query:tsc
-   evidence：通过单调交替样条改进时间点过程的生成
+1. [Multiscale Dynamic Dependence Estimation over Networks](/202607/06/2606.30399v1-multiscale-dynamic-dependence-estimation-over-networks)  
+   标签：评分：6.0/10、query:fe
+   evidence：提出Net-LSW框架建模多尺度时变依赖，可用于时间序列特征提取
 
 
 <div class="dpr-home-promo-card">
