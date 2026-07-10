@@ -6,26 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-06
-- 运行时间：2026-07-06 21:59:11 UTC
+- 最新运行日期：2026-07-10
+- 运行时间：2026-07-10 21:55:26 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：0
+- 精读区：0
+- 速读区：0
 
 ### 今日简报（AI）
-今天精读蛋白预测高分论文，速读网络依赖性分析，推荐聚焦结构信息驱动的多任务蛋白属性预测方法。
-- 详情：[/202607/06/README](/202607/06/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202607/10/README](/202607/10/README)
 
 ### 精读区论文标签
-1. [Prot2Prop: Structure-informed multitask protein property prediction](/202607/06/biorxiv-10-64898-2026-06-28-735009-v1-prot2prop-structure-informed-multitask-protein-property-prediction)  
-   标签：评分：9.0/10、query:fe
-   evidence：使用冻结的ProstT5编码器进行多任务蛋白质性质预测
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Multiscale Dynamic Dependence Estimation over Networks](/202607/06/2606.30399v1-multiscale-dynamic-dependence-estimation-over-networks)  
-   标签：评分：6.0/10、query:fe
-   evidence：提出Net-LSW框架建模多尺度时变依赖，可用于时间序列特征提取
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
