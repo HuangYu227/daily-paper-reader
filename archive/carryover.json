@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-26T22:10:03.116558+00:00",
-  "updated_date": "20260926",
+  "generated_at": "2026-09-27T21:45:20.799493+00:00",
+  "updated_date": "20260927",
   "carryover_days": 9,
   "tag_states": {
     "tsc": {
-      "updated_date": "20260926",
+      "updated_date": "20260927",
       "carryover_days": 9,
       "items": []
     },
     "fe": {
-      "updated_date": "20260926",
+      "updated_date": "20260927",
       "carryover_days": 9,
       "items": []
     }
